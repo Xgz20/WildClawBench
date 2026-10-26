@@ -2,11 +2,13 @@
 
 ## 任务与目录
 
+以下路径为旧扩展集默认值。注册数据集以`datasets/catalog.yaml`和系列`dataset.yaml`为准，例如`general_hard_<category>_task_<NNN>_<slug>`、`datasets/general-hard/tasks/<category>/<task_id>.md`和`datasets/general-hard/workspace/<category>/<task_id>/{exec,gt}`；不能复用旧六类或省略Workspace分类层。
+
 - task ID：`<Category>_task_<NNN>_<slug>`；`NNN` 为分类内三位编号，已存在、已登记或 invalid 保留编号都不可复用。
 - 任务文件：`tasks/extension/<Category>/<task_id>.md`。
 - Workspace：`workspace/extension/<Category>/task_<NNN>_<slug>/{exec,gt}`。
 - `exec/` 是 Agent 可见输入，运行时复制到 `/tmp_workspace/`；`gt/` 仅在评分阶段复制到 `/tmp_workspace/gt/`。
-- 即使没有输入或真值，也保留目录并提交 `.gitkeep`。Prompt 中的交付物统一写到 `/tmp_workspace/results/`。
+- 旧入口无素材时保留目录并提交`.gitkeep`；注册数据集必须有非空真实GT，不能用占位文件宣称可评分。Prompt 中的交付物统一写到 `/tmp_workspace/results/`。
 
 ## Frontmatter 与章节
 
@@ -37,7 +39,7 @@ Automated Checks 约束：
 
 - `def grade(**kwargs) -> dict`，通过 `Path(kwargs.get("workspace_path") or "/tmp_workspace")` 定位工作区。
 - 不调用 LLM 或外部服务；每个 checkpoint 独立返回 `0~1`，并显式返回 `overall_score`。
-- 只读取 Agent 交付、输入和 `gt/`；不得修改结果。评分失败时返回零分字典，不让异常逃逸。
+- 只读取 Agent 交付、输入和 `gt/`；不得修改结果。候选漏交或业务错误按契约返回分数；缺GT、缺依赖、规则自身崩溃须保留评测异常，不能用通用异常捕获补成能力零分。
 - 对合理的等价表示做必要归一化，避免把实现风格当成业务正确性。
 
 通用 Rubric 约束：
@@ -61,8 +63,8 @@ Automated Checks 约束：
 - Prompt 引用的 `/tmp_workspace/<input>` 必须来自 spec 的 `workspace.exec`；评分真值来自 `workspace.gt`，不得在 Prompt 暴露。
 - 每个附件默认不超过 5 MiB，确有必要可提高到 20 MiB，不能超过仓库约定上限。
 
-## 首版禁止项
+## 专项协议边界
 
 - `07_Website_Generation`、`web-site-gen`、Playwright checker。
-- `ppt` tag、PPT/图片专项 `primary/secondary` 指标或 evidence pipeline。
+- `ppt` tag、PPT/图片专项 `primary/secondary` 指标或专项evidence pipeline；普通办公交付或视觉输入按通用业务契约另行取证，不因文件格式自动判为专项。
 - 把公开网页来源误当作运行时依赖。只有任务执行时必须访问的稳定信源才进入 `runtime_sources`。

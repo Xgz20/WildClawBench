@@ -523,7 +523,9 @@ def compile_dataset(
         scoring_tree, scoring_members = _tree_materials(
             workspace_root / "gt", f"{task_root}/private-scoring/gt"
         )
-        if definition.task_id_prefix and not any(entry["kind"] == "file" for entry in scoring_tree["entries"]):
+        if definition.task_id_prefix and not any(entry["kind"] == "file" and entry["size"] > 0
+                                                 and Path(entry["path"]).name != ".gitkeep"
+                                                 for entry in scoring_tree["entries"]):
             raise ValueError(f"private scoring materials must not be empty: {task_id}")
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree

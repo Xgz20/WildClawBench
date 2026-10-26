@@ -7,6 +7,8 @@ description: 校验 WildClawBench 评测任务的 Markdown/frontmatter、评分�
 
 使用仓库内脚本做确定性静态校验。默认扫描 `<repo>/tasks`（包含 `tasks/extension`，排除仅供阅读的 `tasks/cn` 副本），也可重复指定 `--task-dir`、`--task-path`、`--task-id`；`--task-id @file` 按行读取 ID 清单。需要专门检查中文副本时显式加 `--include-doc-copies`。
 
+注册数据集用`--dataset-id general-hard-v1`（或系列ID加`--release-id`）按显式版本清单选题；缺题为FAIL，不能用空目录代替验收。可加`--repo-root`选择受控checkout。显式单题路径用于制作阶段，自动核验该系列的来源、标签、命名空间、Workspace分类层、真实GT、评分key与七维能力映射；不要求尚未制作的其它题齐全。仅整版选择额外校验配额和冻结锁一致性，仍不执行作者评分代码。
+
 ```bash
 python3 .agents/skills/validate-eval-dataset/scripts/validate_eval_dataset.py
 python3 .agents/skills/validate-eval-dataset/scripts/validate_eval_dataset.py \

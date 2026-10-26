@@ -9,6 +9,7 @@ from typing import Iterable
 
 import yaml
 
+from eval_general_e2e.datasets.catalog import load_registered_dataset
 from .contracts import FAIL, Issue
 
 
@@ -22,7 +23,7 @@ class SelectionResult:
 def _task_id(path: Path) -> str:
     try:
         text = path.read_text(encoding="utf-8")
-    except OSError:
+    except (OSError, UnicodeError):
         return path.stem
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n", text, re.DOTALL)
     if match:
@@ -82,6 +83,8 @@ def select_task_files(
     task_ids: Iterable[str] = (),
     default_root: str | Path = "tasks",
     include_doc_copies: bool = False,
+    dataset_id: str | None = None,
+    release_id: str | None = None,
 ) -> SelectionResult:
     """选择任务文件；默认排除 tasks/cn 阅读副本，ID 多义时不静默合并。"""
     repo_root = Path(repo_root).resolve()
@@ -94,6 +97,18 @@ def select_task_files(
     selected: list[Path] = []
     issues: list[Issue] = []
     selectors: list[str] = []
+    registered = None
+    if release_id and not dataset_id:
+        return SelectionResult(issues=[Issue(FAIL, "DATASET_DEFINITION_INVALID", "release_id需要dataset_id")])
+    if dataset_id:
+        try:
+            registered = load_registered_dataset(repo_root, dataset_id, release_id=release_id)
+        except (OSError, ValueError) as exc:
+            return SelectionResult(issues=[Issue(FAIL, "DATASET_DEFINITION_INVALID", str(exc))])
+        default_root = registered.definition.task_root
+        selectors.append(f"dataset:{registered.series_id}/{registered.definition.dataset_id}")
+        if not dirs and not paths and not ids:
+            ids = list(registered.definition.task_ids)
     if not dirs and not paths and not ids:
         dirs = [Path(default_root)]
 
@@ -148,6 +163,14 @@ def select_task_files(
 
     unique: dict[str, Path] = {}
     for path in selected:
+        if registered:
+            root = (repo_root / registered.definition.task_root).resolve()
+            if not path.resolve().is_relative_to(root):
+                issues.append(Issue(FAIL, "DATASET_TASK_OUTSIDE_ROOT", "任务越出所选数据集根目录", location=str(path)))
+                continue
+            if _task_id(path) not in set(registered.definition.task_ids):
+                issues.append(Issue(FAIL, "DATASET_TASK_OUT_OF_RELEASE", "任务不在所选冻结版本清单", task_id=_task_id(path), location=str(path)))
+                continue
         unique[str(path.resolve())] = path.resolve()
     return SelectionResult(sorted(unique.values(), key=str), issues, selectors)
 

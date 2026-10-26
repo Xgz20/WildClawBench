@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from copy import deepcopy
 import json
 import os
 import re
@@ -18,6 +19,11 @@ from typing import Any
 
 import yaml
 
+REPO_ROOT = Path(__file__).resolve().parents[5]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from eval_general_e2e.datasets.catalog import load_mapping, load_registered_dataset, repository_path
 
 CATEGORIES = (
     "01_Productivity_Flow",
@@ -106,9 +112,10 @@ def _require_text(value: Any, name: str) -> str:
 
 
 def _safe_relative_path(value: Any, name: str) -> Path:
-    text = _require_text(value, name).replace("\\", "/")
+    text = _require_text(value, name)
     path = PurePosixPath(text)
-    if path.is_absolute() or any(part in {"", ".", ".."} for part in path.parts):
+    if ("\\" in text or "\0" in text or path.is_absolute()
+            or any(part in {"", ".", ".."} for part in text.split("/"))):
         raise SpecError(f"{name} 必须是安全的相对路径: {text!r}")
     return Path(*path.parts)
 
@@ -227,7 +234,7 @@ def _grade_keys(code: str) -> set[str]:
             "grade() 必须接受 **kwargs，或同时接受 transcript 与 workspace_path"
         )
     blocked_imports = {"anthropic", "httpx", "openai", "requests", "socket", "urllib"}
-    for node in ast.walk(grade):
+    for node in ast.walk(tree):
         names: list[str] = []
         if isinstance(node, ast.Import):
             names = [alias.name.split(".", 1)[0] for alias in node.names]
@@ -281,9 +288,10 @@ def _normalize_copy_items(
         source_text = _require_text(item.get("source"), f"{name}[{index}].source")
         source = Path(source_text).expanduser()
         if not source.is_absolute():
-            source = (spec_dir / source).resolve()
-        else:
-            source = source.resolve()
+            source = spec_dir / source
+        if source.is_symlink():
+            raise SpecError(f"{name}[{index}] 不接受符号链接源: {source}")
+        source = source.resolve()
         if not source.exists():
             raise SpecError(f"{name}[{index}] 源文件不存在: {source}")
         if source.is_symlink():
@@ -338,7 +346,40 @@ def _normalize_source(value: Any) -> dict[str, Any]:
     return {"design_origin": normalized_origin, "runtime_sources": runtime_sources}
 
 
-def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path) -> dict[str, Any]:
+def _normalize_registered_source(value: Any, modality: str) -> dict[str, Any]:
+    source = _require_mapping(value, "source")
+    if set(source) != {"origin", "network", "attributes"}:
+        raise SpecError("注册数据集 source 必须包含 origin、network、attributes")
+    origin = _require_mapping(source["origin"], "source.origin")
+    _require_text(origin.get("mode"), "source.origin.mode")
+    refs = origin.get("production_refs")
+    if not isinstance(refs, list) or not all(isinstance(ref, dict) for ref in refs):
+        raise SpecError("source.origin.production_refs 必须是 object 数组")
+    for ref in refs:
+        if not re.fullmatch(r"[0-9a-f]{64}", str(ref.get("query_hash", ""))):
+            raise SpecError("production_refs 必须带完整Query哈希，不写原始用户文本")
+        _require_text(ref.get("review"), "production_refs.review")
+    network = _require_mapping(source["network"], "source.network")
+    mode = network.get("mode")
+    if not isinstance(mode, str) or mode not in {"offline", "open_public_search", "fixed_url_verification", "site_scoped_search"}:
+        raise SpecError("source.network.mode 未登记")
+    attrs = _require_mapping(source["attributes"], "source.attributes")
+    for key in ("requires_visual_input", "coding_primary"):
+        if type(attrs.get(key)) is not bool:
+            raise SpecError(f"source.attributes.{key} 必须是boolean")
+    if attrs["requires_visual_input"] != (modality == "multimodal"):
+        raise SpecError("requires_visual_input 与 modality 不一致")
+    group = attrs.get("retrieval_group")
+    if group is not None:
+        modes = {"open_search": {"open_public_search"},
+                 "directed_web_retrieval": {"fixed_url_verification", "site_scoped_search"},
+                 "local_evidence": {"offline"}}
+        if not isinstance(group, str) or group not in modes or mode not in modes[group]:
+            raise SpecError("retrieval_group 与 network.mode 不一致")
+    return source
+
+
+def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path, dataset_id: str | None = None) -> dict[str, Any]:
     spec = _require_mapping(raw, "case spec")
     allowed = {
         "name",
@@ -365,14 +406,23 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path) -> dict[str, An
         "workspace",
         "source",
         "checkpoint_capabilities",
+        "dataset_id",
+        "judge_evidence",
     }
     unknown = set(spec) - allowed
     if unknown:
         raise SpecError(f"case spec 含不支持字段: {sorted(unknown)}")
 
+    if dataset_id and spec.get("dataset_id") and dataset_id != spec["dataset_id"]:
+        raise SpecError("CLI与spec的dataset_id不一致")
+    dataset_id = dataset_id or spec.get("dataset_id")
+    registered = load_registered_dataset(repo_root, dataset_id) if dataset_id else None
+    if registered and not registered.definition.task_id_prefix:
+        raise SpecError("旧冻结集请使用原生成入口；不能改写冻结清单")
+    categories = registered.definition.category_labels if registered else CATEGORIES
     category = _require_text(spec.get("category"), "category")
-    if category not in CATEGORIES:
-        raise SpecError(f"首版只支持六类通用场景，category 不支持: {category}")
+    if category not in categories:
+        raise SpecError(f"category 未在数据集分类中登记: {category}")
     slug = _require_text(spec.get("slug"), "slug")
     if not SLUG_RE.fullmatch(slug):
         raise SpecError("slug 必须是小写 snake_case，且只能包含字母、数字和下划线")
@@ -410,6 +460,10 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path) -> dict[str, An
         )
     if "custom" not in tags:
         tags.insert(0, "custom")
+    if registered:
+        tags = list(dict.fromkeys([*registered.definition.include_tags, *tags]))
+        if set(tags) & set(registered.definition.exclude_tags):
+            raise SpecError("tags 包含数据集排除标签")
 
     criteria = _require_mapping(spec.get("grading_criteria"), "grading_criteria")
     unknown_criteria = set(criteria) - {"automated", "llm_judge"}
@@ -487,6 +541,23 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path) -> dict[str, An
     gt_items = _normalize_copy_items(
         workspace.get("gt"), "workspace.gt", spec_dir, size_limit
     )
+    if registered and not gt_items:
+        raise SpecError("注册数据集必须提供真实workspace.gt材料")
+    judge_evidence = _require_mapping(spec.get("judge_evidence", {}), "judge_evidence")
+    if set(judge_evidence) - {"required"}:
+        raise SpecError("judge_evidence只支持required清单")
+    required_evidence = judge_evidence.get("required", [])
+    if not isinstance(required_evidence, list):
+        raise SpecError("judge_evidence.required 必须是数组")
+    seen_evidence: set[str] = set()
+    for item in required_evidence:
+        item = _require_mapping(item, "judge_evidence.required[]")
+        if set(item) != {"path", "role"} or item.get("role") != "candidate_deliverable":
+            raise SpecError("judge_evidence条目需为path和candidate_deliverable角色")
+        target = _safe_relative_path(item.get("path"), "judge_evidence.path").as_posix()
+        if not target.startswith("results/") or target in seen_evidence:
+            raise SpecError("judge_evidence需定位到results下的不重复产物")
+        seen_evidence.add(target)
 
     checkpoint_capabilities = _require_mapping(
         spec.get("checkpoint_capabilities"), "checkpoint_capabilities"
@@ -549,8 +620,11 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path) -> dict[str, An
         "additional_notes": notes,
         "workspace_exec": exec_items,
         "workspace_gt": gt_items,
-        "source": _normalize_source(spec.get("source")),
+        "source": (_normalize_registered_source(spec.get("source"), modality)
+                   if registered else _normalize_source(spec.get("source"))),
         "checkpoint_capabilities": normalized_capabilities,
+        "registered": registered,
+        "judge_evidence": judge_evidence,
     }
 
 
@@ -581,7 +655,7 @@ def assign_next_number(repo_root: Path, category: str, registry: dict[str, Any])
     raise SpecError(f"{category} 已没有可用的三位编号")
 
 
-def _validate_registry(registry: Any) -> dict[str, Any]:
+def _validate_registry(registry: Any, *, categories=CATEGORIES, prefix: str = "") -> dict[str, Any]:
     value = _require_mapping(registry, "task_sources.yaml")
     tasks = value.get("tasks")
     contract = value.get("registry_contract")
@@ -590,15 +664,19 @@ def _validate_registry(registry: Any) -> dict[str, Any]:
     ids = [entry.get("task_id") for entry in tasks if isinstance(entry, dict)]
     if len(ids) != len(tasks) or len(ids) != len(set(ids)):
         raise SpecError("task_sources.yaml 的 task_id 缺失或重复")
-    counts = Counter(str(task_id).split("_task_", 1)[0] for task_id in ids)
+    if prefix and any(not isinstance(task_id, str) or not task_id.startswith(prefix) for task_id in ids):
+        raise SpecError("task_sources.yaml 存在数据集命名空间之外的ID")
+    counts = Counter(str(task_id)[len(prefix):].split("_task_", 1)[0] for task_id in ids)
     if contract.get("active_task_count") != len(tasks):
         raise SpecError("task_sources.yaml 的 active_task_count 与 tasks 数量不一致")
     declared_counts = contract.get("category_task_counts")
     if not isinstance(declared_counts, dict) or any(
         declared_counts.get(category, 0) != counts.get(category, 0)
-        for category in CATEGORIES
+        for category in categories
     ):
         raise SpecError("task_sources.yaml 的 category_task_counts 与 tasks 不一致")
+    if set(counts) - set(categories):
+        raise SpecError("task_sources.yaml 存在未登记分类")
     return value
 
 
@@ -639,6 +717,8 @@ def render_task(spec: dict[str, Any], task_id: str, workspace_relative: str) -> 
     if spec["grading_weights"] is not None:
         frontmatter["grading_weights"] = spec["grading_weights"]
     frontmatter["tags"] = spec["tags"]
+    if spec.get("judge_evidence"):
+        frontmatter["judge_evidence"] = spec["judge_evidence"]
     fm = _dump_yaml(frontmatter).rstrip()
 
     grading_lines: list[str] = []
@@ -846,8 +926,10 @@ def _validate_output_yaml(
     *,
     task_id: str,
     category: str,
+    categories=CATEGORIES,
+    prefix: str = "",
 ) -> None:
-    registry = _validate_registry(yaml.safe_load(registry_text))
+    registry = _validate_registry(yaml.safe_load(registry_text), categories=categories, prefix=prefix)
     matches = [entry for entry in registry["tasks"] if entry.get("task_id") == task_id]
     if len(matches) != 1:
         raise SpecError("生成后的 task_sources.yaml 未唯一登记新任务")
@@ -858,6 +940,39 @@ def _validate_output_yaml(
         raise SpecError("生成后的分类计数异常")
 
 
+def _registered_number(repo_root: Path, registered, spec: dict[str, Any], registry: dict[str, Any]) -> int:
+    definition = registered.definition
+    category = spec["category"]
+    pattern = re.compile(rf"^{re.escape(definition.task_id_prefix + category)}_task_(\d{{3}})_([a-z0-9_]+)$")
+    occupied: set[int] = set()
+    paths = (repo_root / definition.task_root / category).glob("*.md")
+    for task_id in [path.stem for path in paths] + [str(item.get("task_id", ""))
+                   for key in ("tasks", "excluded_tasks") for item in registry.get(key, []) if isinstance(item, dict)]:
+        match = pattern.fullmatch(task_id)
+        if match:
+            occupied.add(int(match[1]))
+    plans: dict[int, set[tuple[str, str]]] = {}
+    for release in load_mapping(registered.definition_path)["releases"].values():
+        for task_id in release["task_ids"]:
+            match = pattern.fullmatch(task_id)
+            if match:
+                plans.setdefault(int(match[1]), set()).add((task_id, release["status"]))
+    number = spec["number"]
+    if number is None:
+        matching = [n for n, entries in plans.items() if n not in occupied and all(
+            task_id == f"{definition.task_id_prefix}{category}_task_{n:03d}_{spec['slug']}" and status == "building"
+            for task_id, status in entries)]
+        if len(matching) > 1:
+            raise SpecError("slug对应多个规划编号，请显式指定number")
+        number = matching[0] if matching else next((n for n in range(1, 1000) if n not in occupied and n not in plans), None)
+    if number is None or number in occupied:
+        raise SpecError("编号已被任务文件、来源或保留项占用")
+    candidate = f"{definition.task_id_prefix}{category}_task_{number:03d}_{spec['slug']}"
+    if any(task_id != candidate or status != "building" for task_id, status in plans.get(number, set())):
+        raise SpecError("编号已被其它规划题或已冻结/就绪版本保留")
+    return number
+
+
 def assemble_case(
     raw_spec: Any,
     *,
@@ -865,56 +980,79 @@ def assemble_case(
     spec_dir: Path,
     dry_run: bool = False,
     run_validation: bool = True,
+    dataset_id: str | None = None,
 ) -> dict[str, Any]:
     repo_root = repo_root.resolve()
-    spec = normalize_spec(raw_spec, repo_root=repo_root, spec_dir=spec_dir.resolve())
-    registry_path = repo_root / "tasks" / "extension" / "task_sources.yaml"
-    capability_path = repo_root / "tools" / "report" / "data" / "checkpoint_capability_map7.yaml"
-    registry_original = registry_path.read_bytes()
-    capability_original = capability_path.read_bytes()
-    registry = _validate_registry(yaml.safe_load(registry_original))
-    capability_map = yaml.safe_load(capability_original)
+    spec = normalize_spec(raw_spec, repo_root=repo_root, spec_dir=spec_dir.resolve(), dataset_id=dataset_id)
+    registered = spec["registered"]
+    definition = registered.definition if registered else None
+    categories = definition.category_labels if definition else CATEGORIES
+    prefix = definition.task_id_prefix if definition else ""
+    registry_path = repository_path(repo_root, definition.registry_path, label="source registry") if definition else repo_root / "tasks/extension/task_sources.yaml"
+    capability_path = repository_path(repo_root, definition.capability_map_path, label="capability map") if definition else repo_root / "tools/report/data/checkpoint_capability_map7.yaml"
+    registry_original = registry_path.read_bytes() if registry_path.is_file() else None
+    capability_original = capability_path.read_bytes() if capability_path.is_file() else None
+    if not registered and (registry_original is None or capability_original is None):
+        raise SpecError("旧集来源登记或能力映射不存在")
+    initial_registry = {"schema_version": 1, "registry_contract": {"active_task_count": 0,
+        "category_task_counts": {category: 0 for category in categories}}, "tasks": []}
+    registry = _validate_registry(load_mapping(registry_path) if registered and registry_original else
+        yaml.safe_load(registry_original) if registry_original else initial_registry, categories=categories, prefix=prefix)
+    capability_map = (load_mapping(capability_path) if registered and capability_original else
+                      yaml.safe_load(capability_original) if capability_original else {})
     if not isinstance(capability_map, dict):
         raise SpecError("checkpoint_capability_map7.yaml 必须是 mapping")
 
-    occupied = _occupied_numbers(repo_root, spec["category"], registry)
-    number = spec["number"] or assign_next_number(repo_root, spec["category"], registry)
-    if number in occupied:
-        raise SpecError(f"编号已被文件、来源登记或 invalid 保留项占用: {number:03d}")
-    task_id = f"{spec['category']}_task_{number:03d}_{spec['slug']}"
+    if registered:
+        number = _registered_number(repo_root, registered, spec, registry)
+    else:
+        occupied = _occupied_numbers(repo_root, spec["category"], registry)
+        number = spec["number"] or assign_next_number(repo_root, spec["category"], registry)
+        if number in occupied:
+            raise SpecError(f"编号已被文件、来源登记或 invalid 保留项占用: {number:03d}")
+    task_id = f"{prefix}{spec['category']}_task_{number:03d}_{spec['slug']}"
     if any(entry.get("task_id") == task_id for entry in registry["tasks"]):
         raise SpecError(f"task_id 已登记: {task_id}")
     if task_id in capability_map:
         raise SpecError(f"task_id 已存在于能力映射: {task_id}")
 
-    task_path = repo_root / "tasks" / "extension" / spec["category"] / f"{task_id}.md"
-    workspace_path = (
+    task_path = (repo_root / definition.task_root / spec["category"] / f"{task_id}.md"
+                 if definition else repo_root / "tasks/extension" / spec["category"] / f"{task_id}.md")
+    workspace_path = (repo_root / definition.workspace_root / spec["category"] / task_id) if definition else (
         repo_root
         / "workspace"
         / "extension"
         / spec["category"]
         / f"task_{number:03d}_{spec['slug']}"
     )
-    if task_path.exists() or workspace_path.exists():
+    if registered and (task_path.resolve() != task_path or workspace_path.resolve() != workspace_path):
+        raise SpecError("数据集任务/Workspace目标不能经过符号链接")
+    if task_path.exists() or workspace_path.exists() or task_path.is_symlink() or workspace_path.is_symlink():
         raise SpecError(f"目标已存在，拒绝覆盖: {task_path} 或 {workspace_path}")
     workspace_relative = workspace_path.relative_to(repo_root).as_posix()
     task_text = render_task(spec, task_id, workspace_relative)
-    registry_text = _registry_text_with_task(
-        registry_original.decode("utf-8"),
-        registry,
-        task_id=task_id,
-        category=spec["category"],
-        number=number,
-        source=spec["source"],
-    )
-    capability_text = _capability_text_with_task(
-        capability_original.decode("utf-8"), task_id, spec["checkpoint_capabilities"]
-    )
+    if registered:
+        updated = deepcopy(registry)
+        updated["tasks"].append({"task_id": task_id, **spec["source"]})
+        updated["registry_contract"]["active_task_count"] += 1
+        updated["registry_contract"]["category_task_counts"][spec["category"]] += 1
+        registry_text = _dump_yaml(updated)
+        capability_text = _dump_yaml({**capability_map, task_id: spec["checkpoint_capabilities"]})
+    else:
+        registry_text = _registry_text_with_task(
+            registry_original.decode("utf-8"), registry, task_id=task_id,
+            category=spec["category"], number=number, source=spec["source"],
+        )
+        capability_text = _capability_text_with_task(
+            capability_original.decode("utf-8"), task_id, spec["checkpoint_capabilities"]
+        )
     _validate_output_yaml(
         registry_text,
         capability_text,
         task_id=task_id,
         category=spec["category"],
+        categories=categories,
+        prefix=prefix,
     )
 
     with tempfile.TemporaryDirectory(prefix="wcb-case-stage-") as temporary:
@@ -922,6 +1060,9 @@ def assemble_case(
         _copy_workspace(spec["workspace_exec"], staged_workspace / "exec")
         _copy_workspace(spec["workspace_gt"], staged_workspace / "gt")
         _validate_prompt_inputs(spec["prompt"], staged_workspace / "exec")
+        if registered and not any(item.is_file() and item.name != ".gitkeep" and item.stat().st_size > 0
+                                  for item in (staged_workspace / "gt").rglob("*")):
+            raise SpecError("注册数据集GT不能仅包含空目录或占位文件")
         if dry_run:
             return {
                 "status": "DRY_RUN",
@@ -965,6 +1106,8 @@ def assemble_case(
                             [
                                 sys.executable,
                                 str(validator),
+                                "--repo-root",
+                                str(repo_root),
                                 "--task-path",
                                 str(task_path),
                                 "--output-dir",
@@ -988,9 +1131,15 @@ def assemble_case(
                     )
         except Exception:
             if "capability" in changed:
-                _write_bytes_atomic(capability_path, capability_original)
+                if capability_original is None:
+                    capability_path.unlink(missing_ok=True)
+                else:
+                    _write_bytes_atomic(capability_path, capability_original)
             if "registry" in changed:
-                _write_bytes_atomic(registry_path, registry_original)
+                if registry_original is None:
+                    registry_path.unlink(missing_ok=True)
+                else:
+                    _write_bytes_atomic(registry_path, registry_original)
             if "task" in changed and task_path.exists():
                 task_path.unlink()
             if "workspace" in changed and workspace_path.exists():
@@ -1013,6 +1162,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("spec", type=Path, help="case-spec.json 路径")
     parser.add_argument("--repo-root", type=Path)
+    parser.add_argument("--dataset-id", help="注册系列或版本；分类/目录/命名空间从定义读取")
     parser.add_argument("--dry-run", action="store_true", help="只做预检和编号规划，不写文件")
     parser.add_argument(
         "--skip-final-validation",
@@ -1034,8 +1184,9 @@ def main(argv: list[str] | None = None) -> int:
             spec_dir=spec_path.parent,
             dry_run=args.dry_run,
             run_validation=not args.skip_final_validation,
+            dataset_id=args.dataset_id,
         )
-    except (OSError, UnicodeError, json.JSONDecodeError, yaml.YAMLError, SpecError) as exc:
+    except (OSError, UnicodeError, json.JSONDecodeError, yaml.YAMLError, ValueError) as exc:
         print(json.dumps({"status": "ERROR", "error": str(exc)}, ensure_ascii=False, indent=2))
         return 2
     print(json.dumps(result, ensure_ascii=False, indent=2))

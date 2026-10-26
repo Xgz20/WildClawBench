@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from contextlib import redirect_stdout
+import importlib.util
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -14,6 +17,7 @@ from eval_general_e2e.datasets.bundle import (
     load_manifest_lock, verify_dataset_bundle, write_manifest_lock,
 )
 from eval_general_e2e.datasets.catalog import CatalogError, load_catalog, load_registered_dataset
+from tools.report.lib.eval_dataset.selectors import select_task_files
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -77,8 +81,8 @@ class DatasetCatalogTests(unittest.TestCase):
         task_path.write_text("---\n" + yaml.safe_dump(metadata) + "---\n"
             "## Prompt\nRead input.txt and write results/answer.json.\n"
             "## Expected Behavior\nAnswer matches private expected.json.\n"
-            "## Grading Criteria\nBusiness correctness.\n"
-            "## Automated Checks\n```python\ndef grade(**kwargs):\n    return {'correct': 1.0}\n```\n"
+            "## Grading Criteria\n- [ ] `correct`: Business correctness.\n"
+            "## Automated Checks\n```python\ndef grade(**kwargs):\n    return {'correct': 1.0, 'overall_score': 1.0}\n```\n"
             f"## Workspace Path\n{workspace}\n## Skills\n## Env\n## Warmup\n", encoding="utf-8")
         self.registry["tasks"].append({"task_id": task_id,
             "attributes": {"requires_visual_input": False, "coding_primary": False,
@@ -113,6 +117,66 @@ class DatasetCatalogTests(unittest.TestCase):
         self.assertEqual(manifest["task_count"], 2)
         self.assertEqual(manifest["selection"]["task_root"], "datasets/sample/tasks")
         self.assertEqual(manifest["statistics"]["category_counts"], {"research": 2})
+
+    def test_dataset_selector_requires_the_explicit_release_without_selecting_legacy_or_new_tasks(self) -> None:
+        self.add_task("sample_research_task_003_new")
+        legacy = self.root / "tasks/extension/research/legacy.md"
+        legacy.parent.mkdir(parents=True)
+        legacy.write_text("---\nid: legacy\n---\n")
+        selected = select_task_files(self.root, dataset_id="sample-v1")
+        self.assertFalse(selected.issues)
+        self.assertEqual({path.stem for path in selected.files}, set(self.ids))
+        missing = self.base / "tasks/research" / f"{self.ids[0]}.md"
+        missing.unlink()
+        result = select_task_files(self.root, dataset_id="sample")
+        self.assertEqual([(issue.code, issue.task_id) for issue in result.issues], [("TASK_ID_NOT_FOUND", self.ids[0])])
+        outside = select_task_files(self.root, dataset_id="sample", task_paths=[legacy])
+        self.assertEqual(outside.files, [])
+        self.assertEqual(outside.issues[0].code, "DATASET_TASK_OUTSIDE_ROOT")
+        unknown = select_task_files(self.root, dataset_id="unknown")
+        self.assertEqual(unknown.files, [])
+        self.assertEqual(unknown.issues[0].code, "DATASET_DEFINITION_INVALID")
+
+    def test_registered_static_validator_checks_source_labels_mapping_and_material_isolation(self) -> None:
+        script = REPO_ROOT / "tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py"
+        spec = importlib.util.spec_from_file_location("registered_validator_test", script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        selected = select_task_files(self.root, dataset_id="sample").files
+        self.assertEqual(module.validate_registered_registry(self.root, selected), [])
+        self.registry["tasks"].pop()
+        self.capabilities[self.ids[0]] = {"other": ["retrieval_verification"]}
+        self.save_sources()
+        issues = module.validate_registered_registry(self.root, selected)
+        self.assertEqual({issue.code for issue in issues}, {"DATASET_SOURCE_MISSING", "DATASET_CAPABILITY_MAP_INVALID"})
+        workspace = self.base / "workspace/research" / self.ids[0]
+        (workspace / "exec/input.txt").unlink()
+        (workspace / "exec").rmdir()
+        (workspace / "exec").symlink_to("gt", target_is_directory=True)
+        issues = module.validate_registered_registry(self.root, [selected[0]])
+        self.assertEqual([issue.code for issue in issues], ["DATASET_MATERIAL_ISOLATION_INVALID"])
+
+    def test_full_static_cli_checks_release_quotas_without_executing_grading_code(self) -> None:
+        script = REPO_ROOT / "tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py"
+        spec = importlib.util.spec_from_file_location("release_validator_test", script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        # Valid syntax that would fail if a supposedly static check ran grade().
+        for path in (self.base / "tasks/research").glob("*.md"):
+            path.write_text(path.read_text().replace("def grade(**kwargs):", "def grade(**kwargs):\n    raise AssertionError('must not execute')"))
+        args = ["--repo-root", str(self.root), "--dataset-id", "sample-v1", "--output-dir", str(self.root / "reports")]
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = module.main(args)
+        self.assertEqual(code, 0)
+        self.family["releases"]["sample-v1"]["constraints"]["multimodal_exact"] = 1
+        self.save_sources()
+        output = io.StringIO()
+        with redirect_stdout(output):
+            code = module.main(args)
+        self.assertEqual(code, 1)
+        report = json.loads((Path(output.getvalue().strip()) / "report.json").read_text())
+        self.assertIn("DATASET_RELEASE_CONTRACT_INVALID", {issue["code"] for issue in report["issues"]})
 
     def test_missing_selected_tasks_and_missing_required_tags_fail_closed(self) -> None:
         path = self.base / "tasks/research" / f"{self.ids[0]}.md"
@@ -198,6 +262,7 @@ class DatasetCatalogTests(unittest.TestCase):
         self.capabilities[self.ids[0]] = {"correct": ["data_processing"]}
         self.save_sources()
         (self.base / "workspace/research" / self.ids[0] / "gt/expected.json").unlink()
+        (self.base / "workspace/research" / self.ids[0] / "gt/.gitkeep").write_text("")
         with self.assertRaisesRegex(ValueError, "must not be empty"):
             self.compile()
 

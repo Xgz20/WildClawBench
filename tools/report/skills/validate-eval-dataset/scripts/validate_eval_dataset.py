@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import os
 import re
 import shlex
@@ -35,6 +36,7 @@ from tools.report.lib.eval_dataset.website_contracts import (
     is_website_task,
     validate_website_contract,
 )
+from eval_general_e2e.datasets.catalog import load_mapping, load_registered_dataset, repository_path
 
 
 def _issue(code: str, message: str, doc: TaskDocument, *, severity: str = FAIL, evidence: dict[str, Any] | None = None) -> Issue:
@@ -195,7 +197,138 @@ def validate_extension_registry(repo_root: Path, selected: list[Path]) -> list[I
     return []
 
 
+def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[Issue]:
+    """Validate individual authored tasks without requiring unfinished siblings."""
+    repo_root = repo_root.resolve()
+    issues: list[Issue] = []
+    cache: dict[str, tuple[Any, dict, dict] | Exception] = {}
+    for selected_path in selected:
+        path = selected_path.resolve()
+        try:
+            relative = path.relative_to(repo_root / "datasets")
+        except ValueError:
+            continue
+        series = relative.parts[0]
+        if series not in cache:
+            try:
+                registered = load_registered_dataset(repo_root, series)
+                definition = registered.definition
+                registry = load_mapping(repository_path(repo_root, definition.registry_path, label="registry"))
+                entries = registry.get("tasks")
+                if not isinstance(entries, list) or any(not isinstance(entry, dict) or not isinstance(entry.get("task_id"), str) for entry in entries):
+                    raise ValueError("来源登记必须包含带task_id的tasks列表")
+                by_id = {entry["task_id"]: entry for entry in entries}
+                if len(by_id) != len(entries):
+                    raise ValueError("来源登记包含重复task_id")
+                mapping = load_mapping(repository_path(repo_root, definition.capability_map_path, label="capability map"))
+                cache[series] = registered, by_id, mapping
+            except (OSError, ValueError) as exc:
+                cache[series] = exc
+        cached = cache[series]
+        if isinstance(cached, Exception):
+            issues.append(Issue(FAIL, "DATASET_REGISTRY_INVALID", str(cached), location=str(path)))
+            continue
+        registered, entries, mapping = cached
+        definition = registered.definition
+        doc = parse_task_document(path)
+        task_id = doc.task_id
+        category = doc.category
+        expected_task = repo_root / definition.task_root / category / f"{task_id}.md"
+        if (category not in definition.category_labels or path != expected_task
+                or path.resolve() != expected_task
+                or not re.fullmatch(re.escape(definition.task_id_prefix + category) + r"_task_\d{3}_[a-z0-9_]+", task_id)):
+            issues.append(_issue("DATASET_TASK_LAYOUT_INVALID", "任务路径、分类或数据集命名空间不一致", doc))
+            continue
+        tags = doc.metadata.get("tags", [])
+        if isinstance(tags, str):
+            tags = [tag.strip().lower() for tag in tags.split(",")]
+        if (not isinstance(tags, list) or any(not isinstance(tag, str) for tag in tags) or not set(definition.include_tags).issubset(tags)
+                or set(definition.exclude_tags).intersection(tags)):
+            issues.append(_issue("DATASET_TAGS_INVALID", "任务缺少数据集必需标签或包含排除标签", doc))
+        workspace = repo_root / definition.workspace_root / category / task_id
+        declared = strip_codeblock(doc.section("Workspace Path"))
+        if declared != workspace.relative_to(repo_root).as_posix() or workspace.resolve() != workspace:
+            issues.append(_issue("DATASET_WORKSPACE_LAYOUT_INVALID", "Workspace必须为本数据集/分类/task_id目录", doc))
+        trees = [(workspace / tree).resolve() for tree in ("exec", "gt")]
+        if (any(not tree.is_relative_to(workspace) for tree in trees)
+                or trees[0].is_relative_to(trees[1]) or trees[1].is_relative_to(trees[0])):
+            issues.append(_issue("DATASET_MATERIAL_ISOLATION_INVALID", "exec与gt必须隔离且不能越出任务Workspace", doc))
+            continue
+        for tree in trees:
+            for item in tree.rglob("*"):
+                if item.is_symlink() and not item.resolve().is_relative_to(tree):
+                    issues.append(_issue("DATASET_MATERIAL_ISOLATION_INVALID", "素材链接越出其exec或gt根目录", doc))
+        for tree in ("exec", "gt"):
+            if not (workspace / tree).is_dir():
+                issues.append(_issue("DATASET_MATERIAL_MISSING", f"缺少{tree}目录", doc))
+        if not any(item.is_file() and not item.is_symlink() and item.stat().st_size > 0
+                   for item in (workspace / "gt").rglob("*") if item.name != ".gitkeep"):
+            issues.append(_issue("DATASET_GT_EMPTY", "注册数据集缺少真实私有评分材料", doc))
+        entry = entries.get(task_id)
+        if not entry:
+            issues.append(_issue("DATASET_SOURCE_MISSING", "任务未登记到本数据集来源表", doc))
+        else:
+            attrs = entry.get("attributes")
+            network = entry.get("network")
+            origin = entry.get("origin")
+            if (not isinstance(attrs, dict) or any(type(attrs.get(key)) is not bool for key in ("requires_visual_input", "coding_primary"))
+                    or attrs["requires_visual_input"] != (doc.metadata.get("modality") == "multimodal")
+                    or not isinstance(network, dict) or not isinstance(network.get("mode"), str)
+                    or network["mode"] not in {"offline", "open_public_search", "site_scoped_search", "fixed_url_verification"}
+                    or not isinstance(origin, dict) or not isinstance(origin.get("production_refs"), list)):
+                issues.append(_issue("DATASET_SOURCE_INVALID", "来源、视觉属性或网络属性缺失/不一致", doc))
+        grading_section = doc.section("Grading Criteria")
+        criteria = re.findall(r"(?m)^- \[ \] `([A-Za-z][A-Za-z0-9_-]*)`:", grading_section.split("### Judge group", 1)[0])
+        rubric, _ = rubric_info(doc.section("LLM Judge Rubric"))
+        rubric_keys = {item["key"] for item in rubric}
+        grade_type = doc.metadata.get("grading_type")
+        automated_keys = set(criteria)
+        expected_map = set()
+        if grade_type in {"automated", "hybrid"}:
+            expected_map.update(("automated." if grade_type == "hybrid" else "") + key for key in automated_keys)
+        if grade_type in {"llm_judge", "hybrid"}:
+            expected_map.update("llm_judge." + key for key in rubric_keys)
+        capabilities = {"code_generation", "tool_use", "data_processing", "retrieval_verification",
+                        "reasoning_planning", "content_generation", "verification_delivery"}
+        task_map = mapping.get(task_id)
+        if (not isinstance(task_map, dict) or not expected_map or set(task_map) != expected_map
+                or any(not isinstance(values, list) or not 1 <= len(values) <= 2
+                       or any(not isinstance(value, str) or value not in capabilities for value in values)
+                       or len(set(values)) != len(values)
+                       or {"retrieval_verification", "verification_delivery"}.issubset(values)
+                       for values in task_map.values())):
+            issues.append(_issue("DATASET_CAPABILITY_MAP_INVALID", "能力映射需精确覆盖评分key且符合七维定义", doc))
+        code = strip_codeblock(doc.section("Automated Checks"))
+        if code:
+            try:
+                tree = ast.parse(code)
+                blocked = {"anthropic", "httpx", "openai", "requests", "socket", "urllib"}
+                imports = {alias.name.split(".")[0] for node in ast.walk(tree) if isinstance(node, ast.Import) for alias in node.names}
+                imports.update(node.module.split(".")[0] for node in ast.walk(tree) if isinstance(node, ast.ImportFrom) and node.module)
+                if imports & blocked:
+                    issues.append(_issue("DATASET_GRADER_NETWORK_IMPORT", "规则评分不得导入网络或LLM客户端", doc))
+                _, code_keys, _ = ast_grade_info(code)
+                if not automated_keys.issubset(code_keys) or "overall_score" not in code_keys:
+                    issues.append(_issue("DATASET_GRADER_KEYS_INVALID", "规则需显式输出全部检查点及overall_score", doc))
+            except SyntaxError:
+                pass  # validate_document already reports the syntax error.
+    return issues
+
+
 _ISSUE_ACTIONS = {
+    "TASK_ID_NOT_FOUND": "按所选版本清单补齐该任务；制作未完成时保留building状态",
+    "DATASET_DEFINITION_INVALID": "修正catalog、系列定义或版本选择参数",
+    "DATASET_TASK_LAYOUT_INVALID": "统一系列命名空间、分类和完整task_id文件名",
+    "DATASET_TAGS_INVALID": "补齐系列必需标签并移除排除标签",
+    "DATASET_WORKSPACE_LAYOUT_INVALID": "使用dataset.yaml指定根下的分类/task_id目录",
+    "DATASET_MATERIAL_ISOLATION_INVALID": "隔离exec和gt并移除越出各自素材根的链接",
+    "DATASET_MATERIAL_MISSING": "补齐真实exec/gt目录",
+    "DATASET_GT_EMPTY": "制作真实私有真值和评分材料，不用占位文件代替",
+    "DATASET_SOURCE_MISSING": "将该任务登记到其系列来源表",
+    "DATASET_SOURCE_INVALID": "复核来源、视觉依赖、编码主交付和联网属性",
+    "DATASET_CAPABILITY_MAP_INVALID": "让该系列能力映射精确覆盖本题评分检查点",
+    "DATASET_GRADER_NETWORK_IMPORT": "移除规则评分中的联网或LLM依赖，保留离线可核验评分",
+    "DATASET_GRADER_KEYS_INVALID": "显式返回全部规则检查点与overall_score",
     "FRONTMATTER_INVALID": "修正 YAML frontmatter，并重新运行静态校验",
     "FRONTMATTER_FIELD_MISSING": "补齐框架必需的 frontmatter 字段",
     "FRONTMATTER_FIELD_TYPE": "修正 frontmatter 字段类型",
@@ -279,6 +412,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--task-dir", action="append", default=[])
     parser.add_argument("--task-path", action="append", default=[])
     parser.add_argument("--task-id", action="append", default=[])
+    parser.add_argument("--repo-root", type=Path, default=REPO_ROOT)
+    parser.add_argument("--dataset-id")
+    parser.add_argument("--release-id")
     parser.add_argument("--include-doc-copies", action="store_true", help="显式包含 tasks/cn 等仅供阅读的中文副本")
     parser.add_argument("--output-dir")
     parser.add_argument("--smoke", action="store_true")
@@ -290,7 +426,8 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
-    selection = select_task_files(REPO_ROOT, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies)
+    repo_root = args.repo_root.resolve()
+    selection = select_task_files(repo_root, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies, dataset_id=args.dataset_id, release_id=args.release_id)
     issues = list(selection.issues)
     task_ids: list[str] = []
     website_task_ids: list[str] = []
@@ -300,13 +437,25 @@ def main(argv: list[str] | None = None) -> int:
             task_ids.append(document.task_id)
             if is_website_task(document):
                 website_task_ids.append(document.task_id)
-            issues.extend(validate_document(document, REPO_ROOT, smoke=args.smoke, warmup_image=args.warmup_image))
+            issues.extend(validate_document(document, repo_root, smoke=args.smoke, warmup_image=args.warmup_image))
         except (OSError, UnicodeError) as exc:
             issues.append(Issue(FAIL, "TASK_READ_ERROR", str(exc), location=str(path)))
-    issues.extend(validate_extension_registry(REPO_ROOT, selection.files))
+    issues.extend(validate_extension_registry(repo_root, selection.files))
+    issues.extend(validate_registered_registry(repo_root, selection.files))
+    if args.dataset_id and not (args.task_dir or args.task_path or args.task_id) and not any(issue.severity == FAIL for issue in issues):
+        from eval_general_e2e.datasets.bundle import compile_dataset, load_manifest_lock
+        try:
+            selected = load_registered_dataset(repo_root, args.dataset_id, release_id=args.release_id)
+            locked = load_manifest_lock(selected.manifest_path) if selected.status == "frozen" else None
+            manifest, _ = compile_dataset(repo_root, definition=selected.definition,
+                source_revision=locked["source"]["revision"] if locked else "static-validation-only")
+            if locked is not None and manifest != locked:
+                raise ValueError("冻结版本题面、素材或评分来源发生变化，必须发布新版本")
+        except (OSError, ValueError) as exc:
+            issues.append(Issue(FAIL, "DATASET_RELEASE_CONTRACT_INVALID", str(exc)))
     status = status_for_issues(issues)
-    report = Report(1, status, {"repo": str(REPO_ROOT), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
-    target = write_report(report, repo_root=REPO_ROOT, kind="static", output_dir=args.output_dir)
+    report = Report(1, status, {"repo": str(repo_root), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies, "dataset_id": args.dataset_id, "release_id": args.release_id, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
+    target = write_report(report, repo_root=repo_root, kind="static", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")
 

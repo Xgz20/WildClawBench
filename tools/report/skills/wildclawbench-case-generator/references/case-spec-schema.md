@@ -8,7 +8,8 @@
 |---|---:|---|
 | `name` | 是 | 报告展示名 |
 | `title` | 否 | Markdown 一级标题，默认等于 `name` |
-| `category` | 是 | 六类通用 Category 之一 |
+| `dataset_id` | 否 | catalog登记的系列或版本；省略时使用旧扩展集 |
+| `category` | 是 | 所选数据集登记的分类；旧默认仍为六类 |
 | `slug` | 是 | 小写 snake_case |
 | `number` | 否 | 显式三位编号；通常省略并自动分配最低未占用编号 |
 | `timeout_seconds` | 否 | 30~3600，默认 300 |
@@ -28,6 +29,23 @@
 | `workspace` | 是 | `exec` 与 `gt` 的复制清单 |
 | `source` | 是 | 来源与改编记录 |
 | `checkpoint_capabilities` | 是 | 精确覆盖运行时评分 key 的七维能力映射 |
+| `judge_evidence` | 否 | `required`数组，各项为`path`及`role: candidate_deliverable`，path必须是`results/`下的相对路径 |
+
+注册数据集的`source`改为以下结构（不能与旧`design_origin/runtime_sources`混填）：
+
+```json
+{
+  "origin": {"mode": "constructed", "production_refs": []},
+  "network": {"mode": "offline"},
+  "attributes": {
+    "requires_visual_input": false,
+    "coding_primary": false,
+    "retrieval_group": "local_evidence"
+  }
+}
+```
+
+`origin`可保留蓝图中的去身份来源信息与方法参考；线上原型必须带完整`query_hash`和审核`review`，不得复制原始用户文本。`network.mode`支持`offline/open_public_search/fixed_url_verification/site_scoped_search`，联网题还需在Prompt和来源中固定范围、时点与独立证据契约。`retrieval_group`仅检索类填写`open_search/directed_web_retrieval/local_evidence`，与联网方式一致。`requires_visual_input`必须与`modality`一致，不按办公文件格式推断。`workspace.gt`不能省略或只提供占位文件。编号优先匹配building蓝图中的同slug任务；新增题只加入源池，版本清单需另行显式登记。
 
 ## 最小 automated 示例
 
