@@ -16,6 +16,34 @@
       "evidence_binding": 1.0,
       "overall_score": 1.0
     },
+    "missing_action_header": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.6,
+      "evidence_binding": 1.0,
+      "overall_score": 0.9400000000000001
+    },
+    "missing_amount_header": {
+      "business_correctness": 0.7,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.8,
+      "evidence_binding": 1.0,
+      "overall_score": 0.555
+    },
+    "missing_evidence_header": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.8,
+      "evidence_binding": 0.0,
+      "overall_score": 0.92
+    },
+    "ambiguous_status_header": {
+      "business_correctness": 0.7,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.8,
+      "evidence_binding": 1.0,
+      "overall_score": 0.555
+    },
     "latest_only": {
       "business_correctness": 0.75,
       "boundary_cases": 0.42857142857142855,
@@ -161,13 +189,13 @@
     "decision_model_validation.json": "789c8651267f356ce3a60e4d032fec64205093b2f7d830ad99c7bff4f41514b3",
     "evidence_requirements.json": "e50e7b172687f76e3311ade185c191cdfc695bc78de237e8c92c333e565e40c4",
     "expected.json": "227f2935eb708c71c44e79011b96e604ac9da26bcbfdfd59da5523f6d65014b7",
-    "grader.py": "0012ec68458f12ad7de026eac71d00fb3acc538944036e739d782934a3540b08",
+    "grader.py": "3a9bc7862dcdd223cd98ae9727e675751b13dc8e86308745a2f89db048f93e0f",
     "native_text.py": "98e69250a1ad9b00c69a5b07640c2a4f3a3f9d950681268add44a95ec3cf5f01",
     "office_runtime.py": "286ae8bcf0b6084708e2f66b569c4836dfc8af714e3d144e9c14a4767928d71f",
     "protected_sha256.json": "d8c692a212ba5472f9368dfead9cdee2652b88e094ee32fdf34dfce505395117",
     "reference/results/applicability.xlsx": "bec0f50dcc8ea4b6b9dd8a2b205c879534e4bc07836951ed5155bd23510466a5",
     "reference/results/handoff.docx": "0da14dc7c0807d63136df45dd22aed20a5aa78d4d74d3c45ca8f042f5cd1e64b",
-    "validate_authoring.py": "ffab940146d9477ef836f76f6357670af91ed07413ce53b581117f02ca6d49b5"
+    "validate_authoring.py": "6b405926f7eaa5b7747d47b8c768d137f8c88b952bd4d93f3cd028446be83704"
   },
   "office_runtime": {
     "schema_version": "wildclawbench.office-runtime-lock/v1",

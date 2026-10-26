@@ -51,14 +51,21 @@ def table_rows(projection, contract):
     for sheet, rows in sheets.items():
         for number, cells in sorted(rows.items()):
             mapping = {}
-            duplicate = False
+            ambiguous = set()
             for column, value in cells.items():
                 key = aliases.get(canonical_header(value))
                 if key:
-                    duplicate |= key in mapping
+                    if key in mapping:
+                        ambiguous.add(key)
                     mapping[key] = column
-            if duplicate or set(mapping) != set(contract["required_fields"]):
+            for key in ambiguous:
+                mapping.pop(key)
+            # The source-data sheet only has case_id. A candidate decision
+            # table needs an ID plus a labelled decision/evidence/action field.
+            # Missing or ambiguous columns do not erase other judgeable fields.
+            if "case_id" not in mapping or not set(mapping) - {"case_id"}:
                 continue
+            complete = not ambiguous and set(mapping) == set(contract["required_fields"])
             found = []
             for row_number, values in sorted(rows.items()):
                 if row_number <= number:
@@ -66,7 +73,8 @@ def table_rows(projection, contract):
                 case_id = str(values.get(mapping["case_id"]) or "").strip()
                 if re.fullmatch(r"C[0-9]{2}", case_id):
                     found.append({**{key: values.get(column) for key, column in mapping.items()},
-                                  "case_id": case_id, "locator": f"{sheet}!{row_number}"})
+                                  "case_id": case_id, "locator": f"{sheet}!{row_number}",
+                                  "_present_columns": set(mapping), "_complete_header": complete})
             if found:
                 tables.append(found)
     if len(tables) != 1:
@@ -115,6 +123,9 @@ def grade(root):
     else:
         table_error = "workbook missing or not a regular file"
     details["table_error"] = table_error
+    table_complete = bool(rows) and all(row["_complete_header"] for row in rows)
+    details["table_contract_complete"] = table_complete
+    details["missing_or_ambiguous_columns"] = sorted(set(contract["required_fields"]) - rows[0]["_present_columns"]) if rows else []
     count = Counter(row["case_id"] for row in rows)
     actual = {row["case_id"]: row for row in rows if count[row["case_id"]] == 1}
     matched = {}
@@ -122,8 +133,9 @@ def grade(root):
     for label in expected:
         case_id = label["case_id"]
         row = actual.get(case_id, {})
-        fields = {key: str(row.get(key) or "").strip() == label[key] for key in ("rule_set", "status")}
-        fields.update({key: numeric(row.get(key), label[key], 1e-8 if key == "rate" else 0.005)
+        present = row.get("_present_columns", set())
+        fields = {key: key in present and str(row.get(key) or "").strip() == label[key] for key in ("rule_set", "status")}
+        fields.update({key: key in present and numeric(row.get(key), label[key], 1e-8 if key == "rate" else 0.005)
                        for key in ("rate", "cap_cny", "grant_cny")})
         # A missing row is never a correct blank/unknown case.
         if not row:
@@ -157,7 +169,7 @@ def grade(root):
     expected_ids = {item["case_id"] for item in expected}
     complete_ids = set(count) == expected_ids and all(value == 1 for value in count.values())
     actions = sum(bool(str(actual.get(case_id, {}).get("next_action") or "").strip()) for case_id in expected_ids) / len(expected_ids)
-    delivery = (float(parsed and not table_error) + float(docx_parsed) + float(complete_ids) + actions + float(integrity)) / 5
+    delivery = (float(parsed and not table_error and table_complete) + float(docx_parsed) + float(complete_ids) + actions + float(integrity)) / 5
     evidence_score = sum(binding.values()) / len(expected)
     if not integrity:
         boundary, delivery, evidence_score = 0.0, 0.0, 0.0

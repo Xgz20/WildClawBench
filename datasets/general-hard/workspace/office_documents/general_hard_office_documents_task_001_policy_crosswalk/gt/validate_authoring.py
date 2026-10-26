@@ -94,7 +94,8 @@ def validate(exec_root, gt_root, lock, task_path=None):
     comparisons = [{"case_id": record["case_id"], "match": all(model(record)[key] == label[key]
                    for key in ("rule_set", "status", "rate", "cap_cny", "grant_cny"))} for record, label in zip(cases, expected)]
     assert len(cases) == len(expected) == 18 and all(item["match"] for item in comparisons)
-    variants = ["reference", "equivalent_layout", "latest_only", "blanket_transition", "invented_missing",
+    variants = ["reference", "equivalent_layout", "missing_action_header", "missing_amount_header", "missing_evidence_header", "ambiguous_status_header",
+                "latest_only", "blanket_transition", "invented_missing",
                 "wrong_formula_correct_cache", "missing_handoff", "missing_workbook", "protected_change", "missing_gt"]
     results = {}
     with tempfile.TemporaryDirectory(prefix="h001-author-") as temporary:
@@ -107,6 +108,14 @@ def validate(exec_root, gt_root, lock, task_path=None):
             workbook = root / "results/applicability.xlsx"
             if name == "equivalent_layout":
                 mutate_workbook(workbook, equivalent_layout=True)
+            elif name == "missing_action_header":
+                mutate_workbook(workbook, {"K5": None})
+            elif name == "missing_amount_header":
+                mutate_workbook(workbook, {"F5": None})
+            elif name == "missing_evidence_header":
+                mutate_workbook(workbook, {"I5": None})
+            elif name == "ambiguous_status_header":
+                mutate_workbook(workbook, {"G5": "办理状态"})
             elif name == "latest_only":
                 mutate_workbook(workbook, {**{f"B{row}": "V2" for row in range(6, 24)},
                     **{f"D{row}": 0.7 for row in range(6, 24)}, **{f"E{row}": 4500 for row in range(6, 24)}})
@@ -152,6 +161,14 @@ def validate(exec_root, gt_root, lock, task_path=None):
                 assert result["overall_score"] < .999, (name, result)
             if name == "wrong_formula_correct_cache":
                 assert result["business_correctness"] <= .701 and result["boundary_cases"] == 0, result
+            if name in {"missing_action_header", "missing_evidence_header"}:
+                assert result["business_correctness"] == result["boundary_cases"] == 1, (name, result)
+            if name == "missing_action_header":
+                assert result["evidence_binding"] == 1 and result["delivery_integrity"] < 1, result
+            if name == "missing_evidence_header":
+                assert result["evidence_binding"] == 0, result
+            if name in {"missing_amount_header", "ambiguous_status_header"}:
+                assert abs(result["business_correctness"] - .7) < 1e-9 and result["boundary_cases"] == 0, (name, result)
             if name == "protected_change":
                 assert result["delivery_integrity"] == result["boundary_cases"] == result["evidence_binding"] == 0
             results[name] = result
