@@ -846,6 +846,7 @@ def _exec_container_python(
     loader_src = Path(__file__).with_name("transcript_loader.py")
     shim_src = Path(__file__).with_name("judge_shim.py")
     workspace_evidence_src = Path(__file__).with_name("workspace_evidence.py")
+    native_evidence_src = Path(__file__).resolve().parents[1] / "wildclawbench_grading_core/native_text.py"
     with tempfile.NamedTemporaryFile(
         mode="w", suffix=".py", delete=False, encoding="utf-8"
     ) as f:
@@ -882,6 +883,14 @@ def _exec_container_python(
                 "docker cp workspace evidence module failed: "
                 f"{r_workspace_evidence.stderr}"
             )
+        if not native_evidence_src.is_file():
+            return None, f"native evidence module not found: {native_evidence_src}"
+        r_native = subprocess.run(
+            ["docker", "cp", str(native_evidence_src), f"{task_id}:/tmp/_native_artifact_text.py"],
+            capture_output=True, text=True,
+        )
+        if r_native.returncode != 0:
+            return None, f"docker cp native evidence module failed: {r_native.stderr}"
         r = subprocess.run(
             ["docker", "cp", runner_host, f"{task_id}:/tmp/_judge_runner.py"],
             capture_output=True, text=True,

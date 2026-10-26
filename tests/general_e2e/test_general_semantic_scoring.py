@@ -9,6 +9,7 @@ import zipfile
 from eval_general_e2e.contracts import validate_contract_file
 from eval_general_e2e.datasets.bundle import build_default_bundle
 from tests.general_e2e.test_local_scoring_runtime import Fixture, MAPPED_RESULTS_RULE, RUNTIME
+from tests.general_e2e.test_native_artifact_text import write_docx
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -383,6 +384,29 @@ class GeneralSemanticScoringTests(unittest.TestCase):
                 mode="catalog",
                 text="answer",
             )
+
+    def test_native_file_query_has_frozen_sha_record_locators_and_audited_paging(self) -> None:
+        fixture = Fixture(self.root / "native", grading_type="hybrid",
+            grading_weights={"automated": .5, "llm_judge": .5}, llm_judge_rubric=RUBRIC)
+        write_docx(fixture.candidate / "results/handoff.docx")
+        entries, digest = RUNTIME._inventory_tree(fixture.candidate)
+        path = fixture.candidate.parent / "candidate-artifact.json"
+        artifact = json.loads(path.read_text()); artifact.update(entries=entries, expected_sha256=digest)
+        path.write_text(json.dumps(artifact))
+        execution = json.loads(fixture.execution_record.read_text()); execution["candidate"]["frozen_sha256"] = digest
+        fixture.execution_record.write_text(json.dumps(execution))
+        attempt = fixture.prepare("native-query")
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        page = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="catalog", path_contains="handoff.docx")
+        evidence_id = page["items"][0]["id"]
+        response = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="file", evidence_id=evidence_id, offset=2, limit=2)
+        self.assertEqual(response["total_matches"], 5)
+        self.assertEqual(response["returned_count"], 2)
+        self.assertEqual([item["line"] for item in response["items"]], [3, 4])
+        self.assertEqual(json.loads(response["items"][0]["text"])["locator"], "table:1/row:1/cell:1")
+        log = json.loads((attempt / "semantic/query-log.json").read_text())["queries"][-1]
+        self.assertEqual(log["coverage"]["kind"], "native-text-records")
+        self.assertEqual(log["coverage"]["native_extraction"]["source_sha256"], page["items"][0]["reference"]["sha256"])
 
     def test_absence_claim_requires_unfiltered_complete_transcript_pages(self) -> None:
         attempt = self._hybrid_attempt("absence")

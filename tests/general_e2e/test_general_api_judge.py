@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 from tests.general_e2e.test_general_semantic_scoring import RUBRIC
 from tests.general_e2e.test_local_scoring_runtime import Fixture, LOCK_PATH, RUNTIME
+from tests.general_e2e.test_native_artifact_text import write_docx, write_xlsx
 
 
 class GeneralApiJudgeTests(unittest.TestCase):
@@ -55,6 +56,7 @@ class GeneralApiJudgeTests(unittest.TestCase):
         grading_type: str = "llm_judge",
         max_input_chars: int = 20_000,
         candidate_chars: int | None = None,
+        native_artifacts: bool = False,
     ) -> Path:
         weights = (
             {"automated": 0.5, "llm_judge": 0.5}
@@ -68,10 +70,14 @@ class GeneralApiJudgeTests(unittest.TestCase):
             grading_weights=weights,
             llm_judge_rubric=RUBRIC,
         )
+        if native_artifacts:
+            write_docx(fixture.candidate / "results/handoff.docx")
+            write_xlsx(fixture.candidate / "results/applicability.xlsx")
         if candidate_chars is not None:
             (fixture.candidate / "answer.txt").write_text(
                 "x" * candidate_chars, encoding="utf-8"
             )
+        if candidate_chars is not None or native_artifacts:
             entries, candidate_sha = RUNTIME._inventory_tree(fixture.candidate)
             artifact_path = fixture.candidate.parent / "candidate-artifact.json"
             artifact = json.loads(artifact_path.read_text())
@@ -122,6 +128,23 @@ class GeneralApiJudgeTests(unittest.TestCase):
         prepared = RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
         self.assertEqual(prepared["semantic_status"], "awaiting_api")
         return attempt
+
+    def test_api_packet_contains_native_contents_with_source_digest_and_limits(self) -> None:
+        attempt = self._attempt("native-packet", native_artifacts=True)
+        packet = json.loads((attempt / "semantic/api-input.json").read_text())
+        user = json.loads(packet["user_prompt"])
+        native = [row for row in user["evidence"] if row.get("content_representation") == "native_text_records"]
+        self.assertEqual(len(native), 2)
+        for row in native:
+            self.assertEqual(row["native_extraction"]["source_sha256"], row["sha256"])
+            self.assertEqual(row["content_status"], "complete" if not row["truncated"] else "truncated")
+            self.assertTrue(row["content"])
+            self.assertTrue(row["native_extraction"]["limitations"])
+        document = next(row for row in native if row["path"].endswith(".docx"))
+        self.assertIn("待核实", document["content"])
+        workbook = next(row for row in native if row["path"].endswith(".xlsx"))
+        self.assertIn("判定!A1", workbook["content"])
+        self.assertNotEqual(workbook["content_status"], "binary_or_non_utf8")
 
     def _candidate(self, attempt: Path, *, score: float = 1.0) -> dict:
         api_input = json.loads((attempt / "semantic/api-input.json").read_text())

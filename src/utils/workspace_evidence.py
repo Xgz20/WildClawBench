@@ -6,8 +6,12 @@ import fnmatch
 from pathlib import Path
 from typing import Any, Mapping
 
+try:
+    from _native_artifact_text import NativeTextError, extract_native_text, is_native_text_format
+except ImportError:
+    from src.wildclawbench_grading_core.native_text import NativeTextError, extract_native_text, is_native_text_format
 
-JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION = "wildclaw-workspace-evidence-v2"
+JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION = "wildclaw-workspace-evidence-v3"
 DEFAULT_JUDGE_WORKSPACE_MAX_CHARS = 80_000
 DEFAULT_JUDGE_WORKSPACE_FILE_MAX_CHARS = 12_000
 DEFAULT_DECLARED_EVIDENCE_FILE_MAX_CHARS = 20_000
@@ -160,14 +164,25 @@ def collect_workspace_evidence(
     ):
         path = workspace / item["path"]
         explicit = item["priority"] <= 1
-        if path.suffix.lower() not in TEXT_EXTENSIONS:
+        native = is_native_text_format(path)
+        if path.suffix.lower() not in TEXT_EXTENSIONS and not native:
             item.update(status="omitted", reason="unsupported_text_extension")
             continue
         if remaining <= 0:
             item.update(status="omitted", reason="workspace_char_budget_exhausted")
             continue
         try:
-            content = path.read_text(encoding="utf-8", errors="ignore")
+            if native:
+                projection = extract_native_text(path)
+                content = projection["text"]
+                item["native_extraction"] = {key: value for key, value in projection.items() if key != "text"}
+            else:
+                content = path.read_text(encoding="utf-8", errors="ignore")
+        except NativeTextError as exc:
+            if exc.code == "NATIVE_TEXT_DEPENDENCY_MISSING":
+                raise RuntimeError(str(exc)) from exc
+            item.update(status="unreadable", reason=exc.code)
+            continue
         except OSError as exc:
             item.update(status="unreadable", reason=type(exc).__name__)
             continue
@@ -179,6 +194,7 @@ def collect_workspace_evidence(
                 remaining,
             )
         included, ranges, truncated = _slice_text(content, file_limit)
+        truncated = truncated or bool(item.get("native_extraction", {}).get("truncated"))
         item.update({
             "status": "selected",
             "original_chars": original_chars,
@@ -186,12 +202,17 @@ def collect_workspace_evidence(
             "included_ranges": ranges,
             "truncated": truncated,
         })
+        native_context = ""
+        if item.get("native_extraction"):
+            projection = item["native_extraction"]
+            native_context = (f"[native text: {projection['schema_version']}; source_sha256={projection['source_sha256']}]\n"
+                              + "[scope: " + " ".join(projection["limitations"]) + "]\n")
         selected_blocks.append(
             f"### {item['path']}\n"
             f"[evidence: {item['selection_reason']}; "
             f"included_chars={item['included_chars']}; "
             f"original_chars={original_chars}; truncated={str(truncated).lower()}]\n"
-            f"{included}"
+            f"{native_context}{included}"
         )
         remaining -= len(included)
 
@@ -210,6 +231,10 @@ def collect_workspace_evidence(
         key=lambda item: (item["priority"], item["path"]),
     )
     omitted = [item for item in manifest if item["status"] != "selected"]
+    unavailable_required = [
+        {"path": item["path"], "reason": item.get("reason", "unavailable")}
+        for item in omitted if item.get("priority") == 0 and is_native_text_format(item["path"])
+    ]
     notes = [
         f"Evidence policy: {JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION}",
         f"Selected files: {len(selected)}; omitted/unreadable files: {len(omitted)}.",
@@ -224,6 +249,9 @@ def collect_workspace_evidence(
             "Missing declared references: "
             + ", ".join(item["path"] for item in missing_references)
         )
+    if unavailable_required:
+        notes.append("Unavailable required native evidence: " + ", ".join(
+            f"{item['path']} ({item['reason']})" for item in unavailable_required))
     text = "\n".join(notes)
     if selected_blocks:
         text += "\n\n" + "\n\n".join(selected_blocks)
@@ -258,6 +286,7 @@ def collect_workspace_evidence(
             "manifest": manifest,
             "missing_required": missing_required,
             "missing_references": missing_references,
+            "unavailable_required_native": unavailable_required,
             "selected_file_count": len(selected),
             "omitted_file_count": len(omitted),
             "included_chars": max_chars - remaining,

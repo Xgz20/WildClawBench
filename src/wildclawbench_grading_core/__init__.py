@@ -5,8 +5,9 @@ from .evidence import build_evidence_index
 from .finalize import finalize_score
 from .rules import inspect_rule_dependencies, run_rules
 from .semantics import evaluate_semantics
+from .native_text import NativeTextError, extract_native_text, is_native_text_format
 
-CORE_VERSION = "0.2.0"
+CORE_VERSION = "0.3.0"
 
 __all__ = (
     "CORE_VERSION",
@@ -16,4 +17,7 @@ __all__ = (
     "finalize_score",
     "inspect_rule_dependencies",
     "run_rules",
+    "NativeTextError",
+    "extract_native_text",
+    "is_native_text_format",
 )

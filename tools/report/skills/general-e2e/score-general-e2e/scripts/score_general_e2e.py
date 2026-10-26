@@ -2801,23 +2801,45 @@ def _api_evidence_sources(
             else:
                 path = _resolve_within(root, relative, "api evidence")
                 try:
-                    if reference["type"] == "raw_trace":
+                    if path.suffix.lower() in {".docx", ".xlsx", ".pdf"}:
+                        projection = _native_evidence_text(path, reference.get("sha256"))
+                        content, status = projection["text"], "native_text"
+                        row["native_extraction"] = {key: value for key, value in projection.items() if key != "text"}
+                        row["content_representation"] = "native_text_records"
+                    elif reference["type"] == "raw_trace":
                         with path.open(encoding="utf-8") as handle:
                             content = handle.read(MAX_EVIDENCE_TEXT_PAGE_CHARS)
                         if path.stat().st_size > len(content.encode("utf-8")):
                             content += "\n[原始轨迹节选；完整原件保存在评分目录 trace/raw。]"
+                        status = "text"
                     else:
                         content = path.read_text(encoding="utf-8")
+                        status = "text"
                 except UnicodeDecodeError:
                     content = None
                     status = "binary_or_non_utf8"
-                else:
-                    status = "text"
+                except ScoringRuntimeError as exc:
+                    if exc.code not in {"NATIVE_TEXT_INVALID", "NATIVE_TEXT_UNAVAILABLE", "NATIVE_TEXT_LIMIT"}:
+                        raise
+                    content, status = None, "native_text_unavailable"
+                    row["extraction_error"] = {"code": exc.code, "message": str(exc)}
         row["content_status"] = (
             "omitted_budget" if content is not None else status
         )
         sources.append((row, content, status))
     return sources
+
+
+def _native_evidence_text(path: Path, expected_sha: str | None = None, **kwargs) -> dict:
+    _import_semantic_grading_core()
+    from wildclawbench_grading_core import NativeTextError, extract_native_text
+    try:
+        projection = extract_native_text(path, **kwargs)
+    except NativeTextError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    if expected_sha is not None and projection["source_sha256"] != expected_sha:
+        raise ScoringRuntimeError("SEMANTIC_EVIDENCE_DIGEST_MISMATCH", str(path))
+    return projection
 
 
 def _build_api_input(
@@ -2881,10 +2903,11 @@ def _build_api_input(
         def include(characters: int) -> None:
             row["content"] = content[:characters] if characters else None
             row["included_chars"] = characters
-            row["truncated"] = characters < len(content)
+            extraction_truncated = bool(row.get("native_extraction", {}).get("truncated"))
+            row["truncated"] = characters < len(content) or extraction_truncated
             if characters == 0:
                 row["content_status"] = "omitted_budget"
-            elif characters < len(content):
+            elif characters < len(content) or extraction_truncated:
                 row["content_status"] = "truncated"
             else:
                 row["content_status"] = "complete"
@@ -2917,7 +2940,7 @@ def _build_api_input(
         ),
         "omitted_content_count": sum(
             row["content_status"]
-            in {"omitted_budget", "binary_or_non_utf8", "event_missing", "path_missing"}
+            in {"omitted_budget", "binary_or_non_utf8", "event_missing", "path_missing", "native_text_unavailable"}
             for row in packet_entries
         ),
         "system_chars": len(system_prompt),
@@ -4099,27 +4122,37 @@ def query_evidence_attempt(
         total_lines = 0
         emitted_chars = 0
         truncated_by_chars = False
+        projection = None
         try:
-            with path.open("r", encoding="utf-8") as handle:
-                for line_number, line in enumerate(handle, start=1):
-                    total_lines = line_number
-                    if (
-                        line_number <= offset
-                        or len(selected_lines) >= limit
-                        or truncated_by_chars
-                    ):
-                        continue
-                    normalized = line.rstrip("\n")
-                    remaining = max_chars - emitted_chars
-                    if len(normalized) > remaining:
-                        truncated_by_chars = True
-                        if not selected_lines and remaining > 0:
-                            selected_lines.append(
-                                (line_number, normalized[:remaining], True)
-                            )
-                        continue
-                    selected_lines.append((line_number, normalized, False))
-                    emitted_chars += len(normalized)
+            if path.suffix.lower() in {".docx", ".xlsx", ".pdf"}:
+                projection = _native_evidence_text(path, reference.get("sha256"),
+                    record_offset=offset, record_limit=limit, max_chars=max_chars)
+                total_lines = projection["record_count"]
+                lines = projection["text"].splitlines()
+                truncated_by_chars = projection["truncated"]
+                selected_lines = [(offset + index, line, truncated_by_chars and index == len(lines))
+                                  for index, line in enumerate(lines, 1)]
+            else:
+                with path.open("r", encoding="utf-8") as handle:
+                    for line_number, line in enumerate(handle, start=1):
+                        total_lines = line_number
+                        if (
+                            line_number <= offset
+                            or len(selected_lines) >= limit
+                            or truncated_by_chars
+                        ):
+                            continue
+                        normalized = line.rstrip("\n")
+                        remaining = max_chars - emitted_chars
+                        if len(normalized) > remaining:
+                            truncated_by_chars = True
+                            if not selected_lines and remaining > 0:
+                                selected_lines.append(
+                                    (line_number, normalized[:remaining], True)
+                                )
+                            continue
+                        selected_lines.append((line_number, normalized, False))
+                        emitted_chars += len(normalized)
         except UnicodeDecodeError as exc:
             raise ScoringRuntimeError(
                 "SEMANTIC_EVIDENCE_NOT_UTF8", relative
@@ -4136,12 +4169,14 @@ def query_evidence_attempt(
         ]
         returned_evidence_ids = [evidence_id] if items else []
         coverage = {
-            "kind": "file-lines",
+            "kind": "native-text-records" if projection else "file-lines",
             "path": relative,
             "start_line": offset + 1,
             "end_line": selected_lines[-1][0] if selected_lines else offset,
             "total_lines": total_lines,
             "truncated_by_chars": truncated_by_chars,
+            **({"native_extraction": {key: value for key, value in projection.items() if key != "text"}}
+               if projection else {}),
         }
     total_matches = len(matches) if mode != "file" else total_lines
     result_payload = {

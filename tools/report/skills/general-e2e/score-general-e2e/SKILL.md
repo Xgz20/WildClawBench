@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.11.0`增加DOCX、XLSX、文本PDF的冻结文本证据投影。`query-evidence --mode file`对这些文件按原生记录分页，保留段落、表格单元格、工作表地址或PDF页定位，并记录原文件SHA、投影SHA及提取边界；API Judge同样接收正文/单元格内容。该能力不解释图片/图表、不重算公式，也不证明原生应用可用性。PDF须在评分CLI解释器环境具备pypdf，缺依赖会显式阻断，不按候选零分处理。使用前读[原生文件文本证据](references/native-text-evidence.md)。历史attempt继续使用原冻结入口，不用新投影改写旧证据。
+
 `0.10.9` 随Skill分发[离线页面观察脚本与协议](references/offline-browser-validation.md)。新版编排在HTML候选评分前验证公共浏览器runtime并冻结judge-environment.json；独立裁判使用禁网字节观察及真实截图验证原Rubric，不依赖被URL策略拒绝的file导航，不绕过安全策略，不把环境故障变成候选能力分。评分core、Worker、原规则及证据政策未改变。
 
 正式语义评分使用独立项目中的独立单题聊天，不能用控制会话或协作子代理替代。纯 automated 任务继续由受管规则 Worker 评分。
@@ -67,7 +69,7 @@ partial 执行证据必须显式列出缺失项，空列表不得按 standard �
 
 ## 已交付能力与边界
 
-需要开发、校验或接入评分 core 时，读取[评分 core 接口](references/grading-core.md)。当前四个公开 API 可用于确定性契约验证和受管 backend 接入；`run_rules()` 不会自行执行不可信规则，`evaluate_semantics()` 也不会自行调用模型。
+需要开发、校验或接入评分core时，读取[评分core接口](references/grading-core.md)。四个主要评分API及原生文本提取辅助API用于确定性契约验证和受管backend接入；`run_rules()`不会自行执行不可信规则，`evaluate_semantics()`也不会自行调用模型。
 
 需要准备、复核或执行本地规则时，读取[本地受管规则运行时](references/local-rule-runtime.md)，使用 `scripts/score_general_e2e.py`。该入口强制候选原件只读、一次性 runtime 副本、GT 后置、真实本机 workspace 路径、冻结 transcript、专用虚拟环境、环境白名单、超时、独立进程组和进程树清理；不得要求 Docker。规则 v2 逐项理由是确定性分值锚点解释，业务判定依据来自随项落盘的可复算证据，不得调用模型替自动规则补写或改判。
 

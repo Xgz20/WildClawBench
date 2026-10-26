@@ -2,7 +2,9 @@
 
 `score-general-e2e` 0.8.1 装配 `grading-core` 0.2.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
-发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
+自score-general-e2e 0.11.0起装配core 0.3.0，新增`extract_native_text()`和`is_native_text_format()`：DOCX/XLSX使用标准库，PDF按需导入评分环境中的pypdf。提取只做离线文本/单元格投影，保留原文件及投影SHA、记录位置、公式缓存状态和未解释内容；不执行宏、外链或公式计算。`NativeTextError`提供独立code/message，缺PDF依赖不能转为候选零分。详见[原生文件文本证据](native-text-evidence.md)。
+
+发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。规则/索引/结果校验及合分、DOCX/XLSX文本投影只使用Python标准库，PDF投影按需使用评分CLI解释器中的pypdf。任务规则所需的PyYAML、Playwright和Chromium属于G3-02专用评分虚拟环境，不因原生证据提取而安装到被测项目。
 
 ## 公开 API
 
