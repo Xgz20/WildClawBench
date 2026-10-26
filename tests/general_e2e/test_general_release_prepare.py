@@ -248,13 +248,25 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             catalog_name = next(n for n in suite.namelist() if n.endswith('/release-catalog.json'))
             catalog = json.loads(suite.read(catalog_name))
             prefix = catalog_name.split('/')[0]
-            for skill in ('collect-general-e2e','run-general-e2e','orchestrate-general-e2e','report-general-e2e'):
+            for skill in ('collect-general-e2e','run-general-e2e','orchestrate-general-e2e','report-general-e2e','score-general-e2e'):
                 row = next(r for r in catalog['skills'] if r['name'] == skill)
                 archive = detached / (skill + '.zip')
                 archive.write_bytes(suite.read(prefix + '/' + row['archive']))
                 builder.verify_skill_package(archive)
                 installed[skill] = builder._safe_extract(archive,detached / (skill + '-installed'))
         environment = dict(os.environ, PYTHONPATH='')
+        from tests.general_e2e.test_native_presentation_text import write_pptx
+        presentation = write_pptx(detached / 'fixture.pptx')
+        vendor = installed['score-general-e2e'] / 'vendor/e2e-shared'
+        core_code = ('import sys,json;from pathlib import Path;sys.path.insert(0,sys.argv[1]);'
+                     'import wildclawbench_grading_core as core;'
+                     'assert Path(core.__file__).resolve().is_relative_to(Path(sys.argv[1]).resolve());'
+                     'v=core.extract_native_text(sys.argv[2]);rows=[json.loads(line) for line in v["text"].splitlines()];'
+                     'assert any(r.get("context")=="speaker_notes" for r in rows);'
+                     'assert any(r.get("context")=="chart_stored_point" and r.get("value")=="1199" for r in rows);'
+                     'assert any(r.get("context")=="embedded_workbook_cell" and r.get("value")=="1200" for r in rows)')
+        subprocess.run([sys.executable, '-I', '-c', core_code, str(vendor), str(presentation)],
+            cwd=detached, env=environment, check=True, capture_output=True, text=True)
         run_script = installed['run-general-e2e'] / 'scripts/run_general_e2e.py'
         help_result = subprocess.run([sys.executable,str(run_script),'prepare-score','--help'],
             cwd=detached,env=environment,capture_output=True,text=True,check=True)

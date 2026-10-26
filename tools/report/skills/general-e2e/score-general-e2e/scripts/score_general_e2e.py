@@ -2921,7 +2921,7 @@ def _api_evidence_sources(
             else:
                 path = _resolve_within(root, relative, "api evidence")
                 try:
-                    if path.suffix.lower() in {".docx", ".xlsx", ".pdf"}:
+                    if path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
                         projection = _native_evidence_text(path, reference.get("sha256"))
                         content, status = projection["text"], "native_text"
                         row["native_extraction"] = {key: value for key, value in projection.items() if key != "text"}
@@ -4244,7 +4244,7 @@ def query_evidence_attempt(
         truncated_by_chars = False
         projection = None
         try:
-            if path.suffix.lower() in {".docx", ".xlsx", ".pdf"}:
+            if path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
                 projection = _native_evidence_text(path, reference.get("sha256"),
                     record_offset=offset, record_limit=limit, max_chars=max_chars)
                 total_lines = projection["record_count"]

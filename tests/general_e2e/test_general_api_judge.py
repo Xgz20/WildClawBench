@@ -10,6 +10,7 @@ from unittest.mock import patch
 from tests.general_e2e.test_general_semantic_scoring import RUBRIC
 from tests.general_e2e.test_local_scoring_runtime import Fixture, LOCK_PATH, RUNTIME
 from tests.general_e2e.test_native_artifact_text import write_docx, write_xlsx
+from tests.general_e2e.test_native_presentation_text import write_pptx
 
 
 class GeneralApiJudgeTests(unittest.TestCase):
@@ -57,6 +58,7 @@ class GeneralApiJudgeTests(unittest.TestCase):
         max_input_chars: int = 20_000,
         candidate_chars: int | None = None,
         native_artifacts: bool = False,
+        native_presentation: bool = False,
     ) -> Path:
         weights = (
             {"automated": 0.5, "llm_judge": 0.5}
@@ -73,11 +75,13 @@ class GeneralApiJudgeTests(unittest.TestCase):
         if native_artifacts:
             write_docx(fixture.candidate / "results/handoff.docx")
             write_xlsx(fixture.candidate / "results/applicability.xlsx")
+        if native_presentation:
+            write_pptx(fixture.candidate / "results/annual.pptx")
         if candidate_chars is not None:
             (fixture.candidate / "answer.txt").write_text(
                 "x" * candidate_chars, encoding="utf-8"
             )
-        if candidate_chars is not None or native_artifacts:
+        if candidate_chars is not None or native_artifacts or native_presentation:
             entries, candidate_sha = RUNTIME._inventory_tree(fixture.candidate)
             artifact_path = fixture.candidate.parent / "candidate-artifact.json"
             artifact = json.loads(artifact_path.read_text())
@@ -93,6 +97,10 @@ class GeneralApiJudgeTests(unittest.TestCase):
             max_attempts=max_attempts,
             max_input_chars=max_input_chars,
         )
+        if native_presentation:
+            config_value = json.loads(config.read_text(encoding="utf-8"))
+            config_value["max_evidence_item_chars"] = 20_000
+            config.write_text(json.dumps(config_value), encoding="utf-8")
         result = RUNTIME.prepare_attempt(
             unit_root=fixture.unit_root,
             execution_record_path=fixture.execution_record,
@@ -145,6 +153,19 @@ class GeneralApiJudgeTests(unittest.TestCase):
         workbook = next(row for row in native if row["path"].endswith(".xlsx"))
         self.assertIn("判定!A1", workbook["content"])
         self.assertNotEqual(workbook["content_status"], "binary_or_non_utf8")
+
+    def test_api_packet_pptx_has_slide_notes_chart_and_separate_workbook_evidence(self) -> None:
+        attempt = self._attempt("presentation-packet", native_presentation=True, max_input_chars=100_000)
+        packet = json.loads((attempt / "semantic/api-input.json").read_text(encoding="utf-8"))
+        evidence = json.loads(packet["user_prompt"])["evidence"]
+        row = next(row for row in evidence if row.get("path", "").endswith("annual.pptx"))
+        self.assertEqual(row["content_representation"], "native_text_records")
+        self.assertEqual(row["content_status"], "complete")
+        self.assertEqual(row["native_extraction"]["source_sha256"], row["sha256"])
+        records = [json.loads(line) for line in row["content"].splitlines()]
+        self.assertTrue(any(record.get("context") == "speaker_notes" for record in records))
+        self.assertTrue(any(record.get("context") == "chart_stored_point" and record.get("value") == "1199" for record in records))
+        self.assertTrue(any(record.get("context") == "embedded_workbook_cell" and record.get("value") == "1200" for record in records))
 
     def _candidate(self, attempt: Path, *, score: float = 1.0) -> dict:
         api_input = json.loads((attempt / "semantic/api-input.json").read_text())

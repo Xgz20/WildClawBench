@@ -1,4 +1,4 @@
-"""Bounded, offline text evidence for native documents and workbooks.
+"""Bounded, offline text evidence for native Office files and text PDFs.
 
 This module is also copied as a standalone helper into legacy rule containers.
 It does not render images, execute macros, follow links, or recalculate formulas.
@@ -18,7 +18,8 @@ import zipfile
 
 
 NATIVE_TEXT_VERSION = "wildclawbench.native-artifact-text/v1"
-NATIVE_TEXT_EXTENSIONS = frozenset({".docx", ".xlsx", ".pdf"})
+NATIVE_TEXT_EXTENSIONS = frozenset({".docx", ".xlsx", ".pptx", ".pdf"})
+PPTX_TEXT_VERSION = "wildclawbench.pptx-text/v1"
 MAX_FILE_BYTES = 32 * 1024 * 1024
 MAX_ZIP_BYTES = 100 * 1024 * 1024
 MAX_XML_BYTES = 16 * 1024 * 1024
@@ -26,6 +27,9 @@ MAX_ZIP_MEMBERS = 5000
 W = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
 S = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 R = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+P = "{http://schemas.openxmlformats.org/presentationml/2006/main}"
+A = "{http://schemas.openxmlformats.org/drawingml/2006/main}"
+C = "{http://schemas.openxmlformats.org/drawingml/2006/chart}"
 
 
 class NativeTextError(ValueError):
@@ -241,6 +245,206 @@ def _pdf(data: bytes) -> tuple[list[dict], list[str]]:
     return records, ["Extracted PDF text only; images, scans, charts and layout are not interpreted."]
 
 
+def _pptx(data: bytes) -> tuple[list[dict], list[str]]:
+    records = []
+    with _archive(data) as archive:
+        expanded_bytes = sum(item.file_size for item in archive.infolist())
+        embedded = {}
+        shape_ids = {}
+
+        def relationships(owner):
+            part = posixpath.join(posixpath.dirname(owner), "_rels", posixpath.basename(owner) + ".rels")
+            result = {}
+            if part not in archive.namelist():
+                return result
+            for node in _xml(archive, part):
+                identity, target = node.get("Id"), node.get("Target")
+                if not identity or not target or identity in result:
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "missing or ambiguous presentation relationship")
+                result[identity] = dict(node.attrib)
+            return result
+
+        def related(owner, rels, identity, kind):
+            relation = rels.get(identity)
+            kinds = (kind,) if isinstance(kind, str) else kind
+            if not relation or not any(relation.get("Type", "").endswith("/" + item) for item in kinds):
+                raise NativeTextError("NATIVE_TEXT_INVALID", f"missing or wrong {kind} relationship")
+            if relation.get("TargetMode") == "External":
+                return None
+            target = relation["Target"]
+            if any(token in target for token in ("\\", ":", "?", "#", "%")):
+                raise NativeTextError("NATIVE_TEXT_INVALID", "unsafe presentation relationship target")
+            part = (posixpath.normpath(target.lstrip("/")) if target.startswith("/") else
+                    posixpath.normpath(posixpath.join(posixpath.dirname(owner), target)))
+            if not part.startswith("ppt/") or ".." in part.split("/"):
+                raise NativeTextError("NATIVE_TEXT_INVALID", "presentation relationship escapes package")
+            if part not in archive.namelist():
+                raise NativeTextError("NATIVE_TEXT_INVALID", f"missing presentation part: {part}")
+            return part
+
+        def paragraph_record(paragraph, locator, *, context):
+            text = "".join((node.text or "") if node.tag == A + "t" else "\n"
+                           for node in paragraph.iter() if node.tag in {A + "t", A + "br"})
+            if not text:
+                return
+            sizes = sorted({node.get("sz") for node in paragraph.iter()
+                            if node.tag in {A + "rPr", A + "defRPr", A + "endParaRPr"} and node.get("sz")})
+            record = {"locator": locator, "context": context, "text": text}
+            if sizes:
+                record["explicit_font_sizes_hundredth_pt"] = sizes
+            records.append(record)
+
+        def text_body(body, locator, context):
+            if body is not None:
+                for number, paragraph in enumerate(body.findall(A + "p"), 1):
+                    paragraph_record(paragraph, f"{locator}/paragraph:{number}", context=context)
+
+        def chart_records(part, locator):
+            nonlocal expanded_bytes
+            chart = _xml(archive, part)
+            if chart.tag != C + "chartSpace":
+                raise NativeTextError("NATIVE_TEXT_INVALID", "unsupported chart namespace or root")
+            records.append({"locator": locator, "context": "chart", "part": part})
+            for number, paragraph in enumerate(chart.iter(A + "p"), 1):
+                paragraph_record(paragraph, f"{locator}/paragraph:{number}", context="chart_text")
+            plot = chart.find(f"{C}chart/{C}plotArea")
+            if plot is not None:
+                for plot_number, chart_type in enumerate(plot, 1):
+                    for number, series in enumerate(chart_type.findall(C + "ser"), 1):
+                        prefix = f"{locator}/plot:{plot_number}/series:{number}"
+                        records.append({"locator": prefix, "context": "chart_series", "chart_type": chart_type.tag.removeprefix(C),
+                                        "series_index": series.find(C + "idx").get("val") if series.find(C + "idx") is not None else None,
+                                        "series_order": series.find(C + "order").get("val") if series.find(C + "order") is not None else None})
+                        for role in ("tx", "cat", "val", "xVal", "yVal", "bubbleSize"):
+                            node = series.find(C + role)
+                            if node is None:
+                                continue
+                            formulas = [item.text or "" for item in node.iter(C + "f")]
+                            records.append({"locator": f"{prefix}/{role}", "context": "chart_data_reference",
+                                            "formulas": formulas, "direct_values": [item.text or "" for item in node.findall(C + "v")]})
+                            for cache_number, cache in enumerate((item for item in node.iter() if item.tag in {
+                                    C + "strCache", C + "numCache", C + "strLit", C + "numLit", C + "multiLvlStrCache"}), 1):
+                                cache_locator = f"{prefix}/{role}/cache:{cache_number}"
+                                count = cache.find(C + "ptCount")
+                                records.append({"locator": cache_locator, "context": "chart_stored_cache",
+                                                "cache_kind": cache.tag.removeprefix(C),
+                                                "declared_point_count": count.get("val") if count is not None else None})
+                                levels = cache.findall(C + "lvl") or [cache]
+                                for level_number, level in enumerate(levels, 1):
+                                    indices = set()
+                                    for point in level.findall(C + "pt"):
+                                        index = point.get("idx")
+                                        if index is None or not re.fullmatch(r"[0-9]+", index) or int(index) in indices:
+                                            raise NativeTextError("NATIVE_TEXT_INVALID", "invalid or duplicate chart cache point index")
+                                        indices.add(int(index))
+                                        value = point.find(C + "v")
+                                        records.append({"locator": f"{cache_locator}/level:{level_number}/point:{index}",
+                                                        "context": "chart_stored_point", "index": int(index),
+                                                        "value": value.text or "" if value is not None else None})
+            rels = relationships(part)
+            for number, external in enumerate(chart.findall(C + "externalData"), 1):
+                target = related(part, rels, external.get(R + "id"), ("package", "oleObject"))
+                prefix = f"{locator}/workbook:{number}"
+                if target is None:
+                    records.append({"locator": prefix, "context": "embedded_workbook", "content_status": "external_not_followed"})
+                    continue
+                blob = archive.read(target)
+                digest = hashlib.sha256(blob).hexdigest()
+                if target not in embedded:
+                    if not target.lower().endswith(".xlsx"):
+                        embedded[target] = None
+                    else:
+                        with _archive(blob) as book:
+                            expanded_bytes += sum(item.file_size for item in book.infolist())
+                        if expanded_bytes > MAX_ZIP_BYTES:
+                            raise NativeTextError("NATIVE_TEXT_LIMIT", "presentation and embedded workbooks exceed combined extraction limit")
+                        embedded[target] = _xlsx(blob)[0]
+                rows = embedded[target]
+                records.append({"locator": prefix, "context": "embedded_workbook", "part": target,
+                                "sha256": digest, "content_status": "stored_cells" if rows is not None else "unsupported_format"})
+                for row in rows or []:
+                    records.append({**row, "locator": f"{prefix}/{row['locator']}", "context": "embedded_workbook_cell",
+                                    "workbook_part": target, "workbook_sha256": digest})
+
+        def shapes(tree, owner, locator, context):
+            if tree is None:
+                raise NativeTextError("NATIVE_TEXT_INVALID", "presentation shape tree is missing")
+            rels = relationships(owner)
+            for number, shape in enumerate(tree, 1):
+                if shape.tag not in {P + item for item in ("sp", "grpSp", "graphicFrame", "pic", "cxnSp")}:
+                    continue
+                kind = shape.tag.removeprefix(P)
+                nonvisual = shape.find(".//" + P + "cNvPr")
+                identity = nonvisual.get("id") if nonvisual is not None else None
+                if identity is not None:
+                    known = shape_ids.setdefault(owner, set())
+                    if identity in known:
+                        raise NativeTextError("NATIVE_TEXT_INVALID", "ambiguous presentation shape ID")
+                    known.add(identity)
+                prefix = f"{locator}/shape:{identity or 'ordinal-' + str(number)}"
+                record = {"locator": prefix, "context": context + "_object", "object_kind": kind}
+                if nonvisual is not None:
+                    record.update(name=nonvisual.get("name", ""), hidden=nonvisual.get("hidden") in {"1", "true"})
+                records.append(record)
+                if kind == "grpSp":
+                    shapes(shape, owner, prefix, context)
+                text_body(shape.find(P + "txBody"), prefix, context)
+                for table_number, table in enumerate(shape.findall(f"{A}graphic/{A}graphicData/{A}tbl"), 1):
+                    for row_number, row in enumerate(table.findall(A + "tr"), 1):
+                        for column, cell in enumerate(row.findall(A + "tc"), 1):
+                            text_body(cell.find(A + "txBody"), f"{prefix}/table:{table_number}/row:{row_number}/cell:{column}", context + "_table")
+                for chart_number, chart in enumerate(shape.findall(f"{A}graphic/{A}graphicData/{C}chart"), 1):
+                    target = related(owner, rels, chart.get(R + "id"), "chart")
+                    if target is None:
+                        records.append({"locator": f"{prefix}/chart:{chart_number}", "context": "chart", "content_status": "external_not_followed"})
+                    else:
+                        chart_records(target, f"{prefix}/chart:{chart_number}")
+
+        owner = "ppt/presentation.xml"
+        presentation = _xml(archive, owner)
+        if presentation.tag != P + "presentation":
+            raise NativeTextError("NATIVE_TEXT_INVALID", "unsupported presentation namespace or root")
+        slide_list = presentation.find(P + "sldIdLst")
+        if slide_list is None or not len(slide_list):
+            raise NativeTextError("NATIVE_TEXT_UNAVAILABLE", "presentation has no slide list")
+        size = presentation.find(P + "sldSz")
+        records.append({"locator": "presentation", "slide_count": len(slide_list),
+                        "width_emu": size.get("cx") if size is not None else None,
+                        "height_emu": size.get("cy") if size is not None else None})
+        rels = relationships(owner)
+        used = set()
+        for number, slide_id in enumerate(slide_list, 1):
+            target = related(owner, rels, slide_id.get(R + "id"), "slide")
+            if target is None or target in used:
+                raise NativeTextError("NATIVE_TEXT_INVALID", "external or duplicate presentation slide")
+            used.add(target)
+            slide = _xml(archive, target)
+            if slide.tag != P + "sld":
+                raise NativeTextError("NATIVE_TEXT_INVALID", "unsupported slide namespace or root")
+            prefix = f"slide:{number}"
+            records.append({"locator": prefix, "part": target, "slide_id": slide_id.get("id"),
+                            "show": slide.get("show", "1") not in {"0", "false"}})
+            shapes(slide.find(f"{P}cSld/{P}spTree"), target, prefix, "slide")
+            slide_rels = relationships(target)
+            for identity, relation in slide_rels.items():
+                if not relation.get("Type", "").endswith("/notesSlide"):
+                    continue
+                notes_part = related(target, slide_rels, identity, "notesSlide")
+                if notes_part is None:
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "external notes slide")
+                notes = _xml(archive, notes_part)
+                if notes.tag != P + "notes":
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "unsupported notes namespace or root")
+                shapes(notes.find(f"{P}cSld/{P}spTree"), notes_part, prefix + "/notes", "speaker_notes")
+    if not any(row.get("text", "").strip() or row.get("context") == "chart_stored_point" for row in records):
+        raise NativeTextError("NATIVE_TEXT_UNAVAILABLE", "presentation has no extractable text or chart caches; visual evidence may be required")
+    return records, ["Explicit slide text, tables, speaker notes, chart caches and embedded XLSX stored cells only.",
+                     "Slide order follows presentation relationships; hidden slides, objects and speaker notes remain explicitly identified.",
+                     "Chart caches and embedded cells are separate observations; neither is recalculated or assumed mutually consistent.",
+                     "Images, SmartArt, inherited master/layout text, animation visibility, font inheritance, text fit and layout are not interpreted.",
+                     "External relationships are not followed; unsupported embedded formats are identified without interpreting their bytes."]
+
+
 def extract_native_text(path: str | Path, *, max_chars: int = 200_000,
                         record_offset: int = 0, record_limit: int | None = None) -> dict:
     path = Path(path)
@@ -255,7 +459,7 @@ def extract_native_text(path: str | Path, *, max_chars: int = 200_000,
     if len(data) > MAX_FILE_BYTES:
         raise NativeTextError("NATIVE_TEXT_LIMIT", "native evidence grew beyond extraction limit")
     try:
-        records, limitations = {".docx": _docx, ".xlsx": _xlsx, ".pdf": _pdf}[path.suffix.lower()](data)
+        records, limitations = {".docx": _docx, ".xlsx": _xlsx, ".pptx": _pptx, ".pdf": _pdf}[path.suffix.lower()](data)
     except (KeyError, ValueError, zipfile.BadZipFile, RuntimeError) as exc:
         if isinstance(exc, NativeTextError):
             raise
@@ -265,6 +469,8 @@ def extract_native_text(path: str | Path, *, max_chars: int = 200_000,
     original_chars = len(text)
     text = text[:max_chars]
     engine = {"name": "stdlib-ooxml", "version": NATIVE_TEXT_VERSION}
+    if path.suffix.lower() == ".pptx":
+        engine = {"name": "stdlib-presentation-ooxml", "version": PPTX_TEXT_VERSION}
     if path.suffix.lower() == ".pdf":
         try:
             engine = {"name": "pypdf", "version": metadata.version("pypdf")}
