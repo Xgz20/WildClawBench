@@ -2103,6 +2103,7 @@ class _WorkerExecutor:
         timeout_seconds: float,
         playwright_browsers_path: Path | None,
         office_runtime: dict | None = None,
+        office_render_runtime: dict | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
@@ -2110,6 +2111,9 @@ class _WorkerExecutor:
         self.timeout_seconds = timeout_seconds
         self.playwright_browsers_path = playwright_browsers_path
         self.office_runtime = office_runtime
+        self.office_render_runtime = office_render_runtime
+        if office_render_runtime is not None and (office_runtime is None or office_render_runtime.get("office_runtime") != office_runtime):
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
         self.audit: dict[str, Any] = {}
 
     def __call__(self, source: str, context: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -2141,6 +2145,7 @@ class _WorkerExecutor:
             playwright_browsers_path=self.playwright_browsers_path,
         )
         office_binding = None
+        render_binding = None
         if self.office_runtime is not None:
             lock_path = work_root / "office-runtime.json"
             _write_new_json(lock_path, self.office_runtime)
@@ -2149,6 +2154,11 @@ class _WorkerExecutor:
             env["GENERAL_E2E_OFFICE_LOCK"] = str(lock_path)
             env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
             office_binding = {"path": "worker/office-runtime.json", "sha256": _sha256_file(lock_path)}
+        if self.office_render_runtime is not None:
+            render_path = work_root / "office-render-runtime.json"
+            _write_new_json(render_path, self.office_render_runtime)
+            env["GENERAL_E2E_OFFICE_RENDER_LOCK"] = str(render_path)
+            render_binding = {"path": "worker/office-render-runtime.json", "sha256": _sha256_file(render_path)}
         creationflags = 0
         popen_kwargs: dict[str, Any] = {"start_new_session": os.name != "nt"}
         if os.name == "nt":
@@ -2214,6 +2224,7 @@ class _WorkerExecutor:
             "stdout_sha256": _sha256_file(stdout_path),
             "stderr_sha256": _sha256_file(stderr_path),
             **({"office_runtime": office_binding} if office_binding else {}),
+            **({"office_render_runtime": render_binding} if render_binding else {}),
         }
         if timed_out:
             raise ScoringRuntimeError("RULE_WORKER_TIMEOUT")
@@ -2282,22 +2293,58 @@ def bootstrap_office_runtime(executable: Path, output: Path, runtime_lock_path: 
     return {"status": "PASS", "office_runtime_lock": str(output.resolve()), "sha256": _sha256_file(output), "engine_version": lock["engine_version"]}
 
 
-def _verify_office_rule_evidence(root: Path, *, required: bool = False, archived: bool = False) -> list[dict]:
+def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Path], output: Path, runtime_lock_path: Path,
+                                   font_directories: list[Path] | None = None) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import OfficeRuntimeError, create_office_render_lock
+    office = _load_office_runtime(office_lock_path)
+    try:
+        render = create_office_render_lock(office, font_files, font_directories=font_directories or ())
+    except OfficeRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    value, _ = _load_runtime_lock(runtime_lock_path)
+    if value.get("office_runtime") is not None and value["office_runtime"] != office:
+        raise ScoringRuntimeError("OFFICE_RUNTIME_CONFLICT", "render engine differs from Python/runtime lock")
+    value = {**value, "office_runtime": office, "office_render_runtime": render}
+    _write_new_json(output, value)
+    return {"status": "PASS", "runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
+            "font_count": len(render["fonts"]), "engine_version": office["engine_version"]}
+
+
+def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
     audit_path = root / "rule-audit.json"
     if not audit_path.is_file():
-        if required:
+        if required or render_required:
             raise ScoringRuntimeError("OFFICE_RULE_AUDIT_MISSING")
         return []
     audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
     binding = (audit.get("worker") or {}).get("office_runtime")
     if not binding:
-        if required:
+        if required or render_required:
             raise ScoringRuntimeError("OFFICE_RUNTIME_BINDING_MISSING")
         return []
     path = _resolve_within(root, binding.get("path"), "office_runtime")
     if binding.get("path") != "worker/office-runtime.json" or path.is_symlink() or _sha256_file(path) != binding.get("sha256"):
         raise ScoringRuntimeError("OFFICE_RUNTIME_LOCK_DRIFT")
     lock = _load_office_runtime(path, archived=archived)
+    render_binding = (audit.get("worker") or {}).get("office_render_runtime")
+    render_lock = None
+    if render_required and not render_binding:
+        raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_BINDING_MISSING")
+    if render_binding:
+        render_path = _resolve_within(root, render_binding.get("path"), "office_render_runtime")
+        if (render_binding.get("path") != "worker/office-render-runtime.json" or render_path.is_symlink()
+                or _sha256_file(render_path) != render_binding.get("sha256")):
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_LOCK_DRIFT")
+        _import_grading_core()
+        from wildclawbench_grading_core import OfficeRuntimeError, validate_office_render_lock
+        render_lock = _read_json(render_path, code="OFFICE_RENDER_LOCK_INVALID")
+        try:
+            validate_office_render_lock(render_lock, require_files=not archived)
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+        if render_lock["office_runtime"] != lock:
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
     artifacts = audit.get("derived_artifacts")
     if not isinstance(artifacts, list):
         raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_INVALID")
@@ -2315,7 +2362,25 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, archived
         raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_DRIFT")
     candidate_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "candidate-original/workspace") if file.suffix.lower() == ".xlsx"}
     reference_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "private/gt") if file.suffix.lower() == ".xlsx"}
+    presentation_hashes = {_sha256_file(file) for folder in (root / "candidate-original/workspace", root / "private/gt")
+                           for file in _regular_evidence_files(folder) if file.suffix.lower() == ".pptx"}
     for artifact in artifacts:
+        if artifact["path"].endswith("/render-audit.json"):
+            _import_grading_core()
+            from wildclawbench_grading_core.office_runtime import RENDER_AUDIT_SCHEMA, RENDER_PROFILE, RENDER_FILTER, office_render_lock_digest
+            receipt_path = root / artifact["path"]
+            receipt = _read_json(receipt_path, code="OFFICE_RENDER_AUDIT_INVALID")
+            derived_path = receipt_path.with_name("rendered.pdf")
+            if (render_lock is None or receipt.get("schema_version") != RENDER_AUDIT_SCHEMA or receipt.get("profile") != RENDER_PROFILE
+                    or receipt.get("engine_version") != lock["engine_version"] or receipt.get("executable_sha256") != lock["executable_sha256"]
+                    or receipt.get("render_lock_sha256") != office_render_lock_digest(render_lock) or receipt.get("source_unchanged") is not True
+                    or receipt.get("source_sha256") not in presentation_hashes or receipt.get("export_filter") != RENDER_FILTER
+                    or receipt.get("environment_profile") != "isolated-fontconfig/v1"
+                    or receipt.get("font_assets") != [{key: font[key] for key in ("sha256", "size")} for font in render_lock["fonts"]]
+                    or type(receipt.get("source_slide_count")) is not int or receipt["source_slide_count"] < 1
+                    or not derived_path.is_file() or receipt.get("derived_sha256") != _sha256_file(derived_path)):
+                raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", artifact["path"])
+            continue
         if not artifact["path"].endswith("/office-audit.json"):
             continue
         receipt_path = root / artifact["path"]
@@ -2330,7 +2395,7 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, archived
     # Missing/invalid deliveries may legitimately yield no workbook receipt.
     # The frozen task grader decides that score; this generic verifier checks
     # every derived artifact that was actually produced, not delivery semantics.
-    return [{"path": binding["path"], "sha256": binding["sha256"]}, *artifacts]
+    return [{"path": binding["path"], "sha256": binding["sha256"]}, *([render_binding] if render_binding else []), *artifacts]
 
 
 def _rule_file_evidence(
@@ -2499,8 +2564,9 @@ def run_rules_attempt(
     contract_path = _resolve_within(attempt_root, manifest["paths"]["contract"], "contract")
     contract = _read_json(contract_path, code="SCORING_CONTRACT_INVALID")
     requirements = contract.get("scoring_runtime") or {}
-    if (not isinstance(requirements, dict) or set(requirements) - {"office"}
-            or any(type(value) is not bool for value in requirements.values())):
+    if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render"}
+            or any(type(value) is not bool for value in requirements.values())
+            or requirements.get("office_render") and not requirements.get("office")):
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "scoring_runtime")
     office_runtime = None
     if office_runtime_lock_path is not None:
@@ -2519,6 +2585,18 @@ def run_rules_attempt(
         office_runtime = inherited_office
     if requirements.get("office") and office_runtime is None:
         raise ScoringRuntimeError("OFFICE_RUNTIME_REQUIRED", "freeze and provide --office-runtime-lock before evaluating this task")
+    render_runtime = frozen_runtime_lock.get("office_render_runtime") if requirements.get("office_render") else None
+    if requirements.get("office_render"):
+        if render_runtime is None:
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_REQUIRED", "freeze engine and font files with bootstrap-office-render")
+        _import_grading_core()
+        from wildclawbench_grading_core import OfficeRuntimeError, validate_office_render_lock
+        try:
+            validate_office_render_lock(render_runtime)
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+        if render_runtime["office_runtime"] != office_runtime:
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
     automated_checks = contract.get("automated_checks")
     if not isinstance(automated_checks, str):
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "automated_checks")
@@ -2552,6 +2630,7 @@ def run_rules_attempt(
         timeout_seconds=timeout_seconds,
         playwright_browsers_path=playwright_browsers_path,
         office_runtime=office_runtime,
+        office_render_runtime=render_runtime,
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -2800,7 +2879,8 @@ def _semantic_reference_inputs(
     if rule_audit.is_file() and not rule_audit.is_symlink():
         add_file("rule_audit", rule_audit)
         contract = _read_json(attempt_root / manifest["paths"]["contract"])
-        for artifact in _verify_office_rule_evidence(attempt_root, required=bool((contract.get("scoring_runtime") or {}).get("office"))):
+        for artifact in _verify_office_rule_evidence(attempt_root, required=bool((contract.get("scoring_runtime") or {}).get("office")),
+                render_required=bool((contract.get("scoring_runtime") or {}).get("office_render"))):
             add_file("rule_derived_artifact", attempt_root / artifact["path"])
     if manifest.get("trace_bundle"):
         bundle = _read_json(attempt_root / manifest["trace_bundle"]["path"])
@@ -5024,7 +5104,8 @@ def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
     _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
     try:
         contract = _read_json(root / manifest["paths"]["contract"])
-        _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")))
+        _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")),
+            render_required=bool((contract.get("scoring_runtime") or {}).get("office_render")))
         _verify_semantic_terminal(root, manifest)
         score = _build_standard_score(
             root, manifest, finalize_score=finalize_score
@@ -5089,7 +5170,8 @@ def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[
     )
     _verify_rule_source_correction(root, manifest)
     contract = _read_json(root / manifest["paths"]["contract"])
-    _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")), archived=archived)
+    _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")),
+        render_required=bool((contract.get("scoring_runtime") or {}).get("office_render")), archived=archived)
     if (
         audit.get("schema_version") != SCORE_AUDIT_SCHEMA
         or audit.get("status") != "completed"
@@ -5611,6 +5693,13 @@ def main(argv: list[str] | None = None) -> int:
     office.add_argument("--output", required=True, type=Path)
     office.add_argument("--runtime-lock", type=Path, help="Embed Office identity in a copied managed Python runtime lock")
 
+    render = subparsers.add_parser("bootstrap-office-render")
+    render.add_argument("--office-runtime-lock", required=True, type=Path)
+    render.add_argument("--font-file", action="append", type=Path, default=[])
+    render.add_argument("--font-directory", action="append", type=Path, default=[])
+    render.add_argument("--runtime-lock", required=True, type=Path)
+    render.add_argument("--output", required=True, type=Path)
+
     prepare_semantics = subparsers.add_parser("prepare-semantics")
     prepare_semantics.add_argument("--attempt-root", required=True, type=Path)
 
@@ -5705,6 +5794,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "bootstrap-office":
             result = bootstrap_office_runtime(args.executable, args.output, args.runtime_lock)
+        elif args.command == "bootstrap-office-render":
+            result = bootstrap_office_render_runtime(args.office_runtime_lock, args.font_file, args.output, args.runtime_lock, args.font_directory)
         elif args.command == "prepare-semantics":
             result = prepare_semantics_attempt(attempt_root=args.attempt_root)
         elif args.command == "query-evidence":

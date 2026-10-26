@@ -32,6 +32,13 @@ class GeneralDatasetCacheFilteringTests(unittest.TestCase):
         self.assertEqual(actual_execution, execution)
         self.assertNotIn("scoring_runtime", scoring)
         self.assertEqual(actual_scoring, {**scoring, "scoring_runtime": {"office": True}})
+        rendered_execution, rendered_scoring = _task_contracts("task", {"scoring_runtime": {"office": True, "office_render": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(rendered_execution, execution)
+        self.assertEqual(rendered_scoring["scoring_runtime"], {"office": True, "office_render": True})
+        for invalid in ({"office_render": True}, {"office": False, "office_render": True}, {"office": True, "office_render": 1}):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):
+                _task_contracts("task", {"scoring_runtime": invalid}, {}, {"sha256": "a" * 64}, {"sha256": "b" * 64})
         with self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):
             _task_contracts("task", {"scoring_runtime": {"office": "false"}}, {},
                 {"sha256": "a" * 64}, {"sha256": "b" * 64})

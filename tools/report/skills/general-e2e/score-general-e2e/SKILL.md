@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.14.0`增加PPTX可信PDF渲染：任务声明`scoring_runtime: {office: true, office_render: true}`，通过`bootstrap-office-render`冻结独立的Office/字体锁，含明确字体文件及目录成员。Worker在一次性副本上运行固定PDF导出，保留源PPTX、PDF、字体清单与导出选项的绑定；语义证据和归档校验接收派生PDF及回执。缺锁、字体漂移或引擎失败保持评测异常；缺交付由原任务规则判断。PDF转换本身不证明字号、遮挡、图表语义或目标应用可编辑性。使用前读[可信PPTX渲染](references/office-rendering.md)。
+
 `0.13.0`增加PPTX原生文本证据：按presentation关系顺序读取幻灯片、分组文本、原生表格、独立标记的备注、图表存储缓存及嵌入XLSX单元格。图表缓存和嵌入表格保留各自值、定位和SHA，不假定二者一致；外部数据关系不跟随。独立裁判查询、API输入及legacy Workspace证据共用该离线提取器。显式字号只作为原始结构记录，不证明继承后的字号、文字溢出或可编辑应用行为。使用前读[原生文件文本证据](references/native-text-evidence.md)；PPTX版式及图像仍需单独渲染/视觉证据。
 
 `0.12.0`增加显式Office评分运行时：任务声明`scoring_runtime: {office: true}`时，先冻结可信LibreOffice的绝对路径、版本与可执行文件SHA，再由受管Worker重算一次性XLSX副本。所有公式缓存先清空，原件保持不变，派生文件与回执进入语义证据及归档核验。缺引擎、漂移或重算失败不补候选零分；漏交文件仍按任务契约计分。使用前读[可信Office重算](references/office-recalculation.md)。文本投影本身仍不计算公式。

@@ -256,6 +256,9 @@ class GeneralReleasePrepareTests(unittest.TestCase):
                 installed[skill] = builder._safe_extract(archive,detached / (skill + '-installed'))
         environment = dict(os.environ, PYTHONPATH='')
         from tests.general_e2e.test_native_presentation_text import write_pptx
+        render_help = subprocess.run([sys.executable, str(installed['score-general-e2e'] / 'scripts/score_general_e2e.py'),
+            'bootstrap-office-render', '--help'], cwd=detached, env=environment, check=True, capture_output=True, text=True)
+        self.assertIn('--font-directory', render_help.stdout)
         presentation = write_pptx(detached / 'fixture.pptx')
         vendor = installed['score-general-e2e'] / 'vendor/e2e-shared'
         core_code = ('import sys,json;from pathlib import Path;sys.path.insert(0,sys.argv[1]);'

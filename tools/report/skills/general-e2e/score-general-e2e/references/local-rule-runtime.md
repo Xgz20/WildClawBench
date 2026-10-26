@@ -77,6 +77,8 @@ Windows 的 Python 路径使用 `Scripts/python.exe`。bootstrap 生成的 marke
 
 需要XLSX公式重算的任务另声明`scoring_runtime: {office: true}`，按[可信Office重算](office-recalculation.md)冻结引擎。Worker仅从评分侧接收锁与派生证据目录；派生文件位于`worker/derived/`，不进入候选原件或runtime Workspace。完成后回传保留派生文件和回执，`verify-score --archived`可在没有引擎和runtime副本时校验其完整性。
 
+PPTX渲染另声明`scoring_runtime: {office: true, office_render: true}`，通过[可信PPTX渲染](office-rendering.md)冻结程序与字体清单。Worker额外获得`GENERAL_E2E_OFFICE_RENDER_LOCK`，PDF及回执仍写同一派生证据目录；归档核验不要求原字体和引擎存在。
+
 ### 逐检查点理由与证据
 
 新执行产生 `wildclawbench.general-e2e-rule-component/v2`。每个 criterion 都记录中文 `reason` 和 `decision`：分数为 `1.0` 时标记 `full_score`，为 `0.0` 时标记 `zero_score`，其余合法值标记 `partial_score`。理由只解释 Worker 已返回的分值状态，不让模型推测自动规则的业务含义。

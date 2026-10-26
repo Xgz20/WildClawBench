@@ -8,6 +8,8 @@ score-general-e2e 0.12.0装配core 0.4.0，增加`create_office_lock(executable)
 
 score-general-e2e 0.13.0装配core 0.5.0，`extract_native_text()`与`is_native_text_format()`增加PPTX。该格式的`engine.version`为`wildclawbench.pptx-text/v1`，外层schema仍为`wildclawbench.native-artifact-text/v1`。幻灯片顺序、文本/表格/备注、图表缓存与嵌入XLSX分别保留位置和适用边界；不渲染、不重算、不解析图像，也不跟随外部关系。既有三种格式的投影不改写。详见[原生文件文本证据](native-text-evidence.md)。
 
+score-general-e2e 0.14.0装配core 0.6.0，新增`create_office_render_lock()`、`validate_office_render_lock()`、`office_render_lock_digest()`及`render_pptx_pdf()`。独立渲染锁在原Office程序锁外绑定字体文件及目录成员，原XLSX锁保持兼容；PPTX转PDF使用原字节一次性副本和明确导出选项，派生回执由外围评分工作空间核验。详见[可信PPTX渲染](office-rendering.md)。
+
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。规则/索引/结果校验及合分、DOCX/XLSX/PPTX文本投影只使用Python标准库，PDF投影按需使用评分CLI解释器中的pypdf。任务规则所需的PyYAML、Playwright和Chromium属于G3-02专用评分虚拟环境，不因原生证据提取而安装到被测项目。
 
 ## 公开 API

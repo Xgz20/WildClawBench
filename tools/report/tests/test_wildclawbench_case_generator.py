@@ -456,15 +456,16 @@ class RegisteredCaseGeneratorTest(unittest.TestCase):
             generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
 
     def test_office_requirement_uses_boolean_scoring_metadata(self):
-        for requirement in ({"office": "true"}, {"office": 1}, {"unknown": True}):
+        for requirement in ({"office": "true"}, {"office": 1}, {"unknown": True}, {"office_render": True},
+                            {"office": False, "office_render": True}, {"office": True, "office_render": "true"}):
             with self.subTest(requirement=requirement), self.assertRaisesRegex(generator.SpecError, "scoring_runtime"):
                 generator.assemble_case({**self.spec(), "scoring_runtime": requirement},
                     repo_root=self.repo, spec_dir=self.repo, dry_run=True)
         self.install_validator_wrapper()
-        result = generator.assemble_case({**self.spec(), "scoring_runtime": {"office": True}},
+        result = generator.assemble_case({**self.spec(), "scoring_runtime": {"office": True, "office_render": True}},
             repo_root=self.repo, spec_dir=self.repo)
         metadata = yaml.safe_load(Path(result["task_path"]).read_text(encoding="utf-8").split("---", 2)[1])
-        self.assertEqual(metadata["scoring_runtime"], {"office": True})
+        self.assertEqual(metadata["scoring_runtime"], {"office": True, "office_render": True})
 
     def test_rejects_symbolic_material_source_and_module_level_network_import(self):
         (self.repo / "linked.md").symlink_to("input.md")

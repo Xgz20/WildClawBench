@@ -554,6 +554,9 @@ class RunGeneralE2ETests(unittest.TestCase):
             derived.mkdir(parents=True)
             (derived / "recalculated.xlsx").write_bytes(b"derived workbook fixture")
             (derived / "office-audit.json").write_text("{}", encoding="utf-8")
+            (derived / "rendered.pdf").write_bytes(b"PDF fixture retained as an opaque derived artifact")
+            (derived / "render-audit.json").write_text("{}", encoding="utf-8")
+            (derived.parent.parent / "office-render-runtime.json").write_text("{}", encoding="utf-8")
             first = MODULE.package_return(package_args(unit, orchestration, root / "out-one"))
             second = MODULE.package_return(package_args(unit, orchestration, root / "out-two"))
             self.assertEqual(first["archive_sha256"], second["archive_sha256"])
@@ -569,6 +572,9 @@ class RunGeneralE2ETests(unittest.TestCase):
             self.assertIn("scoring/attempts/orch-001/candidate-original/workspace/__pycache__/frozen.pyc", names)
             self.assertIn("scoring/attempts/orch-001/worker/derived/candidate/recalculated.xlsx", names)
             self.assertIn("scoring/attempts/orch-001/worker/derived/candidate/office-audit.json", names)
+            self.assertIn("scoring/attempts/orch-001/worker/derived/candidate/rendered.pdf", names)
+            self.assertIn("scoring/attempts/orch-001/worker/derived/candidate/render-audit.json", names)
+            self.assertIn("scoring/attempts/orch-001/worker/office-render-runtime.json", names)
 
     def test_return_package_accepts_valid_partial_collection(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

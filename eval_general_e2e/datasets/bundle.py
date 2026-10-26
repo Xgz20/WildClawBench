@@ -268,8 +268,9 @@ def _task_contracts(
     }
     if metadata.get("scoring_runtime") is not None:
         requirements = metadata["scoring_runtime"]
-        if (not isinstance(requirements, dict) or set(requirements) - {"office"}
-                or any(type(value) is not bool for value in requirements.values())):
+        if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render"}
+                or any(type(value) is not bool for value in requirements.values())
+                or requirements.get("office_render") and not requirements.get("office")):
             raise ValueError(f"invalid scoring_runtime: {task_id}")
         scoring["scoring_runtime"] = requirements
     return execution, scoring
