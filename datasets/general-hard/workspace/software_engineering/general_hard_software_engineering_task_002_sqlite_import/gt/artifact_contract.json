@@ -1,0 +1,78 @@
+{
+  "schema": {
+    "people": [
+      [
+        "id",
+        "TEXT",
+        0,
+        1
+      ],
+      [
+        "name",
+        "TEXT",
+        1,
+        0
+      ]
+    ],
+    "rooms": [
+      [
+        "id",
+        "TEXT",
+        0,
+        1
+      ],
+      [
+        "capacity",
+        "INTEGER",
+        1,
+        0
+      ]
+    ],
+    "bookings": [
+      [
+        "id",
+        "TEXT",
+        0,
+        1
+      ],
+      [
+        "person_id",
+        "TEXT",
+        1,
+        0
+      ],
+      [
+        "room_id",
+        "TEXT",
+        1,
+        0
+      ],
+      [
+        "seats",
+        "INTEGER",
+        1,
+        0
+      ]
+    ]
+  },
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "requirement_weights": {
+    "business": {
+      "atomic_rollback": 0.3,
+      "associations": 0.2,
+      "idempotency": 0.25,
+      "caller_transactions": 0.25
+    },
+    "boundary": {
+      "compatibility": 0.3,
+      "field_types": 0.4,
+      "error_priority": 0.3
+    }
+  },
+  "schema_gate": "Any foreign key, trigger, table or public-column drift zeros business and boundary components; no style/string matching of equivalent transaction code."
+}

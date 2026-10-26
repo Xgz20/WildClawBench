@@ -7,3 +7,12 @@ general_hard_software_engineering_task_001_delimiter_validation:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_software_engineering_task_002_sqlite_import:
+  business_correctness:
+    - code_generation
+  boundary_cases:
+    - code_generation
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery
