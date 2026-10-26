@@ -1,0 +1,130 @@
+schema_version: 1
+series_id: general-hard
+task_id_prefix: general_hard_
+task_root: datasets/general-hard/tasks
+workspace_root: datasets/general-hard/workspace
+source_registry: datasets/general-hard/task_sources.yaml
+capability_map: datasets/general-hard/checkpoint_capability_map7.yaml
+required_tags:
+- custom
+- general-hard
+exclude_tags:
+- invalid
+categories:
+  office_documents:
+    name: 文档与办公交付
+    description: 多文档修订、原生办公产物和业务交接；不以自由闲聊为主。
+  data_analysis:
+    name: 数据分析与表格建模
+    description: 清洗、核算、公式模型与可复算结论；运行脚本只是实现手段。
+  research_verification:
+    name: 研究检索与证据核验
+    description: 发现并核对来源、版本、口径和结论；不是简单搜索摘要。
+  file_operations:
+    name: 文件与本地资源管理
+    description: 文件树、归档、恢复和可验证变更；清理题仅产出计划。
+  software_engineering:
+    name: 软件工程与故障修复
+    description: 代码或软件配置为主要交付，覆盖调试、测试、兼容和一致性。
+  planning_coordination:
+    name: 规划决策与项目协作
+    description: 目标、约束、依赖和资源驱动的行动计划；包含一题学习规划。
+  content_operations:
+    name: 内容创作与运营
+    description: 基于事实材料的改写、策划和多渠道交付；不单设抽象创意类。
+default_release: general-hard-v1
+releases:
+  general-hard-v1:
+    status: building
+    created_at: '2026-10-26T00:00:00+08:00'
+    manifest: datasets/general-hard/manifests/general-hard-v1.json
+    task_ids:
+    - general_hard_office_documents_task_001_policy_crosswalk
+    - general_hard_office_documents_task_002_meeting_decision_repair
+    - general_hard_office_documents_task_003_docx_clause_patch
+    - general_hard_office_documents_task_004_bid_compliance
+    - general_hard_office_documents_task_005_annual_deck
+    - general_hard_office_documents_task_006_sop_knowledge_pack
+    - general_hard_office_documents_task_007_visual_handoff
+    - general_hard_office_documents_task_008_bilingual_revision
+    - general_hard_office_documents_task_009_pdf_to_docx
+    - general_hard_office_documents_task_010_capex_packet
+    - general_hard_office_documents_task_011_linked_report_update
+    - general_hard_office_documents_task_012_visual_redlines
+    - general_hard_office_documents_task_013_proposal_delivery
+    - general_hard_office_documents_task_014_support_localization
+    - general_hard_office_documents_task_015_board_decision_pack
+    - general_hard_office_documents_task_016_docx_structure_repair
+    - general_hard_data_analysis_task_001_heterogeneous_join
+    - general_hard_data_analysis_task_002_survey_denominator
+    - general_hard_data_analysis_task_003_formula_repair
+    - general_hard_data_analysis_task_004_financial_reconcile
+    - general_hard_data_analysis_task_005_retention_cohort
+    - general_hard_data_analysis_task_006_visual_chart_audit
+    - general_hard_data_analysis_task_007_rolling_ledger
+    - general_hard_data_analysis_task_008_parameterized_model
+    - general_hard_data_analysis_task_009_capacity_optimization
+    - general_hard_data_analysis_task_010_visual_voucher_match
+    - general_hard_research_verification_task_001_open_mineral_fact_discovery
+    - general_hard_research_verification_task_002_api_spec_crosscheck
+    - general_hard_research_verification_task_003_open_product_event_research
+    - general_hard_research_verification_task_004_site_search_literature_screening
+    - general_hard_research_verification_task_005_open_long_horizon_agent_research
+    - general_hard_research_verification_task_006_paper_comparison
+    - general_hard_research_verification_task_007_directed_notice_timeline
+    - general_hard_research_verification_task_008_visual_paper_figures
+    - general_hard_file_operations_task_001_cleanup_plan
+    - general_hard_file_operations_task_002_versioned_archive
+    - general_hard_file_operations_task_003_nested_archives
+    - general_hard_file_operations_task_004_resumable_inventory
+    - general_hard_file_operations_task_005_split_bundle_restore
+    - general_hard_file_operations_task_006_visual_file_mapping
+    - general_hard_software_engineering_task_001_delimiter_validation
+    - general_hard_software_engineering_task_002_sqlite_import
+    - general_hard_software_engineering_task_003_async_lifecycle
+    - general_hard_software_engineering_task_004_rbac_export
+    - general_hard_software_engineering_task_005_sql_compatibility
+    - general_hard_software_engineering_task_006_config_migration
+    - general_hard_software_engineering_task_007_bounded_performance
+    - general_hard_software_engineering_task_008_sse_state
+    - general_hard_software_engineering_task_009_package_migration
+    - general_hard_software_engineering_task_010_multiview_state
+    - general_hard_software_engineering_task_011_security_regression
+    - general_hard_software_engineering_task_012_prd_full_delivery
+    - general_hard_planning_coordination_task_001_measurable_roadmap
+    - general_hard_planning_coordination_task_002_identity_cutover
+    - general_hard_planning_coordination_task_003_learning_path
+    - general_hard_planning_coordination_task_004_release_go_no_go
+    - general_hard_content_operations_task_001_article_rewrite
+    - general_hard_content_operations_task_002_source_bound_campaign
+    - general_hard_content_operations_task_003_marketing_evidence
+    - general_hard_content_operations_task_004_multichannel_update
+    expected_statistics:
+      task_count: 60
+      category_counts:
+        office_documents: 16
+        data_analysis: 10
+        research_verification: 8
+        file_operations: 6
+        software_engineering: 12
+        planning_coordination: 4
+        content_operations: 4
+      grading_type_counts:
+        hybrid: 36
+        automated: 24
+      difficulty_counts:
+        L2: 12
+        L3: 24
+        L4: 24
+      timeout_counts:
+        '900': 60
+    constraints:
+      multimodal_exact: 6
+      multimodal_max_ratio: 0.1
+      production_backed_min: 40
+      coding_primary_max: 20
+      controlled_network_max: 12
+      research_retrieval_group_counts:
+        open_search: 3
+        directed_web_retrieval: 3
+        local_evidence: 2
