@@ -1,0 +1,9 @@
+general_hard_software_engineering_task_001_delimiter_validation:
+  business_correctness:
+    - code_generation
+  boundary_cases:
+    - code_generation
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

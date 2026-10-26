@@ -1,0 +1,38 @@
+{
+  "compatibility_headings": [
+    "## 修复",
+    "## 兼容",
+    "## 验证范围"
+  ],
+  "test_report_keys": [
+    "source_sha256",
+    "command",
+    "returncode",
+    "tests_run",
+    "passed",
+    "stdout_path",
+    "stdout_sha256",
+    "stderr_path",
+    "stderr_sha256"
+  ],
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "requirement_weights": {
+    "business": {
+      "delimiter_fix": 0.35,
+      "cross_format_fix": 0.25,
+      "phase_and_record_routing": 0.4
+    },
+    "boundary": {
+      "valid_csv": 0.25,
+      "valid_tsv": 0.25,
+      "unicode_duplicates": 0.2,
+      "other_errors": 0.3
+    }
+  },
+  "aggregation_basis": "Primary business points measure the requested repairs (delimiter rejection, cross-format rejection, phase/record routing); existing correct behavior forms compatibility regression controls. Each requirement has a fixed weight independent of its number of sampled cases."
+}

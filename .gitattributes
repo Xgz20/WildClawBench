@@ -2,3 +2,7 @@ tools/e2e-build/** text=auto eol=lf
 tools/report/e2e-shared/** text=auto eol=lf
 tools/report/skills/web-e2e/** text=auto eol=lf
 tools/report/skills/general-e2e/** text=auto eol=lf
+# 数据集素材按原始字节冻结，不能由宿主Git设置转换CRLF/BOM样本。
+datasets/**/workspace/** -text
+# H041刻意保留字段首尾空白，空白本身是待测输入。
+datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_001_delimiter_validation/exec/fixtures/* whitespace=-blank-at-eol,cr-at-eol

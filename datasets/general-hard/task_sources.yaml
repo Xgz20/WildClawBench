@@ -1,0 +1,56 @@
+schema_version: 1
+registry_contract:
+  active_task_count: 1
+  category_task_counts:
+    office_documents: 0
+    data_analysis: 0
+    research_verification: 0
+    file_operations: 0
+    software_engineering: 1
+    planning_coordination: 0
+    content_operations: 0
+tasks:
+- task_id: general_hard_software_engineering_task_001_delimiter_validation
+  origin:
+    mode: production_adapted_with_open_benchmark_methods
+    production_refs:
+    - candidate_id: ACQ-0090320d4ee5a5b0
+      query_hash: 0090320d4ee5a5b0eae11f4f6146fd1f831f5fdaa200a0f151bf666eb8860b89
+      observed_astudio_turns: 1
+      distinct_users: 1
+      distinct_sessions: 1
+      first_seen_local: '2026-09-24 14:49:13.813000'
+      last_seen_local: '2026-09-24 14:49:13.813000'
+      intent_summary: 修复科目分隔符校验与错误消息分流。
+      review: accepted_intent_prototype
+      review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+      adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+    external_source_ids:
+    - wb-code
+    direct_task_copy: false
+    authoring:
+      kind: synthetic_owned_fixture
+      seed: 2026102641
+      oracle_basis: Declarative expected tables independently labelled against contract;
+        not generated from candidate/reference outputs.
+      review_status: local_author_controls_passed_not_empirically_calibrated
+    external_method_references:
+    - id: wb-code
+      name: WorkBuddy Bench Code v1.0
+      urls:
+      - https://github.com/Tencent/workbuddy-bench/blob/main/README.zh.md
+      identity: 框架625b2233093ae4f23e76be28c1f341d41cc70373，Code说明为80题
+      evidence: 本地README及框架静态源码；未下载Code任务归档。
+      mechanism: 仓库级跨模块修复、正常功能控制与隐藏测试。
+      gt: 原版测试未获取，不继承原分数。
+      dependencies: 容器CLI环境改为四端共享的小型离线工程。
+      license: 同框架自定义许可；本批仅方法启发。
+      decision: 不用原仓库补丁题，设计可控小仓库与独立测试。
+  network:
+    mode: offline
+    allowed_urls: []
+    freeze_requirement: null
+  attributes:
+    requires_visual_input: false
+    coding_primary: true
+    difficulty_status: estimated_before_pilot
