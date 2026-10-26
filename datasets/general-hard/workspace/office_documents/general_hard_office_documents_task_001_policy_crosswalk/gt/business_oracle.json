@@ -1,0 +1,27 @@
+{
+  "schema_version": "h001-business-oracle/v1",
+  "basis": "Manually declared labels cross-checked by independent calendar/Decimal model before reference scoring.",
+  "verification_date": "2027-03-01",
+  "amount_tolerance_cny": 0.005,
+  "field_weights": {
+    "rule_set": 0.2,
+    "status": 0.3,
+    "rate": 0.1,
+    "cap_cny": 0.1,
+    "grant_cny": 0.3
+  },
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "expected_status_counts": {
+    "可资助": 7,
+    "不资助": 6,
+    "待核实": 3,
+    "待补正": 1,
+    "未覆盖": 1
+  },
+  "approved_grant_total_cny": 15900
+}
