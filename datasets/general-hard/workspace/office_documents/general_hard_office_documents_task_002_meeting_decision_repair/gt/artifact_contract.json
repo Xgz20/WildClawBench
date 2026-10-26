@@ -1,0 +1,33 @@
+{
+  "schema_version": "h002-artifacts/v1",
+  "actions": "results/actions.csv",
+  "minutes": "results/minutes.docx",
+  "required_columns": [
+    "issue_id",
+    "subject",
+    "owner_id",
+    "owner_role",
+    "due_date",
+    "status",
+    "evidence_ids",
+    "status_reason",
+    "next_step"
+  ],
+  "status_aliases": {
+    "待办": "待办",
+    "active": "待办",
+    "撤回": "撤回",
+    "cancelled": "撤回",
+    "待定": "待定",
+    "pending": "待定"
+  },
+  "blank_markers": [
+    "",
+    "N/A",
+    "n.a.",
+    "待定"
+  ],
+  "row_rule": "17 issues exactly once; row/column order irrelevant; UTF-8 or UTF-8 BOM; extra columns allowed.",
+  "withdrawal_policy": "Keep last approved owner/role/deadline as historical fields, explain withdrawal; no execution promise.",
+  "pending_policy": "Unapproved proposed owner/deadline remain blank; preserve proposal in minutes only."
+}

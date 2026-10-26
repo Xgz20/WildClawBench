@@ -1,0 +1,643 @@
+{
+  "schema_version": "h002-evidence-index/v1",
+  "events": {
+    "S001": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "16ebf2d54a83774aec9bbeda81251f4675d9d927046d5189e6c36c41a6174dfa",
+      "record": "[S001] 09:00:00 林澈（项目，项目负责人）：今天确认北岭项目试点交付，逐项核对A01至A17。录音已转写，无需处理音频。"
+    },
+    "S002": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "8ec3f794861df1619f5f624611a891811cf0a4d277f8dcc474481bd0dbd2da89",
+      "record": "[S002] 09:00:30 何舟（项目，会议记录员）：参会有两位陈晨，研发接口负责人和运营经理不是同一人。纪要中不能只用姓名派活，人员ID和岗位以staff.csv为准。"
+    },
+    "S003": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "3a8960aa32275acb13e15c5bc80cd1f7336b8f337c764435ab87c8a99427839c",
+      "record": "[S003] 09:01:00 林澈（项目，项目负责人）：本次只有我和已获授权的许禾可以批准、撤回、恢复或变更决议。其他人提出建议、承诺或转述都不能代替批准。许禾的授权在本次核验时点内有效。"
+    },
+    "S004": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "192d89d4f75f0873eaa21628baf9060f27310a39240ae53cae785d917fc3a77b",
+      "record": "[S004] 09:01:30 陈晨（运营，运营经理）：A01统一问题登记模板。试点反馈目前散在两份表里，我建议合并为一份登记表。"
+    },
+    "S005": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "8bc2356ac9a3c50ad6df1dd093292d983ae8f7336478a48594197cc7a7bcbe4e",
+      "record": "[S005] 09:02:00 陈晨（研发，研发接口负责人）：A01研发能补接口字段，但业务问题的命名还应由运营确认。"
+    },
+    "S006": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "7da46609ade7d005df127f507f5a740237c0552b1fa6d4d2a88d8753004804fe",
+      "record": "[S006] 09:02:30 陈晨（运营，运营经理）：A01模板只统一字段和填写说明，不删除原记录，也不向试点用户自动发通知。"
+    },
+    "S007": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "8a310282ba6d6a2110c805b64380ff527de19aa275622efd3cd91164fff5dfa4",
+      "record": "[S007] 09:03:00 林澈（项目，项目负责人）：A01批准，由运营陈晨负责，10月30日前交统一登记模板，列为待办。"
+    },
+    "S008": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "116bd1848cdf6b3085d9ee38046a8e356898dad940a039f53114d7f9f07874bf",
+      "record": "[S008] 09:03:30 何舟（项目，会议记录员）：A01我记录模板和填写说明为交付，研发只协助补字段，不另立一条研发负责的同名待办。"
+    },
+    "S009": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "776750b11097987702d6862c9c8f00d7fd49b7a6ec859a8bb3a5fbd81c122d33",
+      "record": "[S009] 09:04:00 陈晨（研发，研发接口负责人）：A02重试失败复现包。现有截图没有请求序列，我想整理最小复现材料。"
+    },
+    "S010": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "fa866df7e66778f1519e4055b27e6f0f9bf9e34c821f514d287f712f9cdad7eb",
+      "record": "[S010] 09:04:30 陈晨（运营，运营经理）：A02运营可以提供现象描述，但我不能复现接口重试问题。"
+    },
+    "S011": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "73b0700d234d40eb277499bc15d011f8a969f5e1ce0d1b78df13b882eb8acbec",
+      "record": "[S011] 09:05:00 陈晨（研发，研发接口负责人）：A02我这里说的材料包括输入、请求顺序和失败点，不以修复完成代替复现包。"
+    },
+    "S012": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "8463802eb5687470905c58e335ec5ae5f40107823bfb7abfe9779b54c7d95fde",
+      "record": "[S012] 09:05:30 林澈（项目，项目负责人）：A02按研发陈晨刚才的方案办，由他负责，11月2日前交复现包；运营陈晨不是责任人。"
+    },
+    "S013": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "86bdf97c61cf63524f15724c5a9431d8101168e4907559d790780b5c17d4a51b",
+      "record": "[S013] 09:06:00 李安（质量，质量负责人）：A02质量组在复现包交付后复核，本轮不把质量组复核另列为已批准任务。"
+    },
+    "S014": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "65763daa9163c2108e6585810c6a34352413ade196b05c4765094b7d392f7045",
+      "record": "[S014] 09:06:30 李安（质量，质量负责人）：A03负载窗口回归。建议覆盖上午和夜间两组固定窗口。"
+    },
+    "S015": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "65e17b8d3bea3d2bfe50e2432c8de087ea40e1dbfd63163bb2432f6cf8108529",
+      "record": "[S015] 09:07:00 赵衡（平台，平台负责人）：A03平台能提供脱敏日志，但采集授权还在确认，可能影响排期。"
+    },
+    "S016": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "5b39980697a8b144cf41791b971fe8f7dbd1b65b361ec723b13f3017f1705fa2",
+      "record": "[S016] 09:07:30 李安（质量，质量负责人）：A03先保留窗口和成功失败对照，材料不足时会明确报告。"
+    },
+    "S017": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "4677bdcb8a0d1c24bc1a48a7be9e81df198e37107c0ef1b2af42ff0c8363192f",
+      "record": "[S017] 09:08:00 林澈（项目，项目负责人）：A03暂批准李安负责，10月30日前交回归结果；后续如调整必须走有权限的更正记录。"
+    },
+    "S018": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "1dfdd83f0978d2e597db2d953f48b27fcb0668af726ff7902f723695d9da7bac",
+      "record": "[S018] 09:08:30 何舟（项目，会议记录员）：A03我保留这个暂定截止日，不能根据“可能影响排期”自行顺延。"
+    },
+    "S019": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "22ee55dfd3fef2d7f8d1e12e5530d906cbe031004d09d909b455f2eb511f1ba6",
+      "record": "[S019] 09:09:00 陈晨（研发，研发接口负责人）：A04合并试点反馈口径。我最初建议由研发合并，先把接口报错名统一。"
+    },
+    "S020": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "984abf6e3b398d86bde44d826d8096f83f44567e6c41172168be6f7bb30b162b",
+      "record": "[S020] 09:09:30 许禾（项目，授权项目代理）：A04先澄清，运营陈晨掌握业务口径，我建议由运营负责，不是研发陈晨。"
+    },
+    "S021": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "f74e36046b68fa81b77698ee62c098ab510f9b2590234a783bea482aaedf6e21",
+      "record": "[S021] 09:10:00 陈晨（运营，运营经理）：A04这项我可以接，先保留两份原反馈，再输出差异说明。"
+    },
+    "S022": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "a8844af55fb725a354e457dd7956aaaecfcaaa0a37f183536a9803c618b8c82b",
+      "record": "[S022] 09:10:30 林澈（项目，项目负责人）：A04就由她负责，按刚才运营的方案，11月3日前交差异说明。研发协助解释报错，不换责任人。"
+    },
+    "S023": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "cfb4eb3d1a42ffb3afaaa5a0ff94f236c1da0cffd3502488f38a556101a0ca5e",
+      "record": "[S023] 09:11:00 何舟（项目，会议记录员）：A04我按运营发言的指代记录，不沿用最初“研发合并”的建议。"
+    },
+    "S024": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "a2ef7b539f40ce5bd78b7f8011a8c96402d1a4608d05dd7d88f4e1f7355c8f31",
+      "record": "[S024] 09:11:30 周宁（文档，文档管理员）：A05更新字段字典。字段说明缺少空值和枚举含义，建议补齐。"
+    },
+    "S025": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "bafffd482f38082e52c08aa5e7359525d4d6249612398235e6d9b4c3a1dc0bf4",
+      "record": "[S025] 09:12:00 陈晨（运营，运营经理）：A05业务上空值表示未知，不表示用户选择了否。"
+    },
+    "S026": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "134e515d79ccbb3903582e3a190ccb4f4be297901d73a2238e6b4fa9741930d6",
+      "record": "[S026] 09:12:30 陈晨（研发，研发接口负责人）：A05研发可校验枚举现状，文档里仍需保留旧名到新名的对应。"
+    },
+    "S027": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "817a4ce1f17c3d08ba62a0f1ec8a52014a395b92c619fb2004c3d56724022c00",
+      "record": "[S027] 09:13:00 林澈（项目，项目负责人）：A05周宁负责，10月30日前交字段字典和命名对照，批准列为待办。"
+    },
+    "S028": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "b3f4c5b687dc2ce707b3dbd4b5dafe54e37f4366c84597b44f4c5de614980da3",
+      "record": "[S028] 09:13:30 周宁（文档，文档管理员）：A05我只改文档说明，不在本轮修改线上字段。"
+    },
+    "S029": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "093bf257a91c89a69ec3528659c460e55690cc7d43b2a31a0c680ff228bd45b1",
+      "record": "[S029] 09:14:00 赵衡（平台，平台负责人）：A06归档权限审计日志。试点结束前需要留存授权变更记录。"
+    },
+    "S030": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "f66d4b877cf739c28425bd360cafa3ad73974db143080fb317ad7c07beff2a1c",
+      "record": "[S030] 09:14:30 林澈（项目，项目负责人）：A06只对已有授权的本地副本建目录，不新增采集权限。"
+    },
+    "S031": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "eda6ca517ca0ec65c74fc5edb90ad7c8bad0def3f8f11b5abb33f6159a25fbab",
+      "record": "[S031] 09:15:00 赵衡（平台，平台负责人）：A06可以按日期和来源整理，并保留原文件哈希。"
+    },
+    "S032": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "52c03c637c7f7a9dd2607046149598198083c8ef2779990aa6dbafddaefc048a",
+      "record": "[S032] 09:15:30 林澈（项目，项目负责人）：A06赵衡负责，11月2日前交审计日志目录及来源清单。"
+    },
+    "S033": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "33047ea275206aa0e83af53a6d6c8cae0008e30c097a3d9900fc4b42f59cb485",
+      "record": "[S033] 09:16:00 何舟（项目，会议记录员）：A06交付是归档和索引，不是重新导出全部用户数据。"
+    },
+    "S034": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "032f3103ce26f787304748437d7108b58164f8cea27dbbaa1fc9a440cfe5e948",
+      "record": "[S034] 09:16:30 李安（质量，质量负责人）：A07补齐离线回归证据。现有记录只写了通过，没有输入和实际输出。"
+    },
+    "S035": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "50e24b5fdee0f998526a50a11e55ceab40e782f0b93b642a889cc0b838f73fb2",
+      "record": "[S035] 09:17:00 陈晨（研发，研发接口负责人）：A07我能提供两组现成样本，样本本身不用改。"
+    },
+    "S036": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "89fba451cb76700a0a422834d51b8dfbd85b18f46189a8a342dfe7e68da0298d",
+      "record": "[S036] 09:17:30 李安（质量，质量负责人）：A07将记录样本ID、运行版本、退出状态和差异，不补造失败日志。"
+    },
+    "S037": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "713c403f0218a3f89b2ab78e179791352962097516c3b9fd8ae99aa166e9aecf",
+      "record": "[S037] 09:18:00 林澈（项目，项目负责人）：A07李安负责，11月3日前补齐离线回归证据。"
+    },
+    "S038": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "75396c4bf433d8b2667c4b1fd4c42c49be6076a3e4f07e770172fa599993d9c4",
+      "record": "[S038] 09:18:30 林澈（项目，项目负责人）：A07与A03分开：本项补记录，A03是负载窗口回归。不要合并后丢掉其中一项。"
+    },
+    "S039": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "a22fffc55ed899330031c3240b85870344b560e6212a48b7fc8400ce5a252a82",
+      "record": "[S039] 09:19:00 陈晨（研发，研发接口负责人）：A08修复重复导入保护。重复提交目前会多记一次计数。"
+    },
+    "S040": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "c9187c754efc54b53758d7d4667eed06a78afec1ff75477e1c22339243d4eb83",
+      "record": "[S040] 09:19:30 李安（质量，质量负责人）：A08请同时检查失败后的再次提交，不能只测完全相同的成功重放。"
+    },
+    "S041": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "685d1716a0e0cf73f016c0c7873fd5b9918d2e1c7bd8b5f5b4af554571f24308",
+      "record": "[S041] 09:20:00 陈晨（研发，研发接口负责人）：A08我拟保留原API和失败返回，再加幂等回归。"
+    },
+    "S042": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "bc127f18655f2c64a58be532bd26bdfc3c3e0d169cb7a06f920ab0ef73b4d459",
+      "record": "[S042] 09:20:30 林澈（项目，项目负责人）：A08批准研发陈晨负责，11月4日前交修复及回归记录。"
+    },
+    "S043": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "fa90521bd5306670289ac0de94ad5d9deb428f039d503b0ae5113618b1b39792",
+      "record": "[S043] 09:21:00 何舟（项目，会议记录员）：A08不把建议中的接口重设计列入范围，批准内容只到重复导入保护。"
+    },
+    "S044": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "c21045452e5734a949c58d5b5ef7c56d4bd9d6d429b8e9df31fb6bafca052d7d",
+      "record": "[S044] 09:21:30 赵衡（平台，平台负责人）：A09核对缓存过期告警。告警里时间窗口和客户端时间可能混用了。"
+    },
+    "S045": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "7e46411a85d70d58a685580611e0e34ce69910f406dd6f170a9c94e8fc92abbc",
+      "record": "[S045] 09:22:00 李安（质量，质量负责人）：A09需要记录实际时区，不能仅凭告警出现的日期判断过期。"
+    },
+    "S046": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "64489780d01c2022463852de01892075a0dc3346aa1fcf8541523aa3d454277e",
+      "record": "[S046] 09:22:30 赵衡（平台，平台负责人）：A09我会给出时区和窗口的对照；如果延期会另申请，不在会上自行改日期。"
+    },
+    "S047": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "ff41ada0e57dc0bb78daadc50f4ee19aafbb37c0266e5df0467a6dc6b0dc571c",
+      "record": "[S047] 09:23:00 林澈（项目，项目负责人）：A09赵衡负责，11月4日前交告警窗口核对。"
+    },
+    "S048": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "85832360cb66b5e1fe0ce8c609b6b59c59d4959342fee714e8e01d9cfe7739a3",
+      "record": "[S048] 09:23:30 林澈（项目，项目负责人）：A09这是已批准的日期，普通成员的后续申请不自动生效。"
+    },
+    "S049": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "776a8950bb1f70b2b6c511b1e283102f32fb014e5bafbcf824d05966be4ea34f",
+      "record": "[S049] 09:24:00 陈晨（运营，运营经理）：A10编制试点沟通说明。需要给内部经办人员一份变化说明。"
+    },
+    "S050": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "953c70affcfc1841a6691697966bb64250a61a0fae75159dd5600401657b00c7",
+      "record": "[S050] 09:24:30 周宁（文档，文档管理员）：A10旧版本材料要作为来源保留，沟通稿里区分已上线和计划。"
+    },
+    "S051": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "509710a10ebcca10674b7b454742a52b882b5b4479d5c41f1f44511247b24383",
+      "record": "[S051] 09:25:00 陈晨（运营，运营经理）：A10我只准备稿件，实际发送仍由经办人员另行确认。"
+    },
+    "S052": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "1a725e8538a23ce34b425163ca3d4b3258279f0f81f2ff5e8d5f514977d583aa",
+      "record": "[S052] 09:25:30 林澈（项目，项目负责人）：A10运营陈晨负责，11月5日前交试点沟通说明稿。"
+    },
+    "S053": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "6fd948fd8003abacef61c94fc8865fd3339be0592b971e0fb3eb8c062078f201",
+      "record": "[S053] 09:26:00 何舟（项目，会议记录员）：A10批准的是编制稿件，没有批准自动群发或外部联系。"
+    },
+    "S054": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "e9ea3209ea48ec04ded934553c215d959237194b8a3545016b0ad66b3163c074",
+      "record": "[S054] 09:26:30 李安（质量，质量负责人）：A11验收错误恢复路径。建议从断线、失败和重试三个现象核对。"
+    },
+    "S055": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "0d19405a114754957d04d51747080581de07bb6bf0c7be7893794fab600b3f2b",
+      "record": "[S055] 09:27:00 赵衡（平台，平台负责人）：A11平台提供模拟故障开关，执行范围仍限离线环境。"
+    },
+    "S056": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "5bbf48376d9e4365a7cbc4558baa5cd9bfcb5eac96956e0eed3aff2d7e02ba05",
+      "record": "[S056] 09:27:30 李安（质量，质量负责人）：A11会记录恢复前后状态，未恢复成功也保留原输出。"
+    },
+    "S057": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "6aaa39e270ad435d5804c140c0d2d4c20207d547efe138c32bdd45cdf814dad3",
+      "record": "[S057] 09:28:00 林澈（项目，项目负责人）：A11李安负责，11月6日前交错误恢复验收记录。"
+    },
+    "S058": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "6c0eb13599c266cc682bde5262b501eaa60b7c232ef47bba7690a6d2c9381fbe",
+      "record": "[S058] 09:28:30 林澈（项目，项目负责人）：A11不等同于承诺所有恢复场景都成功，验收应如实反映结果。"
+    },
+    "S059": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "3b9ebb1984f5485211bb8f5aeef894de5b762c4be00f082cc01230b332bd279d",
+      "record": "[S059] 09:29:00 周宁（文档，文档管理员）：A12整理旧问题索引。建议把上一轮问题链接到当前编号。"
+    },
+    "S060": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "ddcd045fbab30edfb154528af42e710baabbcabe589b2cf55b0110c285ee0066",
+      "record": "[S060] 09:29:30 林澈（项目，项目负责人）：A12先批准周宁负责，11月2日前交索引。"
+    },
+    "S061": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "cf2b0d23ea3ed4ddcaf13f1a65fa5328f81e17353e6adde5fca251211cc9a15c",
+      "record": "[S061] 09:30:00 赵衡（平台，平台负责人）：A12上一轮快照还在补全，当前整理可能漏一半。"
+    },
+    "S062": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "b07c48a5c79114c42c50b65842ac1ef27ce382f49e8603fbc232659cb566c727",
+      "record": "[S062] 09:30:30 林澈（项目，项目负责人）：A12撤回刚才的安排，等完整快照后再审；不要继续按11月2日开工。"
+    },
+    "S063": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "1820e7c08a9a8f74ae03ea8dc8a7aa9c18122b65df00cbace637381e96580307",
+      "record": "[S063] 09:31:00 何舟（项目，会议记录员）：A12保留先批准再撤回的经过，有新的授权恢复时再更新有效状态。"
+    },
+    "S064": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "0098577bf9af3828513984064936fc74422fdbcf1740d06d666169e9168e3b43",
+      "record": "[S064] 09:31:30 赵衡（平台，平台负责人）：A13导出每日访问快照。我建议在试点期逐日导出一份。"
+    },
+    "S065": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "60f5bd625e62e06ff6c622c5a4e52d84a98bc3cd8ce2aeff6405b0bace560eb5",
+      "record": "[S065] 09:32:00 李安（质量，质量负责人）：A13先核对现有审计是否已经包含相同内容，避免多留一份副本。"
+    },
+    "S066": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "b6c0bdb75a8306ba259ad7c4a747bb7787f051e2ebb3afa7f3af3455a2cfc59d",
+      "record": "[S066] 09:32:30 赵衡（平台，平台负责人）：A13目前先按本地脱敏副本安排，我会报告是否重复。"
+    },
+    "S067": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "c7e756aafbf3f31f60ddb527955cd7073e0a64770cbfa302bce1443959488c97",
+      "record": "[S067] 09:33:00 林澈（项目，项目负责人）：A13暂批准赵衡负责，11月3日前交每日快照目录；如已有审计覆盖，再申请撤回。"
+    },
+    "S068": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "1484fea2ac48394d42caebc1224b34ea77467fe93d331cd8036cd88404d14c57",
+      "record": "[S068] 09:33:30 何舟（项目，会议记录员）：A13现阶段只是提出可能重复，会上还没有撤回，不能提前当作已取消。"
+    },
+    "S069": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "ec6a8cb4c7ce04f7daf6316c8fd64f6a30301d4c9e8196ba15468081560568f4",
+      "record": "[S069] 09:34:00 陈晨（运营，运营经理）：A14全量替换历史标签。建议把旧标签统一改成新名。"
+    },
+    "S070": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "e7ed71b898739fd58b87d4190e1ca62d10c5af095b288a0b6ee681c8ce2f3a56",
+      "record": "[S070] 09:34:30 林澈（项目，项目负责人）：A14先由运营陈晨负责，11月2日前做替换清单，先列入待办。"
+    },
+    "S071": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "8bcafe9bf4c5a57b51d687bdfd95a18f97e77a48bc54bba92254629dd0f808be",
+      "record": "[S071] 09:35:00 周宁（文档，文档管理员）：A14历史记录里旧标签有原始含义，全量替换可能破坏追溯。"
+    },
+    "S072": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "cd02a6e03fade69fcc4281d5d16204d59362192cf379328fec2c0152ca13c5ae",
+      "record": "[S072] 09:35:30 林澈（项目，项目负责人）：A14撤回全量替换安排，保留历史标签；不要把它写为本轮执行任务。"
+    },
+    "S073": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "e5d8954c74fb7c55d3b98af97816f953a45fc5012d8b2d8c2e66d5d1c5a1b1b5",
+      "record": "[S073] 09:36:00 陈晨（运营，运营经理）：A14收到，撤回前的责任人和日期只用于审计，不再作为执行承诺。"
+    },
+    "S074": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "bbc085582bd1437febec46283069f4d4a0a80411224f26695e002cbeebe5e03e",
+      "record": "[S074] 09:36:30 陈晨（研发，研发接口负责人）：A15统一重命名历史附件。想消除上一轮目录里的不同命名方式。"
+    },
+    "S075": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "a718b3f52b2c3e46a36510634241e991ae5a344ec7f3b4f7083d89be75fef90c",
+      "record": "[S075] 09:37:00 林澈（项目，项目负责人）：A15先批准研发陈晨负责，11月3日前交重命名方案。"
+    },
+    "S076": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "4143a13fa6e331ecf2fb52c12fade7fa6c25e4d423e9a12f59aed12ded4b6e0e",
+      "record": "[S076] 09:37:30 周宁（文档，文档管理员）：A15已有外部文档按原路径引用附件，改名会断链接。"
+    },
+    "S077": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "80a6e1435c92e59b6e7952b404563aed84015fe5f7d8e84b58f1ff51eaef9f01",
+      "record": "[S077] 09:38:00 林澈（项目，项目负责人）：A15撤回，不改历史附件名；路径引用风险未解决，不保留这项执行安排。"
+    },
+    "S078": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "8731cc5ee0efb41a050d904b75bcf9135608227e4998703c75a9816984aa1fa0",
+      "record": "[S078] 09:38:30 何舟（项目，会议记录员）：A15与A12分开记录。A12以后可能恢复，不能因此把所有撤回项都自动恢复。"
+    },
+    "S079": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "a65d0a616c2f021a75b01aa3f9b7e4edd6569bf576ae759ccd85557f8b0fab19",
+      "record": "[S079] 09:39:00 赵衡（平台，平台负责人）：A16跨区域备份方案。我建议由平台牵头，11月9日前列一个方案。"
+    },
+    "S080": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "4ed1e1d4350a10200878c415584da6cb719d58dc43ae2932dfabdad633e2b8a1",
+      "record": "[S080] 09:39:30 陈晨（运营，运营经理）：A16预算和数据范围都没有确定，运营不能直接认可这个日期。"
+    },
+    "S081": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "c868cbefc5b989479186a6cae85fcdc42b7bd75820c8b1776f55dfb967e0bbf7",
+      "record": "[S081] 09:40:00 赵衡（平台，平台负责人）：A16上面是我的建议，不代表拿到了新的数据访问许可。"
+    },
+    "S082": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "ec1b22778edaaab9fadf4d1b3087554efa33664ef6c754f4d265d085a084cc0e",
+      "record": "[S082] 09:40:30 许禾（项目，授权项目代理）：A16待定，等预算和范围明确后再批；本次不确定责任人和截止日。"
+    },
+    "S083": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "d825284a87318bde62ff53329f2ad85beaafe4fa7d6f10c0909ad8552ed1d017",
+      "record": "[S083] 09:41:00 何舟（项目，会议记录员）：A16在未决事项里记录平台的建议及待确认条件，不能转成已批准待办。"
+    },
+    "S084": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "0d543178c936aa4671ee71207d790a09f755faab238411caf952d83bfe82a59a",
+      "record": "[S084] 09:41:30 陈晨（运营，运营经理）：A17外部供应商对接。我想请候选供应商演示，建议11月10日前开始联系。"
+    },
+    "S085": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "5a8c6a0f6d4add8e32354ae5fc4f0675677d6ffc4db988abf37743cae69a88da",
+      "record": "[S085] 09:42:00 陈晨（研发，研发接口负责人）：A17功能差异还没有整理，先联系可能问不到重点。"
+    },
+    "S086": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "7fede4c7227c26376c7093f58c6602adb54cd0f2e8e81a400da202e7ed2c4700",
+      "record": "[S086] 09:42:30 陈晨（运营，运营经理）：A17我愿意后续协调，但是否联系、联系谁都请负责人先决定。"
+    },
+    "S087": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "b21a48e74eae4aa3f07d4e7711ef6a76fff05f8084b18c21e2314c0b30fe34e6",
+      "record": "[S087] 09:43:00 林澈（项目，项目负责人）：A17待定，先明确选择条件，本次不批准联系，也不确定责任人和日期。"
+    },
+    "S088": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "ad1a1f80b358b65831f1028bb7f0ed371bd307f007d8f98b1294f6a32002419f",
+      "record": "[S088] 09:43:30 何舟（项目，会议记录员）：A17自愿协调和建议的日期不当作正式安排，保留未决原因。"
+    },
+    "S089": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "4babada1b5f5e74c86fba081a6911bad88f5fa0ee05153e1ca12a282a6f0f996",
+      "record": "[S089] 09:44:00 林澈（项目，项目负责人）：逐项确认到此结束。纪要保留变更、撤回和未决，尤其不要把被否定的提议重新写成决定。"
+    },
+    "S090": {
+      "source": "meeting_transcript.txt",
+      "source_sha256": "77b771beff37f0bf8608b5af0a5f1cfc6015c57fce93e9ae6cfe82ecee082669",
+      "record_sha256": "df5f8b765e5e1cff635e64e590d8bc58c70660e04d550e3ba27a08d92ace26b2",
+      "record": "[S090] 09:44:30 何舟（项目，会议记录员）：会后更正记录汇总到corrections.jsonl，文件行序不等于生效顺序。以有效时间排序，并逐条核对staff.csv权限；本次核验截止到2026年10月27日12时30分。"
+    },
+    "E01": {
+      "source": "corrections.jsonl",
+      "source_sha256": "bd593b762a12c2d8bf195eacba522db388b52d4a7d046073dcb65f2460e308b6",
+      "record": {
+        "event_id": "E01",
+        "effective_at": "2026-10-27T10:15:00+08:00",
+        "author_id": "U01",
+        "claimed_role": "项目负责人",
+        "issue_id": "A03",
+        "patch": {
+          "due_date": "2026-11-04"
+        },
+        "reason": "日志授权等待，A03截止日由10月30日改为11月4日，其他安排不变。"
+      },
+      "record_sha256": "4c540c5d339108446f1b12c2e8659e976509fdcc8d755fa4c757edf8348201f0"
+    },
+    "E02": {
+      "source": "corrections.jsonl",
+      "source_sha256": "bd593b762a12c2d8bf195eacba522db388b52d4a7d046073dcb65f2460e308b6",
+      "record": {
+        "event_id": "E02",
+        "effective_at": "2026-10-27T11:00:00+08:00",
+        "author_id": "U08",
+        "claimed_role": "授权项目代理",
+        "issue_id": "A03",
+        "patch": {
+          "due_date": "2026-11-06"
+        },
+        "reason": "核验日志实际可得时间后，再将A03截止日改为11月6日，取代E01的日期。"
+      },
+      "record_sha256": "3952afd5b02db14df3e8f1e7933dc9fd5cd5de25aee92e13cb70e11f81883ede"
+    },
+    "E03": {
+      "source": "corrections.jsonl",
+      "source_sha256": "bd593b762a12c2d8bf195eacba522db388b52d4a7d046073dcb65f2460e308b6",
+      "record": {
+        "event_id": "E03",
+        "effective_at": "2026-10-27T10:30:00+08:00",
+        "author_id": "U01",
+        "claimed_role": "项目负责人",
+        "issue_id": "A13",
+        "patch": {
+          "status": "撤回"
+        },
+        "reason": "现有审计已经覆盖每日快照，撤回A13，避免额外副本；原责任人和日期保留为撤回历史。"
+      },
+      "record_sha256": "15177f876659db650f627f43ea7e6a1ac74ba5dfdbb4ae4311a3afe0429c5d4c"
+    },
+    "E04": {
+      "source": "corrections.jsonl",
+      "source_sha256": "bd593b762a12c2d8bf195eacba522db388b52d4a7d046073dcb65f2460e308b6",
+      "record": {
+        "event_id": "E04",
+        "effective_at": "2026-10-27T10:45:00+08:00",
+        "author_id": "U08",
+        "claimed_role": "授权项目代理",
+        "issue_id": "A12",
+        "patch": {
+          "status": "待办",
+          "owner_id": "U05",
+          "due_date": "2026-11-05"
+        },
+        "reason": "完整快照已到，恢复A12，由周宁在11月5日前整理索引，取代会上撤回状态和旧日期。"
+      },
+      "record_sha256": "d8685078de5668f2bc0b4f4e01d0238bc5490d50929a674b0d180d239a601c60"
+    },
+    "E05": {
+      "source": "corrections.jsonl",
+      "source_sha256": "bd593b762a12c2d8bf195eacba522db388b52d4a7d046073dcb65f2460e308b6",
+      "record": {
+        "event_id": "E05",
+        "effective_at": "2026-10-27T11:20:00+08:00",
+        "author_id": "U02",
+        "claimed_role": "会议主席",
+        "issue_id": "A04",
+        "patch": {
+          "owner_id": "U02"
+        },
+        "reason": "我认为反馈合并应该转给研发陈晨，申请将A04责任人改为我。"
+      },
+      "record_sha256": "046f4657c5f239766b7a722b1209eec3119b22fa0c02121c0047f4048088257b"
+    },
+    "E06": {
+      "source": "corrections.jsonl",
+      "source_sha256": "bd593b762a12c2d8bf195eacba522db388b52d4a7d046073dcb65f2460e308b6",
+      "record": {
+        "event_id": "E06",
+        "effective_at": "2026-10-27T12:10:00+08:00",
+        "author_id": "U06",
+        "claimed_role": "平台负责人",
+        "issue_id": "A09",
+        "patch": {
+          "due_date": "2026-11-20"
+        },
+        "reason": "平台排期紧张，申请把A09顺延到11月20日，尚未收到负责人批准。"
+      },
+      "record_sha256": "e224cbd104e8ccf632d34c090b1627d7b755042b9ee04a5ef2c9cdc1478a50fc"
+    }
+  }
+}

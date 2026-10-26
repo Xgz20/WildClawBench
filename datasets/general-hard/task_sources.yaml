@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 3
+  active_task_count: 4
   category_task_counts:
-    office_documents: 1
+    office_documents: 2
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -122,6 +122,53 @@ tasks:
         oracle_basis: 18 manually declared labels cross-checked against independent
           calendar/Decimal decisions; real LibreOffice recalculation of reference
           and faulty cached-formula controls.
+        review_status: local_author_controls_passed_not_empirically_calibrated
+      external_method_references:
+        - id: wb-office
+          name: WorkBuddy Bench Office v1.0
+          urls:
+            - https://workbuddybench.com/office.html
+            - https://huggingface.co/datasets/tencent/workbuddy-bench
+            - https://github.com/Tencent/workbuddy-bench
+          identity: 本地框架625b2233093ae4f23e76be28c1f341d41cc70373；HF页面发布提交3e8ad83
+          evidence: 官方Office说明、数据卡与本地框架静态源码；本次归档下载超时，未检查50题私有评分与GT。
+          mechanism: 混合格式工作区、最终状态与交接物的多层核验。
+          gt: 公开归档声明含环境和测试；本次未下载成功，逐题GT覆盖未验证。
+          dependencies: 原版依赖Harbor、Docker、CompositeVerifier；不能直接复制目录声称评分等价。
+          license: Tencent自定义许可；本次不复制题文、素材或评分代码。
+          decision: 借鉴工作流与验证方法，全部重构为自建输入与独立oracle。
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_002_meeting_decision_repair
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-8339bf529de1294b
+          query_hash: 8339bf529de1294bf449e7165b15011f11366bdfdd7f3f77cbffbcc006a17889
+          observed_astudio_turns: 6
+          distinct_users: 6
+          distinct_sessions: 6
+          first_seen_local: '2026-09-07 14:37:31'
+          last_seen_local: '2026-10-15 13:29:59.198000'
+          intent_summary: 将会议录音转为按议题、结论、待办组织的纪要；新题只使用已提供转写文本。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+      authoring:
+        kind: synthetic_owned_fixture
+        seed: 2026102602
+        oracle_basis: 90 source-bound event annotations plus independently implemented
+          state fold versus separately declared 17-item final labels; not generated
+          from candidate/reference output.
         review_status: local_author_controls_passed_not_empirically_calibrated
       external_method_references:
         - id: wb-office

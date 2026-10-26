@@ -1,0 +1,886 @@
+{
+  "schema_version": "h002-annotated-events/v1",
+  "segments": [
+    {
+      "segment_id": "S001",
+      "effective_at": "2026-10-27T09:00:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": null,
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "16ebf2d54a83774aec9bbeda81251f4675d9d927046d5189e6c36c41a6174dfa"
+    },
+    {
+      "segment_id": "S002",
+      "effective_at": "2026-10-27T09:00:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": null,
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "8ec3f794861df1619f5f624611a891811cf0a4d277f8dcc474481bd0dbd2da89"
+    },
+    {
+      "segment_id": "S003",
+      "effective_at": "2026-10-27T09:01:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": null,
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "3a8960aa32275acb13e15c5bc80cd1f7336b8f337c764435ab87c8a99427839c"
+    },
+    {
+      "segment_id": "S004",
+      "effective_at": "2026-10-27T09:01:30+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A01",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "192d89d4f75f0873eaa21628baf9060f27310a39240ae53cae785d917fc3a77b"
+    },
+    {
+      "segment_id": "S005",
+      "effective_at": "2026-10-27T09:02:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A01",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "8bc2356ac9a3c50ad6df1dd093292d983ae8f7336478a48594197cc7a7bcbe4e"
+    },
+    {
+      "segment_id": "S006",
+      "effective_at": "2026-10-27T09:02:30+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A01",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "7da46609ade7d005df127f507f5a740237c0552b1fa6d4d2a88d8753004804fe"
+    },
+    {
+      "segment_id": "S007",
+      "effective_at": "2026-10-27T09:03:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A01",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U03",
+        "due_date": "2026-10-30"
+      },
+      "segment_sha256": "8a310282ba6d6a2110c805b64380ff527de19aa275622efd3cd91164fff5dfa4"
+    },
+    {
+      "segment_id": "S008",
+      "effective_at": "2026-10-27T09:03:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A01",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "116bd1848cdf6b3085d9ee38046a8e356898dad940a039f53114d7f9f07874bf"
+    },
+    {
+      "segment_id": "S009",
+      "effective_at": "2026-10-27T09:04:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A02",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "776750b11097987702d6862c9c8f00d7fd49b7a6ec859a8bb3a5fbd81c122d33"
+    },
+    {
+      "segment_id": "S010",
+      "effective_at": "2026-10-27T09:04:30+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A02",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "fa866df7e66778f1519e4055b27e6f0f9bf9e34c821f514d287f712f9cdad7eb"
+    },
+    {
+      "segment_id": "S011",
+      "effective_at": "2026-10-27T09:05:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A02",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "73b0700d234d40eb277499bc15d011f8a969f5e1ce0d1b78df13b882eb8acbec"
+    },
+    {
+      "segment_id": "S012",
+      "effective_at": "2026-10-27T09:05:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A02",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U02",
+        "due_date": "2026-11-02"
+      },
+      "segment_sha256": "8463802eb5687470905c58e335ec5ae5f40107823bfb7abfe9779b54c7d95fde"
+    },
+    {
+      "segment_id": "S013",
+      "effective_at": "2026-10-27T09:06:00+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A02",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "86bdf97c61cf63524f15724c5a9431d8101168e4907559d790780b5c17d4a51b"
+    },
+    {
+      "segment_id": "S014",
+      "effective_at": "2026-10-27T09:06:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A03",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "65763daa9163c2108e6585810c6a34352413ade196b05c4765094b7d392f7045"
+    },
+    {
+      "segment_id": "S015",
+      "effective_at": "2026-10-27T09:07:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A03",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "65e17b8d3bea3d2bfe50e2432c8de087ea40e1dbfd63163bb2432f6cf8108529"
+    },
+    {
+      "segment_id": "S016",
+      "effective_at": "2026-10-27T09:07:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A03",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "5b39980697a8b144cf41791b971fe8f7dbd1b65b361ec723b13f3017f1705fa2"
+    },
+    {
+      "segment_id": "S017",
+      "effective_at": "2026-10-27T09:08:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A03",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U04",
+        "due_date": "2026-10-30"
+      },
+      "segment_sha256": "4677bdcb8a0d1c24bc1a48a7be9e81df198e37107c0ef1b2af42ff0c8363192f"
+    },
+    {
+      "segment_id": "S018",
+      "effective_at": "2026-10-27T09:08:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A03",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "1dfdd83f0978d2e597db2d953f48b27fcb0668af726ff7902f723695d9da7bac"
+    },
+    {
+      "segment_id": "S019",
+      "effective_at": "2026-10-27T09:09:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A04",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "22ee55dfd3fef2d7f8d1e12e5530d906cbe031004d09d909b455f2eb511f1ba6"
+    },
+    {
+      "segment_id": "S020",
+      "effective_at": "2026-10-27T09:09:30+08:00",
+      "speaker_id": "U08",
+      "issue_id": "A04",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "984abf6e3b398d86bde44d826d8096f83f44567e6c41172168be6f7bb30b162b"
+    },
+    {
+      "segment_id": "S021",
+      "effective_at": "2026-10-27T09:10:00+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A04",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "f74e36046b68fa81b77698ee62c098ab510f9b2590234a783bea482aaedf6e21"
+    },
+    {
+      "segment_id": "S022",
+      "effective_at": "2026-10-27T09:10:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A04",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U03",
+        "due_date": "2026-11-03"
+      },
+      "segment_sha256": "a8844af55fb725a354e457dd7956aaaecfcaaa0a37f183536a9803c618b8c82b"
+    },
+    {
+      "segment_id": "S023",
+      "effective_at": "2026-10-27T09:11:00+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A04",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "cfb4eb3d1a42ffb3afaaa5a0ff94f236c1da0cffd3502488f38a556101a0ca5e"
+    },
+    {
+      "segment_id": "S024",
+      "effective_at": "2026-10-27T09:11:30+08:00",
+      "speaker_id": "U05",
+      "issue_id": "A05",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "a2ef7b539f40ce5bd78b7f8011a8c96402d1a4608d05dd7d88f4e1f7355c8f31"
+    },
+    {
+      "segment_id": "S025",
+      "effective_at": "2026-10-27T09:12:00+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A05",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "bafffd482f38082e52c08aa5e7359525d4d6249612398235e6d9b4c3a1dc0bf4"
+    },
+    {
+      "segment_id": "S026",
+      "effective_at": "2026-10-27T09:12:30+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A05",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "134e515d79ccbb3903582e3a190ccb4f4be297901d73a2238e6b4fa9741930d6"
+    },
+    {
+      "segment_id": "S027",
+      "effective_at": "2026-10-27T09:13:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A05",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U05",
+        "due_date": "2026-10-30"
+      },
+      "segment_sha256": "817a4ce1f17c3d08ba62a0f1ec8a52014a395b92c619fb2004c3d56724022c00"
+    },
+    {
+      "segment_id": "S028",
+      "effective_at": "2026-10-27T09:13:30+08:00",
+      "speaker_id": "U05",
+      "issue_id": "A05",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "b3f4c5b687dc2ce707b3dbd4b5dafe54e37f4366c84597b44f4c5de614980da3"
+    },
+    {
+      "segment_id": "S029",
+      "effective_at": "2026-10-27T09:14:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A06",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "093bf257a91c89a69ec3528659c460e55690cc7d43b2a31a0c680ff228bd45b1"
+    },
+    {
+      "segment_id": "S030",
+      "effective_at": "2026-10-27T09:14:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A06",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "f66d4b877cf739c28425bd360cafa3ad73974db143080fb317ad7c07beff2a1c"
+    },
+    {
+      "segment_id": "S031",
+      "effective_at": "2026-10-27T09:15:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A06",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "eda6ca517ca0ec65c74fc5edb90ad7c8bad0def3f8f11b5abb33f6159a25fbab"
+    },
+    {
+      "segment_id": "S032",
+      "effective_at": "2026-10-27T09:15:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A06",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U06",
+        "due_date": "2026-11-02"
+      },
+      "segment_sha256": "52c03c637c7f7a9dd2607046149598198083c8ef2779990aa6dbafddaefc048a"
+    },
+    {
+      "segment_id": "S033",
+      "effective_at": "2026-10-27T09:16:00+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A06",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "33047ea275206aa0e83af53a6d6c8cae0008e30c097a3d9900fc4b42f59cb485"
+    },
+    {
+      "segment_id": "S034",
+      "effective_at": "2026-10-27T09:16:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A07",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "032f3103ce26f787304748437d7108b58164f8cea27dbbaa1fc9a440cfe5e948"
+    },
+    {
+      "segment_id": "S035",
+      "effective_at": "2026-10-27T09:17:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A07",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "50e24b5fdee0f998526a50a11e55ceab40e782f0b93b642a889cc0b838f73fb2"
+    },
+    {
+      "segment_id": "S036",
+      "effective_at": "2026-10-27T09:17:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A07",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "89fba451cb76700a0a422834d51b8dfbd85b18f46189a8a342dfe7e68da0298d"
+    },
+    {
+      "segment_id": "S037",
+      "effective_at": "2026-10-27T09:18:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A07",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U04",
+        "due_date": "2026-11-03"
+      },
+      "segment_sha256": "713c403f0218a3f89b2ab78e179791352962097516c3b9fd8ae99aa166e9aecf"
+    },
+    {
+      "segment_id": "S038",
+      "effective_at": "2026-10-27T09:18:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A07",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "75396c4bf433d8b2667c4b1fd4c42c49be6076a3e4f07e770172fa599993d9c4"
+    },
+    {
+      "segment_id": "S039",
+      "effective_at": "2026-10-27T09:19:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A08",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "a22fffc55ed899330031c3240b85870344b560e6212a48b7fc8400ce5a252a82"
+    },
+    {
+      "segment_id": "S040",
+      "effective_at": "2026-10-27T09:19:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A08",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "c9187c754efc54b53758d7d4667eed06a78afec1ff75477e1c22339243d4eb83"
+    },
+    {
+      "segment_id": "S041",
+      "effective_at": "2026-10-27T09:20:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A08",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "685d1716a0e0cf73f016c0c7873fd5b9918d2e1c7bd8b5f5b4af554571f24308"
+    },
+    {
+      "segment_id": "S042",
+      "effective_at": "2026-10-27T09:20:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A08",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U02",
+        "due_date": "2026-11-04"
+      },
+      "segment_sha256": "bc127f18655f2c64a58be532bd26bdfc3c3e0d169cb7a06f920ab0ef73b4d459"
+    },
+    {
+      "segment_id": "S043",
+      "effective_at": "2026-10-27T09:21:00+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A08",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "fa90521bd5306670289ac0de94ad5d9deb428f039d503b0ae5113618b1b39792"
+    },
+    {
+      "segment_id": "S044",
+      "effective_at": "2026-10-27T09:21:30+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A09",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "c21045452e5734a949c58d5b5ef7c56d4bd9d6d429b8e9df31fb6bafca052d7d"
+    },
+    {
+      "segment_id": "S045",
+      "effective_at": "2026-10-27T09:22:00+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A09",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "7e46411a85d70d58a685580611e0e34ce69910f406dd6f170a9c94e8fc92abbc"
+    },
+    {
+      "segment_id": "S046",
+      "effective_at": "2026-10-27T09:22:30+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A09",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "64489780d01c2022463852de01892075a0dc3346aa1fcf8541523aa3d454277e"
+    },
+    {
+      "segment_id": "S047",
+      "effective_at": "2026-10-27T09:23:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A09",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U06",
+        "due_date": "2026-11-04"
+      },
+      "segment_sha256": "ff41ada0e57dc0bb78daadc50f4ee19aafbb37c0266e5df0467a6dc6b0dc571c"
+    },
+    {
+      "segment_id": "S048",
+      "effective_at": "2026-10-27T09:23:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A09",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "85832360cb66b5e1fe0ce8c609b6b59c59d4959342fee714e8e01d9cfe7739a3"
+    },
+    {
+      "segment_id": "S049",
+      "effective_at": "2026-10-27T09:24:00+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A10",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "776a8950bb1f70b2b6c511b1e283102f32fb014e5bafbcf824d05966be4ea34f"
+    },
+    {
+      "segment_id": "S050",
+      "effective_at": "2026-10-27T09:24:30+08:00",
+      "speaker_id": "U05",
+      "issue_id": "A10",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "953c70affcfc1841a6691697966bb64250a61a0fae75159dd5600401657b00c7"
+    },
+    {
+      "segment_id": "S051",
+      "effective_at": "2026-10-27T09:25:00+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A10",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "509710a10ebcca10674b7b454742a52b882b5b4479d5c41f1f44511247b24383"
+    },
+    {
+      "segment_id": "S052",
+      "effective_at": "2026-10-27T09:25:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A10",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U03",
+        "due_date": "2026-11-05"
+      },
+      "segment_sha256": "1a725e8538a23ce34b425163ca3d4b3258279f0f81f2ff5e8d5f514977d583aa"
+    },
+    {
+      "segment_id": "S053",
+      "effective_at": "2026-10-27T09:26:00+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A10",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "6fd948fd8003abacef61c94fc8865fd3339be0592b971e0fb3eb8c062078f201"
+    },
+    {
+      "segment_id": "S054",
+      "effective_at": "2026-10-27T09:26:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A11",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "e9ea3209ea48ec04ded934553c215d959237194b8a3545016b0ad66b3163c074"
+    },
+    {
+      "segment_id": "S055",
+      "effective_at": "2026-10-27T09:27:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A11",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "0d19405a114754957d04d51747080581de07bb6bf0c7be7893794fab600b3f2b"
+    },
+    {
+      "segment_id": "S056",
+      "effective_at": "2026-10-27T09:27:30+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A11",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "5bbf48376d9e4365a7cbc4558baa5cd9bfcb5eac96956e0eed3aff2d7e02ba05"
+    },
+    {
+      "segment_id": "S057",
+      "effective_at": "2026-10-27T09:28:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A11",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U04",
+        "due_date": "2026-11-06"
+      },
+      "segment_sha256": "6aaa39e270ad435d5804c140c0d2d4c20207d547efe138c32bdd45cdf814dad3"
+    },
+    {
+      "segment_id": "S058",
+      "effective_at": "2026-10-27T09:28:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A11",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "6c0eb13599c266cc682bde5262b501eaa60b7c232ef47bba7690a6d2c9381fbe"
+    },
+    {
+      "segment_id": "S059",
+      "effective_at": "2026-10-27T09:29:00+08:00",
+      "speaker_id": "U05",
+      "issue_id": "A12",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "3b9ebb1984f5485211bb8f5aeef894de5b762c4be00f082cc01230b332bd279d"
+    },
+    {
+      "segment_id": "S060",
+      "effective_at": "2026-10-27T09:29:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A12",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U05",
+        "due_date": "2026-11-02"
+      },
+      "segment_sha256": "ddcd045fbab30edfb154528af42e710baabbcabe589b2cf55b0110c285ee0066"
+    },
+    {
+      "segment_id": "S061",
+      "effective_at": "2026-10-27T09:30:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A12",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "cf2b0d23ea3ed4ddcaf13f1a65fa5328f81e17353e6adde5fca251211cc9a15c"
+    },
+    {
+      "segment_id": "S062",
+      "effective_at": "2026-10-27T09:30:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A12",
+      "kind": "withdraw",
+      "patch": {
+        "status": "撤回"
+      },
+      "segment_sha256": "b07c48a5c79114c42c50b65842ac1ef27ce382f49e8603fbc232659cb566c727"
+    },
+    {
+      "segment_id": "S063",
+      "effective_at": "2026-10-27T09:31:00+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A12",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "1820e7c08a9a8f74ae03ea8dc8a7aa9c18122b65df00cbace637381e96580307"
+    },
+    {
+      "segment_id": "S064",
+      "effective_at": "2026-10-27T09:31:30+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A13",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "0098577bf9af3828513984064936fc74422fdbcf1740d06d666169e9168e3b43"
+    },
+    {
+      "segment_id": "S065",
+      "effective_at": "2026-10-27T09:32:00+08:00",
+      "speaker_id": "U04",
+      "issue_id": "A13",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "60f5bd625e62e06ff6c622c5a4e52d84a98bc3cd8ce2aeff6405b0bace560eb5"
+    },
+    {
+      "segment_id": "S066",
+      "effective_at": "2026-10-27T09:32:30+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A13",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "b6c0bdb75a8306ba259ad7c4a747bb7787f051e2ebb3afa7f3af3455a2cfc59d"
+    },
+    {
+      "segment_id": "S067",
+      "effective_at": "2026-10-27T09:33:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A13",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U06",
+        "due_date": "2026-11-03"
+      },
+      "segment_sha256": "c7e756aafbf3f31f60ddb527955cd7073e0a64770cbfa302bce1443959488c97"
+    },
+    {
+      "segment_id": "S068",
+      "effective_at": "2026-10-27T09:33:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A13",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "1484fea2ac48394d42caebc1224b34ea77467fe93d331cd8036cd88404d14c57"
+    },
+    {
+      "segment_id": "S069",
+      "effective_at": "2026-10-27T09:34:00+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A14",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "ec6a8cb4c7ce04f7daf6316c8fd64f6a30301d4c9e8196ba15468081560568f4"
+    },
+    {
+      "segment_id": "S070",
+      "effective_at": "2026-10-27T09:34:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A14",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U03",
+        "due_date": "2026-11-02"
+      },
+      "segment_sha256": "e7ed71b898739fd58b87d4190e1ca62d10c5af095b288a0b6ee681c8ce2f3a56"
+    },
+    {
+      "segment_id": "S071",
+      "effective_at": "2026-10-27T09:35:00+08:00",
+      "speaker_id": "U05",
+      "issue_id": "A14",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "8bcafe9bf4c5a57b51d687bdfd95a18f97e77a48bc54bba92254629dd0f808be"
+    },
+    {
+      "segment_id": "S072",
+      "effective_at": "2026-10-27T09:35:30+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A14",
+      "kind": "withdraw",
+      "patch": {
+        "status": "撤回"
+      },
+      "segment_sha256": "cd02a6e03fade69fcc4281d5d16204d59362192cf379328fec2c0152ca13c5ae"
+    },
+    {
+      "segment_id": "S073",
+      "effective_at": "2026-10-27T09:36:00+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A14",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "e5d8954c74fb7c55d3b98af97816f953a45fc5012d8b2d8c2e66d5d1c5a1b1b5"
+    },
+    {
+      "segment_id": "S074",
+      "effective_at": "2026-10-27T09:36:30+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A15",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "bbc085582bd1437febec46283069f4d4a0a80411224f26695e002cbeebe5e03e"
+    },
+    {
+      "segment_id": "S075",
+      "effective_at": "2026-10-27T09:37:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A15",
+      "kind": "approve",
+      "patch": {
+        "status": "待办",
+        "owner_id": "U02",
+        "due_date": "2026-11-03"
+      },
+      "segment_sha256": "a718b3f52b2c3e46a36510634241e991ae5a344ec7f3b4f7083d89be75fef90c"
+    },
+    {
+      "segment_id": "S076",
+      "effective_at": "2026-10-27T09:37:30+08:00",
+      "speaker_id": "U05",
+      "issue_id": "A15",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "4143a13fa6e331ecf2fb52c12fade7fa6c25e4d423e9a12f59aed12ded4b6e0e"
+    },
+    {
+      "segment_id": "S077",
+      "effective_at": "2026-10-27T09:38:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A15",
+      "kind": "withdraw",
+      "patch": {
+        "status": "撤回"
+      },
+      "segment_sha256": "80a6e1435c92e59b6e7952b404563aed84015fe5f7d8e84b58f1ff51eaef9f01"
+    },
+    {
+      "segment_id": "S078",
+      "effective_at": "2026-10-27T09:38:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A15",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "8731cc5ee0efb41a050d904b75bcf9135608227e4998703c75a9816984aa1fa0"
+    },
+    {
+      "segment_id": "S079",
+      "effective_at": "2026-10-27T09:39:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A16",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "a65d0a616c2f021a75b01aa3f9b7e4edd6569bf576ae759ccd85557f8b0fab19"
+    },
+    {
+      "segment_id": "S080",
+      "effective_at": "2026-10-27T09:39:30+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A16",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "4ed1e1d4350a10200878c415584da6cb719d58dc43ae2932dfabdad633e2b8a1"
+    },
+    {
+      "segment_id": "S081",
+      "effective_at": "2026-10-27T09:40:00+08:00",
+      "speaker_id": "U06",
+      "issue_id": "A16",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "c868cbefc5b989479186a6cae85fcdc42b7bd75820c8b1776f55dfb967e0bbf7"
+    },
+    {
+      "segment_id": "S082",
+      "effective_at": "2026-10-27T09:40:30+08:00",
+      "speaker_id": "U08",
+      "issue_id": "A16",
+      "kind": "pending",
+      "patch": {
+        "status": "待定"
+      },
+      "segment_sha256": "ec1b22778edaaab9fadf4d1b3087554efa33664ef6c754f4d265d085a084cc0e"
+    },
+    {
+      "segment_id": "S083",
+      "effective_at": "2026-10-27T09:41:00+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A16",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "d825284a87318bde62ff53329f2ad85beaafe4fa7d6f10c0909ad8552ed1d017"
+    },
+    {
+      "segment_id": "S084",
+      "effective_at": "2026-10-27T09:41:30+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A17",
+      "kind": "propose",
+      "patch": {},
+      "segment_sha256": "0d543178c936aa4671ee71207d790a09f755faab238411caf952d83bfe82a59a"
+    },
+    {
+      "segment_id": "S085",
+      "effective_at": "2026-10-27T09:42:00+08:00",
+      "speaker_id": "U02",
+      "issue_id": "A17",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "5a8c6a0f6d4add8e32354ae5fc4f0675677d6ffc4db988abf37743cae69a88da"
+    },
+    {
+      "segment_id": "S086",
+      "effective_at": "2026-10-27T09:42:30+08:00",
+      "speaker_id": "U03",
+      "issue_id": "A17",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "7fede4c7227c26376c7093f58c6602adb54cd0f2e8e81a400da202e7ed2c4700"
+    },
+    {
+      "segment_id": "S087",
+      "effective_at": "2026-10-27T09:43:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": "A17",
+      "kind": "pending",
+      "patch": {
+        "status": "待定"
+      },
+      "segment_sha256": "b21a48e74eae4aa3f07d4e7711ef6a76fff05f8084b18c21e2314c0b30fe34e6"
+    },
+    {
+      "segment_id": "S088",
+      "effective_at": "2026-10-27T09:43:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": "A17",
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "ad1a1f80b358b65831f1028bb7f0ed371bd307f007d8f98b1294f6a32002419f"
+    },
+    {
+      "segment_id": "S089",
+      "effective_at": "2026-10-27T09:44:00+08:00",
+      "speaker_id": "U01",
+      "issue_id": null,
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "4babada1b5f5e74c86fba081a6911bad88f5fa0ee05153e1ca12a282a6f0f996"
+    },
+    {
+      "segment_id": "S090",
+      "effective_at": "2026-10-27T09:44:30+08:00",
+      "speaker_id": "U07",
+      "issue_id": null,
+      "kind": "context",
+      "patch": {},
+      "segment_sha256": "df5f8b765e5e1cff635e64e590d8bc58c70660e04d550e3ba27a08d92ace26b2"
+    }
+  ],
+  "scope": "Author semantic annotations tied to exact raw segments; cross-checking state folding does not replace independent human reading."
+}

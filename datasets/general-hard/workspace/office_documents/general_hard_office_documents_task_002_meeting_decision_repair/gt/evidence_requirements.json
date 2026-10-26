@@ -1,0 +1,11 @@
+{
+  "schema_version": "h002-evidence/v1",
+  "locator_syntax": "Snnn and Enn; separated by semicolons or commas",
+  "automated_scope": "Final field-determining approved event IDs must resolve to immutable actual input records; no keyword scoring of minutes.",
+  "semantic_scope": [
+    "Accurate decisions and scope",
+    "Correction authority and E05/E06 rejection reasons",
+    "Withdrawal/reinstatement history and unresolved actions",
+    "Usable DOCX and cross-file consistency"
+  ]
+}
