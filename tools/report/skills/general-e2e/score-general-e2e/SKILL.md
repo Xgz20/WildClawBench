@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.16.0`增加冻结静态图片证据：完整解码PNG/JPEG/WebP/单帧GIF，保留原始字节与SHA，不做OCR、裁剪或重编码。Codex裁判用`query-evidence --mode image`取得核验后的实际图片路径，再用看图工具检查像素；catalog或路径元数据不能证明已看图。API配置可显式增加冻结`image_input`，三种transport发送带evidence ID的原字节内容块，图片预算与文本字符预算分开。缺图/省略不能充当视觉依据，缺依赖与来源漂移保留异常。归档复核附件原字节及保存的provider请求，不要求解码器存在。使用前读[冻结图片证据](references/image-evidence.md)。
+
 `0.15.0`增加PPTX内嵌XLSX的可归档重算链：提取回执绑定冻结PPTX、部件名及原始工作簿SHA，随后清缓存重算的输入可追溯到该部件；原始副本、派生文件与两层回执都保留。归档复核重新比对包内原字节，不要求引擎存在。规则依赖目录新增可选pdfplumber/pypdf，实际Worker锁必须声明并通过版本/导入探测；默认3.11安装Profile不因此自动包含它们。详见[内嵌表格重算](references/office-recalculation.md#内嵌表格重算)。
 
 `0.14.0`增加PPTX可信PDF渲染：任务声明`scoring_runtime: {office: true, office_render: true}`，通过`bootstrap-office-render`冻结独立的Office/字体锁，含明确字体文件及目录成员。Worker在一次性副本上运行固定PDF导出，保留源PPTX、PDF、字体清单与导出选项的绑定；语义证据和归档校验接收派生PDF及回执。缺锁、字体漂移或引擎失败保持评测异常；缺交付由原任务规则判断。PDF转换本身不证明字号、遮挡、图表语义或目标应用可编辑性。使用前读[可信PPTX渲染](references/office-rendering.md)。

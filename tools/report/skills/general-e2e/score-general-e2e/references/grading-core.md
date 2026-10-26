@@ -16,6 +16,8 @@ score-general-e2e 0.15.0装配core 0.7.0，新增`read_embedded_xlsx()`、`extra
 
 ## 公开 API
 
+score-general-e2e 0.16.0装配core 0.8.0，新增`read_image_evidence()`、`is_image_evidence_format()`及`ImageEvidenceError`。Pillow只在实际图片解码时按需导入，普通文本评分和归档附件字节核验不增加该依赖；返回原始图片字节及来源SHA，不执行OCR或转换。详见[冻结图片证据](image-evidence.md)。
+
 ### `run_rules()`
 
 输入任务 `automated_checks`、受管 `executor`、本地 runtime 副本的真实 `workspace_path`、可选标准轨迹和预期 criterion key。core 先校验 AST、唯一同步 `grade()` 入口及静态 import，再调用注入的 executor，严格校验返回 key、`overall_score`、有限数值和 `[0,1]` 范围。

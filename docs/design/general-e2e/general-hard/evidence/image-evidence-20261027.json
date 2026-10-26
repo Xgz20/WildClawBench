@@ -1,0 +1,57 @@
+{
+  "schema_version": "general-hard-image-evidence-author-validation/v1",
+  "date_local": "2026-10-27",
+  "status": "PASS",
+  "score_skill_version": "0.16.0",
+  "core_version": "0.8.0",
+  "decoder": {
+    "name": "Pillow",
+    "version": "12.3.0"
+  },
+  "tests": {
+    "count": 99,
+    "command": "PATH=\"$PWD/.venv/bin:$PATH\" .venv/bin/python -m unittest tests.general_e2e.test_image_evidence tests.general_e2e.test_image_semantic_transport tests.general_e2e.test_general_api_judge tests.general_e2e.test_general_semantic_scoring tests.general_e2e.test_grading_core tests.general_e2e.test_native_artifact_text tests.general_e2e.test_native_presentation_text tests.general_e2e.test_skill_layout tests.general_e2e.test_e2e_build",
+    "covers": [
+      "Real local HTTP requests for all three provider schemas, exact original pixel bytes and labels",
+      "Bad format/truncation/animation/size/pixel/extension/digest/symlink and missing decoder",
+      "Image budget omissions cannot be cited as usable visual evidence; unresolved retains null",
+      "Swapped/missing/duplicate images and rehashed wrong provider body rejected",
+      "Catalog-only image citation rejected; image query records source binding but requires separate pixel inspection",
+      "Text/native evidence, core and detached Skill distribution compatibility"
+    ]
+  },
+  "detached_probe": {
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/detached-image-1793055757457195000",
+    "package_sha256": "61a1c103a28815c4a63ab455c7de4b3aec0b5dee76a813611a1bd81a4018c3e7",
+    "package_verification": "PASS",
+    "source_revision": "d0572357610dbc6d993ddc08405fa705e5164def",
+    "working_tree_author_build": true,
+    "fixture_source_sha256": "f3f3e7bb94442c15b5a032e891324180ce383b6e31d79891757c77b7cd4bfa8e",
+    "image_query_id": "query-0002",
+    "candidate_unchanged": true,
+    "pixel_review": {
+      "kind": "same-author-view-image-review",
+      "query_id": "query-0002",
+      "source_sha256": "f3f3e7bb94442c15b5a032e891324180ce383b6e31d79891757c77b7cd4bfa8e",
+      "image_dimensions": [
+        800,
+        600
+      ],
+      "observed": "White background with AUTHOR PROTOCOL FIXTURE text; blue rectangle on the left, red circle inside it, red bent arrow pointing left toward the rectangle.",
+      "limit": "Actual view_image output inspected by the author; no independent semantic score or H007 annotation."
+    }
+  },
+  "h006_compatibility_probe": {
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h006/qa/managed-worker-1793055786391175000",
+    "rule_score": 1.0,
+    "workspace_unchanged": true
+  },
+  "source_sha256": {
+    "src/wildclawbench_grading_core/image_evidence.py": "67814a7cacd7887e089ae4d68a4fcb751e6e911a05e9160b7bfe52db23c98a03",
+    "src/wildclawbench_grading_core/__init__.py": "39dc9a58500a30eff8c056c008471a2e32e63636818ae0660c29e0f06b9f92f6",
+    "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py": "342cdf7946b5c1864501a06e72f022c46207d507b64c3e395db80b2b9d289464",
+    "tests/general_e2e/test_image_evidence.py": "2138c1e9299a96dedc9cd0977638b5845b15c230ef7d3b587301ed057ca5fb76",
+    "tests/general_e2e/test_image_semantic_transport.py": "601def00500126d686ad3929147bec072a46f5b708f8646f6d0910136c78d1d1"
+  },
+  "limit": "Author protocol fixtures, not a live provider vision result, independent semantic judgment, formal Harness execution, H007 materialization or dataset freeze."
+}

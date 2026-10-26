@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import base64
 from collections.abc import Mapping, Sequence
 from datetime import datetime, timezone
 import hashlib
@@ -322,7 +323,7 @@ def _load_api_runtime_config(path: Path) -> dict[str, Any]:
         "temperature",
         "reasoning_parameter",
     }
-    if set(raw) != expected_keys or raw.get("schema_version") != API_JUDGE_CONFIG_SCHEMA:
+    if set(raw) - {"image_input"} != expected_keys or raw.get("schema_version") != API_JUDGE_CONFIG_SCHEMA:
         raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "keys or schema")
     provider = _required_string(raw.get("provider"), "api.provider")
     if provider not in API_PROVIDERS:
@@ -402,7 +403,21 @@ def _load_api_runtime_config(path: Path) -> dict[str, Any]:
             maximum=1.0,
         ),
         "reasoning_parameter": reasoning_parameter,
+        **({"image_input": _image_input_config(raw["image_input"], provider)} if "image_input" in raw else {}),
     }
+
+
+def _image_input_config(value: object, provider: str) -> dict[str, Any]:
+    keys = {"max_images", "max_image_bytes", "max_total_bytes", "max_pixels", "detail"}
+    if not isinstance(value, dict) or set(value) != keys:
+        raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "image_input keys")
+    result = {key: _bounded_int(value[key], f"image_input.{key}", minimum=1, maximum=maximum)
+              for key, maximum in (("max_images", 20), ("max_image_bytes", 5_000_000),
+                                   ("max_total_bytes", 20_000_000), ("max_pixels", 16_000_000))}
+    details = {"native"} if provider == "anthropic-messages" else {"auto", "low", "high", "original"}
+    if not isinstance(value["detail"], str) or value["detail"] not in details or result["max_image_bytes"] > result["max_total_bytes"]:
+        raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "image_input detail or budgets")
+    return {**result, "detail": value["detail"]}
 
 
 def _sha256(value: object, label: str) -> str:
@@ -2961,6 +2976,8 @@ def _load_judge_config(root: Path, manifest: Mapping[str, Any]) -> dict[str, Any
             )
         ):
             raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "frozen runtime")
+        if "image_input" in api_runtime:
+            _image_input_config(api_runtime["image_input"], api_runtime["provider"])
     elif api_runtime is not None:
         raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "unexpected api runtime")
     return config
@@ -2988,6 +3005,7 @@ def _api_evidence_sources(
     root: Path,
     catalog: Mapping[str, Any],
     transcript: Sequence[Mapping[str, Any]],
+    *, images_enabled: bool = False,
 ) -> list[tuple[dict[str, Any], str | None, str]]:
     events = {
         str(event.get("event_id")): event
@@ -3026,7 +3044,9 @@ def _api_evidence_sources(
             else:
                 path = _resolve_within(root, relative, "api evidence")
                 try:
-                    if path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
+                    if images_enabled and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+                        content, status = None, "image_pending"
+                    elif path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
                         projection = _native_evidence_text(path, reference.get("sha256"))
                         content, status = projection["text"], "native_text"
                         row["native_extraction"] = {key: value for key, value in projection.items() if key != "text"}
@@ -3067,6 +3087,97 @@ def _native_evidence_text(path: Path, expected_sha: str | None = None, **kwargs)
     return projection
 
 
+def _image_evidence(path: Path, expected_sha: str | None = None, **kwargs) -> dict:
+    _import_semantic_grading_core()
+    from wildclawbench_grading_core import ImageEvidenceError, read_image_evidence
+    try:
+        return read_image_evidence(path, expected_sha256=expected_sha, **kwargs)
+    except ImageEvidenceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+
+
+def _attach_api_images(root: Path, source_rows: list, config: Mapping[str, Any]) -> list[dict]:
+    attachments: list[dict] = []
+    total_bytes = 0
+    for row, _, status in source_rows:
+        if status != "image_pending":
+            continue
+        path = _resolve_within(root, row["path"], "image evidence")
+        row["content_representation"] = "original_raster_bytes"
+        try:
+            image = _image_evidence(path, row["sha256"], max_bytes=config["max_image_bytes"], max_pixels=config["max_pixels"])
+        except ScoringRuntimeError as exc:
+            if exc.code not in {"IMAGE_EVIDENCE_INVALID", "IMAGE_EVIDENCE_UNSUPPORTED", "IMAGE_EVIDENCE_LIMIT"}:
+                raise
+            row["content_status"] = "image_unavailable"
+            row["extraction_error"] = {"code": exc.code, "message": str(exc)}
+            continue
+        row["image"] = {key: value for key, value in image.items() if key != "data_base64"}
+        if len(attachments) >= config["max_images"] or total_bytes + image["source_bytes"] > config["max_total_bytes"]:
+            row["content_status"] = "image_omitted_budget"
+            continue
+        row["content_status"] = "image_complete"
+        total_bytes += image["source_bytes"]
+        attachments.append({"evidence_id": row["evidence_id"], "path": row["path"], **image})
+    return attachments
+
+
+def _validate_api_image_bindings(root: Path, packet: Mapping[str, Any], catalog: Mapping[str, Any],
+                                 judge: Mapping[str, Any], *, decode_images: bool = False) -> None:
+    """Rebind transport bytes to frozen evidence; archived verification needs no decoder."""
+    config = judge["api_runtime"].get("image_input")
+    attachments = packet.get("image_attachments", [])
+    if config is None:
+        if attachments:
+            raise ScoringRuntimeError("API_JUDGE_IMAGE_BINDING_INVALID", "images not enabled")
+        return
+    config = _image_input_config(config, judge["api_runtime"]["provider"])
+    try:
+        if packet.get("transport", {}).get("image_input") != config:
+            raise ValueError("frozen image config")
+        rows = json.loads(packet["user_prompt"])["evidence"]
+        by_id = {entry["id"]: entry["reference"] for entry in catalog["evidence_index"]["entries"]}
+        image_rows = {row["evidence_id"]: row for row in rows if row["content_status"] == "image_complete"}
+        if not isinstance(attachments, list) or len(attachments) != len(image_rows) or len(attachments) > config["max_images"]:
+            raise ValueError("image count")
+        seen = set(); total = 0
+        for item in attachments:
+            identity = item["evidence_id"]; row = image_rows[identity]; reference = by_id[identity]
+            if identity in seen or item["path"] != reference["path"] or row["path"] != item["path"]:
+                raise ValueError("image identity")
+            seen.add(identity)
+            raw = base64.b64decode(item["data_base64"], validate=True)
+            path = _resolve_within(root, item["path"], "image attachment")
+            expected_mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}.get(path.suffix.lower())
+            if (len(raw) != item["source_bytes"] or len(raw) > config["max_image_bytes"]
+                or _sha256_bytes(raw) != reference["sha256"] or item["source_sha256"] != reference["sha256"]
+                or item["mime_type"] != expected_mime
+                or type(item["width"]) is not int or type(item["height"]) is not int
+                or min(item["width"], item["height"]) < 1 or max(item["width"], item["height"]) > 8000
+                or item["width"] * item["height"] > config["max_pixels"]
+                or row["sha256"] != reference["sha256"] or raw != path.read_bytes()
+                or row["image"] != {key: value for key, value in item.items() if key not in {"data_base64", "path", "evidence_id"}}
+                or identity not in packet["packet_summary"]["usable_evidence_ids"]):
+                raise ValueError("image content binding")
+            if decode_images:
+                observed = _image_evidence(path, reference["sha256"], max_bytes=config["max_image_bytes"], max_pixels=config["max_pixels"])
+                if observed != {key: value for key, value in item.items() if key not in {"path", "evidence_id"}}:
+                    raise ValueError("image decoder/metadata drift")
+            total += len(raw)
+        if total > config["max_total_bytes"]:
+            raise ValueError("total image bytes")
+        summary = packet["packet_summary"]
+        if summary["image_count"] != len(attachments) or summary["image_bytes"] != total:
+            raise ValueError("image summary")
+        for row in rows:
+            if row["content_status"] in {"image_unavailable", "image_omitted_budget"} and row["evidence_id"] in summary["usable_evidence_ids"]:
+                raise ValueError("unavailable image marked usable")
+    except ScoringRuntimeError:
+        raise
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ScoringRuntimeError("API_JUDGE_IMAGE_BINDING_INVALID", str(exc)) from exc
+
+
 def _build_api_input(
     root: Path,
     *,
@@ -3090,7 +3201,9 @@ def _build_api_input(
     response_contract = _api_response_contract(
         request_document["rubric"]["criteria"]
     )
-    source_rows = _api_evidence_sources(root, catalog, transcript)
+    image_config = api_runtime.get("image_input")
+    source_rows = _api_evidence_sources(root, catalog, transcript, images_enabled=image_config is not None)
+    images = _attach_api_images(root, source_rows, image_config) if image_config is not None else []
     packet_entries = [row for row, _, _ in source_rows]
     user_document: dict[str, Any] = {
         "task": {
@@ -3102,6 +3215,9 @@ def _build_api_input(
             "evidence_ids_are_frozen": True,
             "omitted_or_truncated_content_is_not_proof": True,
             "cite_only_ids_present_in_this_packet": True,
+            **({"image_bytes_supplied_as_separate_content_blocks": True,
+                "image_metadata_alone_is_not_visual_proof": True,
+                "unavailable_images_cannot_support_visual_decisions": True} if image_config is not None else {}),
         },
         "evidence": packet_entries,
         "required_response": response_contract,
@@ -3155,7 +3271,7 @@ def _build_api_input(
         "usable_evidence_ids": [
             row["evidence_id"]
             for row in packet_entries
-            if row["content_status"] in {"complete", "truncated"}
+            if row["content_status"] in {"complete", "truncated", "image_complete"}
         ],
         "complete_content_count": sum(
             row["content_status"] == "complete" for row in packet_entries
@@ -3165,12 +3281,13 @@ def _build_api_input(
         ),
         "omitted_content_count": sum(
             row["content_status"]
-            in {"omitted_budget", "binary_or_non_utf8", "event_missing", "path_missing", "native_text_unavailable"}
+            in {"omitted_budget", "binary_or_non_utf8", "event_missing", "path_missing", "native_text_unavailable", "image_unavailable", "image_omitted_budget"}
             for row in packet_entries
         ),
         "system_chars": len(system_prompt),
         "user_chars": len(user_prompt),
         "maximum_input_chars": maximum,
+        **({"image_count": len(images), "image_bytes": sum(item["source_bytes"] for item in images)} if image_config is not None else {}),
     }
     value = {
         "schema_version": API_JUDGE_INPUT_SCHEMA,
@@ -3194,11 +3311,12 @@ def _build_api_input(
                 "temperature",
                 "reasoning_parameter",
             )
-        },
+        } | ({"image_input": image_config} if image_config is not None else {}),
         "packet_summary": packet_summary,
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
         "response_contract": response_contract,
+        **({"image_attachments": images} if image_config is not None else {}),
     }
     value["input_digest"] = _sha256_bytes(_canonical_json_bytes(value))
     return value
@@ -3347,6 +3465,7 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "absence_claim_requires_complete_transcript_coverage": True,
                     "unresolved_is_not_zero": True,
                     "reason_language": REASON_LANGUAGE,
+                    "image_citations_require_image_query_and_actual_pixel_inspection": True,
                 },
             }
             _write_new_json(staging / "request.json", request)
@@ -3504,6 +3623,22 @@ def _api_request_document(
     runtime = judge["api_runtime"]
     provider = runtime["provider"]
     requested_model = judge["model"]
+    images = api_input.get("image_attachments", [])
+    user_content: Any = api_input["user_prompt"]
+    if images:
+        text_type = "input_text" if provider == "openai-responses" else "text"
+        user_content = [{"type": text_type, "text": api_input["user_prompt"]}]
+        for image in images:
+            label = {key: image[key] for key in ("evidence_id", "path", "source_sha256", "width", "height")}
+            user_content.append({"type": text_type, "text": "Frozen image evidence: " + json.dumps(label, ensure_ascii=False, sort_keys=True)})
+            if provider == "anthropic-messages":
+                block = {"type": "image", "source": {"type": "base64", "media_type": image["mime_type"], "data": image["data_base64"]}}
+            else:
+                data_url = "data:" + image["mime_type"] + ";base64," + image["data_base64"]
+                detail = runtime["image_input"]["detail"]
+                block = ({"type": "input_image", "image_url": data_url, "detail": detail} if provider == "openai-responses"
+                         else {"type": "image_url", "image_url": {"url": data_url, "detail": detail}})
+            user_content.append(block)
     if provider == "anthropic-messages":
         send_model = (
             requested_model.removeprefix("anthropic/")
@@ -3515,7 +3650,7 @@ def _api_request_document(
             "max_tokens": runtime["max_output_tokens"],
             "temperature": runtime["temperature"],
             "system": api_input["system_prompt"],
-            "messages": [{"role": "user", "content": api_input["user_prompt"]}],
+            "messages": [{"role": "user", "content": user_content}],
         }
         header_names = [
             "authorization",
@@ -3531,7 +3666,7 @@ def _api_request_document(
             "response_format": {"type": "json_object"},
             "messages": [
                 {"role": "system", "content": api_input["system_prompt"]},
-                {"role": "user", "content": api_input["user_prompt"]},
+                {"role": "user", "content": user_content},
             ],
         }
         if runtime["reasoning_parameter"] == "reasoning_effort":
@@ -3545,12 +3680,14 @@ def _api_request_document(
             "text": {"format": {"type": "json_object"}},
             "input": [
                 {"role": "system", "content": api_input["system_prompt"]},
-                {"role": "user", "content": api_input["user_prompt"]},
+                {"role": "user", "content": user_content},
             ],
         }
         if runtime["reasoning_parameter"] == "reasoning_effort":
             body["reasoning"] = {"effort": judge["reasoning_effort"]}
         header_names = ["authorization", "content-type"]
+    if images and len(_canonical_json_bytes(body)) > 32_000_000:
+        raise ScoringRuntimeError("API_JUDGE_IMAGE_REQUEST_TOO_LARGE", "encoded request exceeds local 32 MB guard")
     return body, header_names
 
 
@@ -3914,6 +4051,7 @@ def run_api_judge_attempt(*, attempt_root: Path) -> dict[str, Any]:
     ):
         raise ScoringRuntimeError("API_JUDGE_INPUT_INVALID", "locks or digest")
     runtime = judge["api_runtime"]
+    _validate_api_image_bindings(root, api_input, catalog, judge, decode_images=True)
     body, header_names = _api_request_document(api_input, judge)
     credential = os.environ.get(runtime["credential_env"], "").strip()
     prior_attempts = sorted(paths["api_attempts"].glob("attempt-*")) if paths["api_attempts"].exists() else []
@@ -4232,7 +4370,7 @@ def query_evidence_attempt(
 ) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(root)
-    if mode not in {"catalog", "transcript", "file"}:
+    if mode not in {"catalog", "transcript", "file", "image"}:
         raise ScoringRuntimeError("SEMANTIC_QUERY_MODE_INVALID", mode)
     if offset < 0 or limit < 1 or limit > 1000:
         raise ScoringRuntimeError("SEMANTIC_QUERY_PAGE_INVALID")
@@ -4259,6 +4397,7 @@ def query_evidence_attempt(
         "catalog": {"evidence_id", "evidence_type", "path_contains"},
         "transcript": {"event_id", "call_id", "path_contains", "text"},
         "file": {"evidence_id"},
+        "image": {"evidence_id"},
     }[mode]
     unsupported_filters = sorted(set(filters) - allowed_filters)
     if unsupported_filters:
@@ -4333,6 +4472,24 @@ def query_evidence_attempt(
             "end": offset + len(items),
             "total": len(events),
         }
+    elif mode == "image":
+        if evidence_id is None or evidence_id not in by_id:
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_ID_UNKNOWN", repr(evidence_id))
+        if offset != 0:
+            raise ScoringRuntimeError("SEMANTIC_QUERY_PAGE_INVALID", "image has one unmodified byte item")
+        reference = by_id[evidence_id].get("reference", {})
+        relative = reference.get("path")
+        if not isinstance(relative, str):
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_FILE_REQUIRED", evidence_id)
+        path = _resolve_within(root, relative, "semantic image evidence")
+        projection = _image_evidence(path, reference.get("sha256"))
+        metadata = {key: value for key, value in projection.items() if key != "data_base64"}
+        items = [{"evidence_id": evidence_id, "path": relative, "view_image_path": str(path),
+                  "pixel_inspection_required": True, **metadata}]
+        matches = items
+        returned_evidence_ids = [evidence_id]
+        coverage = {"kind": "image-bytes", "path": relative, "image": metadata,
+                    "pixel_inspection_required": True}
     else:
         if evidence_id is None or evidence_id not in by_id:
             raise ScoringRuntimeError(
@@ -4570,6 +4727,13 @@ def record_semantics_attempt(
                     "SEMANTIC_CITATION_NOT_QUERIED", row["key"]
                 )
             if status == "judged":
+                for identity in evidence_ids:
+                    reference = evidence_by_id[identity]
+                    if Path(reference.get("path", "")).suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+                        image_queries = [query_by_id[q] for q in query_ids if query_by_id[q].get("mode") == "image"
+                                         and identity in query_by_id[q].get("returned_evidence_ids", [])]
+                        if not any(query.get("coverage", {}).get("image", {}).get("source_sha256") == reference["sha256"] for query in image_queries):
+                            raise ScoringRuntimeError("SEMANTIC_IMAGE_QUERY_REQUIRED", row["key"])
                 if (
                     not query_ids
                     or review.get("supporting_evidence_checked") is not True
@@ -4998,6 +5162,18 @@ def _verify_semantic_terminal(
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "api_audit_sha256")
             api_audit = _read_json(paths["api_audit"], code="API_JUDGE_AUDIT_INVALID")
             runtime = judge["api_runtime"]
+            if runtime.get("image_input") is not None:
+                packet = _read_json(paths["api_input"], code="API_JUDGE_INPUT_INVALID")
+                catalog = _load_semantic_catalog(root)
+                _validate_api_image_bindings(root, packet, catalog, judge)
+                expected_body, _ = _api_request_document(packet, judge)
+                for item in api_audit.get("attempts", []):
+                    request_path = _resolve_within(root, item["request_path"], "API image request")
+                    sent = _read_json(request_path, code="API_JUDGE_AUDIT_INVALID")
+                    if (_sha256_file(request_path) != item["request_sha256"]
+                        or sent.get("body") != expected_body
+                        or sent.get("body_sha256") != _sha256_bytes(_canonical_json_bytes(expected_body))):
+                        raise ScoringRuntimeError("API_JUDGE_IMAGE_BINDING_INVALID", "recorded provider body differs from frozen image packet")
             if (
                 api_audit.get("schema_version") != API_JUDGE_AUDIT_SCHEMA
                 or api_audit.get("identity") != manifest.get("identity")
@@ -5731,7 +5907,7 @@ def main(argv: list[str] | None = None) -> int:
     query_evidence = subparsers.add_parser("query-evidence")
     query_evidence.add_argument("--attempt-root", required=True, type=Path)
     query_evidence.add_argument(
-        "--mode", required=True, choices=("catalog", "transcript", "file")
+        "--mode", required=True, choices=("catalog", "transcript", "file", "image")
     )
     query_evidence.add_argument("--offset", type=int, default=0)
     query_evidence.add_argument("--limit", type=int, default=50)
