@@ -46,15 +46,25 @@ def _issue(code: str, message: str, doc: TaskDocument, *, severity: str = FAIL, 
 def _workspace_refs(doc: TaskDocument, workspace: Path) -> list[Path]:
     refs: set[Path] = set()
     text = doc.raw
+    def material_path(value: str) -> Path:
+        # v2 exec/ is mounted at /tmp_workspace; fixture/input paths in the
+        # Prompt therefore live below exec in the source checkout. Retain the
+        # historical root layout when it exists and no exec copy is present.
+        path = Path(value)
+        if path.parts and path.parts[0] not in {"exec", "gt"}:
+            execution = workspace / "exec" / path
+            legacy = workspace / path
+            return (execution if execution.exists() or not legacy.exists() else legacy).resolve()
+        return (workspace / path).resolve()
     # Explicit relative resource paths in task prose/checks. Avoid treating
     # output paths as required inputs unless they are exec/gt/attachment files.
     for match in re.finditer(r"(?<![A-Za-z0-9_])((?:exec|gt|attachments?|fixtures?|inputs?)/[A-Za-z0-9_./-]+)", text):
         value = match.group(1).rstrip(".,:;`)")
-        refs.add((workspace / value).resolve())
+        refs.add(material_path(value))
     for match in re.finditer(r"(?:workspace\s*/\s*[\"'])([^\"']+)", text):
         value = match.group(1)
         if any(part in value.lower() for part in ("exec", "gt", "attachment", "fixture", "input")):
-            refs.add((workspace / value).resolve())
+            refs.add(material_path(value))
     return sorted(refs)
 
 
