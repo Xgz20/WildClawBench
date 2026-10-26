@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 5
+  active_task_count: 6
   category_task_counts:
-    office_documents: 3
+    office_documents: 4
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -219,6 +219,53 @@ tasks:
           dependencies: 领域审阅与原生办公文件检查；不接入外部自动评分服务。
           license: 当前README未给出足够清晰的资产再分发许可，本次不搬运。
           decision: 借鉴职业工作包和受证据约束的rubric，自建角色与合成材料。
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_004_bid_compliance
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-039f9e17f2cdb413
+          query_hash: 039f9e17f2cdb4130fbef594b1715b8d218692a133294e8924ac52bfde2ddd97
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-10-13 09:57:08.625000'
+          last_seen_local: '2026-10-13 09:57:08.625000'
+          intent_summary: 技术报告遗漏软件功能需求，要求核对需求与主要技术指标的覆盖关系。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+      authoring:
+        kind: synthetic_owned_fixture
+        seed: 2026102604
+        oracle_basis: 35 separately declared labels versus independent predicate/date/scope
+          model over actual source cards; native source extraction and cache-free
+          trusted Calc checks; no reference/candidate output used to derive GT.
+        review_status: local_author_controls_passed_not_empirically_calibrated
+      external_method_references:
+        - id: wb-office
+          name: WorkBuddy Bench Office v1.0
+          urls:
+            - https://workbuddybench.com/office.html
+            - https://huggingface.co/datasets/tencent/workbuddy-bench
+            - https://github.com/Tencent/workbuddy-bench
+          identity: 本地框架625b2233093ae4f23e76be28c1f341d41cc70373；HF页面发布提交3e8ad83
+          evidence: 官方Office说明、数据卡与本地框架静态源码；本次归档下载超时，未检查50题私有评分与GT。
+          mechanism: 混合格式工作区、最终状态与交接物的多层核验。
+          gt: 公开归档声明含环境和测试；本次未下载成功，逐题GT覆盖未验证。
+          dependencies: 原版依赖Harbor、Docker、CompositeVerifier；不能直接复制目录声称评分等价。
+          license: Tencent自定义许可；本次不复制题文、素材或评分代码。
+          decision: 借鉴工作流与验证方法，全部重构为自建输入与独立oracle。
     network:
       mode: offline
       allowed_urls: []

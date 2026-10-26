@@ -1,0 +1,51 @@
+{
+  "schema_version": "h004-boundaries/v1",
+  "groups": [
+    {
+      "key": "software_missing_not_hardware",
+      "req_ids": [
+        "R007",
+        "R014",
+        "R022",
+        "R033"
+      ],
+      "fields": [
+        "draft_status",
+        "coverage"
+      ]
+    },
+    {
+      "key": "date_scope_and_positive_controls",
+      "req_ids": [
+        "R027",
+        "R028",
+        "R029",
+        "R030",
+        "R031",
+        "R032"
+      ],
+      "fields": [
+        "coverage",
+        "certificate_status",
+        "draft_status"
+      ]
+    },
+    {
+      "key": "known_partial_false_and_unknown",
+      "req_ids": [
+        "R005",
+        "R014",
+        "R017",
+        "R019",
+        "R022",
+        "R024",
+        "R026"
+      ],
+      "fields": [
+        "coverage",
+        "draft_status"
+      ]
+    }
+  ],
+  "weights": "Three groups equal; cases and required fields within each group require independently labelled outcomes."
+}
