@@ -42,3 +42,16 @@ general_hard_office_documents_task_002_meeting_decision_repair:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_office_documents_task_003_docx_clause_patch:
+  automated.business_correctness:
+    - data_processing
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - verification_delivery
+  llm_judge.decision_grounding:
+    - data_processing
+  llm_judge.usable_handoff:
+    - verification_delivery

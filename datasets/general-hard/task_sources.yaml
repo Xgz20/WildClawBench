@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 4
+  active_task_count: 5
   category_task_counts:
-    office_documents: 2
+    office_documents: 3
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -184,6 +184,41 @@ tasks:
           dependencies: 原版依赖Harbor、Docker、CompositeVerifier；不能直接复制目录声称评分等价。
           license: Tencent自定义许可；本次不复制题文、素材或评分代码。
           decision: 借鉴工作流与验证方法，全部重构为自建输入与独立oracle。
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_003_docx_clause_patch
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+      authoring:
+        kind: synthetic_owned_fixture
+        seed: 2026102603
+        oracle_basis: Seven approved outcomes authored from original contract/approval,
+          checked by separate OOXML and python-docx/pypdf paths; no reference/candidate
+          output used as oracle.
+        review_status: local_author_controls_passed_not_empirically_calibrated
+      external_method_references:
+        - id: gdpval
+          name: GDPval公开220题
+          urls:
+            - https://huggingface.co/datasets/openai/gdpval
+            - https://huggingface.co/datasets/openai/gdpval/blob/main/README.md
+          identity: 公开卡220题/44职业，README可见v2 rubrics+deliverables提交11e7900
+          evidence: 官方数据卡和viewer字段；确认reference_files、deliverables与rubric字段存在，未取得完整素材。
+          mechanism: 明确职业目标、上下文材料与面向下游读者的交付。
+          gt: 公开字段提供rubric与交付物，但不能将某个参考文件视为唯一合法答案。
+          dependencies: 领域审阅与原生办公文件检查；不接入外部自动评分服务。
+          license: 当前README未给出足够清晰的资产再分发许可，本次不搬运。
+          decision: 借鉴职业工作包和受证据约束的rubric，自建角色与合成材料。
     network:
       mode: offline
       allowed_urls: []

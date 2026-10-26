@@ -1,0 +1,24 @@
+{
+  "schema_version": "h003-artifacts/v1",
+  "contract": "results/contract_revised.docx",
+  "audit": "results/changes.json",
+  "audit_root_fields": [
+    "source_sha256",
+    "result_sha256",
+    "changes"
+  ],
+  "audit_item_fields": [
+    "change_id",
+    "action",
+    "source_locations",
+    "result_locations",
+    "summary"
+  ],
+  "location_formats": [
+    "clause:条款标题",
+    "table:表格名称/首列行名/列名",
+    "absent:已删除条款标题"
+  ],
+  "native_profile": "Editable clean OOXML body, original heading form 第N条, genuine simple or complex REF fields targeting number bookmarks; arbitrary run splits/IDs/names accepted.",
+  "equivalence": "Whitespace and common Chinese/ASCII punctuation normalized, no ZIP or formatting byte match; unauthorized legal wording not paraphrased."
+}

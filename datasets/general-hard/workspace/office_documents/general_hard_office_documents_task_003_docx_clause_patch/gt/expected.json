@@ -1,0 +1,159 @@
+{
+  "schema_version": "h003-approved-outcomes/v1",
+  "changes": [
+    {
+      "id": "C01",
+      "action": "modify",
+      "paragraphs": [
+        {
+          "clause": "费用与付款",
+          "key": "fees.p2",
+          "text": "甲方应在验收通过后15个工作日内支付验收款。签约款的付款期限、各节点金额及结算依据见下表，发票材料不齐时应另列补正事项，不将未知金额填写为零。"
+        }
+      ],
+      "cells": [
+        {
+          "table": "milestones",
+          "row": "验收款",
+          "column": "结算依据",
+          "text": "第[[REF:验收]]条验收通过后15个工作日内"
+        }
+      ],
+      "source_locations": [
+        "clause:费用与付款",
+        "table:付款节点/验收款/结算依据"
+      ],
+      "result_locations": [
+        "clause:费用与付款",
+        "table:付款节点/验收款/结算依据"
+      ]
+    },
+    {
+      "id": "C02",
+      "action": "modify",
+      "paragraphs": [
+        {
+          "clause": "验收",
+          "key": "acceptance.p1",
+          "text": "甲方应在完整交付后7个工作日内提交书面验收意见，逐项说明通过项、未通过项及依据。未提出意见不自动视为验收通过；收到交付清单也不替代验收决定。"
+        }
+      ],
+      "cells": [
+        {
+          "table": "services",
+          "row": "验收反馈",
+          "column": "响应期限",
+          "text": "7个工作日"
+        }
+      ],
+      "source_locations": [
+        "clause:验收",
+        "table:服务联系/验收反馈/响应期限"
+      ],
+      "result_locations": [
+        "clause:验收",
+        "table:服务联系/验收反馈/响应期限"
+      ]
+    },
+    {
+      "id": "C03",
+      "action": "insert",
+      "new_title": "交付确认",
+      "after_title": "交付安排",
+      "new_body": [
+        "双方应在交付清单发送后2个工作日内以本合同约定的通知渠道确认收到；确认仅表明接收，不替代验收。",
+        "逾期未确认不视为验收通过，验收仍按第[[REF:验收]]条执行。"
+      ],
+      "added_link": "交付确认按第[[REF:交付确认]]条办理。",
+      "source_locations": [
+        "clause:交付安排"
+      ],
+      "result_locations": [
+        "clause:交付安排",
+        "clause:交付确认"
+      ]
+    },
+    {
+      "id": "C04",
+      "action": "modify",
+      "paragraphs": [
+        {
+          "clause": "终止",
+          "key": "termination.p1",
+          "text": "一方需要提前终止服务的，应提前20个自然日向另一方发出书面通知，说明拟终止日期和未结事项。通知本身不免除已经发生的付款、保密或赔偿责任。"
+        }
+      ],
+      "source_locations": [
+        "clause:终止"
+      ],
+      "result_locations": [
+        "clause:终止"
+      ]
+    },
+    {
+      "id": "C05",
+      "action": "modify",
+      "cells": [
+        {
+          "table": "services",
+          "row": "接口重试支持",
+          "column": "响应期限",
+          "text": "2小时"
+        }
+      ],
+      "source_locations": [
+        "table:服务联系/接口重试支持/响应期限"
+      ],
+      "result_locations": [
+        "table:服务联系/接口重试支持/响应期限"
+      ]
+    },
+    {
+      "id": "C06",
+      "action": "delete",
+      "deleted_title": "现场培训",
+      "source_locations": [
+        "clause:现场培训",
+        "clause:服务支持"
+      ],
+      "result_locations": [
+        "absent:现场培训",
+        "clause:服务支持"
+      ]
+    },
+    {
+      "id": "C07",
+      "action": "modify",
+      "email": "legal-notice@beiling.example",
+      "cells": [
+        {
+          "table": "services",
+          "row": "合同通知",
+          "column": "渠道",
+          "text": "[[MAIL:legal-notice@beiling.example]]"
+        }
+      ],
+      "source_locations": [
+        "table:服务联系/合同通知/渠道"
+      ],
+      "result_locations": [
+        "table:服务联系/合同通知/渠道"
+      ]
+    }
+  ],
+  "final_clause_titles": [
+    "项目与主体",
+    "服务范围",
+    "交付安排",
+    "交付确认",
+    "费用与付款",
+    "验收",
+    "保密",
+    "服务支持",
+    "违约与责任",
+    "终止",
+    "通知与送达",
+    "生效与附件"
+  ],
+  "basis": "Manually encoded approved outcomes derived from original contract and seven-item approval; no candidate/reference extraction used as oracle."
+}
