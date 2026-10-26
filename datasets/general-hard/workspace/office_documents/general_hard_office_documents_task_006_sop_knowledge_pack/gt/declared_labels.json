@@ -1,0 +1,203 @@
+{
+  "incidents": [
+    {
+      "incident_id": "I01",
+      "route": "ready_finance",
+      "next_owner": "FE",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "running",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "RECV",
+        "INSPECT",
+        "VERIFY_APPR",
+        "VERIFY_BANK",
+        "HANDOFF_FIN"
+      ]
+    },
+    {
+      "incident_id": "I02",
+      "route": "request_approval",
+      "next_owner": "FC",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "not_started",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "RECV",
+        "INSPECT",
+        "REQUEST_FIN_APPROVAL"
+      ]
+    },
+    {
+      "incident_id": "I03",
+      "route": "request_documents",
+      "next_owner": "CS",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "not_started",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "REQUEST_DOCS"
+      ]
+    },
+    {
+      "incident_id": "I04",
+      "route": "await_inspection",
+      "next_owner": "QA",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "not_started",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "RECV",
+        "INSPECT"
+      ]
+    },
+    {
+      "incident_id": "I05",
+      "route": "safety_hold",
+      "next_owner": "QA",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "QA"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "SAFE_HOLD",
+        "SAFE_REPORT"
+      ]
+    },
+    {
+      "incident_id": "I06",
+      "route": "privacy_hold",
+      "next_owner": "PR",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "PR"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "PRIV_HOLD",
+        "PRIV_ISOLATE",
+        "PRIV_REPORT"
+      ]
+    },
+    {
+      "incident_id": "I07",
+      "route": "joint_hold",
+      "next_owner": "OPS",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "QA",
+        "PR"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "SAFE_HOLD",
+        "PRIV_HOLD",
+        "PRIV_ISOLATE",
+        "SAFE_REPORT",
+        "PRIV_REPORT",
+        "JOINT_COORD"
+      ]
+    },
+    {
+      "incident_id": "I08",
+      "route": "link_existing",
+      "next_owner": "CS",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "reuse_existing",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "LINK"
+      ]
+    },
+    {
+      "incident_id": "I09",
+      "route": "withdrawal_review",
+      "next_owner": "FC",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "FC"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "PAUSE_PAYMENT",
+        "WITHDRAW_REVIEW"
+      ]
+    },
+    {
+      "incident_id": "I10",
+      "route": "bank_review",
+      "next_owner": "FC",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "FC"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "PAUSE_PAYMENT",
+        "VERIFY_APPR",
+        "BANK_REVIEW"
+      ]
+    }
+  ],
+  "limit": "Author declarations; policy computation and physical source checks pending. Not expert review."
+}

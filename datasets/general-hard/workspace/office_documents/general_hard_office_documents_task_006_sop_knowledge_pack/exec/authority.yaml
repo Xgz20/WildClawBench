@@ -1,0 +1,407 @@
+{
+  "schema_version": "h006-authority/v1",
+  "organization": "澄川售后服务中心",
+  "scope": "仅合成内部退款规划，材料日期不代替权限域/控制项优先级",
+  "roles": {
+    "CS": "客户支持受理岗",
+    "WH": "仓储负责人",
+    "QA": "质检负责人",
+    "FC": "财务主管",
+    "FE": "财务执行岗",
+    "OPS": "运营主管",
+    "PR": "隐私专员"
+  },
+  "role_aliases": {
+    "支持台": "CS",
+    "客服": "CS",
+    "仓库": "WH",
+    "质控": "QA",
+    "财务复核岗": "FC",
+    "出纳": "FE",
+    "运营经理": "OPS",
+    "数据合规专员": "PR"
+  },
+  "step_aliases": {
+    "入仓": "RECV",
+    "包裹签收": "RECV",
+    "验收通过": "INSPECT",
+    "材料校验": "DOC",
+    "流转财务": "HANDOFF_FIN"
+  },
+  "FLOW": {
+    "dependencies": {
+      "ready_finance": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "RECV"
+        ],
+        [
+          "RECV",
+          "INSPECT"
+        ],
+        [
+          "INSPECT",
+          "VERIFY_APPR"
+        ],
+        [
+          "VERIFY_APPR",
+          "VERIFY_BANK"
+        ],
+        [
+          "VERIFY_BANK",
+          "HANDOFF_FIN"
+        ]
+      ],
+      "request_approval": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "RECV"
+        ],
+        [
+          "RECV",
+          "INSPECT"
+        ],
+        [
+          "INSPECT",
+          "REQUEST_APPROVAL"
+        ]
+      ],
+      "request_documents": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "REQUEST_DOCS"
+        ]
+      ],
+      "await_receipt": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "WAIT_RECEIPT"
+        ]
+      ],
+      "await_inspection": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "RECV"
+        ],
+        [
+          "RECV",
+          "INSPECT"
+        ]
+      ],
+      "safety_hold": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "SAFE_HOLD"
+        ],
+        [
+          "SAFE_HOLD",
+          "SAFE_REPORT"
+        ]
+      ],
+      "privacy_hold": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "PRIV_HOLD"
+        ],
+        [
+          "PRIV_HOLD",
+          "PRIV_ISOLATE"
+        ],
+        [
+          "PRIV_ISOLATE",
+          "PRIV_REPORT"
+        ]
+      ],
+      "joint_hold": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "SAFE_HOLD"
+        ],
+        [
+          "DOC",
+          "PRIV_HOLD"
+        ],
+        [
+          "PRIV_HOLD",
+          "PRIV_ISOLATE"
+        ],
+        [
+          "PRIV_ISOLATE",
+          "PRIV_REPORT"
+        ],
+        [
+          "SAFE_HOLD",
+          "SAFE_REPORT"
+        ],
+        [
+          "PRIV_HOLD",
+          "SAFE_REPORT"
+        ],
+        [
+          "SAFE_HOLD",
+          "PRIV_REPORT"
+        ],
+        [
+          "SAFE_REPORT",
+          "JOINT_COORD"
+        ],
+        [
+          "PRIV_REPORT",
+          "JOINT_COORD"
+        ]
+      ],
+      "link_existing": [
+        [
+          "REG",
+          "LINK"
+        ]
+      ],
+      "withdrawal_review": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "PAUSE_PAYMENT"
+        ],
+        [
+          "PAUSE_PAYMENT",
+          "WITHDRAW_REVIEW"
+        ]
+      ],
+      "bank_review": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "PAUSE_PAYMENT"
+        ],
+        [
+          "PAUSE_PAYMENT",
+          "VERIFY_APPR"
+        ],
+        [
+          "VERIFY_APPR",
+          "BANK_REVIEW"
+        ]
+      ]
+    },
+    "approval_placeholder": "REQUEST_APPROVAL按FI01替换为REQUEST_OPS_APPROVAL或REQUEST_FIN_APPROVAL",
+    "semantics": "逻辑路径只到当前安全终点；不是已执行记录。同一层无边的节点可任意拓扑排序。"
+  },
+  "steps": {
+    "REG": "登记本次联系",
+    "DOC": "核验资料",
+    "RECV": "签收登记",
+    "INSPECT": "实物验收",
+    "VERIFY_APPR": "核验批准",
+    "VERIFY_BANK": "核验当前账户",
+    "HANDOFF_FIN": "转财务执行",
+    "REQUEST_DOCS": "请求补证",
+    "WAIT_RECEIPT": "等待实物",
+    "REQUEST_OPS_APPROVAL": "请求运营审批",
+    "REQUEST_FIN_APPROVAL": "请求财务审批",
+    "SAFE_HOLD": "安全暂停",
+    "SAFE_REPORT": "报告质检",
+    "PRIV_HOLD": "停止外发",
+    "PRIV_ISOLATE": "登记隐私隔离请求",
+    "PRIV_REPORT": "报告隐私专员",
+    "JOINT_COORD": "联合协调",
+    "LINK": "关联原案",
+    "PAUSE_PAYMENT": "暂停资金办理",
+    "WITHDRAW_REVIEW": "撤回核对审批",
+    "BANK_REVIEW": "账户复核"
+  },
+  "forbidden_actions": {
+    "OPS_PAY": "运营自行划款",
+    "DELETE_AUDIT": "删除审计",
+    "CLAIM_PAID": "无回执声称已付款",
+    "PAY_BEFORE_GATE": "门禁不齐先付",
+    "REJECT_FOR_MISSING": "因缺资料直接最终拒绝",
+    "RELEASE_WITHOUT_CLEARANCE": "无解除确认放行",
+    "RESET_CLOCK": "重置已有时钟",
+    "NEW_CASE": "重复案另建独立退款流程",
+    "CLOSE_WITHOUT_FIN": "撤回未经财务确认关单",
+    "SWITCH_BANK_UNVERIFIED": "使用未核验新账户"
+  },
+  "controls": {
+    "AUTH-ACK": {
+      "domain_owner": "CS",
+      "winner": "CS02",
+      "overrides": [
+        "CS99",
+        "OP01"
+      ]
+    },
+    "AUTH-INSPECT": {
+      "domain_owner": "QA",
+      "winner": "QA01",
+      "overrides": [
+        "WH99"
+      ],
+      "distinct_event": "WH02只控制物流签收"
+    },
+    "AUTH-APPROVAL": {
+      "domain_owner": "FC",
+      "winner": "FI01",
+      "overrides": [
+        "OP02"
+      ]
+    },
+    "AUTH-EXECUTE": {
+      "domain_owner": "FC",
+      "winner": "FI02",
+      "overrides": [
+        "OP03"
+      ]
+    },
+    "AUTH-CLOCK": {
+      "domain_owner": "FC",
+      "winner": "FI03",
+      "overrides": [
+        "OP01",
+        "CO99"
+      ]
+    },
+    "AUTH-SAFETY": {
+      "domain_owner": "QA",
+      "winner": "QA02",
+      "support": [
+        "QA03",
+        "QA04"
+      ]
+    },
+    "AUTH-PRIVACY": {
+      "domain_owner": "PR",
+      "winner": "CO01",
+      "support": [
+        "CO02",
+        "CO03"
+      ]
+    },
+    "AUTH-JOINT": {
+      "domain_owner": "OPS",
+      "winner": "OP04",
+      "limited_to": "协调，不能替代QA或PR解除"
+    },
+    "AUTH-DUP": {
+      "domain_owner": "OPS",
+      "winner": "OP05"
+    },
+    "AUTH-WITHDRAW": {
+      "domain_owner": "FC",
+      "winner": "FI04"
+    },
+    "AUTH-BANK": {
+      "domain_owner": "FC",
+      "winner": "FI05"
+    }
+  },
+  "routing_priority": [
+    "joint_hold",
+    "safety_hold",
+    "privacy_hold",
+    "link_existing",
+    "withdrawal_review",
+    "request_documents",
+    "await_receipt",
+    "await_inspection",
+    "request_approval",
+    "bank_review",
+    "ready_finance"
+  ],
+  "priority_notes": "风险先处理，重复案仍须关联已有ID；本批并发案例为安全加隐私。路径仅至当前安全交接终点，不假设未来补证、批准、解除或已划款。",
+  "clock_states": {
+    "not_started": "三门禁尚未全部满足且未曾启动",
+    "running": "已启动且当前无需暂停",
+    "paused": "已经启动，现因异常暂停，不另起计时",
+    "reuse_existing": "仅关联原案时钟，本次不另起"
+  },
+  "route_labels": {
+    "joint_hold": "联合风险暂停",
+    "safety_hold": "安全暂停",
+    "privacy_hold": "隐私暂停",
+    "link_existing": "关联原案",
+    "withdrawal_review": "撤回核对",
+    "request_documents": "补证",
+    "await_receipt": "等待实物",
+    "await_inspection": "等待质检",
+    "request_approval": "请求有效审批",
+    "bank_review": "账户复核",
+    "ready_finance": "转财务执行"
+  },
+  "output_contract": {
+    "coverage_columns": [
+      "incident_id",
+      "route",
+      "next_owner",
+      "approval_owner",
+      "execution_owner",
+      "ack_hours",
+      "inspection_workdays",
+      "payment_workdays",
+      "clock_state",
+      "clearance_roles",
+      "steps",
+      "forbidden_steps",
+      "operator_ref",
+      "supervisor_ref",
+      "source_refs",
+      "explanation"
+    ],
+    "operator_table": [
+      "incident_id",
+      "route",
+      "next_owner",
+      "clock_state",
+      "operator_action"
+    ],
+    "supervisor_table": [
+      "incident_id",
+      "approval_owner",
+      "execution_owner",
+      "ack_hours",
+      "inspection_workdays",
+      "payment_workdays",
+      "clearance_roles",
+      "supervision_action"
+    ],
+    "references": "对应DOCX可见章节/锚点；可任意命名，须在其实际原生表内定位该情境字段。source_refs使用文件#条款或authority控制项，不能只有文件名。",
+    "paths": "steps用分号列代码，表达依赖顺序而非已执行事实。允许并行步骤的任何拓扑顺序，不重复执行已有记录。clearance_roles和forbidden_steps为无序集合，空集合用空白或N/A，但列必须存在。"
+  }
+}

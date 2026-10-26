@@ -1,0 +1,652 @@
+{
+  "schema_version": "h006-oracle/v1",
+  "incidents": [
+    {
+      "incident_id": "I01",
+      "route": "ready_finance",
+      "next_owner": "FE",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "running",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "RECV",
+        "INSPECT",
+        "VERIFY_APPR",
+        "VERIFY_BANK",
+        "HANDOFF_FIN"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "RECV"
+        ],
+        [
+          "RECV",
+          "INSPECT"
+        ],
+        [
+          "INSPECT",
+          "VERIFY_APPR"
+        ],
+        [
+          "VERIFY_APPR",
+          "VERIFY_BANK"
+        ],
+        [
+          "VERIFY_BANK",
+          "HANDOFF_FIN"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#FLOW",
+        "incidents.csv#I01",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03"
+      ],
+      "explanation": "核对已有资料、验收、有效批准及当前账户记录，再转FE；无回执不能说已付款。"
+    },
+    {
+      "incident_id": "I02",
+      "route": "request_approval",
+      "next_owner": "FC",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "not_started",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "RECV",
+        "INSPECT",
+        "REQUEST_FIN_APPROVAL"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "RECV"
+        ],
+        [
+          "RECV",
+          "INSPECT"
+        ],
+        [
+          "INSPECT",
+          "REQUEST_FIN_APPROVAL"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "PAY_BEFORE_GATE"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#FLOW",
+        "incidents.csv#I02",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03"
+      ],
+      "explanation": "金额达到5000元，原OPS批准不构成有效门禁，交FC取得有效书面批准，不先付。"
+    },
+    {
+      "incident_id": "I03",
+      "route": "request_documents",
+      "next_owner": "CS",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "not_started",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "REQUEST_DOCS"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "REQUEST_DOCS"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "PAY_BEFORE_GATE",
+        "REJECT_FOR_MISSING"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#FLOW",
+        "incidents.csv#I03",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03"
+      ],
+      "explanation": "只请求补齐缺失凭证，保留已签收记录；资料不齐不直接最终拒绝，不启动资金时钟。"
+    },
+    {
+      "incident_id": "I04",
+      "route": "await_inspection",
+      "next_owner": "QA",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "not_started",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "RECV",
+        "INSPECT"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "RECV"
+        ],
+        [
+          "RECV",
+          "INSPECT"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "PAY_BEFORE_GATE"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#FLOW",
+        "incidents.csv#I04",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03"
+      ],
+      "explanation": "签收不等于实物验收，转QA验收，运营预批不能绕过验收或资金门禁。"
+    },
+    {
+      "incident_id": "I05",
+      "route": "safety_hold",
+      "next_owner": "QA",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "QA"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "SAFE_HOLD",
+        "SAFE_REPORT"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "SAFE_HOLD"
+        ],
+        [
+          "SAFE_HOLD",
+          "SAFE_REPORT"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "RELEASE_WITHOUT_CLEARANCE",
+        "RESET_CLOCK"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#AUTH-SAFETY",
+        "authority.yaml#FLOW",
+        "incidents.csv#I05",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/03_quality.docx#QA02",
+        "manuals/03_quality.docx#QA03",
+        "manuals/03_quality.docx#QA04",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03"
+      ],
+      "explanation": "先暂停资金和处置，再报QA；等待QA解除，不把金额批准视为安全放行。"
+    },
+    {
+      "incident_id": "I06",
+      "route": "privacy_hold",
+      "next_owner": "PR",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "PR"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "PRIV_HOLD",
+        "PRIV_ISOLATE",
+        "PRIV_REPORT"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "PRIV_HOLD"
+        ],
+        [
+          "PRIV_HOLD",
+          "PRIV_ISOLATE"
+        ],
+        [
+          "PRIV_ISOLATE",
+          "PRIV_REPORT"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "RELEASE_WITHOUT_CLEARANCE",
+        "RESET_CLOCK"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#AUTH-PRIVACY",
+        "authority.yaml#FLOW",
+        "incidents.csv#I06",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03",
+        "manuals/06_compliance.docx#CO01",
+        "manuals/06_compliance.docx#CO02",
+        "manuals/06_compliance.docx#CO03"
+      ],
+      "explanation": "停止外发，登记隔离请求并报PR；保留审计，等待PR解除，不自行删资料。"
+    },
+    {
+      "incident_id": "I07",
+      "route": "joint_hold",
+      "next_owner": "OPS",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "QA",
+        "PR"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "SAFE_HOLD",
+        "PRIV_HOLD",
+        "PRIV_ISOLATE",
+        "SAFE_REPORT",
+        "PRIV_REPORT",
+        "JOINT_COORD"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "SAFE_HOLD"
+        ],
+        [
+          "DOC",
+          "PRIV_HOLD"
+        ],
+        [
+          "PRIV_HOLD",
+          "PRIV_ISOLATE"
+        ],
+        [
+          "PRIV_ISOLATE",
+          "PRIV_REPORT"
+        ],
+        [
+          "SAFE_HOLD",
+          "SAFE_REPORT"
+        ],
+        [
+          "PRIV_HOLD",
+          "SAFE_REPORT"
+        ],
+        [
+          "SAFE_HOLD",
+          "PRIV_REPORT"
+        ],
+        [
+          "SAFE_REPORT",
+          "JOINT_COORD"
+        ],
+        [
+          "PRIV_REPORT",
+          "JOINT_COORD"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "RELEASE_WITHOUT_CLEARANCE",
+        "RESET_CLOCK"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#AUTH-JOINT",
+        "authority.yaml#AUTH-PRIVACY",
+        "authority.yaml#AUTH-SAFETY",
+        "authority.yaml#FLOW",
+        "incidents.csv#I07",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/03_quality.docx#QA02",
+        "manuals/03_quality.docx#QA03",
+        "manuals/03_quality.docx#QA04",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03",
+        "manuals/05_operations.docx#OP04",
+        "manuals/06_compliance.docx#CO01",
+        "manuals/06_compliance.docx#CO02",
+        "manuals/06_compliance.docx#CO03"
+      ],
+      "explanation": "两类暂停后分别报告，再由OPS协调；QA与PR分别确认解除，原时钟暂停而非重置。"
+    },
+    {
+      "incident_id": "I08",
+      "route": "link_existing",
+      "next_owner": "CS",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "reuse_existing",
+      "clearance_roles": [],
+      "required_steps": [
+        "REG",
+        "LINK"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "LINK"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "NEW_CASE",
+        "OPS_PAY",
+        "RESET_CLOCK"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-DUP",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#FLOW",
+        "incidents.csv#I08",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03",
+        "manuals/05_operations.docx#OP05"
+      ],
+      "explanation": "关联原案RMA-240，复用原资料与时钟；本次联系仍响应，不新建第二个退款流程。"
+    },
+    {
+      "incident_id": "I09",
+      "route": "withdrawal_review",
+      "next_owner": "FC",
+      "approval_owner": "OPS",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "FC"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "PAUSE_PAYMENT",
+        "WITHDRAW_REVIEW"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "PAUSE_PAYMENT"
+        ],
+        [
+          "PAUSE_PAYMENT",
+          "WITHDRAW_REVIEW"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "CLOSE_WITHOUT_FIN",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "RESET_CLOCK"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#AUTH-WITHDRAW",
+        "authority.yaml#FLOW",
+        "incidents.csv#I09",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03",
+        "manuals/04_finance.docx#FI04"
+      ],
+      "explanation": "暂停资金并交FC核对审批撤回；工单未付款也不能由CS直接关单或删除审计。"
+    },
+    {
+      "incident_id": "I10",
+      "route": "bank_review",
+      "next_owner": "FC",
+      "approval_owner": "FC",
+      "execution_owner": "FE",
+      "ack_hours": 4,
+      "inspection_workdays": 2,
+      "payment_workdays": 2,
+      "clock_state": "paused",
+      "clearance_roles": [
+        "FC"
+      ],
+      "required_steps": [
+        "REG",
+        "DOC",
+        "PAUSE_PAYMENT",
+        "VERIFY_APPR",
+        "BANK_REVIEW"
+      ],
+      "required_edges": [
+        [
+          "REG",
+          "DOC"
+        ],
+        [
+          "DOC",
+          "PAUSE_PAYMENT"
+        ],
+        [
+          "PAUSE_PAYMENT",
+          "VERIFY_APPR"
+        ],
+        [
+          "VERIFY_APPR",
+          "BANK_REVIEW"
+        ]
+      ],
+      "forbidden_steps": [
+        "CLAIM_PAID",
+        "DELETE_AUDIT",
+        "OPS_PAY",
+        "PAY_BEFORE_GATE",
+        "RESET_CLOCK",
+        "SWITCH_BANK_UNVERIFIED"
+      ],
+      "operator_ref": "operator.docx#OP-CASES",
+      "supervisor_ref": "supervisor.docx#SV-CASES;supervisor.docx#SV-CLOCK",
+      "source_refs": [
+        "authority.yaml#AUTH-ACK",
+        "authority.yaml#AUTH-APPROVAL",
+        "authority.yaml#AUTH-BANK",
+        "authority.yaml#AUTH-CLOCK",
+        "authority.yaml#AUTH-EXECUTE",
+        "authority.yaml#AUTH-INSPECT",
+        "authority.yaml#FLOW",
+        "incidents.csv#I10",
+        "manuals/01_customer.docx#CS02",
+        "manuals/03_quality.docx#QA01",
+        "manuals/04_finance.docx#FI01",
+        "manuals/04_finance.docx#FI02",
+        "manuals/04_finance.docx#FI03",
+        "manuals/04_finance.docx#FI05"
+      ],
+      "explanation": "暂停资金并交FC核验当前新账户；不得沿用旧验证，紧急请求不授权先付或重置时钟。"
+    }
+  ],
+  "numeric_policy": {
+    "ack_hours": 4,
+    "inspection_workdays": 2,
+    "payment_workdays": 2,
+    "approval_threshold": 5000
+  },
+  "construction": "Separate author labels versus policy evaluation before any reference document. Physical source extraction will independently recheck.",
+  "limit": "Author declarations and computation, not second-expert review or empirical difficulty."
+}

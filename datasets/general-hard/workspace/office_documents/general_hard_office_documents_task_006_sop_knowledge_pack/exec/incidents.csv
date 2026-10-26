@@ -1,0 +1,11 @@
+incident_id,amount_cny,documents_complete,received,inspected,approved_by,approval_written,approval_after_inspection,clock_started,safety_risk,privacy_risk,linked_case_id,withdrawal_requested,account_changed,current_account_verified,urgent,description
+I01,1200,True,True,True,OPS,True,True,True,False,False,,False,False,True,False,常规小额，资料、验收、书面批准和账户核验齐备，尚无付款回执。
+I02,5000,True,True,True,OPS,True,True,False,False,False,,False,False,True,True,金额恰好5000元，只有OPS书面批准，客户要求绿色先付。
+I03,1200,False,True,False,,False,False,False,False,False,,False,False,True,False,缺购买凭证，包裹已签收；不能将缺资料直接视为最终拒绝。
+I04,4500,True,True,False,OPS,True,False,False,False,False,,False,False,True,False,签收完成但未实物验收；运营预先签了批准，不得推成验收或有效资金门禁。
+I05,8000,True,True,True,FC,True,True,True,True,False,,False,False,True,False,原时钟已启动，后报安全风险；金额批准仍在，没有QA解除记录。
+I06,500,True,True,True,OPS,True,True,True,False,True,,False,False,True,False,原时钟已启动，工单疑含错误客户信息；无PR解除，不执行删除或外发。
+I07,7000,True,True,True,FC,True,True,True,True,True,,False,False,True,True,安全与隐私同时出现，OPS负责协调，但两域均无解除记录。
+I08,1200,False,True,False,OPS,True,True,False,False,False,RMA-240,False,False,True,False,同一申请已有原案，不另建退款流程或另起时钟，不重复索取全部资料。
+I09,1900,True,True,True,OPS,True,True,True,False,False,,True,False,True,False,时钟已启动，现请求撤回；工单显示未付款但尚无FC撤回批准，不直接关单。
+I10,5200,True,True,True,FC,True,True,True,False,False,,False,True,False,True,原批准有效、时钟已启动，新账户尚未核验；客户要求口头担保先付。
