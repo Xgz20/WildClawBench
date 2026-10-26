@@ -17,6 +17,8 @@ from eval_general_e2e.datasets.bundle import (
     load_manifest_lock, verify_dataset_bundle, write_manifest_lock,
 )
 from eval_general_e2e.datasets.catalog import CatalogError, load_catalog, load_registered_dataset
+from eval_general_e2e.datasets.discovery import discover_frozen_tasks
+from eval_general_e2e.datasets.capability_audit import generate_capability_matrix, render_markdown
 from tools.report.lib.eval_dataset.selectors import select_task_files
 
 
@@ -338,6 +340,47 @@ class DatasetCatalogTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "sources do not match"):
             build_registered_bundle(self.root, "sample", output)
         self.assertEqual(output.read_bytes(), first)
+
+    def test_frozen_source_discovery_is_isolated_and_carries_release_identity(self) -> None:
+        with self.assertRaisesRegex(ValueError, "requires a frozen"):
+            discover_frozen_tasks(self.root, "sample")
+        manifest, _ = self.compile()
+        write_manifest_lock(manifest, self.base / "manifests/sample-v1.json")
+        self.family["releases"]["sample-v1"]["status"] = "frozen"
+        self.add_task("sample_research_task_003_later")
+        self.save_sources()
+        selected = discover_frozen_tasks(self.root, "sample-v1")
+        self.assertEqual([task["task_id"] for task in selected.tasks], self.ids)
+        self.assertEqual(selected.identity["dataset_digest"], manifest["dataset_digest"])
+        for task in selected.tasks:
+            self.assertEqual(task["dataset_selection"], selected.identity)
+            self.assertTrue(Path(task["workspace_path"]).is_relative_to(self.base.resolve()))
+        (self.base / "workspace/research" / self.ids[0] / "gt/expected.json").write_text('{"answer": 99}')
+        with self.assertRaisesRegex(ValueError, "differ from the frozen"):
+            discover_frozen_tasks(self.root, "sample")
+
+    def test_registered_capability_audit_uses_frozen_open_search_and_visual_declarations(self) -> None:
+        self.registry["tasks"][0]["network"]["mode"] = "open_public_search"
+        self.registry["tasks"][0]["attributes"]["retrieval_group"] = "open_search"
+        self.registry["tasks"][1]["attributes"]["requires_visual_input"] = True
+        path = self.base / "tasks/research" / f"{self.ids[1]}.md"
+        path.write_text(path.read_text().replace("modality: pure-text", "modality: multimodal"))
+        constraints = self.family["releases"]["sample-v1"]["constraints"]
+        constraints.update({"controlled_network_max": 1, "multimodal_exact": 1, "multimodal_max_ratio": 0.5,
+                            "research_retrieval_group_counts": {"open_search": 1, "local_evidence": 1}})
+        self.save_sources()
+        with self.assertRaisesRegex(ValueError, "requires a frozen"):
+            generate_capability_matrix(self.root, dataset_id="sample")
+        manifest, _ = self.compile()
+        write_manifest_lock(manifest, self.base / "manifests/sample-v1.json")
+        self.family["releases"]["sample-v1"]["status"] = "frozen"
+        self.save_sources()
+        audit = generate_capability_matrix(self.root, dataset_id="sample-v1")
+        self.assertEqual(audit["summary"]["network_required_task_ids"], [self.ids[0]])
+        self.assertEqual(audit["tasks"][0]["network"]["source_urls"], [])
+        self.assertIn("network.retrieve", audit["tasks"][0]["execution"]["required_tool_capabilities"])
+        self.assertIn("image.understand", audit["tasks"][1]["execution"]["required_tool_capabilities"])
+        self.assertIn("1类共2题", render_markdown(audit))
 
 
 class RegisteredSourceContractTests(unittest.TestCase):

@@ -16,12 +16,14 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         "-c",
         help="Category name, e.g. 01_Productivity_Flow, 02_Code_Intelligence, 03_Social_Interaction, 04_Search_Retrieval, 05_Creative_Synthesis, 06_Safety_Alignment",
     )
+    mode.add_argument("--dataset-id", help="Execute an explicitly registered frozen dataset series or release")
+    parser.add_argument("--release-id", help="Frozen release within --dataset-id; task membership is verified before execution")
 
     parser.add_argument(
         "--modality",
         choices=["pure-text", "multimodal"],
         default=None,
-        help="Only run tasks with this frontmatter modality (applies to --category mode; "
+        help="Only run tasks with this frontmatter modality (applies to --category/--dataset-id modes; "
              "an explicit --task is never filtered)",
     )
     parser.add_argument(
@@ -32,7 +34,7 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
         metavar="TAG",
         help="Only run tasks whose frontmatter `tags` include this tag. Repeatable; "
              "multiple --tag form a union (a task matching ANY of them is kept). "
-             "Applies to --category mode; an explicit --task is never filtered",
+             "Applies to --category/--dataset-id modes; an explicit --task is never filtered",
     )
     parser.add_argument(
         "--exclude-tag",
@@ -205,4 +207,8 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
 
 
 def parse_run_batch_args(default_model: str, default_parallel: int) -> argparse.Namespace:
-    return build_run_batch_parser(default_model, default_parallel).parse_args()
+    parser = build_run_batch_parser(default_model, default_parallel)
+    args = parser.parse_args()
+    if args.release_id and not args.dataset_id:
+        parser.error("--release-id requires --dataset-id")
+    return args

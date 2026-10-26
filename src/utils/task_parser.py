@@ -214,7 +214,7 @@ def parse_rubric_criteria(rubric_text: str) -> list[dict]:
     return criteria
 
 
-def parse_task_md(task_file: Path) -> dict:
+def parse_task_md(task_file: Path, *, repo_root: Path | None = None) -> dict:
     """Extract task_id, prompt, workspace_path, and automated_checks from task.md."""
     content = task_file.read_text(encoding="utf-8")
 
@@ -314,12 +314,12 @@ def parse_task_md(task_file: Path) -> dict:
 
     wp = Path(workspace_path)
     if not wp.is_absolute():
-        wp = (ROOT_DIR / wp).resolve()
+        wp = ((repo_root or ROOT_DIR) / wp).resolve()
     workspace_path = str(wp)
 
     sp = Path(skills_path)
     if not sp.is_absolute():
-        sp = (ROOT_DIR / sp).resolve()
+        sp = ((repo_root or ROOT_DIR) / sp).resolve()
     skills_path = str(sp)
 
     return {
