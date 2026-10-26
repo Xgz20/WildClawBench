@@ -183,6 +183,49 @@ def capability_scores(rows, mapping):
     return result
 
 
+def dataset_references(data, references):
+    """Use dataset-specific metadata from verified private task snapshots only."""
+    mapping, categories, order = dict(references["capabilities"]), dict(CATEGORIES), {}
+    snapshots, sources = {}, []
+    for row in data["tasks"]:
+        definition = row.get("task_definition") or {}
+        contract = definition.get("dataset_report")
+        if contract is None:
+            continue
+        task_id = row["task_id"]
+        if (definition.get("status") != "complete" or not re.fullmatch(r"[0-9a-f]{64}", str(definition.get("task_sha256", "")))
+                or not isinstance(contract, dict) or contract.get("schema_version") != "wildclawbench.dataset-report-contract/v1"
+                or not isinstance(contract.get("series_id"), str)
+                or not task_id.startswith(contract["series_id"].replace("-", "_").replace(".", "_") + "_")
+                or contract.get("category") != row["category"]
+                or not isinstance(contract.get("category_name"), str) or not contract["category_name"].strip()
+                or type(contract.get("category_order")) is not int or contract["category_order"] < 0):
+            raise ValueError("REPORT_DATASET_METADATA_INVALID")
+        task_map = contract.get("checkpoint_capabilities")
+        if (not isinstance(task_map, dict) or not task_map
+                or any(not isinstance(key, str) or not isinstance(dims, list) or not 1 <= len(dims) <= 2
+                       or any(not isinstance(dim, str) or dim not in CAPABILITIES for dim in dims)
+                       or len(dims) != len(set(dims))
+                       or {"retrieval_verification", "verification_delivery"}.issubset(dims)
+                       for key, dims in task_map.items())):
+            raise ValueError("REPORT_DATASET_CAPABILITY_MAP_INVALID")
+        if task_id in snapshots:
+            if contract != snapshots[task_id]:
+                raise ValueError("REPORT_DATASET_METADATA_CONFLICT")
+            continue
+        category = contract["category"]
+        if category in order and (categories[category] != contract["category_name"] or order[category] != contract["category_order"]):
+            raise ValueError("REPORT_DATASET_CATEGORY_CONFLICT")
+        snapshots[task_id] = contract
+        categories[category], order[category] = contract["category_name"], contract["category_order"]
+        mapping[task_id] = task_map
+        sources.append({"task_id": task_id, "series_id": contract["series_id"],
+                        "task_sha256": definition["task_sha256"],
+                        "report_contract_sha256": hashlib.sha256(json.dumps(contract, ensure_ascii=False,
+                            sort_keys=True, separators=(",", ":")).encode()).hexdigest()})
+    return mapping, categories, order, sorted(sources, key=lambda item: item["task_id"])
+
+
 def table(headers, rows, formats=None, notes=None):
     return {"headers": headers, "rows": rows, "formats": formats or {}, "notes": notes or []}
 
@@ -337,6 +380,7 @@ def paired_token_measure(rows, fields, *, ratio=False):
 
 def build_views(data, references):
     import report_case_views
+    capability_mapping, category_labels, category_order, dataset_sources = dataset_references(data, references)
     units = sorted(data["units"], key=lambda u: (u["score"]["mean_score"] is None, -(u["score"]["mean_score"] or 0), u["unit_id"]))
     prepared, labels = [], Counter()
     overrides = data.get("display_overrides", {})
@@ -405,7 +449,7 @@ def build_views(data, references):
         efficiency_coverage.append([label, *[coverage_label(item) for item in efficiency_items]])
         resource_display_by_unit[unit["unit_id"]] = {"metrics": display_metrics, "average_tokens": average,
                                                     "ordinary_input_tokens": ordinary, "cache_hit_rate": hit_rate}
-        caps[unit["unit_id"]] = capability_scores(rows, references["capabilities"])
+        caps[unit["unit_id"]] = capability_scores(rows, capability_mapping)
         grouped, known = Counter(), 0
         for row in rows:
             detail = row.get("tool_calls", {})
@@ -443,8 +487,10 @@ def build_views(data, references):
     views["总览"]["coverage_table"] = table(["模型@Harness", "Token覆盖", "请求覆盖", "工具覆盖", "任务耗时覆盖", "流程耗时覆盖"], overview_coverage)
     views["效率对比"]["cell_annotations"] = efficiency_cells
     views["效率对比"]["coverage_table"] = table(["模型@Harness", "总Token覆盖", "平均Token覆盖", "输入覆盖", "普通输入覆盖", "缓存命中覆盖", "缓存写入覆盖", "输出覆盖", "命中率样本"], efficiency_coverage)
-    for name, key, names in [("分类对比", "category", CATEGORIES), ("难度对比", "difficulty", {}), ("模态对比", "modality", MODALITIES)]:
+    for name, key, names in [("分类对比", "category", category_labels), ("难度对比", "difficulty", {}), ("模态对比", "modality", MODALITIES)]:
         groups = sorted({row.get(key) or "unknown" for row in data["tasks"]})
+        if key == "category" and category_order:
+            groups.sort(key=lambda group: (0, category_order[group], group) if group in category_order else (1, 0, group))
         frozen_counts = {g: len({row["task_id"] for row in data["tasks"] if (row.get(key) or "unknown") == g}) for g in groups}
         table_rows = []
         for unit, rows, _ in prepared:
@@ -494,10 +540,11 @@ def build_views(data, references):
                                  render_row_count=min(cursor + len(views["工具调用对比"]["notes"]), 160))
     order = ["总览", "效率对比", "分类对比", "难度对比", "Agent能力对比", "模态对比", "工具调用对比"]
     return {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
-            **report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES),
+            **report_case_views.build_case_views(data, units, labels_by_id, table, category_labels, MODALITIES, category_order),
             "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
             "reference_sources": references["sources"],
+            **({"dataset_reference_sources": dataset_sources} if dataset_sources else {}),
             "capability_coverage": caps, "resource_display": resource_display_by_unit,
             "display_overrides": applied_overrides,
             "display_overrides_sha256": hashlib.sha256(json.dumps(overrides, ensure_ascii=False, sort_keys=True).encode()).hexdigest() if overrides else None}

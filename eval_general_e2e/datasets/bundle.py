@@ -487,6 +487,7 @@ def compile_dataset(
     grading_counts: Counter[str] = Counter()
     difficulty_counts: Counter[str] = Counter()
     timeout_counts: Counter[str] = Counter()
+    report_capabilities = json.loads(registry_bytes)["checkpoint_capability_map7"] if definition.task_id_prefix else {}
 
     for order, (task_path, metadata, sections, raw) in enumerate(parsed, start=1):
         task_id = str(metadata.get("id") or "").strip()
@@ -501,6 +502,21 @@ def compile_dataset(
             if (not task_id.startswith(f"{definition.task_id_prefix}{category}_task_")
                     or task_path.name != f"{task_id}.md"):
                 raise ValueError(f"task namespace/path mismatch: {task_id}")
+            report_contract = metadata.get("dataset_report")
+            inline_contract = re.search(r"^dataset_report:[ \t]*(\{[^\n]*\})[ \t]*$", raw.decode("utf-8").split("\n---", 1)[0], re.M)
+            if (not isinstance(report_contract, dict)
+                    or inline_contract is None
+                    or report_contract.get("schema_version") != "wildclawbench.dataset-report-contract/v1"
+                    or report_contract.get("category") != category
+                    or report_contract.get("category_name") != definition.category_labels[category]
+                    or type(report_contract.get("category_order")) is not int
+                    or report_contract.get("category_order") != list(definition.category_labels).index(category)
+                    or not isinstance(report_contract.get("series_id"), str)
+                    or report_contract.get("series_id", "").replace("-", "_").replace(".", "_") + "_" != definition.task_id_prefix
+                    or report_contract.get("checkpoint_capabilities") != report_capabilities[task_id]):
+                raise ValueError(f"frozen task report metadata disagrees with dataset definition/mapping: {task_id}")
+            if json.loads(inline_contract.group(1)) != report_contract:
+                raise ValueError(f"task report metadata must use the canonical inline JSON form: {task_id}")
         workspace_text = _strip_codeblock(sections.get("Workspace Path", ""))
         workspace_rel = _safe_relative_path(workspace_text, label="workspace path")
         workspace_root = _within(repo_root / Path(*workspace_rel.parts), repo_root, label="workspace")

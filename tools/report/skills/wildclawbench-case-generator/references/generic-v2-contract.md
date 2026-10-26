@@ -14,6 +14,8 @@
 
 必需 frontmatter：`id`、`name`、`category`、`timeout_seconds`、`modality`、`attachment_size_limit_mb`、`difficulty`、`grading_type`、`tags`。`hybrid` 还必须有和为 1 的 `grading_weights`。
 
+注册数据集另由生成器写入`dataset_report`单行JSON（有效的YAML flow值）：系列、分类中文名/顺序及能力映射须与系列定义一致。它只随完整题面进入私有评分包，被题面SHA锁定；脱仓报告不读取当前源码，也不需要增加PyYAML依赖。不要手填一份与系列映射不同的报告快照。
+
 必需章节按以下顺序生成：
 
 1. `Prompt`

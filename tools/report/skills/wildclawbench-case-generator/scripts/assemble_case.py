@@ -720,6 +720,16 @@ def render_task(spec: dict[str, Any], task_id: str, workspace_relative: str) -> 
     if spec.get("judge_evidence"):
         frontmatter["judge_evidence"] = spec["judge_evidence"]
     fm = _dump_yaml(frontmatter).rstrip()
+    if spec.get("registered"):
+        registered = spec["registered"]
+        # JSON is valid flow-style YAML and can be read by a distributed report
+        # without adding a PyYAML runtime dependency. The task SHA freezes it.
+        report_contract = {"schema_version": "wildclawbench.dataset-report-contract/v1",
+            "series_id": registered.series_id, "category": spec["category"],
+            "category_name": registered.definition.category_labels[spec["category"]],
+            "category_order": list(registered.definition.category_labels).index(spec["category"]),
+            "checkpoint_capabilities": spec["checkpoint_capabilities"]}
+        fm += "\ndataset_report: " + json.dumps(report_contract, ensure_ascii=False, sort_keys=True)
 
     grading_lines: list[str] = []
     if spec["automated_criteria"] and spec["judge_criteria"]:

@@ -7,6 +7,8 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 
 # 汇总 General E2E 报告
 
+`0.9.0`支持注册数据集的独立分类和七维映射。新任务在评分侧冻结题面中携带单行JSON形式的`dataset_report`，其分类中文名、顺序与检查点映射由来源数据集定义生成，并被题面SHA锁定。报告只从身份/哈希验证通过的冻结题面读取，冲突或未验证快照失败关闭；缺少快照时保持不可用，不读取当前仓库回填。分类表和用例明细使用同一分类顺序；`presentation.dataset_reference_sources`记录任务SHA及快照摘要。旧题继续使用发行时冻结的公共字典，不改历史材料。该元数据属于私有评分题面，不进入被测端执行包。
+
 `0.8.10` 的研发索引引用 submission 实际采用且与 score SHA 绑定的 `scoring/execution-records`；初始正式采集记录单独保留路径与 SHA，不再把合法补采误报为原件漂移，也不声称新旧轨迹等价。原包成员、身份、评分绑定校验保持不变。
 
 生成报告时建议显式传入 `--seal-output-dir /absolute/new-archive-directory`：在同一生成进程返回前验证回执并封存规范 ZIP，避免宿主随后修改独立 XLSX 的元数据。`selected_report.py` 也支持此参数。单独封存已有、仍满足原回执的报告可用 `scripts/seal_report.py --report-dir ABS --output-dir ABS --batch-root ABS`；跨来源 composite 报告不需 batch-root。已发生的字节漂移必须保留并用新生成流程处理，不删除属性或修改旧 SHA。研发导出使用 run Skill 的 `--canonical-report-archive` 读取封存成员，独立变体另存。

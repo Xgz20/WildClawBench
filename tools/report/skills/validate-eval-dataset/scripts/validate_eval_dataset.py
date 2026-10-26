@@ -291,6 +291,17 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
         capabilities = {"code_generation", "tool_use", "data_processing", "retrieval_verification",
                         "reasoning_planning", "content_generation", "verification_delivery"}
         task_map = mapping.get(task_id)
+        report_contract = doc.metadata.get("dataset_report")
+        if (not isinstance(report_contract, dict)
+                or not re.search(r"^dataset_report:[ \t]*\{[^\n]*\}[ \t]*$", doc.raw.split("\n---", 1)[0], re.M)
+                or report_contract.get("schema_version") != "wildclawbench.dataset-report-contract/v1"
+                or report_contract.get("series_id") != registered.series_id
+                or report_contract.get("category") != category
+                or report_contract.get("category_name") != definition.category_labels[category]
+                or type(report_contract.get("category_order")) is not int
+                or report_contract.get("category_order") != list(definition.category_labels).index(category)
+                or report_contract.get("checkpoint_capabilities") != task_map):
+            issues.append(_issue("DATASET_REPORT_METADATA_INVALID", "题面中的报告分类/能力快照与系列定义不一致", doc))
         if (not isinstance(task_map, dict) or not expected_map or set(task_map) != expected_map
                 or any(not isinstance(values, list) or not 1 <= len(values) <= 2
                        or any(not isinstance(value, str) or value not in capabilities for value in values)
@@ -329,6 +340,7 @@ _ISSUE_ACTIONS = {
     "DATASET_CAPABILITY_MAP_INVALID": "让该系列能力映射精确覆盖本题评分检查点",
     "DATASET_GRADER_NETWORK_IMPORT": "移除规则评分中的联网或LLM依赖，保留离线可核验评分",
     "DATASET_GRADER_KEYS_INVALID": "显式返回全部规则检查点与overall_score",
+    "DATASET_REPORT_METADATA_INVALID": "从系列定义和能力映射生成一致的dataset_report快照",
     "FRONTMATTER_INVALID": "修正 YAML frontmatter，并重新运行静态校验",
     "FRONTMATTER_FIELD_MISSING": "补齐框架必需的 frontmatter 字段",
     "FRONTMATTER_FIELD_TYPE": "修正 frontmatter 字段类型",

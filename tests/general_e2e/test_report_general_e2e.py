@@ -33,6 +33,49 @@ RELEASE_DIGEST = "2" * 64
 TASKS = ["task-zero", "task-valid", "task-error", "task-unscored"]
 
 
+class DatasetReportMetadataTests(unittest.TestCase):
+    def row(self, *, task_id="general_hard_research_verification_task_001_example", label="研究检索与证据核验"):
+        contract = {"schema_version": "wildclawbench.dataset-report-contract/v1", "series_id": "general-hard",
+                    "category": "research_verification", "category_name": label, "category_order": 2,
+                    "checkpoint_capabilities": {"automated.evidence": ["retrieval_verification"]}}
+        text = "---\nid: " + task_id + "\ndataset_report: " + json.dumps(contract, ensure_ascii=False) + "\n---\n## Prompt\nFind evidence.\n"
+        definition = REPORT.report_case_views.parse_task(text)
+        definition.update(status="complete", task_sha256=hashlib.sha256(text.encode()).hexdigest())
+        return {"task_id": task_id, "category": "research_verification", "task_definition": definition,
+                "score_status": "valid", "checkpoints": {"values": {"automated.evidence": .75}}}
+
+    def test_dataset_labels_and_capabilities_come_from_frozen_private_task(self):
+        row = self.row()
+        references = {"capabilities": {"legacy": {"key": ["code_generation"]}}}
+        mapping, names, order, sources = REPORT.report_views.dataset_references({"tasks": [row]}, references)
+        self.assertEqual(names["research_verification"], "研究检索与证据核验")
+        self.assertEqual(order["research_verification"], 2)
+        score = REPORT.report_views.capability_scores([row], mapping)
+        self.assertEqual(score["retrieval_verification"], {"score": .75, "known": 1, "total": 1})
+        self.assertEqual(sources[0]["task_sha256"], row["task_definition"]["task_sha256"])
+        self.assertNotIn(row["task_id"], references["capabilities"])
+
+    def test_conflicting_or_unverified_dataset_metadata_fails_closed(self):
+        first = self.row()
+        second = self.row(label="另一个定义")
+        with self.assertRaisesRegex(ValueError, "METADATA_CONFLICT"):
+            REPORT.report_views.dataset_references({"tasks": [first, second]}, {"capabilities": {}})
+        first["task_definition"]["status"] = "unavailable"
+        with self.assertRaisesRegex(ValueError, "METADATA_INVALID"):
+            REPORT.report_views.dataset_references({"tasks": [first]}, {"capabilities": {}})
+        with self.assertRaisesRegex(ValueError, "METADATA_INVALID"):
+            REPORT.report_case_views.parse_task("---\nid: example\ndataset_report: broken\n---\n")
+
+    def test_missing_frozen_metadata_does_not_read_current_source_or_invent_coverage(self):
+        row = self.row()
+        row["task_definition"] = {"status": "unavailable"}
+        mapping, names, _, sources = REPORT.report_views.dataset_references({"tasks": [row]}, {"capabilities": {}})
+        self.assertNotIn(row["task_id"], mapping)
+        self.assertNotIn("research_verification", names)
+        self.assertEqual(sources, [])
+        self.assertEqual(REPORT.report_views.capability_scores([row], mapping)["retrieval_verification"]["score"], None)
+
+
 def load_example(name: str) -> dict:
     return json.loads((EXAMPLES / name).read_text(encoding="utf-8"))
 

@@ -9,6 +9,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+import zipfile
 
 import yaml
 
@@ -80,7 +81,10 @@ class DatasetCatalogTests(unittest.TestCase):
         metadata = {"id": task_id, "name": "本地取证", "category": "research", "difficulty": "L3",
                     "modality": "pure-text", "timeout_seconds": 900, "grading_type": "automated",
                     "tags": ["custom", "sample"]}
-        task_path.write_text("---\n" + yaml.safe_dump(metadata) + "---\n"
+        report = {"schema_version": "wildclawbench.dataset-report-contract/v1", "series_id": "sample",
+                  "category": "research", "category_name": "研究", "category_order": 0,
+                  "checkpoint_capabilities": {"correct": ["retrieval_verification"]}}
+        task_path.write_text("---\n" + yaml.safe_dump(metadata) + "dataset_report: " + json.dumps(report, ensure_ascii=False) + "\n---\n"
             "## Prompt\nRead input.txt and write results/answer.json.\n"
             "## Expected Behavior\nAnswer matches private expected.json.\n"
             "## Grading Criteria\n- [ ] `correct`: Business correctness.\n"
@@ -150,7 +154,7 @@ class DatasetCatalogTests(unittest.TestCase):
         self.capabilities[self.ids[0]] = {"other": ["retrieval_verification"]}
         self.save_sources()
         issues = module.validate_registered_registry(self.root, selected)
-        self.assertEqual({issue.code for issue in issues}, {"DATASET_SOURCE_MISSING", "DATASET_CAPABILITY_MAP_INVALID"})
+        self.assertEqual({issue.code for issue in issues}, {"DATASET_SOURCE_MISSING", "DATASET_CAPABILITY_MAP_INVALID", "DATASET_REPORT_METADATA_INVALID"})
         workspace = self.base / "workspace/research" / self.ids[0]
         (workspace / "exec/input.txt").unlink()
         (workspace / "exec").rmdir()
@@ -213,6 +217,10 @@ class DatasetCatalogTests(unittest.TestCase):
         self.assertNotEqual(before["dataset_digest"], provenance["dataset_digest"])
         self.capabilities[self.ids[0]]["correct"] = ["data_processing"]
         self.save_sources()
+        with self.assertRaisesRegex(ValueError, "report metadata disagrees"):
+            self.compile()
+        path = self.base / "tasks/research" / f"{self.ids[0]}.md"
+        path.write_text(path.read_text().replace('"correct": ["retrieval_verification"]', '"correct": ["data_processing"]'))
         mapping = self.compile()[0]
         self.assertNotEqual(provenance["dataset_digest"], mapping["dataset_digest"])
         gt = self.base / "workspace/research" / self.ids[0] / "gt/expected.json"
@@ -261,7 +269,7 @@ class DatasetCatalogTests(unittest.TestCase):
         self.save_sources()
         with self.assertRaisesRegex(ValueError, "lacks capability"):
             self.compile()
-        self.capabilities[self.ids[0]] = {"correct": ["data_processing"]}
+        self.capabilities[self.ids[0]] = {"correct": ["retrieval_verification"]}
         self.save_sources()
         (self.base / "workspace/research" / self.ids[0] / "gt/expected.json").unlink()
         (self.base / "workspace/research" / self.ids[0] / "gt/.gitkeep").write_text("")
@@ -381,6 +389,27 @@ class DatasetCatalogTests(unittest.TestCase):
         self.assertIn("network.retrieve", audit["tasks"][0]["execution"]["required_tool_capabilities"])
         self.assertIn("image.understand", audit["tasks"][1]["execution"]["required_tool_capabilities"])
         self.assertIn("1类共2题", render_markdown(audit))
+
+    def test_dataset_report_snapshot_stays_in_private_scoring_package(self) -> None:
+        from tests.general_e2e.test_general_release_prepare import PREPARE
+        from eval_general_e2e.datasets.bundle import write_dataset_bundle
+        manifest, members = self.compile()
+        bundle = write_dataset_bundle(manifest, members, self.root / "source.zip")
+        catalogue = {"skills": [{"name": name, "version": "1.0.0", "implementation_status": "operational",
+                                  "content_sha256": "a" * 64, "zip_sha256": "b" * 64}
+                                 for name in dict.fromkeys([*PREPARE.EXECUTION_SKILLS, *PREPARE.SCORING_SKILLS])]}
+        unit = {"unit_id": "sample-unit", "task_ids": self.ids, "harness": {"id": "astronstudio"}}
+        dataset = {"id": manifest["dataset_id"], "digest": manifest["dataset_digest"], "bundle_sha256": "c" * 64}
+        release = {"id": "sample-suite", "catalog_digest": "d" * 64, "catalog_sha256": "e" * 64, "suite_sha256": "f" * 64}
+        with zipfile.ZipFile(bundle) as archive:
+            execution, scoring = PREPARE._unit_packages(archive, manifest["dataset_id"], manifest, unit,
+                "sample-batch", dataset, release, catalogue, self.root)
+        with zipfile.ZipFile(execution) as archive:
+            self.assertFalse(any(b"dataset_report" in archive.read(name) for name in archive.namelist()))
+        with zipfile.ZipFile(scoring) as archive:
+            definitions = [name for name in archive.namelist() if name.endswith("/task.md")]
+            self.assertEqual(len(definitions), 2)
+            self.assertTrue(all(b"dataset_report:" in archive.read(name) for name in definitions))
 
 
 class RegisteredSourceContractTests(unittest.TestCase):
