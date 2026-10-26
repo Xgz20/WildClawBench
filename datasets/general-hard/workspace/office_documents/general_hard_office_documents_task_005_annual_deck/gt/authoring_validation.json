@@ -1,0 +1,310 @@
+{
+  "schema_version": "h005-author-validation/v1",
+  "status": "PASS",
+  "controls": {
+    "reference": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9999999999999999
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "equivalent_order": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9999999999999999
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "equivalent_formula": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9999999999999999
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "zero_override": {
+      "scores": {
+        "business_correctness": 0.9416666666666665,
+        "boundary_cases": 0.980952380952381,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9631547619047619
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "unit_mismatch": {
+      "scores": {
+        "business_correctness": 0.9416666666666665,
+        "boundary_cases": 0.980952380952381,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9631547619047619
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "mean_of_rates": {
+      "scores": {
+        "business_correctness": 0.9416666666666665,
+        "boundary_cases": 0.9666666666666668,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9595833333333333
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "include_future_invoices": {
+      "scores": {
+        "business_correctness": 0.9416666666666665,
+        "boundary_cases": 0.9000000000000001,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9429166666666667
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "include_day30": {
+      "scores": {
+        "business_correctness": 0.9416666666666665,
+        "boundary_cases": 0.9333333333333333,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.95125
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "ledger_only_correct": {
+      "scores": {
+        "business_correctness": 0.9620833333333333,
+        "boundary_cases": 0.980952380952381,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9743839285714285
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "wrong_chart_cache": {
+      "scores": {
+        "business_correctness": 0.9666666666666667,
+        "boundary_cases": 0.95,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9691666666666667
+      },
+      "editable_score": 0.8333333333333334,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "wrong_embedded_formula_correct_cache": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 0.95,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9874999999999999
+      },
+      "editable_score": 0.8333333333333334,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "wrong_embedded_literal": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 0.95,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9874999999999999
+      },
+      "editable_score": 0.8333333333333334,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "rasterized_slides": {
+      "scores": {
+        "business_correctness": 0.39999999999999997,
+        "boundary_cases": 0.19999999999999998,
+        "delivery_integrity": 0.8333333333333334,
+        "evidence_binding": 1.0,
+        "overall_score": 0.445
+      },
+      "editable_score": 0.0,
+      "font_pass": false,
+      "fit_pass": true
+    },
+    "font_too_small": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 0.8999999999999999,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9749999999999999
+      },
+      "editable_score": 1.0,
+      "font_pass": false,
+      "fit_pass": true
+    },
+    "text_overflow": {
+      "scores": {
+        "business_correctness": 0.9883333333333334,
+        "boundary_cases": 0.8809523809523809,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9638214285714286
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": false
+    },
+    "missing_description_header": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.6666666666666666,
+        "evidence_binding": 1.0,
+        "overall_score": 0.95
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "wrong_evidence": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9545454545454546,
+        "overall_score": 0.9977272727272727
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "missing_pptx": {
+      "scores": {
+        "business_correctness": 0.39999999999999997,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.8333333333333334,
+        "evidence_binding": 1.0,
+        "overall_score": 0.395
+      },
+      "editable_score": 0.0,
+      "font_pass": false,
+      "fit_pass": false
+    },
+    "missing_ledger": {
+      "scores": {
+        "business_correctness": 0.7050000000000001,
+        "boundary_cases": 0.6,
+        "delivery_integrity": 0.5,
+        "evidence_binding": 0.0,
+        "overall_score": 0.6127500000000001
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "missing_notes": {
+      "scores": {
+        "business_correctness": 0.8949999999999999,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8333333333333334,
+        "evidence_binding": 1.0,
+        "overall_score": 0.91725
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "missing_all": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "editable_score": 0.0,
+      "font_pass": false,
+      "fit_pass": false
+    },
+    "corrupt_pptx": {
+      "scores": {
+        "business_correctness": 0.39999999999999997,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.8333333333333334,
+        "evidence_binding": 1.0,
+        "overall_score": 0.395
+      },
+      "editable_score": 0.0,
+      "font_pass": false,
+      "fit_pass": false
+    },
+    "changed_input": {
+      "scores": {
+        "business_correctness": 0.9999999999999999,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.5499999999999999
+      },
+      "editable_score": 1.0,
+      "font_pass": true,
+      "fit_pass": true
+    },
+    "missing_gt": {
+      "status": "evaluation_error",
+      "score": null,
+      "error": "FileNotFoundError"
+    }
+  },
+  "gt_sha256": {
+    "evidence_requirements.json": "ef79f17394f40afbda96792a9c179909d060b73e51677057ca1054db8fec1569",
+    "scoring_dependencies.json": "eb89fa54bb97438de785c6aa9e559ccf5ac6c4052f34fda6d2f4243ca7d199b4",
+    "business_oracle.json": "5346936f63738b464e0edc968076cdd3b4c30967e6af19b9e3a6292488363688",
+    "verify_oracle.py": "72f1b56c943783f690fa7a2f8a0b58ac20d7aaa236ec0cfb535f08d8aa524985",
+    "protected_sha256.json": "a0c68a48dba7ca1b65eb0c453099b516ddfdf75d052ae96334b22e6b74435161",
+    "office_runtime.py": "efd68cc0eef1ec52ad97069e5725ee9ea198caf3cc7d7ca05519d9a45c7ee246",
+    "grader.py": "ddfb1f4343e8f39efed4a89f6b567c30e9d2cc4f1131e920cd87fc5931d03603",
+    "expected.json": "68f4df3d60034d80502d6864c99575c5c2657132ba79c27a59d47e8e52131650",
+    "evidence_index.json": "ded6a8f7e8be184b0431776b00d539e058084079433c2ba534994a96e24882f7",
+    "scoring_environment.md": "b805ab00161ecd32214b1b98de9a48732b96df2a9efb9e894bdf40c38ddb0386",
+    "counterexamples.json": "8cdf6602488d5e69a8dc8cccb61e4094dbb8afdcde28b97cdeed12c81406342b",
+    "structured_io.py": "176664cc226ca995d3d8b435f05d192ce35aaf38c049101a19673aa3cdaeb580",
+    "independent_calculation.json": "40de5335d82cc20519af5428a67882f64321e8e69a084e8715887ce2cb0ee8bb",
+    "artifact_contract.json": "925ebbced3bc15cd4a23341e507c3a2e2fb5716190503dbfa76d9f12a41bef7d",
+    "source_facts.json": "8f20aa587c888b5d424524be6729ad27411a1ad44dc35888f0f327b575a288df",
+    "validate_authoring.py": "4c53dd6a911b082037ecc898c33ce787a7decbdd90610be032c1b7fdb0eec6cf",
+    "native_text.py": "4e4cb8a2d0c84dc27d307f8a478772541e2404f14c5ebb29538e8326b6036751",
+    "reference/results/evidence.csv": "c351111a9dabc6663d357998ab4069e6187fbcfcba6fc97a95c492a17628fc69",
+    "reference/results/annual.pptx": "d0a8272b68e8e1c8c0c8e7311ca053f00cb594634fce9d49036034bf52262fcb",
+    "reference/results/notes.docx": "f4c875ba69aa3e2636e30a4c6887d3ef95b8188d8791624acc45c4d1ce119c13"
+  },
+  "limit": "Actual locked Office and author rule controls; not independent semantic/expert review, Harness run, hybrid total or difficulty calibration."
+}

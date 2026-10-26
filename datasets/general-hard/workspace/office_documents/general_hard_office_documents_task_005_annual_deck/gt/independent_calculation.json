@@ -1,0 +1,126 @@
+{
+  "schema_version": "h005-physical-workbook-verification/v1",
+  "status": "PASS",
+  "workbook_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+  "zero_correction_preserved": true,
+  "financial_months": 12,
+  "operating_months": 12,
+  "invoices": 18,
+  "eligible_invoices": 16,
+  "comparisons": [
+    {
+      "kpi_id": "K01",
+      "value": "3545.00",
+      "exact_fraction": "3545",
+      "matches": true
+    },
+    {
+      "kpi_id": "K02",
+      "value": "19.16",
+      "exact_fraction": "2280/119",
+      "matches": true
+    },
+    {
+      "kpi_id": "K03",
+      "value": "94.41",
+      "exact_fraction": "70900/751",
+      "matches": true
+    },
+    {
+      "kpi_id": "K04",
+      "value": "1194.00",
+      "exact_fraction": "1194",
+      "matches": true
+    },
+    {
+      "kpi_id": "K05",
+      "value": "33.68",
+      "exact_fraction": "23880/709",
+      "matches": true
+    },
+    {
+      "kpi_id": "K06",
+      "value": "35.83",
+      "exact_fraction": "25400/709",
+      "matches": true
+    },
+    {
+      "kpi_id": "K07",
+      "value": "93.57",
+      "exact_fraction": "655/7",
+      "matches": true
+    },
+    {
+      "kpi_id": "K08",
+      "value": "90.58",
+      "exact_fraction": "28350/313",
+      "matches": true
+    },
+    {
+      "kpi_id": "K09",
+      "value": "93.22",
+      "exact_fraction": "4568/49",
+      "matches": true
+    },
+    {
+      "kpi_id": "K10",
+      "value": "83.99",
+      "exact_fraction": "27800/331",
+      "matches": true
+    },
+    {
+      "kpi_id": "K11",
+      "value": "110.00",
+      "exact_fraction": "110",
+      "matches": true
+    },
+    {
+      "kpi_id": "K12",
+      "value": "35.85",
+      "exact_fraction": "10216/285",
+      "matches": true
+    }
+  ],
+  "quarter_checks": [
+    {
+      "quarter": "Q1",
+      "revenue": "410",
+      "cost": "398",
+      "on_time_rate": "21/25",
+      "resolved_rate": "153/200",
+      "matches": true
+    },
+    {
+      "quarter": "Q2",
+      "revenue": "860",
+      "cost": "528",
+      "on_time_rate": "226/245",
+      "resolved_rate": "534/605",
+      "matches": true
+    },
+    {
+      "quarter": "Q3",
+      "revenue": "1005",
+      "cost": "627",
+      "on_time_rate": "68/73",
+      "resolved_rate": "9/10",
+      "matches": true
+    },
+    {
+      "quarter": "Q4",
+      "revenue": "1270",
+      "cost": "798",
+      "on_time_rate": "22/23",
+      "resolved_rate": "446/475",
+      "matches": true
+    }
+  ],
+  "aging_checks": {
+    "未到期": "230",
+    "0至30天": "155",
+    "31至60天": "65",
+    "大于60天": "45"
+  },
+  "independence": "SQL COALESCE/date predicates and Fraction arithmetic over actual XLSX; compared with pre-reference Decimal oracle only at the end.",
+  "limit": "Independent computation, not independent expert annotation or semantic Judge."
+}

@@ -1,0 +1,80 @@
+{
+  "schema_version": "h005-artifact-contract/v1",
+  "slides": 8,
+  "min_font_pt": 16,
+  "font_tolerance_pt": 0.05,
+  "pptx": "results/annual.pptx",
+  "ledger": "results/evidence.csv",
+  "notes": "results/notes.docx",
+  "fields": {
+    "kpi_id": [
+      "kpi_id",
+      "record_id",
+      "指标编号"
+    ],
+    "slide": [
+      "slide",
+      "page",
+      "页码"
+    ],
+    "value": [
+      "value",
+      "数值"
+    ],
+    "unit": [
+      "unit",
+      "单位"
+    ],
+    "source_cells": [
+      "source_cells",
+      "来源单元格"
+    ],
+    "method": [
+      "method",
+      "计算说明"
+    ]
+  },
+  "required_ids": [
+    "K01",
+    "K02",
+    "K03",
+    "K04",
+    "K05",
+    "K06",
+    "K07",
+    "K08",
+    "K09",
+    "K10",
+    "K11",
+    "K12",
+    "C03-2025",
+    "C03-2026",
+    "C04-revenue",
+    "C04-cost",
+    "C05-ontime",
+    "C05-24h",
+    "A07-future",
+    "A07-0-30",
+    "A07-31-60",
+    "A07-over60"
+  ],
+  "native_chart_pages": [
+    3,
+    4,
+    5
+  ],
+  "native_text_required_pages": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "numeric_tolerance": 0.0051,
+  "ratio_tolerance": 1e-06,
+  "max_csv_rows": 2000,
+  "equivalence": "Allow CSV order/BOM/aliases and equivalent numeric formats, slide objects, series order, chart types and native document layouts. Check fields independently."
+}

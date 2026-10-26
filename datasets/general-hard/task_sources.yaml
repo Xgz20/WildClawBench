@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 6
+  active_task_count: 7
   category_task_counts:
-    office_documents: 4
+    office_documents: 5
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -266,6 +266,52 @@ tasks:
           dependencies: 原版依赖Harbor、Docker、CompositeVerifier；不能直接复制目录声称评分等价。
           license: Tencent自定义许可；本次不复制题文、素材或评分代码。
           decision: 借鉴工作流与验证方法，全部重构为自建输入与独立oracle。
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_005_annual_deck
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-00031d8fb389a47c
+          query_hash: 00031d8fb389a47c701ca06a3277c418b8fc18dfe7c9c8ad8c587a0ac3a699fe
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-26 04:54:44.432000'
+          last_seen_local: '2026-09-26 04:54:44.432000'
+          intent_summary: 依据附件数据制作部门年度总结PPT，约束字号、字体、页数及图表。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+      authoring:
+        kind: synthetic_owned_fixture
+        seed: 2026102605
+        oracle_basis: Decimal calculation before reference; SQL COALESCE/date predicates
+          and Fraction over actual XLSX; original cache plus trusted embedded recalculation
+          and actual rendered glyph observations.
+        review_status: local_author_controls_passed_not_empirically_calibrated
+      external_method_references:
+        - id: gdpval
+          name: GDPval公开220题
+          urls:
+            - https://huggingface.co/datasets/openai/gdpval
+            - https://huggingface.co/datasets/openai/gdpval/blob/main/README.md
+          identity: 公开卡220题/44职业，README可见v2 rubrics+deliverables提交11e7900
+          evidence: 官方数据卡和viewer字段；确认reference_files、deliverables与rubric字段存在，未取得完整素材。
+          mechanism: 明确职业目标、上下文材料与面向下游读者的交付。
+          gt: 公开字段提供rubric与交付物，但不能将某个参考文件视为唯一合法答案。
+          dependencies: 领域审阅与原生办公文件检查；不接入外部自动评分服务。
+          license: 当前README未给出足够清晰的资产再分发许可，本次不搬运。
+          decision: 借鉴职业工作包和受证据约束的rubric，自建角色与合成材料。
     network:
       mode: offline
       allowed_urls: []
