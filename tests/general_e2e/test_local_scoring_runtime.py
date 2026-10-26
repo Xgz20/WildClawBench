@@ -124,6 +124,8 @@ class Fixture:
         llm_judge_rubric: str = "",
         mapped_nested_results: bool = False,
         dual_results: bool = False,
+        scoring_runtime: dict | None = None,
+        extra_gt_files: dict[str, bytes] | None = None,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -222,6 +224,8 @@ class Fixture:
             "grading_weights": grading_weights or {},
             "llm_judge_rubric": llm_judge_rubric,
         }
+        if scoring_runtime is not None:
+            contract["scoring_runtime"] = scoring_runtime
         contract_bytes = json.dumps(contract).encode("utf-8")
         task_bytes = b"# Fixture task\n"
         gt_bytes = b'{"answer":"ready\\n"}\n'
@@ -232,9 +236,12 @@ class Fixture:
             "size": len(gt_bytes),
             "sha256": sha256_bytes(gt_bytes),
         }
+        extra_gt_files = extra_gt_files or {}
+        gt_entries = [gt_entry, *[{"kind": "file", "path": name, "mode": "0644", "size": len(content),
+                                  "sha256": sha256_bytes(content)} for name, content in sorted(extra_gt_files.items())]]
         private_tree = {
             "algorithm": RUNTIME.DATASET_TREE_HASH_ALGORITHM,
-            "entries": [gt_entry],
+            "entries": gt_entries,
         }
         package_root = f"{self.batch_id}__{self.unit_id}"
         private_root = f"score/tasks/{self.task_id}/private-scoring"
@@ -261,7 +268,7 @@ class Fixture:
                     "private_scoring": {
                         "path": f"{private_root}/gt",
                         "tree_sha256": canonical_sha256(private_tree),
-                        "entries": [gt_entry],
+                        "entries": gt_entries,
                     },
                 }
             ],
@@ -285,6 +292,8 @@ class Fixture:
                 zip_info(f"{package_root}/{private_root}/gt/expected.json"),
                 gt_bytes,
             )
+            for name, content in extra_gt_files.items():
+                archive.writestr(zip_info(f"{package_root}/{private_root}/gt/{name}"), content)
         self.output_root = root / "attempts"
 
     def prepare(self, attempt_id: str = "score-attempt") -> Path:

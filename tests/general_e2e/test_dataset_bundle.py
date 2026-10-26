@@ -10,6 +10,7 @@ from pathlib import Path
 
 from eval_general_e2e.datasets.bundle import (
     DEFAULT_DEFINITION,
+    _task_contracts,
     _tree_materials,
     compile_dataset,
     default_manifest_path,
@@ -24,6 +25,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class GeneralDatasetCacheFilteringTests(unittest.TestCase):
+    def test_office_requirement_is_private_and_absence_preserves_legacy_contract(self):
+        execution, scoring = _task_contracts("task", {}, {}, {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        actual_execution, actual_scoring = _task_contracts("task", {"scoring_runtime": {"office": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(actual_execution, execution)
+        self.assertNotIn("scoring_runtime", scoring)
+        self.assertEqual(actual_scoring, {**scoring, "scoring_runtime": {"office": True}})
+        with self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):
+            _task_contracts("task", {"scoring_runtime": {"office": "false"}}, {},
+                {"sha256": "a" * 64}, {"sha256": "b" * 64})
+
     def test_generated_caches_do_not_change_material_digest_or_archive_members(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

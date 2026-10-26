@@ -6,8 +6,9 @@ from .finalize import finalize_score
 from .rules import inspect_rule_dependencies, run_rules
 from .semantics import evaluate_semantics
 from .native_text import NativeTextError, extract_native_text, is_native_text_format
+from .office_runtime import OfficeRuntimeError, create_office_lock, validate_office_lock, recalculate_xlsx
 
-CORE_VERSION = "0.3.0"
+CORE_VERSION = "0.4.0"
 
 __all__ = (
     "CORE_VERSION",
@@ -20,4 +21,8 @@ __all__ = (
     "NativeTextError",
     "extract_native_text",
     "is_native_text_format",
+    "OfficeRuntimeError",
+    "create_office_lock",
+    "validate_office_lock",
+    "recalculate_xlsx",
 )

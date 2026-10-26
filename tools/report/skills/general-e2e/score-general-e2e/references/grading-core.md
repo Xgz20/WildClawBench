@@ -4,6 +4,8 @@
 
 自score-general-e2e 0.11.0起装配core 0.3.0，新增`extract_native_text()`和`is_native_text_format()`：DOCX/XLSX使用标准库，PDF按需导入评分环境中的pypdf。提取只做离线文本/单元格投影，保留原文件及投影SHA、记录位置、公式缓存状态和未解释内容；不执行宏、外链或公式计算。`NativeTextError`提供独立code/message，缺PDF依赖不能转为候选零分。详见[原生文件文本证据](native-text-evidence.md)。
 
+score-general-e2e 0.12.0装配core 0.4.0，增加`create_office_lock(executable)`、`validate_office_lock(lock)`和`recalculate_xlsx(source, lock, output_dir)`。重算调用锁定的外部LibreOffice，不是Python公式模拟器；`OfficeRuntimeError`保留独立code/message。`validate_office_lock(..., require_executable=False)`仅用于归档时核验完整锁结构，不能作为运行前检查。详见[可信Office重算](office-recalculation.md)。
+
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。规则/索引/结果校验及合分、DOCX/XLSX文本投影只使用Python标准库，PDF投影按需使用评分CLI解释器中的pypdf。任务规则所需的PyYAML、Playwright和Chromium属于G3-02专用评分虚拟环境，不因原生证据提取而安装到被测项目。
 
 ## 公开 API

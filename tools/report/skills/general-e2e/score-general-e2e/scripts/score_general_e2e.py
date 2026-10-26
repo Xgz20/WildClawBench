@@ -2102,12 +2102,14 @@ class _WorkerExecutor:
         runtime_lock_path: Path,
         timeout_seconds: float,
         playwright_browsers_path: Path | None,
+        office_runtime: dict | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
         self.runtime_lock_path = runtime_lock_path
         self.timeout_seconds = timeout_seconds
         self.playwright_browsers_path = playwright_browsers_path
+        self.office_runtime = office_runtime
         self.audit: dict[str, Any] = {}
 
     def __call__(self, source: str, context: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -2138,6 +2140,15 @@ class _WorkerExecutor:
             self.runtime_python,
             playwright_browsers_path=self.playwright_browsers_path,
         )
+        office_binding = None
+        if self.office_runtime is not None:
+            lock_path = work_root / "office-runtime.json"
+            _write_new_json(lock_path, self.office_runtime)
+            derived = work_root / "derived"
+            derived.mkdir()
+            env["GENERAL_E2E_OFFICE_LOCK"] = str(lock_path)
+            env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
+            office_binding = {"path": "worker/office-runtime.json", "sha256": _sha256_file(lock_path)}
         creationflags = 0
         popen_kwargs: dict[str, Any] = {"start_new_session": os.name != "nt"}
         if os.name == "nt":
@@ -2202,6 +2213,7 @@ class _WorkerExecutor:
             "request_sha256": _sha256_file(request_path),
             "stdout_sha256": _sha256_file(stdout_path),
             "stderr_sha256": _sha256_file(stderr_path),
+            **({"office_runtime": office_binding} if office_binding else {}),
         }
         if timed_out:
             raise ScoringRuntimeError("RULE_WORKER_TIMEOUT")
@@ -2241,6 +2253,84 @@ def _import_grading_core() -> tuple[Any, Any]:
             "install the packaged vendor/e2e-shared directory on PYTHONPATH",
         ) from exc
     return run_rules, GradingCoreError
+
+
+def _load_office_runtime(path: Path, *, archived: bool = False) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import OfficeRuntimeError, validate_office_lock
+    lock = _read_json(path, code="OFFICE_LOCK_INVALID")
+    try:
+        validate_office_lock(lock, require_executable=not archived)
+    except OfficeRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    return lock
+
+
+def bootstrap_office_runtime(executable: Path, output: Path, runtime_lock_path: Path | None = None) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import OfficeRuntimeError, create_office_lock
+    try:
+        lock = create_office_lock(executable)
+    except OfficeRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    if runtime_lock_path is None:
+        value = lock
+    else:
+        value, _ = _load_runtime_lock(runtime_lock_path)
+        value = {**value, "office_runtime": lock}
+    _write_new_json(output, value)
+    return {"status": "PASS", "office_runtime_lock": str(output.resolve()), "sha256": _sha256_file(output), "engine_version": lock["engine_version"]}
+
+
+def _verify_office_rule_evidence(root: Path, *, required: bool = False, archived: bool = False) -> list[dict]:
+    audit_path = root / "rule-audit.json"
+    if not audit_path.is_file():
+        if required:
+            raise ScoringRuntimeError("OFFICE_RULE_AUDIT_MISSING")
+        return []
+    audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+    binding = (audit.get("worker") or {}).get("office_runtime")
+    if not binding:
+        if required:
+            raise ScoringRuntimeError("OFFICE_RUNTIME_BINDING_MISSING")
+        return []
+    path = _resolve_within(root, binding.get("path"), "office_runtime")
+    if binding.get("path") != "worker/office-runtime.json" or path.is_symlink() or _sha256_file(path) != binding.get("sha256"):
+        raise ScoringRuntimeError("OFFICE_RUNTIME_LOCK_DRIFT")
+    lock = _load_office_runtime(path, archived=archived)
+    artifacts = audit.get("derived_artifacts")
+    if not isinstance(artifacts, list):
+        raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_INVALID")
+    seen = set()
+    for artifact in artifacts:
+        relative = artifact.get("path", "")
+        if not relative.startswith("worker/derived/") or relative in seen:
+            raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_INVALID")
+        seen.add(relative)
+        file = _resolve_within(root, relative, "office derived artifact")
+        if not file.is_file() or file.is_symlink() or _sha256_file(file) != artifact.get("sha256") or file.stat().st_size != artifact.get("size"):
+            raise ScoringRuntimeError("OFFICE_DERIVED_ARTIFACT_DRIFT", relative)
+    actual = {file.relative_to(root).as_posix() for file in (root / "worker/derived").rglob("*") if file.is_file()}
+    if actual != seen:
+        raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_DRIFT")
+    candidate_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "candidate-original/workspace") if file.suffix.lower() == ".xlsx"}
+    reference_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "private/gt") if file.suffix.lower() == ".xlsx"}
+    for artifact in artifacts:
+        if not artifact["path"].endswith("/office-audit.json"):
+            continue
+        receipt_path = root / artifact["path"]
+        receipt = _read_json(receipt_path, code="OFFICE_RECALCULATION_AUDIT_INVALID")
+        derived_path = receipt_path.with_name("recalculated.xlsx")
+        if (receipt.get("schema_version") != "wildclawbench.office-recalculation/v1"
+                or receipt.get("profile") != lock["profile"] or receipt.get("engine_version") != lock["engine_version"]
+                or receipt.get("executable_sha256") != lock["executable_sha256"] or receipt.get("source_unchanged") is not True
+                or receipt.get("source_sha256") not in candidate_hashes | reference_hashes
+                or not derived_path.is_file() or receipt.get("derived_sha256") != _sha256_file(derived_path)):
+            raise ScoringRuntimeError("OFFICE_RECALCULATION_AUDIT_INVALID", artifact["path"])
+    # Missing/invalid deliveries may legitimately yield no workbook receipt.
+    # The frozen task grader decides that score; this generic verifier checks
+    # every derived artifact that was actually produced, not delivery semantics.
+    return [{"path": binding["path"], "sha256": binding["sha256"]}, *artifacts]
 
 
 def _rule_file_evidence(
@@ -2399,6 +2489,7 @@ def run_rules_attempt(
     runtime_python: Path,
     timeout_seconds: float,
     playwright_browsers_path: Path | None = None,
+    office_runtime_lock_path: Path | None = None,
 ) -> dict[str, Any]:
     attempt_root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(attempt_root)
@@ -2407,6 +2498,27 @@ def run_rules_attempt(
     manifest = _read_json(attempt_root / "attempt-manifest.json")
     contract_path = _resolve_within(attempt_root, manifest["paths"]["contract"], "contract")
     contract = _read_json(contract_path, code="SCORING_CONTRACT_INVALID")
+    requirements = contract.get("scoring_runtime") or {}
+    if (not isinstance(requirements, dict) or set(requirements) - {"office"}
+            or any(type(value) is not bool for value in requirements.values())):
+        raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "scoring_runtime")
+    office_runtime = None
+    if office_runtime_lock_path is not None:
+        office_runtime = _load_office_runtime(office_runtime_lock_path)
+    frozen_runtime_lock = _read_json(_resolve_within(attempt_root, manifest["paths"]["runtime_lock"], "runtime_lock"))
+    inherited_office = frozen_runtime_lock.get("office_runtime") if requirements.get("office") else None
+    if inherited_office is not None:
+        if office_runtime is not None and office_runtime != inherited_office:
+            raise ScoringRuntimeError("OFFICE_RUNTIME_CONFLICT", "explicit Office lock disagrees with the frozen Python/runtime lock")
+        _import_grading_core()
+        from wildclawbench_grading_core import OfficeRuntimeError, validate_office_lock
+        try:
+            validate_office_lock(inherited_office)
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+        office_runtime = inherited_office
+    if requirements.get("office") and office_runtime is None:
+        raise ScoringRuntimeError("OFFICE_RUNTIME_REQUIRED", "freeze and provide --office-runtime-lock before evaluating this task")
     automated_checks = contract.get("automated_checks")
     if not isinstance(automated_checks, str):
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "automated_checks")
@@ -2439,6 +2551,7 @@ def run_rules_attempt(
         runtime_lock_path=runtime_lock_path,
         timeout_seconds=timeout_seconds,
         playwright_browsers_path=playwright_browsers_path,
+        office_runtime=office_runtime,
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -2506,6 +2619,10 @@ def run_rules_attempt(
         },
         "error": error,
     }
+    if office_runtime is not None:
+        derived = attempt_root / "worker/derived"
+        audit["derived_artifacts"] = [{"path": path.relative_to(attempt_root).as_posix(), "sha256": _sha256_file(path), "size": path.stat().st_size}
+            for path in sorted(derived.rglob("*")) if path.is_file() and not path.is_symlink()] if derived.exists() else []
     if component is not None:
         _write_new_json(attempt_root / "rule-component.json", component)
     if correction is not None:
@@ -2682,6 +2799,9 @@ def _semantic_reference_inputs(
     rule_audit = attempt_root / "rule-audit.json"
     if rule_audit.is_file() and not rule_audit.is_symlink():
         add_file("rule_audit", rule_audit)
+        contract = _read_json(attempt_root / manifest["paths"]["contract"])
+        for artifact in _verify_office_rule_evidence(attempt_root, required=bool((contract.get("scoring_runtime") or {}).get("office"))):
+            add_file("rule_derived_artifact", attempt_root / artifact["path"])
     if manifest.get("trace_bundle"):
         bundle = _read_json(attempt_root / manifest["trace_bundle"]["path"])
         add_file("trace_index", attempt_root / "trace" / bundle["trace_index"])
@@ -4903,6 +5023,8 @@ def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
     grading_type = manifest["grading"]["type"]
     _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
     try:
+        contract = _read_json(root / manifest["paths"]["contract"])
+        _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")))
         _verify_semantic_terminal(root, manifest)
         score = _build_standard_score(
             root, manifest, finalize_score=finalize_score
@@ -4966,6 +5088,8 @@ def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[
         root / "attempt-manifest.json", code="ATTEMPT_MANIFEST_INVALID"
     )
     _verify_rule_source_correction(root, manifest)
+    contract = _read_json(root / manifest["paths"]["contract"])
+    _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")), archived=archived)
     if (
         audit.get("schema_version") != SCORE_AUDIT_SCHEMA
         or audit.get("status") != "completed"
@@ -5267,6 +5391,7 @@ def run_api_score_attempt(
     runtime_python: Path | None = None,
     timeout_seconds: float = 120.0,
     playwright_browsers_path: Path | None = None,
+    office_runtime_lock_path: Path | None = None,
 ) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
     verification = verify_attempt(root)
@@ -5287,6 +5412,7 @@ def run_api_score_attempt(
                 runtime_python=runtime_python,
                 timeout_seconds=timeout_seconds,
                 playwright_browsers_path=playwright_browsers_path,
+                office_runtime_lock_path=office_runtime_lock_path,
             )
         except ScoringRuntimeError:
             if not (root / "rule-audit.json").is_file():
@@ -5478,6 +5604,12 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--runtime-python", required=True, type=Path)
     run.add_argument("--timeout-seconds", type=float, default=120.0)
     run.add_argument("--playwright-browsers-path", type=Path)
+    run.add_argument("--office-runtime-lock", type=Path)
+
+    office = subparsers.add_parser("bootstrap-office")
+    office.add_argument("--executable", required=True, type=Path)
+    office.add_argument("--output", required=True, type=Path)
+    office.add_argument("--runtime-lock", type=Path, help="Embed Office identity in a copied managed Python runtime lock")
 
     prepare_semantics = subparsers.add_parser("prepare-semantics")
     prepare_semantics.add_argument("--attempt-root", required=True, type=Path)
@@ -5509,6 +5641,7 @@ def main(argv: list[str] | None = None) -> int:
     run_api_score.add_argument("--runtime-python", type=Path)
     run_api_score.add_argument("--timeout-seconds", type=float, default=120.0)
     run_api_score.add_argument("--playwright-browsers-path", type=Path)
+    run_api_score.add_argument("--office-runtime-lock", type=Path)
 
     finalize = subparsers.add_parser("finalize")
     finalize.add_argument("--attempt-root", required=True, type=Path)
@@ -5568,7 +5701,10 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_python=args.runtime_python,
                 timeout_seconds=args.timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
+                office_runtime_lock_path=args.office_runtime_lock,
             )
+        elif args.command == "bootstrap-office":
+            result = bootstrap_office_runtime(args.executable, args.output, args.runtime_lock)
         elif args.command == "prepare-semantics":
             result = prepare_semantics_attempt(attempt_root=args.attempt_root)
         elif args.command == "query-evidence":
@@ -5598,6 +5734,7 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_python=args.runtime_python,
                 timeout_seconds=args.timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
+                office_runtime_lock_path=args.office_runtime_lock,
             )
         elif args.command == "finalize":
             result = finalize_score_attempt(attempt_root=args.attempt_root)

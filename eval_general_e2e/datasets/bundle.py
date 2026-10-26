@@ -266,6 +266,12 @@ def _task_contracts(
         "judge_evidence": metadata.get("judge_evidence") or {},
         "private_scoring_sha256": scoring_tree["sha256"],
     }
+    if metadata.get("scoring_runtime") is not None:
+        requirements = metadata["scoring_runtime"]
+        if (not isinstance(requirements, dict) or set(requirements) - {"office"}
+                or any(type(value) is not bool for value in requirements.values())):
+            raise ValueError(f"invalid scoring_runtime: {task_id}")
+        scoring["scoring_runtime"] = requirements
     return execution, scoring
 
 

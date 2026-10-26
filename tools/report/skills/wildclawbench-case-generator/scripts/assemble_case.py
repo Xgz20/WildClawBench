@@ -408,6 +408,7 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path, dataset_id: str
         "checkpoint_capabilities",
         "dataset_id",
         "judge_evidence",
+        "scoring_runtime",
     }
     unknown = set(spec) - allowed
     if unknown:
@@ -544,6 +545,9 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path, dataset_id: str
     if registered and not gt_items:
         raise SpecError("注册数据集必须提供真实workspace.gt材料")
     judge_evidence = _require_mapping(spec.get("judge_evidence", {}), "judge_evidence")
+    scoring_runtime = _require_mapping(spec.get("scoring_runtime", {}), "scoring_runtime")
+    if set(scoring_runtime) - {"office"} or any(type(value) is not bool for value in scoring_runtime.values()):
+        raise SpecError("scoring_runtime只支持boolean office要求；它不注入被测端Env")
     if set(judge_evidence) - {"required"}:
         raise SpecError("judge_evidence只支持required清单")
     required_evidence = judge_evidence.get("required", [])
@@ -625,6 +629,7 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path, dataset_id: str
         "checkpoint_capabilities": normalized_capabilities,
         "registered": registered,
         "judge_evidence": judge_evidence,
+        "scoring_runtime": scoring_runtime,
     }
 
 
@@ -719,6 +724,8 @@ def render_task(spec: dict[str, Any], task_id: str, workspace_relative: str) -> 
     frontmatter["tags"] = spec["tags"]
     if spec.get("judge_evidence"):
         frontmatter["judge_evidence"] = spec["judge_evidence"]
+    if spec.get("scoring_runtime"):
+        frontmatter["scoring_runtime"] = spec["scoring_runtime"]
     fm = _dump_yaml(frontmatter).rstrip()
     if spec.get("registered"):
         registered = spec["registered"]

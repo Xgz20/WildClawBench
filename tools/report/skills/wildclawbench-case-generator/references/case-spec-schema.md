@@ -30,6 +30,7 @@
 | `source` | 是 | 来源与改编记录 |
 | `checkpoint_capabilities` | 是 | 精确覆盖运行时评分 key 的七维能力映射 |
 | `judge_evidence` | 否 | `required`数组，各项为`path`及`role: candidate_deliverable`，path必须是`results/`下的相对路径 |
+| `scoring_runtime` | 否 | 评分侧要求，当前仅支持`{"office": true}`；生成私有评分契约，不注入被测端Env |
 
 注册数据集的`source`改为以下结构（不能与旧`design_origin/runtime_sources`混填）：
 
