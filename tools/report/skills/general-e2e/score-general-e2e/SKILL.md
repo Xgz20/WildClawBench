@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.15.0`增加PPTX内嵌XLSX的可归档重算链：提取回执绑定冻结PPTX、部件名及原始工作簿SHA，随后清缓存重算的输入可追溯到该部件；原始副本、派生文件与两层回执都保留。归档复核重新比对包内原字节，不要求引擎存在。规则依赖目录新增可选pdfplumber/pypdf，实际Worker锁必须声明并通过版本/导入探测；默认3.11安装Profile不因此自动包含它们。详见[内嵌表格重算](references/office-recalculation.md#内嵌表格重算)。
+
 `0.14.0`增加PPTX可信PDF渲染：任务声明`scoring_runtime: {office: true, office_render: true}`，通过`bootstrap-office-render`冻结独立的Office/字体锁，含明确字体文件及目录成员。Worker在一次性副本上运行固定PDF导出，保留源PPTX、PDF、字体清单与导出选项的绑定；语义证据和归档校验接收派生PDF及回执。缺锁、字体漂移或引擎失败保持评测异常；缺交付由原任务规则判断。PDF转换本身不证明字号、遮挡、图表语义或目标应用可编辑性。使用前读[可信PPTX渲染](references/office-rendering.md)。
 
 `0.13.0`增加PPTX原生文本证据：按presentation关系顺序读取幻灯片、分组文本、原生表格、独立标记的备注、图表存储缓存及嵌入XLSX单元格。图表缓存和嵌入表格保留各自值、定位和SHA，不假定二者一致；外部数据关系不跟随。独立裁判查询、API输入及legacy Workspace证据共用该离线提取器。显式字号只作为原始结构记录，不证明继承后的字号、文字溢出或可编辑应用行为。使用前读[原生文件文本证据](references/native-text-evidence.md)；PPTX版式及图像仍需单独渲染/视觉证据。

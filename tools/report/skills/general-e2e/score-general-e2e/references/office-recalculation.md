@@ -42,3 +42,18 @@ result = recalculate_xlsx(candidate_workbook, lock, evidence_root / "candidate")
 回传保留`worker/derived/`，仅排除runtime副本。`verify-score --archived`不要求原引擎仍存在，但继续核验锁结构与全部绑定字节，不重新计算或改写历史分数。
 
 当前作者验证使用macOS受管LibreOfficeDev 26.8.0.0.alpha0，对H001参考原型清除20个缓存后重新保存，18个金额与独立calendar/Decimal标签一致。伪CLI回归只证明环境传递、缓存清除、原件保护和证据校验；没有据此证明真实计算正确。Windows、其它公式族、四端执行和正式语义评分仍需另行校准。
+
+## 内嵌表格重算
+
+score-general-e2e 0.15.0、core 0.7.0增加`read_embedded_xlsx(source_pptx, part)`与`extract_embedded_xlsx(source_pptx, part, output_dir)`。输入是普通冻结PPTX和经包内关系解析的具体XLSX部件名，不是外部URL；helper验证被动Office包并保留原始工作簿字节及缓存，不以引用路径猜测数据。
+
+```python
+original = extract_embedded_xlsx(candidate_pptx, embedded_part, evidence_root / "source")
+calculated = recalculate_xlsx(original["path"], office_lock, evidence_root / "calculated")
+```
+
+提取目录保留`embedded.xlsx`和`embedded-xlsx-audit.json`，回执绑定源PPTX SHA、部件名、内嵌XLSX SHA及源未变。重算回执再绑定该工作簿的原始SHA和派生SHA。验证器只在提取回执存在时读取对应冻结PPTX的原部件，检查其与保留副本逐字节同源；重算源既可为原有独立XLSX，也可为经此验证的内嵌副本。移除提取回执、改成不存在/不同的部件、伪造父PPTX或只重新索引错误回执均不能通过。
+
+归档保留两层文件及回执，`verify-score --archived`可在引擎不存在时检查这条链，不重新计算分数。合法等价公式仍应清缓存后真正运行；正确显示缓存不能替代实际公式结果。此操作只证明来源与计算观察，不证明图表类目、语义或可编辑应用行为；冻结任务规则与独立Judge仍须核验原生对象。
+
+本Profile要求OPC content-type manifest有正确默认命名空间。前缀改写可能使XML仍可解析而Office无法加载；此类已识别包错误会显式报告`OFFICE_INPUT_INVALID`，不伪装成引擎可用性失败。UTF-16默认命名空间manifest同样支持。

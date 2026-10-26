@@ -1,0 +1,116 @@
+{
+  "status": "PASS",
+  "kind": "author-real-embedded-chain-verification",
+  "worker_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/reference-worker-1793050620164266000",
+  "source": "actual managed Worker reference control",
+  "rule_score": 0.9999999999999999,
+  "workspace_unchanged": true,
+  "producer_helper_sha256": "3661bc4361e7e9b23570c825dfea41ebfbffb0715357cc9dd4fe2fd87fedaa8e",
+  "verifier_source_sha256": "ede01343e15556caa7fe39f82984d68c3f8228cc937e0d5e5a9665a7b8699fe8",
+  "verified_artifacts": [
+    {
+      "path": "worker/office-runtime.json",
+      "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+    },
+    {
+      "path": "worker/office-render-runtime.json",
+      "sha256": "c29c830b1ec4b394be229dc7cec14982c4702bec8e3d127628fd3970520114f4"
+    },
+    {
+      "path": "worker/derived/embedded-1/calculated/office-audit.json",
+      "sha256": "8381eaaabfa6c62804f6a4672fed6962a8b89aae45a7ac2d5bbd6eb28cb802ac",
+      "size": 1117
+    },
+    {
+      "path": "worker/derived/embedded-1/calculated/recalculated.xlsx",
+      "sha256": "964c976e6ea00a424a7ce547f29b0dc339601d522490af59d44b1a2f58a6595c",
+      "size": 6044
+    },
+    {
+      "path": "worker/derived/embedded-1/source/embedded-xlsx-audit.json",
+      "sha256": "e7993bbd41b3063b2af80e544ca825b2caa18f2b8251e50f961df89d21255317",
+      "size": 338
+    },
+    {
+      "path": "worker/derived/embedded-1/source/embedded.xlsx",
+      "sha256": "258dcb6d918731e3a18a703d6e48e2f1e64f44f03ac05a32f2d0877319e5670a",
+      "size": 1707
+    },
+    {
+      "path": "worker/derived/embedded-2/calculated/office-audit.json",
+      "sha256": "58ef5e10754fae73a08b640e1c63f49098f2679914eb1639f4ecbaebea8a376d",
+      "size": 1117
+    },
+    {
+      "path": "worker/derived/embedded-2/calculated/recalculated.xlsx",
+      "sha256": "c8b9b8bb7aa0e99000d9355af094a274b279a7fd580c8a33b422030bc02ad442",
+      "size": 5753
+    },
+    {
+      "path": "worker/derived/embedded-2/source/embedded-xlsx-audit.json",
+      "sha256": "5783c707578d573bbf8b4650aff707b3c4e203ad0d75cbe598a9cba045bc7dd9",
+      "size": 338
+    },
+    {
+      "path": "worker/derived/embedded-2/source/embedded.xlsx",
+      "sha256": "0f4bd6eca33fc52513fae79163cc701bd7b033f44ad20dccfb75d48789476b0f",
+      "size": 1551
+    },
+    {
+      "path": "worker/derived/embedded-3/calculated/office-audit.json",
+      "sha256": "b9d4a419e4af4f7cb7eead999c096de80291ba16fc205c1f66adfa699ce606e6",
+      "size": 1117
+    },
+    {
+      "path": "worker/derived/embedded-3/calculated/recalculated.xlsx",
+      "sha256": "2e01784b04d56f10844e8942fff4d4d1a66f54e9104266ae36d89fb7dcde00f6",
+      "size": 5852
+    },
+    {
+      "path": "worker/derived/embedded-3/source/embedded-xlsx-audit.json",
+      "sha256": "645cda01526a17b28d154488f22ebc705b5b57f25742e9f1254d7e0ae8f86024",
+      "size": 338
+    },
+    {
+      "path": "worker/derived/embedded-3/source/embedded.xlsx",
+      "sha256": "85adb0e8fa890d9f94e9d77e1d5b387c43e2a2e63b413b41ab9644f1b7b4fed1",
+      "size": 1578
+    },
+    {
+      "path": "worker/derived/h005-analysis.json",
+      "sha256": "6194723985c525450805a5f1af168c196d207b6be12d67b760134d2867505e38",
+      "size": 29553
+    },
+    {
+      "path": "worker/derived/presentation/render-audit.json",
+      "sha256": "a8573ae66b934990af93c4dc420009365b5078c39f15e7312979d34daf96e03a",
+      "size": 16620
+    },
+    {
+      "path": "worker/derived/presentation/rendered.pdf",
+      "sha256": "4d18701ceb40379994b3a8198808bd0090da2bca41b0fe66f86216a268379f4f",
+      "size": 214673
+    }
+  ],
+  "extracted_workbooks": 3,
+  "recalculated_workbooks": 3,
+  "limit": "Standalone author verification of real artifacts; no official execution record, attempt manifest, semantic score, submission or dataset freeze.",
+  "core_version": "0.7.0",
+  "score_skill_version": "0.15.0",
+  "test_summary": {
+    "status": "PASS",
+    "unittest_count": 82,
+    "modules": [
+      "tests.general_e2e.test_embedded_office_evidence.EmbeddedOfficeEvidenceTests",
+      "tests.general_e2e.test_office_runtime",
+      "tests.general_e2e.test_office_render_runtime",
+      "tests.general_e2e.test_local_scoring_runtime",
+      "tests.general_e2e.test_grading_core",
+      "tests.general_e2e.test_skill_layout",
+      "tests.general_e2e.test_shared_components",
+      "tests.general_e2e.test_general_api_judge",
+      "tests.general_e2e.test_general_semantic_scoring",
+      "tests.general_e2e.test_general_release_prepare.GeneralReleasePrepareTests.test_packaged_round5_entrypoints_run_without_checkout_or_pythonpath"
+    ]
+  }
+}

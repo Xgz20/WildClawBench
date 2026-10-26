@@ -28,6 +28,8 @@ python scripts/score_general_e2e.py bootstrap-runtime \
 
 `--offline` 只使用已有 `uv` 缓存。`--skip-browser` 可准备不含浏览器的环境，但 Playwright 规则会在运行前失败关闭，不能据此宣称完整运行时就绪。
 
+0.15.0的允许目录含可选PDF规则依赖`pdfplumber`、`pypdf`。默认3.11安装Profile和requirements保持原样，不自动安装这两个可选包。使用它们的规则须提供真实、处于虚拟环境中的解释器，以及声明实际版本和import roots的冻结runtime锁；缺少声明会在Worker启动前拒绝。现成受管库可通过独立虚拟环境共享并逐项probe，但这种已有环境快照不等于默认bootstrap可重建，也不锁每个库文件；校准前仍须统一可信安装制品。
+
 ## 准备私有 attempt
 
 ```bash

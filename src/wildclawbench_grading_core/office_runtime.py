@@ -29,6 +29,7 @@ MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 RENDER_LOCK_SCHEMA = "wildclawbench.office-render-runtime-lock/v1"
 RENDER_AUDIT_SCHEMA = "wildclawbench.office-pptx-render/v1"
 RENDER_PROFILE = "offline-pptx-to-pdf-with-fonts/v1"
+EMBEDDED_AUDIT_SCHEMA = "wildclawbench.office-embedded-xlsx/v1"
 RENDER_FILTER = {"ExportHiddenSlides": {"type": "boolean", "value": "true"},
                  "ExportNotesPages": {"type": "boolean", "value": "false"},
                  "ExportOnlyNotesPages": {"type": "boolean", "value": "false"}}
@@ -42,6 +43,24 @@ class OfficeRuntimeError(RuntimeError):
 
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def _validate_content_types(raw):
+    # OPC content-type manifests require the default namespace. A prefixed
+    # rewrite can be XML-readable while LibreOffice cannot load the package.
+    checked=raw.replace(b'\x00',b'').upper()
+    if b'<!DOCTYPE' in checked or b'<!ENTITY' in checked:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "content-type XML entities are unsupported")
+    namespaces={};root=None
+    try:
+        for event,value in ET.iterparse(io.BytesIO(raw),events=('start-ns','start')):
+            if event=='start-ns':namespaces[value[0]]=value[1]
+            else:root=value;break
+    except ET.ParseError as exc:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "malformed content-type XML") from exc
+    namespace='http://schemas.openxmlformats.org/package/2006/content-types'
+    if root is None or root.tag!='{'+namespace+'}Types' or namespaces.get('')!=namespace:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "content-type manifest lacks its default namespace")
 
 
 def _environment(root):
@@ -124,6 +143,7 @@ def _clean_package(data):
                 if any(token in lowered for token in ("xl/externallinks/", "xl/connections.xml", "xl/querytables/")):
                     raise OfficeRuntimeError("OFFICE_EXTERNAL_DATA_UNSUPPORTED", "external data needs separate evaluation; no cached result fallback")
                 raw = source.read(info)
+                if name == "[Content_Types].xml":_validate_content_types(raw)
                 if name.endswith(".xml") or name.endswith(".rels"):
                     if b"<!DOCTYPE" in raw.upper() or b"<!ENTITY" in raw.upper():
                         raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "XML entities are unsupported")
@@ -213,6 +233,51 @@ def recalculate_xlsx(source, lock, output_dir, *, timeout_seconds=60):
 
 def office_render_lock_digest(lock):
     return hashlib.sha256(json.dumps(lock, ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode("utf-8")).hexdigest()
+
+
+def read_embedded_xlsx(source, part):
+    """Read one passive XLSX part from a frozen PPTX without touching files."""
+    source = Path(source)
+    if source.is_symlink() or not source.is_file() or source.suffix.lower() != ".pptx":
+        raise OfficeRuntimeError("OFFICE_EMBEDDED_SOURCE_INVALID", "source must be a regular PPTX")
+    if source.stat().st_size > MAX_INPUT_BYTES:
+        raise OfficeRuntimeError("OFFICE_INPUT_LIMIT", "presentation too large")
+    if (not isinstance(part, str) or not part.startswith("ppt/") or not part.lower().endswith(".xlsx")
+            or "\\" in part or any(item in {"", ".", ".."} for item in part.split("/"))):
+        raise OfficeRuntimeError("OFFICE_EMBEDDED_PART_INVALID", "unsafe embedded part path")
+    data = source.read_bytes()
+    _inspect_render_package(data)
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        try:
+            member = archive.getinfo(part)
+        except KeyError as exc:
+            raise OfficeRuntimeError("OFFICE_EMBEDDED_PART_INVALID", "embedded XLSX part is missing") from exc
+        if member.file_size > MAX_INPUT_BYTES:
+            raise OfficeRuntimeError("OFFICE_INPUT_LIMIT", "embedded workbook too large")
+        workbook = archive.read(member)
+    _clean_package(workbook)  # validate; keep original formula caches in this source copy
+    if sha(source) != hashlib.sha256(data).hexdigest():
+        raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "presentation changed while reading embedded data")
+    return workbook
+
+
+def extract_embedded_xlsx(source, part, output_dir):
+    """Publish a byte-bound source copy for subsequent trusted recalculation."""
+    source = Path(source)
+    before = sha(source)
+    workbook = read_embedded_xlsx(source, part)
+    destination = Path(output_dir).resolve();destination.mkdir(parents=True, exist_ok=True)
+    target, receipt = destination / "embedded.xlsx", destination / "embedded-xlsx-audit.json"
+    if target.exists() or receipt.exists():
+        raise OfficeRuntimeError("OFFICE_OUTPUT_EXISTS", "embedded artifacts are immutable")
+    if sha(source) != before:
+        raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "presentation changed during extraction")
+    with target.open("xb") as handle:handle.write(workbook)
+    audit = {"schema_version": EMBEDDED_AUDIT_SCHEMA, "source_presentation_sha256": before,
+             "part": part, "embedded_sha256": sha(target), "source_unchanged": True}
+    with receipt.open("x", encoding="utf-8") as handle:
+        json.dump(audit, handle, ensure_ascii=False, sort_keys=True, indent=2);handle.write("\n")
+    return {"path": str(target), "audit_path": str(receipt), "audit": audit}
 
 
 def _font_directory_files(directory):
@@ -318,6 +383,7 @@ def _inspect_render_package(data):
             if any(token in lowered for token in ("vbaproject", "/activex/", "/macrosheets/")):
                 raise OfficeRuntimeError("OFFICE_ACTIVE_CONTENT_UNSUPPORTED", "active PPTX content is outside passive rendering")
             raw = archive.read(item)
+            if name == "[Content_Types].xml":_validate_content_types(raw)
             if lowered.startswith("ppt/embeddings/") and not item.is_dir():
                 if not lowered.endswith(".xlsx"):
                     raise OfficeRuntimeError("OFFICE_ACTIVE_CONTENT_UNSUPPORTED", "only passive embedded XLSX is supported")

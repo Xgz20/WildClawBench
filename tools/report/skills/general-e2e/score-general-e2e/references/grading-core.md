@@ -10,6 +10,8 @@ score-general-e2e 0.13.0装配core 0.5.0，`extract_native_text()`与`is_native_
 
 score-general-e2e 0.14.0装配core 0.6.0，新增`create_office_render_lock()`、`validate_office_render_lock()`、`office_render_lock_digest()`及`render_pptx_pdf()`。独立渲染锁在原Office程序锁外绑定字体文件及目录成员，原XLSX锁保持兼容；PPTX转PDF使用原字节一次性副本和明确导出选项，派生回执由外围评分工作空间核验。详见[可信PPTX渲染](office-rendering.md)。
 
+score-general-e2e 0.15.0装配core 0.7.0，新增`read_embedded_xlsx()`、`extract_embedded_xlsx()`，建立冻结PPTX→原始内嵌XLSX→可信重算XLSX的来源链，归档复核不要求引擎存在。规则目录允许可选`pdfplumber`、`pypdf`，但Worker实际锁未声明的模块会在执行前报`RUNTIME_DEPENDENCY_UNDECLARED`，不能仅凭允许目录推断已安装。详见[内嵌表格重算](office-recalculation.md#内嵌表格重算)。
+
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。规则/索引/结果校验及合分、DOCX/XLSX/PPTX文本投影只使用Python标准库，PDF投影按需使用评分CLI解释器中的pypdf。任务规则所需的PyYAML、Playwright和Chromium属于G3-02专用评分虚拟环境，不因原生证据提取而安装到被测项目。
 
 ## 公开 API

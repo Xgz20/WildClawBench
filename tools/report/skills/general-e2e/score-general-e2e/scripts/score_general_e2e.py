@@ -1929,6 +1929,9 @@ def probe_runtime(
     )
     lock, lock_sha = _load_runtime_lock(runtime_lock_path)
     required = None if required_import_roots is None else set(required_import_roots)
+    declared = {root for item in lock["dependencies"] for root in item["import_roots"]}
+    if required is not None and required - declared:
+        raise ScoringRuntimeError("RUNTIME_DEPENDENCY_UNDECLARED", repr(sorted(required - declared)))
     dependencies = [
         item
         for item in lock["dependencies"]
@@ -2362,8 +2365,30 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
         raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_DRIFT")
     candidate_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "candidate-original/workspace") if file.suffix.lower() == ".xlsx"}
     reference_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "private/gt") if file.suffix.lower() == ".xlsx"}
-    presentation_hashes = {_sha256_file(file) for folder in (root / "candidate-original/workspace", root / "private/gt")
-                           for file in _regular_evidence_files(folder) if file.suffix.lower() == ".pptx"}
+    presentations = {_sha256_file(file): file for folder in (root / "candidate-original/workspace", root / "private/gt")
+                     for file in _regular_evidence_files(folder) if file.suffix.lower() == ".pptx"}
+    presentation_hashes = set(presentations)
+    embedded_hashes = set()
+    for artifact in artifacts:
+        if not artifact["path"].endswith("/embedded-xlsx-audit.json"):
+            continue
+        _import_grading_core()
+        from wildclawbench_grading_core.office_runtime import EMBEDDED_AUDIT_SCHEMA, OfficeRuntimeError, read_embedded_xlsx
+        receipt_path = root / artifact["path"]
+        receipt = _read_json(receipt_path, code="OFFICE_EMBEDDED_AUDIT_INVALID")
+        source = presentations.get(receipt.get("source_presentation_sha256"))
+        extracted = receipt_path.with_name("embedded.xlsx")
+        if (source is None or receipt.get("schema_version") != EMBEDDED_AUDIT_SCHEMA
+                or receipt.get("source_unchanged") is not True or not extracted.is_file()):
+            raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", artifact["path"])
+        try:
+            data = read_embedded_xlsx(source, receipt.get("part"))
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", exc.message) from exc
+        digest = _sha256_bytes(data)
+        if receipt.get("embedded_sha256") != digest or _sha256_file(extracted) != digest:
+            raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", artifact["path"])
+        embedded_hashes.add(digest)
     for artifact in artifacts:
         if artifact["path"].endswith("/render-audit.json"):
             _import_grading_core()
@@ -2389,7 +2414,7 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
         if (receipt.get("schema_version") != "wildclawbench.office-recalculation/v1"
                 or receipt.get("profile") != lock["profile"] or receipt.get("engine_version") != lock["engine_version"]
                 or receipt.get("executable_sha256") != lock["executable_sha256"] or receipt.get("source_unchanged") is not True
-                or receipt.get("source_sha256") not in candidate_hashes | reference_hashes
+                or receipt.get("source_sha256") not in candidate_hashes | reference_hashes | embedded_hashes
                 or not derived_path.is_file() or receipt.get("derived_sha256") != _sha256_file(derived_path)):
             raise ScoringRuntimeError("OFFICE_RECALCULATION_AUDIT_INVALID", artifact["path"])
     # Missing/invalid deliveries may legitimately yield no workbook receipt.

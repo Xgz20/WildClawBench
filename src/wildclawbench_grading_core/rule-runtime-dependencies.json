@@ -12,6 +12,18 @@
       "import_roots": ["playwright"],
       "runtime_assets": ["chromium"],
       "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "pdfplumber",
+      "import_roots": ["pdfplumber"],
+      "runtime_assets": [],
+      "version_policy": "optional-freeze-in-supplied-managed-runtime"
+    },
+    {
+      "distribution": "pypdf",
+      "import_roots": ["pypdf"],
+      "runtime_assets": [],
+      "version_policy": "optional-freeze-in-supplied-managed-runtime"
     }
   ]
 }
