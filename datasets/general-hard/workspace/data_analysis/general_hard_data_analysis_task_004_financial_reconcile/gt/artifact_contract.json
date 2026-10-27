@@ -1,0 +1,23 @@
+{
+  "schema_version": "h020-material-artifacts/v1",
+  "stage": "materials_not_runtime_scoring_authority",
+  "outputs": [
+    "results/comparison.xlsx",
+    "results/memo.docx",
+    "results/sources.csv"
+  ],
+  "max_each_bytes": 5242880,
+  "data_records": 9,
+  "metric_records": 27,
+  "source_records": 63,
+  "revision_records": 2,
+  "required_native_model": "Editable final-wan monetary inputs and scope flag, seven formula-derived metric fields, previous-year revenue links, period-specific valid ranks and changes; source import/version selection and Word/CSV refresh are outside probe scope.",
+  "equivalence": "Sheet names, positions, row/column ordering, clear Chinese aliases and equivalent valid formulas may differ. No values hidden from ordinary readers.",
+  "material_reference_pages": 3,
+  "model_sheets": [
+    "指标",
+    "数据",
+    "重述"
+  ],
+  "reference_style_not_a_candidate_template": true
+}

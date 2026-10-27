@@ -1,9 +1,9 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 20
+  active_task_count: 21
   category_task_counts:
     office_documents: 15
-    data_analysis: 3
+    data_analysis: 4
     research_verification: 0
     file_operations: 0
     software_engineering: 2
@@ -643,6 +643,31 @@ tasks:
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - ssb2
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+  - task_id: general_hard_data_analysis_task_004_financial_reconcile
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-5c5aef1f90057578
+          query_hash: 5c5aef1f900575784bd4feecb1d4208405bbaefef1d599ab1f0a2beb863c35a0
+          observed_astudio_turns: 3
+          distinct_users: 1
+          distinct_sessions: 3
+          first_seen_local: '2026-09-17 19:36:06.807000'
+          last_seen_local: '2026-09-19 19:08:17.251000'
+          intent_summary: 收集企业三年财务指标，形成带来源、排名及变动幅度的Excel与说明。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
       direct_task_copy: false
     network:
       mode: offline

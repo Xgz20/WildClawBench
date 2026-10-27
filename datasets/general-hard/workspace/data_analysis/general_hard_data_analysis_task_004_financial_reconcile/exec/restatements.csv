@@ -1,0 +1,3 @@
+restatement_id,company_id,period_year,field,old_value,new_value,unit,published_date,reason
+R-A24,A,2024,revenue,144000,146000,万元,2026-05-15,更正已披露营业收入，历史口径连续且可比。
+R-B23,B,2023,parent_profit,4900,4700,万元,2025-06-10,更正归母净利润，合并净利润未更正。

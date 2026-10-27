@@ -1,0 +1,29 @@
+{
+  "schema_version": "h020-scoring/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "expected.json": "615d4dcd6198b09163d1acf24d5f174f0ba1cc39d4f765ed1335a6c7c741a441",
+    "protected_sha256.json": "d5989e7314374e20a871c9fb281a39a1e7f9ee556045edb38f7f2df6a8cfc3f2",
+    "runtime_contract.json": "1026ec995cfe0160d7f1f0963ed8a034d84afd8bb4dd07adac49d3c15aef37e4",
+    "office_runtime_v014.py": "7dcb510b0a3a234799c8b4bf44f8fa0c8b2d047b43eded3e6010d239fd1c66ac",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+    "financial_io.py": "78455fef542e996d63a7a04aad55a23c680d5ca9fae2017283928f6c281b0af4",
+    "business_checks.py": "ae0df7f508893d3b3b53532c34c35619eb069771515079939a4a11fcb078861b",
+    "response_checks.py": "040b0b38a4293fe10f860e79467c065edb198cdddc7bf9dc77d57ab2742e4d3e",
+    "report_checks.py": "9eeec779d1b124e26bd0d4e75b4ee79a0d54edcf857e84af1e2fc55931df5499",
+    "office_report_helper.py": "b7a622a4e24c6d2ec8188612a7af6368e9ee1c1efbafeed608088755ccd810b1",
+    "grader.py": "9239f1d3e2bbc203ef9b2a0c6bc5cae2e2bd572c8d6e2ec39dd59428eaec800a"
+  },
+  "semantic_score_included": false,
+  "formal_grading_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "failure_boundary": "Missing/drifted GT/helper/runtime or unsupported legal intervention raises evaluation error; candidate missing/wrong passive deliverables lose relevant points."
+}
