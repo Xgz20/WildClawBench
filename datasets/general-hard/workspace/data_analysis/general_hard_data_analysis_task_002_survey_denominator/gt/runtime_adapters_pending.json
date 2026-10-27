@@ -1,0 +1,22 @@
+{
+  "status": "statically_identified_not_formal_worker_verified",
+  "author_reference_math_passed": true,
+  "reference_marker_edit_count": 142,
+  "reference_native_replay_steps": [
+    100,
+    42
+  ],
+  "requirements": [
+    {
+      "id": "verified_derived_parent",
+      "current_behavior": "Runtime archive verifier indexes original candidate/GT workbooks only as counterfactual parents.",
+      "needed_behavior": "Allow declared chains rooted in an authorized original, with every parent and exact native edit replayed, immutable artifact hashes bound, ordering handled explicitly, and unrooted/cyclic/tampered parents rejected."
+    },
+    {
+      "id": "formula_marker_intervention",
+      "current_behavior": "Counterfactual helper permits existing literal numeric inputs only.",
+      "needed_behavior": "Support an explicitly declared and replayable intermediate-marker intervention, or another equally complete dependency test, when a valid candidate computes marker cells with formulas. Preserve the original baseline and do not impose literal-only markers to fit the verifier."
+    }
+  ],
+  "limits": "Author two-step replay succeeded through native helper on each parent. This is not formal Runtime archive/Worker acceptance, candidate grading, or permission to silently loosen audit checks."
+}

@@ -1,0 +1,115 @@
+{
+  "status": "native_input_grounded_before_reference",
+  "statistics": {
+    "raw_records": 240,
+    "kept_respondents": 185,
+    "excluded_records": 55,
+    "global_invalid": 33,
+    "superseded": 22,
+    "record_reasons": {
+      "incomplete": 7,
+      "superseded": 22,
+      "no_consent": 22,
+      "after_cutoff": 1,
+      "no_id": 2,
+      "bad_time": 1
+    },
+    "question_states": {
+      "Q1": {
+        "valid": 170,
+        "invalid_code": 5,
+        "missing": 10
+      },
+      "Q2": {
+        "ineligible_skip": 69,
+        "valid": 90,
+        "route_unknown": 15,
+        "missing": 9,
+        "invalid_code": 2
+      },
+      "Q3": {
+        "ineligible_skip": 69,
+        "valid": 88,
+        "route_unknown": 15,
+        "invalid_multi": 7,
+        "missing": 6
+      },
+      "Q4": {
+        "valid": 169,
+        "missing": 12,
+        "invalid_code": 4
+      }
+    }
+  },
+  "baseline": {
+    "Q1_yes": {
+      "raw_num": 101,
+      "raw_den": 170,
+      "raw_rate": 0.5941176470588235,
+      "weighted_num": 145.75,
+      "weighted_den": 229.25,
+      "weighted_rate": 0.6357688113413305
+    },
+    "Q2_sat": {
+      "raw_num": 50,
+      "raw_den": 90,
+      "raw_rate": 0.5555555555555556,
+      "weighted_num": 91.25,
+      "weighted_den": 127.75,
+      "weighted_rate": 0.7142857142857143
+    },
+    "Q3_A": {
+      "raw_num": 39,
+      "raw_den": 88,
+      "raw_rate": 0.4431818181818182,
+      "weighted_num": 61.0,
+      "weighted_den": 132.75,
+      "weighted_rate": 0.4595103578154426
+    },
+    "Q3_B": {
+      "raw_num": 49,
+      "raw_den": 88,
+      "raw_rate": 0.5568181818181818,
+      "weighted_num": 79.0,
+      "weighted_den": 132.75,
+      "weighted_rate": 0.5951035781544256
+    },
+    "Q3_C": {
+      "raw_num": 27,
+      "raw_den": 88,
+      "raw_rate": 0.3068181818181818,
+      "weighted_num": 35.0,
+      "weighted_den": 132.75,
+      "weighted_rate": 0.263653483992467
+    },
+    "Q3_D": {
+      "raw_num": 35,
+      "raw_den": 88,
+      "raw_rate": 0.3977272727272727,
+      "weighted_num": 49.5,
+      "weighted_den": 132.75,
+      "weighted_rate": 0.3728813559322034
+    },
+    "Q3_N": {
+      "raw_num": 15,
+      "raw_den": 88,
+      "raw_rate": 0.17045454545454544,
+      "weighted_num": 22.75,
+      "weighted_den": 132.75,
+      "weighted_rate": 0.1713747645951036
+    },
+    "Q4_yes": {
+      "raw_num": 74,
+      "raw_den": 169,
+      "raw_rate": 0.4378698224852071,
+      "weighted_num": 101.0,
+      "weighted_den": 225.5,
+      "weighted_rate": 0.44789356984478934
+    }
+  },
+  "counting_scope": "Global validity then newest valid respondent submission; same timestamp uses higher numeric record_id. Per-question exclusion remains separate from whole-record exclusion. Q3 tokens deduplicated per respondent; N exclusive.",
+  "formula_scope": "Summary depends on per-record marker fields and current strata weights; no requirement to automatically redo source cleaning or rewrite the Word report after driver changes.",
+  "response_oracle": "expected.json/response_specs",
+  "no_population_confidence_interval": true,
+  "semantic_judge_required": false
+}
