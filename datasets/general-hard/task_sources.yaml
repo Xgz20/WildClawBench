@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 15
+  active_task_count: 16
   category_task_counts:
-    office_documents: 13
+    office_documents: 14
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -535,6 +535,32 @@ tasks:
           intent_summary: 比较光伏系统方案、屋顶适用性、需求和预算并制作PPT；新题使用合成固定参数。
           review: accepted_intent_prototype
           review_basis: 沿用清洗后已接受的AStudio桌面去身份需求原型，作者模型据业务目标合成改编；不是人工专家复核或生产结果正确性的证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_015_board_decision_pack
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-009eeeb9a396b6aa
+          query_hash: 009eeeb9a396b6aafeb444107e32441f60dee73720234eacf7b83354d965479e
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-10-10 10:24:18.381000'
+          last_seen_local: '2026-10-10 10:24:18.381000'
+          intent_summary: 综合产品、市场与财务材料，形成可落地的经营改进分析。
+          review: accepted_intent_prototype
+          review_basis: 沿用已清洗接受的AStudio桌面去身份需求原型，作者模型据业务目标重构全部公司、金额、材料和限制；不是人工专家复核或生产结果正确性证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval

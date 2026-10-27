@@ -1,0 +1,18 @@
+{
+  "decision_constraints.md": {
+    "sha256": "09bc116d89d9805c529bbd24a83e4e4c5d2ab13bd9ed68633d44cb031c1d4c4a",
+    "size": 4180
+  },
+  "interviews.docx": {
+    "sha256": "05a38f678a00af4787c27f880e4b29e2d965da78eae951aeebefadc6dba3afde",
+    "size": 38766
+  },
+  "market_notes.pdf": {
+    "sha256": "26deda06edf616c91aced8426997a3c579249fbda6a1492c88accfc9f1685666",
+    "size": 84392
+  },
+  "operations.xlsx": {
+    "sha256": "4910837cd166a0268558079704465d48ea413ad43b704563376cf8c5d87e254d",
+    "size": 7845
+  }
+}

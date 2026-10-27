@@ -1,0 +1,28 @@
+{
+  "schema_version": "h015-evidence-requirements/v1",
+  "source_files": [
+    "operations.xlsx",
+    "interviews.docx",
+    "market_notes.pdf",
+    "decision_constraints.md"
+  ],
+  "evidence_layout": "arbitrary valid JSON; conclusion-level sources and deliverable locations must be recognizable",
+  "required_public_groups": [
+    "G01",
+    "G02",
+    "G03",
+    "G04",
+    "G05",
+    "G06"
+  ],
+  "semantic_judge": true,
+  "semantic_rule_boundary": [
+    "not a Boolean judgment of each entire interview quote",
+    "missing reasons remain unknown",
+    "unsupported future/causal assertions are not necessarily proven false",
+    "multiple safe choices accepted",
+    "fixed benefit zero differs from unknown benefits",
+    "valid existing source location alone is not semantic support"
+  ],
+  "limit": "rule checks source/document locations and quotation equality when supplied; Judge must inspect whether actual material supports the claim, not just whether a cited node exists"
+}

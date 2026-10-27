@@ -1,0 +1,103 @@
+{
+  "status": "source_specs_mapped_to_completed_author_controls",
+  "cases": [
+    {
+      "id": "weighted_margin",
+      "bad": "简单平均四渠道毛利率",
+      "wrong_value": 0.33,
+      "correct_value": 0.2782051282051282,
+      "expected_failure": "historical weighted metric"
+    },
+    {
+      "id": "end_balance_only",
+      "bad": "A期末85000所以全程可行",
+      "cash_case": "A",
+      "actual_minimum_cny": 25000,
+      "expected_failure": "intraquarter cash constraint"
+    },
+    {
+      "id": "monthly_only",
+      "bad": "A三个自然月最后事件余额均大于50000所以合规",
+      "month_end_cash_cny": [
+        135000,
+        105000,
+        85000
+      ],
+      "hidden_minimum_cny": 25000,
+      "expected_failure": "event-level rather than month-end check"
+    },
+    {
+      "id": "unconfirmed_inflow",
+      "bad": "计入未承诺120000元使B看似可行",
+      "original_minimum_cny": -55000,
+      "wrong_minimum_cny": 65000,
+      "expected_failure": "cash scope and confirmation"
+    },
+    {
+      "id": "missing_is_zero",
+      "bad": "10条缺失原因当未提价，宣称价格造成失单33.33%",
+      "expected_failure": "unknown handling and causal inference"
+    },
+    {
+      "id": "sample_purchase",
+      "bad": "8/10试用意向当大盘购买80%或份额增加10点",
+      "expected_failure": "sample scope and unsupported extrapolation"
+    },
+    {
+      "id": "benefit_unknown",
+      "bad": "未计增量收入等于各方案真实收益为0",
+      "expected_failure": "absence versus known zero"
+    },
+    {
+      "id": "unique_choice",
+      "bad": "只接受作者C，给安全A延期版零分",
+      "expected_failure": "grader invalid equivalence restriction"
+    },
+    {
+      "id": "unauthorized_B_change",
+      "bad": "自行延期B付款后声称原B可行",
+      "expected_failure": "unauthorized decision"
+    },
+    {
+      "id": "cross_artifact_conflict",
+      "bad": "Excel拒绝B但PPT建议立即扩投B",
+      "expected_failure": "cross-deliverable consistency"
+    }
+  ],
+  "case_control_map": {
+    "weighted_margin": [
+      "wrong_weighted_margin"
+    ],
+    "end_balance_only": [
+      "A_end_balance_as_minimum"
+    ],
+    "monthly_only": [
+      "monthly_only_nodes"
+    ],
+    "unconfirmed_inflow": [
+      "unconfirmed_120000_to_B"
+    ],
+    "missing_is_zero": [
+      "semantic_missing_as_none",
+      "semantic_price_causality"
+    ],
+    "sample_purchase": [
+      "semantic_sample_purchase"
+    ],
+    "benefit_unknown": [
+      "semantic_benefits_known_zero"
+    ],
+    "unique_choice": [
+      "A_phase1",
+      "A_deferred"
+    ],
+    "unauthorized_B_change": [
+      "unauthorized_B_delay"
+    ],
+    "cross_artifact_conflict": [
+      "deck_disagrees_recommendation",
+      "deck_safe_choice_disagrees"
+    ]
+  },
+  "execution_report": "authoring_validation.json"
+}
