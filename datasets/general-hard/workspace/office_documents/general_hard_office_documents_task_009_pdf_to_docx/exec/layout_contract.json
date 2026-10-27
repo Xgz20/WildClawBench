@@ -1,0 +1,262 @@
+{
+  "schema_version": "h009-layout-contract/v1",
+  "document_code": "LC-QC-2026-04",
+  "source_file": "source.pdf",
+  "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+  "source_page_count": 6,
+  "source_units": [
+    {
+      "source_id": "S00",
+      "source_pages": [
+        1
+      ],
+      "kind": "title"
+    },
+    {
+      "source_id": "H01",
+      "source_pages": [
+        1
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S01",
+      "source_pages": [
+        1
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S02",
+      "source_pages": [
+        1
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T01",
+      "source_pages": [
+        1
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S03",
+      "source_pages": [
+        1
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H02",
+      "source_pages": [
+        2
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S04",
+      "source_pages": [
+        2
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S05",
+      "source_pages": [
+        2
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T02",
+      "source_pages": [
+        2,
+        3
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S06",
+      "source_pages": [
+        3
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H03",
+      "source_pages": [
+        4
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S07",
+      "source_pages": [
+        4
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T03",
+      "source_pages": [
+        4
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S08",
+      "source_pages": [
+        4
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S09",
+      "source_pages": [
+        4
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H04",
+      "source_pages": [
+        5
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S10",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S11",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S12",
+      "source_pages": [
+        5
+      ],
+      "kind": "callout"
+    },
+    {
+      "source_id": "S13",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S14",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H05",
+      "source_pages": [
+        6
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S15",
+      "source_pages": [
+        6
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T04",
+      "source_pages": [
+        6
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S16",
+      "source_pages": [
+        6
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "F01",
+      "source_pages": [
+        1
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F02",
+      "source_pages": [
+        2
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F03",
+      "source_pages": [
+        2
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F04",
+      "source_pages": [
+        3
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F05",
+      "source_pages": [
+        4
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F06",
+      "source_pages": [
+        5
+      ],
+      "kind": "footnote"
+    }
+  ],
+  "table_rules": {
+    "logical_tables": [
+      "T01",
+      "T02",
+      "T03",
+      "T04"
+    ],
+    "continuous_table": "T02",
+    "continuous_source_pages": [
+      2,
+      3
+    ],
+    "requirements": "Preserve visible logical row/column order and native merged cells. Repeated headers and continuation group labels are layout aids, not additional business rows.",
+    "equivalence": "T02 may be one native table or consecutive continuation tables with consistent headers and groups. Reasonable repagination and column widths are allowed; do not flatten into text or images."
+  },
+  "text_rules": "Preserve displayed source IDs, wording, values, units and unknown states. Ignore running headers/footers as body units. Preserve S12 between S11 and S13. Do not invent missing attachments.",
+  "footnote_rules": "F01-F06 must remain real Word footnotes with correct source-object attachments. Automatic display numbering may change, but retain each Fxx ID in its note text. A plain end-of-document note list is not equivalent.",
+  "audit_columns": [
+    "source_id",
+    "source_pages",
+    "source_locator",
+    "target_locator",
+    "status",
+    "issue"
+  ],
+  "audit_rules": "Cover each source_unit once. source_locator uses source.pdf#page:N/source_id. target_locator uses actual Word paragraph:N, table:N, table:N/row:R/cell:C or footnote:ID locators, with 1-based physical OOXML indices; multiple nodes separated by semicolons. source_pages accepts a page list or range. status states converted/partial/missing; issue explains actual losses, empty for no known loss. Rows/columns may be reordered; text is UTF-8 with optional BOM.",
+  "render_rules": "No exact Word page count required. Native text/tables and notes must be readable with no table clipping; source is a text PDF, not a scan. Tables must fit the effective page area. Body/table text should remain at least 9 pt, notes at least 8.5 pt except automatic reference marks.",
+  "modification_boundary": "Only create results/converted.docx and results/conversion_audit.csv (temporary files under results or system temporary directories). Keep both inputs unchanged; offline only."
+}

@@ -1,0 +1,1726 @@
+{
+  "schema_version": "h009-author-controls/v1",
+  "status": "AUTHOR_CONTROLS_PASS",
+  "control_count": 36,
+  "controls": {
+    "reference": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "csv_bom_aliases_ranges": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "native_continuation_tables": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "arbitrary_note_package_ids": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:106",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:101",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:145",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:120",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:102",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:177",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "finer_column_grid": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "paragraph_split_and_merge": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "row_local_column_widths": {
+      "kind": "positive",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "one_local_split_preserves_other_rows": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.9981666666666666,
+        "boundary_cases": 0.9953703703703703,
+        "delivery_integrity": 0.99375,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9968967592592592
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "same_text_wrong_numeric_columns": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.884,
+        "boundary_cases": 0.7083333333333334,
+        "delivery_integrity": 0.9750000000000001,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8595333333333334
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "same_price_wrong_note_row": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.9833333333333334,
+        "boundary_cases": 0.9583333333333334,
+        "delivery_integrity": 0.99375,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9794791666666667
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "same_amount_wrong_note_paragraph": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.9833333333333334,
+        "boundary_cases": 0.9583333333333334,
+        "delivery_integrity": 0.99375,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9794791666666667
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "text_right_horizontal_merge_lost": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9714285714285714,
+        "delivery_integrity": 0.99375,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9919196428571428
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "plain_note_list": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.8943181818181819,
+        "boundary_cases": 0.75,
+        "delivery_integrity": 0.95625,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8728125000000001
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 0
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 0
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 0
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 0
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 0
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 0.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 0
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "source_paragraph_order": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.996551724137931,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.96875,
+        "overall_score": 0.9975754310344828
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "wrong_single_amount": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.996559405940594,
+        "boundary_cases": 0.992404493425533,
+        "delivery_integrity": 0.99375,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9952712966237101
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "unknown_not_zero": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.9979375000000001,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.99375,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9979281250000002
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "audit_wrong_actual_node": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9895833333333334,
+        "overall_score": 0.9994791666666667
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "audit_one_piece_not_whole_table": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9947916666666666,
+        "overall_score": 0.9997395833333333
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "wrong_source_page": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9895833333333334,
+        "overall_score": 0.9994791666666667
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "wrong_source_locator": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9895833333333334,
+        "overall_score": 0.9994791666666667
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "too_small_price": {
+      "kind": "render_negative",
+      "scores": {
+        "business_correctness": 0.996559405940594,
+        "boundary_cases": 0.992404493425533,
+        "delivery_integrity": 0.7453125,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9580056716237101
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 0.0,
+      "render_small_text": 6,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "table_outside_page": {
+      "kind": "render_negative",
+      "scores": {
+        "business_correctness": 0.9346287128712872,
+        "boundary_cases": 0.8966186350777935,
+        "delivery_integrity": 0.7453125,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8999973258486563
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 0.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "page_images_not_native": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.2,
+        "evidence_binding": 0.6666666666666666,
+        "overall_score": 0.06333333333333332
+      },
+      "native_notes": {
+        "F01": {
+          "text": 0.0,
+          "attachment": 0.0,
+          "source_label": 0.0,
+          "package_locator": null,
+          "actual_reference_count": 0
+        },
+        "F02": {
+          "text": 0.0,
+          "attachment": 0.0,
+          "source_label": 0.0,
+          "package_locator": null,
+          "actual_reference_count": 0
+        },
+        "F03": {
+          "text": 0.0,
+          "attachment": 0.0,
+          "source_label": 0.0,
+          "package_locator": null,
+          "actual_reference_count": 0
+        },
+        "F04": {
+          "text": 0.0,
+          "attachment": 0.0,
+          "source_label": 0.0,
+          "package_locator": null,
+          "actual_reference_count": 0
+        },
+        "F05": {
+          "text": 0.0,
+          "attachment": 0.0,
+          "source_label": 0.0,
+          "package_locator": null,
+          "actual_reference_count": 0
+        },
+        "F06": {
+          "text": 0.0,
+          "attachment": 0.0,
+          "source_label": 0.0,
+          "package_locator": null,
+          "actual_reference_count": 0
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 0.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "native_text_hidden": {
+      "kind": "render_negative",
+      "scores": {
+        "business_correctness": 0.143883854543991,
+        "boundary_cases": 0.1798864008243159,
+        "delivery_integrity": 0.628125,
+        "evidence_binding": 1.0,
+        "overall_score": 0.268326470205274
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 0.0,
+      "render_small_text": 6,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "missing_native_opc": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.2,
+        "evidence_binding": 0.6666666666666666,
+        "overall_score": 0.06333333333333332
+      },
+      "native_notes": null,
+      "render_status": null,
+      "render_fit": null,
+      "render_small_text": null,
+      "render_outside": null,
+      "workspace_unchanged": true
+    },
+    "missing_audit_target_header": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.75,
+        "evidence_binding": 0.6666666666666666,
+        "overall_score": 0.9458333333333334
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "missing_word": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.2,
+        "evidence_binding": 0.6666666666666666,
+        "overall_score": 0.06333333333333332
+      },
+      "native_notes": null,
+      "render_status": null,
+      "render_fit": null,
+      "render_small_text": null,
+      "render_outside": null,
+      "workspace_unchanged": true
+    },
+    "damaged_word": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.2,
+        "evidence_binding": 0.6666666666666666,
+        "overall_score": 0.06333333333333332
+      },
+      "native_notes": null,
+      "render_status": null,
+      "render_fit": null,
+      "render_small_text": null,
+      "render_outside": null,
+      "workspace_unchanged": true
+    },
+    "missing_csv": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.6000000000000001,
+        "evidence_binding": 0.0,
+        "overall_score": 0.89
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "all_missing": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "native_notes": null,
+      "render_status": null,
+      "render_fit": null,
+      "render_small_text": null,
+      "render_outside": null,
+      "workspace_unchanged": true
+    },
+    "input_modified": {
+      "kind": "negative",
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.55
+      },
+      "native_notes": {
+        "F01": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:1",
+          "actual_reference_count": 1
+        },
+        "F02": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:2",
+          "actual_reference_count": 1
+        },
+        "F03": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:3",
+          "actual_reference_count": 1
+        },
+        "F04": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:4",
+          "actual_reference_count": 1
+        },
+        "F05": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:5",
+          "actual_reference_count": 1
+        },
+        "F06": {
+          "text": 1.0,
+          "attachment": 1.0,
+          "source_label": 1.0,
+          "package_locator": "footnote:6",
+          "actual_reference_count": 1
+        }
+      },
+      "render_status": "rendered",
+      "render_fit": 1.0,
+      "render_small_text": 0,
+      "render_outside": 0,
+      "workspace_unchanged": true
+    },
+    "missing_gt": {
+      "kind": "infrastructure",
+      "error_type": "FileNotFoundError",
+      "error": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/author-controls-003/missing_gt/workspace/gt/expected.json'",
+      "score_created": false,
+      "workspace_unchanged": true
+    },
+    "missing_helper": {
+      "kind": "infrastructure",
+      "error_type": "FileNotFoundError",
+      "error": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/author-controls-003/missing_helper/workspace/gt/word_model.py'",
+      "score_created": false,
+      "workspace_unchanged": true
+    },
+    "missing_render_lock": {
+      "error_type": "FileNotFoundError",
+      "error": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/runtime-failures-final/missing_render_lock/render-lock.json'",
+      "score_created": false,
+      "workspace_unchanged": true
+    },
+    "engine_unavailable": {
+      "error_type": "OfficeRuntimeError",
+      "error": "OFFICE_EXECUTABLE_UNAVAILABLE: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/runtime-failures-final/engine_unavailable/absent-soffice",
+      "score_created": false,
+      "workspace_unchanged": true
+    },
+    "font_drift": {
+      "error_type": "OfficeRuntimeError",
+      "error": "OFFICE_RENDER_FONT_DRIFT: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/runtime-failures-final/font_drift/changed-font.ttf",
+      "score_created": false,
+      "workspace_unchanged": true
+    }
+  },
+  "gt_bindings": {
+    "artifact_contract.json": "67d961cfaefa7b894eeddee17f5350017c6f8c95405465c49a02068d7f628c4a",
+    "audit_checks.py": "386af250612fc72ff9263a9322b1ec3372fe0a4a46eb6c29877a6bf8f7ca5170",
+    "business_oracle.json": "686adc5f51314e21d93c5364de608a105d715e668fe86092b93c3f084627c456",
+    "counterexamples.json": "c8b1ed75590b8dc3f027ecd0511d04b7b81da6aff3be4a3aae0f204bebd42114",
+    "evidence_requirements.json": "635603dfb400834bb4c2c1f639321bc8f670558bde2388d7eb13a438db461b2f",
+    "expected.json": "941260c3b104b2d7d582db4f4f2d384fb296b8034f5fbad535ca89975d38ed85",
+    "grader.py": "282485119e6bfd911f9a93ab8b8f534efba40b1203da1a1b576ab8a7c8e3a718",
+    "native_checks.py": "d5070c9466943e14c8b2eca25b648577d9584c549f03e64077bee89576d62a34",
+    "office_runtime.py": "7cdb1cc362b992c49d2e71207fb352d527f2acbd2c393ca89eb675ec872e9cb7",
+    "protected_sha256.json": "10c66f579e85b11c63a695d3382c02f43faa8899db5165f5ce86b438c69b7764",
+    "reference/results/conversion_audit.csv": "fa5faa8b15406dddb79102540e36ce3a5c400a76fbcbdeaa2604650fed2f34a1",
+    "reference/results/converted.docx": "1b6c64614372d8f79b671fcb4ef9b7391a315281b4093f96e4273c29e2e8d926",
+    "reference_native_verification.json": "c75cd26317cb97100654807ee062b3a2f1737a0ea8511eac79098c756f21e73b",
+    "render_checks.py": "da2df84e3f165ac125e827cafaf4b8b682f588e00353d33785ba8ac1384f85c3",
+    "source_evidence_index.json": "37e6f1f07cf0737602962ac8618fe8bbf3b0803c6985960dcc5affa86e225fc7",
+    "source_verification.json": "114f68b6240c3b98333162bfaaf2aa30142def6f10eb8c79f0cad7ca053ad62c",
+    "validate_authoring.py": "1daaecc623c2bccacc906a088633ff50b7173006c2bc04fa9ab299d8cb747dce",
+    "validate_runtime_failures.py": "b32dac2fa08c069844b555d033714f95cd055c57813d1ee025acfcb64a306a14",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33"
+  },
+  "limit": "Author controls, not actual Harness or independent semantic scores. Native-only probes do not prove actual render behavior.",
+  "runtime_failure_report": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/runtime-failures-final/validation.json",
+    "sha256": "5d89a1bedce57915da7acb2e72544be2bbbadba7c19d3bb79ca2c806920153d0"
+  },
+  "base_control_report": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/author-controls-003/validation.json",
+    "sha256": "8501e9b0efaad57e1b3a705a5e0bf8b153fb68b4fa842fcc9a78e9286fcffb30"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "schema_version": "h009-artifact-contract/v1",
+  "document": "results/converted.docx",
+  "ledger": "results/conversion_audit.csv",
+  "scope": "Native text/tables and real Word footnotes; no whole-page image replacement. Table continuations and note package IDs are not fixed."
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "h009-counterexamples/v1",
+  "boundaries": [
+    "same_text_wrong_cell",
+    "wrong_merge_or_group",
+    "wrong_native_note_attachment",
+    "plain_note_list_not_footnotes",
+    "image_substitution",
+    "source_order",
+    "false_target_nodes",
+    "actual_pdf_clipping_or_small_text",
+    "unknown_state_not_zero"
+  ],
+  "positive_equivalence": [
+    "native continuation tables",
+    "finer native column grid with equivalent cells",
+    "arbitrary note package IDs",
+    "source paragraph split/merge with IDs",
+    "CSV BOM, field/row order, aliases and page ranges"
+  ],
+  "infrastructure": [
+    "missing GT/helper",
+    "missing/drifted render engine/font lock",
+    "undeclared/missing PDF dependencies"
+  ],
+  "limit": "No error-to-zero catch for infrastructure; candidate malformed delivery is classified separately."
+}

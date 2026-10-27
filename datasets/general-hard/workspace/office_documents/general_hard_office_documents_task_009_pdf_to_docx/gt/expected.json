@@ -1,0 +1,2588 @@
+{
+  "schema_version": "h009-source-verified-expected/v1",
+  "status": "source_verified_before_reference",
+  "source_pdf_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+  "source_pages": 6,
+  "paragraphs": {
+    "S00": {
+      "page": 1,
+      "style": "title",
+      "text": "凌川检验中心批次检测与结算说明"
+    },
+    "H01": {
+      "page": 1,
+      "style": "heading",
+      "text": "一 批次范围与样品登记"
+    },
+    "S01": {
+      "page": 1,
+      "text": "本说明供委托方、检测组与结算岗核对本期登记口径。文号为LC-QC-2026-04，版本R2，记录截至2026年4月30日。全部机构、批次与数据为合成资料，不代表真实检测、付款或对外确认。"
+    },
+    "S02": {
+      "page": 1,
+      "text": "样品编号与费用记录编号分别独立，不能按显示位置相同将两张表逐行合并。表内数量以各自列明的单位理解；相同数字不表示相同样品、项目或计价范围。"
+    },
+    "S03": {
+      "page": 1,
+      "text": "样品登记用于确定受理范围，费用表用于保留本期计价记录。两者均不得据空白、待核或未提供的字样补造数量。复验件只有取得独立登记后才进入相应费用记录，不能由样品表自动推算。"
+    },
+    "H02": {
+      "page": 2,
+      "style": "heading",
+      "text": "二 费用记录与计价边界"
+    },
+    "S04": {
+      "page": 2,
+      "text": "表T02为一个连续逻辑表，原件分置第2页和第3页。续页重复的表头与组别续接提示不构成新增业务行；同组跨页仍沿用原分组边界。数量、单价、小计及说明须按记录编号对应，不能只保留金额总和。"
+    },
+    "S05": {
+      "page": 2,
+      "text": "金额单位为人民币元，表中价格均按未税口径列示。小计是原记录的展示值，本次转换只保留数据，不重算税额、不调整单价，也不以相邻行的相同值替代其脚注或计价条件。"
+    },
+    "S06": {
+      "page": 3,
+      "text": "本表中数量为0的记录仍保留编号和说明，不能当成缺失行删除。标注暂缓的事项应在原位置保留其文字条件，不将其改写为已完成；未列出的支付凭证不得根据金额推断存在。"
+    },
+    "H03": {
+      "page": 4,
+      "style": "heading",
+      "text": "三 确认状态与保留事项"
+    },
+    "S07": {
+      "page": 4,
+      "text": "表T03分别记录确认对象、当前状态和说明。合并单元格只表示原件的共享说明或跨列表述，不能扩展成对其它状态的批准。相邻两行同为待核时，也应保留各自的编号与脚注归属。"
+    },
+    "S08": {
+      "page": 4,
+      "text": "登记完成只表示材料已入册，不表示价格已批准、费用已支付或检测已合格。所有待核事项继续保留原描述；转换者不补写负责人、处理期限、审批结论或未提供的附件。"
+    },
+    "S09": {
+      "page": 4,
+      "text": "其中“共同复核入口”是对两条记录共用入口的说明，不合并两条记录的当前状态。跨列说明应保留在原合并范围内，不拆成多个看似独立的承诺或业务字段。"
+    },
+    "H04": {
+      "page": 5,
+      "style": "heading",
+      "text": "四 使用说明与历史金额"
+    },
+    "S10": {
+      "page": 5,
+      "text": "读者应先核对样品范围，再按费用记录编号逐项核对数量、单价和原展示小计，最后检查状态与附注。引用某一条记录时应同时保留其项目组、单位及适用条件，不将单个数字移到其它行作为依据。"
+    },
+    "S11": {
+      "page": 5,
+      "text": "当资料中出现相同的时间、金额或状态词时，应按所属段落或单元格分别理解。文字搜索只能帮助定位，不能替代原生表格的行列关系；汇总说明也不能覆盖与之并列的具体限制。"
+    },
+    "S12": {
+      "page": 5,
+      "style": "callout",
+      "text": "异议处理提示：若数量、单位或脚注归属无法确认，保留原值并在核对表说明实际问题及定位，不通过猜测填齐。该提示在阅读顺序上位于S11之后、S13之前。"
+    },
+    "S13": {
+      "page": 5,
+      "text": "本报告不构成付款确认。历史示例金额为1,200.00[F06]，用于说明显示格式与适用范围；不得把该金额并入表T02的任何小计，也不据此生成付款状态。"
+    },
+    "S14": {
+      "page": 5,
+      "text": "本报告不构成付款确认。另一处同文提示保留为独立段落，历史示例金额同为1,200.00；此段不引用上一段的脚注，也不把上一段的条件自动扩展到其它行或附件记录。"
+    },
+    "H05": {
+      "page": 6,
+      "style": "heading",
+      "text": "五 附件登记与转换范围"
+    },
+    "S15": {
+      "page": 6,
+      "text": "表T04只登记本说明涉及的材料名称及对应源页，不表示附件实物已交付。转换范围仅为当前六页PDF和明确的结构契约；不要求生成表内列名所指的其它文件，不访问真实系统或补造凭证。"
+    },
+    "S16": {
+      "page": 6,
+      "text": "本期结算审批单：未提供。付款凭证编号：未提供。对外确认日期：待核。上述字样是原件内容，转换后应保留其未知或待核状态，不填0、不改成空白，也不根据本说明的登记日期推断业务已完成。"
+    }
+  },
+  "body_order": [
+    "S00",
+    "H01",
+    "S01",
+    "S02",
+    "T01",
+    "S03",
+    "H02",
+    "S04",
+    "S05",
+    "T02",
+    "S06",
+    "H03",
+    "S07",
+    "T03",
+    "S08",
+    "S09",
+    "H04",
+    "S10",
+    "S11",
+    "S12",
+    "S13",
+    "S14",
+    "H05",
+    "S15",
+    "T04",
+    "S16"
+  ],
+  "tables": {
+    "T01": {
+      "id": "T01",
+      "caption": "样品批次与计量范围",
+      "columns": [
+        "组别",
+        "样品ID",
+        "检测项目",
+        "样本数/件",
+        "计价单位",
+        "说明"
+      ],
+      "widths_pt": [
+        62,
+        50,
+        112,
+        65,
+        65,
+        128
+      ],
+      "header_rows": [
+        [
+          "样品信息",
+          "",
+          "",
+          "计量范围",
+          "",
+          "说明"
+        ],
+        [
+          "组别",
+          "样品ID",
+          "检测项目",
+          "样本数/件",
+          "计价单位",
+          ""
+        ]
+      ],
+      "rows": [
+        [
+          "常规样品",
+          "A01",
+          "理化参数初检",
+          "12",
+          "件",
+          "按签收登记范围"
+        ],
+        [
+          "",
+          "A02",
+          "耐受参数初检",
+          "18",
+          "件",
+          "复验另行登记"
+        ],
+        [
+          "复核样品",
+          "A03",
+          "理化参数复核",
+          "24[F01]",
+          "件",
+          "仅本行适用该附注"
+        ],
+        [
+          "",
+          "A04",
+          "耐受参数复核",
+          "24",
+          "件",
+          "同值不共享上一行附注"
+        ],
+        [
+          "校验样品",
+          "A05",
+          "设备对照校验",
+          "6",
+          "组",
+          "一组含两份对照件"
+        ],
+        [
+          "",
+          "A06",
+          "环境对照校验",
+          "8",
+          "组",
+          "组数不改写为件数"
+        ]
+      ],
+      "spans": [
+        [
+          0,
+          0,
+          0,
+          2
+        ],
+        [
+          0,
+          3,
+          0,
+          4
+        ],
+        [
+          0,
+          5,
+          1,
+          5
+        ],
+        [
+          2,
+          0,
+          3,
+          0
+        ],
+        [
+          4,
+          0,
+          5,
+          0
+        ],
+        [
+          6,
+          0,
+          7,
+          0
+        ]
+      ],
+      "source_pages": [
+        1
+      ],
+      "anchors": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 3,
+          "text": "样品信息",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 2,
+          "text": "计量范围",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "rowspan": 2,
+          "colspan": 1,
+          "text": "说明",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "组别",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "样品ID",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "检测项目",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "样本数/件",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "计价单位",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 2,
+          "colspan": 1,
+          "text": "常规样品",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "A01",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "理化参数初检",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "12",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "件",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "按签收登记范围",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "A02",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "耐受参数初检",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "18",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "件",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "复验另行登记",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 0,
+          "rowspan": 2,
+          "colspan": 1,
+          "text": "复核样品",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "A03",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "理化参数复核",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "24",
+          "footnote_ids": [
+            "F01"
+          ]
+        },
+        {
+          "row": 4,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "件",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "仅本行适用该附注",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "A04",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "耐受参数复核",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "24",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "件",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "同值不共享上一行附注",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 0,
+          "rowspan": 2,
+          "colspan": 1,
+          "text": "校验样品",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "A05",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "设备对照校验",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "组",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "一组含两份对照件",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "A06",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "环境对照校验",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "8",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "组",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "组数不改写为件数",
+          "footnote_ids": []
+        }
+      ]
+    },
+    "T02": {
+      "id": "T02",
+      "caption": "连续费用记录",
+      "columns": [
+        "项目组",
+        "记录ID",
+        "数量/件",
+        "单价/元",
+        "小计/元",
+        "计价说明"
+      ],
+      "widths_pt": [
+        62,
+        47,
+        52,
+        62,
+        72,
+        187
+      ],
+      "header_rows": [
+        [
+          "费用记录",
+          "",
+          "计量与金额",
+          "",
+          "",
+          "计价说明"
+        ],
+        [
+          "项目组",
+          "记录ID",
+          "数量/件",
+          "单价/元",
+          "小计/元",
+          ""
+        ]
+      ],
+      "rows": [
+        [
+          "计划内检测",
+          "R01",
+          "12",
+          "8.50",
+          "102.00",
+          "常规项目登记；不包含复验和加急服务。"
+        ],
+        [
+          "",
+          "R02",
+          "18",
+          "12.00",
+          "216.00",
+          "依签收批次列示；不沿用相邻记录的条件。"
+        ],
+        [
+          "",
+          "R03",
+          "24",
+          "6.25",
+          "150.00",
+          "保留原计量单位；不得与样品表逐行拼接。"
+        ],
+        [
+          "",
+          "R04",
+          "8",
+          "9.50[F02]",
+          "76.00",
+          "单价只适用于本记录，范围见本行附注。"
+        ],
+        [
+          "",
+          "R05",
+          "6",
+          "9.50",
+          "57.00",
+          "相同单价属于另一记录，不共享上一行附注。"
+        ],
+        [
+          "",
+          "R06",
+          "4",
+          "18.00",
+          "72.00",
+          "由同组登记入口核对，未表示结算已批准。"
+        ],
+        [
+          "追加复核",
+          "R07",
+          "10",
+          "15.75",
+          "157.50",
+          "追加复核已登记；实际状态仍按原记录保留。"
+        ],
+        [
+          "",
+          "R08",
+          "0[F03]",
+          "12.50",
+          "0.00",
+          "本期数量为零，保留本行编号与原说明。"
+        ],
+        [
+          "",
+          "R09",
+          "16",
+          "7.20",
+          "115.20",
+          "本组在下一页继续，不新增组别或业务行。"
+        ],
+        [
+          "",
+          "R10",
+          "20",
+          "6.80",
+          "136.00",
+          "承接上一页同组边界；不得按页重新分组。"
+        ],
+        [
+          "",
+          "R11",
+          "5",
+          "20.00",
+          "100.00",
+          "资料已登记，缺损附件仍应单独列明。"
+        ],
+        [
+          "",
+          "R12",
+          "8",
+          "11.25",
+          "90.00",
+          "复核条件仅指本记录，不推定其它行完成。"
+        ],
+        [
+          "专项校验",
+          "R13",
+          "3",
+          "35.00[F04]",
+          "105.00",
+          "专项单价按附注限定范围，不变更税口径。"
+        ],
+        [
+          "",
+          "R14",
+          "7",
+          "21.50",
+          "150.50",
+          "同组专项记录保持独立编号和实际数量。"
+        ],
+        [
+          "",
+          "R15",
+          "9",
+          "19.80",
+          "178.20",
+          "未提供支付凭证，不根据小计补写已付款。"
+        ],
+        [
+          "",
+          "R16",
+          "11",
+          "8.40",
+          "92.40",
+          "按原展示金额保留，不在转换中进行重算。"
+        ],
+        [
+          "",
+          "R17",
+          "14",
+          "12.60",
+          "176.40",
+          "跨行搜索同值时，仍按本记录编号定位。"
+        ],
+        [
+          "",
+          "R18",
+          "6",
+          "25.00",
+          "150.00",
+          "本组最后一项，说明文字不得被右边界裁切。"
+        ]
+      ],
+      "spans": [
+        [
+          0,
+          0,
+          0,
+          1
+        ],
+        [
+          0,
+          2,
+          0,
+          4
+        ],
+        [
+          0,
+          5,
+          1,
+          5
+        ],
+        [
+          2,
+          0,
+          7,
+          0
+        ],
+        [
+          8,
+          0,
+          13,
+          0
+        ],
+        [
+          14,
+          0,
+          19,
+          0
+        ]
+      ],
+      "source_pages": [
+        2,
+        3
+      ],
+      "source_fragments": [
+        {
+          "page": 2,
+          "data_start": 0,
+          "data_end": 9
+        },
+        {
+          "page": 3,
+          "data_start": 9,
+          "data_end": 18
+        }
+      ],
+      "anchors": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 2,
+          "text": "费用记录",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 3,
+          "text": "计量与金额",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 5,
+          "rowspan": 2,
+          "colspan": 1,
+          "text": "计价说明",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "项目组",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "记录ID",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "数量/件",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "单价/元",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "小计/元",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 6,
+          "colspan": 1,
+          "text": "计划内检测",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R01",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "12",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "8.50",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "102.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "常规项目登记；不包含复验和加急服务。",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R02",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "18",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "12.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "216.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "依签收批次列示；不沿用相邻记录的条件。",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R03",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "24",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6.25",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "150.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "保留原计量单位；不得与样品表逐行拼接。",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R04",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "8",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "9.50",
+          "footnote_ids": [
+            "F02"
+          ]
+        },
+        {
+          "row": 5,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "76.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "单价只适用于本记录，范围见本行附注。",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R05",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "9.50",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "57.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "相同单价属于另一记录，不共享上一行附注。",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R06",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "4",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "18.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "72.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "由同组登记入口核对，未表示结算已批准。",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 0,
+          "rowspan": 6,
+          "colspan": 1,
+          "text": "追加复核",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R07",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "10",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "15.75",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "157.50",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "追加复核已登记；实际状态仍按原记录保留。",
+          "footnote_ids": []
+        },
+        {
+          "row": 9,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R08",
+          "footnote_ids": []
+        },
+        {
+          "row": 9,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "0",
+          "footnote_ids": [
+            "F03"
+          ]
+        },
+        {
+          "row": 9,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "12.50",
+          "footnote_ids": []
+        },
+        {
+          "row": 9,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "0.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 9,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "本期数量为零，保留本行编号与原说明。",
+          "footnote_ids": []
+        },
+        {
+          "row": 10,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R09",
+          "footnote_ids": []
+        },
+        {
+          "row": 10,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "16",
+          "footnote_ids": []
+        },
+        {
+          "row": 10,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "7.20",
+          "footnote_ids": []
+        },
+        {
+          "row": 10,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "115.20",
+          "footnote_ids": []
+        },
+        {
+          "row": 10,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "本组在下一页继续，不新增组别或业务行。",
+          "footnote_ids": []
+        },
+        {
+          "row": 11,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R10",
+          "footnote_ids": []
+        },
+        {
+          "row": 11,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "20",
+          "footnote_ids": []
+        },
+        {
+          "row": 11,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6.80",
+          "footnote_ids": []
+        },
+        {
+          "row": 11,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "136.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 11,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "承接上一页同组边界；不得按页重新分组。",
+          "footnote_ids": []
+        },
+        {
+          "row": 12,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R11",
+          "footnote_ids": []
+        },
+        {
+          "row": 12,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "5",
+          "footnote_ids": []
+        },
+        {
+          "row": 12,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "20.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 12,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "100.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 12,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "资料已登记，缺损附件仍应单独列明。",
+          "footnote_ids": []
+        },
+        {
+          "row": 13,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R12",
+          "footnote_ids": []
+        },
+        {
+          "row": 13,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "8",
+          "footnote_ids": []
+        },
+        {
+          "row": 13,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "11.25",
+          "footnote_ids": []
+        },
+        {
+          "row": 13,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "90.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 13,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "复核条件仅指本记录，不推定其它行完成。",
+          "footnote_ids": []
+        },
+        {
+          "row": 14,
+          "column": 0,
+          "rowspan": 6,
+          "colspan": 1,
+          "text": "专项校验",
+          "footnote_ids": []
+        },
+        {
+          "row": 14,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R13",
+          "footnote_ids": []
+        },
+        {
+          "row": 14,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "3",
+          "footnote_ids": []
+        },
+        {
+          "row": 14,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "35.00",
+          "footnote_ids": [
+            "F04"
+          ]
+        },
+        {
+          "row": 14,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "105.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 14,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "专项单价按附注限定范围，不变更税口径。",
+          "footnote_ids": []
+        },
+        {
+          "row": 15,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R14",
+          "footnote_ids": []
+        },
+        {
+          "row": 15,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "7",
+          "footnote_ids": []
+        },
+        {
+          "row": 15,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "21.50",
+          "footnote_ids": []
+        },
+        {
+          "row": 15,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "150.50",
+          "footnote_ids": []
+        },
+        {
+          "row": 15,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "同组专项记录保持独立编号和实际数量。",
+          "footnote_ids": []
+        },
+        {
+          "row": 16,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R15",
+          "footnote_ids": []
+        },
+        {
+          "row": 16,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "9",
+          "footnote_ids": []
+        },
+        {
+          "row": 16,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "19.80",
+          "footnote_ids": []
+        },
+        {
+          "row": 16,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "178.20",
+          "footnote_ids": []
+        },
+        {
+          "row": 16,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "未提供支付凭证，不根据小计补写已付款。",
+          "footnote_ids": []
+        },
+        {
+          "row": 17,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R16",
+          "footnote_ids": []
+        },
+        {
+          "row": 17,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "11",
+          "footnote_ids": []
+        },
+        {
+          "row": 17,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "8.40",
+          "footnote_ids": []
+        },
+        {
+          "row": 17,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "92.40",
+          "footnote_ids": []
+        },
+        {
+          "row": 17,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "按原展示金额保留，不在转换中进行重算。",
+          "footnote_ids": []
+        },
+        {
+          "row": 18,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R17",
+          "footnote_ids": []
+        },
+        {
+          "row": 18,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "14",
+          "footnote_ids": []
+        },
+        {
+          "row": 18,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "12.60",
+          "footnote_ids": []
+        },
+        {
+          "row": 18,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "176.40",
+          "footnote_ids": []
+        },
+        {
+          "row": 18,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "跨行搜索同值时，仍按本记录编号定位。",
+          "footnote_ids": []
+        },
+        {
+          "row": 19,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "R18",
+          "footnote_ids": []
+        },
+        {
+          "row": 19,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6",
+          "footnote_ids": []
+        },
+        {
+          "row": 19,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "25.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 19,
+          "column": 4,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "150.00",
+          "footnote_ids": []
+        },
+        {
+          "row": 19,
+          "column": 5,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "本组最后一项，说明文字不得被右边界裁切。",
+          "footnote_ids": []
+        }
+      ]
+    },
+    "T03": {
+      "id": "T03",
+      "caption": "阶段确认矩阵",
+      "columns": [
+        "记录ID",
+        "确认事项",
+        "当前状态",
+        "处理说明"
+      ],
+      "widths_pt": [
+        50,
+        142,
+        80,
+        210
+      ],
+      "header_rows": [
+        [
+          "记录ID",
+          "确认事项",
+          "当前状态",
+          "处理说明"
+        ]
+      ],
+      "rows": [
+        [
+          "M01",
+          "结算范围",
+          "未税",
+          "税额另列，不在本表补算"
+        ],
+        [
+          "M02",
+          "计量单位确认",
+          "已登记",
+          "原始数量以签收记录为准"
+        ],
+        [
+          "M03",
+          "附条件确认",
+          "待核[F05]",
+          "共同复核入口"
+        ],
+        [
+          "M04",
+          "附条件确认",
+          "待核",
+          ""
+        ],
+        [
+          "M05",
+          "不得用新旧口径直接相加，差额未核定",
+          "",
+          ""
+        ],
+        [
+          "M06",
+          "归档状态",
+          "已登记",
+          "暂缺的实物和附件单独列明"
+        ]
+      ],
+      "spans": [
+        [
+          3,
+          3,
+          4,
+          3
+        ],
+        [
+          5,
+          1,
+          5,
+          3
+        ]
+      ],
+      "source_pages": [
+        4
+      ],
+      "anchors": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "记录ID",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "确认事项",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "当前状态",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "处理说明",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "M01",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "结算范围",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "未税",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "税额另列，不在本表补算",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "M02",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "计量单位确认",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "已登记",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "原始数量以签收记录为准",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "M03",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "附条件确认",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "待核",
+          "footnote_ids": [
+            "F05"
+          ]
+        },
+        {
+          "row": 3,
+          "column": 3,
+          "rowspan": 2,
+          "colspan": 1,
+          "text": "共同复核入口",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "M04",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "附条件确认",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "待核",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "M05",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 3,
+          "text": "不得用新旧口径直接相加，差额未核定",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "M06",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "归档状态",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "已登记",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "暂缺的实物和附件单独列明",
+          "footnote_ids": []
+        }
+      ]
+    },
+    "T04": {
+      "id": "T04",
+      "caption": "材料名称与源页索引",
+      "columns": [
+        "索引ID",
+        "材料名称",
+        "对应源页",
+        "登记说明"
+      ],
+      "widths_pt": [
+        48,
+        207,
+        75,
+        152
+      ],
+      "header_rows": [
+        [
+          "索引ID",
+          "材料名称",
+          "对应源页",
+          "登记说明"
+        ]
+      ],
+      "rows": [
+        [
+          "X01",
+          "样品登记汇总",
+          "1",
+          "当前PDF内表T01"
+        ],
+        [
+          "X02",
+          "费用记录上半部分",
+          "2",
+          "与下一页共同构成T02"
+        ],
+        [
+          "X03",
+          "费用记录续表",
+          "3",
+          "重复表头不算新增业务行"
+        ],
+        [
+          "X04",
+          "阶段确认矩阵",
+          "4",
+          "当前PDF内表T03"
+        ],
+        [
+          "X05",
+          "使用说明与历史示例",
+          "5",
+          "按原段落顺序读取"
+        ],
+        [
+          "X06",
+          "本期结算审批单",
+          "6",
+          "未提供"
+        ],
+        [
+          "X07",
+          "付款凭证登记",
+          "6",
+          "未提供"
+        ],
+        [
+          "X08",
+          "对外确认日期",
+          "6",
+          "待核"
+        ]
+      ],
+      "spans": [],
+      "source_pages": [
+        6
+      ],
+      "anchors": [
+        {
+          "row": 0,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "索引ID",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "材料名称",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "对应源页",
+          "footnote_ids": []
+        },
+        {
+          "row": 0,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "登记说明",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X01",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "样品登记汇总",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "1",
+          "footnote_ids": []
+        },
+        {
+          "row": 1,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "当前PDF内表T01",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X02",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "费用记录上半部分",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "2",
+          "footnote_ids": []
+        },
+        {
+          "row": 2,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "与下一页共同构成T02",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X03",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "费用记录续表",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "3",
+          "footnote_ids": []
+        },
+        {
+          "row": 3,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "重复表头不算新增业务行",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X04",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "阶段确认矩阵",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "4",
+          "footnote_ids": []
+        },
+        {
+          "row": 4,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "当前PDF内表T03",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X05",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "使用说明与历史示例",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "5",
+          "footnote_ids": []
+        },
+        {
+          "row": 5,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "按原段落顺序读取",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X06",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "本期结算审批单",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6",
+          "footnote_ids": []
+        },
+        {
+          "row": 6,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "未提供",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X07",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "付款凭证登记",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6",
+          "footnote_ids": []
+        },
+        {
+          "row": 7,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "未提供",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 0,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "X08",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 1,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "对外确认日期",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 2,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "6",
+          "footnote_ids": []
+        },
+        {
+          "row": 8,
+          "column": 3,
+          "rowspan": 1,
+          "colspan": 1,
+          "text": "待核",
+          "footnote_ids": []
+        }
+      ]
+    }
+  },
+  "footnotes": [
+    {
+      "id": "F01",
+      "page": 1,
+      "text": "仅A03样本数按签收后的净样数登记，不含另行登记的复验件。",
+      "target": {
+        "table": "T01",
+        "record": "A03",
+        "column": 3
+      }
+    },
+    {
+      "id": "F02",
+      "page": 2,
+      "text": "R04单价只覆盖标准复核，未包含加急服务或差旅费用。",
+      "target": {
+        "table": "T02",
+        "record": "R04",
+        "column": 3
+      }
+    },
+    {
+      "id": "F03",
+      "page": 2,
+      "text": "R08数量0表示本期未送检，仍保留该编号，不表示单价或说明缺失。",
+      "target": {
+        "table": "T02",
+        "record": "R08",
+        "column": 2
+      }
+    },
+    {
+      "id": "F04",
+      "page": 3,
+      "text": "R13单价只覆盖一次专项校验，追加轮次另行登记，不改变未税口径。",
+      "target": {
+        "table": "T02",
+        "record": "R13",
+        "column": 3
+      }
+    },
+    {
+      "id": "F05",
+      "page": 4,
+      "text": "本条待核状态属于M03；相邻M04虽文字相同，仍是另一条独立确认记录。",
+      "target": {
+        "table": "T03",
+        "record": "M03",
+        "column": 2
+      }
+    },
+    {
+      "id": "F06",
+      "page": 5,
+      "text": "1,200.00仅为S13中的历史显示示例，不属于当期费用表或付款确认。",
+      "target": {
+        "paragraph": "S13"
+      }
+    }
+  ],
+  "audit_units": [
+    {
+      "source_id": "S00",
+      "source_pages": [
+        1
+      ],
+      "kind": "title"
+    },
+    {
+      "source_id": "H01",
+      "source_pages": [
+        1
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S01",
+      "source_pages": [
+        1
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S02",
+      "source_pages": [
+        1
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T01",
+      "source_pages": [
+        1
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S03",
+      "source_pages": [
+        1
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H02",
+      "source_pages": [
+        2
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S04",
+      "source_pages": [
+        2
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S05",
+      "source_pages": [
+        2
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T02",
+      "source_pages": [
+        2,
+        3
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S06",
+      "source_pages": [
+        3
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H03",
+      "source_pages": [
+        4
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S07",
+      "source_pages": [
+        4
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T03",
+      "source_pages": [
+        4
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S08",
+      "source_pages": [
+        4
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S09",
+      "source_pages": [
+        4
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H04",
+      "source_pages": [
+        5
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S10",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S11",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S12",
+      "source_pages": [
+        5
+      ],
+      "kind": "callout"
+    },
+    {
+      "source_id": "S13",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "S14",
+      "source_pages": [
+        5
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "H05",
+      "source_pages": [
+        6
+      ],
+      "kind": "heading"
+    },
+    {
+      "source_id": "S15",
+      "source_pages": [
+        6
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "T04",
+      "source_pages": [
+        6
+      ],
+      "kind": "table"
+    },
+    {
+      "source_id": "S16",
+      "source_pages": [
+        6
+      ],
+      "kind": "paragraph"
+    },
+    {
+      "source_id": "F01",
+      "source_pages": [
+        1
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F02",
+      "source_pages": [
+        2
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F03",
+      "source_pages": [
+        2
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F04",
+      "source_pages": [
+        3
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F05",
+      "source_pages": [
+        4
+      ],
+      "kind": "footnote"
+    },
+    {
+      "source_id": "F06",
+      "source_pages": [
+        5
+      ],
+      "kind": "footnote"
+    }
+  ],
+  "equivalence": "Native continuation tables may partition T02 without changing logical rows/groups. Page breaks and widths may change. Word note package IDs need not equal Fxx labels.",
+  "independence": "Original facts predate source PDF; pypdf text and pdfplumber ruled-cell extraction checked the actual PDF before any Word reference. No candidate or reference output generated these labels."
+}
