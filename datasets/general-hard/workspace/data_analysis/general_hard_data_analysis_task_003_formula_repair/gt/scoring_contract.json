@@ -1,0 +1,24 @@
+{
+  "schema_version": "h019-scoring/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "expected.json": "180807ad8057f11e443788644505cf48134c36401e6638bffa299b8af4c983c1",
+    "template_snapshot.json": "6324b3fecd40ebc1cebc27115f7dc3d693c751928f31015acffed927cbbed64b",
+    "protected_sha256.json": "afa0dc79abcbae82243d26792f85139fec08d4f0e0a8690250e52b5a1f7da77e",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "office_runtime.py": "68e9ffa05a0f4b48706c6a705b8981120a398c545b1f7d6032712e23153f6f0b",
+    "leave_io.py": "600dcc67818315096584382660e0a54936d3b72b3e38872e1cf7f265fc532473",
+    "grader.py": "da7a78afd54961197d1c276c2bc27a72dd3d9391205bfeaf75bec6f0b024a79e",
+    "business_oracle.json": "34800efdffd063fab9fe0f9763db56a451bdae61887749f342be79afdc0e72a0",
+    "counterexamples.json": "9ecc6763150b096b9da3c86a0cfefc4a61449c5fcac2229039cbb04848bef9a5",
+    "artifact_contract.json": "1e32a41b27e6eb3afcc7688bf840a0de6a62537aa869239f9fd9062a95cf5e51",
+    "evidence_requirements.json": "ca5933705970eaa96bec6895590fbf7cb18c5b94ddb92214a1b4d19b77880c1d",
+    "runtime_contract.json": "ea4b884c1a384a3f04ee7a63348241af20e34efb6938bad5329144004468e46e"
+  },
+  "failure_boundary": "Candidate passive-format/data/scope failures lose relevant points; missing/drifted GT/helper/engine or tool failure raises evaluation error."
+}

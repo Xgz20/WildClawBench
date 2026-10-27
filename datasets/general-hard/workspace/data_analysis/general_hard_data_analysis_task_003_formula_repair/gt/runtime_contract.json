@@ -1,0 +1,11 @@
+{
+  "schema_version": "h019-runtime/v1",
+  "grading_type": "automated",
+  "office": true,
+  "office_render": false,
+  "sdk_core": "0.13.0",
+  "profile": "offline-xlsx-remove-formula-caches/v1",
+  "runtime_lock": "Separate provisioned environment; validate runtime executable/version lock before scoring.",
+  "missing_private_or_runtime": "evaluation_error; no candidate zero",
+  "scope_limits": "Template editing contract, no arbitrary layout rebuilding. No LLM Judge required."
+}

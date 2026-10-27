@@ -8,3 +8,5 @@ datasets/**/workspace/** -text
 datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_001_delimiter_validation/exec/fixtures/* whitespace=-blank-at-eol,cr-at-eol
 # H017审计参考CSV保留标准CRLF，同时继续检查真正的行尾空白。
 datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_001_heterogeneous_join/gt/reference/results/join_audit.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# H019原始人员CSV按冻结字节保留标准CRLF。
+datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_003_formula_repair/exec/cases.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

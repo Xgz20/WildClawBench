@@ -1,9 +1,9 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 19
+  active_task_count: 20
   category_task_counts:
     office_documents: 15
-    data_analysis: 2
+    data_analysis: 3
     research_verification: 0
     file_operations: 0
     software_engineering: 2
@@ -616,6 +616,31 @@ tasks:
     origin:
       mode: open_benchmark_method_inspired_new_task
       production_refs: []
+      external_source_ids:
+        - ssb2
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+  - task_id: general_hard_data_analysis_task_003_formula_repair
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-713df75edeb67ce8
+          query_hash: 713df75edeb67ce8143611700299e8ba88b10d01844fba818ca1e9701b700eec
+          observed_astudio_turns: 3
+          distinct_users: 1
+          distinct_sessions: 3
+          first_seen_local: '2026-09-18 17:47:37.450000'
+          last_seen_local: '2026-09-19 07:51:13.713000'
+          intent_summary: 按整年工龄规则重设休假天数工作簿公式。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - ssb2
       direct_task_copy: false

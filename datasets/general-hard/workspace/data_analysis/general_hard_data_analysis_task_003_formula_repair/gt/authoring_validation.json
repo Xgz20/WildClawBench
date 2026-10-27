@@ -1,0 +1,789 @@
+{
+  "schema_version": "h019-authoring-validation/v1",
+  "status": "AUTHOR_CONTROLS_PASS",
+  "control_count": 44,
+  "control_kinds": {
+    "positive": 9,
+    "negative": 31,
+    "infrastructure": 4
+  },
+  "controls": [
+    {
+      "name": "reference",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/reference",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/reference/validation.json",
+      "validation_sha256": "657f5892515778ab32d98e039e3fd2358809263f6a3cac3a8ebd02e91c1973a0"
+    },
+    {
+      "name": "bad_caches",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/bad_caches",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/bad_caches/validation.json",
+      "validation_sha256": "03c4be87bcd591add0fcfd91042166cffa16f1e0ca7406f9cc61f7e46e9c8a6d"
+    },
+    {
+      "name": "no_caches",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/no_caches",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/no_caches/validation.json",
+      "validation_sha256": "93dfb5eb67bb1073ef83506964845908e42c01fdfa3480c0427ad904186de2a5"
+    },
+    {
+      "name": "helper_formula",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/helper_formula",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/helper_formula/validation.json",
+      "validation_sha256": "e8cfb5ab24ecdebf011fceecc5fcf3f284af2bb441f679af8ae21c2ab2a7e8cd"
+    },
+    {
+      "name": "floor_equivalent",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/floor_equivalent",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/floor_equivalent/validation.json",
+      "validation_sha256": "8782d893688b79a707d4c29f15c67e79b6ec51ec8fba2537c14fe2616d56ae06"
+    },
+    {
+      "name": "year_comparison_equivalent",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/year_comparison_equivalent",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/year_comparison_equivalent/validation.json",
+      "validation_sha256": "5f4f0bea527b940ab631e2d03c63c514b0f9f404b03f273d782887e7381863c7"
+    },
+    {
+      "name": "name_unquoted",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/name_unquoted",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/name_unquoted/validation.json",
+      "validation_sha256": "b4129f076fa31049cb81aae96f2c16af86897ad32d409136f12b3917d9033d3b"
+    },
+    {
+      "name": "openpyxl_roundtrip",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/openpyxl_roundtrip",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/openpyxl_roundtrip/validation.json",
+      "validation_sha256": "8ca82ad78b29d3d36168c2b71a0bd82badaf90f33ac7c8ccfaaa97e33c9a06b7"
+    },
+    {
+      "name": "explicit_style_defaults",
+      "kind": "positive",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/explicit_style_defaults",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/explicit_style_defaults/validation.json",
+      "validation_sha256": "6fd310e32716eb1aaec49b1f4df673b2104df0ae037ef0cb837a37191c10a832"
+    },
+    {
+      "name": "unchanged_old_model",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.275
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/unchanged_old_model",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/unchanged_old_model/validation.json",
+      "validation_sha256": "0532ca6b81d81a99e9d6d0f60b162af626d94e925d720781578dca885cd2f845"
+    },
+    {
+      "name": "literal_baseline",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.8,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.2,
+        "overall_score": 0.45
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/literal_baseline",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/literal_baseline/validation.json",
+      "validation_sha256": "0e35a6c39f8dfe1eceb50aaf5402ea95082cfa6c10148ad0ff400581a0a5081b"
+    },
+    {
+      "name": "constant_formula_baseline",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/constant_formula_baseline",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/constant_formula_baseline/validation.json",
+      "validation_sha256": "836a16408ce844b7af9c5b1614fcc8f5d23352af7738367c804c13c461015187"
+    },
+    {
+      "name": "fixed_date_formula",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.608333333333,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.752083333333
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/fixed_date_formula",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/fixed_date_formula/validation.json",
+      "validation_sha256": "ce5b7e46eab7a72e48e2911e6ec3e1675b03b4ce33cbf0bb4d31402bad2fa90e"
+    },
+    {
+      "name": "wrong_asof_name",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/wrong_asof_name",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/wrong_asof_name/validation.json",
+      "validation_sha256": "0acd89e3c0732132ddb5a2e6a95cf2191a8ead2a59594a3210747d81e4220492"
+    },
+    {
+      "name": "year_subtraction",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.805,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.49275
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/year_subtraction",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/year_subtraction/validation.json",
+      "validation_sha256": "50c192827ad92deac17cc3448b04bd8f0ef501db3f748267ec07f97be6ace941"
+    },
+    {
+      "name": "days_36525",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.948,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5714
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/days_36525",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/days_36525/validation.json",
+      "validation_sha256": "fce4a697b045dbfc72479fdf35d33a284870d1fd340bb524c317240810448cbd"
+    },
+    {
+      "name": "leap_on_feb28",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.922,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5571
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/leap_on_feb28",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/leap_on_feb28/validation.json",
+      "validation_sha256": "5a3bf9875d39e56d90b50d34217c8fe406dba98492403ee686cca88e4abe6459"
+    },
+    {
+      "name": "inclusive_bands",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.961,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.57855
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/inclusive_bands",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/inclusive_bands/validation.json",
+      "validation_sha256": "75b6e8a48ac07712a0c011be5b8aa47f191815b080c3047707c48afb8f046eb0"
+    },
+    {
+      "name": "round_nearest_half",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.961,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.57855
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/round_nearest_half",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/round_nearest_half/validation.json",
+      "validation_sha256": "78b33a3e6d8ca360138c972e27782a898af205e8e83d7453d59df6dead0f023d"
+    },
+    {
+      "name": "zero_fte_fallback",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.974,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5857
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/zero_fte_fallback",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/zero_fte_fallback/validation.json",
+      "validation_sha256": "ceea516ec2182f0c8c1dd1a667ef41d9ae736e54ceecdb6ed2244e730db9e6cf"
+    },
+    {
+      "name": "missing_date_zero",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.974,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5857
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/missing_date_zero",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/missing_date_zero/validation.json",
+      "validation_sha256": "0f688e849465ba438e58a594a22645508d53ae02bcd6dca79b3f64fc5a0dda6b"
+    },
+    {
+      "name": "future_as_normal",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.974,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5857
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/future_as_normal",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/future_as_normal/validation.json",
+      "validation_sha256": "276e7c8a8302b37ab82f9fb4920910cf9b5ef7dd7316eb3b602ae769bf100765"
+    },
+    {
+      "name": "hardcoded_bands",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.8,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/hardcoded_bands",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/hardcoded_bands/validation.json",
+      "validation_sha256": "1c11296fbf8ba2997f9133c32e48c6ed2bca088c9a0708166eeb2c653e9e3112"
+    },
+    {
+      "name": "fte_ignored",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.909,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.54995
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/fte_ignored",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/fte_ignored/validation.json",
+      "validation_sha256": "b184355090c74e43bcfe986eccbc0718ee018fd66db9537e90c57d93bdbc8acf"
+    },
+    {
+      "name": "employee_modified",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/employee_modified",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/employee_modified/validation.json",
+      "validation_sha256": "47acac46d33649bf0dc239daebd3183e1587b53deea57b57a0daa75060417ab3"
+    },
+    {
+      "name": "parameter_modified",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/parameter_modified",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/parameter_modified/validation.json",
+      "validation_sha256": "c6c7d04f7899ea7e207c65b8b4db646a1f2033d112471a6fcec543d913339d84"
+    },
+    {
+      "name": "non_target_formula_modified",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/non_target_formula_modified",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/non_target_formula_modified/validation.json",
+      "validation_sha256": "9143efc8dac58610d88080d046e38cda427fc92535098ed0b03058b605d7be65"
+    },
+    {
+      "name": "hidden_output",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/hidden_output",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/hidden_output/validation.json",
+      "validation_sha256": "7b523d00f481e6a8573e322b44938b562ed782c255b78c89bad6dc7d592fcef4"
+    },
+    {
+      "name": "missing_name",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.325
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/missing_name",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/missing_name/validation.json",
+      "validation_sha256": "df766d8c5ee5e9b633a8bcd059c634532443c7486c8d112fd8490569d5cad9dc"
+    },
+    {
+      "name": "missing_book",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.15,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0825
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/missing_book",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/missing_book/validation.json",
+      "validation_sha256": "d5136e7efa6a75adf381d891f5ca50ecf2386c520f6e2a4b744be3e6dd7baf91"
+    },
+    {
+      "name": "missing_report",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.85,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.7175
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/missing_report",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/missing_report/validation.json",
+      "validation_sha256": "4a7b975e4b31a8c06c96f88c4b19b1d0dcf306be637a491b83d086fcfddcdd14"
+    },
+    {
+      "name": "invalid_book",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.15,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0825
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/invalid_book",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/invalid_book/validation.json",
+      "validation_sha256": "28ce8d03b2754594e5c2bc8fbbaaa410233467d94697a9e075339e1910256ce1"
+    },
+    {
+      "name": "wrong_before_binding",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.8,
+        "overall_score": 0.84
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/wrong_before_binding",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/wrong_before_binding/validation.json",
+      "validation_sha256": "eff4a36271b09759bcd672ba649fae634e72d9bc3da2afdf81effa1c9063267b"
+    },
+    {
+      "name": "wrong_after_binding",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.8,
+        "overall_score": 0.84
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/wrong_after_binding",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/wrong_after_binding/validation.json",
+      "validation_sha256": "55b5310f4c67f7c7211c78909ecb8cc3ef4cc3ebfb741a03a58d1272dea0ec93"
+    },
+    {
+      "name": "report_wrong_value",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.995833333333,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.847708333333
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/report_wrong_value",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/report_wrong_value/validation.json",
+      "validation_sha256": "ca1f3fe88e940db0f010f46afeedb0297f3fd15c0d64661ee4af36cb28d583ab"
+    },
+    {
+      "name": "report_duplicate_row",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.995833333333,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.847708333333
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/report_duplicate_row",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/report_duplicate_row/validation.json",
+      "validation_sha256": "fdd576c586a46484a3a0bf1252d138e883b5e195dd1ca0c637cbd935f175aecf"
+    },
+    {
+      "name": "report_wrong_date",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.995833333333,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.847708333333
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/report_wrong_date",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/report_wrong_date/validation.json",
+      "validation_sha256": "5f96caa7dc61410daccdc5cd0c6cc6061625424fe430c32b842e36f389cf7d17"
+    },
+    {
+      "name": "input_modified",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.5,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.275
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/input_modified",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/input_modified/validation.json",
+      "validation_sha256": "99fea5fe01574e5f9731660ce554a34c58e1f2ca1b38c94d95115c68cb3497da"
+    },
+    {
+      "name": "wrong_formula_good_cache",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.948,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5714
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/wrong_formula_good_cache",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/wrong_formula_good_cache/validation.json",
+      "validation_sha256": "1f09052ebf37ba1117c0ff570cbf302f77b80a04a5934b5aaf8981aebf6a51b0"
+    },
+    {
+      "name": "formula_error_good_cache",
+      "kind": "negative",
+      "passed": true,
+      "scores": {
+        "business_correctness": 0.948,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5714
+      },
+      "error": null,
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/formula_error_good_cache",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/formula_error_good_cache/validation.json",
+      "validation_sha256": "30435bb5dc9f5455c478d9add3d2939e2602a9bf06ce9ee776a53cd1c17a47bb"
+    },
+    {
+      "name": "missing_gt",
+      "kind": "infrastructure",
+      "passed": true,
+      "scores": null,
+      "error": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/missing_gt/workspace/gt/expected.json'"
+      },
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/missing_gt",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/missing_gt/validation.json",
+      "validation_sha256": "b0f74ac18c35a6aff1d166160e4c80e69d92dc94bb92558068de437322348348"
+    },
+    {
+      "name": "helper_drift",
+      "kind": "infrastructure",
+      "passed": true,
+      "scores": null,
+      "error": {
+        "type": "ValueError",
+        "message": "H019 private helper/contract drift: leave_io.py"
+      },
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/helper_drift",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/helper_drift/validation.json",
+      "validation_sha256": "5d3a444edd0cd7d6bc210373dd18421b6dfaecac0dd9739fb34099cf4ca71782"
+    },
+    {
+      "name": "missing_office_lock",
+      "kind": "infrastructure",
+      "passed": true,
+      "scores": null,
+      "error": {
+        "type": "RuntimeError",
+        "message": "H019 missing managed runtime GENERAL_E2E_OFFICE_LOCK"
+      },
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/missing_office_lock",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/missing_office_lock/validation.json",
+      "validation_sha256": "460d1b6a356d1bd2c6067192f58cfc62ee2241df6bd0eac811bc1daadb4d37ff"
+    },
+    {
+      "name": "office_lock_drift",
+      "kind": "infrastructure",
+      "passed": true,
+      "scores": null,
+      "error": {
+        "type": "OfficeRuntimeError",
+        "message": "OFFICE_EXECUTABLE_DRIFT: /Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice"
+      },
+      "workspace_unchanged": true,
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/office_lock_drift",
+      "validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/office_lock_drift/validation.json",
+      "validation_sha256": "c19f65e32dab43b03688851f6dc9dabafe272f1f265178d93471b64d81ac272c"
+    }
+  ],
+  "matrices": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/positive/validation.json",
+      "sha256": "2fe565bfc5581de8869983e4be65520ae0fafa65ff59f97f77e0ddc819391909"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-a/validation.json",
+      "sha256": "1dcf73cc0a7c331566c7c3153a3eefcb812aaa23af0637ce627de2e119f24ae2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/negative-b/validation.json",
+      "sha256": "31c99c71a3b872bb1807005b9988cbac6311ae55c827e8bb311193cbd95fbbc4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019-final-controls/infra/validation.json",
+      "sha256": "846c8638158c4a29776f03ea33abce89fd85c22d9133aafe9f84a7b37d7f100e"
+    }
+  ],
+  "private_sha256": {
+    "expected.json": "180807ad8057f11e443788644505cf48134c36401e6638bffa299b8af4c983c1",
+    "template_snapshot.json": "6324b3fecd40ebc1cebc27115f7dc3d693c751928f31015acffed927cbbed64b",
+    "protected_sha256.json": "afa0dc79abcbae82243d26792f85139fec08d4f0e0a8690250e52b5a1f7da77e",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "office_runtime.py": "68e9ffa05a0f4b48706c6a705b8981120a398c545b1f7d6032712e23153f6f0b",
+    "leave_io.py": "600dcc67818315096584382660e0a54936d3b72b3e38872e1cf7f265fc532473",
+    "grader.py": "da7a78afd54961197d1c276c2bc27a72dd3d9391205bfeaf75bec6f0b024a79e",
+    "business_oracle.json": "34800efdffd063fab9fe0f9763db56a451bdae61887749f342be79afdc0e72a0",
+    "counterexamples.json": "9ecc6763150b096b9da3c86a0cfefc4a61449c5fcac2229039cbb04848bef9a5",
+    "artifact_contract.json": "1e32a41b27e6eb3afcc7688bf840a0de6a62537aa869239f9fd9062a95cf5e51",
+    "evidence_requirements.json": "ca5933705970eaa96bec6895590fbf7cb18c5b94ddb92214a1b4d19b77880c1d",
+    "runtime_contract.json": "ea4b884c1a384a3f04ee7a63348241af20e34efb6938bad5329144004468e46e"
+  },
+  "worker_validation_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h019/qa/managed-task-1793138764081675000/validation.json",
+  "worker_validation_sha256": "dc5ca540a6130270bcc4c8a12a74346ca2cb047fe6a7f83a6733888b463b2f2b",
+  "rule_score": 1.0,
+  "scoring_runtime": "core0.13.0, actual locked Office, six recalculations, five numeric source interventions",
+  "verified_derived_artifacts": 24,
+  "independent_semantic_score": null,
+  "harness_score": null,
+  "difficulty_status": "L3_design_estimate_unvalidated",
+  "limit": "All44 final controls use matching bound final private scoring helpers. Earlier preliminary matrices are retained but excluded. These are author tests, not model/Harness scores or full aesthetic evaluation."
+}
