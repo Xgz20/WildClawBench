@@ -2312,12 +2312,12 @@ def bootstrap_office_runtime(executable: Path, output: Path, runtime_lock_path: 
 
 
 def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Path], output: Path, runtime_lock_path: Path,
-                                   font_directories: list[Path] | None = None) -> dict:
+                                   font_directories: list[Path] | None = None, document_format: str = "pptx") -> dict:
     _import_grading_core()
     from wildclawbench_grading_core import OfficeRuntimeError, create_office_render_lock
     office = _load_office_runtime(office_lock_path)
     try:
-        render = create_office_render_lock(office, font_files, font_directories=font_directories or ())
+        render = create_office_render_lock(office, font_files, font_directories=font_directories or (), document_format=document_format)
     except OfficeRuntimeError as exc:
         raise ScoringRuntimeError(exc.code, exc.message) from exc
     value, _ = _load_runtime_lock(runtime_lock_path)
@@ -2326,7 +2326,8 @@ def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Pat
     value = {**value, "office_runtime": office, "office_render_runtime": render}
     _write_new_json(output, value)
     return {"status": "PASS", "runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
-            "font_count": len(render["fonts"]), "engine_version": office["engine_version"]}
+            "font_count": len(render["fonts"]), "engine_version": office["engine_version"],
+            "document_format": document_format, "profile": render["profile"]}
 
 
 def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
@@ -2383,6 +2384,8 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
     presentations = {_sha256_file(file): file for folder in (root / "candidate-original/workspace", root / "private/gt")
                      for file in _regular_evidence_files(folder) if file.suffix.lower() == ".pptx"}
     presentation_hashes = set(presentations)
+    documents = {_sha256_file(file): file for folder in (root / "candidate-original/workspace", root / "private/gt")
+                 for file in _regular_evidence_files(folder) if file.suffix.lower() == ".docx"}
     embedded_hashes = set()
     for artifact in artifacts:
         if not artifact["path"].endswith("/embedded-xlsx-audit.json"):
@@ -2407,17 +2410,35 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
     for artifact in artifacts:
         if artifact["path"].endswith("/render-audit.json"):
             _import_grading_core()
-            from wildclawbench_grading_core.office_runtime import RENDER_AUDIT_SCHEMA, RENDER_PROFILE, RENDER_FILTER, office_render_lock_digest
+            from wildclawbench_grading_core.office_runtime import (
+                RENDER_AUDIT_SCHEMA, RENDER_PROFILE, RENDER_FILTER, office_render_lock_digest,
+                DOCX_RENDER_AUDIT_SCHEMA, DOCX_RENDER_PROFILE, DOCX_RENDER_FILTER,
+                OfficeRuntimeError, _inspect_docx_render_package,
+            )
             receipt_path = root / artifact["path"]
             receipt = _read_json(receipt_path, code="OFFICE_RENDER_AUDIT_INVALID")
             derived_path = receipt_path.with_name("rendered.pdf")
-            if (render_lock is None or receipt.get("schema_version") != RENDER_AUDIT_SCHEMA or receipt.get("profile") != RENDER_PROFILE
+            is_word = receipt.get("schema_version") == DOCX_RENDER_AUDIT_SCHEMA
+            expected_profile = DOCX_RENDER_PROFILE if is_word else RENDER_PROFILE
+            expected_filter = DOCX_RENDER_FILTER if is_word else RENDER_FILTER
+            source_hash = receipt.get("source_sha256")
+            source = documents.get(source_hash) if is_word and isinstance(source_hash, str) else None
+            if is_word and source is not None:
+                try:
+                    source_info = _inspect_docx_render_package(source.read_bytes())
+                except (OfficeRuntimeError, ValueError, zipfile.BadZipFile) as exc:
+                    raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", str(exc)) from exc
+                source_valid = all(receipt.get(key) == value and type(receipt.get(key)) is type(value) for key, value in source_info.items())
+            else:
+                source_valid = (not is_word and isinstance(source_hash, str) and source_hash in presentation_hashes
+                                and type(receipt.get("source_slide_count")) is int and receipt["source_slide_count"] > 0)
+            if (render_lock is None or receipt.get("schema_version") not in (RENDER_AUDIT_SCHEMA, DOCX_RENDER_AUDIT_SCHEMA)
+                    or receipt.get("profile") != expected_profile or render_lock.get("profile") != expected_profile
                     or receipt.get("engine_version") != lock["engine_version"] or receipt.get("executable_sha256") != lock["executable_sha256"]
                     or receipt.get("render_lock_sha256") != office_render_lock_digest(render_lock) or receipt.get("source_unchanged") is not True
-                    or receipt.get("source_sha256") not in presentation_hashes or receipt.get("export_filter") != RENDER_FILTER
+                    or not source_valid or receipt.get("export_filter") != expected_filter
                     or receipt.get("environment_profile") != "isolated-fontconfig/v1"
                     or receipt.get("font_assets") != [{key: font[key] for key in ("sha256", "size")} for font in render_lock["fonts"]]
-                    or type(receipt.get("source_slide_count")) is not int or receipt["source_slide_count"] < 1
                     or not derived_path.is_file() or receipt.get("derived_sha256") != _sha256_file(derived_path)):
                 raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", artifact["path"])
             continue
@@ -5900,6 +5921,7 @@ def main(argv: list[str] | None = None) -> int:
     render.add_argument("--font-directory", action="append", type=Path, default=[])
     render.add_argument("--runtime-lock", required=True, type=Path)
     render.add_argument("--output", required=True, type=Path)
+    render.add_argument("--document-format", choices=("pptx", "docx"), default="pptx")
 
     prepare_semantics = subparsers.add_parser("prepare-semantics")
     prepare_semantics.add_argument("--attempt-root", required=True, type=Path)
@@ -5996,7 +6018,8 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "bootstrap-office":
             result = bootstrap_office_runtime(args.executable, args.output, args.runtime_lock)
         elif args.command == "bootstrap-office-render":
-            result = bootstrap_office_render_runtime(args.office_runtime_lock, args.font_file, args.output, args.runtime_lock, args.font_directory)
+            result = bootstrap_office_render_runtime(args.office_runtime_lock, args.font_file, args.output, args.runtime_lock,
+                                                    args.font_directory, args.document_format)
         elif args.command == "prepare-semantics":
             result = prepare_semantics_attempt(attempt_root=args.attempt_root)
         elif args.command == "query-evidence":

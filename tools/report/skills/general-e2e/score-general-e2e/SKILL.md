@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.18.0`增加独立DOCX可信渲染Profile：`bootstrap-office-render --document-format docx`冻结Word字体锁，`render_docx_pdf()`在受管Worker内对原字节副本执行Writer PDF导出。回执绑定原Word、声明结构摘要、PDF、引擎、字体和固定选项；正常与归档核验按冻结候选/私有参考重新检查来源。PPTX默认Profile及旧helper保持兼容；两种渲染锁不能混用。Word宏、嵌入对象、外部素材及主动字段超出此离线Profile，明确报错；环境和转换失败不补能力零分。详见[可信Office渲染](references/office-rendering.md)。
+
 `0.17.0`补齐DOCX结构证据：保留原段落/物理单元格定位，增加声明网格、合并区间、重复表头与正文/单元格到脚注和尾注的实际关系链。引用绑定部件SHA和内容定位，缺关系、缺部件、缺注释及外部关系分别标记；不访问外部资源。结构声明不能证明渲染、可编辑性或显示编号，嵌套表拓扑尚不展开。新DOCX引擎为`wildclawbench.docx-text/v1`，旧attempt继续使用冻结入口。详见[原生文件文本证据](references/native-text-evidence.md)。
 
 `0.16.0`增加冻结静态图片证据：完整解码PNG/JPEG/WebP/单帧GIF，保留原始字节与SHA，不做OCR、裁剪或重编码。Codex裁判用`query-evidence --mode image`取得核验后的实际图片路径，再用看图工具检查像素；catalog或路径元数据不能证明已看图。API配置可显式增加冻结`image_input`，三种transport发送带evidence ID的原字节内容块，图片预算与文本字符预算分开。缺图/省略不能充当视觉依据，缺依赖与来源漂移保留异常。归档复核附件原字节及保存的provider请求，不要求解码器存在。使用前读[冻结图片证据](references/image-evidence.md)。

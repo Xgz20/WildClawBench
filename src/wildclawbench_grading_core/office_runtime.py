@@ -1,4 +1,4 @@
-"""Frozen LibreOffice operations on disposable copies: XLSX math and PPTX PDF.
+"""Frozen LibreOffice operations on disposable copies: XLSX math and Office PDF.
 
 This helper is intentionally standalone so an identical, hashed copy can live
 in a dataset's private scoring materials. It never writes the source workbook.
@@ -29,10 +29,16 @@ MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 RENDER_LOCK_SCHEMA = "wildclawbench.office-render-runtime-lock/v1"
 RENDER_AUDIT_SCHEMA = "wildclawbench.office-pptx-render/v1"
 RENDER_PROFILE = "offline-pptx-to-pdf-with-fonts/v1"
+DOCX_RENDER_AUDIT_SCHEMA = "wildclawbench.office-docx-render/v1"
+DOCX_RENDER_PROFILE = "offline-docx-to-pdf-with-fonts/v1"
 EMBEDDED_AUDIT_SCHEMA = "wildclawbench.office-embedded-xlsx/v1"
 RENDER_FILTER = {"ExportHiddenSlides": {"type": "boolean", "value": "true"},
                  "ExportNotesPages": {"type": "boolean", "value": "false"},
                  "ExportOnlyNotesPages": {"type": "boolean", "value": "false"}}
+DOCX_RENDER_FILTER = {"ExportNotes": {"type": "boolean", "value": "false"},
+                      "ExportNotesInMargin": {"type": "boolean", "value": "false"},
+                      "ExportFormFields": {"type": "boolean", "value": "false"},
+                      "IsSkipEmptyPages": {"type": "boolean", "value": "false"}}
 
 
 class OfficeRuntimeError(RuntimeError):
@@ -295,8 +301,10 @@ def _font_directory_files(directory):
     return set(fonts)
 
 
-def create_office_render_lock(office_lock, font_files, *, font_directories=()):
+def create_office_render_lock(office_lock, font_files, *, font_directories=(), document_format="pptx"):
     """Bind separately supplied font assets without changing the XLSX lock."""
+    if document_format not in {"pptx", "docx"}:
+        raise OfficeRuntimeError("OFFICE_RENDER_LOCK_INVALID", "unsupported render document format")
     validate_office_lock(office_lock)
     directories = []
     for source in font_directories:
@@ -319,7 +327,7 @@ def create_office_render_lock(office_lock, font_files, *, font_directories=()):
             raise OfficeRuntimeError("OFFICE_RENDER_FONT_INVALID", "invalid font type, size or inventory limit")
         fonts.append({"path": str(path), "sha256": sha(path), "size": path.stat().st_size})
     fonts.sort(key=lambda item: item["path"])
-    lock = {"schema_version": RENDER_LOCK_SCHEMA, "profile": RENDER_PROFILE,
+    lock = {"schema_version": RENDER_LOCK_SCHEMA, "profile": RENDER_PROFILE if document_format == "pptx" else DOCX_RENDER_PROFILE,
             "office_runtime": dict(office_lock), "fonts": fonts, "font_directories": directories}
     validate_office_render_lock(lock)
     return lock
@@ -327,7 +335,7 @@ def create_office_render_lock(office_lock, font_files, *, font_directories=()):
 
 def validate_office_render_lock(lock, *, require_files=True):
     if (not isinstance(lock, dict) or set(lock) != {"schema_version", "profile", "office_runtime", "fonts", "font_directories"}
-            or lock.get("schema_version") != RENDER_LOCK_SCHEMA or lock.get("profile") != RENDER_PROFILE
+            or lock.get("schema_version") != RENDER_LOCK_SCHEMA or lock.get("profile") not in (RENDER_PROFILE, DOCX_RENDER_PROFILE)
             or not isinstance(lock.get("fonts"), list) or not 1 <= len(lock["fonts"]) <= 512
             or not isinstance(lock.get("font_directories"), list) or len(lock["font_directories"]) > 16
             or any(not isinstance(path, str) or not Path(path).is_absolute() for path in lock["font_directories"])
@@ -428,18 +436,144 @@ def _inspect_render_package(data):
     return {"source_slide_count": slide_count, "embedded_xlsx_validated": embedded_count}
 
 
+def _inspect_docx_render_package(data):
+    """Inspect a passive Word package; do not modify its fields or stored text."""
+    w = "{http://schemas.openxmlformats.org/wordprocessingml/2006/main}"
+    relns = "{http://schemas.openxmlformats.org/package/2006/relationships}"
+    reltype = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
+    try:
+        archive = zipfile.ZipFile(io.BytesIO(data))
+    except zipfile.BadZipFile as exc:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "not a DOCX ZIP") from exc
+    with archive:
+        infos = archive.infolist()
+        names = {item.filename for item in infos}
+        if len(infos) > 5000 or sum(item.file_size for item in infos) > MAX_UNCOMPRESSED_BYTES:
+            raise OfficeRuntimeError("OFFICE_INPUT_LIMIT", "DOCX package extraction limit")
+        if len(names) != len(infos) or not {"[Content_Types].xml", "_rels/.rels", "word/document.xml"} <= names:
+            raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "duplicate or missing DOCX package parts")
+        document = None
+        main_targets = []
+        active_fields = {"DDE", "DDEAUTO", "INCLUDETEXT", "INCLUDEPICTURE", "LINK", "DATABASE", "IMPORT", "MACROBUTTON"}
+        def check_instruction(text):
+            command = text.strip().split(None, 1)
+            if command and command[0].upper() in active_fields:
+                raise OfficeRuntimeError("OFFICE_EXTERNAL_DATA_UNSUPPORTED", "active or linked Word field is outside passive rendering")
+        for item in infos:
+            name = item.filename
+            parts = name.rstrip("/").split("/")
+            if item.flag_bits & 1 or name.startswith("/") or "\\" in name or any(part in {"", ".", ".."} for part in parts):
+                raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "unsafe/encrypted DOCX package member")
+            lowered = name.lower()
+            if any(token in lowered for token in ("vbaproject", "/activex/", "/embeddings/", "/afchunk", "customui/")):
+                raise OfficeRuntimeError("OFFICE_ACTIVE_CONTENT_UNSUPPORTED", "active/embedded Word content is outside passive rendering")
+            raw = archive.read(item)
+            if name == "[Content_Types].xml":
+                _validate_content_types(raw)
+            if not lowered.endswith((".xml", ".rels")):
+                continue
+            checked = raw.replace(b"\x00", b"").upper()
+            if len(raw) > 16 * 1024 * 1024 or b"<!DOCTYPE" in checked or b"<!ENTITY" in checked:
+                raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "unsafe or oversized DOCX XML")
+            try:
+                node = ET.fromstring(raw)
+            except ET.ParseError as exc:
+                raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "malformed DOCX XML") from exc
+            if name == "[Content_Types].xml" and any("macroenabled" in child.get("ContentType", "").lower() for child in node):
+                raise OfficeRuntimeError("OFFICE_ACTIVE_CONTENT_UNSUPPORTED", "macro-enabled Word content type")
+            if lowered.endswith(".rels"):
+                if node.tag != relns + "Relationships":
+                    raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "unsupported Word relationship root")
+                seen = set()
+                owner_dir = posixpath.dirname(posixpath.dirname(name))
+                for relation in node:
+                    identity = relation.get("Id")
+                    if relation.tag != relns + "Relationship" or not identity or identity in seen:
+                        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "missing or ambiguous Word relationship ID")
+                    seen.add(identity)
+                    kind, mode = relation.get("Type", ""), relation.get("TargetMode", "Internal")
+                    if mode not in {"Internal", "External"}:
+                        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "unsupported Word relationship mode")
+                    if kind.endswith(("/oleObject", "/package", "/aFChunk", "/control")):
+                        raise OfficeRuntimeError("OFFICE_ACTIVE_CONTENT_UNSUPPORTED", "embedded Word relationship is outside passive rendering")
+                    if kind == reltype + "hyperlink":
+                        continue  # PDF export does not activate hyperlink targets.
+                    if mode == "External":
+                        raise OfficeRuntimeError("OFFICE_EXTERNAL_DATA_UNSUPPORTED", "linked Word data/assets are outside passive rendering")
+                    target = unquote(relation.get("Target", ""))
+                    try:
+                        uri = urlsplit(target)
+                    except ValueError as exc:
+                        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "invalid Word relationship URI") from exc
+                    resolved = posixpath.normpath(target.lstrip("/") if target.startswith("/") else posixpath.join(owner_dir, target))
+                    if (not target or "\\" in target or uri.scheme or uri.netloc or uri.query or uri.fragment
+                            or resolved == ".." or resolved.startswith("../") or resolved not in names):
+                        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "Word relationship escapes or misses its package part")
+                    if name == "_rels/.rels" and kind == reltype + "officeDocument":
+                        main_targets.append(resolved)
+            instructions = []
+            for element in node.iter():
+                if element.tag in {w + "altChunk", w + "object", w + "control", w + "subDoc"}:
+                    raise OfficeRuntimeError("OFFICE_ACTIVE_CONTENT_UNSUPPORTED", "active Word element is outside passive rendering")
+                if element.tag == w + "fldSimple":
+                    check_instruction(element.get(w + "instr", ""))
+                elif element.tag == w + "fldChar":
+                    kind = element.get(w + "fldCharType")
+                    if kind == "begin":
+                        instructions.append("")
+                    elif kind in {"separate", "end"} and instructions:
+                        check_instruction(instructions[-1])
+                        if kind == "end":
+                            instructions.pop()
+                elif element.tag == w + "instrText":
+                    if not instructions:
+                        # Unbalanced field fragments cannot be interpreted safely.
+                        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "unbalanced Word field instruction")
+                    instructions[-1] += element.text or ""
+            for instruction in instructions:
+                check_instruction(instruction)
+            if name == "word/document.xml":
+                document = node
+        if main_targets != ["word/document.xml"] or document is None or document.tag != w + "document":
+            raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "unsupported Word main document relationship/namespace")
+        body = document.find(w + "body")
+        if body is None:
+            raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "Word document body missing")
+        return {"source_format": "docx", "source_body_paragraph_count": sum(1 for _ in body.iter(w + "p")),
+                "source_body_table_count": sum(1 for _ in body.iter(w + "tbl")),
+                "source_section_count": sum(1 for _ in body.iter(w + "sectPr"))}
+
+
 def render_pptx_pdf(source, render_lock, output_dir, *, timeout_seconds=60):
     """Render a byte-identical disposable PPTX with frozen engine/font identities."""
+    return _render_office_pdf(source, render_lock, output_dir, document_format="pptx", timeout_seconds=timeout_seconds)
+
+
+def render_docx_pdf(source, render_lock, output_dir, *, timeout_seconds=60):
+    """Render passive Word text/tables/notes with the explicit DOCX font lock."""
+    return _render_office_pdf(source, render_lock, output_dir, document_format="docx", timeout_seconds=timeout_seconds)
+
+
+def _render_office_pdf(source, render_lock, output_dir, *, document_format, timeout_seconds):
+    word = document_format == "docx"
+    profile_name = DOCX_RENDER_PROFILE if word else RENDER_PROFILE
+    export_filter = DOCX_RENDER_FILTER if word else RENDER_FILTER
+    source_name = "document.docx" if word else "presentation.pptx"
+    pdf_name = "document.pdf" if word else "presentation.pdf"
     source = Path(source)
-    if source.is_symlink() or source.suffix.lower() != ".pptx":
-        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "PPTX source must be a regular non-symlink file")
+    if source.is_symlink() or source.suffix.lower() != "." + document_format:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "Office source must be a regular file of the declared format")
     source = source.resolve(strict=True)
     if not source.is_file() or source.stat().st_size > MAX_INPUT_BYTES:
         raise OfficeRuntimeError("OFFICE_INPUT_LIMIT", "presentation unavailable or too large")
     binary = validate_office_render_lock(render_lock)
+    if render_lock["profile"] != profile_name:
+        raise OfficeRuntimeError("OFFICE_RENDER_PROFILE_MISMATCH", "render lock does not authorize this document format")
     data = source.read_bytes()
+    if len(data) > MAX_INPUT_BYTES:
+        raise OfficeRuntimeError("OFFICE_INPUT_LIMIT", "Office input grew beyond rendering limit")
     original_sha = hashlib.sha256(data).hexdigest()
-    source_info = _inspect_render_package(data)
+    source_info = _inspect_docx_render_package(data) if word else _inspect_render_package(data)
     destination = Path(output_dir).resolve()
     destination.mkdir(parents=True, exist_ok=True)
     target, receipt = destination / "rendered.pdf", destination / "render-audit.json"
@@ -450,7 +584,7 @@ def render_pptx_pdf(source, render_lock, output_dir, *, timeout_seconds=60):
         incoming, outgoing, profile, fonts = (root / name for name in ("input", "output", "profile", "fonts"))
         for folder in (incoming, outgoing, profile, fonts):
             folder.mkdir()
-        (incoming / "presentation.pptx").write_bytes(data)
+        (incoming / source_name).write_bytes(data)
         for index, font in enumerate(render_lock["fonts"]):
             copied = fonts / (f"font-{index:02d}" + Path(font["path"]).suffix.lower())
             shutil.copyfile(font["path"], copied)
@@ -463,14 +597,14 @@ def render_pptx_pdf(source, render_lock, output_dir, *, timeout_seconds=60):
         fontconfig.write_bytes(ET.tostring(config, encoding="utf-8", xml_declaration=True))
         env = _environment(root)
         env.update(FONTCONFIG_FILE=str(fontconfig), SAL_FONTPATH_PRIVATE=str(fonts))
-        export = "pdf:impress_pdf_Export:" + json.dumps(RENDER_FILTER, separators=(",", ":"))
+        export = "pdf:" + ("writer_pdf_Export:" if word else "impress_pdf_Export:") + json.dumps(export_filter, separators=(",", ":"))
         command = [str(binary), "-env:UserInstallation=" + profile.as_uri(), "--headless", "--invisible", "--norestore",
-                   "--convert-to", export, "--outdir", str(outgoing), str(incoming / "presentation.pptx")]
+                   "--convert-to", export, "--outdir", str(outgoing), str(incoming / source_name)]
         try:
             result = subprocess.run(command, env=env, cwd=root, capture_output=True, timeout=timeout_seconds)
         except subprocess.TimeoutExpired as exc:
-            raise OfficeRuntimeError("OFFICE_RENDER_TIMEOUT", "trusted PPTX rendering did not complete") from exc
-        converted = outgoing / "presentation.pdf"
+            raise OfficeRuntimeError("OFFICE_RENDER_TIMEOUT", "trusted Office rendering did not complete") from exc
+        converted = outgoing / pdf_name
         if result.returncode or not converted.is_file():
             raise OfficeRuntimeError("OFFICE_RENDER_FAILED", result.stderr.decode("utf-8", errors="replace")[-1500:])
         derived = converted.read_bytes()
@@ -480,16 +614,16 @@ def render_pptx_pdf(source, render_lock, output_dir, *, timeout_seconds=60):
         stderr = result.stderr.decode("utf-8", errors="replace")[-4000:]
     validate_office_render_lock(render_lock)
     if sha(source) != original_sha:
-        raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "source presentation changed during rendering")
+        raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "source Office document changed during rendering")
     with target.open("xb") as handle:
         handle.write(derived)
-    audit = {"schema_version": RENDER_AUDIT_SCHEMA, "profile": RENDER_PROFILE,
+    audit = {"schema_version": DOCX_RENDER_AUDIT_SCHEMA if word else RENDER_AUDIT_SCHEMA, "profile": profile_name,
              "engine_version": render_lock["office_runtime"]["engine_version"],
              "executable_sha256": render_lock["office_runtime"]["executable_sha256"],
              "render_lock_sha256": office_render_lock_digest(render_lock),
              "font_assets": [{key: font[key] for key in ("sha256", "size")} for font in render_lock["fonts"]],
              "source_sha256": original_sha, "derived_sha256": sha(target), "source_unchanged": True,
-             "environment_profile": "isolated-fontconfig/v1", "export_filter": RENDER_FILTER,
+             "environment_profile": "isolated-fontconfig/v1", "export_filter": export_filter,
              **source_info, "stdout": stdout, "stderr": stderr,
              "limit": "PDF conversion only; page count, visual fit, font usage, editability and semantic correctness need independent checks."}
     with receipt.open("x", encoding="utf-8") as handle:

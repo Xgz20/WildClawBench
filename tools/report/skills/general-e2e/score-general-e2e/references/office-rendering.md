@@ -1,4 +1,4 @@
-# 可信PPTX渲染
+# 可信Office渲染
 
 score-general-e2e 0.14.0、grading-core 0.6.0支持把PPTX的一次性原字节副本转换为PDF。任务私有frontmatter声明`scoring_runtime: {office: true, office_render: true}`；生成器、静态门禁和分包器验证两个boolean，`office_render: true`必须同时声明`office: true`。这些字段不进入被测端输入、Skills或Env，旧任务不增加依赖。
 
@@ -41,3 +41,13 @@ Worker把两个运行时锁及`worker/derived/`派生文件加入证据。语义
 `verify-score --archived`不要求原引擎和字体仍存在，但继续检查完整锁结构及全部绑定字节，不重新渲染或改变旧分数。PDF文本查询仍要求**冻结评分CLI解释器**具备pypdf；转换用的规则Worker可只用标准库。文字提取不等于视觉检查，API文本包不能证明遮挡、图像含义或原生可编辑性。
 
 当前macOS作者验证通过实际受管LibreOfficeDev 26.8.0.0.alpha0渲染仓库一份现有4页PPTX，锁定一份CJK字体与127份Office内置字体。原件未变，实际4页PDF、页文本与字体名已独立核对，全部4页已渲染为PNG检查。另将末页设为隐藏的QA变体仍导出4页、包含该页文字，8段仅在备注中的文字未进入PDF。伪转换器回归只验证运行时、依赖和归档绑定，不证明版式正确。尚未据此完成H005素材、GT、独立语义评分、四端兼容或难度校准。
+
+## Word渲染
+
+score-general-e2e 0.18.0、grading-core 0.10.0新增`render_docx_pdf(source, render_lock, output_dir, timeout_seconds=60)`。先用同一bootstrap命令加`--document-format docx`生成Word锁，再在受管规则中调用；任务私有`scoring_runtime`仍声明`{office: true, office_render: true}`。Python API用`create_office_render_lock(..., document_format="docx")`。锁schema仍为v1，Word的Profile为`offline-docx-to-pdf-with-fonts/v1`；省略format仍产生原PPTX Profile，旧题与旧helper无须修改。两种导出函数拒绝另一种格式的锁，不能仅改文件扩展名或沿用PPTX导出选项。
+
+Word导出使用`writer_pdf_Export`，固定`ExportNotes=false`、`ExportNotesInMargin=false`、`ExportFormFields=false`、`IsSkipEmptyPages=false`，不导出评论及交互表单；脚注与尾注是正文内容，仍会呈现。原始DOCX字节复制到一次性目录，不先修订文字、接受修订或补算字段。Writer对字段、修订显示及字体替换的实际行为需要题目另行核验，不能据导出成功推断已保留全部语义。
+
+此Profile接收被动Word正文、原生表格、注释部件及内部图片。预检验证OPC主关系、包内关系目标、唯一ID、XML与大小边界；普通超链接保留但不点击。宏、ActiveX、OLE/嵌入包、altChunk/子文档、外部模板/图片及DDE、INCLUDETEXT、INCLUDEPICTURE、LINK、DATABASE等主动字段明确拒绝。复杂字段会按实际指令片段组合检查，不能靠拆分`instrText`绕过。它是受信任数据集的离线输入Profile，不是恶意Office文件安全沙箱；超出范围的输入由任务契约明确分类，不应由基础设施擅自补能力零分。
+
+`wildclawbench.office-docx-render/v1`回执保留源/PDF SHA、Office身份、Word字体锁摘要、字体清单、固定导出选项及正文段落/表格/节声明数量。这些数量来自主文档XML，不含脚注部件，不是页数或可用性分。来源必须属于冻结候选或私有参考的实际DOCX；归档时重新解析该原件核对摘要，不能仅重新索引一份篡改回执。正常运行核验实际引擎/字体，`verify-score --archived`只验证锁结构与绑定字节，不要求引擎仍在、不重新转换。派生PDF与回执继续通过原Worker目录、语义catalog及归档证据机制收口。

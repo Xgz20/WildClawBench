@@ -14,6 +14,8 @@ score-general-e2e 0.15.0装配core 0.7.0，新增`read_embedded_xlsx()`、`extra
 
 score-general-e2e 0.17.0装配core 0.9.0，`extract_native_text()`增加DOCX声明网格/合并区间及脚注、尾注关系链。DOCX提取引擎为`wildclawbench.docx-text/v1`；保留原段落和物理单元格locator，但新增结构记录会改变记录序号、总数及投影SHA。缺关系/部件/注释、外部目标分开记录，不通过匹配注释文字猜挂接；结构声明不证明版式、可编辑性或显示编号，嵌套表拓扑不展开。公开API签名与其它格式不变，历史attempt仍用冻结入口。详见[原生文件文本证据](native-text-evidence.md#word结构证据)。
 
+score-general-e2e 0.18.0装配core 0.10.0，新增`render_docx_pdf()`；`create_office_render_lock(..., document_format="docx")`生成独立Word Profile，默认仍为PPTX。两种Profile共用引擎/字体身份结构与归档校验方式，互不授权另一种格式导出；旧PPTX锁及私有helper不需迁移。DOCX回执按冻结原件重新核对主文档结构摘要，不虚构源页数；宏/嵌入、外部数据与主动字段明确拒绝。详见[可信Office渲染](office-rendering.md#word渲染)。
+
 发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。规则/索引/结果校验及合分、DOCX/XLSX/PPTX文本投影只使用Python标准库，PDF投影按需使用评分CLI解释器中的pypdf。任务规则所需的PyYAML、Playwright和Chromium属于G3-02专用评分虚拟环境，不因原生证据提取而安装到被测项目。
 
 ## 公开 API
