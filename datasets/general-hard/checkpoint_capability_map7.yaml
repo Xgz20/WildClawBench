@@ -198,3 +198,16 @@ general_hard_office_documents_task_015_board_decision_pack:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_office_documents_task_016_docx_structure_repair:
+  automated.business_correctness:
+    - data_processing
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - verification_delivery
+  llm_judge.decision_grounding:
+    - data_processing
+  llm_judge.usable_handoff:
+    - verification_delivery

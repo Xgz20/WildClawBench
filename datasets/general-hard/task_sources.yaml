@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 16
+  active_task_count: 17
   category_task_counts:
-    office_documents: 14
+    office_documents: 15
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -573,3 +573,17 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_016_docx_structure_repair
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false

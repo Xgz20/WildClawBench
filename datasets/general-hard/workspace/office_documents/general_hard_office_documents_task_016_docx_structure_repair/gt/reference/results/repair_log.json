@@ -1,0 +1,132 @@
+{
+  "source": "damaged_styles.docx",
+  "result": "repaired.docx",
+  "repairs": [
+    {
+      "repair_id": "R01",
+      "problem": "heading_style",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0029",
+      "result_file": "repaired.docx",
+      "result_locator": "P0029",
+      "action": "恢复第三章的一级标题样式及大纲语义，保留原章文字和同一标题编号链。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R02",
+      "problem": "heading_level",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0049",
+      "result_file": "repaired.docx",
+      "result_locator": "P0049",
+      "action": "采样与复核属于第四章的第二节，恢复二级样式和大纲层级，不另起一级章。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R03",
+      "problem": "outline_override",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0080",
+      "result_file": "repaired.docx",
+      "result_locator": "P0080",
+      "action": "分级依据是二级标题，移除与其样式冲突的三级大纲覆盖。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R04",
+      "problem": "heading_numbering_instance",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0057",
+      "result_file": "repaired.docx",
+      "result_locator": "P0057",
+      "action": "第五章重新接回连续主章多级编号实例，后续第六至十二章恢复连续编号。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R05",
+      "problem": "procedure_restart",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0063",
+      "result_file": "repaired.docx",
+      "result_locator": "P0063",
+      "action": "第三步接回办理步骤的独立连续列表，步骤序列恢复1至5，不在中途重启。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R06",
+      "problem": "heading_numbering_level",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0103",
+      "result_file": "repaired.docx",
+      "result_locator": "P0103",
+      "action": "意见的办理状态使用二级编号级别，与二级样式及第九章上下文一致。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R07",
+      "problem": "toc_depth",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "TOC域及其目录条目",
+      "result_file": "repaired.docx",
+      "result_locator": "TOC域及其目录条目",
+      "action": "目录保留原生可更新TOC域并覆盖三级标题与附录，保留26个正确条目与原生页引用。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R08",
+      "problem": "caption_sequence",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0053",
+      "result_file": "repaired.docx",
+      "result_locator": "P0053",
+      "action": "采样复核记录的表题归入Table计数，不能与Figure计数混用，恢复全篇连续表号。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R09",
+      "problem": "caption_restart",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0083",
+      "result_file": "repaired.docx",
+      "result_locator": "P0083",
+      "action": "异常分级表题移除中途重置，继续全篇Table序列，后续表题一并保持连续。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R10",
+      "problem": "wrong_existing_reference",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0066",
+      "result_file": "repaired.docx",
+      "result_locator": "P0066",
+      "action": "采样记录引用改回采样复核记录表题的编号书签，不能仅引用一个存在但无关的职责表。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R11",
+      "problem": "missing_caption_bookmark",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "P0074",
+      "result_file": "repaired.docx",
+      "result_locator": "P0074",
+      "action": "在保留范围表题编号处恢复缺失书签，使原REF域重新指向该编号范围。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    },
+    {
+      "repair_id": "R12",
+      "problem": "toc_wrong_existing_anchor",
+      "source_file": "damaged_styles.docx",
+      "source_locator": "TOC条目 交接记录与证据",
+      "result_file": "repaired.docx",
+      "result_locator": "TOC条目 交接记录与证据",
+      "action": "目录第八章条目跳转恢复到交接记录与证据，不能指向第七章的现存书签。",
+      "preservation": "正文、180个段落标识、6表数据及顺序、6批注及其原文范围均保留；只恢复结构属性、域和链接关系。"
+    }
+  ],
+  "validation_scope": {
+    "native_structure": "标题样式和大纲、原生编号、TOC/SEQ/REF/PAGEREF、书签目标、数据与评论范围关系已核对",
+    "rendering": "同一字节干净原稿经锁定版本的Office渲染为18页；未在Microsoft Word桌面版执行GUI更新测试",
+    "comments": "以真实comments.xml、关系、起止范围和commentReference核对，不从PDF是否显示批注作判断"
+  },
+  "remaining": "不同编辑器的域刷新和实际打开行为需要在接收环境核对；本文不宣称全部客户端兼容已验证。"
+}

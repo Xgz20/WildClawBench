@@ -1,0 +1,174 @@
+{
+  "status": "clean_source_graph_and_injection_contract",
+  "defects": [
+    {
+      "id": "D01",
+      "kind": "heading_style",
+      "target": "chapter_03",
+      "change": "Normal"
+    },
+    {
+      "id": "D02",
+      "kind": "heading_level",
+      "target": "scope_04_02",
+      "change": "Heading1"
+    },
+    {
+      "id": "D03",
+      "kind": "outline_override",
+      "target": "scope_07_01",
+      "change": 2
+    },
+    {
+      "id": "D04",
+      "kind": "heading_numbering_instance",
+      "target": "chapter_05",
+      "change": 99
+    },
+    {
+      "id": "D05",
+      "kind": "procedure_restart",
+      "target": "step_3",
+      "change": 98
+    },
+    {
+      "id": "D06",
+      "kind": "heading_numbering_level",
+      "target": "scope_09_01",
+      "change": 2
+    },
+    {
+      "id": "D07",
+      "kind": "toc_depth",
+      "target": "contents",
+      "change": "TOC \\o \"1-1\" \\h \\z"
+    },
+    {
+      "id": "D08",
+      "kind": "caption_sequence",
+      "target": "T03",
+      "change": "SEQ Figure \\* ARABIC"
+    },
+    {
+      "id": "D09",
+      "kind": "caption_restart",
+      "target": "T05",
+      "change": "SEQ Table \\r 1 \\* ARABIC"
+    },
+    {
+      "id": "D10",
+      "kind": "wrong_existing_reference",
+      "target": "sampling_reference",
+      "change": "caption_T02"
+    },
+    {
+      "id": "D11",
+      "kind": "missing_caption_bookmark",
+      "target": "T04",
+      "change": "remove_number_bookmark_only"
+    },
+    {
+      "id": "D12",
+      "kind": "toc_wrong_existing_anchor",
+      "target": "chapter_08",
+      "change": "chapter_07"
+    }
+  ],
+  "source_mutations": [
+    {
+      "defect_id": "D01",
+      "kind": "heading_style",
+      "target_key": "chapter_03",
+      "source_paragraph_id": "P0029"
+    },
+    {
+      "defect_id": "D02",
+      "kind": "heading_level",
+      "target_key": "scope_04_02",
+      "source_paragraph_id": "P0049"
+    },
+    {
+      "defect_id": "D03",
+      "kind": "outline_override",
+      "target_key": "scope_07_01",
+      "source_paragraph_id": "P0080"
+    },
+    {
+      "defect_id": "D04",
+      "kind": "heading_numbering_instance",
+      "target_key": "chapter_05",
+      "source_paragraph_id": "P0057"
+    },
+    {
+      "defect_id": "D05",
+      "kind": "procedure_restart",
+      "target_key": "step_3",
+      "source_paragraph_id": "P0063"
+    },
+    {
+      "defect_id": "D06",
+      "kind": "heading_numbering_level",
+      "target_key": "scope_09_01",
+      "source_paragraph_id": "P0103"
+    },
+    {
+      "defect_id": "D07",
+      "kind": "toc_depth",
+      "target_key": "contents",
+      "source_paragraph_id": null
+    },
+    {
+      "defect_id": "D08",
+      "kind": "caption_sequence",
+      "target_key": "T03",
+      "source_paragraph_id": "P0053"
+    },
+    {
+      "defect_id": "D09",
+      "kind": "caption_restart",
+      "target_key": "T05",
+      "source_paragraph_id": "P0083"
+    },
+    {
+      "defect_id": "D10",
+      "kind": "wrong_existing_reference",
+      "target_key": "sampling_reference",
+      "source_paragraph_id": "P0066"
+    },
+    {
+      "defect_id": "D11",
+      "kind": "missing_caption_bookmark",
+      "target_key": "T04",
+      "source_paragraph_id": "P0074"
+    },
+    {
+      "defect_id": "D12",
+      "kind": "toc_wrong_existing_anchor",
+      "target_key": "chapter_08",
+      "source_paragraph_id": "P0090"
+    }
+  ],
+  "repaired_file_sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e",
+  "protection": "static text/order and native data/comment anchoring preserved; cached field displays are mutable only as structural results",
+  "field_targets": [
+    {
+      "paragraph": "P0066",
+      "target_paragraph": "P0053",
+      "target_table": "T03",
+      "computed": "3"
+    },
+    {
+      "paragraph": "P0086",
+      "target_paragraph": "P0074",
+      "target_table": "T04",
+      "computed": "4"
+    },
+    {
+      "paragraph": "P0096",
+      "target_paragraph": "P0079",
+      "target_table": null,
+      "computed": "7"
+    }
+  ],
+  "limit": "author clean manuscript reference, independently parsed before copying reference; not an independent semantic or Harness score"
+}
