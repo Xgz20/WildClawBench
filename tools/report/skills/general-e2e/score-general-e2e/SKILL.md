@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.20.0`增加显式Word/PPTX双格式渲染锁：`bootstrap-office-render --document-format both`冻结v2锁，共享一个引擎和一份字体清单，两类PDF分别保留原格式的固定导出选项、来源和回执，并共同绑定完整v2锁SHA。新helper的`office_render_lock_formats()`给出实际授权格式；正常与归档核验逐份核对Word结构及PPTX页/内嵌表声明。默认仍为原PPTX v1锁，`docx`仍为原Word v1锁，不自动扩大旧锁或旧私有helper的能力。详见[双格式渲染](references/office-rendering.md#word与pptx共同渲染)。
+
 `0.19.0`增加可归档的XLSX数值输入扰动链：`prepare_xlsx_counterfactual()`只在一次性副本修改已存在的数值输入，保留公式和其余部件；随后由原锁定Office清缓存重算。回执记录冻结源、实际输入单元格/原值/新值、变体与重算产物。正常及归档核验重新对照源包，拒绝未声明的公式/缓存/其它部件变更；归档不要求Office仍存在。任务作者仍须独立计算扰动后的业务真值，不能把“有公式”或导出成功当成模型正确。详见[数值输入扰动](references/office-recalculation.md#数值输入扰动)。
 
 `0.18.0`增加独立DOCX可信渲染Profile：`bootstrap-office-render --document-format docx`冻结Word字体锁，`render_docx_pdf()`在受管Worker内对原字节副本执行Writer PDF导出。回执绑定原Word、声明结构摘要、PDF、引擎、字体和固定选项；正常与归档核验按冻结候选/私有参考重新检查来源。PPTX默认Profile及旧helper保持兼容；两种渲染锁不能混用。Word宏、嵌入对象、外部素材及主动字段超出此离线Profile，明确报错；环境和转换失败不补能力零分。详见[可信Office渲染](references/office-rendering.md)。

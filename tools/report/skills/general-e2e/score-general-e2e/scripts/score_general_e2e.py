@@ -2314,7 +2314,7 @@ def bootstrap_office_runtime(executable: Path, output: Path, runtime_lock_path: 
 def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Path], output: Path, runtime_lock_path: Path,
                                    font_directories: list[Path] | None = None, document_format: str = "pptx") -> dict:
     _import_grading_core()
-    from wildclawbench_grading_core import OfficeRuntimeError, create_office_render_lock
+    from wildclawbench_grading_core import OfficeRuntimeError, create_office_render_lock, office_render_lock_formats
     office = _load_office_runtime(office_lock_path)
     try:
         render = create_office_render_lock(office, font_files, font_directories=font_directories or (), document_format=document_format)
@@ -2327,7 +2327,7 @@ def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Pat
     _write_new_json(output, value)
     return {"status": "PASS", "runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
             "font_count": len(render["fonts"]), "engine_version": office["engine_version"],
-            "document_format": document_format, "profile": render["profile"]}
+            "document_format": document_format, "document_formats": list(office_render_lock_formats(render)), "profile": render["profile"]}
 
 
 def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
@@ -2432,7 +2432,8 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
             from wildclawbench_grading_core.office_runtime import (
                 RENDER_AUDIT_SCHEMA, RENDER_PROFILE, RENDER_FILTER, office_render_lock_digest,
                 DOCX_RENDER_AUDIT_SCHEMA, DOCX_RENDER_PROFILE, DOCX_RENDER_FILTER,
-                OfficeRuntimeError, _inspect_docx_render_package,
+                OfficeRuntimeError, _inspect_docx_render_package, _inspect_render_package,
+                MULTI_RENDER_LOCK_SCHEMA, office_render_lock_formats,
             )
             receipt_path = root / artifact["path"]
             receipt = _read_json(receipt_path, code="OFFICE_RENDER_AUDIT_INVALID")
@@ -2448,11 +2449,17 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
                 except (OfficeRuntimeError, ValueError, zipfile.BadZipFile) as exc:
                     raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", str(exc)) from exc
                 source_valid = all(receipt.get(key) == value and type(receipt.get(key)) is type(value) for key, value in source_info.items())
+            elif not is_word and isinstance(source_hash, str) and source_hash in presentations and render_lock is not None and render_lock.get("schema_version") == MULTI_RENDER_LOCK_SCHEMA:
+                try:
+                    source_info = _inspect_render_package(presentations[source_hash].read_bytes())
+                except (OfficeRuntimeError, ValueError, zipfile.BadZipFile) as exc:
+                    raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", str(exc)) from exc
+                source_valid = all(receipt.get(key) == value and type(receipt.get(key)) is type(value) for key, value in source_info.items())
             else:
                 source_valid = (not is_word and isinstance(source_hash, str) and source_hash in presentation_hashes
                                 and type(receipt.get("source_slide_count")) is int and receipt["source_slide_count"] > 0)
             if (render_lock is None or receipt.get("schema_version") not in (RENDER_AUDIT_SCHEMA, DOCX_RENDER_AUDIT_SCHEMA)
-                    or receipt.get("profile") != expected_profile or render_lock.get("profile") != expected_profile
+                    or receipt.get("profile") != expected_profile or ("docx" if is_word else "pptx") not in office_render_lock_formats(render_lock)
                     or receipt.get("engine_version") != lock["engine_version"] or receipt.get("executable_sha256") != lock["executable_sha256"]
                     or receipt.get("render_lock_sha256") != office_render_lock_digest(render_lock) or receipt.get("source_unchanged") is not True
                     or not source_valid or receipt.get("export_filter") != expected_filter
@@ -5940,7 +5947,7 @@ def main(argv: list[str] | None = None) -> int:
     render.add_argument("--font-directory", action="append", type=Path, default=[])
     render.add_argument("--runtime-lock", required=True, type=Path)
     render.add_argument("--output", required=True, type=Path)
-    render.add_argument("--document-format", choices=("pptx", "docx"), default="pptx")
+    render.add_argument("--document-format", choices=("pptx", "docx", "both"), default="pptx")
 
     prepare_semantics = subparsers.add_parser("prepare-semantics")
     prepare_semantics.add_argument("--attempt-root", required=True, type=Path)

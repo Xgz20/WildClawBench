@@ -522,7 +522,7 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external']}
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(payload["version"], "0.11.0")
+        self.assertEqual(payload["version"], "0.12.0")
         self.assertEqual(
             {item["distribution"] for item in payload["external"]},
             {"PyYAML", "playwright"},

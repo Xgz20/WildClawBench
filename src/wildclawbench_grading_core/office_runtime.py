@@ -28,6 +28,8 @@ S = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
 MAX_INPUT_BYTES = 32 * 1024 * 1024
 MAX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 RENDER_LOCK_SCHEMA = "wildclawbench.office-render-runtime-lock/v1"
+MULTI_RENDER_LOCK_SCHEMA = "wildclawbench.office-render-runtime-lock/v2"
+MULTI_RENDER_PROFILE = "offline-docx-pptx-to-pdf-with-fonts/v1"
 RENDER_AUDIT_SCHEMA = "wildclawbench.office-pptx-render/v1"
 RENDER_PROFILE = "offline-pptx-to-pdf-with-fonts/v1"
 DOCX_RENDER_AUDIT_SCHEMA = "wildclawbench.office-docx-render/v1"
@@ -447,7 +449,7 @@ def _font_directory_files(directory):
 
 def create_office_render_lock(office_lock, font_files, *, font_directories=(), document_format="pptx"):
     """Bind separately supplied font assets without changing the XLSX lock."""
-    if document_format not in {"pptx", "docx"}:
+    if document_format not in {"pptx", "docx", "both"}:
         raise OfficeRuntimeError("OFFICE_RENDER_LOCK_INVALID", "unsupported render document format")
     validate_office_lock(office_lock)
     directories = []
@@ -471,7 +473,8 @@ def create_office_render_lock(office_lock, font_files, *, font_directories=(), d
             raise OfficeRuntimeError("OFFICE_RENDER_FONT_INVALID", "invalid font type, size or inventory limit")
         fonts.append({"path": str(path), "sha256": sha(path), "size": path.stat().st_size})
     fonts.sort(key=lambda item: item["path"])
-    lock = {"schema_version": RENDER_LOCK_SCHEMA, "profile": RENDER_PROFILE if document_format == "pptx" else DOCX_RENDER_PROFILE,
+    lock = {"schema_version": MULTI_RENDER_LOCK_SCHEMA if document_format == "both" else RENDER_LOCK_SCHEMA,
+            "profile": MULTI_RENDER_PROFILE if document_format == "both" else RENDER_PROFILE if document_format == "pptx" else DOCX_RENDER_PROFILE,
             "office_runtime": dict(office_lock), "fonts": fonts, "font_directories": directories}
     validate_office_render_lock(lock)
     return lock
@@ -479,7 +482,8 @@ def create_office_render_lock(office_lock, font_files, *, font_directories=(), d
 
 def validate_office_render_lock(lock, *, require_files=True):
     if (not isinstance(lock, dict) or set(lock) != {"schema_version", "profile", "office_runtime", "fonts", "font_directories"}
-            or lock.get("schema_version") != RENDER_LOCK_SCHEMA or lock.get("profile") not in (RENDER_PROFILE, DOCX_RENDER_PROFILE)
+            or not ((lock.get("schema_version") == RENDER_LOCK_SCHEMA and lock.get("profile") in (RENDER_PROFILE, DOCX_RENDER_PROFILE))
+                    or (lock.get("schema_version") == MULTI_RENDER_LOCK_SCHEMA and lock.get("profile") == MULTI_RENDER_PROFILE))
             or not isinstance(lock.get("fonts"), list) or not 1 <= len(lock["fonts"]) <= 512
             or not isinstance(lock.get("font_directories"), list) or len(lock["font_directories"]) > 16
             or any(not isinstance(path, str) or not Path(path).is_absolute() for path in lock["font_directories"])
@@ -508,6 +512,14 @@ def validate_office_render_lock(lock, *, require_files=True):
             if _font_directory_files(directory) != expected:
                 raise OfficeRuntimeError("OFFICE_RENDER_FONT_DRIFT", "font directory membership changed")
     return binary
+
+
+def office_render_lock_formats(lock):
+    """Return only explicitly authorized formats; no extension-based widening."""
+    validate_office_render_lock(lock, require_files=False)
+    if lock["schema_version"] == MULTI_RENDER_LOCK_SCHEMA:
+        return ("docx", "pptx")
+    return ("docx",) if lock["profile"] == DOCX_RENDER_PROFILE else ("pptx",)
 
 
 def _inspect_render_package(data):
@@ -711,7 +723,7 @@ def _render_office_pdf(source, render_lock, output_dir, *, document_format, time
     if not source.is_file() or source.stat().st_size > MAX_INPUT_BYTES:
         raise OfficeRuntimeError("OFFICE_INPUT_LIMIT", "presentation unavailable or too large")
     binary = validate_office_render_lock(render_lock)
-    if render_lock["profile"] != profile_name:
+    if document_format not in office_render_lock_formats(render_lock):
         raise OfficeRuntimeError("OFFICE_RENDER_PROFILE_MISMATCH", "render lock does not authorize this document format")
     data = source.read_bytes()
     if len(data) > MAX_INPUT_BYTES:

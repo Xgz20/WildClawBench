@@ -9,11 +9,12 @@ from .native_text import NativeTextError, extract_native_text, is_native_text_fo
 from .office_runtime import OfficeRuntimeError, create_office_lock, validate_office_lock, recalculate_xlsx
 from .office_runtime import create_office_render_lock, validate_office_render_lock, office_render_lock_digest, render_pptx_pdf
 from .office_runtime import render_docx_pdf
+from .office_runtime import office_render_lock_formats
 from .office_runtime import read_embedded_xlsx, extract_embedded_xlsx
 from .office_runtime import prepare_xlsx_counterfactual, verify_xlsx_counterfactual
 from .image_evidence import ImageEvidenceError, is_image_evidence_format, read_image_evidence
 
-CORE_VERSION = "0.11.0"
+CORE_VERSION = "0.12.0"
 
 __all__ = (
     "CORE_VERSION",
@@ -35,6 +36,7 @@ __all__ = (
     "office_render_lock_digest",
     "render_pptx_pdf",
     "render_docx_pdf",
+    "office_render_lock_formats",
     "read_embedded_xlsx",
     "extract_embedded_xlsx",
     "prepare_xlsx_counterfactual",
