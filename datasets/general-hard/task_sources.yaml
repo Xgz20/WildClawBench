@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 12
+  active_task_count: 13
   category_task_counts:
-    office_documents: 10
+    office_documents: 11
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -460,6 +460,32 @@ tasks:
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_011_linked_report_update
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-03579cc5acf09da5
+          query_hash: 03579cc5acf09da55aae85d2f2bdbf4891a888869c65e9984b847d972f05c3da
+          observed_astudio_turns: 2
+          distinct_users: 1
+          distinct_sessions: 2
+          first_seen_local: '2026-09-26 02:34:06.967000'
+          last_seen_local: '2026-09-26 03:06:52.021000'
+          intent_summary: 将经营与财务诊断材料整理为管理层汇报幻灯片，强调数字、现金流与风险。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确，原型沿用已接受的清洗蓝图；作者模型据其主目标与输入依赖改编合成用例；不等同生产结果正确、人工专家审阅或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - ssb2
       direct_task_copy: false
     network:
       mode: offline

@@ -1,0 +1,3725 @@
+{
+  "schema_version": "h011-business-oracle/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "source_numeric_truth_sha256": "2a62722ed31d2270d3fcaca3d2776fa9c8cf4a42671e6dfa71ee6a8374206c59",
+  "semantic_nodes": {
+    "word/paragraph/P10": {
+      "id": "word/paragraph/P10",
+      "kind": "semantic_or_constraint",
+      "locator": "paragraph:4",
+      "deps": [
+        "compare/YTD/REV_YOY",
+        "compare/YTD/OP_YOY"
+      ],
+      "before": {
+        "revenue_yoy": "negative",
+        "op_yoy": "negative"
+      },
+      "after": {
+        "revenue_yoy": "positive",
+        "op_yoy": "positive"
+      },
+      "rule": "Numeric values and corresponding direction claims must agree with both restated periods."
+    },
+    "word/cash-direction": {
+      "id": "word/cash-direction",
+      "kind": "semantic_or_constraint",
+      "locator": "paragraph:10",
+      "deps": [
+        "group/2026-Q2/OCF",
+        "group/2026-YTD/OCF"
+      ],
+      "before": {
+        "q2": "positive",
+        "ytd": "positive"
+      },
+      "after": {
+        "q2": "negative",
+        "ytd": "positive"
+      },
+      "rule": "Q2 negative does not mean the YTD or whole year is negative."
+    },
+    "pptx/cash-direction": {
+      "id": "pptx/cash-direction",
+      "kind": "semantic_or_constraint",
+      "locator": "slide:4/notes/shape:3/paragraph:1",
+      "deps": [
+        "group/2026-Q2/OCF",
+        "group/2026-YTD/OCF"
+      ],
+      "before": {
+        "q2": "positive",
+        "ytd": "positive"
+      },
+      "after": {
+        "q2": "negative",
+        "ytd": "positive"
+      },
+      "rule": "Q2 negative does not mean the YTD or whole year is negative."
+    },
+    "pptx/revenue-direction": {
+      "id": "pptx/revenue-direction",
+      "kind": "semantic_or_constraint",
+      "locator": "slide:1/shape:8/paragraph:1",
+      "deps": [
+        "compare/YTD/REV_YOY"
+      ],
+      "before": "negative",
+      "after": "positive",
+      "rule": "Update visible direction words as well as displayed percentages."
+    },
+    "word/paragraph/P21": {
+      "id": "word/paragraph/P21",
+      "kind": "semantic_or_constraint",
+      "locator": "paragraph:11",
+      "deps": [
+        "group/2026-YTD/AR"
+      ],
+      "before": "480000",
+      "after": "420000",
+      "rule": "AR is a point-in-time balance, not the sum of monthly balances."
+    },
+    "pptx/chart/CASH_QUARTER/axis": {
+      "id": "pptx/chart/CASH_QUARTER/axis",
+      "kind": "semantic_or_constraint",
+      "locator": "slide:4/shape:6/chart:1",
+      "deps": [
+        "group/2026-Q2/OCF"
+      ],
+      "before": {
+        "axis_min": "0"
+      },
+      "after": {
+        "axis_min_maximum": -3,
+        "auto_axis_allowed": true
+      },
+      "rule": "Negative Q2 cash bar must be actually visible; remove or lower the old zero minimum."
+    }
+  },
+  "complete_graph": {
+    "raw/2025-01/REV": {
+      "id": "raw/2025-01/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E6",
+      "value": "1800000",
+      "deps": []
+    },
+    "raw/2025-01/COGS": {
+      "id": "raw/2025-01/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F6",
+      "value": "1200000",
+      "deps": []
+    },
+    "raw/2025-01/OPEX": {
+      "id": "raw/2025-01/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G6",
+      "value": "260000",
+      "deps": []
+    },
+    "raw/2025-01/OCF": {
+      "id": "raw/2025-01/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H6",
+      "value": "50000",
+      "deps": []
+    },
+    "raw/2025-01/AR": {
+      "id": "raw/2025-01/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I6",
+      "value": "400000",
+      "deps": []
+    },
+    "raw/2025-02/REV": {
+      "id": "raw/2025-02/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E7",
+      "value": "1900000",
+      "deps": []
+    },
+    "raw/2025-02/COGS": {
+      "id": "raw/2025-02/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F7",
+      "value": "1300000",
+      "deps": []
+    },
+    "raw/2025-02/OPEX": {
+      "id": "raw/2025-02/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G7",
+      "value": "250000",
+      "deps": []
+    },
+    "raw/2025-02/OCF": {
+      "id": "raw/2025-02/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H7",
+      "value": "45000",
+      "deps": []
+    },
+    "raw/2025-02/AR": {
+      "id": "raw/2025-02/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I7",
+      "value": "430000",
+      "deps": []
+    },
+    "raw/2025-03/REV": {
+      "id": "raw/2025-03/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E8",
+      "value": "1700000",
+      "deps": []
+    },
+    "raw/2025-03/COGS": {
+      "id": "raw/2025-03/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F8",
+      "value": "1160000",
+      "deps": []
+    },
+    "raw/2025-03/OPEX": {
+      "id": "raw/2025-03/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G8",
+      "value": "270000",
+      "deps": []
+    },
+    "raw/2025-03/OCF": {
+      "id": "raw/2025-03/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H8",
+      "value": "55000",
+      "deps": []
+    },
+    "raw/2025-03/AR": {
+      "id": "raw/2025-03/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I8",
+      "value": "420000",
+      "deps": []
+    },
+    "raw/2025-04/REV": {
+      "id": "raw/2025-04/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E9",
+      "value": "1700000",
+      "deps": []
+    },
+    "raw/2025-04/COGS": {
+      "id": "raw/2025-04/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F9",
+      "value": "1180000",
+      "deps": []
+    },
+    "raw/2025-04/OPEX": {
+      "id": "raw/2025-04/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G9",
+      "value": "260000",
+      "deps": []
+    },
+    "raw/2025-04/OCF": {
+      "id": "raw/2025-04/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H9",
+      "value": "60000",
+      "deps": []
+    },
+    "raw/2025-04/AR": {
+      "id": "raw/2025-04/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I9",
+      "value": "450000",
+      "deps": []
+    },
+    "raw/2025-05/REV": {
+      "id": "raw/2025-05/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E10",
+      "value": "2000000",
+      "deps": []
+    },
+    "raw/2025-05/COGS": {
+      "id": "raw/2025-05/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F10",
+      "value": "1350000",
+      "deps": []
+    },
+    "raw/2025-05/OPEX": {
+      "id": "raw/2025-05/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G10",
+      "value": "280000",
+      "deps": []
+    },
+    "raw/2025-05/OCF": {
+      "id": "raw/2025-05/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H10",
+      "value": "-10000",
+      "deps": []
+    },
+    "raw/2025-05/AR": {
+      "id": "raw/2025-05/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I10",
+      "value": "460000",
+      "deps": []
+    },
+    "raw/2025-06/REV": {
+      "id": "raw/2025-06/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E11",
+      "value": "1850000",
+      "deps": []
+    },
+    "raw/2025-06/COGS": {
+      "id": "raw/2025-06/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F11",
+      "value": "1250000",
+      "deps": []
+    },
+    "raw/2025-06/OPEX": {
+      "id": "raw/2025-06/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G11",
+      "value": "270000",
+      "deps": []
+    },
+    "raw/2025-06/OCF": {
+      "id": "raw/2025-06/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H11",
+      "value": "80000",
+      "deps": []
+    },
+    "raw/2025-06/AR": {
+      "id": "raw/2025-06/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I11",
+      "value": "440000",
+      "deps": []
+    },
+    "raw/2025-07/REV": {
+      "id": "raw/2025-07/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E12",
+      "value": "2100000",
+      "deps": []
+    },
+    "raw/2025-07/COGS": {
+      "id": "raw/2025-07/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F12",
+      "value": "1450000",
+      "deps": []
+    },
+    "raw/2025-07/OPEX": {
+      "id": "raw/2025-07/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G12",
+      "value": "290000",
+      "deps": []
+    },
+    "raw/2025-07/OCF": {
+      "id": "raw/2025-07/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H12",
+      "value": "70000",
+      "deps": []
+    },
+    "raw/2025-07/AR": {
+      "id": "raw/2025-07/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I12",
+      "value": "480000",
+      "deps": []
+    },
+    "raw/2025-08/REV": {
+      "id": "raw/2025-08/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E13",
+      "value": "2000000",
+      "deps": []
+    },
+    "raw/2025-08/COGS": {
+      "id": "raw/2025-08/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F13",
+      "value": "1200000",
+      "deps": []
+    },
+    "raw/2025-08/OPEX": {
+      "id": "raw/2025-08/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G13",
+      "value": "280000",
+      "deps": []
+    },
+    "raw/2025-08/OCF": {
+      "id": "raw/2025-08/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H13",
+      "value": "65000",
+      "deps": []
+    },
+    "raw/2025-08/AR": {
+      "id": "raw/2025-08/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I13",
+      "value": "500000",
+      "deps": []
+    },
+    "raw/2025-09/REV": {
+      "id": "raw/2025-09/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E14",
+      "value": "2200000",
+      "deps": []
+    },
+    "raw/2025-09/COGS": {
+      "id": "raw/2025-09/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F14",
+      "value": "1550000",
+      "deps": []
+    },
+    "raw/2025-09/OPEX": {
+      "id": "raw/2025-09/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G14",
+      "value": "300000",
+      "deps": []
+    },
+    "raw/2025-09/OCF": {
+      "id": "raw/2025-09/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H14",
+      "value": "85000",
+      "deps": []
+    },
+    "raw/2025-09/AR": {
+      "id": "raw/2025-09/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I14",
+      "value": "510000",
+      "deps": []
+    },
+    "raw/2026-01/REV": {
+      "id": "raw/2026-01/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E15",
+      "value": "1750000",
+      "deps": []
+    },
+    "raw/2026-01/COGS": {
+      "id": "raw/2026-01/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F15",
+      "value": "1190000",
+      "deps": []
+    },
+    "raw/2026-01/OPEX": {
+      "id": "raw/2026-01/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G15",
+      "value": "270000",
+      "deps": []
+    },
+    "raw/2026-01/OCF": {
+      "id": "raw/2026-01/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H15",
+      "value": "30000",
+      "deps": []
+    },
+    "raw/2026-01/AR": {
+      "id": "raw/2026-01/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I15",
+      "value": "410000",
+      "deps": []
+    },
+    "raw/2026-02/REV": {
+      "id": "raw/2026-02/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E16",
+      "value": "1900000",
+      "deps": []
+    },
+    "raw/2026-02/COGS": {
+      "id": "raw/2026-02/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F16",
+      "value": "1300000",
+      "deps": []
+    },
+    "raw/2026-02/OPEX": {
+      "id": "raw/2026-02/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G16",
+      "value": "250000",
+      "deps": []
+    },
+    "raw/2026-02/OCF": {
+      "id": "raw/2026-02/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H16",
+      "value": "40000",
+      "deps": []
+    },
+    "raw/2026-02/AR": {
+      "id": "raw/2026-02/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I16",
+      "value": "420000",
+      "deps": []
+    },
+    "raw/2026-03/REV": {
+      "id": "raw/2026-03/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E17",
+      "value": "1650000",
+      "deps": []
+    },
+    "raw/2026-03/COGS": {
+      "id": "raw/2026-03/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F17",
+      "value": "1130000",
+      "deps": []
+    },
+    "raw/2026-03/OPEX": {
+      "id": "raw/2026-03/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G17",
+      "value": "260000",
+      "deps": []
+    },
+    "raw/2026-03/OCF": {
+      "id": "raw/2026-03/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H17",
+      "value": "-20000",
+      "deps": []
+    },
+    "raw/2026-03/AR": {
+      "id": "raw/2026-03/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I17",
+      "value": "400000",
+      "deps": []
+    },
+    "raw/2026-04/REV": {
+      "id": "raw/2026-04/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E18",
+      "value": "1800000",
+      "deps": []
+    },
+    "raw/2026-04/COGS": {
+      "id": "raw/2026-04/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F18",
+      "value": "1230000",
+      "deps": []
+    },
+    "raw/2026-04/OPEX": {
+      "id": "raw/2026-04/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G18",
+      "value": "270000",
+      "deps": []
+    },
+    "raw/2026-04/OCF": {
+      "id": "raw/2026-04/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H18",
+      "value": "40000",
+      "deps": []
+    },
+    "raw/2026-04/AR": {
+      "id": "raw/2026-04/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I18",
+      "value": "430000",
+      "deps": []
+    },
+    "raw/2026-05/REV": {
+      "id": "raw/2026-05/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E19",
+      "value": "1950000",
+      "deps": []
+    },
+    "raw/2026-05/COGS": {
+      "id": "raw/2026-05/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F19",
+      "value": "1320000",
+      "deps": []
+    },
+    "raw/2026-05/OPEX": {
+      "id": "raw/2026-05/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G19",
+      "value": "280000",
+      "deps": []
+    },
+    "raw/2026-05/OCF": {
+      "id": "raw/2026-05/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H19",
+      "value": "50000",
+      "deps": []
+    },
+    "raw/2026-05/AR": {
+      "id": "raw/2026-05/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I19",
+      "value": "440000",
+      "deps": []
+    },
+    "raw/2026-06/REV": {
+      "id": "raw/2026-06/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E20",
+      "value": "1900000",
+      "deps": []
+    },
+    "raw/2026-06/COGS": {
+      "id": "raw/2026-06/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F20",
+      "value": "1340000",
+      "deps": []
+    },
+    "raw/2026-06/OPEX": {
+      "id": "raw/2026-06/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G20",
+      "value": "290000",
+      "deps": []
+    },
+    "raw/2026-06/OCF": {
+      "id": "raw/2026-06/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H20",
+      "value": "80000",
+      "deps": []
+    },
+    "raw/2026-06/AR": {
+      "id": "raw/2026-06/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I20",
+      "value": "470000",
+      "deps": []
+    },
+    "raw/2026-07/REV": {
+      "id": "raw/2026-07/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E21",
+      "value": "2000000",
+      "deps": []
+    },
+    "raw/2026-07/COGS": {
+      "id": "raw/2026-07/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F21",
+      "value": "1350000",
+      "deps": []
+    },
+    "raw/2026-07/OPEX": {
+      "id": "raw/2026-07/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G21",
+      "value": "300000",
+      "deps": []
+    },
+    "raw/2026-07/OCF": {
+      "id": "raw/2026-07/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H21",
+      "value": "-60000",
+      "deps": []
+    },
+    "raw/2026-07/AR": {
+      "id": "raw/2026-07/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I21",
+      "value": "460000",
+      "deps": []
+    },
+    "raw/2026-08/REV": {
+      "id": "raw/2026-08/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E22",
+      "value": "2050000",
+      "deps": []
+    },
+    "raw/2026-08/COGS": {
+      "id": "raw/2026-08/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F22",
+      "value": "1390000",
+      "deps": []
+    },
+    "raw/2026-08/OPEX": {
+      "id": "raw/2026-08/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G22",
+      "value": "250000",
+      "deps": []
+    },
+    "raw/2026-08/OCF": {
+      "id": "raw/2026-08/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H22",
+      "value": "70000",
+      "deps": []
+    },
+    "raw/2026-08/AR": {
+      "id": "raw/2026-08/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I22",
+      "value": "450000",
+      "deps": []
+    },
+    "raw/2026-09/REV": {
+      "id": "raw/2026-09/REV",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "E23",
+      "value": "2200000",
+      "deps": []
+    },
+    "raw/2026-09/COGS": {
+      "id": "raw/2026-09/COGS",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "F23",
+      "value": "1500000",
+      "deps": []
+    },
+    "raw/2026-09/OPEX": {
+      "id": "raw/2026-09/OPEX",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "G23",
+      "value": "310000",
+      "deps": []
+    },
+    "raw/2026-09/OCF": {
+      "id": "raw/2026-09/OCF",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "H23",
+      "value": "10000",
+      "deps": []
+    },
+    "raw/2026-09/AR": {
+      "id": "raw/2026-09/AR",
+      "kind": "source",
+      "sheet": "Facts",
+      "cell": "I23",
+      "value": "480000",
+      "deps": []
+    },
+    "group/2025-Q1/REV": {
+      "id": "group/2025-Q1/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B6",
+      "formula": "SUM(Facts!E6:E8)",
+      "deps": [
+        "raw/2025-01/REV",
+        "raw/2025-02/REV",
+        "raw/2025-03/REV"
+      ],
+      "value": "5400000"
+    },
+    "group/2025-Q1/COGS": {
+      "id": "group/2025-Q1/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C6",
+      "formula": "SUM(Facts!F6:F8)",
+      "deps": [
+        "raw/2025-01/COGS",
+        "raw/2025-02/COGS",
+        "raw/2025-03/COGS"
+      ],
+      "value": "3660000"
+    },
+    "group/2025-Q1/GP": {
+      "id": "group/2025-Q1/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D6",
+      "formula": "B6-C6",
+      "deps": [
+        "group/2025-Q1/COGS",
+        "group/2025-Q1/REV"
+      ],
+      "value": "1740000"
+    },
+    "group/2025-Q1/OPEX": {
+      "id": "group/2025-Q1/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E6",
+      "formula": "SUM(Facts!G6:G8)",
+      "deps": [
+        "raw/2025-01/OPEX",
+        "raw/2025-02/OPEX",
+        "raw/2025-03/OPEX"
+      ],
+      "value": "780000"
+    },
+    "group/2025-Q1/OP": {
+      "id": "group/2025-Q1/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F6",
+      "formula": "D6-E6",
+      "deps": [
+        "group/2025-Q1/GP",
+        "group/2025-Q1/OPEX"
+      ],
+      "value": "960000"
+    },
+    "group/2025-Q1/OCF": {
+      "id": "group/2025-Q1/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G6",
+      "formula": "SUM(Facts!H6:H8)",
+      "deps": [
+        "raw/2025-01/OCF",
+        "raw/2025-02/OCF",
+        "raw/2025-03/OCF"
+      ],
+      "value": "150000"
+    },
+    "group/2025-Q1/AR": {
+      "id": "group/2025-Q1/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H6",
+      "formula": "Facts!I8",
+      "deps": [
+        "raw/2025-03/AR"
+      ],
+      "value": "420000"
+    },
+    "group/2025-Q1/GP_MARGIN": {
+      "id": "group/2025-Q1/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I6",
+      "formula": "D6/B6",
+      "deps": [
+        "group/2025-Q1/GP",
+        "group/2025-Q1/REV"
+      ],
+      "value": "0.3222222222222222222222222222"
+    },
+    "group/2025-Q1/OP_MARGIN": {
+      "id": "group/2025-Q1/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J6",
+      "formula": "F6/B6",
+      "deps": [
+        "group/2025-Q1/OP",
+        "group/2025-Q1/REV"
+      ],
+      "value": "0.1777777777777777777777777778"
+    },
+    "group/2025-Q1/OCF_REV": {
+      "id": "group/2025-Q1/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K6",
+      "formula": "G6/B6",
+      "deps": [
+        "group/2025-Q1/OCF",
+        "group/2025-Q1/REV"
+      ],
+      "value": "0.02777777777777777777777777778"
+    },
+    "group/2025-Q2/REV": {
+      "id": "group/2025-Q2/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B7",
+      "formula": "SUM(Facts!E9:E11)",
+      "deps": [
+        "raw/2025-04/REV",
+        "raw/2025-05/REV",
+        "raw/2025-06/REV"
+      ],
+      "value": "5550000"
+    },
+    "group/2025-Q2/COGS": {
+      "id": "group/2025-Q2/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C7",
+      "formula": "SUM(Facts!F9:F11)",
+      "deps": [
+        "raw/2025-04/COGS",
+        "raw/2025-05/COGS",
+        "raw/2025-06/COGS"
+      ],
+      "value": "3780000"
+    },
+    "group/2025-Q2/GP": {
+      "id": "group/2025-Q2/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D7",
+      "formula": "B7-C7",
+      "deps": [
+        "group/2025-Q2/COGS",
+        "group/2025-Q2/REV"
+      ],
+      "value": "1770000"
+    },
+    "group/2025-Q2/OPEX": {
+      "id": "group/2025-Q2/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E7",
+      "formula": "SUM(Facts!G9:G11)",
+      "deps": [
+        "raw/2025-04/OPEX",
+        "raw/2025-05/OPEX",
+        "raw/2025-06/OPEX"
+      ],
+      "value": "810000"
+    },
+    "group/2025-Q2/OP": {
+      "id": "group/2025-Q2/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F7",
+      "formula": "D7-E7",
+      "deps": [
+        "group/2025-Q2/GP",
+        "group/2025-Q2/OPEX"
+      ],
+      "value": "960000"
+    },
+    "group/2025-Q2/OCF": {
+      "id": "group/2025-Q2/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G7",
+      "formula": "SUM(Facts!H9:H11)",
+      "deps": [
+        "raw/2025-04/OCF",
+        "raw/2025-05/OCF",
+        "raw/2025-06/OCF"
+      ],
+      "value": "130000"
+    },
+    "group/2025-Q2/AR": {
+      "id": "group/2025-Q2/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H7",
+      "formula": "Facts!I11",
+      "deps": [
+        "raw/2025-06/AR"
+      ],
+      "value": "440000"
+    },
+    "group/2025-Q2/GP_MARGIN": {
+      "id": "group/2025-Q2/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I7",
+      "formula": "D7/B7",
+      "deps": [
+        "group/2025-Q2/GP",
+        "group/2025-Q2/REV"
+      ],
+      "value": "0.3189189189189189189189189189"
+    },
+    "group/2025-Q2/OP_MARGIN": {
+      "id": "group/2025-Q2/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J7",
+      "formula": "F7/B7",
+      "deps": [
+        "group/2025-Q2/OP",
+        "group/2025-Q2/REV"
+      ],
+      "value": "0.1729729729729729729729729730"
+    },
+    "group/2025-Q2/OCF_REV": {
+      "id": "group/2025-Q2/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K7",
+      "formula": "G7/B7",
+      "deps": [
+        "group/2025-Q2/OCF",
+        "group/2025-Q2/REV"
+      ],
+      "value": "0.02342342342342342342342342342"
+    },
+    "group/2025-Q3/REV": {
+      "id": "group/2025-Q3/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B8",
+      "formula": "SUM(Facts!E12:E14)",
+      "deps": [
+        "raw/2025-07/REV",
+        "raw/2025-08/REV",
+        "raw/2025-09/REV"
+      ],
+      "value": "6300000"
+    },
+    "group/2025-Q3/COGS": {
+      "id": "group/2025-Q3/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C8",
+      "formula": "SUM(Facts!F12:F14)",
+      "deps": [
+        "raw/2025-07/COGS",
+        "raw/2025-08/COGS",
+        "raw/2025-09/COGS"
+      ],
+      "value": "4200000"
+    },
+    "group/2025-Q3/GP": {
+      "id": "group/2025-Q3/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D8",
+      "formula": "B8-C8",
+      "deps": [
+        "group/2025-Q3/COGS",
+        "group/2025-Q3/REV"
+      ],
+      "value": "2100000"
+    },
+    "group/2025-Q3/OPEX": {
+      "id": "group/2025-Q3/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E8",
+      "formula": "SUM(Facts!G12:G14)",
+      "deps": [
+        "raw/2025-07/OPEX",
+        "raw/2025-08/OPEX",
+        "raw/2025-09/OPEX"
+      ],
+      "value": "870000"
+    },
+    "group/2025-Q3/OP": {
+      "id": "group/2025-Q3/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F8",
+      "formula": "D8-E8",
+      "deps": [
+        "group/2025-Q3/GP",
+        "group/2025-Q3/OPEX"
+      ],
+      "value": "1230000"
+    },
+    "group/2025-Q3/OCF": {
+      "id": "group/2025-Q3/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G8",
+      "formula": "SUM(Facts!H12:H14)",
+      "deps": [
+        "raw/2025-07/OCF",
+        "raw/2025-08/OCF",
+        "raw/2025-09/OCF"
+      ],
+      "value": "220000"
+    },
+    "group/2025-Q3/AR": {
+      "id": "group/2025-Q3/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H8",
+      "formula": "Facts!I14",
+      "deps": [
+        "raw/2025-09/AR"
+      ],
+      "value": "510000"
+    },
+    "group/2025-Q3/GP_MARGIN": {
+      "id": "group/2025-Q3/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I8",
+      "formula": "D8/B8",
+      "deps": [
+        "group/2025-Q3/GP",
+        "group/2025-Q3/REV"
+      ],
+      "value": "0.3333333333333333333333333333"
+    },
+    "group/2025-Q3/OP_MARGIN": {
+      "id": "group/2025-Q3/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J8",
+      "formula": "F8/B8",
+      "deps": [
+        "group/2025-Q3/OP",
+        "group/2025-Q3/REV"
+      ],
+      "value": "0.1952380952380952380952380952"
+    },
+    "group/2025-Q3/OCF_REV": {
+      "id": "group/2025-Q3/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K8",
+      "formula": "G8/B8",
+      "deps": [
+        "group/2025-Q3/OCF",
+        "group/2025-Q3/REV"
+      ],
+      "value": "0.03492063492063492063492063492"
+    },
+    "group/2025-YTD/REV": {
+      "id": "group/2025-YTD/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B9",
+      "formula": "SUM(B6:B8)",
+      "deps": [
+        "group/2025-Q1/REV",
+        "group/2025-Q2/REV",
+        "group/2025-Q3/REV"
+      ],
+      "value": "17250000"
+    },
+    "group/2025-YTD/COGS": {
+      "id": "group/2025-YTD/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C9",
+      "formula": "SUM(C6:C8)",
+      "deps": [
+        "group/2025-Q1/COGS",
+        "group/2025-Q2/COGS",
+        "group/2025-Q3/COGS"
+      ],
+      "value": "11640000"
+    },
+    "group/2025-YTD/GP": {
+      "id": "group/2025-YTD/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D9",
+      "formula": "B9-C9",
+      "deps": [
+        "group/2025-YTD/COGS",
+        "group/2025-YTD/REV"
+      ],
+      "value": "5610000"
+    },
+    "group/2025-YTD/OPEX": {
+      "id": "group/2025-YTD/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E9",
+      "formula": "SUM(E6:E8)",
+      "deps": [
+        "group/2025-Q1/OPEX",
+        "group/2025-Q2/OPEX",
+        "group/2025-Q3/OPEX"
+      ],
+      "value": "2460000"
+    },
+    "group/2025-YTD/OP": {
+      "id": "group/2025-YTD/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F9",
+      "formula": "D9-E9",
+      "deps": [
+        "group/2025-YTD/GP",
+        "group/2025-YTD/OPEX"
+      ],
+      "value": "3150000"
+    },
+    "group/2025-YTD/OCF": {
+      "id": "group/2025-YTD/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G9",
+      "formula": "SUM(G6:G8)",
+      "deps": [
+        "group/2025-Q1/OCF",
+        "group/2025-Q2/OCF",
+        "group/2025-Q3/OCF"
+      ],
+      "value": "500000"
+    },
+    "group/2025-YTD/AR": {
+      "id": "group/2025-YTD/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H9",
+      "formula": "H8",
+      "deps": [
+        "group/2025-Q3/AR"
+      ],
+      "value": "510000"
+    },
+    "group/2025-YTD/GP_MARGIN": {
+      "id": "group/2025-YTD/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I9",
+      "formula": "D9/B9",
+      "deps": [
+        "group/2025-YTD/GP",
+        "group/2025-YTD/REV"
+      ],
+      "value": "0.3252173913043478260869565217"
+    },
+    "group/2025-YTD/OP_MARGIN": {
+      "id": "group/2025-YTD/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J9",
+      "formula": "F9/B9",
+      "deps": [
+        "group/2025-YTD/OP",
+        "group/2025-YTD/REV"
+      ],
+      "value": "0.1826086956521739130434782609"
+    },
+    "group/2025-YTD/OCF_REV": {
+      "id": "group/2025-YTD/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K9",
+      "formula": "G9/B9",
+      "deps": [
+        "group/2025-YTD/OCF",
+        "group/2025-YTD/REV"
+      ],
+      "value": "0.02898550724637681159420289855"
+    },
+    "group/2026-Q1/REV": {
+      "id": "group/2026-Q1/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B10",
+      "formula": "SUM(Facts!E15:E17)",
+      "deps": [
+        "raw/2026-01/REV",
+        "raw/2026-02/REV",
+        "raw/2026-03/REV"
+      ],
+      "value": "5300000"
+    },
+    "group/2026-Q1/COGS": {
+      "id": "group/2026-Q1/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C10",
+      "formula": "SUM(Facts!F15:F17)",
+      "deps": [
+        "raw/2026-01/COGS",
+        "raw/2026-02/COGS",
+        "raw/2026-03/COGS"
+      ],
+      "value": "3620000"
+    },
+    "group/2026-Q1/GP": {
+      "id": "group/2026-Q1/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D10",
+      "formula": "B10-C10",
+      "deps": [
+        "group/2026-Q1/COGS",
+        "group/2026-Q1/REV"
+      ],
+      "value": "1680000"
+    },
+    "group/2026-Q1/OPEX": {
+      "id": "group/2026-Q1/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E10",
+      "formula": "SUM(Facts!G15:G17)",
+      "deps": [
+        "raw/2026-01/OPEX",
+        "raw/2026-02/OPEX",
+        "raw/2026-03/OPEX"
+      ],
+      "value": "780000"
+    },
+    "group/2026-Q1/OP": {
+      "id": "group/2026-Q1/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F10",
+      "formula": "D10-E10",
+      "deps": [
+        "group/2026-Q1/GP",
+        "group/2026-Q1/OPEX"
+      ],
+      "value": "900000"
+    },
+    "group/2026-Q1/OCF": {
+      "id": "group/2026-Q1/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G10",
+      "formula": "SUM(Facts!H15:H17)",
+      "deps": [
+        "raw/2026-01/OCF",
+        "raw/2026-02/OCF",
+        "raw/2026-03/OCF"
+      ],
+      "value": "50000"
+    },
+    "group/2026-Q1/AR": {
+      "id": "group/2026-Q1/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H10",
+      "formula": "Facts!I17",
+      "deps": [
+        "raw/2026-03/AR"
+      ],
+      "value": "400000"
+    },
+    "group/2026-Q1/GP_MARGIN": {
+      "id": "group/2026-Q1/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I10",
+      "formula": "D10/B10",
+      "deps": [
+        "group/2026-Q1/GP",
+        "group/2026-Q1/REV"
+      ],
+      "value": "0.3169811320754716981132075472"
+    },
+    "group/2026-Q1/OP_MARGIN": {
+      "id": "group/2026-Q1/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J10",
+      "formula": "F10/B10",
+      "deps": [
+        "group/2026-Q1/OP",
+        "group/2026-Q1/REV"
+      ],
+      "value": "0.1698113207547169811320754717"
+    },
+    "group/2026-Q1/OCF_REV": {
+      "id": "group/2026-Q1/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K10",
+      "formula": "G10/B10",
+      "deps": [
+        "group/2026-Q1/OCF",
+        "group/2026-Q1/REV"
+      ],
+      "value": "0.009433962264150943396226415094"
+    },
+    "group/2026-Q2/REV": {
+      "id": "group/2026-Q2/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B11",
+      "formula": "SUM(Facts!E18:E20)",
+      "deps": [
+        "raw/2026-04/REV",
+        "raw/2026-05/REV",
+        "raw/2026-06/REV"
+      ],
+      "value": "5650000"
+    },
+    "group/2026-Q2/COGS": {
+      "id": "group/2026-Q2/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C11",
+      "formula": "SUM(Facts!F18:F20)",
+      "deps": [
+        "raw/2026-04/COGS",
+        "raw/2026-05/COGS",
+        "raw/2026-06/COGS"
+      ],
+      "value": "3890000"
+    },
+    "group/2026-Q2/GP": {
+      "id": "group/2026-Q2/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D11",
+      "formula": "B11-C11",
+      "deps": [
+        "group/2026-Q2/COGS",
+        "group/2026-Q2/REV"
+      ],
+      "value": "1760000"
+    },
+    "group/2026-Q2/OPEX": {
+      "id": "group/2026-Q2/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E11",
+      "formula": "SUM(Facts!G18:G20)",
+      "deps": [
+        "raw/2026-04/OPEX",
+        "raw/2026-05/OPEX",
+        "raw/2026-06/OPEX"
+      ],
+      "value": "840000"
+    },
+    "group/2026-Q2/OP": {
+      "id": "group/2026-Q2/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F11",
+      "formula": "D11-E11",
+      "deps": [
+        "group/2026-Q2/GP",
+        "group/2026-Q2/OPEX"
+      ],
+      "value": "920000"
+    },
+    "group/2026-Q2/OCF": {
+      "id": "group/2026-Q2/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G11",
+      "formula": "SUM(Facts!H18:H20)",
+      "deps": [
+        "raw/2026-04/OCF",
+        "raw/2026-05/OCF",
+        "raw/2026-06/OCF"
+      ],
+      "value": "170000"
+    },
+    "group/2026-Q2/AR": {
+      "id": "group/2026-Q2/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H11",
+      "formula": "Facts!I20",
+      "deps": [
+        "raw/2026-06/AR"
+      ],
+      "value": "470000"
+    },
+    "group/2026-Q2/GP_MARGIN": {
+      "id": "group/2026-Q2/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I11",
+      "formula": "D11/B11",
+      "deps": [
+        "group/2026-Q2/GP",
+        "group/2026-Q2/REV"
+      ],
+      "value": "0.3115044247787610619469026549"
+    },
+    "group/2026-Q2/OP_MARGIN": {
+      "id": "group/2026-Q2/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J11",
+      "formula": "F11/B11",
+      "deps": [
+        "group/2026-Q2/OP",
+        "group/2026-Q2/REV"
+      ],
+      "value": "0.1628318584070796460176991150"
+    },
+    "group/2026-Q2/OCF_REV": {
+      "id": "group/2026-Q2/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K11",
+      "formula": "G11/B11",
+      "deps": [
+        "group/2026-Q2/OCF",
+        "group/2026-Q2/REV"
+      ],
+      "value": "0.03008849557522123893805309735"
+    },
+    "group/2026-Q3/REV": {
+      "id": "group/2026-Q3/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B12",
+      "formula": "SUM(Facts!E21:E23)",
+      "deps": [
+        "raw/2026-07/REV",
+        "raw/2026-08/REV",
+        "raw/2026-09/REV"
+      ],
+      "value": "6250000"
+    },
+    "group/2026-Q3/COGS": {
+      "id": "group/2026-Q3/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C12",
+      "formula": "SUM(Facts!F21:F23)",
+      "deps": [
+        "raw/2026-07/COGS",
+        "raw/2026-08/COGS",
+        "raw/2026-09/COGS"
+      ],
+      "value": "4240000"
+    },
+    "group/2026-Q3/GP": {
+      "id": "group/2026-Q3/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D12",
+      "formula": "B12-C12",
+      "deps": [
+        "group/2026-Q3/COGS",
+        "group/2026-Q3/REV"
+      ],
+      "value": "2010000"
+    },
+    "group/2026-Q3/OPEX": {
+      "id": "group/2026-Q3/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E12",
+      "formula": "SUM(Facts!G21:G23)",
+      "deps": [
+        "raw/2026-07/OPEX",
+        "raw/2026-08/OPEX",
+        "raw/2026-09/OPEX"
+      ],
+      "value": "860000"
+    },
+    "group/2026-Q3/OP": {
+      "id": "group/2026-Q3/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F12",
+      "formula": "D12-E12",
+      "deps": [
+        "group/2026-Q3/GP",
+        "group/2026-Q3/OPEX"
+      ],
+      "value": "1150000"
+    },
+    "group/2026-Q3/OCF": {
+      "id": "group/2026-Q3/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G12",
+      "formula": "SUM(Facts!H21:H23)",
+      "deps": [
+        "raw/2026-07/OCF",
+        "raw/2026-08/OCF",
+        "raw/2026-09/OCF"
+      ],
+      "value": "20000"
+    },
+    "group/2026-Q3/AR": {
+      "id": "group/2026-Q3/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H12",
+      "formula": "Facts!I23",
+      "deps": [
+        "raw/2026-09/AR"
+      ],
+      "value": "480000"
+    },
+    "group/2026-Q3/GP_MARGIN": {
+      "id": "group/2026-Q3/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I12",
+      "formula": "D12/B12",
+      "deps": [
+        "group/2026-Q3/GP",
+        "group/2026-Q3/REV"
+      ],
+      "value": "0.3216"
+    },
+    "group/2026-Q3/OP_MARGIN": {
+      "id": "group/2026-Q3/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J12",
+      "formula": "F12/B12",
+      "deps": [
+        "group/2026-Q3/OP",
+        "group/2026-Q3/REV"
+      ],
+      "value": "0.184"
+    },
+    "group/2026-Q3/OCF_REV": {
+      "id": "group/2026-Q3/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K12",
+      "formula": "G12/B12",
+      "deps": [
+        "group/2026-Q3/OCF",
+        "group/2026-Q3/REV"
+      ],
+      "value": "0.0032"
+    },
+    "group/2026-YTD/REV": {
+      "id": "group/2026-YTD/REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "B13",
+      "formula": "SUM(B10:B12)",
+      "deps": [
+        "group/2026-Q1/REV",
+        "group/2026-Q2/REV",
+        "group/2026-Q3/REV"
+      ],
+      "value": "17200000"
+    },
+    "group/2026-YTD/COGS": {
+      "id": "group/2026-YTD/COGS",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "C13",
+      "formula": "SUM(C10:C12)",
+      "deps": [
+        "group/2026-Q1/COGS",
+        "group/2026-Q2/COGS",
+        "group/2026-Q3/COGS"
+      ],
+      "value": "11750000"
+    },
+    "group/2026-YTD/GP": {
+      "id": "group/2026-YTD/GP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "D13",
+      "formula": "B13-C13",
+      "deps": [
+        "group/2026-YTD/COGS",
+        "group/2026-YTD/REV"
+      ],
+      "value": "5450000"
+    },
+    "group/2026-YTD/OPEX": {
+      "id": "group/2026-YTD/OPEX",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "E13",
+      "formula": "SUM(E10:E12)",
+      "deps": [
+        "group/2026-Q1/OPEX",
+        "group/2026-Q2/OPEX",
+        "group/2026-Q3/OPEX"
+      ],
+      "value": "2480000"
+    },
+    "group/2026-YTD/OP": {
+      "id": "group/2026-YTD/OP",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "F13",
+      "formula": "D13-E13",
+      "deps": [
+        "group/2026-YTD/GP",
+        "group/2026-YTD/OPEX"
+      ],
+      "value": "2970000"
+    },
+    "group/2026-YTD/OCF": {
+      "id": "group/2026-YTD/OCF",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "G13",
+      "formula": "SUM(G10:G12)",
+      "deps": [
+        "group/2026-Q1/OCF",
+        "group/2026-Q2/OCF",
+        "group/2026-Q3/OCF"
+      ],
+      "value": "240000"
+    },
+    "group/2026-YTD/AR": {
+      "id": "group/2026-YTD/AR",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "H13",
+      "formula": "H12",
+      "deps": [
+        "group/2026-Q3/AR"
+      ],
+      "value": "480000"
+    },
+    "group/2026-YTD/GP_MARGIN": {
+      "id": "group/2026-YTD/GP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "I13",
+      "formula": "D13/B13",
+      "deps": [
+        "group/2026-YTD/GP",
+        "group/2026-YTD/REV"
+      ],
+      "value": "0.3168604651162790697674418605"
+    },
+    "group/2026-YTD/OP_MARGIN": {
+      "id": "group/2026-YTD/OP_MARGIN",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "J13",
+      "formula": "F13/B13",
+      "deps": [
+        "group/2026-YTD/OP",
+        "group/2026-YTD/REV"
+      ],
+      "value": "0.1726744186046511627906976744"
+    },
+    "group/2026-YTD/OCF_REV": {
+      "id": "group/2026-YTD/OCF_REV",
+      "kind": "formula",
+      "sheet": "Summary",
+      "cell": "K13",
+      "formula": "G13/B13",
+      "deps": [
+        "group/2026-YTD/OCF",
+        "group/2026-YTD/REV"
+      ],
+      "value": "0.01395348837209302325581395349"
+    },
+    "compare/Q1/REV_YOY": {
+      "id": "compare/Q1/REV_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "B6",
+      "formula": "Summary!B10/Summary!B6-1",
+      "deps": [
+        "group/2025-Q1/REV",
+        "group/2026-Q1/REV"
+      ],
+      "value": "-0.0185185185185185185185185185"
+    },
+    "compare/Q1/GP_YOY": {
+      "id": "compare/Q1/GP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "C6",
+      "formula": "Summary!D10/Summary!D6-1",
+      "deps": [
+        "group/2025-Q1/GP",
+        "group/2026-Q1/GP"
+      ],
+      "value": "-0.0344827586206896551724137931"
+    },
+    "compare/Q1/OP_YOY": {
+      "id": "compare/Q1/OP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "D6",
+      "formula": "Summary!F10/Summary!F6-1",
+      "deps": [
+        "group/2025-Q1/OP",
+        "group/2026-Q1/OP"
+      ],
+      "value": "-0.0625"
+    },
+    "compare/Q1/AR_YOY": {
+      "id": "compare/Q1/AR_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "E6",
+      "formula": "Summary!H10/Summary!H6-1",
+      "deps": [
+        "group/2025-Q1/AR",
+        "group/2026-Q1/AR"
+      ],
+      "value": "-0.0476190476190476190476190476"
+    },
+    "compare/Q1/OCF_DIFF": {
+      "id": "compare/Q1/OCF_DIFF",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "F6",
+      "formula": "Summary!G10-Summary!G6",
+      "deps": [
+        "group/2025-Q1/OCF",
+        "group/2026-Q1/OCF"
+      ],
+      "value": "-100000"
+    },
+    "compare/Q2/REV_YOY": {
+      "id": "compare/Q2/REV_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "B7",
+      "formula": "Summary!B11/Summary!B7-1",
+      "deps": [
+        "group/2025-Q2/REV",
+        "group/2026-Q2/REV"
+      ],
+      "value": "0.018018018018018018018018018"
+    },
+    "compare/Q2/GP_YOY": {
+      "id": "compare/Q2/GP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "C7",
+      "formula": "Summary!D11/Summary!D7-1",
+      "deps": [
+        "group/2025-Q2/GP",
+        "group/2026-Q2/GP"
+      ],
+      "value": "-0.0056497175141242937853107345"
+    },
+    "compare/Q2/OP_YOY": {
+      "id": "compare/Q2/OP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "D7",
+      "formula": "Summary!F11/Summary!F7-1",
+      "deps": [
+        "group/2025-Q2/OP",
+        "group/2026-Q2/OP"
+      ],
+      "value": "-0.0416666666666666666666666667"
+    },
+    "compare/Q2/AR_YOY": {
+      "id": "compare/Q2/AR_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "E7",
+      "formula": "Summary!H11/Summary!H7-1",
+      "deps": [
+        "group/2025-Q2/AR",
+        "group/2026-Q2/AR"
+      ],
+      "value": "0.068181818181818181818181818"
+    },
+    "compare/Q2/OCF_DIFF": {
+      "id": "compare/Q2/OCF_DIFF",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "F7",
+      "formula": "Summary!G11-Summary!G7",
+      "deps": [
+        "group/2025-Q2/OCF",
+        "group/2026-Q2/OCF"
+      ],
+      "value": "40000"
+    },
+    "compare/Q3/REV_YOY": {
+      "id": "compare/Q3/REV_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "B8",
+      "formula": "Summary!B12/Summary!B8-1",
+      "deps": [
+        "group/2025-Q3/REV",
+        "group/2026-Q3/REV"
+      ],
+      "value": "-0.0079365079365079365079365079"
+    },
+    "compare/Q3/GP_YOY": {
+      "id": "compare/Q3/GP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "C8",
+      "formula": "Summary!D12/Summary!D8-1",
+      "deps": [
+        "group/2025-Q3/GP",
+        "group/2026-Q3/GP"
+      ],
+      "value": "-0.0428571428571428571428571429"
+    },
+    "compare/Q3/OP_YOY": {
+      "id": "compare/Q3/OP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "D8",
+      "formula": "Summary!F12/Summary!F8-1",
+      "deps": [
+        "group/2025-Q3/OP",
+        "group/2026-Q3/OP"
+      ],
+      "value": "-0.0650406504065040650406504065"
+    },
+    "compare/Q3/AR_YOY": {
+      "id": "compare/Q3/AR_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "E8",
+      "formula": "Summary!H12/Summary!H8-1",
+      "deps": [
+        "group/2025-Q3/AR",
+        "group/2026-Q3/AR"
+      ],
+      "value": "-0.0588235294117647058823529412"
+    },
+    "compare/Q3/OCF_DIFF": {
+      "id": "compare/Q3/OCF_DIFF",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "F8",
+      "formula": "Summary!G12-Summary!G8",
+      "deps": [
+        "group/2025-Q3/OCF",
+        "group/2026-Q3/OCF"
+      ],
+      "value": "-200000"
+    },
+    "compare/YTD/REV_YOY": {
+      "id": "compare/YTD/REV_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "B9",
+      "formula": "Summary!B13/Summary!B9-1",
+      "deps": [
+        "group/2025-YTD/REV",
+        "group/2026-YTD/REV"
+      ],
+      "value": "-0.0028985507246376811594202899"
+    },
+    "compare/YTD/GP_YOY": {
+      "id": "compare/YTD/GP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "C9",
+      "formula": "Summary!D13/Summary!D9-1",
+      "deps": [
+        "group/2025-YTD/GP",
+        "group/2026-YTD/GP"
+      ],
+      "value": "-0.0285204991087344028520499109"
+    },
+    "compare/YTD/OP_YOY": {
+      "id": "compare/YTD/OP_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "D9",
+      "formula": "Summary!F13/Summary!F9-1",
+      "deps": [
+        "group/2025-YTD/OP",
+        "group/2026-YTD/OP"
+      ],
+      "value": "-0.0571428571428571428571428571"
+    },
+    "compare/YTD/AR_YOY": {
+      "id": "compare/YTD/AR_YOY",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "E9",
+      "formula": "Summary!H13/Summary!H9-1",
+      "deps": [
+        "group/2025-YTD/AR",
+        "group/2026-YTD/AR"
+      ],
+      "value": "-0.0588235294117647058823529412"
+    },
+    "compare/YTD/OCF_DIFF": {
+      "id": "compare/YTD/OCF_DIFF",
+      "kind": "formula",
+      "sheet": "Compare",
+      "cell": "F9",
+      "formula": "Summary!G13-Summary!G9",
+      "deps": [
+        "group/2025-YTD/OCF",
+        "group/2026-YTD/OCF"
+      ],
+      "value": "-260000"
+    },
+    "word/kpi/K01": {
+      "id": "word/kpi/K01",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/REV"
+      ],
+      "locator": "table:1/row:2/cell:2",
+      "unit": "万元",
+      "before": "1720.00",
+      "after": "1747.00",
+      "precision": 2
+    },
+    "word/kpi/K02": {
+      "id": "word/kpi/K02",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/REV_YOY"
+      ],
+      "locator": "table:1/row:3/cell:2",
+      "unit": "%",
+      "before": "-0.29",
+      "after": "0.11",
+      "precision": 2
+    },
+    "word/kpi/K03": {
+      "id": "word/kpi/K03",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/GP"
+      ],
+      "locator": "table:1/row:4/cell:2",
+      "unit": "万元",
+      "before": "545.00",
+      "after": "580.00",
+      "precision": 2
+    },
+    "word/kpi/K04": {
+      "id": "word/kpi/K04",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/GP_MARGIN"
+      ],
+      "locator": "table:1/row:5/cell:2",
+      "unit": "%",
+      "before": "31.69",
+      "after": "33.20",
+      "precision": 2
+    },
+    "word/kpi/K05": {
+      "id": "word/kpi/K05",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OP"
+      ],
+      "locator": "table:1/row:6/cell:2",
+      "unit": "万元",
+      "before": "297.00",
+      "after": "357.00",
+      "precision": 2
+    },
+    "word/kpi/K06": {
+      "id": "word/kpi/K06",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/OP_YOY"
+      ],
+      "locator": "table:1/row:7/cell:2",
+      "unit": "%",
+      "before": "-5.71",
+      "after": "8.18",
+      "precision": 2
+    },
+    "word/kpi/K07": {
+      "id": "word/kpi/K07",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OCF"
+      ],
+      "locator": "table:1/row:8/cell:2",
+      "unit": "万元",
+      "before": "24.00",
+      "after": "4.00",
+      "precision": 2
+    },
+    "word/kpi/K08": {
+      "id": "word/kpi/K08",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/OCF"
+      ],
+      "locator": "table:3/row:2/cell:2",
+      "unit": "万元",
+      "before": "17.00",
+      "after": "-3.00",
+      "precision": 2
+    },
+    "word/kpi/K09": {
+      "id": "word/kpi/K09",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/AR"
+      ],
+      "locator": "table:3/row:3/cell:2",
+      "unit": "万元",
+      "before": "48.00",
+      "after": "42.00",
+      "precision": 2
+    },
+    "word/kpi/K10": {
+      "id": "word/kpi/K10",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/AR_YOY"
+      ],
+      "locator": "table:3/row:4/cell:2",
+      "unit": "%",
+      "before": "-5.88",
+      "after": "-17.65",
+      "precision": 2
+    },
+    "word/kpi/K11": {
+      "id": "word/kpi/K11",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OCF_REV"
+      ],
+      "locator": "table:3/row:5/cell:2",
+      "unit": "%",
+      "before": "1.40",
+      "after": "0.23",
+      "precision": 2
+    },
+    "word/quarter/Q1/REV": {
+      "id": "word/quarter/Q1/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/REV"
+      ],
+      "locator": "table:2/row:2/cell:2",
+      "unit": "万元",
+      "before": "530.00",
+      "after": "527.00",
+      "precision": 2
+    },
+    "word/quarter/Q1/GP": {
+      "id": "word/quarter/Q1/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/GP"
+      ],
+      "locator": "table:2/row:2/cell:3",
+      "unit": "万元",
+      "before": "168.00",
+      "after": "165.00",
+      "precision": 2
+    },
+    "word/quarter/Q1/OP": {
+      "id": "word/quarter/Q1/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/OP"
+      ],
+      "locator": "table:2/row:2/cell:4",
+      "unit": "万元",
+      "before": "90.00",
+      "after": "87.00",
+      "precision": 2
+    },
+    "word/quarter/Q1/OCF": {
+      "id": "word/quarter/Q1/OCF",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/OCF"
+      ],
+      "locator": "table:2/row:2/cell:5",
+      "unit": "万元",
+      "before": "5.00",
+      "after": "5.00",
+      "precision": 2
+    },
+    "word/quarter/Q1/AR": {
+      "id": "word/quarter/Q1/AR",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/AR"
+      ],
+      "locator": "table:2/row:2/cell:6",
+      "unit": "万元",
+      "before": "40.00",
+      "after": "40.00",
+      "precision": 2
+    },
+    "word/quarter/Q2/REV": {
+      "id": "word/quarter/Q2/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/REV"
+      ],
+      "locator": "table:2/row:3/cell:2",
+      "unit": "万元",
+      "before": "565.00",
+      "after": "595.00",
+      "precision": 2
+    },
+    "word/quarter/Q2/GP": {
+      "id": "word/quarter/Q2/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/GP"
+      ],
+      "locator": "table:2/row:3/cell:3",
+      "unit": "万元",
+      "before": "176.00",
+      "after": "206.00",
+      "precision": 2
+    },
+    "word/quarter/Q2/OP": {
+      "id": "word/quarter/Q2/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/OP"
+      ],
+      "locator": "table:2/row:3/cell:4",
+      "unit": "万元",
+      "before": "92.00",
+      "after": "122.00",
+      "precision": 2
+    },
+    "word/quarter/Q2/OCF": {
+      "id": "word/quarter/Q2/OCF",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/OCF"
+      ],
+      "locator": "table:2/row:3/cell:5",
+      "unit": "万元",
+      "before": "17.00",
+      "after": "-3.00",
+      "precision": 2
+    },
+    "word/quarter/Q2/AR": {
+      "id": "word/quarter/Q2/AR",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/AR"
+      ],
+      "locator": "table:2/row:3/cell:6",
+      "unit": "万元",
+      "before": "47.00",
+      "after": "47.00",
+      "precision": 2
+    },
+    "word/quarter/Q3/REV": {
+      "id": "word/quarter/Q3/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/REV"
+      ],
+      "locator": "table:2/row:4/cell:2",
+      "unit": "万元",
+      "before": "625.00",
+      "after": "625.00",
+      "precision": 2
+    },
+    "word/quarter/Q3/GP": {
+      "id": "word/quarter/Q3/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/GP"
+      ],
+      "locator": "table:2/row:4/cell:3",
+      "unit": "万元",
+      "before": "201.00",
+      "after": "209.00",
+      "precision": 2
+    },
+    "word/quarter/Q3/OP": {
+      "id": "word/quarter/Q3/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/OP"
+      ],
+      "locator": "table:2/row:4/cell:4",
+      "unit": "万元",
+      "before": "115.00",
+      "after": "148.00",
+      "precision": 2
+    },
+    "word/quarter/Q3/OCF": {
+      "id": "word/quarter/Q3/OCF",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/OCF"
+      ],
+      "locator": "table:2/row:4/cell:5",
+      "unit": "万元",
+      "before": "2.00",
+      "after": "2.00",
+      "precision": 2
+    },
+    "word/quarter/Q3/AR": {
+      "id": "word/quarter/Q3/AR",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/AR"
+      ],
+      "locator": "table:2/row:4/cell:6",
+      "unit": "万元",
+      "before": "48.00",
+      "after": "42.00",
+      "precision": 2
+    },
+    "word/quarter/YTD/REV": {
+      "id": "word/quarter/YTD/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/REV"
+      ],
+      "locator": "table:2/row:5/cell:2",
+      "unit": "万元",
+      "before": "1720.00",
+      "after": "1747.00",
+      "precision": 2
+    },
+    "word/quarter/YTD/GP": {
+      "id": "word/quarter/YTD/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/GP"
+      ],
+      "locator": "table:2/row:5/cell:3",
+      "unit": "万元",
+      "before": "545.00",
+      "after": "580.00",
+      "precision": 2
+    },
+    "word/quarter/YTD/OP": {
+      "id": "word/quarter/YTD/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OP"
+      ],
+      "locator": "table:2/row:5/cell:4",
+      "unit": "万元",
+      "before": "297.00",
+      "after": "357.00",
+      "precision": 2
+    },
+    "word/quarter/YTD/OCF": {
+      "id": "word/quarter/YTD/OCF",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OCF"
+      ],
+      "locator": "table:2/row:5/cell:5",
+      "unit": "万元",
+      "before": "24.00",
+      "after": "4.00",
+      "precision": 2
+    },
+    "word/quarter/YTD/AR": {
+      "id": "word/quarter/YTD/AR",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/AR"
+      ],
+      "locator": "table:2/row:5/cell:6",
+      "unit": "万元",
+      "before": "48.00",
+      "after": "42.00",
+      "precision": 2
+    },
+    "word/basis/REV": {
+      "id": "word/basis/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/REV"
+      ],
+      "locator": "table:4/row:2/cell:2",
+      "unit": "万元",
+      "before": "1725.00",
+      "after": "1745.00",
+      "precision": 2
+    },
+    "word/basis/COGS": {
+      "id": "word/basis/COGS",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/COGS"
+      ],
+      "locator": "table:4/row:3/cell:2",
+      "unit": "万元",
+      "before": "1164.00",
+      "after": "1169.00",
+      "precision": 2
+    },
+    "word/basis/GP": {
+      "id": "word/basis/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/GP"
+      ],
+      "locator": "table:4/row:4/cell:2",
+      "unit": "万元",
+      "before": "561.00",
+      "after": "576.00",
+      "precision": 2
+    },
+    "word/basis/OPEX": {
+      "id": "word/basis/OPEX",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/OPEX"
+      ],
+      "locator": "table:4/row:5/cell:2",
+      "unit": "万元",
+      "before": "246.00",
+      "after": "246.00",
+      "precision": 2
+    },
+    "word/basis/OP": {
+      "id": "word/basis/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/OP"
+      ],
+      "locator": "table:4/row:6/cell:2",
+      "unit": "万元",
+      "before": "315.00",
+      "after": "330.00",
+      "precision": 2
+    },
+    "word/kpi/K12": {
+      "id": "word/kpi/K12",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/GP"
+      ],
+      "locator": "paragraph:15",
+      "unit": "万元",
+      "before": "561.00",
+      "after": "576.00",
+      "precision": 2
+    },
+    "word/kpi/K13": {
+      "id": "word/kpi/K13",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/GP_YOY"
+      ],
+      "locator": "paragraph:15",
+      "unit": "%",
+      "before": "-2.85",
+      "after": "0.69",
+      "precision": 2
+    },
+    "word/kpi/K14": {
+      "id": "word/kpi/K14",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/REV"
+      ],
+      "locator": "paragraph:15",
+      "unit": "万元",
+      "before": "1725.00",
+      "after": "1745.00",
+      "precision": 2
+    },
+    "word/footnote/F01": {
+      "id": "word/footnote/F01",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/REV"
+      ],
+      "locator": "footnote:1",
+      "unit": "万元",
+      "before": "1725.00",
+      "after": "1745.00",
+      "precision": 2
+    },
+    "pptx/kpi/K01": {
+      "id": "pptx/kpi/K01",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/REV"
+      ],
+      "locator": "slide:1/shape:4/paragraph:1",
+      "unit": "万元",
+      "before": "1720.00",
+      "after": "1747.00",
+      "precision": 2
+    },
+    "pptx/kpi/K02": {
+      "id": "pptx/kpi/K02",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/REV_YOY"
+      ],
+      "locator": "slide:1/shape:5/paragraph:1",
+      "unit": "%",
+      "before": "-0.29",
+      "after": "0.11",
+      "precision": 2
+    },
+    "pptx/kpi/K05": {
+      "id": "pptx/kpi/K05",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OP"
+      ],
+      "locator": "slide:1/shape:6/paragraph:1",
+      "unit": "万元",
+      "before": "297.00",
+      "after": "357.00",
+      "precision": 2
+    },
+    "pptx/kpi/K06": {
+      "id": "pptx/kpi/K06",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/OP_YOY"
+      ],
+      "locator": "slide:1/shape:7/paragraph:1",
+      "unit": "%",
+      "before": "-5.71",
+      "after": "8.18",
+      "precision": 2
+    },
+    "pptx/kpi/K03": {
+      "id": "pptx/kpi/K03",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/GP"
+      ],
+      "locator": "slide:3/shape:4/paragraph:1",
+      "unit": "万元",
+      "before": "545.00",
+      "after": "580.00",
+      "precision": 2
+    },
+    "pptx/kpi/K04": {
+      "id": "pptx/kpi/K04",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/GP_MARGIN"
+      ],
+      "locator": "slide:3/shape:4/paragraph:1",
+      "unit": "%",
+      "before": "31.69",
+      "after": "33.20",
+      "precision": 2
+    },
+    "pptx/kpi/K08": {
+      "id": "pptx/kpi/K08",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/OCF"
+      ],
+      "locator": "slide:4/shape:8/paragraph:1",
+      "unit": "万元",
+      "before": "17.00",
+      "after": "-3.00",
+      "precision": 2
+    },
+    "pptx/kpi/K07": {
+      "id": "pptx/kpi/K07",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OCF"
+      ],
+      "locator": "slide:4/shape:8/paragraph:2",
+      "unit": "万元",
+      "before": "24.00",
+      "after": "4.00",
+      "precision": 2
+    },
+    "pptx/kpi/K09": {
+      "id": "pptx/kpi/K09",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/AR"
+      ],
+      "locator": "slide:4/shape:9/paragraph:1",
+      "unit": "万元",
+      "before": "48.00",
+      "after": "42.00",
+      "precision": 2
+    },
+    "pptx/kpi/K10": {
+      "id": "pptx/kpi/K10",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/AR_YOY"
+      ],
+      "locator": "slide:4/shape:9/paragraph:2",
+      "unit": "%",
+      "before": "-5.88",
+      "after": "-17.65",
+      "precision": 2
+    },
+    "pptx/kpi/K13": {
+      "id": "pptx/kpi/K13",
+      "kind": "artifact_value",
+      "deps": [
+        "compare/YTD/GP_YOY"
+      ],
+      "locator": "slide:5/shape:5/paragraph:1",
+      "unit": "%",
+      "before": "-2.85",
+      "after": "0.69",
+      "precision": 2
+    },
+    "pptx/kpi/K14": {
+      "id": "pptx/kpi/K14",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/REV"
+      ],
+      "locator": "slide:5/shape:5/paragraph:1",
+      "unit": "万元",
+      "before": "1725.00",
+      "after": "1745.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/0": {
+      "id": "pptx/chart/REV_MONTHLY/0/0",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-01/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:0",
+      "unit": "万元",
+      "before": "180",
+      "after": "180.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/1": {
+      "id": "pptx/chart/REV_MONTHLY/0/1",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-02/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:1",
+      "unit": "万元",
+      "before": "190",
+      "after": "190.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/2": {
+      "id": "pptx/chart/REV_MONTHLY/0/2",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-03/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:2",
+      "unit": "万元",
+      "before": "170",
+      "after": "170.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/3": {
+      "id": "pptx/chart/REV_MONTHLY/0/3",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-04/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:3",
+      "unit": "万元",
+      "before": "170",
+      "after": "190.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/4": {
+      "id": "pptx/chart/REV_MONTHLY/0/4",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-05/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:4",
+      "unit": "万元",
+      "before": "200",
+      "after": "200.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/5": {
+      "id": "pptx/chart/REV_MONTHLY/0/5",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-06/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:5",
+      "unit": "万元",
+      "before": "185",
+      "after": "185.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/6": {
+      "id": "pptx/chart/REV_MONTHLY/0/6",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-07/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:6",
+      "unit": "万元",
+      "before": "210",
+      "after": "210.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/7": {
+      "id": "pptx/chart/REV_MONTHLY/0/7",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-08/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:7",
+      "unit": "万元",
+      "before": "200",
+      "after": "200.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/0/8": {
+      "id": "pptx/chart/REV_MONTHLY/0/8",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2025-09/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:1/point:8",
+      "unit": "万元",
+      "before": "220",
+      "after": "220.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/0": {
+      "id": "pptx/chart/REV_MONTHLY/1/0",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-01/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:0",
+      "unit": "万元",
+      "before": "175",
+      "after": "175.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/1": {
+      "id": "pptx/chart/REV_MONTHLY/1/1",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-02/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:1",
+      "unit": "万元",
+      "before": "190",
+      "after": "190.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/2": {
+      "id": "pptx/chart/REV_MONTHLY/1/2",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-03/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:2",
+      "unit": "万元",
+      "before": "165",
+      "after": "162.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/3": {
+      "id": "pptx/chart/REV_MONTHLY/1/3",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-04/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:3",
+      "unit": "万元",
+      "before": "180",
+      "after": "210.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/4": {
+      "id": "pptx/chart/REV_MONTHLY/1/4",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-05/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:4",
+      "unit": "万元",
+      "before": "195",
+      "after": "195.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/5": {
+      "id": "pptx/chart/REV_MONTHLY/1/5",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-06/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:5",
+      "unit": "万元",
+      "before": "190",
+      "after": "190.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/6": {
+      "id": "pptx/chart/REV_MONTHLY/1/6",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-07/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:6",
+      "unit": "万元",
+      "before": "200",
+      "after": "200.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/7": {
+      "id": "pptx/chart/REV_MONTHLY/1/7",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-08/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:7",
+      "unit": "万元",
+      "before": "205",
+      "after": "205.00",
+      "precision": 2
+    },
+    "pptx/chart/REV_MONTHLY/1/8": {
+      "id": "pptx/chart/REV_MONTHLY/1/8",
+      "kind": "artifact_value",
+      "deps": [
+        "raw/2026-09/REV"
+      ],
+      "locator": "slide:2/shape:4/chart:1/series:2/point:8",
+      "unit": "万元",
+      "before": "220",
+      "after": "220.00",
+      "precision": 2
+    },
+    "pptx/chart/PROFIT_QUARTER/0/0": {
+      "id": "pptx/chart/PROFIT_QUARTER/0/0",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/GP"
+      ],
+      "locator": "slide:3/shape:5/chart:1/series:1/point:0",
+      "unit": "万元",
+      "before": "168",
+      "after": "165.00",
+      "precision": 2
+    },
+    "pptx/chart/PROFIT_QUARTER/0/1": {
+      "id": "pptx/chart/PROFIT_QUARTER/0/1",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/GP"
+      ],
+      "locator": "slide:3/shape:5/chart:1/series:1/point:1",
+      "unit": "万元",
+      "before": "176",
+      "after": "206.00",
+      "precision": 2
+    },
+    "pptx/chart/PROFIT_QUARTER/0/2": {
+      "id": "pptx/chart/PROFIT_QUARTER/0/2",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/GP"
+      ],
+      "locator": "slide:3/shape:5/chart:1/series:1/point:2",
+      "unit": "万元",
+      "before": "201",
+      "after": "209.00",
+      "precision": 2
+    },
+    "pptx/chart/PROFIT_QUARTER/1/0": {
+      "id": "pptx/chart/PROFIT_QUARTER/1/0",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/OP"
+      ],
+      "locator": "slide:3/shape:5/chart:1/series:2/point:0",
+      "unit": "万元",
+      "before": "90",
+      "after": "87.00",
+      "precision": 2
+    },
+    "pptx/chart/PROFIT_QUARTER/1/1": {
+      "id": "pptx/chart/PROFIT_QUARTER/1/1",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/OP"
+      ],
+      "locator": "slide:3/shape:5/chart:1/series:2/point:1",
+      "unit": "万元",
+      "before": "92",
+      "after": "122.00",
+      "precision": 2
+    },
+    "pptx/chart/PROFIT_QUARTER/1/2": {
+      "id": "pptx/chart/PROFIT_QUARTER/1/2",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/OP"
+      ],
+      "locator": "slide:3/shape:5/chart:1/series:2/point:2",
+      "unit": "万元",
+      "before": "115",
+      "after": "148.00",
+      "precision": 2
+    },
+    "pptx/chart/CASH_QUARTER/0/0": {
+      "id": "pptx/chart/CASH_QUARTER/0/0",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/OCF"
+      ],
+      "locator": "slide:4/shape:6/chart:1/series:1/point:0",
+      "unit": "万元",
+      "before": "5",
+      "after": "5.00",
+      "precision": 2
+    },
+    "pptx/chart/CASH_QUARTER/0/1": {
+      "id": "pptx/chart/CASH_QUARTER/0/1",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/OCF"
+      ],
+      "locator": "slide:4/shape:6/chart:1/series:1/point:1",
+      "unit": "万元",
+      "before": "17",
+      "after": "-3.00",
+      "precision": 2
+    },
+    "pptx/chart/CASH_QUARTER/0/2": {
+      "id": "pptx/chart/CASH_QUARTER/0/2",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/OCF"
+      ],
+      "locator": "slide:4/shape:6/chart:1/series:1/point:2",
+      "unit": "万元",
+      "before": "2",
+      "after": "2.00",
+      "precision": 2
+    },
+    "pptx/chart/AR_QUARTER/0/0": {
+      "id": "pptx/chart/AR_QUARTER/0/0",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q1/AR"
+      ],
+      "locator": "slide:4/shape:7/chart:1/series:1/point:0",
+      "unit": "万元",
+      "before": "40",
+      "after": "40.00",
+      "precision": 2
+    },
+    "pptx/chart/AR_QUARTER/0/1": {
+      "id": "pptx/chart/AR_QUARTER/0/1",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q2/AR"
+      ],
+      "locator": "slide:4/shape:7/chart:1/series:1/point:1",
+      "unit": "万元",
+      "before": "47",
+      "after": "47.00",
+      "precision": 2
+    },
+    "pptx/chart/AR_QUARTER/0/2": {
+      "id": "pptx/chart/AR_QUARTER/0/2",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-Q3/AR"
+      ],
+      "locator": "slide:4/shape:7/chart:1/series:1/point:2",
+      "unit": "万元",
+      "before": "48",
+      "after": "42.00",
+      "precision": 2
+    },
+    "pptx/basis/2025/REV": {
+      "id": "pptx/basis/2025/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/REV"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:2/cell:2/paragraph:1",
+      "unit": "万元",
+      "before": "1725.00",
+      "after": "1745.00",
+      "precision": 2
+    },
+    "pptx/basis/2026/REV": {
+      "id": "pptx/basis/2026/REV",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/REV"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:2/cell:3/paragraph:1",
+      "unit": "万元",
+      "before": "1720.00",
+      "after": "1747.00",
+      "precision": 2
+    },
+    "pptx/basis/2025/COGS": {
+      "id": "pptx/basis/2025/COGS",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/COGS"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:3/cell:2/paragraph:1",
+      "unit": "万元",
+      "before": "1164.00",
+      "after": "1169.00",
+      "precision": 2
+    },
+    "pptx/basis/2026/COGS": {
+      "id": "pptx/basis/2026/COGS",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/COGS"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:3/cell:3/paragraph:1",
+      "unit": "万元",
+      "before": "1175.00",
+      "after": "1167.00",
+      "precision": 2
+    },
+    "pptx/basis/2025/GP": {
+      "id": "pptx/basis/2025/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/GP"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:4/cell:2/paragraph:1",
+      "unit": "万元",
+      "before": "561.00",
+      "after": "576.00",
+      "precision": 2
+    },
+    "pptx/basis/2026/GP": {
+      "id": "pptx/basis/2026/GP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/GP"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:4/cell:3/paragraph:1",
+      "unit": "万元",
+      "before": "545.00",
+      "after": "580.00",
+      "precision": 2
+    },
+    "pptx/basis/2025/OPEX": {
+      "id": "pptx/basis/2025/OPEX",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/OPEX"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:5/cell:2/paragraph:1",
+      "unit": "万元",
+      "before": "246.00",
+      "after": "246.00",
+      "precision": 2
+    },
+    "pptx/basis/2026/OPEX": {
+      "id": "pptx/basis/2026/OPEX",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OPEX"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:5/cell:3/paragraph:1",
+      "unit": "万元",
+      "before": "248.00",
+      "after": "223.00",
+      "precision": 2
+    },
+    "pptx/basis/2025/OP": {
+      "id": "pptx/basis/2025/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2025-YTD/OP"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:6/cell:2/paragraph:1",
+      "unit": "万元",
+      "before": "315.00",
+      "after": "330.00",
+      "precision": 2
+    },
+    "pptx/basis/2026/OP": {
+      "id": "pptx/basis/2026/OP",
+      "kind": "artifact_value",
+      "deps": [
+        "group/2026-YTD/OP"
+      ],
+      "locator": "slide:5/shape:4/table:1/row:6/cell:3/paragraph:1",
+      "unit": "万元",
+      "before": "297.00",
+      "after": "357.00",
+      "precision": 2
+    },
+    "word/paragraph/P10": {
+      "id": "word/paragraph/P10",
+      "kind": "semantic_or_constraint",
+      "locator": "paragraph:4",
+      "deps": [
+        "compare/YTD/REV_YOY",
+        "compare/YTD/OP_YOY"
+      ],
+      "before": {
+        "revenue_yoy": "negative",
+        "op_yoy": "negative"
+      },
+      "after": {
+        "revenue_yoy": "positive",
+        "op_yoy": "positive"
+      },
+      "rule": "Numeric values and corresponding direction claims must agree with both restated periods."
+    },
+    "word/cash-direction": {
+      "id": "word/cash-direction",
+      "kind": "semantic_or_constraint",
+      "locator": "paragraph:10",
+      "deps": [
+        "group/2026-Q2/OCF",
+        "group/2026-YTD/OCF"
+      ],
+      "before": {
+        "q2": "positive",
+        "ytd": "positive"
+      },
+      "after": {
+        "q2": "negative",
+        "ytd": "positive"
+      },
+      "rule": "Q2 negative does not mean the YTD or whole year is negative."
+    },
+    "pptx/cash-direction": {
+      "id": "pptx/cash-direction",
+      "kind": "semantic_or_constraint",
+      "locator": "slide:4/notes/shape:3/paragraph:1",
+      "deps": [
+        "group/2026-Q2/OCF",
+        "group/2026-YTD/OCF"
+      ],
+      "before": {
+        "q2": "positive",
+        "ytd": "positive"
+      },
+      "after": {
+        "q2": "negative",
+        "ytd": "positive"
+      },
+      "rule": "Q2 negative does not mean the YTD or whole year is negative."
+    },
+    "pptx/revenue-direction": {
+      "id": "pptx/revenue-direction",
+      "kind": "semantic_or_constraint",
+      "locator": "slide:1/shape:8/paragraph:1",
+      "deps": [
+        "compare/YTD/REV_YOY"
+      ],
+      "before": "negative",
+      "after": "positive",
+      "rule": "Update visible direction words as well as displayed percentages."
+    },
+    "word/paragraph/P21": {
+      "id": "word/paragraph/P21",
+      "kind": "semantic_or_constraint",
+      "locator": "paragraph:11",
+      "deps": [
+        "group/2026-YTD/AR"
+      ],
+      "before": "480000",
+      "after": "420000",
+      "rule": "AR is a point-in-time balance, not the sum of monthly balances."
+    },
+    "pptx/chart/CASH_QUARTER/axis": {
+      "id": "pptx/chart/CASH_QUARTER/axis",
+      "kind": "semantic_or_constraint",
+      "locator": "slide:4/shape:6/chart:1",
+      "deps": [
+        "group/2026-Q2/OCF"
+      ],
+      "before": {
+        "axis_min": "0"
+      },
+      "after": {
+        "axis_min_maximum": -3,
+        "auto_axis_allowed": true
+      },
+      "rule": "Negative Q2 cash bar must be actually visible; remove or lower the old zero minimum."
+    }
+  },
+  "per_correction_affected_nodes": {
+    "C001": [
+      "compare/Q2/GP_YOY",
+      "compare/Q2/OP_YOY",
+      "compare/Q2/REV_YOY",
+      "compare/YTD/GP_YOY",
+      "compare/YTD/OP_YOY",
+      "compare/YTD/REV_YOY",
+      "group/2026-Q2/GP",
+      "group/2026-Q2/GP_MARGIN",
+      "group/2026-Q2/OCF_REV",
+      "group/2026-Q2/OP",
+      "group/2026-Q2/OP_MARGIN",
+      "group/2026-Q2/REV",
+      "group/2026-YTD/GP",
+      "group/2026-YTD/GP_MARGIN",
+      "group/2026-YTD/OCF_REV",
+      "group/2026-YTD/OP",
+      "group/2026-YTD/OP_MARGIN",
+      "group/2026-YTD/REV",
+      "pptx/basis/2026/GP",
+      "pptx/basis/2026/OP",
+      "pptx/basis/2026/REV",
+      "pptx/chart/PROFIT_QUARTER/0/1",
+      "pptx/chart/PROFIT_QUARTER/1/1",
+      "pptx/chart/REV_MONTHLY/1/3",
+      "pptx/kpi/K01",
+      "pptx/kpi/K02",
+      "pptx/kpi/K03",
+      "pptx/kpi/K04",
+      "pptx/kpi/K05",
+      "pptx/kpi/K06",
+      "pptx/kpi/K13",
+      "pptx/revenue-direction",
+      "raw/2026-04/REV",
+      "word/kpi/K01",
+      "word/kpi/K02",
+      "word/kpi/K03",
+      "word/kpi/K04",
+      "word/kpi/K05",
+      "word/kpi/K06",
+      "word/kpi/K11",
+      "word/kpi/K13",
+      "word/paragraph/P10",
+      "word/quarter/Q2/GP",
+      "word/quarter/Q2/OP",
+      "word/quarter/Q2/REV",
+      "word/quarter/YTD/GP",
+      "word/quarter/YTD/OP",
+      "word/quarter/YTD/REV"
+    ],
+    "C002": [
+      "compare/Q2/GP_YOY",
+      "compare/Q2/OP_YOY",
+      "compare/Q2/REV_YOY",
+      "compare/YTD/GP_YOY",
+      "compare/YTD/OP_YOY",
+      "compare/YTD/REV_YOY",
+      "group/2025-Q2/GP",
+      "group/2025-Q2/GP_MARGIN",
+      "group/2025-Q2/OCF_REV",
+      "group/2025-Q2/OP",
+      "group/2025-Q2/OP_MARGIN",
+      "group/2025-Q2/REV",
+      "group/2025-YTD/GP",
+      "group/2025-YTD/GP_MARGIN",
+      "group/2025-YTD/OCF_REV",
+      "group/2025-YTD/OP",
+      "group/2025-YTD/OP_MARGIN",
+      "group/2025-YTD/REV",
+      "pptx/basis/2025/GP",
+      "pptx/basis/2025/OP",
+      "pptx/basis/2025/REV",
+      "pptx/chart/REV_MONTHLY/0/3",
+      "pptx/kpi/K02",
+      "pptx/kpi/K06",
+      "pptx/kpi/K13",
+      "pptx/kpi/K14",
+      "pptx/revenue-direction",
+      "raw/2025-04/REV",
+      "word/basis/GP",
+      "word/basis/OP",
+      "word/basis/REV",
+      "word/footnote/F01",
+      "word/kpi/K02",
+      "word/kpi/K06",
+      "word/kpi/K12",
+      "word/kpi/K13",
+      "word/kpi/K14",
+      "word/paragraph/P10"
+    ],
+    "C003": [
+      "compare/Q3/GP_YOY",
+      "compare/Q3/OP_YOY",
+      "compare/YTD/GP_YOY",
+      "compare/YTD/OP_YOY",
+      "group/2026-Q3/COGS",
+      "group/2026-Q3/GP",
+      "group/2026-Q3/GP_MARGIN",
+      "group/2026-Q3/OP",
+      "group/2026-Q3/OP_MARGIN",
+      "group/2026-YTD/COGS",
+      "group/2026-YTD/GP",
+      "group/2026-YTD/GP_MARGIN",
+      "group/2026-YTD/OP",
+      "group/2026-YTD/OP_MARGIN",
+      "pptx/basis/2026/COGS",
+      "pptx/basis/2026/GP",
+      "pptx/basis/2026/OP",
+      "pptx/chart/PROFIT_QUARTER/0/2",
+      "pptx/chart/PROFIT_QUARTER/1/2",
+      "pptx/kpi/K03",
+      "pptx/kpi/K04",
+      "pptx/kpi/K05",
+      "pptx/kpi/K06",
+      "pptx/kpi/K13",
+      "raw/2026-09/COGS",
+      "word/kpi/K03",
+      "word/kpi/K04",
+      "word/kpi/K05",
+      "word/kpi/K06",
+      "word/kpi/K13",
+      "word/paragraph/P10",
+      "word/quarter/Q3/GP",
+      "word/quarter/Q3/OP",
+      "word/quarter/YTD/GP",
+      "word/quarter/YTD/OP"
+    ],
+    "C004": [
+      "compare/Q3/OP_YOY",
+      "compare/YTD/OP_YOY",
+      "group/2026-Q3/OP",
+      "group/2026-Q3/OPEX",
+      "group/2026-Q3/OP_MARGIN",
+      "group/2026-YTD/OP",
+      "group/2026-YTD/OPEX",
+      "group/2026-YTD/OP_MARGIN",
+      "pptx/basis/2026/OP",
+      "pptx/basis/2026/OPEX",
+      "pptx/chart/PROFIT_QUARTER/1/2",
+      "pptx/kpi/K05",
+      "pptx/kpi/K06",
+      "raw/2026-08/OPEX",
+      "word/kpi/K05",
+      "word/kpi/K06",
+      "word/paragraph/P10",
+      "word/quarter/Q3/OP",
+      "word/quarter/YTD/OP"
+    ],
+    "C005": [
+      "compare/Q2/OCF_DIFF",
+      "compare/YTD/OCF_DIFF",
+      "group/2026-Q2/OCF",
+      "group/2026-Q2/OCF_REV",
+      "group/2026-YTD/OCF",
+      "group/2026-YTD/OCF_REV",
+      "pptx/cash-direction",
+      "pptx/chart/CASH_QUARTER/0/1",
+      "pptx/chart/CASH_QUARTER/axis",
+      "pptx/kpi/K07",
+      "pptx/kpi/K08",
+      "raw/2026-06/OCF",
+      "word/cash-direction",
+      "word/kpi/K07",
+      "word/kpi/K08",
+      "word/kpi/K11",
+      "word/quarter/Q2/OCF",
+      "word/quarter/YTD/OCF"
+    ],
+    "C006": [
+      "compare/Q3/AR_YOY",
+      "compare/YTD/AR_YOY",
+      "group/2026-Q3/AR",
+      "group/2026-YTD/AR",
+      "pptx/chart/AR_QUARTER/0/2",
+      "pptx/kpi/K09",
+      "pptx/kpi/K10",
+      "raw/2026-09/AR",
+      "word/kpi/K09",
+      "word/kpi/K10",
+      "word/paragraph/P21",
+      "word/quarter/Q3/AR",
+      "word/quarter/YTD/AR"
+    ],
+    "C007": [
+      "compare/Q1/GP_YOY",
+      "compare/Q1/OP_YOY",
+      "compare/Q1/REV_YOY",
+      "compare/YTD/GP_YOY",
+      "compare/YTD/OP_YOY",
+      "compare/YTD/REV_YOY",
+      "group/2026-Q1/GP",
+      "group/2026-Q1/GP_MARGIN",
+      "group/2026-Q1/OCF_REV",
+      "group/2026-Q1/OP",
+      "group/2026-Q1/OP_MARGIN",
+      "group/2026-Q1/REV",
+      "group/2026-YTD/GP",
+      "group/2026-YTD/GP_MARGIN",
+      "group/2026-YTD/OCF_REV",
+      "group/2026-YTD/OP",
+      "group/2026-YTD/OP_MARGIN",
+      "group/2026-YTD/REV",
+      "pptx/basis/2026/GP",
+      "pptx/basis/2026/OP",
+      "pptx/basis/2026/REV",
+      "pptx/chart/PROFIT_QUARTER/0/0",
+      "pptx/chart/PROFIT_QUARTER/1/0",
+      "pptx/chart/REV_MONTHLY/1/2",
+      "pptx/kpi/K01",
+      "pptx/kpi/K02",
+      "pptx/kpi/K03",
+      "pptx/kpi/K04",
+      "pptx/kpi/K05",
+      "pptx/kpi/K06",
+      "pptx/kpi/K13",
+      "pptx/revenue-direction",
+      "raw/2026-03/REV",
+      "word/kpi/K01",
+      "word/kpi/K02",
+      "word/kpi/K03",
+      "word/kpi/K04",
+      "word/kpi/K05",
+      "word/kpi/K06",
+      "word/kpi/K11",
+      "word/kpi/K13",
+      "word/paragraph/P10",
+      "word/quarter/Q1/GP",
+      "word/quarter/Q1/OP",
+      "word/quarter/Q1/REV",
+      "word/quarter/YTD/GP",
+      "word/quarter/YTD/OP",
+      "word/quarter/YTD/REV"
+    ],
+    "C008": [
+      "compare/Q3/GP_YOY",
+      "compare/Q3/OP_YOY",
+      "compare/YTD/GP_YOY",
+      "compare/YTD/OP_YOY",
+      "group/2025-Q3/COGS",
+      "group/2025-Q3/GP",
+      "group/2025-Q3/GP_MARGIN",
+      "group/2025-Q3/OP",
+      "group/2025-Q3/OP_MARGIN",
+      "group/2025-YTD/COGS",
+      "group/2025-YTD/GP",
+      "group/2025-YTD/GP_MARGIN",
+      "group/2025-YTD/OP",
+      "group/2025-YTD/OP_MARGIN",
+      "pptx/basis/2025/COGS",
+      "pptx/basis/2025/GP",
+      "pptx/basis/2025/OP",
+      "pptx/kpi/K06",
+      "pptx/kpi/K13",
+      "raw/2025-08/COGS",
+      "word/basis/COGS",
+      "word/basis/GP",
+      "word/basis/OP",
+      "word/kpi/K06",
+      "word/kpi/K12",
+      "word/kpi/K13",
+      "word/paragraph/P10"
+    ]
+  },
+  "all_affected_nodes": [
+    "compare/Q1/GP_YOY",
+    "compare/Q1/OP_YOY",
+    "compare/Q1/REV_YOY",
+    "compare/Q2/GP_YOY",
+    "compare/Q2/OCF_DIFF",
+    "compare/Q2/OP_YOY",
+    "compare/Q2/REV_YOY",
+    "compare/Q3/AR_YOY",
+    "compare/Q3/GP_YOY",
+    "compare/Q3/OP_YOY",
+    "compare/YTD/AR_YOY",
+    "compare/YTD/GP_YOY",
+    "compare/YTD/OCF_DIFF",
+    "compare/YTD/OP_YOY",
+    "compare/YTD/REV_YOY",
+    "group/2025-Q2/GP",
+    "group/2025-Q2/GP_MARGIN",
+    "group/2025-Q2/OCF_REV",
+    "group/2025-Q2/OP",
+    "group/2025-Q2/OP_MARGIN",
+    "group/2025-Q2/REV",
+    "group/2025-Q3/COGS",
+    "group/2025-Q3/GP",
+    "group/2025-Q3/GP_MARGIN",
+    "group/2025-Q3/OP",
+    "group/2025-Q3/OP_MARGIN",
+    "group/2025-YTD/COGS",
+    "group/2025-YTD/GP",
+    "group/2025-YTD/GP_MARGIN",
+    "group/2025-YTD/OCF_REV",
+    "group/2025-YTD/OP",
+    "group/2025-YTD/OP_MARGIN",
+    "group/2025-YTD/REV",
+    "group/2026-Q1/GP",
+    "group/2026-Q1/GP_MARGIN",
+    "group/2026-Q1/OCF_REV",
+    "group/2026-Q1/OP",
+    "group/2026-Q1/OP_MARGIN",
+    "group/2026-Q1/REV",
+    "group/2026-Q2/GP",
+    "group/2026-Q2/GP_MARGIN",
+    "group/2026-Q2/OCF",
+    "group/2026-Q2/OCF_REV",
+    "group/2026-Q2/OP",
+    "group/2026-Q2/OP_MARGIN",
+    "group/2026-Q2/REV",
+    "group/2026-Q3/AR",
+    "group/2026-Q3/COGS",
+    "group/2026-Q3/GP",
+    "group/2026-Q3/GP_MARGIN",
+    "group/2026-Q3/OP",
+    "group/2026-Q3/OPEX",
+    "group/2026-Q3/OP_MARGIN",
+    "group/2026-YTD/AR",
+    "group/2026-YTD/COGS",
+    "group/2026-YTD/GP",
+    "group/2026-YTD/GP_MARGIN",
+    "group/2026-YTD/OCF",
+    "group/2026-YTD/OCF_REV",
+    "group/2026-YTD/OP",
+    "group/2026-YTD/OPEX",
+    "group/2026-YTD/OP_MARGIN",
+    "group/2026-YTD/REV",
+    "pptx/basis/2025/COGS",
+    "pptx/basis/2025/GP",
+    "pptx/basis/2025/OP",
+    "pptx/basis/2025/REV",
+    "pptx/basis/2026/COGS",
+    "pptx/basis/2026/GP",
+    "pptx/basis/2026/OP",
+    "pptx/basis/2026/OPEX",
+    "pptx/basis/2026/REV",
+    "pptx/cash-direction",
+    "pptx/chart/AR_QUARTER/0/2",
+    "pptx/chart/CASH_QUARTER/0/1",
+    "pptx/chart/CASH_QUARTER/axis",
+    "pptx/chart/PROFIT_QUARTER/0/0",
+    "pptx/chart/PROFIT_QUARTER/0/1",
+    "pptx/chart/PROFIT_QUARTER/0/2",
+    "pptx/chart/PROFIT_QUARTER/1/0",
+    "pptx/chart/PROFIT_QUARTER/1/1",
+    "pptx/chart/PROFIT_QUARTER/1/2",
+    "pptx/chart/REV_MONTHLY/0/3",
+    "pptx/chart/REV_MONTHLY/1/2",
+    "pptx/chart/REV_MONTHLY/1/3",
+    "pptx/kpi/K01",
+    "pptx/kpi/K02",
+    "pptx/kpi/K03",
+    "pptx/kpi/K04",
+    "pptx/kpi/K05",
+    "pptx/kpi/K06",
+    "pptx/kpi/K07",
+    "pptx/kpi/K08",
+    "pptx/kpi/K09",
+    "pptx/kpi/K10",
+    "pptx/kpi/K13",
+    "pptx/kpi/K14",
+    "pptx/revenue-direction",
+    "raw/2025-04/REV",
+    "raw/2025-08/COGS",
+    "raw/2026-03/REV",
+    "raw/2026-04/REV",
+    "raw/2026-06/OCF",
+    "raw/2026-08/OPEX",
+    "raw/2026-09/AR",
+    "raw/2026-09/COGS",
+    "word/basis/COGS",
+    "word/basis/GP",
+    "word/basis/OP",
+    "word/basis/REV",
+    "word/cash-direction",
+    "word/footnote/F01",
+    "word/kpi/K01",
+    "word/kpi/K02",
+    "word/kpi/K03",
+    "word/kpi/K04",
+    "word/kpi/K05",
+    "word/kpi/K06",
+    "word/kpi/K07",
+    "word/kpi/K08",
+    "word/kpi/K09",
+    "word/kpi/K10",
+    "word/kpi/K11",
+    "word/kpi/K12",
+    "word/kpi/K13",
+    "word/kpi/K14",
+    "word/paragraph/P10",
+    "word/paragraph/P21",
+    "word/quarter/Q1/GP",
+    "word/quarter/Q1/OP",
+    "word/quarter/Q1/REV",
+    "word/quarter/Q2/GP",
+    "word/quarter/Q2/OCF",
+    "word/quarter/Q2/OP",
+    "word/quarter/Q2/REV",
+    "word/quarter/Q3/AR",
+    "word/quarter/Q3/GP",
+    "word/quarter/Q3/OP",
+    "word/quarter/YTD/AR",
+    "word/quarter/YTD/GP",
+    "word/quarter/YTD/OCF",
+    "word/quarter/YTD/OP",
+    "word/quarter/YTD/REV"
+  ],
+  "protected_word_paragraphs": {
+    "P11": {
+      "kind": "paragraph",
+      "locator": "paragraph:5",
+      "text": "[P11] 毛利为收入减营业成本；简化经营利润再减期间费用。材料未包含完整利润表，不据此声明净利润。",
+      "references": [],
+      "parent_cell": null,
+      "position": 30
+    },
+    "P90": {
+      "kind": "paragraph",
+      "locator": "paragraph:17",
+      "text": "[P90] 仅覆盖2025与2026各1至9月，不包含Q4。所得税、财务费用、净利润和对外确认未提供。",
+      "references": [
+        {
+          "kind": "footnote",
+          "id": "2",
+          "offset": 51,
+          "node": "paragraph:17",
+          "cell": null,
+          "note_locator": "footnote:2",
+          "available": true
+        }
+      ],
+      "parent_cell": null,
+      "position": 102
+    },
+    "P99": {
+      "kind": "paragraph",
+      "locator": "paragraph:18",
+      "text": "[P99] 数据复核制度版本2026年7月，责任角色为财务负责人和经营分析员。",
+      "references": [],
+      "parent_cell": null,
+      "position": 103
+    },
+    "P91": {
+      "kind": "paragraph",
+      "locator": "paragraph:19",
+      "text": "[P91] 原始资料与输出分别保存，后续核对保留真实期间、单位与数据口径。",
+      "references": [],
+      "parent_cell": null,
+      "position": 104
+    }
+  },
+  "protected_word_footnote": {
+    "locator": "footnote:2",
+    "kind": "footnote",
+    "id": "2",
+    "text": " [F02] 本报告仅覆盖1至9月，不含第四季度。所得税、财务费用及完整利润表未提供，不直接称为净利润。",
+    "part": "word/footnotes.xml",
+    "part_sha256": "d41d7bba8178436bc2cc2f5f8d35a331eded8c95e6a5bb04e0411f1d0fb44bd0",
+    "type": "normal"
+  },
+  "protected_pptx_slide": 6,
+  "protected_workbook_unknowns": [
+    "Q4",
+    "income_tax",
+    "finance_costs",
+    "net_profit",
+    "external_confirmation"
+  ],
+  "source_gt_precedes_reference": true,
+  "impact_log_equivalence": "Use actual sheet/cell, visible KPI/paragraph/footnote IDs, slide/chart/series/category and real target locators; private internal IDs are not required.",
+  "numeric_tolerances": {
+    "raw_cny": "0.005",
+    "display_wanyuan": "0.005",
+    "display_percent_points": "0.005",
+    "native_chart_wanyuan": "0.00000001"
+  },
+  "semantic_scope": "Independent Judge checks prose/note direction, unsupported claims, protected meaning and full visual fit; structural/value observations alone do not establish these."
+}
