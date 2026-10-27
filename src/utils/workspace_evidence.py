@@ -11,7 +11,7 @@ try:
 except ImportError:
     from src.wildclawbench_grading_core.native_text import NativeTextError, extract_native_text, is_native_text_format
 
-JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION = "wildclaw-workspace-evidence-v4"
+JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION = "wildclaw-workspace-evidence-v5"
 DEFAULT_JUDGE_WORKSPACE_MAX_CHARS = 80_000
 DEFAULT_JUDGE_WORKSPACE_FILE_MAX_CHARS = 12_000
 DEFAULT_DECLARED_EVIDENCE_FILE_MAX_CHARS = 20_000

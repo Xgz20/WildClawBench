@@ -11,6 +11,7 @@ from tests.general_e2e.test_general_semantic_scoring import RUBRIC
 from tests.general_e2e.test_local_scoring_runtime import Fixture, LOCK_PATH, RUNTIME
 from tests.general_e2e.test_native_artifact_text import write_docx, write_xlsx
 from tests.general_e2e.test_native_presentation_text import write_pptx
+from tests.general_e2e.test_native_word_structure import write_word
 
 
 class GeneralApiJudgeTests(unittest.TestCase):
@@ -59,6 +60,7 @@ class GeneralApiJudgeTests(unittest.TestCase):
         candidate_chars: int | None = None,
         native_artifacts: bool = False,
         native_presentation: bool = False,
+        native_word_structure: bool = False,
     ) -> Path:
         weights = (
             {"automated": 0.5, "llm_judge": 0.5}
@@ -77,11 +79,13 @@ class GeneralApiJudgeTests(unittest.TestCase):
             write_xlsx(fixture.candidate / "results/applicability.xlsx")
         if native_presentation:
             write_pptx(fixture.candidate / "results/annual.pptx")
+        if native_word_structure:
+            write_word(fixture.candidate / "results/converted.docx")
         if candidate_chars is not None:
             (fixture.candidate / "answer.txt").write_text(
                 "x" * candidate_chars, encoding="utf-8"
             )
-        if candidate_chars is not None or native_artifacts or native_presentation:
+        if candidate_chars is not None or native_artifacts or native_presentation or native_word_structure:
             entries, candidate_sha = RUNTIME._inventory_tree(fixture.candidate)
             artifact_path = fixture.candidate.parent / "candidate-artifact.json"
             artifact = json.loads(artifact_path.read_text())
@@ -97,7 +101,7 @@ class GeneralApiJudgeTests(unittest.TestCase):
             max_attempts=max_attempts,
             max_input_chars=max_input_chars,
         )
-        if native_presentation:
+        if native_presentation or native_word_structure:
             config_value = json.loads(config.read_text(encoding="utf-8"))
             config_value["max_evidence_item_chars"] = 20_000
             config.write_text(json.dumps(config_value), encoding="utf-8")
@@ -187,6 +191,19 @@ class GeneralApiJudgeTests(unittest.TestCase):
             ],
             "notes": "fixture",
         }
+
+    def test_word_packet_contains_grid_and_resolved_note_evidence_from_original_bytes(self) -> None:
+        attempt = self._attempt("word-structure-packet",native_word_structure=True,max_input_chars=100_000)
+        packet = json.loads((attempt/"semantic/api-input.json").read_text(encoding="utf-8"))
+        row = next(r for r in json.loads(packet["user_prompt"])["evidence"] if r.get("path","").endswith("converted.docx"))
+        self.assertEqual(row["content_status"],"complete")
+        self.assertEqual(row["native_extraction"]["source_sha256"],row["sha256"])
+        self.assertEqual(row["native_extraction"]["engine"]["version"],"wildclawbench.docx-text/v1")
+        records={r['locator']:r for r in map(json.loads,row['content'].splitlines())}
+        self.assertEqual(records['table:1/row:1/cell:2']['table_structure']['grid_column_start'],3)
+        target=records['table:1/row:2/cell:3']['note_references'][0]['target_locator']
+        self.assertEqual(target,'word/footnotes.xml/footnote:1')
+        self.assertEqual(records[records[target]['paragraph_locators'][0]]['text'],'仅适用甲行A')
 
     @staticmethod
     def _anthropic_response(candidate: dict) -> tuple[int, dict, bytes]:

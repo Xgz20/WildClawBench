@@ -11,6 +11,7 @@ from eval_general_e2e.datasets.bundle import build_default_bundle
 from tests.general_e2e.test_local_scoring_runtime import Fixture, MAPPED_RESULTS_RULE, RUNTIME
 from tests.general_e2e.test_native_artifact_text import write_docx
 from tests.general_e2e.test_native_presentation_text import write_pptx
+from tests.general_e2e.test_native_word_structure import write_word
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -432,6 +433,22 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         self.assertEqual(log["coverage"]["kind"], "native-text-records")
         self.assertEqual(log["coverage"]["native_extraction"]["source_sha256"], catalog["items"][0]["reference"]["sha256"])
         self.assertEqual(log["coverage"]["native_extraction"]["engine"]["version"], "wildclawbench.pptx-text/v1")
+
+    def test_word_structure_query_keeps_frozen_cell_and_note_locators(self) -> None:
+        fixture=Fixture(self.root/'word-structure',rule='',grading_type='llm_judge',grading_weights={'automated':0.,'llm_judge':1.},llm_judge_rubric=RUBRIC)
+        write_word(fixture.candidate/'results/converted.docx')
+        entries,digest=RUNTIME._inventory_tree(fixture.candidate)
+        path=fixture.candidate.parent/'candidate-artifact.json';record=json.loads(path.read_text());record.update(entries=entries,expected_sha256=digest);path.write_text(json.dumps(record),encoding='utf-8')
+        record=json.loads(fixture.execution_record.read_text());record['candidate']['frozen_sha256']=digest;fixture.execution_record.write_text(json.dumps(record),encoding='utf-8')
+        attempt=fixture.prepare('word-structure-query');RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        catalog=RUNTIME.query_evidence_attempt(attempt_root=attempt,mode='catalog',path_contains='converted.docx')
+        identity=catalog['items'][0]['id'];page=RUNTIME.query_evidence_attempt(attempt_root=attempt,mode='file',evidence_id=identity,offset=0,limit=1000,max_chars=100_000)
+        rows={r['locator']:r for r in (json.loads(item['text']) for item in page['items'])}
+        self.assertEqual(rows['table:1/row:3/cell:1']['table_structure']['vertical_anchor'],'table:1/row:2/cell:1')
+        self.assertEqual(rows['table:1/row:3/cell:4']['note_references'][0]['id'],'2')
+        log=json.loads((attempt/'semantic/query-log.json').read_text())['queries'][-1]
+        self.assertEqual(log['coverage']['native_extraction']['source_sha256'],catalog['items'][0]['reference']['sha256'])
+        self.assertEqual(log['coverage']['native_extraction']['engine']['version'],'wildclawbench.docx-text/v1')
 
     def test_absence_claim_requires_unfiltered_complete_transcript_pages(self) -> None:
         attempt = self._hybrid_attempt("absence")

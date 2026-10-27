@@ -15,11 +15,13 @@ import posixpath
 import re
 import xml.etree.ElementTree as ET
 import zipfile
+from urllib.parse import unquote, urlsplit
 
 
 NATIVE_TEXT_VERSION = "wildclawbench.native-artifact-text/v1"
 NATIVE_TEXT_EXTENSIONS = frozenset({".docx", ".xlsx", ".pptx", ".pdf"})
 PPTX_TEXT_VERSION = "wildclawbench.pptx-text/v1"
+DOCX_TEXT_VERSION = "wildclawbench.docx-text/v1"
 MAX_FILE_BYTES = 32 * 1024 * 1024
 MAX_ZIP_BYTES = 100 * 1024 * 1024
 MAX_XML_BYTES = 16 * 1024 * 1024
@@ -95,6 +97,110 @@ def _docx(data: bytes) -> tuple[list[dict], list[str]]:
         body = root.find(W + "body")
         if body is None:
             raise NativeTextError("NATIVE_TEXT_INVALID", "Word document body is missing")
+        names = set(archive.namelist())
+        note_targets = {}
+        relpart = "word/_rels/document.xml.rels"
+        if relpart in names:
+            seen = set()
+            for relation in _xml(archive, relpart):
+                identity = relation.get("Id")
+                if not identity or identity in seen:
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "missing or ambiguous Word relationship ID")
+                seen.add(identity)
+                kind = next((kind for kind in ("footnote", "endnote") if relation.get("Type", "").endswith("/" + kind + "s")), None)
+                if kind is None:
+                    continue
+                if relation.get("TargetMode") == "External":
+                    value = {"content_status": "external_not_followed", "part": None}
+                else:
+                    target = unquote(relation.get("Target", ""))
+                    uri = urlsplit(target)
+                    if not target or "\\" in target or uri.scheme or uri.netloc or uri.query or uri.fragment:
+                        raise NativeTextError("NATIVE_TEXT_INVALID", "unsafe Word note relationship target")
+                    part = posixpath.normpath(target.lstrip("/") if target.startswith("/") else posixpath.join("word", target))
+                    if part == ".." or part.startswith("../"):
+                        raise NativeTextError("NATIVE_TEXT_INVALID", "Word note relationship escapes package")
+                    value = {"content_status": "available" if part in names else "missing_part", "part": part}
+                if kind in note_targets and note_targets[kind] != value:
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "ambiguous Word note relationship type")
+                note_targets[kind] = value
+
+        def note_id(node):
+            value = node.get(W + "id", "").strip()
+            if not re.fullmatch(r"[+-]?\d{1,10}", value) or not -(2**31) <= int(value) < 2**31:
+                raise NativeTextError("NATIVE_TEXT_INVALID", "invalid Word note ID")
+            return str(int(value))
+
+        note_parts = {part: kind for kind, part in (("footnote", "word/footnotes.xml"), ("endnote", "word/endnotes.xml")) if part in names}
+        for kind, target in note_targets.items():
+            if target["content_status"] == "available":
+                if target["part"] in note_parts and note_parts[target["part"]] != kind:
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "Word note relationship type conflicts with part")
+                note_parts[target["part"]] = kind
+        note_index, note_text, note_summaries = {}, {}, []
+        for part, kind in sorted(note_parts.items()):
+            notes = _xml(archive, part)
+            if notes.tag != W + kind + "s":
+                raise NativeTextError("NATIVE_TEXT_INVALID", "wrong Word note part root")
+            part_sha = hashlib.sha256(archive.read(part)).hexdigest()
+            paragraph_index = 0
+            for note in notes.findall(W + kind):
+                identity = note_id(note)
+                if (part, identity) in note_index:
+                    raise NativeTextError("NATIVE_TEXT_INVALID", "duplicate Word note ID")
+                locator = f"{part}/{kind}:{identity}"
+                paragraphs = []
+                for paragraph in note.iter(W + "p"):
+                    paragraph_index += 1
+                    text = _word_text(paragraph)
+                    if text:
+                        location = f"{part}/paragraph:{paragraph_index}"
+                        paragraphs.append(location)
+                        note_text.setdefault(part, []).append({"locator": location, "text": text,
+                            "context": "word_" + kind + "_text", "note_id": identity, "note_locator": locator})
+                summary = {"locator": locator, "text": "", "context": "word_" + kind,
+                    "note_id": identity, "note_type": note.get(W + "type", "normal"),
+                    "part": part, "part_sha256": part_sha, "paragraph_locators": paragraphs,
+                    "part_linked_from_document": note_targets.get(kind, {}).get("part") == part}
+                note_index[(part, identity)] = summary
+                note_summaries.append(summary)
+
+        def note_references(node):
+            result = []
+            def walk(parent):
+                for child in parent:
+                    if child.tag in {W + "del", W + "moveFrom", W + "drawing", W + "pict", W + "tbl"}:
+                        continue
+                    if child.tag in {W + "footnoteReference", W + "endnoteReference"}:
+                        kind = "footnote" if child.tag == W + "footnoteReference" else "endnote"
+                        identity = note_id(child)
+                        target = note_targets.get(kind, {"part": None, "content_status": "relationship_missing"})
+                        entry = {"kind": kind, "id": identity, **target}
+                        note = note_index.get((target["part"], identity))
+                        if entry["content_status"] == "available":
+                            entry["content_status"] = "available" if note else "note_missing"
+                        entry["target_locator"] = note["locator"] if note else None
+                        result.append(entry)
+                    else:
+                        walk(child)
+            walk(node)
+            return result
+
+        def nonnegative(node, tag, default):
+            element = node.find(W + tag) if node is not None else None
+            if element is None:
+                return default
+            value = element.get(W + "val", "")
+            return int(value) if re.fullmatch(r"\d{1,8}", value) else None
+
+        def merge_value(properties, tag):
+            element = properties.find(W + tag) if properties is not None else None
+            return element.get(W + "val", "continue") if element is not None else None
+
+        def repeated_header(properties):
+            item = properties.find(W + "tblHeader") if properties is not None else None
+            return item is not None and item.get(W + "val", "1") not in {"0", "false", "off"}
+
         paragraph_number = table_number = 0
         def body_nodes(parent):
             for node in parent:
@@ -105,25 +211,72 @@ def _docx(data: bytes) -> tuple[list[dict], list[str]]:
         for node in body_nodes(body):
             if node.tag == W + "p":
                 paragraph_number += 1
-                text = _word_text(node)
-                if text:
-                    records.append({"locator": f"paragraph:{paragraph_number}", "text": text})
-            elif node.tag == W + "tbl":
+                text, refs = _word_text(node), note_references(node)
+                if text or refs:
+                    records.append({"locator": f"paragraph:{paragraph_number}", "text": text,
+                                    **({"note_references": refs} if refs else {})})
+            else:
                 table_number += 1
-                for row_number, row in enumerate(node.findall(W + "tr"), 1):
+                grid = node.findall(W + "tblGrid/" + W + "gridCol")
+                row_nodes = node.findall(W + "tr")
+                detailed = any(cell.find(W + "tbl") is not None for cell in node.findall(W + "tr/" + W + "tc")) or any(cell.find(W + "tcPr/" + W + tag) is not None
+                    for cell in node.findall(W + "tr/" + W + "tc") for tag in ("gridSpan", "vMerge", "hMerge")) or any(
+                    row.find(W + "trPr/" + W + tag) is not None for row in row_nodes for tag in ("gridBefore", "gridAfter"))
+                headers = [i for i, row in enumerate(row_nodes, 1) if repeated_header(row.find(W + "trPr"))]
+                if node.find(W + "tblGrid") is not None or detailed or headers:
+                    records.append({"locator": f"table:{table_number}/grid", "text": "", "context": "word_table_grid",
+                        "column_widths_twips_raw": [item.get(W + "w") for item in grid],
+                        "declared_column_count": len(grid) if node.find(W + "tblGrid") is not None else None,
+                        "row_count": len(row_nodes), "repeated_header_rows": headers})
+                previous_vertical = {}
+                for row_number, row in enumerate(row_nodes, 1):
+                    properties = row.find(W + "trPr")
+                    before, after = nonnegative(properties, "gridBefore", 0), nonnegative(properties, "gridAfter", 0)
+                    column = before + 1 if before is not None else None
+                    next_vertical, horizontal = {}, None
                     for cell_number, cell in enumerate(row.findall(W + "tc"), 1):
                         text = "\n".join(_word_text(p) for p in cell.iter(W + "p"))
-                        records.append({"locator": f"table:{table_number}/row:{row_number}/cell:{cell_number}", "text": text})
-        for name in sorted(archive.namelist()):
-            if re.fullmatch(r"word/(?:header\d+|footer\d+|footnotes|endnotes|comments)\.xml", name):
+                        locator = f"table:{table_number}/row:{row_number}/cell:{cell_number}"
+                        refs, structure = note_references(cell), {}
+                        if detailed:
+                            cp = cell.find(W + "tcPr")
+                            span = nonnegative(cp, "gridSpan", 1)
+                            span = span if span is not None and span > 0 else None
+                            raw_span = cp.find(W + "gridSpan") if cp is not None else None
+                            vertical, hmerge = merge_value(cp, "vMerge"), merge_value(cp, "hMerge")
+                            horizontal = locator if hmerge == "restart" else horizontal if hmerge == "continue" else None
+                            valid_interval = column is not None and span is not None
+                            anchor = (locator if vertical == "restart" else previous_vertical.get((column, span)) if vertical == "continue" else None) if valid_interval else None
+                            if anchor:
+                                next_vertical[(column, span)] = anchor
+                            structure = {"grid_column_start": column, "grid_span": span,
+                                "grid_span_raw": raw_span.get(W + "val") if raw_span is not None else None,
+                                "vertical_merge": vertical, "vertical_anchor": anchor,
+                                "vertical_merge_status": "none" if vertical is None else "matched" if anchor else
+                                    "invalid_interval" if not valid_interval else "orphan_or_span_mismatch" if vertical == "continue" else "invalid",
+                                "legacy_horizontal_merge": hmerge, "horizontal_anchor": horizontal,
+                                "row_grid_before": before, "row_grid_after": after,
+                                "repeated_header": repeated_header(properties), "contains_nested_table": cell.find(W + "tbl") is not None}
+                            column = column + span if valid_interval else None
+                        records.append({"locator": locator, "text": text,
+                            **({"table_structure": structure} if detailed else {}), **({"note_references": refs} if refs else {})})
+                    previous_vertical = next_vertical
+        for name in sorted(names | set(note_text)):
+            if name in note_parts:
+                records.extend(note_text.get(name, []))
+                continue
+            if re.fullmatch(r"word/(?:header\d+|footer\d+|comments)\.xml", name):
                 for index, paragraph in enumerate(_xml(archive, name).iter(W + "p"), 1):
                     text = _word_text(paragraph)
                     if text:
                         records.append({"locator": f"{name}/paragraph:{index}", "text": text})
+        records.extend(note_summaries)
     if not any(record["text"].strip() for record in records):
         raise NativeTextError("NATIVE_TEXT_UNAVAILABLE", "Word file has no extractable text; visual evidence may be required")
-    return records, ["Text and tables only; images, embedded objects and layout are not interpreted.",
-                     "Inserted text is included; deleted text stored as delText is excluded."]
+    return records, ["Text, declared table grids/merges and explicit note relationships only; images, visual layout and editability are not interpreted.",
+        "Grid positions are declared OOXML intervals, not inferred from rendered geometry; invalid or orphan merges remain explicit.",
+        "Nested table text may be included in the parent cell; nested topology is not expanded.",
+        "Inserted text is included; deleted text stored as delText is excluded. Note IDs are package IDs, not rendered note numbers."]
 
 
 def _cell_date(value: str, code: str, epoch_1904: bool) -> str | None:
@@ -471,6 +624,8 @@ def extract_native_text(path: str | Path, *, max_chars: int = 200_000,
     engine = {"name": "stdlib-ooxml", "version": NATIVE_TEXT_VERSION}
     if path.suffix.lower() == ".pptx":
         engine = {"name": "stdlib-presentation-ooxml", "version": PPTX_TEXT_VERSION}
+    if path.suffix.lower() == ".docx":
+        engine = {"name": "stdlib-word-ooxml", "version": DOCX_TEXT_VERSION}
     if path.suffix.lower() == ".pdf":
         try:
             engine = {"name": "pypdf", "version": metadata.version("pypdf")}

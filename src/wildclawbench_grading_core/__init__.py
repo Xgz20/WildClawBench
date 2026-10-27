@@ -11,7 +11,7 @@ from .office_runtime import create_office_render_lock, validate_office_render_lo
 from .office_runtime import read_embedded_xlsx, extract_embedded_xlsx
 from .image_evidence import ImageEvidenceError, is_image_evidence_format, read_image_evidence
 
-CORE_VERSION = "0.8.0"
+CORE_VERSION = "0.9.0"
 
 __all__ = (
     "CORE_VERSION",
