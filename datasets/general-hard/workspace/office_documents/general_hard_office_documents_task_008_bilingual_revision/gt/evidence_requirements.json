@@ -1,0 +1,103 @@
+{
+  "required_sources": {
+    "S01": [
+      "baseline_zh.docx#S01",
+      "draft_vi.docx#S01",
+      "review_vi.docx#R01",
+      "terms.csv#T01"
+    ],
+    "S02": [
+      "baseline_zh.docx#S02",
+      "draft_vi.docx#S02",
+      "review_vi.docx#R02",
+      "terms.csv#T01",
+      "terms.csv#T02"
+    ],
+    "S03": [
+      "baseline_zh.docx#S03",
+      "draft_vi.docx#S03",
+      "review_vi.docx#R03"
+    ],
+    "S04": [
+      "baseline_zh.docx#AUTHORITY",
+      "baseline_zh.docx#S04",
+      "draft_vi.docx#S04",
+      "review_vi.docx#R04"
+    ],
+    "S05": [
+      "baseline_zh.docx#S05",
+      "draft_vi.docx#S05",
+      "review_vi.docx#R05",
+      "terms.csv#T10"
+    ],
+    "S06": [
+      "baseline_zh.docx#AUTHORITY",
+      "baseline_zh.docx#S06",
+      "draft_vi.docx#S06",
+      "review_vi.docx#R06",
+      "terms.csv#T11"
+    ],
+    "S07": [
+      "baseline_zh.docx#S07",
+      "draft_vi.docx#S07",
+      "review_vi.docx#R07",
+      "terms.csv#T03"
+    ],
+    "S08": [
+      "baseline_zh.docx#AUTHORITY",
+      "baseline_zh.docx#S08",
+      "draft_vi.docx#S08",
+      "review_vi.docx#R08",
+      "terms.csv#T04"
+    ],
+    "S09": [
+      "baseline_zh.docx#S09",
+      "draft_vi.docx#S09",
+      "review_vi.docx#R09",
+      "terms.csv#T06",
+      "terms.csv#T07"
+    ],
+    "S10": [
+      "baseline_zh.docx#S10",
+      "draft_vi.docx#S10",
+      "review_vi.docx#R10",
+      "terms.csv#T05"
+    ],
+    "S11": [
+      "baseline_zh.docx#S11",
+      "draft_vi.docx#S11",
+      "review_vi.docx#R11",
+      "terms.csv#T08"
+    ],
+    "S12": [
+      "baseline_zh.docx#AUTHORITY",
+      "baseline_zh.docx#S12",
+      "draft_vi.docx#S12",
+      "review_vi.docx#R12",
+      "terms.csv#T09"
+    ],
+    "S13": [
+      "baseline_zh.docx#S13",
+      "draft_vi.docx#S13"
+    ],
+    "S14": [
+      "baseline_zh.docx#S14",
+      "draft_vi.docx#S14"
+    ],
+    "S15": [
+      "baseline_zh.docx#S15",
+      "draft_vi.docx#S15"
+    ],
+    "S16": [
+      "baseline_zh.docx#S16",
+      "draft_vi.docx#S16",
+      "terms.csv#T07"
+    ]
+  },
+  "source_codes": {
+    "ZH": "baseline_zh.docx",
+    "DV": "draft_vi.docx",
+    "RV": "review_vi.docx",
+    "T": "terms.csv"
+  }
+}

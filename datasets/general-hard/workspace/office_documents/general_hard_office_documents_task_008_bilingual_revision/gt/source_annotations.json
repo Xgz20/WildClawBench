@@ -1,0 +1,376 @@
+{
+  "schema_version": "h008-author-source-annotations/v1",
+  "data": {
+    "schema_version": "h008-author-material/v1",
+    "organization": "青澜服务中心",
+    "seed": 2026102608,
+    "scope_zh": "本题为合成的双语条款样稿修订。中文基线及固定术语是事实与口径上限；越文意见是提案，冲突且无授权时不采纳或列待授权。只改越文及写中文说明，不改中文基线，不实际执行业务。样稿提及的附件、通知或业务状态不是额外执行依赖。",
+    "sentences": [
+      {
+        "sentence_id": "S01",
+        "baseline_zh": "青澜服务中心负责提供本批服务支持。",
+        "draft_vi": "Công ty Thanh Lam chịu trách nhiệm cung cấp hỗ trợ dịch vụ cho đợt này.",
+        "author_declared_facts": {
+          "provider_id": "SUP-01"
+        }
+      },
+      {
+        "sentence_id": "S02",
+        "baseline_zh": "所需数据清单由北澄项目组提供，青澜服务中心负责核对。",
+        "draft_vi": "Trung tâm Dịch vụ Thanh Lam cung cấp danh mục dữ liệu cần thiết; Nhóm dự án Bắc Trừng kiểm tra danh mục.",
+        "author_declared_facts": {
+          "materials_provider_id": "CLI-01",
+          "materials_checker_id": "SUP-01"
+        }
+      },
+      {
+        "sentence_id": "S03",
+        "baseline_zh": "每批服务金额为人民币80000元，不含税，不更改币种或按汇率换算。",
+        "draft_vi": "Giá trị dịch vụ cho mỗi đợt là 80.000.000 CNY, chưa bao gồm thuế; không đổi đơn vị tiền tệ hoặc quy đổi theo tỷ giá.",
+        "author_declared_facts": {
+          "amount": 80000,
+          "currency": "CNY",
+          "amount_unit": "per_batch",
+          "tax_basis": "excluded"
+        }
+      },
+      {
+        "sentence_id": "S04",
+        "baseline_zh": "服务期自2026年11月1日起至2027年10月31日止。",
+        "draft_vi": "Thời hạn dịch vụ bắt đầu từ ngày 01/11/2026 và kết thúc vào ngày 31/10/2027.",
+        "author_declared_facts": {
+          "start_date": "2026-11-01",
+          "end_date": "2027-10-31"
+        }
+      },
+      {
+        "sentence_id": "S05",
+        "baseline_zh": "首次响应须在本次受理登记起4工作小时内完成。",
+        "draft_vi": "Phản hồi đầu tiên phải được thực hiện trong 4 ngày làm việc kể từ khi đăng ký tiếp nhận yêu cầu lần này.",
+        "author_declared_facts": {
+          "first_response_work_hours": 4,
+          "clock_origin": "intake_registration"
+        }
+      },
+      {
+        "sentence_id": "S06",
+        "baseline_zh": "处理时限为所需资料齐备后2工作日，不从首次受理时提前起算。",
+        "draft_vi": "Thời hạn xử lý là 2 ngày làm việc kể từ khi đã nhận đủ tài liệu cần thiết, không tính trước từ lần tiếp nhận đầu tiên.",
+        "author_declared_facts": {
+          "handling_work_days": 2,
+          "clock_origin": "required_documents_complete"
+        }
+      },
+      {
+        "sentence_id": "S07",
+        "baseline_zh": "试运行完成前，不得直接发布到正式环境。",
+        "draft_vi": "Trước khi hoàn tất chạy thử, được phép phát hành trực tiếp lên môi trường chính thức.",
+        "author_declared_facts": {
+          "release_before_trial_allowed": false
+        }
+      },
+      {
+        "sentence_id": "S08",
+        "baseline_zh": "仅可外发脱敏样本，原始客户资料不得外发。",
+        "draft_vi": "Chỉ được gửi ra ngoài mẫu dữ liệu đã khử định danh; không được gửi ra ngoài dữ liệu khách hàng gốc.",
+        "author_declared_facts": {
+          "external_deidentified_sample_allowed": true,
+          "external_raw_customer_data_allowed": false
+        }
+      },
+      {
+        "sentence_id": "S09",
+        "baseline_zh": "验收须双方书面确认，单方或口头确认不构成验收。",
+        "draft_vi": "Việc nghiệm thu chỉ cần xác nhận miệng của bên cung cấp.",
+        "author_declared_facts": {
+          "acceptance_written": true,
+          "acceptance_parties": "both",
+          "oral_or_single_side_acceptance": false
+        }
+      },
+      {
+        "sentence_id": "S10",
+        "baseline_zh": "超出既定范围的事项应通过变更申请单独登记，不自动并入本批范围。",
+        "draft_vi": "Các hạng mục ngoài phạm vi đã chốt phải được ghi nhận riêng bằng phiếu yêu cầu mới và không tự động được đưa vào phạm vi đợt này.",
+        "author_declared_facts": {
+          "request_type": "change_request",
+          "automatically_included": false
+        }
+      },
+      {
+        "sentence_id": "S11",
+        "baseline_zh": "统计共17个项目，其中3个待核，待核项不计入完成数。",
+        "draft_vi": "Có tổng cộng 20 hạng mục, trong đó 3 hạng mục chờ xác minh; số hạng mục hoàn thành là 17.",
+        "author_declared_facts": {
+          "total": 17,
+          "pending": 3,
+          "completed": 14
+        }
+      },
+      {
+        "sentence_id": "S12",
+        "baseline_zh": "只交付通知草稿，不向真实收件人发送。",
+        "draft_vi": "Chỉ bàn giao bản nháp thông báo; không gửi cho người nhận thực.",
+        "author_declared_facts": {
+          "notification_output": "draft",
+          "actual_send_allowed": false
+        }
+      },
+      {
+        "sentence_id": "S13",
+        "baseline_zh": "备用联系人为Linh，值班安排不变。",
+        "draft_vi": "Người liên hệ dự phòng là Linh; lịch trực không thay đổi.",
+        "author_declared_facts": {
+          "backup_person": "Linh",
+          "rota_changed": false
+        }
+      },
+      {
+        "sentence_id": "S14",
+        "baseline_zh": "不进行汇率换算，币种保持为人民币CNY。",
+        "draft_vi": "Không áp dụng quy đổi theo tỷ giá; đơn vị tiền tệ giữ nguyên là CNY.",
+        "author_declared_facts": {
+          "currency": "CNY",
+          "fx_conversion": false
+        }
+      },
+      {
+        "sentence_id": "S15",
+        "baseline_zh": "正文提及的附件仅为数据清单与校验记录两项，不要求生成新附件。",
+        "draft_vi": "Phần phụ lục được nhắc đến trong nội dung chỉ gồm danh mục dữ liệu và bản ghi kiểm tra, tổng cộng hai mục; không yêu cầu tạo phụ lục mới.",
+        "author_declared_facts": {
+          "mentioned_attachment_count": 2,
+          "new_attachments_required": false
+        }
+      },
+      {
+        "sentence_id": "S16",
+        "baseline_zh": "未提供回执状态，不能推定已验收或已结案。",
+        "draft_vi": "Chưa có thông tin về biên nhận; không suy đoán rằng hồ sơ đã được nghiệm thu hoặc khép lại.",
+        "author_declared_facts": {
+          "receipt_status": "unknown",
+          "acceptance_status": "unknown",
+          "closure_status": "unknown"
+        }
+      }
+    ],
+    "review_comments": [
+      {
+        "comment_id": "R01",
+        "sentence_id": "S01",
+        "review_vi": "Dùng đúng tên tổ chức trong bảng thuật ngữ: thay “Công ty Thanh Lam” bằng “Trung tâm Dịch vụ Thanh Lam”; không tự đổi sang tên viết tắt.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "更正固定主体名称，不改变服务提供方。"
+      },
+      {
+        "comment_id": "R02",
+        "sentence_id": "S02",
+        "review_vi": "Theo bản gốc tiếng Trung, Nhóm dự án Bắc Trừng cung cấp danh mục; Trung tâm Dịch vụ Thanh Lam kiểm tra. Hãy sửa lại chủ thể, không đảo hai vai trò.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "中文基线明确客户提供、服务方核对，越文草稿角色颠倒。"
+      },
+      {
+        "comment_id": "R03",
+        "sentence_id": "S03",
+        "review_vi": "Số tiền đúng là 80.000 CNY cho mỗi đợt, chưa bao gồm thuế. Bỏ phần số không thừa; không đổi tiền tệ và không thêm thuế suất.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "改正千分位及多余零，金额80000、CNY、每批及不含税保持。"
+      },
+      {
+        "comment_id": "R04",
+        "sentence_id": "S04",
+        "review_vi": "Đề nghị kéo dài ngày kết thúc dịch vụ đến 30/11/2027 để thuận tiện cho kế hoạch mới.",
+        "author_declared_decision": "not_applied",
+        "author_reason_zh": "该提案改变中文基线日期，缺少授权，保持2027-10-31并记待授权。"
+      },
+      {
+        "comment_id": "R05",
+        "sentence_id": "S05",
+        "review_vi": "Đổi đơn vị của phản hồi đầu tiên từ “ngày làm việc” thành “giờ làm việc”; giữ số 4 và mốc đăng ký tiếp nhận lần này.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "首次响应为4工作小时，不能变成4工作日或更改起算事件。"
+      },
+      {
+        "comment_id": "R06",
+        "sentence_id": "S06",
+        "review_vi": "Đề nghị đổi thời hạn xử lý thành 24 giờ theo lịch kể từ khi tiếp nhận lần đầu, thay cho điều kiện nhận đủ tài liệu.",
+        "author_declared_decision": "not_applied",
+        "author_reason_zh": "同时改变工作日口径和起算条件，中文基线未授权，不采纳。"
+      },
+      {
+        "comment_id": "R07",
+        "sentence_id": "S07",
+        "review_vi": "Cần thêm phủ định “không được” trước hành động phát hành; giữ nguyên điều kiện trước khi hoàn tất chạy thử.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "补回禁止性含义，保留试运行完成前这一条件。"
+      },
+      {
+        "comment_id": "R08",
+        "sentence_id": "S08",
+        "review_vi": "Bỏ cụm “không được” ở vế nói về dữ liệu khách hàng gốc để câu ngắn hơn.",
+        "author_declared_decision": "not_applied",
+        "author_reason_zh": "删除否定会把禁止外发改成允许，不能按压缩文字为由采纳。"
+      },
+      {
+        "comment_id": "R09",
+        "sentence_id": "S09",
+        "review_vi": "Sửa điều kiện nghiệm thu thành xác nhận bằng văn bản của cả hai bên. Nêu rõ xác nhận đơn phương hoặc bằng lời nói không thay thế điều kiện này.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "纠正单方口头确认，保留双方书面确认及排除条件。"
+      },
+      {
+        "comment_id": "R10",
+        "sentence_id": "S10",
+        "review_vi": "Thay “phiếu yêu cầu mới” bằng thuật ngữ cố định “phiếu đề nghị thay đổi”; không thay đổi cách xử lý các hạng mục ngoài phạm vi.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "统一变更申请术语，超范围单独登记、不自动并入的含义保留。"
+      },
+      {
+        "comment_id": "R11",
+        "sentence_id": "S11",
+        "review_vi": "Tổng số đúng là 17 hạng mục, giữ 3 hạng mục chờ xác minh. Tính lại số hoàn thành sau khi loại các mục chờ xác minh; không gộp chúng vào hoàn thành.",
+        "author_declared_decision": "applied",
+        "author_reason_zh": "从17项中排除3项待核，完成数独立计算为14。"
+      },
+      {
+        "comment_id": "R12",
+        "sentence_id": "S12",
+        "review_vi": "Đổi câu thành “Đã gửi thông báo cho toàn bộ người nhận” để thể hiện công việc đã kết thúc.",
+        "author_declared_decision": "not_applied",
+        "author_reason_zh": "提案将草稿变成已发送事实，超出基线与任务权限，不采纳也不实际发送。"
+      }
+    ],
+    "terms": [
+      {
+        "term_id": "T01",
+        "zh": "青澜服务中心",
+        "vi": "Trung tâm Dịch vụ Thanh Lam",
+        "role": "SUP-01",
+        "sentence_ids": "S01;S02"
+      },
+      {
+        "term_id": "T02",
+        "zh": "北澄项目组",
+        "vi": "Nhóm dự án Bắc Trừng",
+        "role": "CLI-01",
+        "sentence_ids": "S02"
+      },
+      {
+        "term_id": "T03",
+        "zh": "正式环境",
+        "vi": "môi trường chính thức",
+        "role": "environment",
+        "sentence_ids": "S07"
+      },
+      {
+        "term_id": "T04",
+        "zh": "脱敏样本",
+        "vi": "mẫu dữ liệu đã khử định danh",
+        "role": "sample_type",
+        "sentence_ids": "S08"
+      },
+      {
+        "term_id": "T05",
+        "zh": "变更申请",
+        "vi": "phiếu đề nghị thay đổi",
+        "role": "request_type",
+        "sentence_ids": "S10"
+      },
+      {
+        "term_id": "T06",
+        "zh": "书面确认",
+        "vi": "xác nhận bằng văn bản",
+        "role": "acceptance_evidence",
+        "sentence_ids": "S09"
+      },
+      {
+        "term_id": "T07",
+        "zh": "验收",
+        "vi": "nghiệm thu",
+        "role": "acceptance",
+        "sentence_ids": "S09;S16"
+      },
+      {
+        "term_id": "T08",
+        "zh": "待核",
+        "vi": "chờ xác minh",
+        "role": "pending_status",
+        "sentence_ids": "S11"
+      },
+      {
+        "term_id": "T09",
+        "zh": "通知草稿",
+        "vi": "bản nháp thông báo",
+        "role": "notification_output",
+        "sentence_ids": "S12"
+      },
+      {
+        "term_id": "T10",
+        "zh": "工作小时",
+        "vi": "giờ làm việc",
+        "role": "time_basis",
+        "sentence_ids": "S05"
+      },
+      {
+        "term_id": "T11",
+        "zh": "工作日",
+        "vi": "ngày làm việc",
+        "role": "time_basis",
+        "sentence_ids": "S06"
+      }
+    ],
+    "verification_status": "author_data_before_documents_references_or_independent_verification",
+    "limit": "Author bilingual content and fact labels only; no second expert review, native artifacts, rule run, semantic Judge or calibrated difficulty."
+  },
+  "proposals": {
+    "R01": {
+      "provider_id": "SUP-01"
+    },
+    "R02": {
+      "materials_provider_id": "CLI-01",
+      "materials_checker_id": "SUP-01"
+    },
+    "R03": {
+      "amount": 80000,
+      "currency": "CNY",
+      "amount_unit": "per_batch",
+      "tax_basis": "excluded"
+    },
+    "R04": {
+      "end_date": "2027-11-30"
+    },
+    "R05": {
+      "first_response_work_hours": 4,
+      "clock_origin": "intake_registration"
+    },
+    "R06": {
+      "handling_natural_hours": 24,
+      "clock_origin": "intake_registration"
+    },
+    "R07": {
+      "release_before_trial_allowed": false
+    },
+    "R08": {
+      "external_raw_customer_data_allowed": true
+    },
+    "R09": {
+      "acceptance_written": true,
+      "acceptance_parties": "both",
+      "oral_or_single_side_acceptance": false
+    },
+    "R10": {
+      "request_type": "change_request",
+      "automatically_included": false
+    },
+    "R11": {
+      "total": 17,
+      "pending": 3,
+      "completed": 14
+    },
+    "R12": {
+      "notification_output": "sent",
+      "actual_send_allowed": true
+    }
+  },
+  "limit": "Author bilingual semantic annotations and declared facts. Decision comparison/arithmetic is independently recomputable; not a second expert translation review."
+}

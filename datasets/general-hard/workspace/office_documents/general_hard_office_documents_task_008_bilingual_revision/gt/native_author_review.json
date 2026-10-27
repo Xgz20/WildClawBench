@@ -1,0 +1,21 @@
+{
+  "status": "PASS",
+  "reviewer": "same-author render and visual check",
+  "pages": {
+    "baseline_zh": 4,
+    "draft_vi": 2,
+    "review_vi": 2,
+    "final_vi": 2,
+    "review_zh": 3
+  },
+  "total_pages_reviewed": 13,
+  "source_and_reference_sha256": {
+    "exec/baseline_zh.docx": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+    "exec/draft_vi.docx": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+    "exec/review_vi.docx": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+    "gt/reference/results/final_vi.docx": "18d906003026e7207b6d4cc25e4fe3572e5a95e4526f55ee13ce57cbeb4c2001",
+    "gt/reference/results/review_zh.docx": "696b14f550a07de188bae7df45d6fdf5061d1722dfc2483b1cdcc37bfa83679b"
+  },
+  "observation": "All pages inspected; Chinese and Vietnamese diacritics, black titles, table headers and pagination readable without observed clipping/overlap.",
+  "limit": "Author visual inspection only; not independent expert translation review, semantic Judge or target application execution."
+}

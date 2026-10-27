@@ -1,0 +1,15 @@
+{
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "business_weights": {
+    "declared_facts": 0.4,
+    "native_literal_values": 0.25,
+    "native_coverage_and_terms": 0.2,
+    "comment_decisions": 0.15
+  },
+  "semantic_limit": "Rules verify typed alignment facts, native literal numerals/dates/units, exact fixed terms and ID/decision tables. They do not infer complete Vietnamese role, polarity, condition or translation meaning from keywords; independent Judge must read the actual prose."
+}

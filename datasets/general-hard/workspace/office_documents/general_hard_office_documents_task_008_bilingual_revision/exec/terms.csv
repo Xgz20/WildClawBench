@@ -1,0 +1,12 @@
+term_id,zh,vi,role,sentence_ids
+T01,青澜服务中心,Trung tâm Dịch vụ Thanh Lam,SUP-01,S01;S02
+T02,北澄项目组,Nhóm dự án Bắc Trừng,CLI-01,S02
+T03,正式环境,môi trường chính thức,environment,S07
+T04,脱敏样本,mẫu dữ liệu đã khử định danh,sample_type,S08
+T05,变更申请,phiếu đề nghị thay đổi,request_type,S10
+T06,书面确认,xác nhận bằng văn bản,acceptance_evidence,S09
+T07,验收,nghiệm thu,acceptance,S09;S16
+T08,待核,chờ xác minh,pending_status,S11
+T09,通知草稿,bản nháp thông báo,notification_output,S12
+T10,工作小时,giờ làm việc,time_basis,S05
+T11,工作日,ngày làm việc,time_basis,S06
