@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 14
+  active_task_count: 15
   category_task_counts:
-    office_documents: 12
+    office_documents: 13
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -519,5 +519,31 @@ tasks:
       freeze_requirement: null
     attributes:
       requires_visual_input: true
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_013_proposal_delivery
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-052d4bea5bd4fdbb
+          query_hash: 052d4bea5bd4fdbba08967f186a5da4b6dad7b5b13814fd231f11b8b443d7f7c
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-26 05:00:54.212000'
+          last_seen_local: '2026-09-26 05:00:54.212000'
+          intent_summary: 比较光伏系统方案、屋顶适用性、需求和预算并制作PPT；新题使用合成固定参数。
+          review: accepted_intent_prototype
+          review_basis: 沿用清洗后已接受的AStudio桌面去身份需求原型，作者模型据业务目标合成改编；不是人工专家复核或生产结果正确性的证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
       coding_primary: false
       difficulty_status: estimated_before_pilot

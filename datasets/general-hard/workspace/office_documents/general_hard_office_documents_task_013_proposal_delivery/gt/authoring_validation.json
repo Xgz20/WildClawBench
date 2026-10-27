@@ -1,0 +1,139 @@
+{
+  "schema_version": "h013-reviewed-author-controls/v1",
+  "status": "AUTHOR_CONTROLS_PASS",
+  "control_count": 69,
+  "full_matrix_count": 61,
+  "final_scope_count": 7,
+  "formula_error_count": 1,
+  "control_scope_summary": "61项完整基线矩阵（17合法表达、37候选负例、5基础设施、2语义专用），加7项例外缺交专项回归与1项实际公式错误验证；三批分别保留源码绑定，不声称69项全在最终同一版执行。",
+  "full_matrix_report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/validation.json",
+  "full_matrix_sha256": "dd87199016cc0547d8b29b2d82bbd9d4522115b02c6aa014b5c5398806f03743",
+  "final_scope_report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/validation.json",
+  "final_scope_sha256": "5c6bf975a97fe56220880c94ed949b63297c6bf102ded5150b57635fb3c8a285",
+  "formula_error_report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/formula-error-001/validation.json",
+  "formula_error_sha256": "69a2c8c774d8dd60a9b2f89a2aef4d67142b4f3558c26acaf9c7f1e109d75582",
+  "revision_sets": {
+    "full_matrix_61": {
+      "gt_bindings": {
+        "evidence_requirements.json": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+        "business_oracle.json": "35a23ed7cb3c5a024c5c23ff54f1947d8b3d3fd8b1a878cdbd5441d51e1cfa4f",
+        "protected_sha256.json": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+        "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+        "grader.py": "440e573a4b028c5b914695cddbdaf40964a897c2c951da530481fbf229771a23",
+        "expected.json": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+        "business_checks.py": "45f8679c97c9171a5c0eb7812d2fba464ddfd0c2da3952f4f594abd1f1240b91",
+        "evidence_index.json": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+        "business_model.py": "432c97465c6c8dde1b8dc20bddce696ef9de985f271ab8c0d3fc8fe8e4c2895f",
+        "counterexamples.json": "98b1ccadb057a26375919f8919f1cceda34785c7b409091470ef5548827ba85b",
+        "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+        "artifact_io.py": "b357be16562a55b6ea0fbfa29c79571a1e104ac181026661acc599b981a73bdd",
+        "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+        "artifact_contract.json": "41c9114a1984399d53b9295569459edbd396f7113c562fb1385e78e89de3f200",
+        "validate_authoring.py": "2b86df06b81a4b6b5bec14c71644a48e1184b87255ad8f5484fc5b5d64cc8dc8",
+        "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+        "source_verification.json": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+        "reference/results/exceptions.csv": "649bb66a6e3055fc8d55605aed23be3066660ab497ec97436e230f1b35934ac2",
+        "reference/results/customer_email.md": "ea8b83e5768b046079beed592244bbda43aa24809c8b18e7d1b58c66c3f67229",
+        "reference/results/quote.xlsx": "5d249b692c14b93eeb54c73a75061d5c84fe58e722730c298c1ef3c3da1632c9",
+        "reference/results/proposal.docx": "f1f01ec878a636002f5089e8b2ee6c8499c5e2f3b462b6e38ffd176bee07bffd"
+      },
+      "report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/validation.json"
+    },
+    "final_exception_scope_7": {
+      "gt_bindings": {
+        "evidence_requirements.json": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+        "business_oracle.json": "f195deecc9cf76adbff524975f73a4a8ea8204020713d18e7d15a67b5f39d775",
+        "protected_sha256.json": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+        "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+        "grader.py": "440e573a4b028c5b914695cddbdaf40964a897c2c951da530481fbf229771a23",
+        "expected.json": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+        "business_checks.py": "c6b86b40078c37deec452c6682eb60d86d7430e71a48be19f01e7e4077e033d1",
+        "evidence_index.json": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+        "business_model.py": "432c97465c6c8dde1b8dc20bddce696ef9de985f271ab8c0d3fc8fe8e4c2895f",
+        "counterexamples.json": "1e2f838d29be5ee7f3de5b07b2527adc6584bb5c241039d563ba72d9ff8eb845",
+        "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+        "artifact_io.py": "b357be16562a55b6ea0fbfa29c79571a1e104ac181026661acc599b981a73bdd",
+        "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+        "artifact_contract.json": "2a70048bcfacd3ee32ed3b3426cc4b3c3f923879c4ebb6d253e3ef8dd9dff140",
+        "validate_authoring.py": "2b86df06b81a4b6b5bec14c71644a48e1184b87255ad8f5484fc5b5d64cc8dc8",
+        "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+        "source_verification.json": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+        "reference/results/exceptions.csv": "649bb66a6e3055fc8d55605aed23be3066660ab497ec97436e230f1b35934ac2",
+        "reference/results/customer_email.md": "ea8b83e5768b046079beed592244bbda43aa24809c8b18e7d1b58c66c3f67229",
+        "reference/results/quote.xlsx": "5d249b692c14b93eeb54c73a75061d5c84fe58e722730c298c1ef3c3da1632c9",
+        "reference/results/proposal.docx": "f1f01ec878a636002f5089e8b2ee6c8499c5e2f3b462b6e38ffd176bee07bffd"
+      },
+      "report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/validation.json",
+      "changed_runtime_functions": [
+        "exceptions_check"
+      ],
+      "metadata_only_files": [
+        "artifact_contract.json",
+        "business_oracle.json",
+        "counterexamples.json"
+      ],
+      "scope_record": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/scope.json"
+    },
+    "formula_error_1": {
+      "gt_bindings": {
+        "evidence_requirements.json": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+        "business_oracle.json": "35a23ed7cb3c5a024c5c23ff54f1947d8b3d3fd8b1a878cdbd5441d51e1cfa4f",
+        "protected_sha256.json": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+        "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+        "grader.py": "440e573a4b028c5b914695cddbdaf40964a897c2c951da530481fbf229771a23",
+        "expected.json": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+        "business_checks.py": "45f8679c97c9171a5c0eb7812d2fba464ddfd0c2da3952f4f594abd1f1240b91",
+        "evidence_index.json": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+        "business_model.py": "432c97465c6c8dde1b8dc20bddce696ef9de985f271ab8c0d3fc8fe8e4c2895f",
+        "counterexamples.json": "98b1ccadb057a26375919f8919f1cceda34785c7b409091470ef5548827ba85b",
+        "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+        "artifact_io.py": "b357be16562a55b6ea0fbfa29c79571a1e104ac181026661acc599b981a73bdd",
+        "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+        "artifact_contract.json": "41c9114a1984399d53b9295569459edbd396f7113c562fb1385e78e89de3f200",
+        "validate_authoring.py": "2b86df06b81a4b6b5bec14c71644a48e1184b87255ad8f5484fc5b5d64cc8dc8",
+        "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+        "source_verification.json": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+        "reference/results/exceptions.csv": "649bb66a6e3055fc8d55605aed23be3066660ab497ec97436e230f1b35934ac2",
+        "reference/results/customer_email.md": "ea8b83e5768b046079beed592244bbda43aa24809c8b18e7d1b58c66c3f67229",
+        "reference/results/quote.xlsx": "5d249b692c14b93eeb54c73a75061d5c84fe58e722730c298c1ef3c3da1632c9",
+        "reference/results/proposal.docx": "f1f01ec878a636002f5089e8b2ee6c8499c5e2f3b462b6e38ffd176bee07bffd"
+      },
+      "report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/formula-error-001/validation.json",
+      "kind": "direct native Worker author control, not generated-MD acceptance"
+    }
+  },
+  "gt_bindings": {
+    "evidence_requirements.json": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+    "business_oracle.json": "f195deecc9cf76adbff524975f73a4a8ea8204020713d18e7d15a67b5f39d775",
+    "protected_sha256.json": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+    "grader.py": "440e573a4b028c5b914695cddbdaf40964a897c2c951da530481fbf229771a23",
+    "expected.json": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+    "business_checks.py": "c6b86b40078c37deec452c6682eb60d86d7430e71a48be19f01e7e4077e033d1",
+    "evidence_index.json": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+    "business_model.py": "432c97465c6c8dde1b8dc20bddce696ef9de985f271ab8c0d3fc8fe8e4c2895f",
+    "counterexamples.json": "1e2f838d29be5ee7f3de5b07b2527adc6584bb5c241039d563ba72d9ff8eb845",
+    "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+    "artifact_io.py": "b357be16562a55b6ea0fbfa29c79571a1e104ac181026661acc599b981a73bdd",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+    "artifact_contract.json": "2a70048bcfacd3ee32ed3b3426cc4b3c3f923879c4ebb6d253e3ef8dd9dff140",
+    "validate_authoring.py": "2b86df06b81a4b6b5bec14c71644a48e1184b87255ad8f5484fc5b5d64cc8dc8",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "source_verification.json": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+    "reference/results/exceptions.csv": "649bb66a6e3055fc8d55605aed23be3066660ab497ec97436e230f1b35934ac2",
+    "reference/results/customer_email.md": "ea8b83e5768b046079beed592244bbda43aa24809c8b18e7d1b58c66c3f67229",
+    "reference/results/quote.xlsx": "5d249b692c14b93eeb54c73a75061d5c84fe58e722730c298c1ef3c3da1632c9",
+    "reference/results/proposal.docx": "f1f01ec878a636002f5089e8b2ee6c8499c5e2f3b462b6e38ffd176bee07bffd"
+  },
+  "exec_bindings": {
+    "response_template.docx": "be54cdcd2f4f31b00cde15ffc2e6798ae76d5049e687e1ae0b849ff318c588d4",
+    "customer_requirements.docx": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+    "technical_notes.pdf": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+    "options.csv": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236"
+  },
+  "early_fixture_repairs": [
+    "Original smoke exposed str-valued OOXML header handling in the fixture mutator and a content-type default-namespace serialization error in the authored long-table fixture. Repaired fixtures; no source/GT/reference answer changed.",
+    "Initial runtime probe resolved the venv symlink to its base interpreter. Re-probed the original venv path successfully without environment/lock changes."
+  ],
+  "limit": "Author numerical/native/rule controls only. No independent semantic or Harness score; actual generated-MD Worker acceptance remains separate."
+}

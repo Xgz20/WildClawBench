@@ -1,0 +1,1076 @@
+{
+  "schema_version": "h013-native-ground-truth/v1",
+  "status": "native_sources_verified_before_reference",
+  "source_sha256": {
+    "customer_requirements.docx": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+    "options.csv": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+    "technical_notes.pdf": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+    "response_template.docx": "be54cdcd2f4f31b00cde15ffc2e6798ae76d5049e687e1ae0b849ff318c588d4"
+  },
+  "inputs": {
+    "sites": [
+      {
+        "site_id": "S1",
+        "roof_type": "metal",
+        "usable_area_m2": "460",
+        "verified_load_kg_m2": "20",
+        "load_status": "verified",
+        "max_dc_kwp": "75",
+        "annual_target_kwh": "62000",
+        "yield_kwh_kwp": "1050",
+        "shading_factor": "1",
+        "budget_gross_cny": "315000",
+        "replacement_allowed": false,
+        "adhesion_evidence": "verified",
+        "corrosion_evidence": "not_required",
+        "roof_repair_cost": "not_required"
+      },
+      {
+        "site_id": "S2",
+        "roof_type": "flat",
+        "usable_area_m2": "250",
+        "verified_load_kg_m2": "25",
+        "load_status": "verified",
+        "max_dc_kwp": "50",
+        "annual_target_kwh": "48000",
+        "yield_kwh_kwp": "1100",
+        "shading_factor": "1",
+        "budget_gross_cny": "315000",
+        "replacement_allowed": true,
+        "adhesion_evidence": "verified",
+        "corrosion_evidence": "not_required",
+        "roof_repair_cost": "not_required"
+      },
+      {
+        "site_id": "S3",
+        "roof_type": "metal",
+        "usable_area_m2": "320",
+        "verified_load_kg_m2": null,
+        "load_status": "unverified",
+        "max_dc_kwp": "40",
+        "annual_target_kwh": "30000",
+        "yield_kwh_kwp": "1000",
+        "shading_factor": "0.9",
+        "budget_gross_cny": "215000",
+        "replacement_allowed": false,
+        "adhesion_evidence": "unverified",
+        "corrosion_evidence": "unverified",
+        "roof_repair_cost": null
+      }
+    ],
+    "options": [
+      {
+        "option_id": "A",
+        "name": "刚性组件夹具系统",
+        "module_kwp": "0.55",
+        "module_area_m2": "2.5",
+        "performance_factor": "0.96",
+        "load_metal_kg_m2": "14",
+        "load_flat_kg_m2": "30",
+        "requires_replacement": false,
+        "module_price_ex_vat": "900",
+        "mount_metal_cny_m2": "85",
+        "mount_flat_cny_m2": "110",
+        "installation_cny_kwp": "650",
+        "adhesion_required": false
+      },
+      {
+        "option_id": "B",
+        "name": "装配式替换屋面系统",
+        "module_kwp": "0.4",
+        "module_area_m2": "2",
+        "performance_factor": "0.97",
+        "load_metal_kg_m2": "18",
+        "load_flat_kg_m2": "20",
+        "requires_replacement": true,
+        "module_price_ex_vat": "820",
+        "mount_metal_cny_m2": "95",
+        "mount_flat_cny_m2": "95",
+        "installation_cny_kwp": "700",
+        "adhesion_required": false
+      },
+      {
+        "option_id": "C",
+        "name": "轻质粘接组件系统",
+        "module_kwp": "0.3",
+        "module_area_m2": "2",
+        "performance_factor": "0.9",
+        "load_metal_kg_m2": "4.5",
+        "load_flat_kg_m2": "4.5",
+        "requires_replacement": false,
+        "module_price_ex_vat": "500",
+        "mount_metal_cny_m2": "55",
+        "mount_flat_cny_m2": "55",
+        "installation_cny_kwp": "900",
+        "adhesion_required": true
+      }
+    ],
+    "parameters": {
+      "inverter_block_kwp": "15",
+      "inverter_unit_ex_vat": "10500",
+      "cable_per_module_ex_vat": "65",
+      "isolation_per_site_ex_vat": "14500",
+      "design_per_site_ex_vat": "6000",
+      "inspection_per_site_ex_vat": "6000",
+      "adhesion_acceptance_ex_vat": "7500",
+      "corrosion_review_ex_vat": "4800",
+      "replacement_roof_cny_m2": "180",
+      "drainage_cny_m2": "30",
+      "vat_goods": "0.13",
+      "vat_construction": "0.09",
+      "vat_services": "0.06"
+    }
+  },
+  "source_units": {
+    "roof_type": "enum",
+    "usable_area_m2": "m2",
+    "verified_load_kg_m2": "kg/m2",
+    "load_status": "enum",
+    "max_dc_kwp": "kWp",
+    "annual_target_kwh": "kWh/year",
+    "yield_kwh_kwp": "kWh/kWp/year",
+    "shading_factor": "ratio",
+    "budget_gross_cny": "CNY incl VAT",
+    "replacement_allowed": "boolean",
+    "adhesion_evidence": "enum",
+    "corrosion_evidence": "enum",
+    "roof_repair_cost": "CNY or unknown"
+  },
+  "template_headings": [
+    "三个方案与九个场地组合比较",
+    "分场地推荐与前置条件",
+    "逐项需求响应",
+    "例外和后续确认"
+  ],
+  "requirements": {
+    "Q01": "三个方案均按本题固定参数比较；全部市场价、补贴、税收优惠及工程实测结论不另行推测。",
+    "Q02": "逐一响应S1的年度目标、屋面面积、荷载、DC容量、换屋面权限及含税预算。",
+    "Q03": "逐一响应S2的年度目标、屋面面积、荷载、DC容量、换屋面权限及含税预算。",
+    "Q04": "逐一响应S3；无核验荷载上限、无腐蚀报告，修复费未知，不得把unknown替成0或直接批准实施。",
+    "Q05": "按T01求达到目标的最小整片组件数量，不能向下取整、用裸组件效率代替系统因子或漏遮阴因子。",
+    "Q06": "面积按组件总占用计算，荷载按屋面类型选择；任一明确硬约束不满足即不可行，不用低价格补偿。",
+    "Q07": "B必须更换整个可用屋面范围；未允许换屋面视为硬约束失败，不能只按组件覆盖面积报价。",
+    "Q08": "对九个场地方案组合报价，列全必要部件、施工、设计、检验和对应增值税，保留真实可重算公式。",
+    "Q09": "预算比较以含税已知基础总额为准；S3仍是附条件估算，不代表包含未知修复费后的最终不超支。",
+    "Q10": "补贴金额未知，不得编造补贴或在报价中抵减未知收入；未知费用不可伪装成已确认免费。",
+    "Q11": "每个场地给推荐或明确不推荐，先排除不可行，再在其余中按已知基础总额最低选择；只有附条件方案时必须保留全部条件。",
+    "Q12": "提交Word、可重算报价、沟通草稿和逐项例外清单；不得发送邮件、下单、付款或声称审批/工程核验已完成。"
+  },
+  "rule_locations": {
+    "T01": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T01",
+      "text": "module_count = ROUNDUP(annual_target_kwh / (module_kwp * yield_kwh_kwp * performance_factor * shading_factor), 0)。dc_kwp = module_count * module_kwp；area_m2 = module_count * module_area_m2；annual_energy_kwh = dc_kwp * yield_kwh_kwp * performance_factor * shading_factor。所有比率均为小数，因子相乘一次，kWp和kWh不可互换。此为本题纸面年量模型，不是发电保证。"
+    },
+    "T02": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T02",
+      "text": "A/B/C在本题均可用于metal和平屋面flat。inverter_count = ROUNDUP(dc_kwp / inverter_block_kwp, 0)，按额定块向上取整；本题DC接入上限直接与dc_kwp比较，不作AC/DC折算。"
+    },
+    "T03": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T03",
+      "text": "area_m2不可超过场地可用面积；设计新增荷载取options.csv对应屋面类型列，不按总屋面面积平均摊薄。verified_load_kg_m2只有load_status=verified时可作上限。S3荷载未核验，缺值不是0也不是无限大。"
+    },
+    "T04": {
+      "file": "technical_notes.pdf",
+      "page": 2,
+      "anchor": "T04",
+      "text": "B必须获replacement_allowed=true，并对整个usable_area_m2计屋面更换和排水配套，不按area_m2计这两项；即使权限不允许也需展示该方案的条件性基础报价用于比较，但不可推荐实施。A/C这两项为0。"
+    },
+    "T05": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T05",
+      "text": "供货未税额 = module_count * module_price_ex_vat + inverter_count * inverter_unit_ex_vat + module_count * cable_per_module_ex_vat + isolation_per_site_ex_vat。所有四项必需，隔离防护14500元对每个场地方案组合只计一次，不能漏逆变器、电缆或保护件。"
+    },
+    "T06": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T06",
+      "text": "施工未税额 = area_m2 * 当前屋面类型的mount价格 + dc_kwp * installation_cny_kwp + replacement_area_m2 * replacement_roof_cny_m2 + replacement_area_m2 * drainage_cny_m2。replacement_area_m2对B取场地usable_area_m2，对A/C取0。"
+    },
+    "T07": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T07",
+      "text": "技术服务未税额包含每场地设计和独立检验各6000元。C另加施工粘接验收7500元，即使前置兼容性材料已验证也不能漏这笔施工检验费用。S3三个方案均加腐蚀专项核验4800元；报价包含核验工作不等于报告已经取得或通过。"
+    },
+    "T08": {
+      "file": "technical_notes.pdf",
+      "page": 3,
+      "anchor": "T08",
+      "text": "供货按vat_goods=0.13，施工按vat_construction=0.09，技术服务按vat_services=0.06；三个税额分别按ROUND(未税额*税率,2)四舍五入到分，再与三个未税额相加得gross_total。预算余量=budget_gross_cny-gross_total。不合并税率，不重复加税，不减未知补贴。"
+    },
+    "T09": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T09",
+      "text": "逐项判定AREA、LOAD、GRID、REPLACEMENT、BUDGET、ADHESION、CORROSION、REPAIR_SCOPE。可读硬约束失败优先为infeasible；否则任一需要核实的条件为conditional；全部满足为feasible。ADHESION仅对C检查前置兼容材料，CORROSION与REPAIR_SCOPE仅对S3检查。LOAD未核验、材料未核实或修复费未知均是条件，不能写成已经满足。"
+    },
+    "T10": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T10",
+      "text": "exceptions.csv逐条列出所有硬约束失败或待核实条件，包含site_id、option_id、rule_id、status、observed、limit、source_file、source_locator、next_action。rule_id用T09八个检查名。硬失败status=fail，条件status=unknown；即使某组合已不可行，也保留其他尚待核实项。来源用实际输入及其可见S/Q/T/option_id定位，不能引用私有oracle。"
+    },
+    "T11": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T11",
+      "text": "每场地先排除infeasible，再对feasible/conditional各自按已知基础含税总额排序；存在feasible则优先feasible；仅有conditional时可给有条件的最低已知基础总额方案，但保留荷载、证据与未知修复费等全部条件。没有可选项时不推荐，不能擅改目标、预算或权限。"
+    },
+    "T12": {
+      "file": "technical_notes.pdf",
+      "page": 4,
+      "anchor": "T12",
+      "text": "所有价格均为合成固定未税参数，报价有效时点2026-09-30，仅用于纸面比较。S3未知修复费和全部未知补贴不作数值假定，需另行确认，不构成工程报价承诺、正式发电保证或实施批准。客户沟通稿仅保存草稿，不发送。"
+    }
+  },
+  "cases": {
+    "S1-A": {
+      "site_id": "S1",
+      "option_id": "A",
+      "status": "feasible",
+      "values": {
+        "module_count": "112",
+        "dc_kwp": "61.60",
+        "area_m2": "280.0",
+        "design_load_kg_m2": "14",
+        "annual_energy_kwh": "62092.8000",
+        "inverter_count": "5",
+        "replacement_area_m2": "0",
+        "cost_module": "100800",
+        "cost_inverter": "52500",
+        "cost_cable": "7280",
+        "cost_isolation": "14500",
+        "cost_mounting": "23800.0",
+        "cost_installation": "40040.00",
+        "cost_replacement": "0",
+        "cost_drainage": "0",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "0",
+        "cost_corrosion": "0",
+        "subtotal_goods": "175080",
+        "subtotal_construction": "63840.00",
+        "subtotal_services": "12000",
+        "tax_goods": "22760.40",
+        "tax_construction": "5745.60",
+        "tax_services": "720.00",
+        "gross_total": "280146.00",
+        "budget_margin": "34854.00"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "280.0",
+          "limit": "460"
+        },
+        "LOAD": {
+          "status": "pass",
+          "observed": "14",
+          "limit": "20"
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "61.60",
+          "limit": "75"
+        },
+        "REPLACEMENT": {
+          "status": "not_applicable",
+          "observed": false,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "pass",
+          "observed": "280146.00",
+          "limit": "315000"
+        },
+        "ADHESION": {
+          "status": "not_applicable",
+          "observed": "verified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S1-B": {
+      "site_id": "S1",
+      "option_id": "B",
+      "status": "infeasible",
+      "values": {
+        "module_count": "153",
+        "dc_kwp": "61.2",
+        "area_m2": "306",
+        "design_load_kg_m2": "18",
+        "annual_energy_kwh": "62332.200",
+        "inverter_count": "5",
+        "replacement_area_m2": "460",
+        "cost_module": "125460",
+        "cost_inverter": "52500",
+        "cost_cable": "9945",
+        "cost_isolation": "14500",
+        "cost_mounting": "29070",
+        "cost_installation": "42840.0",
+        "cost_replacement": "82800",
+        "cost_drainage": "13800",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "0",
+        "cost_corrosion": "0",
+        "subtotal_goods": "202405",
+        "subtotal_construction": "168510.0",
+        "subtotal_services": "12000",
+        "tax_goods": "26312.65",
+        "tax_construction": "15165.90",
+        "tax_services": "720.00",
+        "gross_total": "425113.55",
+        "budget_margin": "-110113.55"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "306",
+          "limit": "460"
+        },
+        "LOAD": {
+          "status": "pass",
+          "observed": "18",
+          "limit": "20"
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "61.2",
+          "limit": "75"
+        },
+        "REPLACEMENT": {
+          "status": "fail",
+          "observed": false,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "fail",
+          "observed": "425113.55",
+          "limit": "315000"
+        },
+        "ADHESION": {
+          "status": "not_applicable",
+          "observed": "verified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S1-C": {
+      "site_id": "S1",
+      "option_id": "C",
+      "status": "infeasible",
+      "values": {
+        "module_count": "219",
+        "dc_kwp": "65.7",
+        "area_m2": "438",
+        "design_load_kg_m2": "4.5",
+        "annual_energy_kwh": "62086.50",
+        "inverter_count": "5",
+        "replacement_area_m2": "0",
+        "cost_module": "109500",
+        "cost_inverter": "52500",
+        "cost_cable": "14235",
+        "cost_isolation": "14500",
+        "cost_mounting": "24090",
+        "cost_installation": "59130.0",
+        "cost_replacement": "0",
+        "cost_drainage": "0",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "7500",
+        "cost_corrosion": "0",
+        "subtotal_goods": "190735",
+        "subtotal_construction": "83220.0",
+        "subtotal_services": "19500",
+        "tax_goods": "24795.55",
+        "tax_construction": "7489.80",
+        "tax_services": "1170.00",
+        "gross_total": "326910.35",
+        "budget_margin": "-11910.35"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "438",
+          "limit": "460"
+        },
+        "LOAD": {
+          "status": "pass",
+          "observed": "4.5",
+          "limit": "20"
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "65.7",
+          "limit": "75"
+        },
+        "REPLACEMENT": {
+          "status": "not_applicable",
+          "observed": false,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "fail",
+          "observed": "326910.35",
+          "limit": "315000"
+        },
+        "ADHESION": {
+          "status": "pass",
+          "observed": "verified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S2-A": {
+      "site_id": "S2",
+      "option_id": "A",
+      "status": "infeasible",
+      "values": {
+        "module_count": "83",
+        "dc_kwp": "45.65",
+        "area_m2": "207.5",
+        "design_load_kg_m2": "30",
+        "annual_energy_kwh": "48206.4000",
+        "inverter_count": "4",
+        "replacement_area_m2": "0",
+        "cost_module": "74700",
+        "cost_inverter": "42000",
+        "cost_cable": "5395",
+        "cost_isolation": "14500",
+        "cost_mounting": "22825.0",
+        "cost_installation": "29672.50",
+        "cost_replacement": "0",
+        "cost_drainage": "0",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "0",
+        "cost_corrosion": "0",
+        "subtotal_goods": "136595",
+        "subtotal_construction": "52497.50",
+        "subtotal_services": "12000",
+        "tax_goods": "17757.35",
+        "tax_construction": "4724.78",
+        "tax_services": "720.00",
+        "gross_total": "224294.63",
+        "budget_margin": "90705.37"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "207.5",
+          "limit": "250"
+        },
+        "LOAD": {
+          "status": "fail",
+          "observed": "30",
+          "limit": "25"
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "45.65",
+          "limit": "50"
+        },
+        "REPLACEMENT": {
+          "status": "not_applicable",
+          "observed": true,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "pass",
+          "observed": "224294.63",
+          "limit": "315000"
+        },
+        "ADHESION": {
+          "status": "not_applicable",
+          "observed": "verified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S2-B": {
+      "site_id": "S2",
+      "option_id": "B",
+      "status": "feasible",
+      "values": {
+        "module_count": "113",
+        "dc_kwp": "45.2",
+        "area_m2": "226",
+        "design_load_kg_m2": "20",
+        "annual_energy_kwh": "48228.400",
+        "inverter_count": "4",
+        "replacement_area_m2": "250",
+        "cost_module": "92660",
+        "cost_inverter": "42000",
+        "cost_cable": "7345",
+        "cost_isolation": "14500",
+        "cost_mounting": "21470",
+        "cost_installation": "31640.0",
+        "cost_replacement": "45000",
+        "cost_drainage": "7500",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "0",
+        "cost_corrosion": "0",
+        "subtotal_goods": "156505",
+        "subtotal_construction": "105610.0",
+        "subtotal_services": "12000",
+        "tax_goods": "20345.65",
+        "tax_construction": "9504.90",
+        "tax_services": "720.00",
+        "gross_total": "304685.55",
+        "budget_margin": "10314.45"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "226",
+          "limit": "250"
+        },
+        "LOAD": {
+          "status": "pass",
+          "observed": "20",
+          "limit": "25"
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "45.2",
+          "limit": "50"
+        },
+        "REPLACEMENT": {
+          "status": "pass",
+          "observed": true,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "pass",
+          "observed": "304685.55",
+          "limit": "315000"
+        },
+        "ADHESION": {
+          "status": "not_applicable",
+          "observed": "verified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S2-C": {
+      "site_id": "S2",
+      "option_id": "C",
+      "status": "infeasible",
+      "values": {
+        "module_count": "162",
+        "dc_kwp": "48.6",
+        "area_m2": "324",
+        "design_load_kg_m2": "4.5",
+        "annual_energy_kwh": "48114.00",
+        "inverter_count": "4",
+        "replacement_area_m2": "0",
+        "cost_module": "81000",
+        "cost_inverter": "42000",
+        "cost_cable": "10530",
+        "cost_isolation": "14500",
+        "cost_mounting": "17820",
+        "cost_installation": "43740.0",
+        "cost_replacement": "0",
+        "cost_drainage": "0",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "7500",
+        "cost_corrosion": "0",
+        "subtotal_goods": "148030",
+        "subtotal_construction": "61560.0",
+        "subtotal_services": "19500",
+        "tax_goods": "19243.90",
+        "tax_construction": "5540.40",
+        "tax_services": "1170.00",
+        "gross_total": "255044.30",
+        "budget_margin": "59955.70"
+      },
+      "checks": {
+        "AREA": {
+          "status": "fail",
+          "observed": "324",
+          "limit": "250"
+        },
+        "LOAD": {
+          "status": "pass",
+          "observed": "4.5",
+          "limit": "25"
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "48.6",
+          "limit": "50"
+        },
+        "REPLACEMENT": {
+          "status": "not_applicable",
+          "observed": true,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "pass",
+          "observed": "255044.30",
+          "limit": "315000"
+        },
+        "ADHESION": {
+          "status": "pass",
+          "observed": "verified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "not_applicable",
+          "observed": "not_required",
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S3-A": {
+      "site_id": "S3",
+      "option_id": "A",
+      "status": "conditional",
+      "values": {
+        "module_count": "64",
+        "dc_kwp": "35.20",
+        "area_m2": "160.0",
+        "design_load_kg_m2": "14",
+        "annual_energy_kwh": "30412.80000",
+        "inverter_count": "3",
+        "replacement_area_m2": "0",
+        "cost_module": "57600",
+        "cost_inverter": "31500",
+        "cost_cable": "4160",
+        "cost_isolation": "14500",
+        "cost_mounting": "13600.0",
+        "cost_installation": "22880.00",
+        "cost_replacement": "0",
+        "cost_drainage": "0",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "0",
+        "cost_corrosion": "4800",
+        "subtotal_goods": "107760",
+        "subtotal_construction": "36480.00",
+        "subtotal_services": "16800",
+        "tax_goods": "14008.80",
+        "tax_construction": "3283.20",
+        "tax_services": "1008.00",
+        "gross_total": "179340.00",
+        "budget_margin": "35660.00"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "160.0",
+          "limit": "320"
+        },
+        "LOAD": {
+          "status": "unknown",
+          "observed": "14",
+          "limit": null
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "35.20",
+          "limit": "40"
+        },
+        "REPLACEMENT": {
+          "status": "not_applicable",
+          "observed": false,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "pass",
+          "observed": "179340.00",
+          "limit": "215000"
+        },
+        "ADHESION": {
+          "status": "not_applicable",
+          "observed": "unverified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "unknown",
+          "observed": "unverified",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "unknown",
+          "observed": null,
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S3-B": {
+      "site_id": "S3",
+      "option_id": "B",
+      "status": "infeasible",
+      "values": {
+        "module_count": "86",
+        "dc_kwp": "34.4",
+        "area_m2": "172",
+        "design_load_kg_m2": "18",
+        "annual_energy_kwh": "30031.2000",
+        "inverter_count": "3",
+        "replacement_area_m2": "320",
+        "cost_module": "70520",
+        "cost_inverter": "31500",
+        "cost_cable": "5590",
+        "cost_isolation": "14500",
+        "cost_mounting": "16340",
+        "cost_installation": "24080.0",
+        "cost_replacement": "57600",
+        "cost_drainage": "9600",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "0",
+        "cost_corrosion": "4800",
+        "subtotal_goods": "122110",
+        "subtotal_construction": "107620.0",
+        "subtotal_services": "16800",
+        "tax_goods": "15874.30",
+        "tax_construction": "9685.80",
+        "tax_services": "1008.00",
+        "gross_total": "273098.10",
+        "budget_margin": "-58098.10"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "172",
+          "limit": "320"
+        },
+        "LOAD": {
+          "status": "unknown",
+          "observed": "18",
+          "limit": null
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "34.4",
+          "limit": "40"
+        },
+        "REPLACEMENT": {
+          "status": "fail",
+          "observed": false,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "fail",
+          "observed": "273098.10",
+          "limit": "215000"
+        },
+        "ADHESION": {
+          "status": "not_applicable",
+          "observed": "unverified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "unknown",
+          "observed": "unverified",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "unknown",
+          "observed": null,
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    },
+    "S3-C": {
+      "site_id": "S3",
+      "option_id": "C",
+      "status": "conditional",
+      "values": {
+        "module_count": "124",
+        "dc_kwp": "37.2",
+        "area_m2": "248",
+        "design_load_kg_m2": "4.5",
+        "annual_energy_kwh": "30132.000",
+        "inverter_count": "3",
+        "replacement_area_m2": "0",
+        "cost_module": "62000",
+        "cost_inverter": "31500",
+        "cost_cable": "8060",
+        "cost_isolation": "14500",
+        "cost_mounting": "13640",
+        "cost_installation": "33480.0",
+        "cost_replacement": "0",
+        "cost_drainage": "0",
+        "cost_design": "6000",
+        "cost_inspection": "6000",
+        "cost_adhesion": "7500",
+        "cost_corrosion": "4800",
+        "subtotal_goods": "116060",
+        "subtotal_construction": "47120.0",
+        "subtotal_services": "24300",
+        "tax_goods": "15087.80",
+        "tax_construction": "4240.80",
+        "tax_services": "1458.00",
+        "gross_total": "208266.60",
+        "budget_margin": "6733.40"
+      },
+      "checks": {
+        "AREA": {
+          "status": "pass",
+          "observed": "248",
+          "limit": "320"
+        },
+        "LOAD": {
+          "status": "unknown",
+          "observed": "4.5",
+          "limit": null
+        },
+        "GRID": {
+          "status": "pass",
+          "observed": "37.2",
+          "limit": "40"
+        },
+        "REPLACEMENT": {
+          "status": "not_applicable",
+          "observed": false,
+          "limit": true
+        },
+        "BUDGET": {
+          "status": "pass",
+          "observed": "208266.60",
+          "limit": "215000"
+        },
+        "ADHESION": {
+          "status": "unknown",
+          "observed": "unverified",
+          "limit": "verified"
+        },
+        "CORROSION": {
+          "status": "unknown",
+          "observed": "unverified",
+          "limit": "verified"
+        },
+        "REPAIR_SCOPE": {
+          "status": "unknown",
+          "observed": null,
+          "limit": "confirmed_scope_and_cost"
+        }
+      }
+    }
+  },
+  "recommendations": {
+    "S1": {
+      "option_id": "A",
+      "status": "feasible",
+      "pair": "S1-A"
+    },
+    "S2": {
+      "option_id": "B",
+      "status": "feasible",
+      "pair": "S2-B"
+    },
+    "S3": {
+      "option_id": "A",
+      "status": "conditional",
+      "pair": "S3-A"
+    }
+  },
+  "exceptions": [
+    {
+      "site_id": "S1",
+      "option_id": "B",
+      "rule_id": "REPLACEMENT",
+      "status": "fail",
+      "observed": false,
+      "limit": true
+    },
+    {
+      "site_id": "S1",
+      "option_id": "B",
+      "rule_id": "BUDGET",
+      "status": "fail",
+      "observed": "425113.55",
+      "limit": "315000"
+    },
+    {
+      "site_id": "S1",
+      "option_id": "C",
+      "rule_id": "BUDGET",
+      "status": "fail",
+      "observed": "326910.35",
+      "limit": "315000"
+    },
+    {
+      "site_id": "S2",
+      "option_id": "A",
+      "rule_id": "LOAD",
+      "status": "fail",
+      "observed": "30",
+      "limit": "25"
+    },
+    {
+      "site_id": "S2",
+      "option_id": "C",
+      "rule_id": "AREA",
+      "status": "fail",
+      "observed": "324",
+      "limit": "250"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "A",
+      "rule_id": "LOAD",
+      "status": "unknown",
+      "observed": "14",
+      "limit": null
+    },
+    {
+      "site_id": "S3",
+      "option_id": "A",
+      "rule_id": "CORROSION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "A",
+      "rule_id": "REPAIR_SCOPE",
+      "status": "unknown",
+      "observed": null,
+      "limit": "confirmed_scope_and_cost"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "LOAD",
+      "status": "unknown",
+      "observed": "18",
+      "limit": null
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "REPLACEMENT",
+      "status": "fail",
+      "observed": false,
+      "limit": true
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "BUDGET",
+      "status": "fail",
+      "observed": "273098.10",
+      "limit": "215000"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "CORROSION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "B",
+      "rule_id": "REPAIR_SCOPE",
+      "status": "unknown",
+      "observed": null,
+      "limit": "confirmed_scope_and_cost"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "LOAD",
+      "status": "unknown",
+      "observed": "4.5",
+      "limit": null
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "ADHESION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "CORROSION",
+      "status": "unknown",
+      "observed": "unverified",
+      "limit": "verified"
+    },
+    {
+      "site_id": "S3",
+      "option_id": "C",
+      "rule_id": "REPAIR_SCOPE",
+      "status": "unknown",
+      "observed": null,
+      "limit": "confirmed_scope_and_cost"
+    }
+  ],
+  "numeric_value_count": 243,
+  "limit": "Deterministic synthetic rules and cross-path calculations, not independent human engineering review or a semantic Judge result."
+}
