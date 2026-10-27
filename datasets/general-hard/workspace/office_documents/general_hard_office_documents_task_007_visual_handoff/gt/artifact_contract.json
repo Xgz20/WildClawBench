@@ -1,0 +1,99 @@
+{
+  "schema_version": "h007-artifact-contract/v1",
+  "document": "results/handoff_revised.docx",
+  "ledger": "results/visual_changes.json",
+  "images": [
+    {
+      "image": "page_01.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "bytes": 232467
+    },
+    {
+      "image": "page_02.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "bytes": 191123
+    },
+    {
+      "image": "page_03.png",
+      "width": 1600,
+      "height": 1300,
+      "sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "bytes": 128461
+    }
+  ],
+  "required_rows": 8,
+  "ids": {
+    "V01": "V01",
+    "V02": "V02",
+    "V03": "V03",
+    "V04": "V04",
+    "V05": "V05",
+    "V06": "V06",
+    "V07": "V07",
+    "V08": "V08",
+    "1": "V01",
+    "2": "V02",
+    "3": "V03",
+    "4": "V04",
+    "5": "V05",
+    "6": "V06",
+    "7": "V07",
+    "8": "V08",
+    "①": "V01",
+    "②": "V02",
+    "③": "V03",
+    "④": "V04",
+    "⑤": "V05",
+    "⑥": "V06",
+    "⑦": "V07",
+    "⑧": "V08"
+  },
+  "action_aliases": {
+    "replace": "replace",
+    "replace_span": "replace",
+    "replace_cell": "replace",
+    "替换": "replace",
+    "delete": "delete",
+    "delete_span": "delete",
+    "删除": "delete",
+    "insert_after": "insert_after",
+    "插入": "insert_after",
+    "reorder": "reorder",
+    "move_before": "reorder",
+    "移动": "reorder",
+    "顺序调整": "reorder",
+    "retain": "retain",
+    "keep": "retain",
+    "保留": "retain",
+    "reject": "reject_out_of_scope",
+    "reject_out_of_scope": "reject_out_of_scope",
+    "拒绝越界": "reject_out_of_scope"
+  },
+  "required_fields": [
+    "annotation_id",
+    "image",
+    "action",
+    "target_ref",
+    "before",
+    "after",
+    "annotation_region",
+    "target_region",
+    "source_image_sha256",
+    "explanation"
+  ],
+  "region_policy": {
+    "pixel_xyxy": true,
+    "normalized_xyxy": true,
+    "explicit_xywh": true,
+    "polygon_bbox": true,
+    "whole_image_not_a_target": true,
+    "notes": "Annotation region is the actual note text, excluding long connector; target region is the pointed/selected original object. Reorder also records destination_region."
+  },
+  "text_equivalence": "NFKC, whitespace and punctuation equivalence; directed replacement/insert text preserves the exact words. No free semantic keyword substitute.",
+  "decision": "Optional. Inferred from action when absent; explicit conflicting decisions are incorrect.",
+  "scope": "Only sections preparation, coordination and release_order. Protect original content, page setup and table structure/format; step numbering may use a native numbered list."
+}

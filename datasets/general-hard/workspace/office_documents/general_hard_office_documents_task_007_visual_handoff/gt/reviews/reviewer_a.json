@@ -1,0 +1,348 @@
+{
+  "annotator": "reviewer_a",
+  "review_kind": "independent_model_review",
+  "human_expert": false,
+  "coordinate_system": {
+    "space": "pixel",
+    "format": "xyxy",
+    "origin": "top_left",
+    "image_size": [
+      1600,
+      1300
+    ],
+    "method": "Manual visual localization from the original-resolution input images; bounding boxes enclose the relevant annotation text or original object, excluding long connector lines."
+  },
+  "images_read": [
+    {
+      "image": "annotated_pages/page_01.png",
+      "width": 1600,
+      "height": 1300,
+      "actually_viewed": true,
+      "read_method": "view_image with original detail; visual inspection",
+      "sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465"
+    },
+    {
+      "image": "annotated_pages/page_02.png",
+      "width": 1600,
+      "height": 1300,
+      "actually_viewed": true,
+      "read_method": "view_image with original detail; visual inspection",
+      "sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954"
+    },
+    {
+      "image": "annotated_pages/page_03.png",
+      "width": 1600,
+      "height": 1300,
+      "actually_viewed": true,
+      "read_method": "view_image with original detail; visual inspection",
+      "sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76"
+    }
+  ],
+  "annotations": [
+    {
+      "annotation_id": "①",
+      "image": "page_01.png",
+      "annotation_bbox": [
+        1175,
+        385,
+        1405,
+        430
+      ],
+      "target_bbox": [
+        246,
+        568,
+        374,
+        597
+      ],
+      "target_ref": {
+        "section": "二 本批交接准备",
+        "body_index": 6,
+        "original_text": "正式交接窗口为周一09:00。按窗口完成状态交接。",
+        "selected_text": "周一09:00"
+      },
+      "annotation_text": "改为周二10:30",
+      "action": "replace",
+      "decision": {
+        "status": "adopt",
+        "within_allowed_scope": true
+      },
+      "before": "周一09:00",
+      "after": "周二10:30",
+      "reason": "批注文字在右侧较高位置，但长实线沿右边折向正文，箭头指向“正式交接窗口”句内被红圈的周一09:00。应只替换本批正式交接窗口；“一 历史演练记录”的同值不在该圈和箭头目标内，且不在可编辑章节内。"
+    },
+    {
+      "annotation_id": "②",
+      "image": "page_01.png",
+      "annotation_bbox": [
+        1174,
+        602,
+        1450,
+        652
+      ],
+      "target_bbox": [
+        85,
+        634,
+        352,
+        662
+      ],
+      "target_ref": {
+        "section": "二 本批交接准备",
+        "body_index": 7,
+        "original_text": "准备责任岗为值班小组A；后备岗为值班小组A。",
+        "selected_text": "准备责任岗为值班小组A"
+      },
+      "annotation_text": "此处换 值班小组B",
+      "action": "replace",
+      "decision": {
+        "status": "adopt",
+        "within_allowed_scope": true
+      },
+      "before": "准备责任岗为值班小组A；后备岗为值班小组A。",
+      "after": "准备责任岗为值班小组B；后备岗为值班小组A。",
+      "reason": "箭头接至左侧红圈，圈住的是分号前准备责任岗这一项；分号后的后备岗在圈外。应将准备责任岗的A改为B，后备岗的同名值保留。"
+    },
+    {
+      "annotation_id": "③",
+      "image": "page_01.png",
+      "annotation_bbox": [
+        1174,
+        831,
+        1392,
+        876
+      ],
+      "target_bbox": [
+        84,
+        702,
+        430,
+        729
+      ],
+      "target_ref": {
+        "section": "二 本批交接准备",
+        "body_index": 8,
+        "original_text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。",
+        "selected_text": "通知客户时承诺当日一定结案。"
+      },
+      "annotation_text": "删掉划线这句",
+      "action": "delete",
+      "decision": {
+        "status": "adopt",
+        "within_allowed_scope": true
+      },
+      "before": "通知客户时承诺当日一定结案。",
+      "after": "",
+      "reason": "红色删除横线覆盖第一句“通知客户时承诺当日一定结案。”，引线箭头也接至该句下方；后一句“依赖项未完成时应同步待办与当前状态。”未被划线，应保留。删除对象位于允许修改的第二节。"
+    },
+    {
+      "annotation_id": "④",
+      "image": "page_02.png",
+      "annotation_bbox": [
+        1176,
+        508,
+        1321,
+        551
+      ],
+      "target_bbox": [
+        488,
+        402,
+        552,
+        433
+      ],
+      "target_ref": {
+        "section": "三 协作时限",
+        "body_index": 13,
+        "table_row": "复核材料",
+        "column": "截止时间",
+        "original_text": "16:00"
+      },
+      "annotation_text": "改17:30",
+      "action": "replace",
+      "decision": {
+        "status": "adopt",
+        "within_allowed_scope": true
+      },
+      "before": "16:00",
+      "after": "17:30",
+      "reason": "④的实线从右侧折至表格第一数据行截止时间下方，箭头尖端接到小红圈内16:00。虽然同列下一行也为16:00，④的箭头明确绑定“复核材料”行，故只改该格为17:30；保留原生表结构和其余格内容。"
+    },
+    {
+      "annotation_id": "⑤",
+      "image": "page_02.png",
+      "annotation_bbox": [
+        1176,
+        710,
+        1371,
+        790
+      ],
+      "target_bbox": [
+        88,
+        450,
+        1070,
+        518
+      ],
+      "target_ref": {
+        "section": "三 协作时限",
+        "body_index": 13,
+        "table_row": "回执归档",
+        "column": "整行",
+        "original_text": [
+          "回执归档",
+          "归档专员",
+          "16:00",
+          "沿用历史归档登记口径"
+        ]
+      },
+      "annotation_text": "归档也改17:30（已划除）；圈中保留",
+      "action": "retain",
+      "decision": {
+        "status": "retain",
+        "within_allowed_scope": true,
+        "struck_proposal_effective": false
+      },
+      "before": [
+        "回执归档",
+        "归档专员",
+        "16:00",
+        "沿用历史归档登记口径"
+      ],
+      "after": [
+        "回执归档",
+        "归档专员",
+        "16:00",
+        "沿用历史归档登记口径"
+      ],
+      "reason": "⑤的引线箭头指向包围第二数据行的整行椭圆。“归档也改17:30”提案本身被横线划除，下方红字明确写“圈中保留”；因此整行保持，尤其截止时间仍为16:00。被划除的提案不生效。"
+    },
+    {
+      "annotation_id": "⑥",
+      "image": "page_02.png",
+      "annotation_bbox": [
+        1176,
+        960,
+        1478,
+        1038
+      ],
+      "target_bbox": [
+        87,
+        558,
+        496,
+        589
+      ],
+      "target_ref": {
+        "section": "三 协作时限",
+        "body_index": 14,
+        "original_text": "交接说明：提交后由下一岗接续办理。"
+      },
+      "annotation_text": "此段后加：缺回执不得标记为完成。",
+      "action": "insert_after",
+      "decision": {
+        "status": "adopt",
+        "within_allowed_scope": true
+      },
+      "before": "交接说明：提交后由下一岗接续办理。",
+      "after": "交接说明：提交后由下一岗接续办理。\n缺回执不得标记为完成。",
+      "reason": "⑥的长实线从批注处折回，箭头尖端接至被红线强调的第一段“交接说明”下方；不是位置更近或文字相似的下一段“归档说明”。应紧随交接说明插入原批注限制“缺回执不得标记为完成。”；不将其改写为新的条件。"
+    },
+    {
+      "annotation_id": "⑦",
+      "image": "page_03.png",
+      "annotation_bbox": [
+        1175,
+        307,
+        1366,
+        389
+      ],
+      "target_bbox": [
+        85,
+        348,
+        271,
+        379
+      ],
+      "destination_bbox": [
+        77,
+        251,
+        404,
+        280
+      ],
+      "target_ref": {
+        "section": "四 放行与交接顺序",
+        "body_index": 21,
+        "original_text": "3 核对依赖回执。",
+        "moved_object": "3 核对依赖回执。",
+        "destination_before_original_text": "2 通知协作岗位。",
+        "destination_after_original_text": "1 登记本批次状态。"
+      },
+      "annotation_text": "移到箭头处\n顺序号重排",
+      "action": "reorder",
+      "decision": {
+        "status": "adopt",
+        "within_allowed_scope": true
+      },
+      "before": [
+        "1 登记本批次状态。",
+        "2 通知协作岗位。",
+        "3 核对依赖回执。",
+        "4 记录交接结果。"
+      ],
+      "after": [
+        "1 登记本批次状态。",
+        "2 核对依赖回执。",
+        "3 通知协作岗位。",
+        "4 记录交接结果。"
+      ],
+      "reason": "右侧虚线连接至圈住原第3步的椭圆，用于标明被移对象；左侧实线从该对象向上折行，其箭头实际落在原第1步与第2步之间的空白处。故将“核对依赖回执”移到“通知协作岗位”之前，并将实际顺序编号同步改为1登记、2核对、3通知、4记录。destination_bbox标记箭头尖端所在插入带，未把整条连接线作为落点。"
+    },
+    {
+      "annotation_id": "⑧",
+      "image": "page_03.png",
+      "annotation_bbox": [
+        1175,
+        817,
+        1338,
+        862
+      ],
+      "target_bbox": [
+        85,
+        528,
+        702,
+        557
+      ],
+      "target_ref": {
+        "section": "五 记录保留",
+        "body_index": 24,
+        "original_text": "发布记录保存期为180天；任何例外仍按已批准记录保留。"
+      },
+      "annotation_text": "这段删掉",
+      "action": "reject_out_of_scope",
+      "decision": {
+        "status": "reject",
+        "within_allowed_scope": false
+      },
+      "before": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+      "after": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+      "reason": "箭头指向“发布记录保存期为180天；任何例外仍按已批准记录保留。”整段，圈线包围该段，文字提案是删除；但该段属于第五节，edit_scope.md仅授权第二、三、四节，明确要求越界提案保留原文并记录未采纳。因此拒绝删除，且下方另一段也不改。"
+    }
+  ],
+  "ambiguities": [],
+  "input_sha256": {
+    "handoff.docx": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+    "edit_scope.md": "34810b360ebd4e914907de349dab65b6447131e2294bd3445c3ddc3db3ebea51",
+    "annotated_pages/page_01.png": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+    "annotated_pages/page_02.png": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+    "annotated_pages/page_03.png": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76"
+  },
+  "review_boundary": {
+    "business_inputs_read": [
+      "handoff.docx",
+      "edit_scope.md",
+      "annotated_pages/page_01.png",
+      "annotated_pages/page_02.png",
+      "annotated_pages/page_03.png"
+    ],
+    "docx_extraction": "Extracted paragraph text and native table cell text directly from word/document.xml with Python zipfile and ElementTree.",
+    "other_reviewer_or_author_material_read": false,
+    "candidate_word_created": false,
+    "scoring_performed": false,
+    "input_modified": false,
+    "annotation_limitations": "Model visual review only, not human expert adjudication. Regions are manual pixel bounding boxes; no change to original business material was executed."
+  }
+}

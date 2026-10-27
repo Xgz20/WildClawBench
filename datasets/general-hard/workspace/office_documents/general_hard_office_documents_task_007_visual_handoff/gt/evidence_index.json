@@ -1,0 +1,379 @@
+{
+  "schema_version": "h007-evidence-index/v1",
+  "records": {
+    "handoff.docx#history_window": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:4",
+      "bookmark": "history_window",
+      "text": "演练回放时间为周一09:00。已完成记录不得改写。",
+      "text_sha256": "05c1ff5246de401d66f664e0061fd34ceeddcc18d8d3c007097454e50d4977aa"
+    },
+    "handoff.docx#batch_scope": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:6",
+      "bookmark": "batch_scope",
+      "text": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。",
+      "text_sha256": "076fecdd1d3a720464463f7b763589b6aad55f202d337a0f47844c41db37f168"
+    },
+    "handoff.docx#current_window": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:7",
+      "bookmark": "current_window",
+      "text": "正式交接窗口为周一09:00。按窗口完成状态交接。",
+      "text_sha256": "2577b358127a6853a32d7f597781808779ae46ae5b0d6d9a9f61841afe67a26c"
+    },
+    "handoff.docx#owner_pair": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:8",
+      "bookmark": "owner_pair",
+      "text": "准备责任岗为值班小组A；后备岗为值班小组A。",
+      "text_sha256": "03e9640fc184573e5a1d146d17a6a8907449b61f19e743c45d8d5614923bffcd"
+    },
+    "handoff.docx#customer_promise": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:9",
+      "bookmark": "customer_promise",
+      "text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。",
+      "text_sha256": "fe81e171cb21b252071462b75a76e4271fb00148d7c79afcbe7be843a1dd7777"
+    },
+    "handoff.docx#preparation_log": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:10",
+      "bookmark": "preparation_log",
+      "text": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。",
+      "text_sha256": "c80c2c12e7a43497ac7e91e2f4ff1c1383bcfff6c081af461a15ef7124db03eb"
+    },
+    "handoff.docx#coordination_intro": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:13",
+      "bookmark": "coordination_intro",
+      "text": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。",
+      "text_sha256": "8f76f0696e3a3fa2619b2948276ef77b76c8723db3b8c0eaaec54ddd1441dd8c"
+    },
+    "handoff.docx#handoff_note": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:14",
+      "bookmark": "handoff_note",
+      "text": "交接说明：提交后由下一岗接续办理。",
+      "text_sha256": "e28ebc155ad96dd9fe8179b95ab69bece1b3b0b5ee45c9453019366590fad209"
+    },
+    "handoff.docx#archive_note": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:15",
+      "bookmark": "archive_note",
+      "text": "归档说明：提交后由下一岗接续办理。",
+      "text_sha256": "41167e1e6afb169c4650added243aac4eed51320e6cf8ec4633135ad3b760c2f"
+    },
+    "handoff.docx#handoff_boundary": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:16",
+      "bookmark": "handoff_boundary",
+      "text": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。",
+      "text_sha256": "bc9576a7db9917834e71ce7f53833b64f547da907ccf3ce14fdc9de5d238901b"
+    },
+    "handoff.docx#step1": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:19",
+      "bookmark": "step1",
+      "text": "1 登记本批次状态。",
+      "text_sha256": "6b2ff693fb3d103c3f50b5612fac7d3f70c62217ac1a91a99b6a2ce556e6ffdb"
+    },
+    "handoff.docx#step2": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:20",
+      "bookmark": "step2",
+      "text": "2 通知协作岗位。",
+      "text_sha256": "8642b38c072de10f6af01a31ca3ea43ebb1f6f28d06e5ac8271eeb5a630a43f2"
+    },
+    "handoff.docx#step3": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:21",
+      "bookmark": "step3",
+      "text": "3 核对依赖回执。",
+      "text_sha256": "e50649cfa875df493ad75dcdf1f16fbd5d7478903ec9d8741c6bf1ad5bb2d8b1"
+    },
+    "handoff.docx#step4": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:22",
+      "bookmark": "step4",
+      "text": "4 记录交接结果。",
+      "text_sha256": "637d7f28067c58b87bbc4c08e6c74709776f5b634193de79765814de7ce33348"
+    },
+    "handoff.docx#record_retention": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:24",
+      "bookmark": "record_retention",
+      "text": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+      "text_sha256": "cc82b90b4c1da00993be1f81874531a200ab6e1d30cb6bfe750f951bdc001619"
+    },
+    "handoff.docx#receipt_originals": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "paragraph:25",
+      "bookmark": "receipt_originals",
+      "text": "未经负责人确认，不得删除任何回执原件。",
+      "text_sha256": "89904d26362aac27252c9580e90df212c10683ba1e0e8ebdca8187d6303f7aa8"
+    },
+    "handoff.docx#table:1/row:1/cell:1": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:1/cell:1",
+      "text": "协作环节"
+    },
+    "handoff.docx#table:1/row:1/cell:2": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:1/cell:2",
+      "text": "责任岗位"
+    },
+    "handoff.docx#table:1/row:1/cell:3": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:1/cell:3",
+      "text": "截止时间"
+    },
+    "handoff.docx#table:1/row:1/cell:4": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:1/cell:4",
+      "text": "交接条件"
+    },
+    "handoff.docx#table:1/row:2/cell:1": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:2/cell:1",
+      "text": "复核材料"
+    },
+    "handoff.docx#table:1/row:2/cell:2": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:2/cell:2",
+      "text": "资料专员"
+    },
+    "handoff.docx#table:1/row:2/cell:3": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:2/cell:3",
+      "text": "16:00"
+    },
+    "handoff.docx#table:1/row:2/cell:4": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:2/cell:4",
+      "text": "依赖状态可查，缺项单独登记"
+    },
+    "handoff.docx#table:1/row:3/cell:1": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:3/cell:1",
+      "text": "回执归档"
+    },
+    "handoff.docx#table:1/row:3/cell:2": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:3/cell:2",
+      "text": "归档专员"
+    },
+    "handoff.docx#table:1/row:3/cell:3": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:3/cell:3",
+      "text": "16:00"
+    },
+    "handoff.docx#table:1/row:3/cell:4": {
+      "source": "handoff.docx",
+      "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+      "locator": "table:1/row:3/cell:4",
+      "text": "沿用历史归档登记口径"
+    },
+    "edit_scope.md#allowed_sections": {
+      "source": "edit_scope.md",
+      "source_sha256": "34810b360ebd4e914907de349dab65b6447131e2294bd3445c3ddc3db3ebea51",
+      "locator": "line:5",
+      "text": "可修改原稿的“二 本批交接准备”“三 协作时限”“四 放行与交接顺序”，且仅在截图明确指向的对象/范围内修改。其余正文、标题、页眉页脚、页面设置和原生表格结构/格式保持。圈注保留的对象不因旁边提案而更改；被划除的批注提案不生效。图片提案越过范围时保留原文，并在修改记录标记未采纳和范围依据。"
+    },
+    "annotated_pages/page_01.png#V01": {
+      "source": "annotated_pages/page_01.png",
+      "source_sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1175,
+          385,
+          1405,
+          430
+        ],
+        "target": [
+          246,
+          568,
+          374,
+          597
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_01.png#V02": {
+      "source": "annotated_pages/page_01.png",
+      "source_sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1174,
+          602,
+          1450,
+          652
+        ],
+        "target": [
+          85,
+          634,
+          355,
+          664
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_01.png#V03": {
+      "source": "annotated_pages/page_01.png",
+      "source_sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1174,
+          830,
+          1398,
+          876
+        ],
+        "target": [
+          84,
+          700,
+          430,
+          730
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_02.png#V04": {
+      "source": "annotated_pages/page_02.png",
+      "source_sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1175,
+          508,
+          1324,
+          552
+        ],
+        "target": [
+          488,
+          401,
+          552,
+          433
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_02.png#V05": {
+      "source": "annotated_pages/page_02.png",
+      "source_sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1175,
+          710,
+          1374,
+          791
+        ],
+        "target": [
+          88,
+          450,
+          1070,
+          518
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_02.png#V06": {
+      "source": "annotated_pages/page_02.png",
+      "source_sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1175,
+          958,
+          1484,
+          1038
+        ],
+        "target": [
+          87,
+          557,
+          497,
+          589
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_03.png#V07": {
+      "source": "annotated_pages/page_03.png",
+      "source_sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1175,
+          307,
+          1367,
+          390
+        ],
+        "target": [
+          85,
+          348,
+          271,
+          379
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    },
+    "annotated_pages/page_03.png#V08": {
+      "source": "annotated_pages/page_03.png",
+      "source_sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "locator": {
+        "kind": "pixel_region",
+        "coordinate_space": "pixel_xyxy",
+        "note": [
+          1175,
+          817,
+          1343,
+          863
+        ],
+        "target": [
+          85,
+          527,
+          702,
+          557
+        ]
+      },
+      "verification": "Two retained independent model pixel reads plus author reconciliation; not human expert labels."
+    }
+  }
+}

@@ -1,0 +1,490 @@
+{
+  "schema_version": "h007-annotation-reconciliation/v1",
+  "approved_ids": [
+    "V01",
+    "V02",
+    "V03",
+    "V04",
+    "V05",
+    "V06",
+    "V07",
+    "V08"
+  ],
+  "unresolved_ids": [],
+  "input_sha256": {
+    "annotated_pages/page_01.png": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+    "annotated_pages/page_02.png": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+    "annotated_pages/page_03.png": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+    "edit_scope.md": "34810b360ebd4e914907de349dab65b6447131e2294bd3445c3ddc3db3ebea51",
+    "handoff.docx": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38"
+  },
+  "reviewers": [
+    {
+      "reviewer_id": "reviewer_a",
+      "kind": "independent_model_annotation",
+      "human_expert": false,
+      "agent_task": "/root/h007_annotator_a",
+      "history": "fork_turns=none",
+      "path": "reviews/reviewer_a.json",
+      "sha256": "b7fd29de9311e5fe896311e61eedfcc74f0339c731a02ce958e8d1750f8fbc33"
+    },
+    {
+      "reviewer_id": "reviewer_b",
+      "kind": "independent_model_annotation",
+      "human_expert": false,
+      "agent_task": "/root/h007_annotator_b",
+      "history": "fork_turns=none",
+      "path": "reviews/reviewer_b.json",
+      "sha256": "336705b3b79c025a5c15f0a3d06bcbcf6e66f69d0c24409443241a0fb815648d"
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "V01",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9956521739130435,
+      "target_iou": 0.984375,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1175,
+            385,
+            1405,
+            430
+          ],
+          "target": [
+            246,
+            568,
+            374,
+            597
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            385,
+            1404,
+            430
+          ],
+          "target": [
+            247,
+            568,
+            373,
+            597
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    },
+    {
+      "id": "V02",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9530434782608695,
+      "target_iou": 0.9197332674734502,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1174,
+            602,
+            1450,
+            652
+          ],
+          "target": [
+            85,
+            634,
+            352,
+            662
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            603,
+            1449,
+            651
+          ],
+          "target": [
+            86,
+            634,
+            355,
+            664
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    },
+    {
+      "id": "V03",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9272603670972128,
+      "target_iou": 0.8953152111046848,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1174,
+            831,
+            1392,
+            876
+          ],
+          "target": [
+            84,
+            702,
+            430,
+            729
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            830,
+            1398,
+            875
+          ],
+          "target": [
+            86,
+            700,
+            430,
+            730
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    },
+    {
+      "id": "V04",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9294871794871795,
+      "target_iou": 0.8650366748166259,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1176,
+            508,
+            1321,
+            551
+          ],
+          "target": [
+            488,
+            402,
+            552,
+            433
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            509,
+            1324,
+            552
+          ],
+          "target": [
+            491,
+            401,
+            552,
+            431
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    },
+    {
+      "id": "V05",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9678019728270985,
+      "target_iou": 0.9842907631484366,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1176,
+            710,
+            1371,
+            790
+          ],
+          "target": [
+            88,
+            450,
+            1070,
+            518
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            710,
+            1374,
+            791
+          ],
+          "target": [
+            88,
+            451,
+            1069,
+            518
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    },
+    {
+      "id": "V06",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9529126213592233,
+      "target_iou": 0.9663871951219513,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1176,
+            960,
+            1478,
+            1038
+          ],
+          "target": [
+            87,
+            558,
+            496,
+            589
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            958,
+            1484,
+            1038
+          ],
+          "target": [
+            87,
+            557,
+            497,
+            589
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    },
+    {
+      "id": "V07",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9708817069344211,
+      "target_iou": 0.989247311827957,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1175,
+            307,
+            1366,
+            389
+          ],
+          "target": [
+            85,
+            348,
+            271,
+            379
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            308,
+            1367,
+            390
+          ],
+          "target": [
+            86,
+            348,
+            270,
+            379
+          ]
+        }
+      },
+      "resolution": "Both place step3 before original step2, after step1, with 1-2-3-4 renumbering. Different insertion-band widths accepted; observed tip [85,265] lies in both.",
+      "destination_regions": {
+        "reviewer_a": [
+          77,
+          251,
+          404,
+          280
+        ],
+        "reviewer_b": [
+          79,
+          249,
+          313,
+          280
+        ]
+      }
+    },
+    {
+      "id": "V08",
+      "semantic_agreement": true,
+      "reviewer_checks": [
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        },
+        {
+          "action": true,
+          "target": true,
+          "before": true,
+          "after": true,
+          "scope_decision": true
+        }
+      ],
+      "annotation_iou": 0.9491459627329193,
+      "target_iou": 0.9636373460125351,
+      "raw_regions": {
+        "reviewer_a": {
+          "annotation": [
+            1175,
+            817,
+            1338,
+            862
+          ],
+          "target": [
+            85,
+            528,
+            702,
+            557
+          ]
+        },
+        "reviewer_b": {
+          "annotation": [
+            1175,
+            817,
+            1343,
+            863
+          ],
+          "target": [
+            86,
+            527,
+            701,
+            557
+          ]
+        }
+      },
+      "resolution": "Same business target/action/before-after; minor bounding-edge and selected-span/full-paragraph conventions accepted."
+    }
+  ],
+  "author_pixel_review": {
+    "images": [
+      "annotated_pages/page_01.png",
+      "annotated_pages/page_02.png",
+      "annotated_pages/page_03.png"
+    ],
+    "observed": "Reviewed original pixels after both independent records returned. Time/role/sentence, cross-row arrow, cancelled proposal, insert target, step move/renumber and protected section agree with declarations."
+  },
+  "approval_scope": "Author approves case GT after two independent model annotations; not human expert or an independent Judge result."
+}

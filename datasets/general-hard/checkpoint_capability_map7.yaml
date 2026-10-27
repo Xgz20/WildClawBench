@@ -107,3 +107,16 @@ general_hard_office_documents_task_008_bilingual_revision:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_office_documents_task_007_visual_handoff:
+  automated.business_correctness:
+    - data_processing
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - verification_delivery
+  llm_judge.decision_grounding:
+    - data_processing
+  llm_judge.usable_handoff:
+    - verification_delivery

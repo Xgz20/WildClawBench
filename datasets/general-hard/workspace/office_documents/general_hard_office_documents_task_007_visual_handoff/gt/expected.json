@@ -1,0 +1,1615 @@
+{
+  "schema_version": "h007-approved-expected/v1",
+  "review_status": "approved",
+  "source_sha256": "80cef74cde39fd4ad8357b28823d25013c6cc38c254fb7a8074719a77e761d38",
+  "source_blocks": [
+    {
+      "kind": "paragraph",
+      "text": "澄桥服务中心发布交接稿"
+    },
+    {
+      "kind": "paragraph",
+      "text": "本稿供受理岗、复核岗和交接负责人核对本批发布准备。内容为合成业务材料，当前只制作交接稿，不代表已执行发布、通知或权限变更。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "一 历史演练记录"
+    },
+    {
+      "kind": "paragraph",
+      "text": "演练回放时间为周一09:00。已完成记录不得改写。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "二 本批交接准备"
+    },
+    {
+      "kind": "paragraph",
+      "text": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "正式交接窗口为周一09:00。按窗口完成状态交接。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "准备责任岗为值班小组A；后备岗为值班小组A。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "三 协作时限"
+    },
+    {
+      "kind": "paragraph",
+      "text": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "协作环节",
+          "责任岗位",
+          "截止时间",
+          "交接条件"
+        ],
+        [
+          "复核材料",
+          "资料专员",
+          "16:00",
+          "依赖状态可查，缺项单独登记"
+        ],
+        [
+          "回执归档",
+          "归档专员",
+          "16:00",
+          "沿用历史归档登记口径"
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "交接说明：提交后由下一岗接续办理。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "归档说明：提交后由下一岗接续办理。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "四 放行与交接顺序"
+    },
+    {
+      "kind": "paragraph",
+      "text": "1 登记本批次状态。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "2 通知协作岗位。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "3 核对依赖回执。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "4 记录交接结果。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "五 记录保留"
+    },
+    {
+      "kind": "paragraph",
+      "text": "发布记录保存期为180天；任何例外仍按已批准记录保留。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "未经负责人确认，不得删除任何回执原件。"
+    }
+  ],
+  "expected_blocks": [
+    {
+      "kind": "paragraph",
+      "text": "澄桥服务中心发布交接稿"
+    },
+    {
+      "kind": "paragraph",
+      "text": "本稿供受理岗、复核岗和交接负责人核对本批发布准备。内容为合成业务材料，当前只制作交接稿，不代表已执行发布、通知或权限变更。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "一 历史演练记录"
+    },
+    {
+      "kind": "paragraph",
+      "text": "演练回放时间为周一09:00。已完成记录不得改写。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "二 本批交接准备"
+    },
+    {
+      "kind": "paragraph",
+      "text": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "正式交接窗口为周二10:30。按窗口完成状态交接。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "准备责任岗为值班小组B；后备岗为值班小组A。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "依赖项未完成时应同步待办与当前状态。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "三 协作时限"
+    },
+    {
+      "kind": "paragraph",
+      "text": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。"
+    },
+    {
+      "kind": "table",
+      "rows": [
+        [
+          "协作环节",
+          "责任岗位",
+          "截止时间",
+          "交接条件"
+        ],
+        [
+          "复核材料",
+          "资料专员",
+          "17:30",
+          "依赖状态可查，缺项单独登记"
+        ],
+        [
+          "回执归档",
+          "归档专员",
+          "16:00",
+          "沿用历史归档登记口径"
+        ]
+      ]
+    },
+    {
+      "kind": "paragraph",
+      "text": "交接说明：提交后由下一岗接续办理。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "缺回执不得标记为完成。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "归档说明：提交后由下一岗接续办理。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "四 放行与交接顺序"
+    },
+    {
+      "kind": "paragraph",
+      "text": "1 登记本批次状态。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "2 核对依赖回执。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "3 通知协作岗位。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "4 记录交接结果。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "五 记录保留"
+    },
+    {
+      "kind": "paragraph",
+      "text": "发布记录保存期为180天；任何例外仍按已批准记录保留。"
+    },
+    {
+      "kind": "paragraph",
+      "text": "未经负责人确认，不得删除任何回执原件。"
+    }
+  ],
+  "source_paragraphs": {
+    "history_window": "演练回放时间为周一09:00。已完成记录不得改写。",
+    "batch_scope": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。",
+    "current_window": "正式交接窗口为周一09:00。按窗口完成状态交接。",
+    "owner_pair": "准备责任岗为值班小组A；后备岗为值班小组A。",
+    "customer_promise": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。",
+    "preparation_log": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。",
+    "coordination_intro": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。",
+    "handoff_note": "交接说明：提交后由下一岗接续办理。",
+    "archive_note": "归档说明：提交后由下一岗接续办理。",
+    "handoff_boundary": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。",
+    "step1": "1 登记本批次状态。",
+    "step2": "2 通知协作岗位。",
+    "step3": "3 核对依赖回执。",
+    "step4": "4 记录交接结果。",
+    "record_retention": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+    "receipt_originals": "未经负责人确认，不得删除任何回执原件。"
+  },
+  "cases": [
+    {
+      "id": "V01",
+      "page": 1,
+      "action": "replace",
+      "target": "current_window",
+      "old": "周一09:00",
+      "new": "周二10:30",
+      "protected_control": "history_window",
+      "source_text": "正式交接窗口为周一09:00。按窗口完成状态交接。",
+      "expected_text": "正式交接窗口为周二10:30。按窗口完成状态交接。"
+    },
+    {
+      "id": "V02",
+      "page": 1,
+      "action": "replace_span",
+      "target": "owner_pair",
+      "old": "准备责任岗为值班小组A",
+      "new": "准备责任岗为值班小组B",
+      "preserve": "后备岗为值班小组A",
+      "source_text": "准备责任岗为值班小组A；后备岗为值班小组A。",
+      "expected_text": "准备责任岗为值班小组B；后备岗为值班小组A。"
+    },
+    {
+      "id": "V03",
+      "page": 1,
+      "action": "delete_span",
+      "target": "customer_promise",
+      "old": "通知客户时承诺当日一定结案。",
+      "preserve": "依赖项未完成时应同步待办与当前状态。",
+      "source_text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。",
+      "expected_text": "依赖项未完成时应同步待办与当前状态。"
+    },
+    {
+      "id": "V04",
+      "page": 2,
+      "action": "replace_cell",
+      "target": "coordination_table/review_materials/截止时间",
+      "old": "16:00",
+      "new": "17:30",
+      "protected_control": "coordination_table/archive_receipt/截止时间",
+      "row": "复核材料",
+      "column": "截止时间"
+    },
+    {
+      "id": "V05",
+      "page": 2,
+      "action": "retain",
+      "target": "coordination_table/archive_receipt",
+      "reason": "圈选保留；旁边对归档17:30的提案被划除，不应应用",
+      "expected_row": [
+        "回执归档",
+        "归档专员",
+        "16:00",
+        "沿用历史归档登记口径"
+      ]
+    },
+    {
+      "id": "V06",
+      "page": 2,
+      "action": "insert_after",
+      "target": "handoff_note",
+      "new": "缺回执不得标记为完成。",
+      "protected_control": "archive_note",
+      "source_text": "交接说明：提交后由下一岗接续办理。",
+      "expected_insert": "缺回执不得标记为完成。"
+    },
+    {
+      "id": "V07",
+      "page": 3,
+      "action": "reorder",
+      "target": "release_order",
+      "order": [
+        "step1",
+        "step3",
+        "step2",
+        "step4"
+      ],
+      "renumber": true,
+      "source_steps": [
+        "1 登记本批次状态。",
+        "2 通知协作岗位。",
+        "3 核对依赖回执。",
+        "4 记录交接结果。"
+      ],
+      "expected_steps": [
+        "1 登记本批次状态。",
+        "2 核对依赖回执。",
+        "3 通知协作岗位。",
+        "4 记录交接结果。"
+      ]
+    },
+    {
+      "id": "V08",
+      "page": 3,
+      "action": "reject_out_of_scope",
+      "target": "record_retention",
+      "reason": "批注提出删除，但五记录保留在保护范围，不采纳并记录范围依据",
+      "source_text": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+      "expected_text": "发布记录保存期为180天；任何例外仍按已批准记录保留。"
+    }
+  ],
+  "source_format": {
+    "blocks": [
+      {
+        "kind": "paragraph",
+        "text": "澄桥服务中心发布交接稿",
+        "style": "Title",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "val": "5"
+          },
+          "font": "Heiti SC",
+          "sz": 38
+        },
+        "segments": [
+          {
+            "text": "澄桥服务中心发布交接稿",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 38,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:1"
+      },
+      {
+        "kind": "paragraph",
+        "text": "本稿供受理岗、复核岗和交接负责人核对本批发布准备。内容为合成业务材料，当前只制作交接稿，不代表已执行发布、通知或权限变更。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "本稿供受理岗、复核岗和交接负责人核对本批发布准备。内容为合成业务材料，当前只制作交接稿，不代表已执行发布、通知或权限变更。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:2"
+      },
+      {
+        "kind": "paragraph",
+        "text": "一 历史演练记录",
+        "style": "Heading1",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "before": "480",
+            "after": "0"
+          },
+          "font": "Heiti SC",
+          "sz": 28,
+          "keepNext": "1",
+          "b": true
+        },
+        "segments": [
+          {
+            "text": "一 历史演练记录",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 28,
+              "b": true,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:3"
+      },
+      {
+        "kind": "paragraph",
+        "text": "演练回放时间为周一09:00。已完成记录不得改写。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "演练回放时间为周一09:00。已完成记录不得改写。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "history_window"
+        ],
+        "locator": "paragraph:4"
+      },
+      {
+        "kind": "paragraph",
+        "text": "二 本批交接准备",
+        "style": "Heading1",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "before": "480",
+            "after": "0"
+          },
+          "font": "Heiti SC",
+          "sz": 28,
+          "keepNext": "1",
+          "b": true
+        },
+        "segments": [
+          {
+            "text": "二 本批交接准备",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 28,
+              "b": true,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:5"
+      },
+      {
+        "kind": "paragraph",
+        "text": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "batch_scope"
+        ],
+        "locator": "paragraph:6"
+      },
+      {
+        "kind": "paragraph",
+        "text": "正式交接窗口为周一09:00。按窗口完成状态交接。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "正式交接窗口为周一09:00。按窗口完成状态交接。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "current_window"
+        ],
+        "locator": "paragraph:7"
+      },
+      {
+        "kind": "paragraph",
+        "text": "准备责任岗为值班小组A；后备岗为值班小组A。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "准备责任岗为值班小组A；后备岗为值班小组A。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "owner_pair"
+        ],
+        "locator": "paragraph:8"
+      },
+      {
+        "kind": "paragraph",
+        "text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "customer_promise"
+        ],
+        "locator": "paragraph:9"
+      },
+      {
+        "kind": "paragraph",
+        "text": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "preparation_log"
+        ],
+        "locator": "paragraph:10"
+      },
+      {
+        "kind": "paragraph",
+        "text": "三 协作时限",
+        "style": "Heading1",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "before": "480",
+            "after": "0"
+          },
+          "font": "Heiti SC",
+          "sz": 28,
+          "keepNext": "1",
+          "b": true
+        },
+        "segments": [
+          {
+            "text": "三 协作时限",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 28,
+              "b": true,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:12"
+      },
+      {
+        "kind": "paragraph",
+        "text": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "coordination_intro"
+        ],
+        "locator": "paragraph:13"
+      },
+      {
+        "kind": "table",
+        "rows": [
+          [
+            {
+              "text": "协作环节",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "协作环节",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "协作环节",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": true,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:1/cell:1/p:1"
+                }
+              ]
+            },
+            {
+              "text": "责任岗位",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "责任岗位",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "责任岗位",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": true,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:1/cell:2/p:1"
+                }
+              ]
+            },
+            {
+              "text": "截止时间",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "截止时间",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "截止时间",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": true,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:1/cell:3/p:1"
+                }
+              ]
+            },
+            {
+              "text": "交接条件",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "交接条件",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "交接条件",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": true,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:1/cell:4/p:1"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "text": "复核材料",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "复核材料",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "复核材料",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:2/cell:1/p:1"
+                }
+              ]
+            },
+            {
+              "text": "资料专员",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "资料专员",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "资料专员",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:2/cell:2/p:1"
+                }
+              ]
+            },
+            {
+              "text": "16:00",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "16:00",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "16:00",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:2/cell:3/p:1"
+                }
+              ]
+            },
+            {
+              "text": "依赖状态可查，缺项单独登记",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "依赖状态可查，缺项单独登记",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "依赖状态可查，缺项单独登记",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:2/cell:4/p:1"
+                }
+              ]
+            }
+          ],
+          [
+            {
+              "text": "回执归档",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "回执归档",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "回执归档",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:3/cell:1/p:1"
+                }
+              ]
+            },
+            {
+              "text": "归档专员",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "归档专员",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "归档专员",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:3/cell:2/p:1"
+                }
+              ]
+            },
+            {
+              "text": "16:00",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "16:00",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "16:00",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:3/cell:3/p:1"
+                }
+              ]
+            },
+            {
+              "text": "沿用历史归档登记口径",
+              "paragraphs": [
+                {
+                  "kind": "paragraph",
+                  "text": "沿用历史归档登记口径",
+                  "style": "Normal",
+                  "format": {
+                    "color": "000000",
+                    "spacing": {
+                      "before": "100",
+                      "after": "100"
+                    },
+                    "font": "Heiti SC",
+                    "sz": 23
+                  },
+                  "segments": [
+                    {
+                      "text": "沿用历史归档登记口径",
+                      "format": {
+                        "font": "Heiti SC",
+                        "sz": 22,
+                        "b": false,
+                        "i": null,
+                        "u": null,
+                        "color": "000000"
+                      }
+                    }
+                  ],
+                  "list_number": null,
+                  "bookmarks": [],
+                  "locator": "table:1/row:3/cell:4/p:1"
+                }
+              ]
+            }
+          ]
+        ],
+        "grid": [
+          2016,
+          1944,
+          1584,
+          4536
+        ],
+        "cell_properties": [
+          [
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"2016\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders><ns0:shd ns0:fill=\"E6EDF2\" /></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"1944\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders><ns0:shd ns0:fill=\"E6EDF2\" /></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"1584\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders><ns0:shd ns0:fill=\"E6EDF2\" /></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"4536\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders><ns0:shd ns0:fill=\"E6EDF2\" /></ns0:tcPr>"
+          ],
+          [
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"2016\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"1944\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"1584\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"4536\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>"
+          ],
+          [
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"2016\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"1944\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"1584\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>",
+            "<ns0:tcPr xmlns:ns0=\"http://schemas.openxmlformats.org/wordprocessingml/2006/main\"><ns0:tcW ns0:type=\"dxa\" ns0:w=\"4536\" /><ns0:tcBorders><ns0:top ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:left ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:bottom ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /><ns0:right ns0:val=\"single\" ns0:sz=\"4\" ns0:color=\"BDBDBD\" /></ns0:tcBorders></ns0:tcPr>"
+          ]
+        ],
+        "locator": "table:1"
+      },
+      {
+        "kind": "paragraph",
+        "text": "交接说明：提交后由下一岗接续办理。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "交接说明：提交后由下一岗接续办理。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "handoff_note"
+        ],
+        "locator": "paragraph:14"
+      },
+      {
+        "kind": "paragraph",
+        "text": "归档说明：提交后由下一岗接续办理。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "归档说明：提交后由下一岗接续办理。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "archive_note"
+        ],
+        "locator": "paragraph:15"
+      },
+      {
+        "kind": "paragraph",
+        "text": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "handoff_boundary"
+        ],
+        "locator": "paragraph:16"
+      },
+      {
+        "kind": "paragraph",
+        "text": "四 放行与交接顺序",
+        "style": "Heading1",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "before": "480",
+            "after": "0"
+          },
+          "font": "Heiti SC",
+          "sz": 28,
+          "keepNext": "1",
+          "b": true
+        },
+        "segments": [
+          {
+            "text": "四 放行与交接顺序",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 28,
+              "b": true,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:18"
+      },
+      {
+        "kind": "paragraph",
+        "text": "1 登记本批次状态。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "1 登记本批次状态。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "step1"
+        ],
+        "locator": "paragraph:19"
+      },
+      {
+        "kind": "paragraph",
+        "text": "2 通知协作岗位。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "2 通知协作岗位。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "step2"
+        ],
+        "locator": "paragraph:20"
+      },
+      {
+        "kind": "paragraph",
+        "text": "3 核对依赖回执。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "3 核对依赖回执。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "step3"
+        ],
+        "locator": "paragraph:21"
+      },
+      {
+        "kind": "paragraph",
+        "text": "4 记录交接结果。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "4 记录交接结果。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "step4"
+        ],
+        "locator": "paragraph:22"
+      },
+      {
+        "kind": "paragraph",
+        "text": "五 记录保留",
+        "style": "Heading1",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "before": "480",
+            "after": "0"
+          },
+          "font": "Heiti SC",
+          "sz": 28,
+          "keepNext": "1",
+          "b": true
+        },
+        "segments": [
+          {
+            "text": "五 记录保留",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 28,
+              "b": true,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [],
+        "locator": "paragraph:23"
+      },
+      {
+        "kind": "paragraph",
+        "text": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "record_retention"
+        ],
+        "locator": "paragraph:24"
+      },
+      {
+        "kind": "paragraph",
+        "text": "未经负责人确认，不得删除任何回执原件。",
+        "style": "Normal",
+        "format": {
+          "color": "000000",
+          "spacing": {
+            "after": "240",
+            "line": "288",
+            "lineRule": "auto"
+          },
+          "font": "Heiti SC",
+          "sz": 23
+        },
+        "segments": [
+          {
+            "text": "未经负责人确认，不得删除任何回执原件。",
+            "format": {
+              "font": "Heiti SC",
+              "sz": 23,
+              "b": null,
+              "i": null,
+              "u": null,
+              "color": "000000"
+            }
+          }
+        ],
+        "list_number": null,
+        "bookmarks": [
+          "receipt_originals"
+        ],
+        "locator": "paragraph:25"
+      }
+    ],
+    "page_setup": {
+      "pgSz": {
+        "w": "12240",
+        "h": "15840"
+      },
+      "pgMar": {
+        "top": "1008",
+        "right": "1080",
+        "bottom": "1008",
+        "left": "1080",
+        "header": "720",
+        "footer": "720",
+        "gutter": "0"
+      },
+      "cols": {
+        "space": "720"
+      }
+    },
+    "header_footer_text": []
+  },
+  "source_page_setup": {
+    "pgSz": {
+      "w": "12240",
+      "h": "15840"
+    },
+    "pgMar": {
+      "top": "1008",
+      "right": "1080",
+      "bottom": "1008",
+      "left": "1080",
+      "header": "720",
+      "footer": "720",
+      "gutter": "0"
+    },
+    "cols": {
+      "space": "720"
+    }
+  },
+  "independence": "Actual source extracted via stdlib parser and high-level block transitions, compared with declarations; does not read any reference output.",
+  "limit": "Computational author cross-check, not an independent visual annotation or semantic Judge.",
+  "annotation_status_sha256": "7a5a737227aadd63e5b0325c401bcacef646ab6ad9e5a9b38abc3706c4b50539",
+  "visual_regions_sha256": "b89e0d7ee473211548df0a26405f1efea5fa50551d9407af66ea0c0f74b3f070",
+  "review_note": "Original author facts retained after all eight independent interpretations agreed. No candidate or reference output was used to infer the answers."
+}

@@ -1,0 +1,541 @@
+{
+  "schema_version": "h007-author-oracle/v1",
+  "status": "pending_independent_annotations",
+  "source": {
+    "title": "澄桥服务中心发布交接稿",
+    "organization": "澄桥服务中心",
+    "introduction": "本稿供受理岗、复核岗和交接负责人核对本批发布准备。内容为合成业务材料，当前只制作交接稿，不代表已执行发布、通知或权限变更。",
+    "pages": [
+      {
+        "sections": [
+          {
+            "id": "history",
+            "title": "一 历史演练记录",
+            "paragraphs": [
+              {
+                "id": "history_window",
+                "text": "演练回放时间为周一09:00。已完成记录不得改写。"
+              }
+            ]
+          },
+          {
+            "id": "preparation",
+            "title": "二 本批交接准备",
+            "paragraphs": [
+              {
+                "id": "batch_scope",
+                "text": "本批由交接负责人统一收口状态，未完成依赖继续保留待办，不以文稿修订代替实际业务验收。"
+              },
+              {
+                "id": "current_window",
+                "text": "正式交接窗口为周一09:00。按窗口完成状态交接。"
+              },
+              {
+                "id": "owner_pair",
+                "text": "准备责任岗为值班小组A；后备岗为值班小组A。"
+              },
+              {
+                "id": "customer_promise",
+                "text": "通知客户时承诺当日一定结案。依赖项未完成时应同步待办与当前状态。"
+              },
+              {
+                "id": "preparation_log",
+                "text": "准备登记保留原批次号、实际联系时间与材料版本，不因修订说明重建批次。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sections": [
+          {
+            "id": "coordination",
+            "title": "三 协作时限",
+            "paragraphs": [
+              {
+                "id": "coordination_intro",
+                "text": "以下截止时间用于内部交接节点，岗位分别核对材料与回执，不把协作登记写成业务已经办结。"
+              }
+            ],
+            "table": {
+              "id": "coordination_table",
+              "headers": [
+                "协作环节",
+                "责任岗位",
+                "截止时间",
+                "交接条件"
+              ],
+              "rows": [
+                {
+                  "id": "review_materials",
+                  "values": [
+                    "复核材料",
+                    "资料专员",
+                    "16:00",
+                    "依赖状态可查，缺项单独登记"
+                  ]
+                },
+                {
+                  "id": "archive_receipt",
+                  "values": [
+                    "回执归档",
+                    "归档专员",
+                    "16:00",
+                    "沿用历史归档登记口径"
+                  ]
+                }
+              ]
+            },
+            "after": [
+              {
+                "id": "handoff_note",
+                "text": "交接说明：提交后由下一岗接续办理。"
+              },
+              {
+                "id": "archive_note",
+                "text": "归档说明：提交后由下一岗接续办理。"
+              },
+              {
+                "id": "handoff_boundary",
+                "text": "交接材料只记实际状态和责任入口，未取得确认的事项保留待核，不补造回执。"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "sections": [
+          {
+            "id": "release_order",
+            "title": "四 放行与交接顺序",
+            "paragraphs": [
+              {
+                "id": "step1",
+                "text": "1 登记本批次状态。"
+              },
+              {
+                "id": "step2",
+                "text": "2 通知协作岗位。"
+              },
+              {
+                "id": "step3",
+                "text": "3 核对依赖回执。"
+              },
+              {
+                "id": "step4",
+                "text": "4 记录交接结果。"
+              }
+            ]
+          },
+          {
+            "id": "retention",
+            "title": "五 记录保留",
+            "paragraphs": [
+              {
+                "id": "record_retention",
+                "text": "发布记录保存期为180天；任何例外仍按已批准记录保留。"
+              },
+              {
+                "id": "receipt_originals",
+                "text": "未经负责人确认，不得删除任何回执原件。"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "actions": [
+    {
+      "id": "V01",
+      "page": 1,
+      "action": "replace",
+      "target": "current_window",
+      "old": "周一09:00",
+      "new": "周二10:30",
+      "protected_control": "history_window",
+      "visual_construction": {
+        "id": "V01",
+        "image": "page_01.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          374.33392333984375,
+          1399.93115234375,
+          430.67254638671875
+        ],
+        "target_bbox": [
+          256,
+          570.375,
+          363.84375,
+          594.375
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            388.3740234375
+          ],
+          [
+            1138,
+            388.3740234375
+          ],
+          [
+            1138,
+            611.375
+          ],
+          [
+            309.921875,
+            611.375
+          ],
+          [
+            309.921875,
+            601.375
+          ]
+        ]
+      }
+    },
+    {
+      "id": "V02",
+      "page": 1,
+      "action": "replace_span",
+      "target": "owner_pair",
+      "old": "准备责任岗为值班小组A",
+      "new": "准备责任岗为值班小组B",
+      "preserve": "后备岗为值班小组A",
+      "visual_construction": {
+        "id": "V02",
+        "image": "page_01.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          592.067138671875,
+          1443.184326171875,
+          650.6725463867188
+        ],
+        "target_bbox": [
+          88,
+          635.96875,
+          345.765625,
+          659.96875
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            608.3740234375
+          ],
+          [
+            1148,
+            608.3740234375
+          ],
+          [
+            1148,
+            676.96875
+          ],
+          [
+            216.8828125,
+            676.96875
+          ],
+          [
+            216.8828125,
+            666.96875
+          ]
+        ]
+      }
+    },
+    {
+      "id": "V03",
+      "page": 1,
+      "action": "delete_span",
+      "target": "customer_promise",
+      "old": "通知客户时承诺当日一定结案。",
+      "preserve": "依赖项未完成时应同步待办与当前状态。",
+      "visual_construction": {
+        "id": "V03",
+        "image": "page_01.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          819.840087890625,
+          1390.2725830078125,
+          875.6725463867188
+        ],
+        "target_bbox": [
+          88,
+          701.5625,
+          424,
+          725.5625
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            833.3740234375
+          ],
+          [
+            1130,
+            833.3740234375
+          ],
+          [
+            1130,
+            742.5625
+          ],
+          [
+            256,
+            742.5625
+          ],
+          [
+            256,
+            732.5625
+          ]
+        ]
+      }
+    },
+    {
+      "id": "V04",
+      "page": 2,
+      "action": "replace_cell",
+      "target": "coordination_table/review_materials/截止时间",
+      "old": "16:00",
+      "new": "17:30",
+      "protected_control": "coordination_table/archive_receipt/截止时间",
+      "visual_construction": {
+        "id": "V04",
+        "image": "page_02.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          498.7301330566406,
+          1316.0462646484375,
+          550.6725463867188
+        ],
+        "target_bbox": [
+          491.375,
+          405.828125,
+          548.71875,
+          428.828125
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            508.3740234375
+          ],
+          [
+            1138,
+            508.3740234375
+          ],
+          [
+            1138,
+            445.828125
+          ],
+          [
+            520.046875,
+            445.828125
+          ],
+          [
+            520.046875,
+            435.828125
+          ]
+        ]
+      }
+    },
+    {
+      "id": "V05",
+      "page": 2,
+      "action": "retain",
+      "target": "coordination_table/archive_receipt",
+      "reason": "圈选保留；旁边对归档17:30的提案被划除，不应应用",
+      "visual_construction": {
+        "id": "V05",
+        "image": "page_02.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          700.9699096679688,
+          1368.4788818359375,
+          793.6135864257812
+        ],
+        "target_bbox": [
+          88.5,
+          450.96875,
+          1069.5,
+          517.609375
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            708.3740234375
+          ],
+          [
+            1155,
+            708.3740234375
+          ],
+          [
+            1155,
+            534.609375
+          ],
+          [
+            579,
+            534.609375
+          ],
+          [
+            579,
+            524.609375
+          ]
+        ],
+        "cancelled_proposal_bbox": [
+          1217.6710205078125,
+          703.9699096679688,
+          1365.4788818359375,
+          744.5804443359375
+        ]
+      }
+    },
+    {
+      "id": "V06",
+      "page": 2,
+      "action": "insert_after",
+      "target": "handoff_note",
+      "new": "缺回执不得标记为完成。",
+      "protected_control": "archive_note",
+      "visual_construction": {
+        "id": "V06",
+        "image": "page_02.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          946.3055419921875,
+          1492.3336181640625,
+          1043.6136474609375
+        ],
+        "target_bbox": [
+          88,
+          559.109375,
+          496,
+          583.109375
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            958.3740234375
+          ],
+          [
+            1140,
+            958.3740234375
+          ],
+          [
+            1140,
+            600.109375
+          ],
+          [
+            292,
+            600.109375
+          ],
+          [
+            292,
+            590.109375
+          ]
+        ]
+      }
+    },
+    {
+      "id": "V07",
+      "page": 3,
+      "action": "reorder",
+      "target": "release_order",
+      "order": [
+        "step1",
+        "step3",
+        "step2",
+        "step4"
+      ],
+      "renumber": true,
+      "visual_construction": {
+        "id": "V07",
+        "image": "page_03.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          296.3055114746094,
+          1362.3109130859375,
+          393.6136169433594
+        ],
+        "target_bbox": [
+          88,
+          343.1875,
+          388,
+          382.78125
+        ],
+        "arrow_polyline": [
+          [
+            76,
+            362.984375
+          ],
+          [
+            58,
+            362.984375
+          ],
+          [
+            58,
+            265.59375
+          ],
+          [
+            85,
+            265.59375
+          ]
+        ],
+        "landing_bbox": [
+          83,
+          256.59375,
+          438,
+          274.59375
+        ]
+      }
+    },
+    {
+      "id": "V08",
+      "page": 3,
+      "action": "reject_out_of_scope",
+      "target": "record_retention",
+      "reason": "批注提出删除，但五记录保留在保护范围，不采纳并记录范围依据",
+      "visual_construction": {
+        "id": "V08",
+        "image": "page_03.png",
+        "coordinate_space": "pixel_xyxy",
+        "annotation_bbox": [
+          1174.7781982421875,
+          807.7709350585938,
+          1334.3492431640625,
+          860.6725463867188
+        ],
+        "target_bbox": [
+          88,
+          529.375,
+          703.890625,
+          553.375
+        ],
+        "arrow_polyline": [
+          [
+            1164,
+            818.3740234375
+          ],
+          [
+            1138,
+            818.3740234375
+          ],
+          [
+            1138,
+            570.375
+          ],
+          [
+            395.9453125,
+            570.375
+          ],
+          [
+            395.9453125,
+            560.375
+          ]
+        ]
+      }
+    }
+  ],
+  "limit": "Pre-reference author intent plus actual browser geometry. Must be reconciled with independent image annotations before use as approved GT."
+}
