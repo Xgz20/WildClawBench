@@ -1,5 +1,7 @@
 # General E2E 评分 core 接口
 
+score-general-e2e 0.22.0装配core 0.14.0，新增普通标量公式/数值中间量干预API `prepare_xlsx_numeric_intervention()`、`verify_xlsx_numeric_intervention()`。有限数值范围沿用已有numeric literal约束，逐格保存完整`original_cell`并以新的审计schema/Profile重放；不扩大旧字面数值或二进制标记接口。它与原两种Profile共用扎根来源图，归档不依赖引擎仍在场。见[标量数值中间量干预](office-recalculation.md#标量数值中间量干预)。
+
 score-general-e2e 0.21.0装配core 0.13.0，新增`prepare_xlsx_marker_intervention()`与`verify_xlsx_marker_intervention()`。独立Profile记录原单元格完整XML，允许在副本对普通标量公式或二进制数值/布尔/文本标记做0/1干预；现有普通数值输入接口仍拒绝改公式。归档校验器按来源依赖重放连续普通变体和标记变体，未扎根、环和未声明变更均拒绝。详见[连续变体与标记干预](office-recalculation.md#连续变体与二进制标记干预)。
 
 `score-general-e2e` 0.8.1 装配 `grading-core` 0.2.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。

@@ -510,7 +510,7 @@ import sys
 sys.path.insert(0, sys.argv[1])
 import wildclawbench_grading_core as core
 payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api')
-print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'], 'marker_api': callable(core.prepare_xlsx_marker_intervention) and callable(core.verify_xlsx_marker_intervention)}))
+print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'], 'marker_api': callable(core.prepare_xlsx_marker_intervention) and callable(core.verify_xlsx_marker_intervention), 'numeric_api': callable(core.prepare_xlsx_numeric_intervention) and callable(core.verify_xlsx_numeric_intervention)}))
 """
         completed = subprocess.run(
             [sys.executable, "-I", "-c", source, str(vendor_parent)],
@@ -522,8 +522,9 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'],
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(payload["version"], "0.13.0")
+        self.assertEqual(payload["version"], "0.14.0")
         self.assertTrue(payload["marker_api"])
+        self.assertTrue(payload["numeric_api"])
         component = next(c for c in self.rows["score-general-e2e"]["components"] if c["name"] == "grading-core")
         self.assertEqual(component["version"], payload["version"])
         self.assertEqual(

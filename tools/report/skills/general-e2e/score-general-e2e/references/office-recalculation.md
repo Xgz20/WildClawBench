@@ -1,5 +1,25 @@
 # 可信Office重算
 
+## 标量数值中间量干预
+
+score-general-e2e 0.22.0、core 0.14.0提供独立Profile：
+
+```python
+variant = prepare_xlsx_numeric_intervention(
+    source,
+    [{"sheet": "生效数据", "cell": "C7", "value": 136000}],
+    evidence_root / "revenue-variant",
+)
+verify_xlsx_numeric_intervention(source, variant["path"], variant["audit"])
+result = recalculate_xlsx(variant["path"], office_lock, evidence_root / "revenue-result")
+```
+
+适用于经规则独立核验基线值、身份及业务角色的普通标量公式和数值中间量。每步1至100个不同单元格，目标值须为现有数值协议支持的有限数（绝对值不超过1e15，非零数数量级不小于1e-15）。生成的目标格为数值类型；原公式、错误/缺失缓存、布尔或数值文本的完整原单元格XML保存在`original_cell`中。原始数值文本仅在其确为可解析数值时接受，不能把缺失标记当作数值源。
+
+`numeric-intervention-audit.json`使用`wildclawbench.office-xlsx-numeric-intervention/v1`和`offline-xlsx-scalar-numeric-intervention/v1`，绑定父源SHA、变体SHA、完整原格与声明目标值。校验器重放原始单元格，不相信回执自己提供的历史；其它格/部件、原公式记录或目标值发生未声明变化，即使重新索引也拒绝。新Profile可与普通数值输入和二进制标记变体混用，仍按冻结来源依赖图授权，不依赖索引顺序。
+
+这是下游计算依赖实验，不证明被覆盖公式本身正确，也不要求候选把合理的来源公式改成常量。任务必须单独核对来源提取、单位、版本和基线；只在其通过后选择真实业务中间量。共享/数组公式、处于这些公式范围的子格、元数据支持的单元格仍报`OFFICE_NUMERIC_INTERVENTION_UNSUPPORTED`，按评测运行时能力异常处理，不补为候选零分。原`prepare_xlsx_counterfactual()`继续只改字面数值，原marker Profile继续只接受0/1。
+
 任务MD的frontmatter可声明`scoring_runtime: {office: true}`。该声明只进入私有评分契约，不要求被测端安装同一引擎，也不进入任务Env。没有声明的旧任务契约和冻结清单保持原字节。
 
 评分core的`office_runtime.py`可逐字节复制到任务私有GT，作为标准库helper由可信规则调用。它清除全部单元格公式缓存，设置自动全量计算，调用锁定的headless LibreOffice打开并另存一次性副本。评分器读取重算副本中的值，仍可查看原件公式；不能以原件缓存替代重算，也不能禁止等价公式来规避计算。

@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.22.0`装配core `0.14.0`，增加独立的`prepare_xlsx_numeric_intervention()`/`verify_xlsx_numeric_intervention()`。它可在副本中对普通标量公式或数值中间量做声明式有限数值干预，保留原单元格公式、缓存、类型的完整记录，并纳入连续来源重放。只证明下游依赖，原值及业务角色须先独立核验。原普通字面数值接口和0/1标记接口保持各自限制；共享/数组/元数据形态仍明确报告不支持。详见[标量数值中间量干预](references/office-recalculation.md#标量数值中间量干预)。
+
 `0.21.0`增加扎根于冻结候选/私有GT的连续XLSX变体验证和独立二进制标记干预Profile。归档校验按依赖重放每一层，只有已核验变体可成为后续父源，制品索引顺序不影响合法链。`prepare_xlsx_marker_intervention()`在副本中干预声明的0/1中间标记，保留原公式、缓存与类型的完整单元格记录；原基线和允许干预的业务对象须由任务规则先行核验。普通数值输入API的非公式限制保持。共享/数组/元数据型标记明确报告暂不支持，不自动当作候选零分。详见[连续变体与标记干预](references/office-recalculation.md#连续变体与二进制标记干预)。
 
 `0.20.0`增加显式Word/PPTX双格式渲染锁：`bootstrap-office-render --document-format both`冻结v2锁，共享一个引擎和一份字体清单，两类PDF分别保留原格式的固定导出选项、来源和回执，并共同绑定完整v2锁SHA。新helper的`office_render_lock_formats()`给出实际授权格式；正常与归档核验逐份核对Word结构及PPTX页/内嵌表声明。默认仍为原PPTX v1锁，`docx`仍为原Word v1锁，不自动扩大旧锁或旧私有helper的能力。详见[双格式渲染](references/office-rendering.md#word与pptx共同渲染)。

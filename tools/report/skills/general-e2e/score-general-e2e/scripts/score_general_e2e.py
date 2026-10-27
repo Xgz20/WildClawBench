@@ -2414,14 +2414,17 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
     prepared_paths = set()
     for artifact in artifacts:
         marker = artifact["path"].endswith("/marker-intervention-audit.json")
-        if not marker and not artifact["path"].endswith("/counterfactual-audit.json"):
+        numeric = artifact["path"].endswith("/numeric-intervention-audit.json")
+        if not marker and not numeric and not artifact["path"].endswith("/counterfactual-audit.json"):
             continue
         _import_grading_core()
         from wildclawbench_grading_core.office_runtime import (
             OfficeRuntimeError, verify_xlsx_counterfactual, verify_xlsx_marker_intervention,
+            verify_xlsx_numeric_intervention,
         )
         receipt_path = root / artifact["path"]
-        code = "OFFICE_MARKER_INTERVENTION_AUDIT_INVALID" if marker else "OFFICE_COUNTERFACTUAL_AUDIT_INVALID"
+        code = ("OFFICE_NUMERIC_INTERVENTION_AUDIT_INVALID" if numeric else
+                "OFFICE_MARKER_INTERVENTION_AUDIT_INVALID" if marker else "OFFICE_COUNTERFACTUAL_AUDIT_INVALID")
         receipt = _read_json(receipt_path, code=code)
         prepared = receipt_path.with_name("prepared.xlsx")
         parent = receipt.get("source_sha256")
@@ -2430,6 +2433,7 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
             raise ScoringRuntimeError(code, artifact["path"])
         prepared_paths.add(prepared)
         variants.append((artifact["path"], parent, prepared, receipt,
+                         verify_xlsx_numeric_intervention if numeric else
                          verify_xlsx_marker_intervention if marker else verify_xlsx_counterfactual, code))
     if len(variants) > 1024:
         raise ScoringRuntimeError("OFFICE_VARIANT_GRAPH_LIMIT")

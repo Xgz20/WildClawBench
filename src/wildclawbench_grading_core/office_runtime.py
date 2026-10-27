@@ -40,6 +40,8 @@ COUNTERFACTUAL_AUDIT_SCHEMA = "wildclawbench.office-xlsx-counterfactual/v1"
 COUNTERFACTUAL_PROFILE = "offline-xlsx-numeric-input-change/v1"
 MARKER_INTERVENTION_AUDIT_SCHEMA = "wildclawbench.office-xlsx-marker-intervention/v1"
 MARKER_INTERVENTION_PROFILE = "offline-xlsx-binary-marker-intervention/v1"
+NUMERIC_INTERVENTION_AUDIT_SCHEMA = "wildclawbench.office-xlsx-numeric-intervention/v1"
+NUMERIC_INTERVENTION_PROFILE = "offline-xlsx-scalar-numeric-intervention/v1"
 RENDER_FILTER = {"ExportHiddenSlides": {"type": "boolean", "value": "true"},
                  "ExportNotesPages": {"type": "boolean", "value": "false"},
                  "ExportOnlyNotesPages": {"type": "boolean", "value": "false"}}
@@ -386,17 +388,18 @@ def verify_xlsx_counterfactual(source, prepared, audit):
     return audit
 
 
-def _marker_intervention_parts(data, changes):
-    """Override declared binary intermediate markers, preserving a full before image.
+def _scalar_intervention_parts(data, changes, *, numeric=False):
+    """Override declared scalar intermediates, preserving a full before image.
 
     This is a summary-dependency experiment, not a repair or a claim that the
     original marker formula is correct. The caller must verify baseline markers
     and their business role independently before choosing intervention cells.
     """
     _clean_package(data)
-    invalid = "OFFICE_MARKER_INTERVENTION_CHANGE_INVALID"
-    target_invalid = "OFFICE_MARKER_INTERVENTION_TARGET_INVALID"
-    unsupported = "OFFICE_MARKER_INTERVENTION_UNSUPPORTED"
+    prefix = "OFFICE_NUMERIC_INTERVENTION" if numeric else "OFFICE_MARKER_INTERVENTION"
+    invalid = prefix + "_CHANGE_INVALID"
+    target_invalid = prefix + "_TARGET_INVALID"
+    unsupported = prefix + "_UNSUPPORTED"
     if not isinstance(changes, list) or not 1 <= len(changes) <= 100:
         raise OfficeRuntimeError(invalid, "need 1 to 100 marker edits")
     requested = {}
@@ -413,7 +416,7 @@ def _marker_intervention_parts(data, changes):
             value = _numeric_literal(change["value"])
         except OfficeRuntimeError as exc:
             raise OfficeRuntimeError(invalid, exc.message) from exc
-        if value not in {"0", "1"}:
+        if not numeric and value not in {"0", "1"}:
             raise OfficeRuntimeError(invalid, "marker interventions must be zero or one")
         requested[key] = value
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
@@ -497,7 +500,7 @@ def _marker_intervention_parts(data, changes):
                     binary = _numeric_literal(original.strip() if isinstance(original, str) else original)
                 except OfficeRuntimeError as exc:
                     raise OfficeRuntimeError(target_invalid, "existing marker must be binary") from exc
-                if binary not in {"0", "1"}:
+                if not numeric and binary not in {"0", "1"}:
                     raise OfficeRuntimeError(target_invalid, "existing marker must be binary")
             before_cell = copy.deepcopy(cell)
             before_cell.tail = None
@@ -508,26 +511,35 @@ def _marker_intervention_parts(data, changes):
             for child in list(cell):
                 if child.tag in {S + "f", S + "v", S + "is"}:
                     cell.remove(child)
-            if kind in {"s", "str", "inlineStr"}:
+            if not numeric and kind in {"s", "str", "inlineStr"}:
                 cell.set("t", "inlineStr")
                 ET.SubElement(ET.SubElement(cell, S + "is"), S + "t").text = value
             else:
-                cell.set("t", "b" if kind == "b" else "n")
+                cell.set("t", "b" if not numeric and kind == "b" else "n")
                 ET.SubElement(cell, S + "v").text = value
         modified = {part: ET.tostring(node, encoding="utf-8", xml_declaration=True) for part, node in parsed.items()}
         return parts, modified, records
 
 
-def prepare_xlsx_marker_intervention(source, changes, output_dir):
-    """Make an immutable binary-marker experiment; never rewrite the source."""
+def _marker_intervention_parts(data, changes):
+    return _scalar_intervention_parts(data, changes)
+
+
+def _numeric_intervention_parts(data, changes):
+    return _scalar_intervention_parts(data, changes, numeric=True)
+
+
+def _prepare_xlsx_intervention(source, changes, output_dir, *, parts_function,
+                               audit_schema, profile, receipt_name):
+    """Publish immutable experiment bytes and full original-cell provenance."""
     source = Path(source)
     if source.is_symlink() or not source.is_file() or source.stat().st_size > MAX_INPUT_BYTES:
         raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "marker intervention source unavailable")
     data = source.read_bytes()
-    _, modified, records = _marker_intervention_parts(data, changes)
+    _, modified, records = parts_function(data, changes)
     output = Path(output_dir).resolve()
     output.mkdir(parents=True, exist_ok=True)
-    prepared, receipt = output / "prepared.xlsx", output / "marker-intervention-audit.json"
+    prepared, receipt = output / "prepared.xlsx", output / receipt_name
     if prepared.exists() or receipt.exists():
         raise OfficeRuntimeError("OFFICE_OUTPUT_EXISTS", "marker artifacts are immutable")
     buffer = io.BytesIO()
@@ -539,7 +551,7 @@ def prepare_xlsx_marker_intervention(source, changes, output_dir):
         raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "marker source changed")
     with prepared.open("xb") as handle:
         handle.write(buffer.getvalue())
-    audit = {"schema_version": MARKER_INTERVENTION_AUDIT_SCHEMA, "profile": MARKER_INTERVENTION_PROFILE,
+    audit = {"schema_version": audit_schema, "profile": profile,
              "source_sha256": digest, "prepared_sha256": sha(prepared), "source_unchanged": True, "changes": records}
     with receipt.open("x", encoding="utf-8") as handle:
         json.dump(audit, handle, ensure_ascii=False, sort_keys=True, indent=2)
@@ -547,22 +559,22 @@ def prepare_xlsx_marker_intervention(source, changes, output_dir):
     return {"path": str(prepared), "audit_path": str(receipt), "audit": audit}
 
 
-def verify_xlsx_marker_intervention(source, prepared, audit):
-    """Replay only declared marker cells, including their original formula/cache."""
+def _verify_xlsx_intervention(source, prepared, audit, *, parts_function,
+                              audit_schema, profile, invalid):
+    """Replay declared cells and reject any unbound before image or mutation."""
     source, prepared = Path(source), Path(prepared)
-    invalid = "OFFICE_MARKER_INTERVENTION_AUDIT_INVALID"
     keys = {"schema_version", "profile", "source_sha256", "prepared_sha256", "source_unchanged", "changes"}
     if (source.is_symlink() or prepared.is_symlink() or not source.is_file() or not prepared.is_file()
             or max(source.stat().st_size, prepared.stat().st_size) > MAX_INPUT_BYTES
             or not isinstance(audit, dict) or set(audit) != keys
-            or audit.get("schema_version") != MARKER_INTERVENTION_AUDIT_SCHEMA
-            or audit.get("profile") != MARKER_INTERVENTION_PROFILE or audit.get("source_unchanged") is not True
+            or audit.get("schema_version") != audit_schema
+            or audit.get("profile") != profile or audit.get("source_unchanged") is not True
             or audit.get("source_sha256") != sha(source) or audit.get("prepared_sha256") != sha(prepared)
             or not isinstance(audit.get("changes"), list)
             or any(not isinstance(row, dict) or set(row) != {"sheet", "cell", "value", "original_cell"} for row in audit["changes"])):
         raise OfficeRuntimeError(invalid, "marker intervention binding mismatch")
     edits = [{key: row[key] for key in ("sheet", "cell", "value")} for row in audit["changes"]]
-    parts, modified, records = _marker_intervention_parts(source.read_bytes(), edits)
+    parts, modified, records = parts_function(source.read_bytes(), edits)
     if records != audit["changes"]:
         raise OfficeRuntimeError(invalid, "original marker cells or declared edits differ")
     data = prepared.read_bytes()
@@ -579,6 +591,39 @@ def verify_xlsx_marker_intervention(source, prepared, audit):
             if not equal:
                 raise OfficeRuntimeError(invalid, "undeclared marker change: " + name)
     return audit
+
+
+def prepare_xlsx_marker_intervention(source, changes, output_dir):
+    """Make an immutable binary-marker experiment; never rewrite the source."""
+    return _prepare_xlsx_intervention(source, changes, output_dir,
+        parts_function=_marker_intervention_parts, audit_schema=MARKER_INTERVENTION_AUDIT_SCHEMA,
+        profile=MARKER_INTERVENTION_PROFILE, receipt_name="marker-intervention-audit.json")
+
+
+def verify_xlsx_marker_intervention(source, prepared, audit):
+    """Replay only declared binary markers, including original formula/cache."""
+    return _verify_xlsx_intervention(source, prepared, audit,
+        parts_function=_marker_intervention_parts, audit_schema=MARKER_INTERVENTION_AUDIT_SCHEMA,
+        profile=MARKER_INTERVENTION_PROFILE, invalid="OFFICE_MARKER_INTERVENTION_AUDIT_INVALID")
+
+
+def prepare_xlsx_numeric_intervention(source, changes, output_dir):
+    """Override numeric intermediates, including ordinary scalar formulas.
+
+    This verifies downstream dependence, not the correctness of the original
+    source formula. Rules must independently verify baseline values and select
+    legitimate business inputs. The original workbook is never changed.
+    """
+    return _prepare_xlsx_intervention(source, changes, output_dir,
+        parts_function=_numeric_intervention_parts, audit_schema=NUMERIC_INTERVENTION_AUDIT_SCHEMA,
+        profile=NUMERIC_INTERVENTION_PROFILE, receipt_name="numeric-intervention-audit.json")
+
+
+def verify_xlsx_numeric_intervention(source, prepared, audit):
+    """Replay a scalar numeric override without requiring an Office engine."""
+    return _verify_xlsx_intervention(source, prepared, audit,
+        parts_function=_numeric_intervention_parts, audit_schema=NUMERIC_INTERVENTION_AUDIT_SCHEMA,
+        profile=NUMERIC_INTERVENTION_PROFILE, invalid="OFFICE_NUMERIC_INTERVENTION_AUDIT_INVALID")
 
 
 def office_render_lock_digest(lock):
