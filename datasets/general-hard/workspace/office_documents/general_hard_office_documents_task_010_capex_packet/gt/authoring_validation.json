@@ -1,0 +1,609 @@
+{
+  "schema_version": "h010-author-controls/v1",
+  "status": "AUTHOR_CONTROLS_PASS",
+  "control_count": 49,
+  "planned_control_count": 49,
+  "controls": {
+    "renamed_sheets": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/renamed_sheets/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/renamed_sheets"
+    },
+    "reference": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/reference/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/reference"
+    },
+    "alternate_valid_schedule": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/alternate_valid_schedule/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/alternate_valid_schedule"
+    },
+    "shifted_columns": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/shifted_columns/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/shifted_columns"
+    },
+    "chinese_html_headers_and_cell_paragraphs": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/chinese_html_headers_and_cell_paragraphs/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/chinese_html_headers_and_cell_paragraphs"
+    },
+    "combined_recommended_alternative_tables": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/combined_recommended_alternative_tables/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/combined_recommended_alternative_tables"
+    },
+    "absolute_canonical_source_refs": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/absolute_canonical_source_refs/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/absolute_canonical_source_refs"
+    },
+    "linked_numeric_driver": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/linked_numeric_driver/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/linked_numeric_driver"
+    },
+    "html_spans_and_header_rows": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/html_spans_and_header_rows/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/html_spans_and_header_rows"
+    },
+    "double_tax_B": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.675,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8181250000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/double_tax_B/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/double_tax_B"
+    },
+    "cross_phase_tier": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.775,
+        "boundary_cases": 0.9545454545454546,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8617613636363637
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/cross_phase_tier/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/cross_phase_tier"
+    },
+    "duplicate_freight": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.875,
+        "boundary_cases": 0.7727272727272727,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8713068181818182
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/duplicate_freight/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/duplicate_freight"
+    },
+    "missing_p2_freight": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.875,
+        "boundary_cases": 0.7272727272727273,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8599431818181819
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_p2_freight/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_p2_freight"
+    },
+    "training_capitalized": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.875,
+        "boundary_cases": 0.7727272727272727,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8713068181818182
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/training_capitalized/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/training_capitalized"
+    },
+    "expired_C_as_firm": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.8635714285714287,
+        "boundary_cases": 0.8706168831168831,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.8125,
+        "overall_score": 0.8832435064935066
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/expired_C_as_firm/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/expired_C_as_firm"
+    },
+    "contingency_truncated": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.875,
+        "boundary_cases": 0.7272727272727273,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8599431818181819
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/contingency_truncated/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/contingency_truncated"
+    },
+    "nonminimal_valid_selection": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.8785714285714286,
+        "boundary_cases": 0.9545454545454546,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.8125,
+        "overall_score": 0.9124756493506494
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/nonminimal_valid_selection/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/nonminimal_valid_selection"
+    },
+    "wrong_word_budget_ledger_correct": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9785714285714286,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.9850892857142858
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_word_budget_ledger_correct/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_word_budget_ledger_correct"
+    },
+    "wrong_html_budget_ledger_correct": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9785714285714286,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.9850892857142858
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_html_budget_ledger_correct/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_html_budget_ledger_correct"
+    },
+    "wrong_actual_budget_node": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.9968750000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_actual_budget_node/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_actual_budget_node"
+    },
+    "wrong_actual_word_node": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.9968750000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_actual_word_node/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_actual_word_node"
+    },
+    "wrong_source_quote": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.9968750000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_source_quote/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_source_quote"
+    },
+    "overlapping_shared_crew": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.875,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.96875
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/overlapping_shared_crew/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/overlapping_shared_crew"
+    },
+    "blackout_date": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.984375
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/blackout_date/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/blackout_date"
+    },
+    "weekend_date": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.984375
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/weekend_date/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/weekend_date"
+    },
+    "unknown_zero": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9857142857142858,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9964285714285714
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/unknown_zero/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/unknown_zero"
+    },
+    "gate_confirmed": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9857142857142858,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9964285714285714
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/gate_confirmed/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/gate_confirmed"
+    },
+    "unsupported_word_savings": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9750000000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/unsupported_word_savings/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/unsupported_word_savings"
+    },
+    "unsupported_html_payback": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9750000000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/unsupported_html_payback/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/unsupported_html_payback"
+    },
+    "duplicate_json_key": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9357142857142857,
+        "boundary_cases": 0.5857142857142857,
+        "delivery_integrity": 0.7875,
+        "evidence_binding": 0.0,
+        "overall_score": 0.7791964285714286
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/duplicate_json_key/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/duplicate_json_key"
+    },
+    "static_cached_values": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.5,
+        "delivery_integrity": 0.9375000000000001,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8656250000000001
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/static_cached_values/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/static_cached_values"
+    },
+    "wrong_formula_correct_old_cache": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.825,
+        "boundary_cases": 0.8636363636363636,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9375,
+        "overall_score": 0.8665340909090908
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_formula_correct_old_cache/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/wrong_formula_correct_old_cache"
+    },
+    "hardcoded_tier_threshold": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9545454545454546,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9886363636363636
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/hardcoded_tier_threshold/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/hardcoded_tier_threshold"
+    },
+    "hidden_html_budget": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9571428571428572,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.9375000000000001,
+        "evidence_binding": 0.875,
+        "overall_score": 0.9608035714285714
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/hidden_html_budget/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/hidden_html_budget"
+    },
+    "missing_budget": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.12857142857142856,
+        "boundary_cases": 0.16428571428571428,
+        "delivery_integrity": 0.7875,
+        "evidence_binding": 0.5,
+        "overall_score": 0.25491071428571427
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_budget/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_budget"
+    },
+    "empty_word": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9571428571428572,
+        "boundary_cases": 0.9166666666666666,
+        "delivery_integrity": 0.7375,
+        "evidence_binding": 0.875,
+        "overall_score": 0.9099702380952381
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/empty_word/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/empty_word"
+    },
+    "missing_word": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9571428571428572,
+        "boundary_cases": 0.9166666666666666,
+        "delivery_integrity": 0.6375000000000001,
+        "evidence_binding": 0.875,
+        "overall_score": 0.8949702380952381
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_word/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_word"
+    },
+    "missing_html": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9571428571428572,
+        "boundary_cases": 0.9166666666666666,
+        "delivery_integrity": 0.7875,
+        "evidence_binding": 0.875,
+        "overall_score": 0.9174702380952381
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_html/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_html"
+    },
+    "missing_ledger": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9357142857142857,
+        "boundary_cases": 0.5857142857142857,
+        "delivery_integrity": 0.7875,
+        "evidence_binding": 0.0,
+        "overall_score": 0.7791964285714286
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_ledger/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_ledger"
+    },
+    "damaged_budget": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.12857142857142856,
+        "boundary_cases": 0.16428571428571428,
+        "delivery_integrity": 0.7875,
+        "evidence_binding": 0.5,
+        "overall_score": 0.25491071428571427
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/damaged_budget/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/damaged_budget"
+    },
+    "all_missing": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/all_missing/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/all_missing"
+    },
+    "damaged_word": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 0.9571428571428572,
+        "boundary_cases": 0.9166666666666666,
+        "delivery_integrity": 0.6375000000000001,
+        "evidence_binding": 0.875,
+        "overall_score": 0.8949702380952381
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/damaged_word/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/damaged_word"
+    },
+    "extra_unauthorized_phase": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.9500000000000001,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9925
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/extra_unauthorized_phase/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/extra_unauthorized_phase"
+    },
+    "missing_gt": {
+      "workspace_unchanged": true,
+      "error": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_gt/workspace/gt/expected.json'"
+      },
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_gt"
+    },
+    "missing_helper": {
+      "workspace_unchanged": true,
+      "error": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_helper/workspace/gt/budget_checks.py'"
+      },
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_helper"
+    },
+    "missing_render_lock": {
+      "workspace_unchanged": true,
+      "error": {
+        "type": "FileNotFoundError",
+        "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_render_lock/absent-render-lock.json'"
+      },
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/missing_render_lock"
+    },
+    "engine_unavailable": {
+      "workspace_unchanged": true,
+      "error": {
+        "type": "OfficeRuntimeError",
+        "message": "OFFICE_EXECUTABLE_UNAVAILABLE: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/engine_unavailable/absent-soffice"
+      },
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/engine_unavailable"
+    },
+    "font_drift": {
+      "workspace_unchanged": true,
+      "error": {
+        "type": "OfficeRuntimeError",
+        "message": "OFFICE_RENDER_FONT_DRIFT: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/font_drift/changed-font.ttf"
+      },
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/font_drift"
+    },
+    "input_modified": {
+      "workspace_unchanged": true,
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.55
+      },
+      "observed_checkpoint_details": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/input_modified/derived/h010-analysis.json",
+      "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/qa/author-controls-003/input_modified"
+    }
+  },
+  "gt_bindings": {
+    "budget_checks.py": "71f540df967f3610cc7d7e52129c24424d4f70711ca10c5108025fc153a64ade",
+    "evidence_requirements.json": "08564c6ebe06efe02cd18241db7b5b71f6e3dac03e937e822f3983db18a7086d",
+    "business_oracle.json": "b00404a3e3402843765b6da4894727307969ca7336a9a303f3a3ea0fc43977f1",
+    "protected_sha256.json": "b843723b2aee957a7b218f481f76dc2d33094f7a27f732e4b5a6a2036c1b5667",
+    "office_runtime.py": "f03a57190986d78eed8da3378d91e1a44896e43f870c7a5940513e2f6446cdd0",
+    "grader.py": "5a869b7e772d09606b3f00ea407c9e542458cfa72af2b3649258eeb724319bf3",
+    "expected.json": "9c354ddd677e7623ccfa1cd21284be5939dad6b677dbd00b255a370973824801",
+    "html_grid.py": "18ee7055acb9c09077e5a9968bc334434ed6b3b41c509695dcba82647e786179",
+    "handoff_checks.py": "7529f0e3f1d866b628a7dcca4507d4e86afbf077e7fe7e53e7cffe69684a60fa",
+    "reference_native_verification.json": "14f0eb15c811fbfa5f55725081e102ee9d15c9298d00bb9149eb87e093a74154",
+    "counterexamples.json": "b0005438e3515b765d0ef631c26eab8efe4c54d6868302d3e49ec100da2fa59a",
+    "render_checks.py": "498e5e4929b72495e44e11e604ee0981f9f7781b1c38ab2f84cfa1795dcafe0c",
+    "artifact_io.py": "d4756ed8a9ce6e559433f8c649d0e45ba15a7f10ba107b7768273fc21f02d8b2",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+    "artifact_contract.json": "53319236bdb2dcadbef16d0e5c4398935029471489c0edf1966354d1882ef525",
+    "validate_authoring.py": "edcaf4260842abe62a94024455a5181ac693723592d7b5b9508bcd8391798514",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "source_verification.json": "2cfd2155388f15dac42c2f189b71e8023d25c37deaa60d47752f608b975bdf16",
+    "reference/results/assumptions.json": "437f996ea1f9658435d95741f4fe26a6ac72af5fd630a5175b85ef2fee13472e",
+    "reference/results/budget.xlsx": "9716c616edca7f3dc1848db1861395e3d0da69a924af46b4d66cbc4b5deadf6d",
+    "reference/results/application.docx": "7e81723cc3303e6bd4d40f0381e67e97014897c0a75dc87a52a8079b894b5fdf",
+    "reference/results/plan.html": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603"
+  },
+  "source_bindings": {
+    "approval.docx": "c59233ed40d34ed86a6cfa82744c89e98fd2456017ca35eb3d8298c260726c35",
+    "baseline.xlsx": "840e4c987eea88016f1830fe79fc5da26f0fec2971a9a50ebc1c16e3c311287a",
+    "constraints.md": "f23c13920c760a89b322df8140ce42cfc787605857eb42b358319655a94f3d45",
+    "quotes/quote_A.pdf": "2a09f48efd2df86493cdfcba65c3b3bf2bd5e2d8471dcad849174df58657034c",
+    "quotes/quote_C.pdf": "ff52ba00bcebebb35fd032eb2f110493e8343eb989a04a8a1d6b3fa2ba79187d",
+    "quotes/quote_B.pdf": "9c908322842335072ad1d4b46af1eb6b6edc1b3d50518fa9653594352382e682"
+  },
+  "limit": "Actual Office per control; reused controls only when every GT/source byte is identical. Author rule scores, not independent semantic scores or Harness runs."
+}

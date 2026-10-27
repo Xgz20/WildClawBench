@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 11
+  active_task_count: 12
   category_task_counts:
-    office_documents: 9
+    office_documents: 10
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -434,6 +434,32 @@ tasks:
       production_refs: []
       external_source_ids:
         - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_010_capex_packet
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-0b80aedac35e4cab
+          query_hash: 0b80aedac35e4cab266fde4815cec1001d0d41ec2ea19333e48489e715b049b8
+          observed_astudio_turns: 2
+          distinct_users: 1
+          distinct_sessions: 2
+          first_seen_local: '2026-09-26 03:33:29.771000'
+          last_seen_local: '2026-09-26 03:52:20.604000'
+          intent_summary: 设备升级项目的时间线、预算和资本申请理由，交付Word与网页。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
       direct_task_copy: false
     network:
       mode: offline

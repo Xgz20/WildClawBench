@@ -1,0 +1,22 @@
+{
+  "schema_version": "h010-business-oracle/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "financial_basis": {
+    "contingency_rate": "0.05",
+    "maintenance_net": {
+      "CL": "600",
+      "FAN": "180"
+    },
+    "maintenance_factor": "1.06",
+    "training_gross": "1500",
+    "migration_gross": "1696",
+    "total_limit": "190000"
+  },
+  "expected_origin": "Actual source PDF/table/asset extraction and two arithmetic paths preceded reference; reference is an example, not truth.",
+  "semantic_scope": "Independent Judge checks funding rationale, unsupported benefits, conditions, cross-artifact contradictions, complete visual usability and claims."
+}
