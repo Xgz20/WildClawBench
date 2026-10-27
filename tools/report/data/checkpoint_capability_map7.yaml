@@ -1,4 +1,4 @@
-# WildClawBench 检查点 → 7 维能力映射（checkpoint_capability_map7）
+# WildClawBench 检查点 → 能力映射（历史七维 + general_e2e 新五维）
 #
 # 结构：{task_id: {checkpoint_key: [维度标签, ...]}}，每个检查点 1~2 个维度。
 # 7 维：code_generation 代码生成 / tool_use 工具调用 / data_processing 数据处理 /
@@ -1100,6 +1100,244 @@
   llm_judge.privacy_visual_clarity: [content_generation, verification_delivery]
   llm_judge.visual_hierarchy: [content_generation, verification_delivery]
   llm_judge.audience_readability: [content_generation, verification_delivery]
+
+# 搜索第1题：2026-10-16.1；保留原Prompt。
+# 规则22、语义78；QA覆盖25分；已交付分类/题名质量不重复扣遗漏。
+# W=51：状态16、推理15、工具8、结果12；资格规则应用与取证分别归因。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_001_acl2024_long_context_qa:
+  llm_judge.C3b_delivered_fact_binding: [state_awareness]  # 题目及能力预算=12
+  llm_judge.C9_source_availability: [state_awareness]  # 题目及能力预算=2
+  llm_judge.C10_object_identity: [state_awareness]  # 题目及能力预算=2
+  llm_judge.C3c_comparison_reasoning: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.C4a_corpus_acquisition: [reasoning_and_decision_making]  # 题目及能力预算=1
+  llm_judge.C4b_eligibility_acquisition: [reasoning_and_decision_making]  # 题目及能力预算=1
+  llm_judge.C4c_fact_acquisition: [reasoning_and_decision_making]  # 题目及能力预算=1
+  llm_judge.C4d_eligibility_decision: [reasoning_and_decision_making]  # 题目及能力预算=8
+  llm_judge.C11_call_contract: [tool_invocation]  # 题目及能力预算=6
+  llm_judge.C12_execution_context: [tool_invocation]  # 题目及能力预算=2
+  llm_judge.C8a_scope_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C8b_data_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C8c_citation_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C8d_file_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C13_completion_calibration: [result_evaluation]  # 题目及能力预算=4
+
+# 搜索第2题：2026-10-16.1；保留原Prompt。
+# 语义100；历史召回25、历史署名准确25，错误数量/比例/虚构严重性取较严值。
+# W=50：状态35、推理15；真实正确预印本中性，缺关联不伪造能力满分。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography:
+  llm_judge.topic_selection: [reasoning_and_decision_making]  # 题目及能力预算=15
+  llm_judge.first_author_binding: [state_awareness]  # 题目及能力预算=10
+  llm_judge.historical_author_binding: [state_awareness]  # 题目及能力预算=25
+
+# 搜索第3题：2026-10-16.1；保留原Prompt。
+# 规则4、语义96；项目内硬约束门槛不跨项目，实验干预关联纳入状态。
+# W=90：状态42、推理32、工具10、结果6；三参数项合为8分，handoff统一不映射。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_003_batch_normalization_claim_verification:
+  llm_judge.followup_interventions: [state_awareness]  # 题目及能力预算=6
+  llm_judge.efficiency_metric: [state_awareness]  # 题目及能力预算=4
+  llm_judge.efficiency_configuration: [state_awareness]  # 题目及能力预算=4
+  llm_judge.small_batch_protocols: [state_awareness]  # 题目及能力预算=6
+  llm_judge.correlated_batch_protocols: [state_awareness]  # 题目及能力预算=6
+  llm_judge.transfer_protocols: [state_awareness]  # 题目及能力预算=6
+  llm_judge.source_identity: [state_awareness]  # 题目及能力预算=2
+  llm_judge.version_consistency: [state_awareness]  # 题目及能力预算=3
+  llm_judge.source_locators: [state_awareness]  # 题目及能力预算=5
+  llm_judge.mechanism_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.efficiency_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.small_batch_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.correlation_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.transfer_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.recommendation_p1: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.recommendation_p2: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.recommendation_p3: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.tool_call_contract: [tool_invocation]  # 题目及能力预算=8
+  llm_judge.tool_execution_context: [tool_invocation]  # 题目及能力预算=2
+  llm_judge.verification_calibration_A1: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A2: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A3: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A4: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A5: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A6: [result_evaluation]  # 题目及能力预算=1
+
+# 搜索第4题：2026-10-16.1；保留原Prompt。
+# 规则2、语义98；新增回忆语义4，因果边界8；污染先判运行有效性。
+# W=82：状态40、推理26、工具12、结果4；三参数项合为8分，handoff统一不映射。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_004_luxun_national_character_source_comparison:
+  llm_judge.source_identity: [state_awareness]  # 题目及能力预算=4
+  llm_judge.chronology_binding: [state_awareness]  # 题目及能力预算=4
+  llm_judge.evidence_role_binding: [state_awareness]  # 题目及能力预算=4
+  llm_judge.period_genre_selection: [state_awareness]  # 题目及能力预算=4
+  llm_judge.source_locators: [state_awareness]  # 题目及能力预算=4
+  llm_judge.japan_text_fidelity: [state_awareness]  # 题目及能力预算=6
+  llm_judge.may_fourth_text_fidelity: [state_awareness]  # 题目及能力预算=6
+  llm_judge.recollection_text_fidelity: [state_awareness]  # 题目及能力预算=4
+  llm_judge.scholar_claim_binding: [state_awareness]  # 题目及能力预算=4
+  llm_judge.continuity_reasoning: [reasoning_and_decision_making]  # 题目及能力预算=6
+  llm_judge.change_reasoning: [reasoning_and_decision_making]  # 题目及能力预算=6
+  llm_judge.causal_limits: [reasoning_and_decision_making]  # 题目及能力预算=8
+  llm_judge.scholarly_comparison: [reasoning_and_decision_making]  # 题目及能力预算=6
+  llm_judge.verification_calibration: [result_evaluation]  # 题目及能力预算=4
+  llm_judge.tool_call_contract: [tool_invocation]  # 题目及能力预算=8
+  llm_judge.temporary_evidence_scope: [tool_invocation]  # 题目及能力预算=2
+  llm_judge.workspace_isolation: [tool_invocation]  # 题目及能力预算=2
+
+# 搜索第5题：2026-10-16.1；保留原Prompt。
+# 保留原结果15/20/30/25/10和两个原过程模块；原过程错误只归一个owner。
+# 独立m预算W=75：意图20、状态20、推理15（搜索5+比较推断10）、工具10、结果10。
+# 关键独立推断错误限制结果50/比较推断0.25；首条查询关键词不是意图代理。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_005_raptor_migration_monitoring_review:
+  llm_judge.process_tool_semantics: [intent_understanding]  # 独立能力m=20
+  llm_judge.process_evidence_mapping: [state_awareness]  # 独立能力m=20
+  llm_judge.process_search_planning: [reasoning_and_decision_making]  # 独立能力m=5
+  llm_judge.ability_comparison_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.ability_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.ability_completion_calibration: [result_evaluation]  # 独立能力m=10
+
+# 四家公司历史财务核验；18项业务weight合计100，另3项weight=0；五能力m权重W=35。
+# 推理m=2/2/6：阈值、年度组合、最终集合推导；真实集合conclusion只计业务，避免能力重复归因。
+# 原生七维报告不实现m加权；按本题aggregate_review计算；证据不足不重归一。
+01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening:
+  llm_judge.scope_and_version: [intent_understanding]  # 能力m=5
+  llm_judge.source_binding: [state_awareness]  # 能力m=5
+  llm_judge.calc_thresholds: [reasoning_and_decision_making]  # 能力m=2
+  llm_judge.calc_all_years: [reasoning_and_decision_making]  # 能力m=2，仅年度组合
+  llm_judge.decision_consistency: [reasoning_and_decision_making]  # 能力m=6，最终集合推导
+  llm_judge.tool_call_contract: [tool_invocation]  # 能力m=10
+  llm_judge.completion_calibration: [result_evaluation]  # 能力m=5
+
+# 搜索第12题：核心85、来源15；规则0业务分，能力独立m预算W=40。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=5
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 搜索第13题：核心85、来源15；规则0业务分，能力独立m预算W=45。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.scope_execution: [intent_understanding]  # 独立能力m=5
+  llm_judge.difference_inference: [reasoning_and_decision_making]  # 独立能力m=15
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 搜索第14题：核心85、来源15；规则0业务分，能力独立m预算W=45。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 搜索第15题：核心85、来源15；规则0业务分，能力独立m预算W=45。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 2026-10-27 编号调整：历史测评记录保持原始ID及得分，不重写原始运行证据。
+# 历史 01_Information_Search_Organization_task_006_pientzehuang_multiyear_financial_screening -> 当前 01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening
+# 历史 01_Information_Search_Organization_task_007_credit_suisse_at1_regulatory_comparison -> 当前 01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison
+# 历史 01_Information_Search_Organization_task_008_spy_voo_2024_return_fee_comparison -> 当前 01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison
+# 历史 01_Information_Search_Organization_task_009_motor_insurance_water_damage_clause_comparison -> 当前 01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison
+# 历史 01_Information_Search_Organization_task_010_boc_mortgage_repricing_comparison -> 当前 01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison
+
+# 第006题：规则0业务分，业务100；独立能力m预算W=30。
+# core_accuracy不映射；缺证不删项重归一；按题内aggregate_review复核。
+01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=10
+
+# 第007题：规则0业务分，原文取证主导业务100；独立能力m预算W=45。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_007_rice_awd_field_trials:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第008题：规则0业务分，原文取证主导业务100；独立能力m预算W=45。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_008_human_cell_atlas_verification:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第009题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_009_global_methane_budget_revision:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=10
+
+# 第010题：规则0业务分，业务100；独立能力m预算W=20。
+# core_accuracy不映射；缺证不删项重归一；按题内aggregate_review复核。
+01_Information_Search_Organization_task_010_perovskite_stability_verification:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=5
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第016题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_016_balance_of_payments_reconciliation:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第017题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第018题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第019题：规则0业务分，业务100；独立能力m预算W=45。
+# core_accuracy不映射；缺证不删项重归一；按题内aggregate_review复核。
+# source_binding能力使用独立AbilityScore，业务豁免不替代能力判断。
+01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.scope_execution: [intent_understanding]  # 独立能力m=5
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=15
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第020题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_020_treasury_yield_rising_intervals:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
 
 02_Office_task_001_multi_source_project_report:
   # C1 意图理解#2：仅 DOCX/PDF 两项交付及报告主题；不要求独立辅助附件。
