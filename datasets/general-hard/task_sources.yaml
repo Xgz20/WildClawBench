@@ -1,9 +1,9 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 17
+  active_task_count: 18
   category_task_counts:
     office_documents: 15
-    data_analysis: 0
+    data_analysis: 1
     research_verification: 0
     file_operations: 0
     software_engineering: 2
@@ -579,6 +579,31 @@ tasks:
       production_refs: []
       external_source_ids:
         - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+  - task_id: general_hard_data_analysis_task_001_heterogeneous_join
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-0018e88ab9477468
+          query_hash: 0018e88ab9477468eed79627c33ac8ab038d6e20d2a6358ca76d7e06ef21c66d
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-28 09:49:59.617000'
+          last_seen_local: '2026-09-28 09:49:59.617000'
+          intent_summary: 从子表格式不一致的复杂表格抽取字段和值，填入目标简表。
+          review: accepted_intent_prototype
+          review_basis: 沿用已清洗接受的AStudio桌面去身份意图原型；作者模型重构全部合成项目、数据、素材与边界，原生读取与独立算法复核，不表示独立人工专家复核或生产结果正确。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - ssb2
       direct_task_copy: false
     network:
       mode: offline

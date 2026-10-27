@@ -1,0 +1,41 @@
+{
+  "status": "material_phase_not_candidate_scoring",
+  "required_files": [
+    "results/aligned.xlsx",
+    "results/join_audit.csv"
+  ],
+  "target_count": 120,
+  "source_count": 146,
+  "target_columns": [
+    "target_id",
+    "project_id",
+    "contract_id",
+    "service_month",
+    "project_name",
+    "status",
+    "match_count",
+    "amount_cny",
+    "hours",
+    "count"
+  ],
+  "unmatched_columns": [
+    "side",
+    "record_id",
+    "reason"
+  ],
+  "audit_columns": [
+    "target_id",
+    "target_sheet",
+    "target_row",
+    "source_id",
+    "source_sheet",
+    "source_row",
+    "match_basis",
+    "status",
+    "amount_cny",
+    "hours",
+    "count"
+  ],
+  "equivalence": "Allow output worksheet rename and row reordering, equivalent readable headers and static or native calculated cells; physical audit target locations must point into actual output. Source IDs, source rows and original five target fields stay identifiable and accurate.",
+  "limit": "Materials and reference only; no grader, candidate controls or generated-MD Worker yet."
+}

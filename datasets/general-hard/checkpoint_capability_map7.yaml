@@ -211,3 +211,12 @@ general_hard_office_documents_task_016_docx_structure_repair:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_data_analysis_task_001_heterogeneous_join:
+  business_correctness:
+    - data_processing
+  boundary_cases:
+    - reasoning_planning
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery
