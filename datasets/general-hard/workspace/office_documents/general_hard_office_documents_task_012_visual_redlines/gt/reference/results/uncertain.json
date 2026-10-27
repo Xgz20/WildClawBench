@@ -1,0 +1,158 @@
+{
+  "items": [
+    {
+      "revision_id": "R04",
+      "unknown_fields": [
+        "proposed_amount"
+      ],
+      "visible_text": "服务押金改为unknown元。",
+      "reason": "采用和双方局部确认清晰，但红色提议的金额数字被色块与斜向涂抹覆盖；只能读出服务押金改为及元，不能用未签底稿6000元补新金额，无法确定完整采用内容。",
+      "evidence": [
+        {
+          "file": "signed_pages/scan_01.png",
+          "bbox": [
+            105,
+            1488,
+            1200,
+            1612
+          ],
+          "observation": "底稿服务押金为6000元清晰；红色提议仅可读服务押金改为及元，金额数字被实色条与斜向涂抹遮盖，未见贯穿红色提议的两道相交斜线，不能读出新金额。"
+        },
+        {
+          "file": "signed_pages/scan_01.png",
+          "bbox": [
+            105,
+            1620,
+            1385,
+            1725
+          ],
+          "observation": "附记条件栏清晰空白，未见指向本条的另注。"
+        },
+        {
+          "file": "signed_pages/scan_01.png",
+          "bbox": [
+            114,
+            1749,
+            430,
+            1805
+          ],
+          "observation": "仅采用框明确勾选。"
+        },
+        {
+          "file": "signed_pages/scan_01.png",
+          "bbox": [
+            558,
+            1727,
+            1040,
+            1808
+          ],
+          "observation": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。"
+        }
+      ],
+      "next_action": "补取可读的押金金额并逐项核对，不沿用底稿金额。"
+    },
+    {
+      "revision_id": "R10",
+      "unknown_fields": [
+        "confirmation_b"
+      ],
+      "visible_text": "结算周期为验收后15个自然日。",
+      "reason": "提议15个自然日、采用单选及A确认清晰；本条B确认框被深色涂抹遮住，不能判断是否存在有效B印记，也不能将遮挡当作清晰缺签，因此未决仅限B确认。",
+      "evidence": [
+        {
+          "file": "signed_pages/scan_03.png",
+          "bbox": [
+            105,
+            668,
+            1200,
+            792
+          ],
+          "observation": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。"
+        },
+        {
+          "file": "signed_pages/scan_03.png",
+          "bbox": [
+            105,
+            800,
+            1385,
+            905
+          ],
+          "observation": "附记条件栏清晰空白，未见指向本条的另注。"
+        },
+        {
+          "file": "signed_pages/scan_03.png",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation": "仅采用框明确勾选。"
+        },
+        {
+          "file": "signed_pages/scan_03.png",
+          "bbox": [
+            558,
+            907,
+            1040,
+            988
+          ],
+          "observation": "A样例印记位于本条甲方确认A框内。本条乙方确认B框被深色涂抹覆盖，不能辨认框内是否有有效B样例印记。"
+        }
+      ],
+      "next_action": "取得乙方确认框清晰原件，核实本条B确认。"
+    },
+    {
+      "revision_id": "R16",
+      "unknown_fields": [
+        "condition",
+        "condition_met"
+      ],
+      "visible_text": "现场响应时限为4小时。",
+      "reason": "提议4小时、采用单选和A/B框内印记清晰，但前置条件只读得仅在及情形下执行，中间触发情形被覆盖；不能将缺字条件当作无条件或猜其已满足，按A5未决。",
+      "evidence": [
+        {
+          "file": "signed_pages/scan_05.png",
+          "bbox": [
+            105,
+            668,
+            1200,
+            792
+          ],
+          "observation": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。"
+        },
+        {
+          "file": "signed_pages/scan_05.png",
+          "bbox": [
+            105,
+            800,
+            1385,
+            905
+          ],
+          "observation": "附记条件左侧可读仅在，右侧可读情形下执行；中间触发情形被实色条与斜向涂抹覆盖，无法读出条件或确定满足情况。"
+        },
+        {
+          "file": "signed_pages/scan_05.png",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation": "仅采用框明确勾选。"
+        },
+        {
+          "file": "signed_pages/scan_05.png",
+          "bbox": [
+            558,
+            907,
+            1040,
+            988
+          ],
+          "observation": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。"
+        }
+      ],
+      "next_action": "取得未涂抹的完整触发条件及其满足依据，继续暂停该提议。"
+    }
+  ]
+}

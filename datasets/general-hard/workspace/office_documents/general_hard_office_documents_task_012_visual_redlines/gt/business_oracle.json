@@ -1,0 +1,80 @@
+{
+  "expected_sha256": "ed69d1a263f9c586925b58e2f05c7a3fb9bbfda390a216a1cdcb7e1fe3c0a7d1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "confirmed_ids": [
+    "R01",
+    "R03",
+    "R12",
+    "R13",
+    "R15",
+    "R17"
+  ],
+  "nonexecuting_ids": [
+    "R02",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09",
+    "R10",
+    "R11",
+    "R14",
+    "R16"
+  ],
+  "uncertain_required_fields": {
+    "R04": [
+      "proposed_amount"
+    ],
+    "R10": [
+      "confirmation_b"
+    ],
+    "R16": [
+      "condition"
+    ]
+  },
+  "condition_anchors": {
+    "R09": [
+      [
+        "收齐"
+      ],
+      [
+        "试运行"
+      ],
+      [
+        "记录"
+      ],
+      [
+        "后"
+      ],
+      [
+        "执行"
+      ]
+    ],
+    "R13": [
+      [
+        "一期"
+      ],
+      [
+        "有效"
+      ],
+      [
+        "验收"
+      ],
+      [
+        "记录"
+      ],
+      [
+        "收齐"
+      ],
+      [
+        "生效"
+      ]
+    ]
+  }
+}

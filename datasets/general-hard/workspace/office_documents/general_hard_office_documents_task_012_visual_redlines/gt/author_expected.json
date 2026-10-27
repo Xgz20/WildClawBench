@@ -1,0 +1,254 @@
+{
+  "schema_version": "h012-author-expected/v1",
+  "status": "AUTHOR_INTENT_ONLY_REVIEW_PENDING",
+  "cases": [
+    {
+      "revision_id": "R01",
+      "status": "confirmed",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R02",
+      "status": "pending",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": false,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R03",
+      "status": "confirmed",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R04",
+      "status": "uncertain",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": false,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R05",
+      "status": "withdrawn",
+      "declared_observation": {
+        "proposal_cancelled": true,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R06",
+      "status": "rejected",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "reject",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R07",
+      "status": "pending",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": false,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R08",
+      "status": "pending",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "conflict",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R09",
+      "status": "conditional",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "readable",
+        "condition_met": false
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R10",
+      "status": "uncertain",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": null,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R11",
+      "status": "pending",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "blank",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R12",
+      "status": "confirmed",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R13",
+      "status": "confirmed",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "readable",
+        "condition_met": true
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R14",
+      "status": "withdrawn",
+      "declared_observation": {
+        "proposal_cancelled": true,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R15",
+      "status": "confirmed",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R16",
+      "status": "uncertain",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "unreadable",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    },
+    {
+      "revision_id": "R17",
+      "status": "confirmed",
+      "declared_observation": {
+        "proposal_cancelled": false,
+        "selection": "adopt",
+        "confirmation_a": true,
+        "confirmation_b": true,
+        "proposal_readable": true,
+        "condition_kind": "none",
+        "condition_met": null
+      },
+      "source": "author construction declaration, not an independent pixel annotation"
+    }
+  ],
+  "state_counts": {
+    "confirmed": 6,
+    "pending": 4,
+    "uncertain": 3,
+    "withdrawn": 2,
+    "rejected": 1,
+    "conditional": 1
+  },
+  "rule_model_sha256": "73c73d26eba8432752935f5c167c1f43e830707f934435d202780ed1b0272c6b",
+  "limit": "Procedural priority and completion-set oracle agree, but no independent pixel annotations have been received. Not official expected.json or visual GT."
+}

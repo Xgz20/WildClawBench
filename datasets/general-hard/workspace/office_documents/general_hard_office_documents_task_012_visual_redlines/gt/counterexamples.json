@@ -1,0 +1,18 @@
+{
+  "boundaries": [
+    "archive_not_local",
+    "black_strike_not_red_cancel",
+    "cancelled_red_proposals",
+    "reject_with_stamps",
+    "missing_b",
+    "double_choice",
+    "blank_choice",
+    "condition_unmet",
+    "condition_met_scope",
+    "unreadable_amount",
+    "obscured_b",
+    "unknown_condition",
+    "old_unsigned_not_executing"
+  ],
+  "limit": "No keyword-only proof of legal/business meaning. These synthetic state boundaries are checked against actual native outputs and approved pixel observations."
+}

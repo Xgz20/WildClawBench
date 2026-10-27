@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 13
+  active_task_count: 14
   category_task_counts:
-    office_documents: 11
+    office_documents: 12
     data_analysis: 0
     research_verification: 0
     file_operations: 0
@@ -493,5 +493,31 @@ tasks:
       freeze_requirement: null
     attributes:
       requires_visual_input: false
+      coding_primary: false
+      difficulty_status: estimated_before_pilot
+  - task_id: general_hard_office_documents_task_012_visual_redlines
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-04b7802760fbf8f7
+          query_hash: 04b7802760fbf8f76b7afda8c8cf0976f4d40c6049ffa997c5cfbc0a3cd689a9
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-28 17:27:17.081000'
+          last_seen_local: '2026-09-28 17:27:17.081000'
+          intent_summary: 依据图片修改话术并保持指定Word文档格式。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面去身份需求原型沿用清洗后蓝图；作者模型据其业务目标合成材料；不是人工专家复核或生产结果正确性的证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gaia
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: true
       coding_primary: false
       difficulty_status: estimated_before_pilot

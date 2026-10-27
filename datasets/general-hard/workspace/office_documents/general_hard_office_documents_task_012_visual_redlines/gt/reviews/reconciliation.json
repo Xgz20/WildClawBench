@@ -1,0 +1,189 @@
+{
+  "schema_version": "h012-reconciliation/v1",
+  "input_sha256": {
+    "authority.md": "ab293194f5dad307b4435b6e4f65db324263ae5585cbde6f419e6220841a7f75",
+    "signed_pages/scan_01.png": "dd05680866db8cf875985ffc8304fdc95bd296eb80f16d8b9aa5e921a64d2025",
+    "signed_pages/scan_02.png": "4ad7b38d450b188cb78ba474bca7e93dac37862da7ffbcdb7e4ba93afcd727cf",
+    "signed_pages/scan_03.png": "fdf55771e617001247a94154b5fb0a062a30acc6851e500cded26d463e431c71",
+    "signed_pages/scan_04.png": "de5860efdd2fc00874cc1d3ac81827dda3e259db7a3d13983b79ca5de60fc780",
+    "signed_pages/scan_05.png": "43bc8f4ff9981546e98cb3dc60d66abaae1e964766788fd003ca801f8921531a",
+    "unsigned.docx": "c6e88db1e214f48a648e0bae22a4ec1273d041e986e2078ff2f0ff477b0c1d26"
+  },
+  "reviewers": [
+    {
+      "reviewer_id": "reviewer_a",
+      "agent_task": "/root/h012_annotator_a",
+      "fork_turns": "none",
+      "path": "reviews/reviewer_a.json",
+      "sha256": "09819147702b19499a0ea2c603851b6815eb5d83def0c22fc8b2274a7ccd4024",
+      "review_type": "independent_model_review",
+      "human_expert": false
+    },
+    {
+      "reviewer_id": "reviewer_b",
+      "agent_task": "/root/h012_annotator_b",
+      "fork_turns": "none",
+      "path": "reviews/reviewer_b.json",
+      "sha256": "799bce46034d3c4f1b7943631bbc6f1a91db300ccbf52c4471f627879c768953",
+      "review_type": "independent_model_review",
+      "human_expert": false
+    }
+  ],
+  "comparisons": [
+    {
+      "revision_id": "R01",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R02",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R03",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R04",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R05",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R06",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R07",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R08",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R09",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R10",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R11",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R12",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R13",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R14",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R15",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R16",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    },
+    {
+      "revision_id": "R17",
+      "semantic_agreement": true,
+      "normalized_observations_agree": true,
+      "raw_region_conventions_differ": true,
+      "resolution": "No state, text or necessary-observation disagreement. Preserve raw boxes; accept broad and narrow regions covering the same features. A0/A2/A4 contextual rule-list differences do not change decisions."
+    }
+  ],
+  "approved_ids": [
+    "R01",
+    "R02",
+    "R03",
+    "R04",
+    "R05",
+    "R06",
+    "R07",
+    "R08",
+    "R09",
+    "R10",
+    "R11",
+    "R12",
+    "R13",
+    "R14",
+    "R15",
+    "R16",
+    "R17"
+  ],
+  "unresolved_annotation_disagreements": [],
+  "intentional_unreadable_ids": [
+    "R04",
+    "R10",
+    "R16"
+  ],
+  "author_pixel_review": {
+    "actually_viewed": [
+      "signed_pages/scan_01.png",
+      "signed_pages/scan_02.png",
+      "signed_pages/scan_03.png",
+      "signed_pages/scan_04.png",
+      "signed_pages/scan_05.png"
+    ],
+    "checks": "Original pixel review confirms local-vs-archive B, black-base strike, two cancelled red proposals, reject/double/blank choices, condition checkbox, obscured B and unreadable amount/condition."
+  },
+  "limit": "Author approval after two isolated same-model observations, not human expert review, independent semantic scoring or empirical difficulty."
+}
