@@ -1,0 +1,37 @@
+{
+  "revision": "realistic-prompt-v2-20260923",
+  "utc": "2026-09-23T07:23:03.812067+00:00",
+  "status": "pass",
+  "tests_run": 18,
+  "failures": [],
+  "skipped": [],
+  "task_sha256": "d2c9fcf168661293876be7135910ce0fcb311367cced7942814f4dd0d0eb0aec",
+  "rubric_sha256": "c8c00cd71a4c569615eb66c2ac051ae4b826d3cdb0f5b7e7b4f46aa0f3d90c48",
+  "mapping_sha256": "cd1a5cebf8c197081cc4eacf43eb6b3193787786b1ac093e3707b223d6ff711d",
+  "historical_evidence_unchanged": true,
+  "historical_hashes": {
+    "D:\\tmp\\_evaluation\\20260923035438Z\\submitted_prompt.txt": "cf6d869fc214fc32050d66ffb132295d501cc4228f4f2152e34b069530dcb0c8",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\task_snapshot.md": "4d9c56765a407c4d6f43643fb91c1351ba775abe2c7fb155af482aba6865b229",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\raw_trace.jsonl": "3d33484739e92f2aa5e387f8bdf4340681bcbcbb4cd7dceb3063bc83dfb4f78c",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\evaluation\\single_run_result.json": "9553bc8addf7f9a2390918cade4fa2fa52db5f696bce0f5c95748c8a82b6b0f3",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\deliverables\\project_report.docx": "3faea83100e3167f713a3da95c4dbaa9fd9f5e847ccb058843620bc3e8e77236",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\deliverables\\project_report.pdf": "6d522e703e6857c6d26ebdd7df7e70cfc0ca23fd18bea19ed7003508f0e7b1f1"
+  },
+  "public_files": [
+    "01_研发阶段材料_v1.0.docx",
+    "02_实施阶段材料_v1.0.docx",
+    "03_运营阶段材料_v1.0.docx",
+    "04_项目工作簿_v1.0.xlsx",
+    "05_阶段汇报_v1.0.pptx",
+    "06_报告模板.docx"
+  ],
+  "office_inputs_changed": false,
+  "new_agent_trial": "not_run",
+  "semantic_judge_calibration": "not_performed",
+  "scope": "Author regression, source-rule audit and arithmetic validation only; not candidate C7 evidence",
+  "limitations": [
+    "C7 semantic evidence examples have not been independently calibrated.",
+    "New prompt has not had a fresh solver trial.",
+    "Common discrete-score Judge and legacy seven-dimension report are not adapted."
+  ]
+}

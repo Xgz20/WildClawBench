@@ -1,0 +1,12 @@
+{
+  "message_id": "msg-20260418-river-01",
+  "thread_id": "thread_river_bins",
+  "sent_local": "2026-04-18 13:54",
+  "subject": "River bins pickup documents",
+  "body_excerpt": "清运箱收取文件已转存。附件包含本次批处理保存的两个导出件和门户操作记录。",
+  "attachment_refs": [
+    "attachments/export_1420.txt",
+    "attachments/export_1350.txt",
+    "attachments/handling_note.txt"
+  ]
+}

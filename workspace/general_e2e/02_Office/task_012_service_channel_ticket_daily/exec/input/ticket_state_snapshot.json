@@ -1,0 +1,1099 @@
+{
+  "snapshot_metadata": {
+    "snapshot_id": "snapshot-20260519-0030",
+    "generated_at_local": "2026-05-19 00:30:00",
+    "timezone": "Asia/Shanghai",
+    "sample_domain": "模拟社区服务台业务资料",
+    "source_export_file": "input/ticket_export.csv",
+    "local_mock_only": true,
+    "notes": [
+      "模拟业务数据；不对应真实居民或实际业务系统。"
+    ]
+  },
+  "field_descriptions": {
+    "ticket_id": "受理编号。",
+    "normalized_ticket_key": "业务事项标识。",
+    "service_desk": "记录所属服务台。",
+    "service_channel": "记录所属服务通道。",
+    "snapshot_status": "快照生成时的状态。",
+    "snapshot_progress_pct": "快照生成时的进展百分比。",
+    "updates": "按事件时间记录的状态更新。",
+    "source_record_id": "导出记录编号。",
+    "source_row": "导出来源行标识。",
+    "occurred_at": "事件发生时间，Asia/Shanghai。",
+    "transition": "状态变更。",
+    "progress_pct": "该条更新登记的进展百分比。",
+    "due_at": "登记的计划完成时间。",
+    "first_response_at": "登记的首次响应时间；空值表示未登记。",
+    "last_responded_at": "登记的最近响应时间。",
+    "key_aliases": "事项标识的归一关系。",
+    "canonical_ticket_id": "归一后的受理编号。",
+    "alias_ticket_ids": "同一事项使用过的受理编号。"
+  },
+  "status_catalog": {
+    "new": "新建，尚未形成处置进展。",
+    "assigned": "已派给处理小组。",
+    "in_progress": "处理中，有现场或后台处置动作。",
+    "pending_resident": "等待居民确认、补充信息或复核反馈。",
+    "pending_external": "等待外部协同单位或非本服务台动作。",
+    "resolved": "处理小组标记已解决，但可能仍需复核。",
+    "reopened": "复核或居民反馈后重新打开，需要补充处理。",
+    "closed": "完成复核并关闭。"
+  },
+  "tickets": [
+    {
+      "ticket_id": "TCK-CS-3101",
+      "normalized_ticket_key": "east:TCK-CS-3101",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "路面/设施",
+      "priority": "中",
+      "area_tag": "青榆片区",
+      "snapshot_status": "reopened",
+      "snapshot_progress_pct": 70,
+      "due_at": "2026-05-19 12:00",
+      "first_response_at": "2026-05-18 08:22:00",
+      "last_responded_at": "2026-05-19 00:12:50",
+      "updates": [
+        {
+          "source_record_id": "R-001",
+          "source_row": "row-001",
+          "occurred_at": "2026-05-18 08:05:12",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "居民反馈路灯闪烁需要巡检"
+        },
+        {
+          "source_record_id": "R-002",
+          "source_row": "row-002",
+          "occurred_at": "2026-05-18 10:15:27",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 20,
+          "note": "已派给照明巡查小组"
+        },
+        {
+          "source_record_id": "R-003",
+          "source_row": "row-003",
+          "occurred_at": "2026-05-18 17:40:03",
+          "transition": "assigned->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "note": "已更换控制盒等待夜间复核"
+        },
+        {
+          "source_record_id": "R-004",
+          "source_row": "row-004",
+          "occurred_at": "2026-05-19 00:12:18",
+          "transition": "resolved->reopened",
+          "status": "reopened",
+          "progress_pct": 70,
+          "note": "夜间复核发现仍有间歇闪烁"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3102",
+      "normalized_ticket_key": "east:TCK-CS-3102",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "环境卫生",
+      "priority": "高",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "pending_resident",
+      "snapshot_progress_pct": 60,
+      "due_at": "2026-05-18 18:00",
+      "first_response_at": "2026-05-18 09:18:21",
+      "last_responded_at": "2026-05-18 14:23:05",
+      "updates": [
+        {
+          "source_record_id": "R-005",
+          "source_row": "row-005",
+          "occurred_at": "2026-05-18 09:05:44",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "垃圾桶满溢需协调清运"
+        },
+        {
+          "source_record_id": "R-006",
+          "source_row": "row-006",
+          "occurred_at": "2026-05-18 11:32:08",
+          "transition": "new->in_progress",
+          "status": "in_progress",
+          "progress_pct": 45,
+          "note": "清运车已到场处理外溢垃圾"
+        },
+        {
+          "source_record_id": "R-007",
+          "source_row": "row-007",
+          "occurred_at": "2026-05-18 14:22:10",
+          "transition": "in_progress->pending_resident",
+          "status": "pending_resident",
+          "progress_pct": 60,
+          "note": "清运完成但需居民确认异味是否消除"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3103",
+      "normalized_ticket_key": "east:TCK-CS-3103",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "便民咨询",
+      "priority": "中",
+      "area_tag": "青榆片区",
+      "snapshot_status": "assigned",
+      "snapshot_progress_pct": 25,
+      "due_at": "2026-05-20 10:00",
+      "first_response_at": "2026-05-18 10:05:00",
+      "last_responded_at": "2026-05-18 15:06:12",
+      "updates": [
+        {
+          "source_record_id": "R-008",
+          "source_row": "row-008",
+          "occurred_at": "2026-05-18 09:50:09",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "独居老人咨询代办材料清单"
+        },
+        {
+          "source_record_id": "R-009",
+          "source_row": "row-009",
+          "occurred_at": "2026-05-18 15:05:31",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 25,
+          "note": "安排窗口工作人员次日电话回访"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3104",
+      "normalized_ticket_key": "east:TCK-CS-3104",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "市容秩序",
+      "priority": "中",
+      "area_tag": "榕湾片区",
+      "snapshot_status": "reopened",
+      "snapshot_progress_pct": 65,
+      "due_at": "2026-05-18 20:00",
+      "first_response_at": "2026-05-18 10:20:01",
+      "last_responded_at": "2026-05-18 16:06:44",
+      "updates": [
+        {
+          "source_record_id": "R-010",
+          "source_row": "row-010",
+          "occurred_at": "2026-05-18 10:10:34",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "早餐摊位占道影响通行"
+        },
+        {
+          "source_record_id": "R-011",
+          "source_row": "row-011",
+          "occurred_at": "2026-05-18 11:30:55",
+          "transition": "in_progress->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "note": "现场劝导完成并标记解决"
+        },
+        {
+          "source_record_id": "R-012",
+          "source_row": "row-012",
+          "occurred_at": "2026-05-18 16:05:20",
+          "transition": "resolved->reopened",
+          "status": "reopened",
+          "progress_pct": 65,
+          "note": "复核发现需补充围挡提示"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3105",
+      "normalized_ticket_key": "east:TCK-CS-3105",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "便民咨询",
+      "priority": "低",
+      "area_tag": "青榆片区",
+      "snapshot_status": "closed",
+      "snapshot_progress_pct": 100,
+      "due_at": "2026-05-18 17:00",
+      "first_response_at": "2026-05-18 15:19:30",
+      "last_responded_at": "2026-05-18 15:20:12",
+      "updates": [
+        {
+          "source_record_id": "R-013",
+          "source_row": "row-013",
+          "occurred_at": "2026-05-18 15:18:09",
+          "transition": "created->closed",
+          "status": "closed",
+          "progress_pct": 100,
+          "note": "已答复居民活动报名入口"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3106",
+      "normalized_ticket_key": "east:TCK-CS-3106",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "动物协助",
+      "priority": "中",
+      "area_tag": "松岚片区",
+      "snapshot_status": "in_progress",
+      "snapshot_progress_pct": 40,
+      "due_at": "2026-05-19 18:00",
+      "first_response_at": "2026-05-18 09:30:00",
+      "last_responded_at": "2026-05-18 13:17:22",
+      "updates": [
+        {
+          "source_record_id": "R-014",
+          "source_row": "row-014",
+          "occurred_at": "2026-05-18 08:58:41",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "居民反馈流浪猫聚集影响通行"
+        },
+        {
+          "source_record_id": "R-015",
+          "source_row": "row-015",
+          "occurred_at": "2026-05-18 13:15:14",
+          "transition": "new->in_progress",
+          "status": "in_progress",
+          "progress_pct": 40,
+          "note": "已联系志愿者协调临时诱导点"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3107",
+      "normalized_ticket_key": "east:TCK-CS-3107",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "排水/积水",
+      "priority": "高",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "resolved",
+      "snapshot_progress_pct": 100,
+      "due_at": "2026-05-18 14:00",
+      "first_response_at": "2026-05-18 00:25:00",
+      "last_responded_at": "2026-05-18 23:59:59",
+      "updates": [
+        {
+          "source_record_id": "R-016",
+          "source_row": "row-016",
+          "occurred_at": "2026-05-18 00:00:00",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "雨后路口积水影响通行"
+        },
+        {
+          "source_record_id": "R-017",
+          "source_row": "row-017",
+          "occurred_at": "2026-05-18 06:40:26",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 25,
+          "note": "已派抢修组带泵车到场"
+        },
+        {
+          "source_record_id": "R-018",
+          "source_row": "row-018",
+          "occurred_at": "2026-05-18 12:10:49",
+          "transition": "assigned->in_progress",
+          "status": "in_progress",
+          "progress_pct": 70,
+          "note": "已疏通雨水篦子仍需抽排"
+        },
+        {
+          "source_record_id": "R-019",
+          "source_row": "row-019",
+          "occurred_at": "2026-05-18 23:59:59",
+          "transition": "in_progress->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "note": "积水抽排完成并设置警示锥"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3108",
+      "normalized_ticket_key": "east:TCK-CS-3108",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "噪声/扰民",
+      "priority": "中",
+      "area_tag": "榕湾片区",
+      "snapshot_status": "pending_resident",
+      "snapshot_progress_pct": 55,
+      "due_at": "2026-05-19 09:00",
+      "first_response_at": "2026-05-18 08:10:00",
+      "last_responded_at": "2026-05-18 21:12:00",
+      "updates": [
+        {
+          "source_record_id": "R-020",
+          "source_row": "row-020",
+          "occurred_at": "2026-05-18 07:40:22",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "居民反馈清晨装修噪声"
+        },
+        {
+          "source_record_id": "R-021",
+          "source_row": "row-021",
+          "occurred_at": "2026-05-18 18:30:44",
+          "transition": "new->pending_external",
+          "status": "pending_external",
+          "progress_pct": 50,
+          "note": "已转街面巡查等待夜间复核"
+        },
+        {
+          "source_record_id": "R-022",
+          "source_row": "row-022",
+          "occurred_at": "2026-05-18 21:10:08",
+          "transition": "pending_external->pending_resident",
+          "status": "pending_resident",
+          "progress_pct": 55,
+          "note": "等待居民补充夜间录音材料"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3109",
+      "normalized_ticket_key": "east:TCK-CS-3109",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "无障碍设施",
+      "priority": "高",
+      "area_tag": "青榆片区",
+      "snapshot_status": "reopened",
+      "snapshot_progress_pct": 80,
+      "due_at": "2026-05-18 19:00",
+      "first_response_at": "2026-05-18 11:02:00",
+      "last_responded_at": "2026-05-18 19:31:15",
+      "updates": [
+        {
+          "source_record_id": "R-023",
+          "source_row": "row-023",
+          "occurred_at": "2026-05-18 10:45:02",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "盲道挡板松动需处理"
+        },
+        {
+          "source_record_id": "R-024",
+          "source_row": "row-024",
+          "occurred_at": "2026-05-18 12:20:18",
+          "transition": "new->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "note": "维护人员已固定挡板"
+        },
+        {
+          "source_record_id": "R-025",
+          "source_row": "row-025",
+          "occurred_at": "2026-05-18 19:30:37",
+          "transition": "resolved->reopened",
+          "status": "reopened",
+          "progress_pct": 80,
+          "note": "居民反馈固定点仍突出需再次处理"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3110",
+      "normalized_ticket_key": "east:TCK-CS-3110",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "绿化养护",
+      "priority": "低",
+      "area_tag": "松岚片区",
+      "snapshot_status": "assigned",
+      "snapshot_progress_pct": 15,
+      "due_at": "2026-05-21 18:00",
+      "first_response_at": "2026-05-18 17:00:00",
+      "last_responded_at": "2026-05-18 17:06:01",
+      "updates": [
+        {
+          "source_record_id": "R-026",
+          "source_row": "row-026",
+          "occurred_at": "2026-05-18 16:40:51",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "居民建议修剪遮挡路牌的树枝"
+        },
+        {
+          "source_record_id": "R-027",
+          "source_row": "row-027",
+          "occurred_at": "2026-05-18 17:05:19",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 15,
+          "note": "已排入本周绿化巡查单"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3111",
+      "normalized_ticket_key": "east:TCK-CS-3111",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "供水/排水",
+      "priority": "高",
+      "area_tag": "榕湾片区",
+      "snapshot_status": "in_progress",
+      "snapshot_progress_pct": 85,
+      "due_at": "2026-05-18 09:00",
+      "first_response_at": "2026-05-18 00:18:44",
+      "last_responded_at": "2026-05-18 22:46:10",
+      "updates": [
+        {
+          "source_record_id": "R-028",
+          "source_row": "row-028",
+          "occurred_at": "2026-05-18 00:03:17",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "居民反馈楼前井盖冒水"
+        },
+        {
+          "source_record_id": "R-029",
+          "source_row": "row-029",
+          "occurred_at": "2026-05-18 22:45:33",
+          "transition": "new->in_progress",
+          "status": "in_progress",
+          "progress_pct": 85,
+          "note": "市政管线单位已到场排查阀门"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3112",
+      "normalized_ticket_key": "east:TCK-CS-3112",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "便民咨询",
+      "priority": "低",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "closed",
+      "snapshot_progress_pct": 100,
+      "due_at": "2026-05-18 15:00",
+      "first_response_at": "2026-05-18 12:04:00",
+      "last_responded_at": "2026-05-18 12:05:30",
+      "updates": [
+        {
+          "source_record_id": "R-030",
+          "source_row": "row-030",
+          "occurred_at": "2026-05-18 12:00:00",
+          "transition": "created->closed",
+          "status": "closed",
+          "progress_pct": 100,
+          "note": "已答复医保材料打印地点"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3113",
+      "normalized_ticket_key": "east:TCK-CS-3113",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "环境卫生",
+      "priority": "高",
+      "area_tag": "青榆片区",
+      "snapshot_status": "in_progress",
+      "snapshot_progress_pct": 50,
+      "due_at": "2026-05-18 17:00",
+      "first_response_at": null,
+      "last_responded_at": "2026-05-18 18:20:00",
+      "updates": [
+        {
+          "source_record_id": "R-031",
+          "source_row": "row-031",
+          "occurred_at": "2026-05-18 13:10:06",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "楼下回收点异味反复出现"
+        },
+        {
+          "source_record_id": "R-032",
+          "source_row": "row-032",
+          "occurred_at": "2026-05-18 18:15:45",
+          "transition": "new->in_progress",
+          "status": "in_progress",
+          "progress_pct": 50,
+          "note": "已补放消杀包等待物业清运"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3114",
+      "normalized_ticket_key": "east:TCK-CS-3114",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "楼道维护",
+      "priority": "中",
+      "area_tag": "松岚片区",
+      "snapshot_status": "resolved",
+      "snapshot_progress_pct": 100,
+      "due_at": "2026-05-19 16:00",
+      "first_response_at": "2026-05-18 09:00:00",
+      "last_responded_at": "2026-05-18 16:56:30",
+      "updates": [
+        {
+          "source_record_id": "R-033",
+          "source_row": "row-033",
+          "occurred_at": "2026-05-17 22:30:18",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "前一日晚间报修楼道扶手松动"
+        },
+        {
+          "source_record_id": "R-034",
+          "source_row": "row-034",
+          "occurred_at": "2026-05-18 09:25:11",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 30,
+          "note": "已派楼道维护人员下午检查"
+        },
+        {
+          "source_record_id": "R-035",
+          "source_row": "row-035",
+          "occurred_at": "2026-05-18 16:55:09",
+          "transition": "assigned->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "note": "扶手螺丝已加固并拍照回填"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3115",
+      "normalized_ticket_key": "east:TCK-CS-3115",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "路面/设施",
+      "priority": "高",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "assigned",
+      "snapshot_progress_pct": 20,
+      "due_at": "2026-05-19 11:00",
+      "first_response_at": "2026-05-18 20:45:00",
+      "last_responded_at": "2026-05-18 23:11:20",
+      "updates": [
+        {
+          "source_record_id": "R-036",
+          "source_row": "row-036",
+          "occurred_at": "2026-05-18 20:30:24",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "小区门口减速带脱落"
+        },
+        {
+          "source_record_id": "R-037",
+          "source_row": "row-037",
+          "occurred_at": "2026-05-18 23:10:02",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 20,
+          "note": "已派给道路设施夜间值班"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3120",
+      "normalized_ticket_key": "west:TCK-CS-3120",
+      "service_desk": "西区民生服务中心",
+      "service_channel": "社区热线-西区服务台",
+      "category": "环境卫生",
+      "priority": "中",
+      "area_tag": "西桥片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-19 11:00",
+      "first_response_at": "2026-05-18 09:35:00",
+      "last_responded_at": "2026-05-18 09:35:00",
+      "updates": [
+        {
+          "source_record_id": "R-038",
+          "source_row": "row-038",
+          "occurred_at": "2026-05-18 09:20:31",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "西区绿化带落叶清理"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3121",
+      "normalized_ticket_key": "north:TCK-CS-3121",
+      "service_desk": "北区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "路面/设施",
+      "priority": "中",
+      "area_tag": "北槐片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-20 09:00",
+      "first_response_at": "2026-05-18 11:00:00",
+      "last_responded_at": "2026-05-18 11:00:00",
+      "updates": [
+        {
+          "source_record_id": "R-039",
+          "source_row": "row-039",
+          "occurred_at": "2026-05-18 10:40:17",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "北区路牌倾斜，已登记待安排检修"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3122",
+      "normalized_ticket_key": "east-property:TCK-CS-3122",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "物业协同-转办",
+      "category": "楼道维护",
+      "priority": "中",
+      "area_tag": "松岚片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-20 10:00",
+      "first_response_at": "2026-05-18 13:20:00",
+      "last_responded_at": "2026-05-18 13:20:00",
+      "updates": [
+        {
+          "source_record_id": "R-040",
+          "source_row": "row-040",
+          "occurred_at": "2026-05-18 13:00:05",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "楼道照明由物业协同渠道受理"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3123",
+      "normalized_ticket_key": "east:TCK-CS-3123",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "便民咨询",
+      "priority": "低",
+      "area_tag": "青榆片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-19 09:00",
+      "first_response_at": "2026-05-17 23:55:00",
+      "last_responded_at": "2026-05-17 23:55:00",
+      "updates": [
+        {
+          "source_record_id": "R-041",
+          "source_row": "row-041",
+          "occurred_at": "2026-05-17 23:50:19",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "前一日夜间咨询社区活动时间"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3124",
+      "normalized_ticket_key": "east:TCK-CS-3124",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "市容秩序",
+      "priority": "中",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-20 18:00",
+      "first_response_at": "2026-05-19 00:20:00",
+      "last_responded_at": "2026-05-19 00:20:00",
+      "updates": [
+        {
+          "source_record_id": "R-042",
+          "source_row": "row-042",
+          "occurred_at": "2026-05-19 00:08:02",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "次日凌晨反馈摊位噪声"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3116",
+      "canonical_ticket_id": "TCK-CS-3116",
+      "alias_ticket_ids": [
+        "TCK-CS-3116A"
+      ],
+      "normalized_ticket_key": "east:TCK-CS-3116",
+      "alias_keys": [
+        "east-manual:TCK-CS-3116"
+      ],
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "路面/设施",
+      "priority": "高",
+      "area_tag": "榕湾片区",
+      "snapshot_status": "in_progress",
+      "snapshot_progress_pct": 80,
+      "due_at": "2026-05-18 16:00",
+      "first_response_at": "2026-05-18 08:12:00",
+      "last_responded_at": "2026-05-19 00:21:00",
+      "updates": [
+        {
+          "source_record_id": "R-043",
+          "source_row": "row-043",
+          "occurred_at": "2026-05-18 07:55:33",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "normalized_ticket_key": "east:TCK-CS-3116",
+          "note": "桥下步道护栏松动，居民从热线提交"
+        },
+        {
+          "source_record_id": "R-044",
+          "source_row": "row-044",
+          "occurred_at": "2026-05-18 09:18:45",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 30,
+          "normalized_ticket_key": "east-manual:TCK-CS-3116",
+          "note": "坐席补录后已派单，使用临时受理编号登记"
+        },
+        {
+          "source_record_id": "R-045",
+          "source_row": "row-045",
+          "occurred_at": "2026-05-18 15:50:12",
+          "transition": "assigned->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "normalized_ticket_key": "east:TCK-CS-3116",
+          "note": "护栏已临时固定，等待晚间复查"
+        },
+        {
+          "source_record_id": "R-046",
+          "source_row": "row-046",
+          "occurred_at": "2026-05-18 18:42:09",
+          "transition": "resolved->reopened",
+          "status": "reopened",
+          "progress_pct": 70,
+          "normalized_ticket_key": "east-manual:TCK-CS-3116",
+          "note": "复查发现仍有晃动，需二次加固"
+        },
+        {
+          "source_record_id": "R-047",
+          "source_row": "row-047",
+          "occurred_at": "2026-05-19 00:20:16",
+          "transition": "reopened->in_progress",
+          "status": "in_progress",
+          "progress_pct": 80,
+          "normalized_ticket_key": "east:TCK-CS-3116",
+          "note": "次日凌晨施工队到场二次加固"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3117",
+      "normalized_ticket_key": "east:TCK-CS-3117",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "供水/排水",
+      "priority": "中",
+      "area_tag": "青榆片区",
+      "snapshot_status": "closed",
+      "snapshot_progress_pct": 100,
+      "due_at": "2026-05-18 22:00",
+      "first_response_at": "2026-05-18 01:00:00",
+      "last_responded_at": "2026-05-19 00:04:30",
+      "updates": [
+        {
+          "source_record_id": "R-048",
+          "source_row": "row-048",
+          "occurred_at": "2026-05-17 21:35:00",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "前一日晚间低压报修"
+        },
+        {
+          "source_record_id": "R-049",
+          "source_row": "row-049",
+          "occurred_at": "2026-05-18 01:05:21",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 25,
+          "note": "夜班转管线协调组"
+        },
+        {
+          "source_record_id": "R-050",
+          "source_row": "row-050",
+          "occurred_at": "2026-05-18 13:35:42",
+          "transition": "assigned->in_progress",
+          "status": "in_progress",
+          "progress_pct": 65,
+          "note": "已联系供水单位巡查支管"
+        },
+        {
+          "source_record_id": "R-051",
+          "source_row": "row-051",
+          "occurred_at": "2026-05-18 22:30:18",
+          "transition": "in_progress->pending_external",
+          "status": "pending_external",
+          "progress_pct": 90,
+          "note": "等待供水单位回传压力复测"
+        },
+        {
+          "source_record_id": "R-052",
+          "source_row": "row-052",
+          "occurred_at": "2026-05-19 00:04:11",
+          "transition": "pending_external->closed",
+          "status": "closed",
+          "progress_pct": 100,
+          "note": "次日凌晨标记闭环"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3118",
+      "normalized_ticket_key": "east:TCK-CS-3118",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "居家关怀",
+      "priority": "高",
+      "area_tag": "松岚片区",
+      "snapshot_status": "in_progress",
+      "snapshot_progress_pct": 60,
+      "due_at": "2026-05-18 19:00",
+      "first_response_at": null,
+      "last_responded_at": "2026-05-18 22:19:30",
+      "updates": [
+        {
+          "source_record_id": "R-053",
+          "source_row": "row-053",
+          "occurred_at": "2026-05-18 11:40:05",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "独居老人紧急联系卡信息需核对"
+        },
+        {
+          "source_record_id": "R-054",
+          "source_row": "row-054",
+          "occurred_at": "2026-05-18 12:28:39",
+          "transition": "new->resolved",
+          "status": "resolved",
+          "progress_pct": 100,
+          "note": "社区志愿者电话联系后标记已解决"
+        },
+        {
+          "source_record_id": "R-055",
+          "source_row": "row-055",
+          "occurred_at": "2026-05-18 18:05:12",
+          "transition": "resolved->reopened",
+          "status": "reopened",
+          "progress_pct": 45,
+          "note": "居民家属反馈信息仍未同步到值班册"
+        },
+        {
+          "source_record_id": "R-056",
+          "source_row": "row-056",
+          "occurred_at": "2026-05-18 22:18:44",
+          "transition": "reopened->in_progress",
+          "status": "in_progress",
+          "progress_pct": 60,
+          "note": "值班册已补登记，等待次日窗口复核"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3119",
+      "normalized_ticket_key": "east:TCK-CS-3119",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台",
+      "category": "环境卫生",
+      "priority": "中",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "in_progress",
+      "snapshot_progress_pct": 55,
+      "due_at": "2026-05-18 12:00",
+      "first_response_at": null,
+      "last_responded_at": "2026-05-18 15:11:00",
+      "updates": [
+        {
+          "source_record_id": "R-057",
+          "source_row": "row-057",
+          "occurred_at": "2026-05-18 05:58:13",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "清晨市场后巷污水味"
+        },
+        {
+          "source_record_id": "R-058",
+          "source_row": "row-058",
+          "occurred_at": "2026-05-18 08:25:30",
+          "transition": "new->assigned",
+          "status": "assigned",
+          "progress_pct": 20,
+          "note": "转环卫协调组"
+        },
+        {
+          "source_record_id": "R-059",
+          "source_row": "row-059",
+          "occurred_at": "2026-05-18 11:55:59",
+          "transition": "assigned->pending_external",
+          "status": "pending_external",
+          "progress_pct": 40,
+          "note": "等待物业打开后巷门"
+        },
+        {
+          "source_record_id": "R-060",
+          "source_row": "row-060",
+          "occurred_at": "2026-05-18 15:10:07",
+          "transition": "pending_external->in_progress",
+          "status": "in_progress",
+          "progress_pct": 55,
+          "note": "已进入后巷冲洗，异味复测中"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3125",
+      "normalized_ticket_key": "east:TCK-CS-3125",
+      "service_desk": "东区民生服务站",
+      "service_channel": "社区热线-东区服务台",
+      "category": "路面/设施",
+      "priority": "高",
+      "area_tag": "榕湾片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-19 10:00",
+      "first_response_at": "2026-05-18 17:05:00",
+      "last_responded_at": "2026-05-18 17:05:00",
+      "updates": [
+        {
+          "source_record_id": "R-061",
+          "source_row": "row-061",
+          "occurred_at": "2026-05-18 16:50:22",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "路面设施报修，已登记待安排巡查"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3126",
+      "normalized_ticket_key": "east-night:TCK-CS-3126",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区夜间服务台",
+      "category": "噪声/扰民",
+      "priority": "中",
+      "area_tag": "榕湾片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-19 08:00",
+      "first_response_at": "2026-05-18 17:35:00",
+      "last_responded_at": "2026-05-18 17:35:00",
+      "updates": [
+        {
+          "source_record_id": "R-062",
+          "source_row": "row-062",
+          "occurred_at": "2026-05-18 17:20:35",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "夜间噪声投诉，已登记待核查"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3127",
+      "normalized_ticket_key": "east-callback:TCK-CS-3127",
+      "service_desk": "东区民生服务中心",
+      "service_channel": "社区热线-东区服务台-回访",
+      "category": "便民咨询",
+      "priority": "低",
+      "area_tag": "青榆片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-20 12:00",
+      "first_response_at": "2026-05-18 19:20:00",
+      "last_responded_at": "2026-05-18 19:20:00",
+      "updates": [
+        {
+          "source_record_id": "R-063",
+          "source_row": "row-063",
+          "occurred_at": "2026-05-18 19:05:44",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "居民咨询回访登记，待确认办理材料"
+        }
+      ]
+    },
+    {
+      "ticket_id": "TCK-CS-3128",
+      "normalized_ticket_key": "east-window:TCK-CS-3128",
+      "service_desk": "东区民生服务中心综合窗口",
+      "service_channel": "社区热线-东区服务台",
+      "category": "市容秩序",
+      "priority": "中",
+      "area_tag": "柏溪片区",
+      "snapshot_status": "new",
+      "snapshot_progress_pct": 0,
+      "due_at": "2026-05-20 18:00",
+      "first_response_at": "2026-05-19 00:10:00",
+      "last_responded_at": "2026-05-19 00:10:00",
+      "updates": [
+        {
+          "source_record_id": "R-064",
+          "source_row": "row-064",
+          "occurred_at": "2026-05-18 23:58:30",
+          "transition": "created->new",
+          "status": "new",
+          "progress_pct": 0,
+          "note": "综合窗口登记市容事项，待安排处置"
+        }
+      ]
+    }
+  ],
+  "key_aliases": [
+    {
+      "alias_key": "east-manual:TCK-CS-3116",
+      "canonical_key": "east:TCK-CS-3116",
+      "canonical_ticket_id": "TCK-CS-3116",
+      "alias_ticket_ids": [
+        "TCK-CS-3116A"
+      ],
+      "reason": "坐席补录形成临时受理编号，与桥下步道护栏事项归为同一事项。",
+      "source_record_ids": [
+        "R-043",
+        "R-044",
+        "R-045",
+        "R-046",
+        "R-047"
+      ]
+    }
+  ]
+}

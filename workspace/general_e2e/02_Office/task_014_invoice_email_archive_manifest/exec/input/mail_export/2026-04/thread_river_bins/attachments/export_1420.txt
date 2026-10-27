@@ -1,0 +1,8 @@
+River Bins Cooperative
+Service ticket / invoice export
+Document number: RBC-0418-77
+Service period: 2026-04-15 / 2026-04-17
+Amount: USD 734.25
+
+Work: temporary bins, pickup, disposal ticket
+Export: 14:20 local; manual re-export.

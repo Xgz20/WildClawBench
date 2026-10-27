@@ -1,0 +1,98 @@
+target_date_range:
+  start: 2026-04-10
+  end: 2026-04-11
+
+page_noise_policy:
+  ignore_sections:
+    - navigation_or_breadcrumb
+    - font_size_share_comment_controls
+    - app_download_or_recommendations
+    - disclaimer_or_copyright
+    - hot_rank_or_related_articles
+    - export_manifest_or_crawler_note
+  source_metadata_fields:
+    keep_for_provenance: [page_title, page_publish_time, source_name, author_name, editor_name]
+    do_not_use_as_event_date_unless_no_event_date: [page_publish_time, export_time, file_modified_time]
+
+event_date_rule: >
+  Use the event occurrence date, disclosure date, data period release date, or policy effective/release date stated in the event paragraph/table.
+  Do not use page publish time, digest date, export time, or file name date unless the event text provides no more specific event date.
+
+source_section_rule: >
+  Source page sections such as 【品大事】, 【观业绩】, 【签大单】, 市场表现, 政策与监管, or 公司消息 are evidence locations only.
+  They do not directly determine the output category; output category must follow the category definitions below.
+
+categories:
+  policy_update:
+    zh_name: 政策更新
+    required_fields: [policy_issuer, policy_action, event_date]
+    include_when:
+      - government_or_regulatory_body_issues_updates_or_implements_policy
+      - public_operation_support_program_or_regulatory_measure_has_amount_term_scope_or_effective_date
+  company_disclosure:
+    zh_name: 企业公告
+    required_fields: [canonical_entity, disclosure_action, event_date]
+    include_when:
+      - listed_or_fund_like_entity_discloses_result_contract_financing_risk_or_governance_item
+  macro_data:
+    zh_name: 宏观数据
+    required_fields: [indicator_name, period_or_scope, event_date]
+    include_when:
+      - statistical_index_or_survey_release_reports_actual_measurement
+  market_movement:
+    zh_name: 股市动态
+    required_fields: [market_or_index_name, movement_direction, event_date]
+    include_when:
+      - market_index_sector_basket_or_rate_records_actual_move
+  other_finance:
+    zh_name: 其他财经
+    required_fields: [canonical_entity_or_topic, finance_relevance, event_date]
+
+category_priority:
+  - policy_update
+  - company_disclosure
+  - macro_data
+  - market_movement
+  - other_finance
+
+dedup_rule:
+  key_fields: [event_date, category, canonical_entity_or_topic, core_fact]
+  merge_sources: true
+  keep_distinct_if:
+    - different_event_date
+    - different_core_fact
+    - correction_or_update_changes_core_fact
+    - one_item_is_forecast_or_commentary_only
+
+unclassified_reasons:
+  - outside_target_date_range
+  - page_noise_or_site_module
+  - background_or_forecast_only
+  - non_finance_topic
+  - duplicate_merged_into_event
+
+output_order:
+  events: [event_date, category_priority, canonical_entity_or_topic, core_fact]
+  entity_mentions: [canonical_entity, source_file, first_mention_order]
+
+citation_anchor:
+  required: [source_file, page_or_section_title, normalized_snippet_anchor]
+  snippet_max_chars: 80
+
+# 离线归档业务口径补充；本包机构、主体和数据均为模拟资料。
+archive_conventions:
+  source_count: >
+    merged_source_count 统计独立报道片段，不是文件数；同一快讯流中不同时间的补充报道可分别计数。
+    同一 PDF 正文与附件对同一事项的重复摘要只算一个片段。
+    只重申旧数据日期、未改变事实的更正可作日期佐证，不新增事件，也不增加合并片段数。
+  missing_date: 正文无日期时可继承所在日期分组或页面发布日；不得优先使用文件名或导出日。
+  entity_mentions: >
+    记录入选事件及发布机构在有效报道中实际出现的主体名称和别名、类型、文件及章节。
+    同一文件中同一别名可只记首次提及；全称和简称均应保留。无需穷举导航、历史回顾或预测中的别名。
+    政策附件带“配套”等业务后缀时，结合事项内容归一到字典中的政策工具。
+  exclusions: >
+    记录未入选的候选内容及典型页面噪声，保留来源、简短片段和原因。
+    同一文件同原因的相邻页面模块可以合并，不必逐条登记字号、分享按钮等控件。
+    同时越窗和纯预测的内容，可写任一成立原因或并列说明；合并报道无需再当作排除项计数。
+  presentation: 行序、编号样式和中英文表头可自定，引用应能定位到文件、章节或页码及短片段。
+  policy_scope: 会议中无独立操作参数的一般配合、跟踪、风险提示不另建政策事件；可作背景说明。

@@ -1,0 +1,13 @@
+{
+  "input_sha256": "5ef4f6b22aa613771edc6fb61876c871c7953f6cab89b551abf2c4be11efdabd",
+  "engine": "WPS",
+  "control_opened": true,
+  "opened": true,
+  "status": "pass",
+  "phase": "complete",
+  "pages": 1,
+  "version": "12.0",
+  "pdf": "D:\\astroncode-eval\\workspace\\general-e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.revision_two_outputs\\template\\06_报告模板.pdf",
+  "edited": false,
+  "input": "D:\\astroncode-eval\\workspace\\general-e2e\\02_Office\\task_001_multi_source_project_report\\exec\\06_报告模板.docx"
+}

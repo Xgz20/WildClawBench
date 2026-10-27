@@ -1,0 +1,95 @@
+[
+  {
+    "pages": 15,
+    "version": "12.0",
+    "engine": "WPS Writer",
+    "file": "01_研发阶段材料_v1.0.docx",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\01_研发阶段材料_v1.0.pdf"
+  },
+  {
+    "pages": 15,
+    "version": "12.0",
+    "engine": "WPS Writer",
+    "file": "02_实施阶段材料_v1.0.docx",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\02_实施阶段材料_v1.0.pdf"
+  },
+  {
+    "pages": 15,
+    "version": "12.0",
+    "engine": "WPS Writer",
+    "file": "03_运营阶段材料_v1.0.docx",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\03_运营阶段材料_v1.0.pdf"
+  },
+  {
+    "pages": 1,
+    "version": "12.0",
+    "engine": "WPS Writer",
+    "file": "06_报告模板.docx",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\06_报告模板.pdf"
+  },
+  {
+    "slides": 24,
+    "file": "05_阶段汇报_v1.0.pptx",
+    "variant": "original",
+    "engine": "WPS Presentation",
+    "directory": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\original_slides",
+    "version": "12.0"
+  },
+  {
+    "slides": 24,
+    "file": "05_阶段汇报_v1.0.pptx",
+    "variant": "draft",
+    "engine": "WPS Presentation",
+    "directory": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\draft_slides",
+    "version": "12.0"
+  },
+  {
+    "original_visible": -1,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "阅读说明",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-1.pdf"
+  },
+  {
+    "original_visible": -1,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "任务台账",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-2.pdf"
+  },
+  {
+    "original_visible": -1,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "指标明细",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-3.pdf"
+  },
+  {
+    "original_visible": -1,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "验收记录",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-4.pdf"
+  },
+  {
+    "original_visible": -1,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "问题记录",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-5.pdf"
+  },
+  {
+    "original_visible": -1,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "版本对照",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-6.pdf"
+  },
+  {
+    "original_visible": 0,
+    "version": "12.0",
+    "engine": "WPS Spreadsheets",
+    "sheet": "补录明细",
+    "pdf": "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.material_hint_revision\\rendered\\sheet-7.pdf"
+  }
+]

@@ -1,0 +1,4 @@
+Batch: thread_delta_service
+attachments/packet_0503.pdf saved
+attachments/image_0503.png: failed (binary not written)
+attachments/export_0503.txt saved

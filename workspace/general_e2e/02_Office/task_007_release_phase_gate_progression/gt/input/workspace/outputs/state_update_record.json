@@ -1,0 +1,122 @@
+{
+  "record_meta": {
+    "record_type": "local_state_update",
+    "release_id": "qs-local-2026-08-rc3",
+    "run_time_utc": "2026-08-05T10:40:00Z",
+    "scaffold": false
+  },
+  "updated_artifacts": [
+    "input/workspace/release_board.md",
+    "input/workspace/state/workflow_state.json",
+    "input/workspace/state/validation_results.json",
+    "input/workspace/state/lookup_cache.json",
+    "input/workspace/audit/audit_history.md",
+    "input/workspace/outputs/release_progress_report.md",
+    "input/workspace/outputs/state_update_record.json",
+    "environment/mock_release_board/final_state_capture.json"
+  ],
+  "phase_decision": {
+    "from_phase": "local_validation",
+    "to_phase": "local_validation",
+    "advanced_adjacent_phase_only": false,
+    "blocking_check_keys": [
+      "bundle_integrity"
+    ],
+    "blocked_or_carry_forward_reason": "bundle_integrity: stale input bindings; no current matching receipt within decision time"
+  },
+  "validation_category_handling": [
+    {
+      "local_check_key": "scope_manifest_readable",
+      "category": "passed",
+      "repair_source_record_ref": "config/release_scope.json, state/workflow_state.json"
+    },
+    {
+      "local_check_key": "cli_component_lock",
+      "category": "passed",
+      "repair_source_record_ref": "state/local_lookup_records.json#cli_core:linux_x64, state/local_lookup_records.json#completion:bash_zsh"
+    },
+    {
+      "local_check_key": "docs_bundle_lookup_bound",
+      "category": "passed",
+      "repair_source_record_ref": "state/lookup_cache.json, state/local_lookup_records.json#record.docs.scan1021, logs/local_validation_runs.jsonl#line.lookup-docs-current, state/local_lookup_records.json#record.manifest.scan1030, logs/local_validation_runs.jsonl#line.manifest-scan1030"
+    },
+    {
+      "local_check_key": "board_state_alignment",
+      "category": "passed",
+      "repair_source_record_ref": "release_board.md, state/workflow_state.json"
+    },
+    {
+      "local_check_key": "validation_snapshot_freshness",
+      "category": "passed",
+      "repair_source_record_ref": "state/lookup_cache.json, state/local_lookup_records.json#record.docs.scan1021, logs/local_validation_runs.jsonl#line.lookup-docs-current, state/local_lookup_records.json#record.manifest.scan1030, logs/local_validation_runs.jsonl#line.manifest-scan1030"
+    },
+    {
+      "local_check_key": "audit_after_validation",
+      "category": "passed",
+      "repair_source_record_ref": "audit/audit_history.md#AUD-QS-042, state/validation_results.json#refresh_history.refresh-1040"
+    },
+    {
+      "local_check_key": "archived_board_scope_guard",
+      "category": "passed",
+      "repair_source_record_ref": "notes/old_release_board_copy.md, config/release_scope.json"
+    },
+    {
+      "local_check_key": "manifest_dependency_alignment",
+      "category": "passed",
+      "repair_source_record_ref": "state/lookup_cache.json, state/local_lookup_records.json#record.docs.scan1021, logs/local_validation_runs.jsonl#line.lookup-docs-current, state/local_lookup_records.json#record.manifest.scan1030, logs/local_validation_runs.jsonl#line.manifest-scan1030"
+    },
+    {
+      "local_check_key": "bundle_integrity",
+      "category": "stale",
+      "repair_source_record_ref": "logs/local_validation_runs.jsonl#line.bundle-integrity-1037, state/lookup_cache.json"
+    }
+  ],
+  "lookup_cache_updates": [
+    {
+      "lookup_key": "cli_core:linux_x64",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "cli-linux-x64-rc3-local-4b72",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.cli_core.current",
+      "recorded_at_utc": "2026-08-05T09:57:00Z"
+    },
+    {
+      "lookup_key": "completion:bash_zsh",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "completion-bash-zsh-rc3-local-91af",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.completion.current",
+      "recorded_at_utc": "2026-08-05T09:57:30Z"
+    },
+    {
+      "lookup_key": "doc_bundle:guide_set",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "docs-guide-rc3-local-c8e1",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.docs.scan1021",
+      "recorded_at_utc": "2026-08-05T10:21:12Z",
+      "required_for_phase": "local_validation"
+    },
+    {
+      "lookup_key": "manifest:rc3_bundle",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "manifest-rc3-local-f19d",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.manifest.scan1030",
+      "recorded_at_utc": "2026-08-05T10:30:00Z"
+    }
+  ],
+  "audit_history_updates": [
+    {
+      "audit_ref": "AUD-QS-042",
+      "recorded_at_utc": "2026-08-05T10:40:00Z"
+    }
+  ],
+  "no_network_confirmation": {
+    "network_used": false,
+    "scope": "仅本地文件修复；未执行真实 CI、发布、通知。"
+  },
+  "human_followup": [
+    "packaging maintainer 补充当前完整依赖组合的有效回执；release coordinator 复核后再决定相邻推进。"
+  ]
+}

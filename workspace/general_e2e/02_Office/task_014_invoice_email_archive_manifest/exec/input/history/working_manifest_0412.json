@@ -1,0 +1,12 @@
+{
+  "saved_at": "2026-04-12 08:30",
+  "operator": "J. Lin",
+  "scope": "Cedar packet first pass",
+  "rows": [
+    {
+      "source_path": "input/mail_export/2026-04/thread_cedar_booth/attachments/packet_a.pdf",
+      "disposition": "reference",
+      "reason": "Upload title says quote packet A"
+    }
+  ]
+}

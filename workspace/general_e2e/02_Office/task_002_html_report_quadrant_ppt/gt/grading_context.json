@@ -1,0 +1,770 @@
+{
+  "fingerprints": {
+    "input/01_青穗街区季度运营报告_源文.html": "7db8bb7491690543cb38a0cb6a9101d0f2900cff64417f17c869932b765b770a",
+    "input/02_指标与图表数据_工作簿.xlsx": "94c7f53549bab17fa41e1d42472be80bce08629221b1307b2d632ef43e6d3ec8",
+    "input/03_chart_bindings.json": "ad6a88460ece420d5f6eaebe5b926ccdfec9a962a0ac971e4709a6cfe4d9c4e8",
+    "input/04_四象限草稿预览.html": "f29fbcf7a7676df2fcff6e20d7aeb1d204988d1570846faeaf182f6f15fa1fe9",
+    "input/05_修订说明_两轮摘录.md": "3f950260511931665de20e1c88f5f1a4bfb31602e1f31f024a86bc365ff93402",
+    "input/06_空白四象限版式模板.pptx": "80cdcef0281c11826f163a18cd83d3e84e0b78a3619e388e741f5cc0437491e2",
+    "input/07_董事会问题与呈现口径.md": "6b046853fb6b8a99e32433f6b23699a60662284f2f328e95a7ac6ce6ccefd451"
+  },
+  "public_context": "# Frozen public source text (not a reference answer)\nAll inputs are fictional public fixtures.\n\n\n## input/01 HTML report\n青穗街区协同项目 2026 年第二季度运营简报\n青穗街区协同项目 2026 年第二季度运营简报 H-101\n本简报供季度看板材料使用，范围限定为 2026 年第二季度已结束的运营数据、修订意见和下季准备动作。\n请注意，本文件同时保留少量旧稿、预测、支撑材料和会议纪要摘录；它们用于说明口径变化，不等同于最终 PPT 的每一条主结论。\n项目域名为虚构公共样例；不对应任何真实机构、客户、账号或服务。\n本季核心周期为 2026-04-01 至 2026-06-30，预算预测段落另含下季准备值。\n源锚点 H-117、H-205、H-304 与 H-402 是四象限 PPT 的主要来源线索。\n表格和图表数据以配套工作簿为准；正文中的指标提示仅用于帮助定位。\n旧稿文字保留在 aside 或 blockquote 中，除非修订说明要求，否则不应直接进入最终看板。\n二、服务覆盖与触达 H-117\n第二季度线下咨询、流动服务点和周末预约合计触达 18,420 人次，较上一季度回升；回访人群占比由 18.9% 提升到 23.4% 。\n新增 46 场社区微站服务，重点覆盖雨季交通不便片区，微站数不宜单独作为主标题。\n微站服务集中在南梧、北澜、禾湾三个虚构片区，属于触达渠道补充。\n热线和窗口仍是高频入口，但重复咨询已开始转向预约回访。\n服务覆盖象限建议同时呈现触达人次和回访占比，避免只报告规模。\n“预约未到率下降”只在周报口径出现，季度工作簿未设为主指标。\n基层协同员反馈雨天路段巡回服务更稳定，但该反馈只作为说明材料。\n旧稿里将第一季度触达人次作为主数字，需要在草稿预览中纠偏。\n旧稿摘录：第一季度触达人次 15,980 ，原草稿曾误放在左上象限主数字处。\n三、渠道结构与非主指标 H-146\n热线入口本季记录 6,330 次，线上小表单入口记录 4,870 次，但两者在四象限页中只作为背景，不替代触达主数字。\n流动服务点的访谈材料显示，部分重复咨询来自同一户的二次确认，不能简单累加为新增服务对象。\n渠道明细适合放入备注或 speaker notes，不建议占用主图标题。\n线上表单存在重复提交去重延迟，数据表以已清洗行作为准。\n临时问卷摘要只覆盖 5 月中旬两周，不代表整个季度。\n本节包含较多背景与旁支材料，整理看板时需自行取舍。\n如需在 PPT 中显示渠道结构，应使用低优先级旁注或小号标签。\n四、办理效率与积压变化 H-205\n服务申请的中位办理时长降至 5.8 天，期末积压件数从 428 件降至 312 件。\n复杂件分流占比本季为 27.6% ，说明效率改善并非完全来自自动化，而是来自人工分流与复核节奏调整。\n报告建议把“积压回落”和“复杂件分流”放在同一象限，避免只展示自动办结率。\n自动办结率 41.2% 低于上季，不应单独作为主要成效标题。\n6 月最后一周存在集中补录，因此日维度曲线不宜用于最终看板。\n分流规则调整说明适合写进 speaker notes，而不是在页面中占据过多空间。\n本节与 CH-03 图表绑定，图表应突出中位时长和积压件数。\n“自动办结率提升”是旧稿假设，当前报告已经撤回该表述。\n五、复核质量与回访摘要 H-238\n抽样回访满意度为 88.5% ，只覆盖已完成服务样本，不代表未办结申请。\n人工复核量上升与复杂件分流有关，不能据此推断效率下降。\n满意度可作为效率象限的解释背景，但不是四象限主指标之一。\n复核意见中有 14 条涉及材料补齐说明，已在运营日志中另行记录。\n回访摘要不应替代工作簿中的中位办理时长或积压件数。\n质量段落用于限制过度乐观叙述，避免“全自动提效”误读。\n本段没有单独图表绑定，可作为右上象限 speaker notes 支撑。\n六、资源投入与预算节奏 H-304\n截至季末，已执行预算占全年口径 62% ，已承诺但未支付部分为 74% 。\n工作簿另列下季预测承诺率 89% ，该值只能作为风险注记，不能写成本季执行率。\n预算象限应同时呈现执行率与承诺率，避免单数值误读。\n承诺率上升主要来自雨季临时服务点和复核班次预留。\n剩余机动额度 26% 只作为支撑，不是本季主图序列。\n草稿预览曾把 Q3 预测写成“本季执行率”，修订说明要求移至风险动作。\n成本项存在月度入账滞后，最终 PPT 不应逐项展示明细账。\n本节与 CH-02 绑定，图表应突出实际执行、已承诺与预测风险的区别。\n草稿预览旧句：预算执行已达 89%，可支持全部服务点稳定扩围。该句已被修订说明要求删除或改写。\n七、协同单位与会议节奏 H-331\n本季开展协同小结会 9 场，会议纪要主要用于解释资源排班，不建议作为最终页面主结论。\n外部协同名称材料中的协同方均使用通用角色称谓，如“社区联络小组”“流动服务小队”，如“社区联络小组”“流动服务小队”。\n会议频次与触达结果相关，但不是可直接放入四象限的大数字。\n某些会议纪要沿用旧版季度标题，可能误导为历史材料。\n如在 PPT 注释中引用协同背景，应同时注明 H-331 源锚点。\n本节保留部分冗余上下文，用于增加真实报告噪声。\n不要引入任何真实机构、外部网址或专有服务名称。\n八、风险、纠偏与下季动作 H-402\n风险象限需要保留具体纠偏动作，而不是沿用旧稿“全部稳定扩围”的过度乐观句。\n南梧临时服务点 6 月下旬出现排班缺口，等效缺口为 1.5 个班次；北澜夜间咨询点在两周内缺少 2 名轮值协同员。\n预算复核动作安排在 7 月第一周，需核对临时服务点预留、复核班次和材料补齐费用，避免把 64 件待补齐材料误写成已关闭事项。\nQ4 应以“风险纠偏与下季动作”为标题，不建议改成“全面扩围建议”。\n两处服务点人手缺口必须能从 H-402-a 追溯，数值在工作簿锚点对照表中另有记录。\n预算复核属于行动项，可与 CH-04 的风险动作表绑定。\n下季预测值可作为风险提示，但不应写成本季已经完成。\n旧稿“试点名单全部稳定扩围”已经被修订说明要求删除。\n风险象限需要至少一个 source chip 或 speaker notes 标记 H-402。\n该段包含可入页内容，也包含解释性边界；最终看板应压缩而不是整段复制。\n风险项 来源 建议处理\n南梧排班缺口 H-402-a 下季首周复核临时班次\n北澜轮值不足 H-402-a 与流动服务小队重排夜间班\n预算复核 H-402-b 7 月第一周完成预算口径确认\n九、附录、旧稿和不入页材料 H-488\n附录保留了模板页脚、旧版摘要和内部排版提醒，主要用于解释为什么草稿预览会出现错位。\n这些材料可帮助检查来源边界，但不应成为最终四象限 PPT 的正文主体。\n旧版页脚写有“Q2 v0.3 草稿”，正式输出应使用可读但非隐私化的文件版本。\n模板提示“总览 / 图表 / 建议 / 附录”来自旧版结构，已不适用于本案四象限标题。\n附录中出现的“全部扩围”是被撤回的表达，应作为干扰项处理。\n不要把本附录表格整页复制到 PPT；它只提供来源判断背景。\n如需要保留追溯信息，可在 speaker notes 中列出 H-117、H-205、H-304、H-402 与 chart IDs。\n本简报不包含任何外部链接、真实组织、账号、邮箱或服务凭据。\n\n## input/05 revision notes\n# 修订说明（两轮摘录）\n\n这些说明是两轮归档修订上下文，用来解释草稿预览中的错位、过时内容、来源追溯要求和修订先后关系；它不是定稿清单，也不枚举完整 PPT 文案或完整指标到象限映射。\n\n## 标签说明\n\n- `SUPERSEDED`：旧稿或第一轮之前的表述，只可作为错位/冲突背景，不应作为当前结论直接入页。\n- `FINAL`：第二轮后仍保留的制作口径，需要结合 HTML、工作簿和图表绑定核对；标签本身不是最终文案。\n- `CONTEXT_ONLY`：可放入旁注、speaker notes 或解释背景，不应替代主叙事。\n- `FORECAST_ONLY`：下季或滚动预测，只能作为风险/动作注记，不能改写为本季实绩。\n\n## 第一轮：结构与主口径\n\n- CN-R1-01（版式方向｜FINAL）：保留一页四象限结构，但把旧稿 `SUPERSEDED` 的“总览 / 图表 / 建议 / 附录”改为四个业务角色标题。标题用于分区，不等同于每区最终正文。\n- CN-R1-02（左上绑定｜SUPERSEDED → FINAL）：左上图表旧稿仍绑到 `M_COVER_VISITS_Q1`（`SUPERSEDED`）；本轮要求改查本季 `M_COVER_VISITS_Q2`，并让 `H-117` 成为可读来源标记。`M_COVER_REPEAT_Q2` 可作为同图副轴或旁注，但具体一句话结论需另行综合。\n- CN-R1-03（效率象限取舍｜CONTEXT_ONLY）：右上象限重点是办理时长和积压关系；`M_FLOW_AUTO_RATE_Q2` 只能作背景，因为 `H-205` 已说明人工复核量同步上升。不要把“自动化率”写成主成效标题。\n- CN-R1-04（草稿标题｜FINAL）：草稿标题仍带“v0.3”旧稿感，可改成季度看板标题，但不要引入真实机构、网址、外部 logo 或不可追溯来源。\n- CN-R1-05（来源可见性｜FINAL）：每个象限至少保留一个 source chip、speaker notes 或 shape alt text 绑定；格式可类似“来源 H-117 / metric M_COVER_VISITS_Q2 / chart CH-01”。来源标记是审计线索，不要求全部显示在正文大字中。\n\n## 第二轮：预算、风险与追溯\n\n- CN-R2-01（预算图表口径｜FORECAST_ONLY 冲突）：预算象限请把 `H-304`、`CH-02`、`M_BUDGET_SPEND_Q2` 和 `M_BUDGET_COMMIT_Q2` 作为同一图表关系核对；`M_BUDGET_FORECAST_Q3` 是下季预测风险，不能写成本季执行率或本季已完成成果。\n- CN-R2-02（风险措辞修订｜SUPERSEDED → FINAL）：旧稿“试点名单全部稳定扩围”为 `SUPERSEDED`；风险象限需要保留两处服务点人手缺口和预算复核动作的来源线索，来源锚点使用 `H-402`，但不要整段复制源文。\n- CN-R2-03（第四象限表面｜FINAL）：如果右下角空间不足，可用 `CH-04` 风险动作表或三行状态表承载风险/动作/来源，不要把 `H-402` 原段落直接堆入页面。\n- CN-R2-04（PPTX 追溯｜FINAL）：图表和表格对象需要在可解析的 PPTX 文本、speaker notes 或 alt text 中保留 `chart_id`、`html_anchor`、`metric_id` 中至少两类标记；这些标记可以分散在可见 chip、备注或对象描述里。\n- CN-R2-05（边界提醒｜FINAL）：不要联网，不要使用外部模板或私有服务；不要把附录、旧稿、预测行或支撑项当成全部当前事实。\n\n## 冲突索引（非定稿清单）\n\n| 冲突ID | 最新标签 | 涉及公开线索 | 不要沿用的旧路线 | 核对提示 |\n| --- | --- | --- | --- | --- |\n| RC-01 | FINAL with SUPERSEDED context | `CN-R1-02`, `H-117`, `CH-01` | 把上一期触达行当作本季主证据 | 先看口径状态，再决定图表系列和来源 chip |\n| RC-02 | CONTEXT_ONLY | `CN-R1-03`, `H-205`, `CH-03` | 自动办结率主标题 | 解释效率时需同时核对时长、积压和复核背景 |\n| RC-03 | FORECAST_ONLY | `CN-R2-01`, `H-304`, `CH-02` | 把 Q3 预测当成本季执行率 | 预测只能作风险/下季动作注记 |\n| RC-04 | FINAL after SUPERSEDED claim | `CN-R2-02`, `H-402`, `CH-04` | “全部稳定扩围”的乐观旧句 | 风险动作需压缩呈现并保留来源，不提供最终措辞 |\n\n\n## input/07 board brief\n# 董事会问题与呈现口径\n\n本文件是公开输入的一部分，用来说明单页四象限看板的决策语境、呈现边界和可追溯要求。它不是定稿清单，不提供完整指标到象限的映射，也不规定最终页面的逐字文案。\n\n## 董事会关心的 3 个问题\n\n1. 本季服务覆盖是否真正扩大到需要被看见的人群，还是只体现为活动或触达记录增加？\n2. 办理效率的改善是否同步缓解积压压力，哪些过程性指标只能作为背景口径而不能当作主成效？\n3. 预算节奏、风险纠偏和下季动作是否支持稳态推进，哪些预测、旧稿或支撑材料只能作为注记或更正背景？\n\n## 四个象限在页面中的角色\n\n- **服务覆盖与触达**：回答覆盖面、有效触达和服务对象识别的问题。正文应综合公开输入中的当前期证据，不应把原始表格行或旧稿摘句直接铺成正文。\n- **办理效率与积压**：说明办理周期、积压压力和流程口径之间的关系。需要区分主效率证据与背景过程指标，避免用单一指标替代该象限的判断。\n- **资源投入与预算节奏**：呈现本季资源使用、承诺节奏和目标区间的关系。预测、滚动估计或附录口径只能在有明确标注时作为注记，不应写成已经发生的实绩。\n- **风险纠偏与下季动作**：整理最终修订后的风险、纠偏动作和下季注意事项。不要沿用被后续修订替换的乐观草稿，也不要把其他象限的数字重复堆放到这里充当行动建议。\n\n## 可见正文的反堆砌要求\n\n- 可见幻灯片文字应是董事会可读的中文短句、标题、标签、必要数值和简短判断，而不是原始表格、JSON 片段、文件名、行号、调试日志或批量 ID 清单。\n- `source anchor`、`metric_id`、`chart_id` 等公开追溯标记可以出现，但应服务于审阅和追溯，不应压倒页面正文。\n- 不要把 HTML 段落、工作簿原表或修订说明整段复制到 PPT 正文；需要压缩成适合单页看板阅读的表述。\n\n## 来源追溯与审计口径\n\n- 每个象限都应能追溯到公开输入中的来源、指标或图表绑定；追溯信息可以放在 source chip、speaker notes、shape alt text、shape name、shape description 或文档元数据中。\n- 可见 source chip 可以简短列出关键公开来源标记；更细的 `metric_id`、`chart_id` 或锚点组合可以放在备注或形状元数据中。\n- 追溯只允许使用工作区材料中的公开来源标记，不得引入私有路径、私有链接、真实客户资料、账号信息或外部素材来源。\n\n## 材料与页面边界\n\n- 业务事实只来自材料包中的 HTML 文本、工作簿数据、JSON 绑定和修订说明；不引入联网信息、外部模板、私有服务或未提供的来源。\n- 指标、图表和来源关系保留可解析文本或 PPTX 对象结构，不能只交付一张图片。详细来源可以放在备注，页面本身应能用于汇报。\n- 按单页整体阅读时，核心指标、必要标签、判断和风险动作应清楚可读，避免截断、遮挡或缩小到难以辨认。主结论与支撑信息要能区分，不要求特定配色、字体或图表类型。\n- 制作过程、旧稿修改经过和内部状态代码不应占据业务正文；必要的期间、预测、待办和口径限制，用读者能理解的简短表达放在对应内容旁。\n\n## 非定稿边界\n\n- 本文件只说明问题框架和呈现原则，不列出最终四象限 bullet、不提供完整指标选择清单、不规定最终措辞。\n- 冲突、旧稿、预测和支撑材料的取舍需要结合 HTML、工作簿、chart bindings、草稿预览和修订说明共同判断。",
+  "source_rows": {
+    "role": "frozen_public_input",
+    "truncated": false,
+    "workbook_rows": [
+      {
+        "sheet": "服务覆盖",
+        "row": 3,
+        "fields": {
+          "序号": "S-01",
+          "区域/项目": "青穗街区总体",
+          "数据期别/口径状态": "2026Q2 本季实绩",
+          "指标ID（用于图表绑定）": "M_COVER_VISITS_Q2",
+          "指标名称": "线下咨询/流动服务触达人次",
+          "本期值": 18420,
+          "单位": "人次",
+          "对比口径": "较2026Q1环比",
+          "上期/基准": 15980,
+          "目标区间/警戒线": "≥17,500",
+          "方向性/解读": "越高越好；需同时看回访占比",
+          "来源锚点": "H-117",
+          "图表绑定提示": "CH-01 系列A",
+          "业务备注": "本季行，需结合 HTML 对象说明和修订说明判断呈现口径。"
+        }
+      },
+      {
+        "sheet": "服务覆盖",
+        "row": 4,
+        "fields": {
+          "序号": "S-02",
+          "区域/项目": "青穗街区总体",
+          "数据期别/口径状态": "2026Q2 本季实绩",
+          "指标ID（用于图表绑定）": "M_COVER_REPEAT_Q2",
+          "指标名称": "回访人群占比",
+          "本期值": 0.234,
+          "单位": "百分比",
+          "对比口径": "较2026Q1环比",
+          "上期/基准": 0.189,
+          "目标区间/警戒线": "≥20%",
+          "方向性/解读": "越高越好；作为副轴/旁注",
+          "来源锚点": "H-117",
+          "图表绑定提示": "CH-01 系列B",
+          "业务备注": "不要只报告规模，需体现有效触达。"
+        }
+      },
+      {
+        "sheet": "服务覆盖",
+        "row": 5,
+        "fields": {
+          "序号": "S-03",
+          "区域/项目": "流动服务微站",
+          "数据期别/口径状态": "2026Q2 运营背景",
+          "指标ID（用于图表绑定）": "M_COVER_POPUP_Q2",
+          "指标名称": "社区微站服务场次",
+          "本期值": 46,
+          "单位": "场",
+          "对比口径": "较2026Q1环比",
+          "上期/基准": 39,
+          "目标区间/警戒线": "≥40",
+          "方向性/解读": "支撑背景，不等同于触达人次",
+          "来源锚点": "H-117-a",
+          "图表绑定提示": "CH-01 注释",
+          "业务备注": "活动场次为运营背景，不能替代有效触达证据。"
+        }
+      },
+      {
+        "sheet": "服务覆盖",
+        "row": 6,
+        "fields": {
+          "序号": "S-04",
+          "区域/项目": "青穗街区总体",
+          "数据期别/口径状态": "2026Q1 旧稿引用，非本季实绩",
+          "指标ID（用于图表绑定）": "M_COVER_VISITS_Q1",
+          "指标名称": "旧稿触达人次",
+          "本期值": 15980,
+          "单位": "人次",
+          "对比口径": "旧稿草稿曾引用",
+          "上期/基准": null,
+          "目标区间/警戒线": "本季目标不适用",
+          "方向性/解读": "仅供更正追溯",
+          "来源锚点": "H-117-old",
+          "图表绑定提示": "旧稿曾指向 CH-01，最终以修订说明为准",
+          "业务备注": "用于说明错位来源，不应单独写成本季结论。"
+        }
+      },
+      {
+        "sheet": "办理效率_积压",
+        "row": 3,
+        "fields": {
+          "行号": "F-01",
+          "业务环节": "申请办理",
+          "数据期别/口径状态": "2026Q2 本季实绩",
+          "指标ID（用于图表绑定）": "M_FLOW_MEDIAN_DAYS_Q2",
+          "指标名称": "办理周期中位数",
+          "本期值": 5.8,
+          "单位": "天",
+          "对比口径": "较2026Q1中位数",
+          "上期/基准": 7.1,
+          "目标区间/警戒线": "≤6.0天",
+          "方向性/解读": "越低越好",
+          "来源锚点": "H-205",
+          "图表绑定提示": "CH-03 点图",
+          "公式/口径说明": "PERCENTILE.INC(结案天数,0.5)",
+          "业务备注": "需与积压余量一起解释，避免只看单点改善。"
+        }
+      },
+      {
+        "sheet": "办理效率_积压",
+        "row": 4,
+        "fields": {
+          "行号": "F-02",
+          "业务环节": "期末积压",
+          "数据期别/口径状态": "2026Q2 本季实绩",
+          "指标ID（用于图表绑定）": "M_FLOW_BACKLOG_Q2",
+          "指标名称": "期末积压件数",
+          "本期值": 312,
+          "单位": "件",
+          "对比口径": "月末快照",
+          "上期/基准": 428,
+          "目标区间/警戒线": "≤350件",
+          "方向性/解读": "越低越好",
+          "来源锚点": "H-205",
+          "图表绑定提示": "CH-03 柱形",
+          "公式/口径说明": "期末未办结清单计数",
+          "业务备注": "与办理周期共同判断压力是否缓解。"
+        }
+      },
+      {
+        "sheet": "办理效率_积压",
+        "row": 6,
+        "fields": {
+          "行号": "F-04",
+          "业务环节": "复杂件分流",
+          "数据期别/口径状态": "2026Q2 支撑说明",
+          "指标ID（用于图表绑定）": "M_FLOW_COMPLEX_SPLIT_Q2",
+          "指标名称": "复杂件分流占比",
+          "本期值": 0.276,
+          "单位": "百分比",
+          "对比口径": "较2026Q1",
+          "上期/基准": 0.218,
+          "目标区间/警戒线": "解释项",
+          "方向性/解读": "支撑效率改善来源",
+          "来源锚点": "H-205",
+          "图表绑定提示": "CH-03 注释",
+          "公式/口径说明": "复杂件分流量 / 总办理量",
+          "业务备注": "解释改善并非完全来自自动化。"
+        }
+      },
+      {
+        "sheet": "办理效率_积压",
+        "row": 7,
+        "fields": {
+          "行号": "F-05",
+          "业务环节": "自动化",
+          "数据期别/口径状态": "2026Q2 背景口径",
+          "指标ID（用于图表绑定）": "M_FLOW_AUTO_RATE_Q2",
+          "指标名称": "自动办结率",
+          "本期值": 0.412,
+          "单位": "百分比",
+          "对比口径": "与人工复核规则调整后口径并列阅读",
+          "上期/基准": 0.44,
+          "目标区间/警戒线": "参考值45%-55%",
+          "方向性/解读": "区间内为宜；只作背景",
+          "来源锚点": "H-205",
+          "图表绑定提示": "无",
+          "公式/口径说明": "自动结案量 / 总结案量",
+          "业务备注": "人工复核增加时可能下降，不能写成主成效标题。"
+        }
+      },
+      {
+        "sheet": "办理效率_积压",
+        "row": 8,
+        "fields": {
+          "行号": "F-06",
+          "业务环节": "人工复核",
+          "数据期别/口径状态": "2026Q2 支撑说明",
+          "指标ID（用于图表绑定）": "M_FLOW_REVIEW_LOAD_Q2",
+          "指标名称": "人工复核量",
+          "本期值": 986,
+          "单位": "件",
+          "对比口径": "较2026Q1",
+          "上期/基准": 812,
+          "目标区间/警戒线": "解释项",
+          "方向性/解读": "越高不必然更好",
+          "来源锚点": "H-238",
+          "图表绑定提示": "CH-03 小注",
+          "公式/口径说明": "人工复核清单计数",
+          "业务备注": "与自动办结率下降同时出现。"
+        }
+      },
+      {
+        "sheet": "预算资源节奏",
+        "row": 3,
+        "fields": {
+          "编号": "B-01",
+          "预算科目": "全年统筹",
+          "数据期别/口径状态": "2026Q2 本季已支付",
+          "指标ID（用于图表绑定）": "M_BUDGET_SPEND_Q2",
+          "指标项": "预算执行率",
+          "本期/状态值": 0.62,
+          "预测或下季值": null,
+          "单位": "百分比",
+          "对比口径": "本季预算口径",
+          "目标区间/警戒线": "50%-65%",
+          "方向性/解读": "区间内为宜",
+          "来源锚点": "H-304",
+          "图表绑定提示": "CH-02 实线/柱形",
+          "公式/口径说明": "已支付金额 / 本季预算",
+          "财务备注": "需与已承诺率并列查看，不宜单独最大化。"
+        }
+      },
+      {
+        "sheet": "预算资源节奏",
+        "row": 4,
+        "fields": {
+          "编号": "B-02",
+          "预算科目": "全年统筹",
+          "数据期别/口径状态": "2026Q2 已承诺未全额支付",
+          "指标ID（用于图表绑定）": "M_BUDGET_COMMIT_Q2",
+          "指标项": "已承诺资金比例",
+          "本期/状态值": 0.74,
+          "预测或下季值": null,
+          "单位": "百分比",
+          "对比口径": "合同/采购承诺口径",
+          "目标区间/警戒线": "60%-75%",
+          "方向性/解读": "区间内为宜；接近上沿需提示",
+          "来源锚点": "H-304",
+          "图表绑定提示": "CH-02 虚线/折线",
+          "公式/口径说明": "已承诺金额 / 本季预算",
+          "财务备注": "解释下季现金压力时需查修订说明。"
+        }
+      },
+      {
+        "sheet": "预算资源节奏",
+        "row": 5,
+        "fields": {
+          "编号": "B-03",
+          "预算科目": "全年统筹",
+          "数据期别/口径状态": "2026Q3 预测仅作备注",
+          "指标ID（用于图表绑定）": "M_BUDGET_FORECAST_Q3",
+          "指标项": "下季预计承诺率",
+          "本期/状态值": null,
+          "预测或下季值": 0.89,
+          "单位": "预测百分比",
+          "对比口径": "财务滚动预测",
+          "目标区间/警戒线": "接近90%复核线",
+          "方向性/解读": "预测仅作风险备注",
+          "来源锚点": "H-304",
+          "图表绑定提示": "CH-02 注释，不作为实绩系列",
+          "公式/口径说明": "滚动预算备忘",
+          "财务备注": "只能作为风险或下季动作背景。"
+        }
+      },
+      {
+        "sheet": "预算资源节奏",
+        "row": 6,
+        "fields": {
+          "编号": "B-04",
+          "预算科目": "机动额度",
+          "数据期别/口径状态": "2026Q2 支撑说明",
+          "指标ID（用于图表绑定）": "M_BUDGET_RESERVE_Q2",
+          "指标项": "剩余机动额度",
+          "本期/状态值": 0.26,
+          "预测或下季值": null,
+          "单位": "百分比",
+          "对比口径": "季末口径",
+          "目标区间/警戒线": "支撑项",
+          "方向性/解读": "越高不必然更好",
+          "来源锚点": "H-304",
+          "图表绑定提示": "CH-02 目标带旁注",
+          "公式/口径说明": "机动额度 / 本季预算",
+          "财务备注": "目标带注记，不是主序列。"
+        }
+      },
+      {
+        "sheet": "预算资源节奏",
+        "row": 7,
+        "fields": {
+          "编号": "B-05",
+          "预算科目": "预算复核",
+          "数据期别/口径状态": "2026Q3 动作，未完成",
+          "指标ID（用于图表绑定）": "M_RISK_BUDGET_REVIEW_Q3",
+          "指标项": "7月第一周预算复核",
+          "本期/状态值": "待复核",
+          "预测或下季值": "7月第1周",
+          "单位": "动作",
+          "对比口径": "下季准备",
+          "目标区间/警戒线": "必须复核",
+          "方向性/解读": "动作状态，不是本季完成事实",
+          "来源锚点": "H-402-b",
+          "图表绑定提示": "CH-04 风险动作表",
+          "公式/口径说明": "复核临时服务点、复核班次和材料补齐费用",
+          "财务备注": "风险动作表使用。"
+        }
+      },
+      {
+        "sheet": "修订锚点索引",
+        "row": 9,
+        "fields": {
+          "索引号": "R-08",
+          "来源/对象": "H-238",
+          "数据期别/口径状态": "质量支撑",
+          "公开线索": "回访和人工复核背景",
+          "相关指标或图表": "M_FLOW_REVIEW_LOAD_Q2",
+          "冲突标签": "支撑说明",
+          "修订说明引用": "CN-R1-03",
+          "核对提醒": "可解释复核增加，不直接推出效率下降。",
+          "业务备注": "适合 speaker notes。"
+        }
+      },
+      {
+        "sheet": "修订锚点索引",
+        "row": 6,
+        "fields": {
+          "索引号": "R-05",
+          "来源/对象": "H-402-a",
+          "数据期别/口径状态": "本季风险来源",
+          "公开线索": "两处服务点人手缺口来源段",
+          "相关指标或图表": "M_RISK_STAFF_SOUTH_Q2 / M_RISK_STAFF_NORTH_Q2",
+          "冲突标签": "本季实绩",
+          "修订说明引用": "CN-R2-02",
+          "核对提醒": "需与预算复核动作分开核对。",
+          "业务备注": "用于来源追溯。"
+        }
+      },
+      {
+        "sheet": "修订锚点索引",
+        "row": 7,
+        "fields": {
+          "索引号": "R-06",
+          "来源/对象": "H-402-b",
+          "数据期别/口径状态": "下季动作/风险队列",
+          "公开线索": "预算复核与待补齐材料说明",
+          "相关指标或图表": "M_RISK_BUDGET_REVIEW_Q3 / M_RISK_SUPPORT_QUEUE_Q2",
+          "冲突标签": "动作/背景",
+          "修订说明引用": "CN-R2-03, CN-R2-04",
+          "核对提醒": "待补齐材料不是已关闭事项。",
+          "业务备注": "适合表格或备注。"
+        }
+      }
+    ],
+    "chart_bindings": {
+      "binding_version": "qingsui-q2-bindings-v1",
+      "public_safety_note": "Chart/table binding notes for source consistency; provides relation context and draft mismatch references, not finalized slide copy.",
+      "source_anchor_conventions": {
+        "html_anchor": "H-### values from input/01_青穗街区季度运营报告_源文.html",
+        "metric_id": "safe English metric IDs stored in indicator rows",
+        "correction_note": "CN-R#-## references visible correction notes",
+        "board_question_ref": "BQ-## values from the public board-question/readability artifact",
+        "pptx_binding_surfaces": [
+          "visible source chips",
+          "speaker notes",
+          "shape alt text or object descriptions"
+        ]
+      },
+      "global_display_policies": {
+        "forecast_policy": "Forecast rows may be shown only as risk or next-quarter annotations, never as current-quarter actual series.",
+        "target_band_display": "Band or guardrail semantics should be shown as ranges/thresholds, not converted into a single maximization goal.",
+        "provenance_policy": "Use source chips, notes, or object metadata for auditability; avoid turning IDs into the visible story.",
+        "anti_dump_policy": "Chart bindings provide relation context and mismatch references but do not provide complete final slide bullets."
+      },
+      "chart_specs": [
+        {
+          "chart_id": "CH-01",
+          "title_zh": "服务触达与回访率",
+          "surface_type": "chart",
+          "chart_type": "combo_bar_line",
+          "target_quadrant": "Q1_service_reach",
+          "board_question_refs": [
+            "BQ-01"
+          ],
+          "source_anchor_refs": [
+            "H-117",
+            "H-117-a"
+          ],
+          "metric_refs": [
+            "M_COVER_VISITS_Q2",
+            "M_COVER_REPEAT_Q2",
+            "M_COVER_POPUP_Q2",
+            "M_COVER_VISITS_Q1"
+          ],
+          "revision_note_refs": [
+            "CN-R1-02",
+            "CN-R1-05"
+          ],
+          "draft_mismatch_refs": [
+            "draft_preview:data-label=SUPERSEDED:data-current-draft-ref=M_COVER_VISITS_Q1",
+            "RC-01"
+          ],
+          "display_policy": {
+            "forecast_policy": "not_applicable",
+            "target_band_display": "simple_threshold_if_needed",
+            "series_priority": "current reach actual plus repeat-share context; micro-station count remains annotation/context",
+            "source_chip_expectation": "H-117 or equivalent source marker should be auditable"
+          },
+          "source_anchors": {
+            "html": [
+              "H-117",
+              "H-117-a"
+            ],
+            "correction_notes": [
+              "CN-R1-02",
+              "CN-R1-05"
+            ]
+          },
+          "series": [
+            {
+              "binding_id": "B-01",
+              "series_id": "visit_count",
+              "metric_id": "M_COVER_VISITS_Q2",
+              "unit": "人次",
+              "period": "2026Q2",
+              "visual_role": "bar",
+              "source_role": "current_quarter_actual",
+              "row_state_hint": "current_period"
+            },
+            {
+              "binding_id": "B-02",
+              "series_id": "repeat_share",
+              "metric_id": "M_COVER_REPEAT_Q2",
+              "unit": "百分比",
+              "period": "2026Q2",
+              "visual_role": "line_or_side_note",
+              "source_role": "current_quarter_actual",
+              "row_state_hint": "current_period"
+            },
+            {
+              "binding_id": "B-03",
+              "series_id": "popup_services",
+              "metric_id": "M_COVER_POPUP_Q2",
+              "unit": "场次",
+              "period": "2026Q2",
+              "visual_role": "annotation",
+              "source_role": "supporting_context",
+              "row_state_hint": "context_only"
+            }
+          ],
+          "known_draft_mismatch": {
+            "placeholder": "data-bind=chart:CH-01",
+            "current_draft_points_to": "M_COVER_VISITS_Q1",
+            "label": "SUPERSEDED",
+            "correction_note_ref": "CN-R1-02",
+            "business_warning": "旧稿曾把上一期触达行绑定为本季主证据，正式制作需查修订说明。"
+          }
+        },
+        {
+          "chart_id": "CH-02",
+          "title_zh": "预算执行与承诺节奏",
+          "surface_type": "chart",
+          "chart_type": "line_with_target_band",
+          "target_quadrant": "Q3_budget_pacing",
+          "board_question_refs": [
+            "BQ-03"
+          ],
+          "source_anchor_refs": [
+            "H-304",
+            "H-402-b"
+          ],
+          "metric_refs": [
+            "M_BUDGET_SPEND_Q2",
+            "M_BUDGET_COMMIT_Q2",
+            "M_BUDGET_FORECAST_Q3",
+            "M_BUDGET_RESERVE_Q2"
+          ],
+          "revision_note_refs": [
+            "CN-R2-01",
+            "CN-R2-05"
+          ],
+          "draft_mismatch_refs": [
+            "draft_preview:data-label=FORECAST_ONLY:data-wrong-route=forecast_as_current_actual",
+            "RC-03"
+          ],
+          "display_policy": {
+            "forecast_policy": "annotation_only",
+            "target_band_display": "band_not_single_goal_line",
+            "series_priority": "current actual and committed values are distinct; forecast is risk note only",
+            "source_chip_expectation": "H-304 should remain auditable; H-402-b may support risk-action context"
+          },
+          "source_anchors": {
+            "html": [
+              "H-304"
+            ],
+            "correction_notes": [
+              "CN-R2-01"
+            ]
+          },
+          "series": [
+            {
+              "binding_id": "B-04",
+              "series_id": "actual_spend_rate",
+              "metric_id": "M_BUDGET_SPEND_Q2",
+              "unit": "百分比",
+              "period": "2026Q2",
+              "visual_role": "solid_line",
+              "source_role": "current_quarter_actual",
+              "row_state_hint": "actual_current"
+            },
+            {
+              "binding_id": "B-05",
+              "series_id": "committed_rate",
+              "metric_id": "M_BUDGET_COMMIT_Q2",
+              "unit": "百分比",
+              "period": "2026Q2",
+              "visual_role": "dashed_line",
+              "source_role": "current_quarter_committed",
+              "row_state_hint": "committed_current"
+            },
+            {
+              "binding_id": "B-06",
+              "series_id": "next_quarter_forecast",
+              "metric_id": "M_BUDGET_FORECAST_Q3",
+              "unit": "百分比",
+              "period": "2026Q3 forecast",
+              "visual_role": "risk_annotation_only",
+              "source_role": "forecast_not_actual",
+              "row_state_hint": "forecast_only"
+            },
+            {
+              "binding_id": "B-07",
+              "series_id": "reserve_band",
+              "metric_id": "M_BUDGET_RESERVE_Q2",
+              "unit": "百分比",
+              "period": "2026Q2",
+              "visual_role": "target_band_note",
+              "source_role": "supporting_context",
+              "row_state_hint": "context_only"
+            }
+          ],
+          "known_draft_mismatch": {
+            "current_draft_claim": "预算执行已达 89%",
+            "why_wrong": "forecast row is not current-quarter actual",
+            "label": "FORECAST_ONLY",
+            "correction_note_ref": "CN-R2-01",
+            "business_warning": "下季预测不得画成当前实绩线或写成已完成成果。"
+          }
+        },
+        {
+          "chart_id": "CH-03",
+          "title_zh": "办理时长、积压与复杂件分流",
+          "surface_type": "chart",
+          "chart_type": "bar_dot_summary",
+          "target_quadrant": "Q2_flow_backlog",
+          "board_question_refs": [
+            "BQ-02"
+          ],
+          "source_anchor_refs": [
+            "H-205",
+            "H-238"
+          ],
+          "metric_refs": [
+            "M_FLOW_MEDIAN_DAYS_Q2",
+            "M_FLOW_BACKLOG_Q2",
+            "M_FLOW_COMPLEX_SPLIT_Q2",
+            "M_FLOW_REVIEW_LOAD_Q2",
+            "M_FLOW_AUTO_RATE_Q2"
+          ],
+          "revision_note_refs": [
+            "CN-R1-03",
+            "CN-R1-05"
+          ],
+          "draft_mismatch_refs": [
+            "draft_preview:data-label=CONTEXT_ONLY:data-wrong-route=headline_efficiency_claim",
+            "RC-02"
+          ],
+          "display_policy": {
+            "forecast_policy": "not_applicable",
+            "target_band_display": "guardrail_lines_with_lower_is_better_label",
+            "series_priority": "duration and backlog lead; complex split and review load explain context; automation rate stays context-only",
+            "source_chip_expectation": "H-205 should be visible or auditable; H-238 may support caveat notes"
+          },
+          "source_anchors": {
+            "html": [
+              "H-205",
+              "H-238"
+            ],
+            "correction_notes": [
+              "CN-R1-03"
+            ]
+          },
+          "series": [
+            {
+              "binding_id": "B-08",
+              "series_id": "median_days",
+              "metric_id": "M_FLOW_MEDIAN_DAYS_Q2",
+              "unit": "天",
+              "period": "2026Q2",
+              "visual_role": "dot",
+              "direction": "lower_is_better",
+              "row_state_hint": "current_period"
+            },
+            {
+              "binding_id": "B-09",
+              "series_id": "backlog_count",
+              "metric_id": "M_FLOW_BACKLOG_Q2",
+              "unit": "件",
+              "period": "2026Q2",
+              "visual_role": "bar",
+              "direction": "lower_is_better",
+              "row_state_hint": "current_period"
+            },
+            {
+              "binding_id": "B-10",
+              "series_id": "complex_split",
+              "metric_id": "M_FLOW_COMPLEX_SPLIT_Q2",
+              "unit": "百分比",
+              "period": "2026Q2",
+              "visual_role": "annotation",
+              "source_role": "explanatory",
+              "row_state_hint": "context_only"
+            },
+            {
+              "binding_id": "B-11",
+              "series_id": "manual_review_load",
+              "metric_id": "M_FLOW_REVIEW_LOAD_Q2",
+              "unit": "件",
+              "period": "2026Q2",
+              "visual_role": "small_note",
+              "source_role": "context_not_main",
+              "row_state_hint": "context_only"
+            }
+          ],
+          "excluded_or_context_metrics": [
+            {
+              "metric_id": "M_FLOW_AUTO_RATE_Q2",
+              "reason": "visible context but not main success claim",
+              "label": "CONTEXT_ONLY",
+              "correction_note_ref": "CN-R1-03",
+              "draft_mismatch_ref": "auto_rate_as_title"
+            }
+          ]
+        },
+        {
+          "chart_id": "CH-04",
+          "title_zh": "风险纠偏与下季动作表",
+          "surface_type": "table",
+          "chart_type": "risk_action_status_table",
+          "target_quadrant": "Q4_risk_actions",
+          "board_question_refs": [
+            "BQ-03"
+          ],
+          "source_anchor_refs": [
+            "H-402",
+            "H-402-a",
+            "H-402-b"
+          ],
+          "metric_refs": [
+            "M_RISK_STAFF_SOUTH_Q2",
+            "M_RISK_STAFF_NORTH_Q2",
+            "M_RISK_BUDGET_REVIEW_Q3",
+            "M_RISK_SUPPORT_QUEUE_Q2"
+          ],
+          "revision_note_refs": [
+            "CN-R2-02",
+            "CN-R2-03",
+            "CN-R2-04"
+          ],
+          "draft_mismatch_refs": [
+            "draft_preview:data-label=SUPERSEDED:data-old-claim=全部稳定扩围",
+            "draft_preview:data-label=FORECAST_ONLY:data-wrong-route=closed_item_claim",
+            "RC-04"
+          ],
+          "display_policy": {
+            "forecast_policy": "next_quarter_actions_must_be_labeled_as_actions_or_risks",
+            "target_band_display": "not_applicable_for_action_table",
+            "series_priority": "risk/action/source rows should be compressed; do not copy full H-402 paragraph",
+            "source_chip_expectation": "H-402 or row-level H-402-a/H-402-b marker should remain auditable"
+          },
+          "source_anchors": {
+            "html": [
+              "H-402",
+              "H-402-a",
+              "H-402-b"
+            ],
+            "correction_notes": [
+              "CN-R2-02",
+              "CN-R2-03",
+              "CN-R2-04"
+            ]
+          },
+          "columns_zh": [
+            "风险/动作",
+            "本季状态",
+            "来源锚点",
+            "下季处理"
+          ],
+          "rows": [
+            {
+              "binding_id": "B-12",
+              "row_id": "south_staff_gap",
+              "metric_id": "M_RISK_STAFF_SOUTH_Q2",
+              "unit": "班次",
+              "html_anchor": "H-402-a",
+              "source_role": "risk_current",
+              "row_state_hint": "final_risk_anchor"
+            },
+            {
+              "binding_id": "B-13",
+              "row_id": "north_staff_gap",
+              "metric_id": "M_RISK_STAFF_NORTH_Q2",
+              "unit": "人",
+              "html_anchor": "H-402-a",
+              "source_role": "risk_current",
+              "row_state_hint": "final_risk_anchor"
+            },
+            {
+              "binding_id": "B-14",
+              "row_id": "budget_review_action",
+              "metric_id": "M_RISK_BUDGET_REVIEW_Q3",
+              "unit": "动作",
+              "html_anchor": "H-402-b",
+              "source_role": "next_quarter_action",
+              "row_state_hint": "next_quarter_action"
+            },
+            {
+              "binding_id": "B-15",
+              "row_id": "support_queue",
+              "metric_id": "M_RISK_SUPPORT_QUEUE_Q2",
+              "unit": "件",
+              "html_anchor": "H-402-b",
+              "source_role": "risk_context",
+              "row_state_hint": "context_only"
+            }
+          ],
+          "known_draft_mismatch": {
+            "current_draft_claim": "试点名单全部稳定扩围",
+            "why_wrong": "H-402 records staffing gaps and budget-review actions",
+            "label": "SUPERSEDED",
+            "correction_note_ref": "CN-R2-02",
+            "business_warning": "旧稿乐观扩围结论只能作为被替换背景。"
+          }
+        }
+      ],
+      "binding_count": 15,
+      "text_first_boundary": {
+        "allowed_basis": [
+          "text",
+          "data_binding",
+          "source_consistency",
+          "DOM_or_structure",
+          "PPT_structure",
+          "chart_specs",
+          "placeholders"
+        ],
+        "prohibited_core_requirements": [
+          "image_understanding",
+          "video_understanding",
+          "audio_understanding",
+          "OCR",
+          "pixel_level_visual_matching"
+        ],
+        "scope": "input_interpretation; final_artifact_review_uses_evaluator_rendering",
+        "evaluator_rendering_review": [
+          "business_readability",
+          "comparison_semantics",
+          "information_hierarchy"
+        ]
+      }
+    }
+  }
+}

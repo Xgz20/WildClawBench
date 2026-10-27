@@ -1,0 +1,7 @@
+
+Local no-network policy for release_phase_gate_progression
+
+- Do not call, probe, log in to, upload to, download from, or validate against any real external service.
+- Do not use package registries, git hosting, CI systems, issue trackers, chat tools, browsers, webhooks, or private accounts.
+- All validation, lookup/cache, state, audit, and capture updates must be represented only by workspace Markdown/JSON/text files in this task package.
+- If a rule seems to ask for external confirmation, treat that as a blocker or use only the provided lookup records.

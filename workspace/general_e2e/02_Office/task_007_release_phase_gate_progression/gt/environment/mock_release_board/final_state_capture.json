@@ -1,0 +1,109 @@
+{
+  "mock_app_meta": {
+    "mock_app_kind": "file_backed_release_board",
+    "case_label": "release_phase_gate_progression",
+    "release_id": "qs-local-2026-08-rc3",
+    "capture_file": true,
+    "not_hidden_gold": true,
+    "network_allowed": false
+  },
+  "capture_status": "captured",
+  "captured_at_utc": "2026-08-05T10:40:00Z",
+  "artifact_state_summary": {
+    "workflow_state_path": "input/workspace/state/workflow_state.json",
+    "release_board_path": "input/workspace/release_board.md",
+    "validation_results_path": "input/workspace/state/validation_results.json",
+    "lookup_cache_path": "input/workspace/state/lookup_cache.json",
+    "audit_history_path": "input/workspace/audit/audit_history.md",
+    "progress_report_path": "input/workspace/outputs/release_progress_report.md",
+    "state_update_record_path": "input/workspace/outputs/state_update_record.json"
+  },
+  "phase_status_capture": {
+    "current_phase": "local_validation",
+    "state_phase_status": "blocked",
+    "completion_claimed": false,
+    "candidate_next_phase": "repair_alignment"
+  },
+  "validation_category_capture": [
+    {
+      "local_check_key": "scope_manifest_readable",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "cli_component_lock",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "docs_bundle_lookup_bound",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "board_state_alignment",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "validation_snapshot_freshness",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "audit_after_validation",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "archived_board_scope_guard",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "manifest_dependency_alignment",
+      "category": "passed"
+    },
+    {
+      "local_check_key": "bundle_integrity",
+      "category": "stale"
+    }
+  ],
+  "lookup_cache_capture": [
+    {
+      "lookup_key": "cli_core:linux_x64",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "cli-linux-x64-rc3-local-4b72",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.cli_core.current",
+      "recorded_at_utc": "2026-08-05T09:57:00Z"
+    },
+    {
+      "lookup_key": "completion:bash_zsh",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "completion-bash-zsh-rc3-local-91af",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.completion.current",
+      "recorded_at_utc": "2026-08-05T09:57:30Z"
+    },
+    {
+      "lookup_key": "doc_bundle:guide_set",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "docs-guide-rc3-local-c8e1",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.docs.scan1021",
+      "recorded_at_utc": "2026-08-05T10:21:12Z",
+      "required_for_phase": "local_validation"
+    },
+    {
+      "lookup_key": "manifest:rc3_bundle",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "manifest-rc3-local-f19d",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.manifest.scan1030",
+      "recorded_at_utc": "2026-08-05T10:30:00Z"
+    }
+  ],
+  "audit_capture": {
+    "audit_ref": "AUD-QS-042",
+    "recorded_at_utc": "2026-08-05T10:40:00Z"
+  },
+  "no_network_confirmation": {
+    "network_used": false,
+    "scope": "仅本地文件修复；未执行真实 CI、发布、通知。"
+  },
+  "notes": "Local state repair completed; bundle_integrity remains stale, local_validation blocked. Not an external-service receipt."
+}

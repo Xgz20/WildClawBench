@@ -1,0 +1,417 @@
+{
+  "binding_version": "qingsui-q2-bindings-v1",
+  "public_safety_note": "Chart/table binding notes for source consistency; provides relation context and draft mismatch references, not finalized slide copy.",
+  "source_anchor_conventions": {
+    "html_anchor": "H-### values from input/01_青穗街区季度运营报告_源文.html",
+    "metric_id": "safe English metric IDs stored in indicator rows",
+    "correction_note": "CN-R#-## references visible correction notes",
+    "board_question_ref": "BQ-## values from the public board-question/readability artifact",
+    "pptx_binding_surfaces": [
+      "visible source chips",
+      "speaker notes",
+      "shape alt text or object descriptions"
+    ]
+  },
+  "global_display_policies": {
+    "forecast_policy": "Forecast rows may be shown only as risk or next-quarter annotations, never as current-quarter actual series.",
+    "target_band_display": "Band or guardrail semantics should be shown as ranges/thresholds, not converted into a single maximization goal.",
+    "provenance_policy": "Use source chips, notes, or object metadata for auditability; avoid turning IDs into the visible story.",
+    "anti_dump_policy": "Chart bindings provide relation context and mismatch references but do not provide complete final slide bullets."
+  },
+  "chart_specs": [
+    {
+      "chart_id": "CH-01",
+      "title_zh": "服务触达与回访率",
+      "surface_type": "chart",
+      "chart_type": "combo_bar_line",
+      "target_quadrant": "Q1_service_reach",
+      "board_question_refs": [
+        "BQ-01"
+      ],
+      "source_anchor_refs": [
+        "H-117",
+        "H-117-a"
+      ],
+      "metric_refs": [
+        "M_COVER_VISITS_Q2",
+        "M_COVER_REPEAT_Q2",
+        "M_COVER_POPUP_Q2",
+        "M_COVER_VISITS_Q1"
+      ],
+      "revision_note_refs": [
+        "CN-R1-02",
+        "CN-R1-05"
+      ],
+      "draft_mismatch_refs": [
+        "draft_preview:data-label=SUPERSEDED:data-current-draft-ref=M_COVER_VISITS_Q1",
+        "RC-01"
+      ],
+      "display_policy": {
+        "forecast_policy": "not_applicable",
+        "target_band_display": "simple_threshold_if_needed",
+        "series_priority": "current reach actual plus repeat-share context; micro-station count remains annotation/context",
+        "source_chip_expectation": "H-117 or equivalent source marker should be auditable"
+      },
+      "source_anchors": {
+        "html": [
+          "H-117",
+          "H-117-a"
+        ],
+        "correction_notes": [
+          "CN-R1-02",
+          "CN-R1-05"
+        ]
+      },
+      "series": [
+        {
+          "binding_id": "B-01",
+          "series_id": "visit_count",
+          "metric_id": "M_COVER_VISITS_Q2",
+          "unit": "人次",
+          "period": "2026Q2",
+          "visual_role": "bar",
+          "source_role": "current_quarter_actual",
+          "row_state_hint": "current_period"
+        },
+        {
+          "binding_id": "B-02",
+          "series_id": "repeat_share",
+          "metric_id": "M_COVER_REPEAT_Q2",
+          "unit": "百分比",
+          "period": "2026Q2",
+          "visual_role": "line_or_side_note",
+          "source_role": "current_quarter_actual",
+          "row_state_hint": "current_period"
+        },
+        {
+          "binding_id": "B-03",
+          "series_id": "popup_services",
+          "metric_id": "M_COVER_POPUP_Q2",
+          "unit": "场次",
+          "period": "2026Q2",
+          "visual_role": "annotation",
+          "source_role": "supporting_context",
+          "row_state_hint": "context_only"
+        }
+      ],
+      "known_draft_mismatch": {
+        "placeholder": "data-bind=chart:CH-01",
+        "current_draft_points_to": "M_COVER_VISITS_Q1",
+        "label": "SUPERSEDED",
+        "correction_note_ref": "CN-R1-02",
+        "business_warning": "旧稿曾把上一期触达行绑定为本季主证据，正式制作需查修订说明。"
+      }
+    },
+    {
+      "chart_id": "CH-02",
+      "title_zh": "预算执行与承诺节奏",
+      "surface_type": "chart",
+      "chart_type": "line_with_target_band",
+      "target_quadrant": "Q3_budget_pacing",
+      "board_question_refs": [
+        "BQ-03"
+      ],
+      "source_anchor_refs": [
+        "H-304",
+        "H-402-b"
+      ],
+      "metric_refs": [
+        "M_BUDGET_SPEND_Q2",
+        "M_BUDGET_COMMIT_Q2",
+        "M_BUDGET_FORECAST_Q3",
+        "M_BUDGET_RESERVE_Q2"
+      ],
+      "revision_note_refs": [
+        "CN-R2-01",
+        "CN-R2-05"
+      ],
+      "draft_mismatch_refs": [
+        "draft_preview:data-label=FORECAST_ONLY:data-wrong-route=forecast_as_current_actual",
+        "RC-03"
+      ],
+      "display_policy": {
+        "forecast_policy": "annotation_only",
+        "target_band_display": "band_not_single_goal_line",
+        "series_priority": "current actual and committed values are distinct; forecast is risk note only",
+        "source_chip_expectation": "H-304 should remain auditable; H-402-b may support risk-action context"
+      },
+      "source_anchors": {
+        "html": [
+          "H-304"
+        ],
+        "correction_notes": [
+          "CN-R2-01"
+        ]
+      },
+      "series": [
+        {
+          "binding_id": "B-04",
+          "series_id": "actual_spend_rate",
+          "metric_id": "M_BUDGET_SPEND_Q2",
+          "unit": "百分比",
+          "period": "2026Q2",
+          "visual_role": "solid_line",
+          "source_role": "current_quarter_actual",
+          "row_state_hint": "actual_current"
+        },
+        {
+          "binding_id": "B-05",
+          "series_id": "committed_rate",
+          "metric_id": "M_BUDGET_COMMIT_Q2",
+          "unit": "百分比",
+          "period": "2026Q2",
+          "visual_role": "dashed_line",
+          "source_role": "current_quarter_committed",
+          "row_state_hint": "committed_current"
+        },
+        {
+          "binding_id": "B-06",
+          "series_id": "next_quarter_forecast",
+          "metric_id": "M_BUDGET_FORECAST_Q3",
+          "unit": "百分比",
+          "period": "2026Q3 forecast",
+          "visual_role": "risk_annotation_only",
+          "source_role": "forecast_not_actual",
+          "row_state_hint": "forecast_only"
+        },
+        {
+          "binding_id": "B-07",
+          "series_id": "reserve_band",
+          "metric_id": "M_BUDGET_RESERVE_Q2",
+          "unit": "百分比",
+          "period": "2026Q2",
+          "visual_role": "target_band_note",
+          "source_role": "supporting_context",
+          "row_state_hint": "context_only"
+        }
+      ],
+      "known_draft_mismatch": {
+        "current_draft_claim": "预算执行已达 89%",
+        "why_wrong": "forecast row is not current-quarter actual",
+        "label": "FORECAST_ONLY",
+        "correction_note_ref": "CN-R2-01",
+        "business_warning": "下季预测不得画成当前实绩线或写成已完成成果。"
+      }
+    },
+    {
+      "chart_id": "CH-03",
+      "title_zh": "办理时长、积压与复杂件分流",
+      "surface_type": "chart",
+      "chart_type": "bar_dot_summary",
+      "target_quadrant": "Q2_flow_backlog",
+      "board_question_refs": [
+        "BQ-02"
+      ],
+      "source_anchor_refs": [
+        "H-205",
+        "H-238"
+      ],
+      "metric_refs": [
+        "M_FLOW_MEDIAN_DAYS_Q2",
+        "M_FLOW_BACKLOG_Q2",
+        "M_FLOW_COMPLEX_SPLIT_Q2",
+        "M_FLOW_REVIEW_LOAD_Q2",
+        "M_FLOW_AUTO_RATE_Q2"
+      ],
+      "revision_note_refs": [
+        "CN-R1-03",
+        "CN-R1-05"
+      ],
+      "draft_mismatch_refs": [
+        "draft_preview:data-label=CONTEXT_ONLY:data-wrong-route=headline_efficiency_claim",
+        "RC-02"
+      ],
+      "display_policy": {
+        "forecast_policy": "not_applicable",
+        "target_band_display": "guardrail_lines_with_lower_is_better_label",
+        "series_priority": "duration and backlog lead; complex split and review load explain context; automation rate stays context-only",
+        "source_chip_expectation": "H-205 should be visible or auditable; H-238 may support caveat notes"
+      },
+      "source_anchors": {
+        "html": [
+          "H-205",
+          "H-238"
+        ],
+        "correction_notes": [
+          "CN-R1-03"
+        ]
+      },
+      "series": [
+        {
+          "binding_id": "B-08",
+          "series_id": "median_days",
+          "metric_id": "M_FLOW_MEDIAN_DAYS_Q2",
+          "unit": "天",
+          "period": "2026Q2",
+          "visual_role": "dot",
+          "direction": "lower_is_better",
+          "row_state_hint": "current_period"
+        },
+        {
+          "binding_id": "B-09",
+          "series_id": "backlog_count",
+          "metric_id": "M_FLOW_BACKLOG_Q2",
+          "unit": "件",
+          "period": "2026Q2",
+          "visual_role": "bar",
+          "direction": "lower_is_better",
+          "row_state_hint": "current_period"
+        },
+        {
+          "binding_id": "B-10",
+          "series_id": "complex_split",
+          "metric_id": "M_FLOW_COMPLEX_SPLIT_Q2",
+          "unit": "百分比",
+          "period": "2026Q2",
+          "visual_role": "annotation",
+          "source_role": "explanatory",
+          "row_state_hint": "context_only"
+        },
+        {
+          "binding_id": "B-11",
+          "series_id": "manual_review_load",
+          "metric_id": "M_FLOW_REVIEW_LOAD_Q2",
+          "unit": "件",
+          "period": "2026Q2",
+          "visual_role": "small_note",
+          "source_role": "context_not_main",
+          "row_state_hint": "context_only"
+        }
+      ],
+      "excluded_or_context_metrics": [
+        {
+          "metric_id": "M_FLOW_AUTO_RATE_Q2",
+          "reason": "visible context but not main success claim",
+          "label": "CONTEXT_ONLY",
+          "correction_note_ref": "CN-R1-03",
+          "draft_mismatch_ref": "auto_rate_as_title"
+        }
+      ]
+    },
+    {
+      "chart_id": "CH-04",
+      "title_zh": "风险纠偏与下季动作表",
+      "surface_type": "table",
+      "chart_type": "risk_action_status_table",
+      "target_quadrant": "Q4_risk_actions",
+      "board_question_refs": [
+        "BQ-03"
+      ],
+      "source_anchor_refs": [
+        "H-402",
+        "H-402-a",
+        "H-402-b"
+      ],
+      "metric_refs": [
+        "M_RISK_STAFF_SOUTH_Q2",
+        "M_RISK_STAFF_NORTH_Q2",
+        "M_RISK_BUDGET_REVIEW_Q3",
+        "M_RISK_SUPPORT_QUEUE_Q2"
+      ],
+      "revision_note_refs": [
+        "CN-R2-02",
+        "CN-R2-03",
+        "CN-R2-04"
+      ],
+      "draft_mismatch_refs": [
+        "draft_preview:data-label=SUPERSEDED:data-old-claim=全部稳定扩围",
+        "draft_preview:data-label=FORECAST_ONLY:data-wrong-route=closed_item_claim",
+        "RC-04"
+      ],
+      "display_policy": {
+        "forecast_policy": "next_quarter_actions_must_be_labeled_as_actions_or_risks",
+        "target_band_display": "not_applicable_for_action_table",
+        "series_priority": "risk/action/source rows should be compressed; do not copy full H-402 paragraph",
+        "source_chip_expectation": "H-402 or row-level H-402-a/H-402-b marker should remain auditable"
+      },
+      "source_anchors": {
+        "html": [
+          "H-402",
+          "H-402-a",
+          "H-402-b"
+        ],
+        "correction_notes": [
+          "CN-R2-02",
+          "CN-R2-03",
+          "CN-R2-04"
+        ]
+      },
+      "columns_zh": [
+        "风险/动作",
+        "本季状态",
+        "来源锚点",
+        "下季处理"
+      ],
+      "rows": [
+        {
+          "binding_id": "B-12",
+          "row_id": "south_staff_gap",
+          "metric_id": "M_RISK_STAFF_SOUTH_Q2",
+          "unit": "班次",
+          "html_anchor": "H-402-a",
+          "source_role": "risk_current",
+          "row_state_hint": "final_risk_anchor"
+        },
+        {
+          "binding_id": "B-13",
+          "row_id": "north_staff_gap",
+          "metric_id": "M_RISK_STAFF_NORTH_Q2",
+          "unit": "人",
+          "html_anchor": "H-402-a",
+          "source_role": "risk_current",
+          "row_state_hint": "final_risk_anchor"
+        },
+        {
+          "binding_id": "B-14",
+          "row_id": "budget_review_action",
+          "metric_id": "M_RISK_BUDGET_REVIEW_Q3",
+          "unit": "动作",
+          "html_anchor": "H-402-b",
+          "source_role": "next_quarter_action",
+          "row_state_hint": "next_quarter_action"
+        },
+        {
+          "binding_id": "B-15",
+          "row_id": "support_queue",
+          "metric_id": "M_RISK_SUPPORT_QUEUE_Q2",
+          "unit": "件",
+          "html_anchor": "H-402-b",
+          "source_role": "risk_context",
+          "row_state_hint": "context_only"
+        }
+      ],
+      "known_draft_mismatch": {
+        "current_draft_claim": "试点名单全部稳定扩围",
+        "why_wrong": "H-402 records staffing gaps and budget-review actions",
+        "label": "SUPERSEDED",
+        "correction_note_ref": "CN-R2-02",
+        "business_warning": "旧稿乐观扩围结论只能作为被替换背景。"
+      }
+    }
+  ],
+  "binding_count": 15,
+  "text_first_boundary": {
+    "allowed_basis": [
+      "text",
+      "data_binding",
+      "source_consistency",
+      "DOM_or_structure",
+      "PPT_structure",
+      "chart_specs",
+      "placeholders"
+    ],
+    "prohibited_core_requirements": [
+      "image_understanding",
+      "video_understanding",
+      "audio_understanding",
+      "OCR",
+      "pixel_level_visual_matching"
+    ],
+    "scope": "input_interpretation; final_artifact_review_uses_evaluator_rendering",
+    "evaluator_rendering_review": [
+      "business_readability",
+      "comparison_semantics",
+      "information_hierarchy"
+    ]
+  }
+}

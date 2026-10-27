@@ -1,0 +1,7 @@
+Oak Storage Fixtures
+Invoice copy
+Document number: OSF-0601-9
+Service period: 2026-05-28 / 2026-05-29
+Amount: USD 388.75
+
+Description: temporary shelving rental returned at close of May

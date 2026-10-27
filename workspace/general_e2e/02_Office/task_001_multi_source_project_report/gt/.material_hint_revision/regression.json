@@ -1,0 +1,12 @@
+{
+  "tests_run": 5,
+  "status": "pass",
+  "tests": [
+    "test_public_prompt_and_packaging",
+    "test_task_parser",
+    "test_material_hashes",
+    "test_business_rules_are_in_sources",
+    "test_materials_keep_facts_without_solver_directions"
+  ],
+  "log": "test_public_prompt_and_packaging (material_checks.RevisionTests.test_public_prompt_and_packaging) ... ok\ntest_task_parser (material_checks.RevisionTests.test_task_parser) ... ok\ntest_material_hashes (material_checks.RevisionTests.test_material_hashes) ... ok\ntest_business_rules_are_in_sources (material_checks.RevisionTests.test_business_rules_are_in_sources) ... ok\ntest_materials_keep_facts_without_solver_directions (material_checks.RevisionTests.test_materials_keep_facts_without_solver_directions) ... ok\n\n----------------------------------------------------------------------\nRan 5 tests in 1.746s\n\nOK\n"
+}

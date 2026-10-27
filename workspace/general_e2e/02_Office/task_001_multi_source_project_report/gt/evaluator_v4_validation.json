@@ -1,0 +1,1181 @@
+{
+  "revision": "evaluator-v4-20260924",
+  "utc": "2026-09-24T02:09:48.838583+00:00",
+  "status": "pass",
+  "tests_run": 37,
+  "failures": [],
+  "skipped": [],
+  "log": "test_acceptance_pair_variants (__main__.EvaluatorTests.test_acceptance_pair_variants) ... ok\ntest_actual_deliverables_entrypoint (__main__.EvaluatorTests.test_actual_deliverables_entrypoint) ... ok\ntest_actual_latest_trial_all_rule_fields (__main__.EvaluatorTests.test_actual_latest_trial_all_rule_fields) ... ok\ntest_actual_trial_combined_column_regression (__main__.EvaluatorTests.test_actual_trial_combined_column_regression) ... ok\ntest_apply_review_computes_c2_c7_and_validates_nested_citations (__main__.EvaluatorTests.test_apply_review_computes_c2_c7_and_validates_nested_citations) ... ok\ntest_business_rules_are_in_sources (__main__.EvaluatorTests.test_business_rules_are_in_sources) ... ok\ntest_c2_inventory_evidence_and_foreign_units (__main__.EvaluatorTests.test_c2_inventory_evidence_and_foreign_units) ... ok\ntest_c2_omission_only_penalizes_c3 (__main__.EvaluatorTests.test_c2_omission_only_penalizes_c3) ... ok\ntest_c4_is_semantic_only (__main__.EvaluatorTests.test_c4_is_semantic_only) ... ok\ntest_c4_semantic_score_controls_checkpoint_and_ability (__main__.EvaluatorTests.test_c4_semantic_score_controls_checkpoint_and_ability) ... ok\ntest_c6_evaluator_visual_coverage_is_separate_from_candidate (__main__.EvaluatorTests.test_c6_evaluator_visual_coverage_is_separate_from_candidate) ... ok\ntest_c6_fine_deductions_and_no_double_count (__main__.EvaluatorTests.test_c6_fine_deductions_and_no_double_count) ... ok\ntest_c7_assertion_only_and_missing_scope_evidence (__main__.EvaluatorTests.test_c7_assertion_only_and_missing_scope_evidence) ... ok\ntest_c7_states_and_nonvisual_scope (__main__.EvaluatorTests.test_c7_states_and_nonvisual_scope) ... ok\ntest_conflicting_separate_and_combined_columns (__main__.EvaluatorTests.test_conflicting_separate_and_combined_columns) ... ok\ntest_continuous_score_aggregation (__main__.EvaluatorTests.test_continuous_score_aggregation) ... ok\ntest_fabrication_and_missing_evidence (__main__.EvaluatorTests.test_fabrication_and_missing_evidence) ... ok\ntest_frozen_prompt_and_mapping (__main__.EvaluatorTests.test_frozen_prompt_and_mapping) ... ok\ntest_hidden_supplement_omission_is_detected (__main__.EvaluatorTests.test_hidden_supplement_omission_is_detected) ... ok\ntest_issue_only_table_joins_from_candidate_link (__main__.EvaluatorTests.test_issue_only_table_joins_from_candidate_link) ... ok\ntest_join_reordered_tables_duplicate_representations (__main__.EvaluatorTests.test_join_reordered_tables_duplicate_representations) ... ok\ntest_latest_delivery_no_c4_rule_or_coverage_placeholder (__main__.EvaluatorTests.test_latest_delivery_no_c4_rule_or_coverage_placeholder) ... ok\ntest_mapping_and_manifest (__main__.EvaluatorTests.test_mapping_and_manifest) ... ok\ntest_material_hashes (__main__.EvaluatorTests.test_material_hashes) ... ok\ntest_multiline_merged_headers (__main__.EvaluatorTests.test_multiline_merged_headers) ... ok\ntest_natural_headers_and_acceptance_orders (__main__.EvaluatorTests.test_natural_headers_and_acceptance_orders) ... ok\ntest_pair_errors_are_not_hidden (__main__.EvaluatorTests.test_pair_errors_are_not_hidden) ... ok\ntest_public_prompt_and_packaging (__main__.EvaluatorTests.test_public_prompt_and_packaging) ... ok\ntest_reference_rules (__main__.EvaluatorTests.test_reference_rules) ... ok\ntest_review_accepts_and_computes_continuous_coverage (__main__.EvaluatorTests.test_review_accepts_and_computes_continuous_coverage) ... ok\ntest_review_rejects_old_revision_and_invalid_citations (__main__.EvaluatorTests.test_review_rejects_old_revision_and_invalid_citations) ... ok\ntest_semantic_coverage_is_continuous (__main__.EvaluatorTests.test_semantic_coverage_is_continuous) ... ok\ntest_semantic_denominator_cannot_shrink_or_duplicate (__main__.EvaluatorTests.test_semantic_denominator_cannot_shrink_or_duplicate) ... ok\ntest_task_parser (__main__.EvaluatorTests.test_task_parser) ... ok\ntest_unsupported_numeric_layout_is_not_zero (__main__.EvaluatorTests.test_unsupported_numeric_layout_is_not_zero) ... ok\ntest_weights_and_exact_mapping_key_set (__main__.EvaluatorTests.test_weights_and_exact_mapping_key_set) ... ok\ntest_wrong_id_conflicting_duplicates_and_contamination (__main__.EvaluatorTests.test_wrong_id_conflicting_duplicates_and_contamination) ... ok\n\n----------------------------------------------------------------------\nRan 37 tests in 9.830s\n\nOK\n",
+  "task_sha256": "3653a8df82d59fd56a2cd6428d4b84d1c82213f088bc4ce3de3a1ea7c6b0e0cb",
+  "rubric_sha256": "2c28384c2c53ffd825e1c7f3b096ead1d84d4c417c92ed3c7a4a1a67d19b2a52",
+  "mapping_sha256": "66bd038d1ad6f897a701c55d2408b460c113545748e390f7e814b8f15bb9cf42",
+  "historical_evidence_unchanged": true,
+  "historical_hashes": {
+    "D:\\tmp\\_evaluation\\20260923035438Z\\task_snapshot.md": "4d9c56765a407c4d6f43643fb91c1351ba775abe2c7fb155af482aba6865b229",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\submitted_prompt.txt": "cf6d869fc214fc32050d66ffb132295d501cc4228f4f2152e34b069530dcb0c8",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\raw_trace.jsonl": "3d33484739e92f2aa5e387f8bdf4340681bcbcbb4cd7dceb3063bc83dfb4f78c",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\evaluation\\single_run_result.json": "9553bc8addf7f9a2390918cade4fa2fa52db5f696bce0f5c95748c8a82b6b0f3",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\deliverables\\project_report.docx": "3faea83100e3167f713a3da95c4dbaa9fd9f5e847ccb058843620bc3e8e77236",
+    "D:\\tmp\\_evaluation\\20260923035438Z\\deliverables\\project_report.pdf": "6d522e703e6857c6d26ebdd7df7e70cfc0ca23fd18bea19ed7003508f0e7b1f1",
+    "D:\\tmp\\_evaluation\\20260923075047Z\\task_snapshot.md": "d2c9fcf168661293876be7135910ce0fcb311367cced7942814f4dd0d0eb0aec",
+    "D:\\tmp\\_evaluation\\20260923075047Z\\submitted_prompt.txt": "8505b35007f43496ac776f518ffe0d3ed9e55bd0ebbc7433f7cd4a06841a0edf",
+    "D:\\tmp\\_evaluation\\20260923075047Z\\raw_trace.jsonl": "7c37be599e8927d91d766d8b7857daa2cab92e4bef370d8c01f52c75ab60a644",
+    "D:\\tmp\\_evaluation\\20260923075047Z\\evaluation\\single_run_result.json": "63fece3b0bc2db5d1536dc551ddbc213ca53c388c1c497b5766fe588b3a91f21",
+    "D:\\tmp\\_evaluation\\20260923075047Z\\deliverables\\project_report.docx": "9055a6692e74e0196c96c8d65b4c3b9c77b6e298a49572d515214c20cd71355f",
+    "D:\\tmp\\_evaluation\\20260923075047Z\\deliverables\\project_report.pdf": "1ca8e7827a62ec3fd07ef8786f99fd3a61e69d55d4c69b26367391d65cf8582b",
+    "D:\\tmp\\_evaluation\\20260923092855Z\\task_snapshot.md": "8339d93fe21117c57975456ed894e59fe04412440d8ffd8ed5df0048f97fdbc5",
+    "D:\\tmp\\_evaluation\\20260923092855Z\\submitted_prompt.txt": "6181784b97855fb43eecfba297f8d787505462d9865bae8b9a9b2791ef7f0eb5",
+    "D:\\tmp\\_evaluation\\20260923092855Z\\raw_trace.jsonl": "536337279c9e3b9488ba0e42a1473e80653bcc66b1a90b668b474fff4ef63064",
+    "D:\\tmp\\_evaluation\\20260923092855Z\\evaluation\\single_run_result.json": "a552c0fab3af1e6dea89ba48309ccc0ec75629b80babb6c01f4ee7ced114ff9c",
+    "D:\\tmp\\_evaluation\\20260923092855Z\\deliverables\\project_report.docx": "cc74a7acc1a2e0062bc58590a953e5c485ada30c55929e7ca9da11234d44bde0",
+    "D:\\tmp\\_evaluation\\20260923092855Z\\deliverables\\project_report.pdf": "17731081ceae21acad37bd43a4f8e85155bc88dc5b4ca80519e85dbcd31f59fe"
+  },
+  "scope": "Author extraction, scoring arithmetic and evidence-protocol regression; no new solver or semantic/visual review",
+  "new_agent_trial": "not_run",
+  "independent_semantic_calibration": "not_performed",
+  "native_edit_export": "not_rerun_unchanged_code",
+  "historical_candidate_rule_recheck": {
+    "candidate_sha256": "9055a6692e74e0196c96c8d65b4c3b9c77b6e298a49572d515214c20cd71355f",
+    "scores": {
+      "automated.c1_files": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Readable required DOCX and PDF; report content is assessed separately",
+        "evidence": [
+          {
+            "project_report.docx": true,
+            "project_report.pdf": true
+          },
+          {}
+        ]
+      },
+      "automated.c2_task_links": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Check asserted ID/name/department/priority-issue links across tables; omissions belong to C3",
+        "evidence": [
+          {
+            "associations": [
+              {
+                "task_id": "XQ-001",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "统一身份接入",
+                    "column": 2,
+                    "locator": "table 1 row 2"
+                  },
+                  {
+                    "value": "统一身份接入",
+                    "column": 2,
+                    "locator": "table 3 row 2"
+                  },
+                  {
+                    "value": "统一身份接入",
+                    "column": 2,
+                    "locator": "table 5 row 2"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-001",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 2"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-001",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-001-01",
+                    "column": 2,
+                    "locator": "table 4 row 2"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-002",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "权限矩阵",
+                    "column": 2,
+                    "locator": "table 1 row 3"
+                  },
+                  {
+                    "value": "权限矩阵",
+                    "column": 2,
+                    "locator": "table 3 row 3"
+                  },
+                  {
+                    "value": "权限矩阵",
+                    "column": 2,
+                    "locator": "table 5 row 3"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-002",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 3"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-002",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-002-01",
+                    "column": 2,
+                    "locator": "table 4 row 3"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-003",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "知识库检索",
+                    "column": 2,
+                    "locator": "table 1 row 4"
+                  },
+                  {
+                    "value": "知识库检索",
+                    "column": 2,
+                    "locator": "table 3 row 4"
+                  },
+                  {
+                    "value": "知识库检索",
+                    "column": 2,
+                    "locator": "table 5 row 4"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-003",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 4"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-003",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-003-01",
+                    "column": 2,
+                    "locator": "table 4 row 4"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-004",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "工单路由",
+                    "column": 2,
+                    "locator": "table 1 row 5"
+                  },
+                  {
+                    "value": "工单路由",
+                    "column": 2,
+                    "locator": "table 3 row 5"
+                  },
+                  {
+                    "value": "工单路由",
+                    "column": 2,
+                    "locator": "table 5 row 5"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-004",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 5"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-004",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-004-01",
+                    "column": 2,
+                    "locator": "table 4 row 5"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-005",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "会话留痕",
+                    "column": 2,
+                    "locator": "table 1 row 6"
+                  },
+                  {
+                    "value": "会话留痕",
+                    "column": 2,
+                    "locator": "table 3 row 6"
+                  },
+                  {
+                    "value": "会话留痕",
+                    "column": 2,
+                    "locator": "table 5 row 6"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-005",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 6"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-005",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-005-01",
+                    "column": 2,
+                    "locator": "table 4 row 6"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-006",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "质检规则",
+                    "column": 2,
+                    "locator": "table 1 row 7"
+                  },
+                  {
+                    "value": "质检规则",
+                    "column": 2,
+                    "locator": "table 3 row 7"
+                  },
+                  {
+                    "value": "质检规则",
+                    "column": 2,
+                    "locator": "table 5 row 7"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-006",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 7"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-006",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-006-01",
+                    "column": 2,
+                    "locator": "table 4 row 7"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-007",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "接口重试",
+                    "column": 2,
+                    "locator": "table 1 row 8"
+                  },
+                  {
+                    "value": "接口重试",
+                    "column": 2,
+                    "locator": "table 3 row 8"
+                  },
+                  {
+                    "value": "接口重试",
+                    "column": 2,
+                    "locator": "table 5 row 8"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-007",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 8"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-007",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-007-01",
+                    "column": 2,
+                    "locator": "table 4 row 8"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-008",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "监控告警",
+                    "column": 2,
+                    "locator": "table 1 row 9"
+                  },
+                  {
+                    "value": "监控告警",
+                    "column": 2,
+                    "locator": "table 3 row 9"
+                  },
+                  {
+                    "value": "监控告警",
+                    "column": 2,
+                    "locator": "table 5 row 9"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-008",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 9"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-008",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-008-01",
+                    "column": 2,
+                    "locator": "table 4 row 9"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-009",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "数据迁移",
+                    "column": 2,
+                    "locator": "table 1 row 10"
+                  },
+                  {
+                    "value": "数据迁移",
+                    "column": 2,
+                    "locator": "table 3 row 10"
+                  },
+                  {
+                    "value": "数据迁移",
+                    "column": 2,
+                    "locator": "table 5 row 10"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-009",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 10"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-009",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-009-01",
+                    "column": 2,
+                    "locator": "table 4 row 10"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-010",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "网点接入",
+                    "column": 2,
+                    "locator": "table 1 row 11"
+                  },
+                  {
+                    "value": "网点接入",
+                    "column": 2,
+                    "locator": "table 3 row 11"
+                  },
+                  {
+                    "value": "网点接入",
+                    "column": 2,
+                    "locator": "table 5 row 11"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-010",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 11"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-010",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-010-01",
+                    "column": 2,
+                    "locator": "table 4 row 11"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-011",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "坐席部署",
+                    "column": 2,
+                    "locator": "table 1 row 12"
+                  },
+                  {
+                    "value": "坐席部署",
+                    "column": 2,
+                    "locator": "table 3 row 12"
+                  },
+                  {
+                    "value": "坐席部署",
+                    "column": 2,
+                    "locator": "table 5 row 12"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-011",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 12"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-011",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-011-01",
+                    "column": 2,
+                    "locator": "table 4 row 12"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-012",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "网络联调",
+                    "column": 2,
+                    "locator": "table 1 row 13"
+                  },
+                  {
+                    "value": "网络联调",
+                    "column": 2,
+                    "locator": "table 3 row 13"
+                  },
+                  {
+                    "value": "网络联调",
+                    "column": 2,
+                    "locator": "table 5 row 13"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-012",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 13"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-012",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-012-01",
+                    "column": 2,
+                    "locator": "table 4 row 13"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-013",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "回滚演练",
+                    "column": 2,
+                    "locator": "table 1 row 14"
+                  },
+                  {
+                    "value": "回滚演练",
+                    "column": 2,
+                    "locator": "table 3 row 14"
+                  },
+                  {
+                    "value": "回滚演练",
+                    "column": 2,
+                    "locator": "table 5 row 14"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-013",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 14"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-013",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-013-01",
+                    "column": 2,
+                    "locator": "table 4 row 14"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-014",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "终端适配",
+                    "column": 2,
+                    "locator": "table 1 row 15"
+                  },
+                  {
+                    "value": "终端适配",
+                    "column": 2,
+                    "locator": "table 3 row 15"
+                  },
+                  {
+                    "value": "终端适配",
+                    "column": 2,
+                    "locator": "table 5 row 15"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-014",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 15"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-014",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-014-01",
+                    "column": 2,
+                    "locator": "table 4 row 15"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-015",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "权限复核",
+                    "column": 2,
+                    "locator": "table 1 row 16"
+                  },
+                  {
+                    "value": "权限复核",
+                    "column": 2,
+                    "locator": "table 3 row 16"
+                  },
+                  {
+                    "value": "权限复核",
+                    "column": 2,
+                    "locator": "table 5 row 16"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-015",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 16"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-015",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-015-01",
+                    "column": 2,
+                    "locator": "table 4 row 16"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-016",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "试点切换",
+                    "column": 2,
+                    "locator": "table 1 row 17"
+                  },
+                  {
+                    "value": "试点切换",
+                    "column": 2,
+                    "locator": "table 3 row 17"
+                  },
+                  {
+                    "value": "试点切换",
+                    "column": 2,
+                    "locator": "table 5 row 17"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-016",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 17"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-016",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-016-01",
+                    "column": 2,
+                    "locator": "table 4 row 17"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-017",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "坐席培训",
+                    "column": 2,
+                    "locator": "table 1 row 18"
+                  },
+                  {
+                    "value": "坐席培训",
+                    "column": 2,
+                    "locator": "table 3 row 18"
+                  },
+                  {
+                    "value": "坐席培训",
+                    "column": 2,
+                    "locator": "table 5 row 18"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-017",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 18"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-017",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-017-01",
+                    "column": 2,
+                    "locator": "table 4 row 18"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-018",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "话术维护",
+                    "column": 2,
+                    "locator": "table 1 row 19"
+                  },
+                  {
+                    "value": "话术维护",
+                    "column": 2,
+                    "locator": "table 3 row 19"
+                  },
+                  {
+                    "value": "话术维护",
+                    "column": 2,
+                    "locator": "table 5 row 19"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-018",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 19"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-018",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-018-01",
+                    "column": 2,
+                    "locator": "table 4 row 19"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-019",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "知识审核",
+                    "column": 2,
+                    "locator": "table 1 row 20"
+                  },
+                  {
+                    "value": "知识审核",
+                    "column": 2,
+                    "locator": "table 3 row 20"
+                  },
+                  {
+                    "value": "知识审核",
+                    "column": 2,
+                    "locator": "table 5 row 20"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-019",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 20"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-019",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-019-01",
+                    "column": 2,
+                    "locator": "table 4 row 20"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-020",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "服务巡检",
+                    "column": 2,
+                    "locator": "table 1 row 21"
+                  },
+                  {
+                    "value": "服务巡检",
+                    "column": 2,
+                    "locator": "table 3 row 21"
+                  },
+                  {
+                    "value": "服务巡检",
+                    "column": 2,
+                    "locator": "table 5 row 21"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-020",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 21"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-020",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-020-01",
+                    "column": 2,
+                    "locator": "table 4 row 21"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-021",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "反馈归因",
+                    "column": 2,
+                    "locator": "table 1 row 22"
+                  },
+                  {
+                    "value": "反馈归因",
+                    "column": 2,
+                    "locator": "table 3 row 22"
+                  },
+                  {
+                    "value": "反馈归因",
+                    "column": 2,
+                    "locator": "table 5 row 22"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-021",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 22"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-021",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-021-01",
+                    "column": 2,
+                    "locator": "table 4 row 22"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-022",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "排班协同",
+                    "column": 2,
+                    "locator": "table 1 row 23"
+                  },
+                  {
+                    "value": "排班协同",
+                    "column": 2,
+                    "locator": "table 3 row 23"
+                  },
+                  {
+                    "value": "排班协同",
+                    "column": 2,
+                    "locator": "table 5 row 23"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-022",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 23"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-022",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-022-01",
+                    "column": 2,
+                    "locator": "table 4 row 23"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-023",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "应急值守",
+                    "column": 2,
+                    "locator": "table 1 row 24"
+                  },
+                  {
+                    "value": "应急值守",
+                    "column": 2,
+                    "locator": "table 3 row 24"
+                  },
+                  {
+                    "value": "应急值守",
+                    "column": 2,
+                    "locator": "table 5 row 24"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-023",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 24"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-023",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-023-01",
+                    "column": 2,
+                    "locator": "table 4 row 24"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-024",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营交接",
+                    "column": 2,
+                    "locator": "table 1 row 25"
+                  },
+                  {
+                    "value": "运营交接",
+                    "column": 2,
+                    "locator": "table 3 row 25"
+                  },
+                  {
+                    "value": "运营交接",
+                    "column": 2,
+                    "locator": "table 5 row 25"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-024",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 25"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-024",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-024-01",
+                    "column": 2,
+                    "locator": "table 4 row 25"
+                  }
+                ]
+              }
+            ],
+            "foreign_task_ids": []
+          }
+        ]
+      },
+      "automated.c3_numeric_facts": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Exact task totals, with explicit pass/fail counts summed; repeated statements must agree",
+        "evidence": [
+          {
+            "differences": []
+          }
+        ]
+      }
+    },
+    "note": "Parser regression only; original trial results and Judge review are not replaced."
+  }
+}

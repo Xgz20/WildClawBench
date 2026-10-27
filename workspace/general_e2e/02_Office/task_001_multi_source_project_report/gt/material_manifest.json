@@ -1,0 +1,207 @@
+{
+  "files": [
+    {
+      "name": "01_研发阶段材料_v1.0.docx",
+      "bytes": 62933,
+      "sha256": "c956931009ac7c4b70e7c6d6fa7e8a904d9ffe3bf4aa82c1216b0cafdf4a44d9",
+      "version": "v1.0"
+    },
+    {
+      "name": "02_实施阶段材料_v1.0.docx",
+      "bytes": 62834,
+      "sha256": "0d32068663320533e84a3bb209620d9787bc6e2c6d50a84658f35221dd5ce598",
+      "version": "v1.0"
+    },
+    {
+      "name": "03_运营阶段材料_v1.0.docx",
+      "bytes": 62863,
+      "sha256": "184f078942946eaaff9a630572ae0ce5a9bac3aa2258c178ba882ed3e8394a80",
+      "version": "v1.0"
+    },
+    {
+      "name": "04_项目工作簿_v1.0.xlsx",
+      "bytes": 157347,
+      "sha256": "ac3522a31dc16a8812a7ab4d4ab845b80efb62a3b2bfed6063f706550b5c49ff",
+      "version": "v1.0"
+    },
+    {
+      "name": "05_阶段汇报_v1.0.pptx",
+      "bytes": 115290,
+      "sha256": "f66cd098225a4d419b17dbfc18edbf7b085e36f0946c744336090119ba0cfe07",
+      "version": "v1.0"
+    },
+    {
+      "name": "06_报告模板.docx",
+      "bytes": 37818,
+      "sha256": "56a4aece5ba1d657c2751e5e5c15b17ebba2a42f5d79e1f5f74dffa817a1caf3",
+      "version": "1.0"
+    }
+  ],
+  "sheets": [
+    {
+      "name": "阅读说明",
+      "rows": 7,
+      "columns": 4,
+      "nonempty": 19,
+      "state": "visible",
+      "merges": [
+        "A1:D1",
+        "A2:D2",
+        "A3:D3"
+      ],
+      "formulas": []
+    },
+    {
+      "name": "任务台账",
+      "rows": 34,
+      "columns": 7,
+      "nonempty": 216,
+      "state": "visible",
+      "merges": [
+        "A1:G1",
+        "A2:G2",
+        "A3:G3"
+      ],
+      "formulas": []
+    },
+    {
+      "name": "指标明细",
+      "rows": 1447,
+      "columns": 9,
+      "nonempty": 12976,
+      "state": "visible",
+      "merges": [
+        "A1:I1",
+        "A2:I2",
+        "A3:I3"
+      ],
+      "formulas": [
+        {
+          "cell": "F1447",
+          "formula": "=SUM(F5:F1444)",
+          "cached": 86386
+        },
+        {
+          "cell": "G1447",
+          "formula": "=SUM(G5:G1444)",
+          "cached": 77700
+        }
+      ]
+    },
+    {
+      "name": "验收记录",
+      "rows": 1204,
+      "columns": 8,
+      "nonempty": 9611,
+      "state": "visible",
+      "merges": [
+        "A1:H1",
+        "A2:H2",
+        "A3:H3"
+      ],
+      "formulas": []
+    },
+    {
+      "name": "问题记录",
+      "rows": 604,
+      "columns": 9,
+      "nonempty": 5408,
+      "state": "visible",
+      "merges": [
+        "A1:I1",
+        "A2:I2",
+        "A3:I3"
+      ],
+      "formulas": []
+    },
+    {
+      "name": "版本对照",
+      "rows": 34,
+      "columns": 4,
+      "nonempty": 127,
+      "state": "visible",
+      "merges": [
+        "A1:D1",
+        "A2:D2",
+        "A3:D3"
+      ],
+      "formulas": []
+    },
+    {
+      "name": "补录明细",
+      "rows": 367,
+      "columns": 9,
+      "nonempty": 3256,
+      "state": "hidden",
+      "merges": [
+        "A1:I1",
+        "A2:I2",
+        "A3:I3"
+      ],
+      "formulas": [
+        {
+          "cell": "F367",
+          "formula": "=SUM(F5:F364)",
+          "cached": 5955
+        },
+        {
+          "cell": "G367",
+          "formula": "=SUM(G5:G364)",
+          "cached": 5057
+        }
+      ]
+    }
+  ],
+  "docx": [
+    {
+      "file": "01_研发阶段材料_v1.0.docx",
+      "paragraphs": 73,
+      "tables": 11,
+      "footnotes": 8,
+      "images": 1,
+      "repeated_headers": 11,
+      "rendered_pages": 15
+    },
+    {
+      "file": "02_实施阶段材料_v1.0.docx",
+      "paragraphs": 73,
+      "tables": 11,
+      "footnotes": 8,
+      "images": 1,
+      "repeated_headers": 11,
+      "rendered_pages": 15
+    },
+    {
+      "file": "03_运营阶段材料_v1.0.docx",
+      "paragraphs": 73,
+      "tables": 11,
+      "footnotes": 8,
+      "images": 1,
+      "repeated_headers": 11,
+      "rendered_pages": 15
+    }
+  ],
+  "pptx": {
+    "slides": 24,
+    "qualifiers_in_notes": 12,
+    "note_parts": 24
+  },
+  "counts": {
+    "任务台账": 30,
+    "指标明细": 1440,
+    "验收记录": 1200,
+    "问题记录": 600,
+    "补录明细": 360
+  },
+  "nonempty_cells": 31613,
+  "public_package_revision": "materials-dehint-v1-20261010",
+  "removed_public_files": [
+    "00_材料说明.md"
+  ],
+  "material_revision": {
+    "scope": "Remove solver directions; preserve business definitions, data and source locators",
+    "task_prompt_unchanged": true,
+    "scoring_unchanged": true,
+    "business_versions_unchanged": true
+  }
+}

@@ -1,0 +1,12 @@
+Pine Courier Local
+Delivery invoice
+Document number
+PCL-26-0602
+Service period
+2026-06-01
+Description: two crate deliveries for month-end archive move
+AMOUNT  /  USD
+216.30
+SIMULATED BUSINESS RECORD  |  Mail export copy
+1 / 1
+

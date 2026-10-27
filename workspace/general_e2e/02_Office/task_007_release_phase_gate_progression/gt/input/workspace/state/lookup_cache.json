@@ -1,0 +1,60 @@
+{
+  "cache_meta": {
+    "cache_id": "qs-local-cache-2026-08-05",
+    "release_id": "qs-local-2026-08-rc3",
+    "last_rebuilt_at_utc": "2026-08-05T10:40:00Z",
+    "network_allowed": false,
+    "active_cache_mutable": true
+  },
+  "active_cache": [
+    {
+      "lookup_key": "cli_core:linux_x64",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "cli-linux-x64-rc3-local-4b72",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.cli_core.current",
+      "recorded_at_utc": "2026-08-05T09:57:00Z"
+    },
+    {
+      "lookup_key": "completion:bash_zsh",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "completion-bash-zsh-rc3-local-91af",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.completion.current",
+      "recorded_at_utc": "2026-08-05T09:57:30Z"
+    },
+    {
+      "lookup_key": "doc_bundle:guide_set",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "docs-guide-rc3-local-c8e1",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.docs.scan1021",
+      "recorded_at_utc": "2026-08-05T10:21:12Z",
+      "required_for_phase": "local_validation"
+    },
+    {
+      "lookup_key": "manifest:rc3_bundle",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "manifest-rc3-local-f19d",
+      "status": "current",
+      "source_record_ref": "state/local_lookup_records.json#record.manifest.scan1030",
+      "recorded_at_utc": "2026-08-05T10:30:00Z"
+    }
+  ],
+  "quarantined_or_stale_entries": [
+    {
+      "lookup_key": "doc_bundle:guide_set",
+      "scope_version": "scope-bundle-2026.07",
+      "cache_value": "docs-guide-rc2-archived-88d1",
+      "status": "stale_prior_scope",
+      "reason": "archived board copy"
+    },
+    {
+      "lookup_key": "experimental_plugin_notes",
+      "scope_version": "scope-bundle-2026.08",
+      "cache_value": "plugin-note-outside-lane-0f11",
+      "status": "out_of_scope",
+      "reason": "excluded in release_scope"
+    }
+  ]
+}

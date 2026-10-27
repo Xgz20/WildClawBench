@@ -1,0 +1,68 @@
+{
+  "scope_meta": {
+    "release_id": "qs-local-2026-08-rc3",
+    "scope_version": "scope-bundle-2026.08",
+    "created_at_utc": "2026-08-05T08:36:00Z",
+    "local_only": true,
+    "network_allowed": false,
+    "fictional_project": true
+  },
+  "current_scope": {
+    "package_label": "quillship-cli-doc-bundle",
+    "target_channel": "local_docs_bundle",
+    "component_keys": [
+      "cli_core",
+      "shell_completion",
+      "docs_bundle",
+      "release_manifest"
+    ],
+    "scope_version": "scope-bundle-2026.08",
+    "excluded_components": [
+      {
+        "component_key": "experimental_plugin_notes",
+        "reason": "outside_current_release_lane"
+      },
+      {
+        "component_key": "archived_windows_zip",
+        "reason": "prior_scope_archive_only"
+      }
+    ]
+  },
+  "timestamp_policy": {
+    "run_time_utc": "2026-08-05T10:40:00Z",
+    "latest_state_change_at_utc": "2026-08-05T10:29:20Z",
+    "timezone_note": "Use UTC strings as recorded; do not infer private/local system time."
+  },
+  "validation_requirements": {
+    "cli_component_lock": {
+      "input_lookup_keys": [
+        "cli_core:linux_x64",
+        "completion:bash_zsh"
+      ],
+      "evidence_kind": "local_validation_receipt"
+    },
+    "bundle_integrity": {
+      "input_lookup_keys": [
+        "cli_core:linux_x64",
+        "completion:bash_zsh",
+        "doc_bundle:guide_set",
+        "manifest:rc3_bundle"
+      ],
+      "evidence_kind": "local_validation_receipt",
+      "required_for_phase": "local_validation",
+      "owner_role": "packaging maintainer"
+    }
+  },
+  "component_dependencies": {
+    "cli_core": [],
+    "shell_completion": [
+      "cli_core"
+    ],
+    "docs_bundle": [],
+    "release_manifest": [
+      "docs_bundle",
+      "cli_core",
+      "shell_completion"
+    ]
+  }
+}

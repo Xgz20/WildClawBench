@@ -1,0 +1,29 @@
+{
+  "scan_id": "20260602-1220",
+  "files": [
+    {
+      "file": "mail_export/2026-04/thread_river_bins/attachments/export_1350.txt",
+      "mail_ref": "msg-20260418-river-01"
+    },
+    {
+      "file": "mail_export/2026-04/thread_river_bins/attachments/export_1420.txt",
+      "mail_ref": "msg-20260418-river-01"
+    },
+    {
+      "file": "mail_export/2026-05/thread_delta_service/attachments/packet_0503.pdf",
+      "mail_ref": "msg-20260503-delta-01"
+    },
+    {
+      "file": "mail_export/2026-05/thread_ivy_adjustment/attachments/upload_b.pdf",
+      "mail_ref": "msg-20260517-ivy-01"
+    },
+    {
+      "file": "mail_export/2026-06/manual_uploads/transfer_0602_a.txt",
+      "mail_ref": null
+    },
+    {
+      "file": "mail_export/2026-06/manual_uploads/transfer_0602_b.pdf",
+      "mail_ref": null
+    }
+  ]
+}

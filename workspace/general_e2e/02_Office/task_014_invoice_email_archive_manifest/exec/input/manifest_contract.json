@@ -1,0 +1,31 @@
+{
+  "format": "UTF-8 JSON",
+  "top_level": {
+    "rows": "附件级条目数组；缺失引用也保留条目",
+    "summary": "counts按disposition计数；totals_by_currency仅汇总archive原币金额"
+  },
+  "fields": {
+    "row_id": "自行分配的唯一行标识",
+    "source_path": "相对/tmp_workspace的源文件路径；引用但缺失的文件保留其预期路径",
+    "source_exists": "布尔值，本地源文件是否存在",
+    "message_id": "直接引用该附件的原始邮件ID；无关联则null",
+    "thread_id": "原始线程ID；无关联则null",
+    "attachment_ref": "原邮件的附件引用；无关联则null",
+    "document_id": "单据编号；未提供则null",
+    "vendor": "单据供应商，可保留原文或可核实别名",
+    "issue_date": "明确签发日期，YYYY-MM-DD；未提供则null",
+    "service_period": "可选：原文服务日期或期间，勿当作签发日期",
+    "amount": "原币金额，保留符号；可为数字或数字字符串；未提供则null",
+    "currency": "原文币种；未提供则null",
+    "disposition": "archive正式归档 / review待复核 / reference辅助或历史留存 / missing缺失引用",
+    "archive_path": "相对/tmp_workspace的实际副本路径，必须在results下；archive必须提供，review/reference可仅保留源文件索引，missing为null",
+    "related_rows": "数组，记录对象间关系，建议{type,row_id}；无关系用[]",
+    "rationale": "处理依据，允许引用报告中的对应条目",
+    "evidence": "数组，来源路径及必要定位；可用路径#字段或段落"
+  },
+  "notes": [
+    "除service_period外均保留字段，未知值为null，不填猜测值。",
+    "行序、row_id命名、文件命名不限；同一源附件只建一条记录。",
+    "报告说明处理范围、归档依据、待跟进事项和清单与文件的核对结论，篇幅不限。"
+  ]
+}

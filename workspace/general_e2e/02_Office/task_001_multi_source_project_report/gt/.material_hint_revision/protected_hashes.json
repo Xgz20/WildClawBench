@@ -1,0 +1,11 @@
+{
+  "D:\\astroncode-eval\\tasks\\general_e2e\\02_Office\\02_Office_task_001_multi_source_project_report.md": "3653a8df82d59fd56a2cd6428d4b84d1c82213f088bc4ce3de3a1ea7c6b0e0cb",
+  "D:\\astroncode-eval\\tools\\report\\data\\checkpoint_capability_map7.yaml": "2ea87e36d669e2d71e86e2b053480f628b9c650699065aa064e03847d93ed19f",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\independent_facts.json": "4fa805dd3e1d5f99b4109b4bb71f6468f1e593d64e691f125cee19d6e4282f2a",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\source_locations.json": "81927093ce3441836480e092507b42e61cf6ab52f10739e955460f50fbe1e3f3",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\evaluator_v3_validation.json": "4238b7196be2808ff473d6cc43664e667e059d7b06011d59dd4f5bbc25b6a182",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\evaluator_v4_validation.json": "3cd29b3c24a7b73c65c2f369a75910c4426b5aec77dff9245537ec09f8f3a140",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\realistic_prompt_validation.json": "04e11557b6c7f49045d0ef31392126c3493809e5c1f1d8ba6a466ddddd8a9b95",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\reference\\results\\project_report.docx": "8cf617232e08cd16a2472a3e0feafe22c4b669a92ef0843664cd58a7a62c278f",
+  "D:\\astroncode-eval\\workspace\\general_e2e\\02_Office\\task_001_multi_source_project_report\\gt\\reference\\results\\project_report.pdf": "6daf99a544777a1471a08dd4ea5c7934646bea653f0f4079df1b34f0238ad755"
+}

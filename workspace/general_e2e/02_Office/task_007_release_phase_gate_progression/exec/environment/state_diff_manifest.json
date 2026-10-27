@@ -1,0 +1,43 @@
+{
+  "manifest_meta": {
+    "case_label": "release_phase_gate_progression",
+    "manifest_kind": "public_state_diff_contract",
+    "not_harness_code": true,
+    "not_hidden_gold": true,
+    "network_allowed": false
+  },
+  "mutable_paths": [
+    "input/workspace/release_board.md",
+    "input/workspace/state/workflow_state.json",
+    "input/workspace/state/validation_results.json",
+    "input/workspace/state/lookup_cache.json",
+    "input/workspace/audit/audit_history.md",
+    "input/workspace/outputs/release_progress_report.md",
+    "input/workspace/outputs/state_update_record.json",
+    "environment/mock_release_board/final_state_capture.json"
+  ],
+  "read_only_reference_paths": [
+    "input/workspace/runbooks/phase_gate_policy.md",
+    "input/workspace/runbooks/local_validation_policy.md",
+    "input/workspace/runbooks/audit_and_status_sync.md",
+    "input/workspace/state/local_lookup_records.json",
+    "input/workspace/logs/local_validation_runs.jsonl",
+    "input/workspace/config/no_network_policy.txt",
+    "input/workspace/config/release_scope.json",
+    "input/workspace/handoff/maintainer_handoff.md",
+    "input/workspace/notes/operator_margin_notes.md",
+    "input/workspace/notes/old_release_board_copy.md",
+    "environment/mock_release_board/initial_state.json",
+    "environment/mock_release_board/README.md",
+    "environment/state_diff_manifest.json"
+  ],
+  "state_diff_expectation_notes": [
+    "本轮仅更新 mutable_paths；临时处理文件可放在 input/ 与 environment/ 之外。",
+    "文件末态对账不能证明全过程没有访问网络或临时改写源文件。"
+  ],
+  "timestamp_policy": {
+    "normalized_timezone": "UTC",
+    "solver_may_use_run_time_utc": "2026-08-05T10:40:00Z",
+    "avoid_private_system_time_dependency": true
+  }
+}

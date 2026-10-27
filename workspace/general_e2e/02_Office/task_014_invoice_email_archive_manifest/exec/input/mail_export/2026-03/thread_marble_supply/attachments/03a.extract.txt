@@ -1,0 +1,14 @@
+Marble Supply Desk
+Invoice copy
+Document number
+MS-2603-17
+Service period
+2026-02-25 / 2026-02-28
+Site: North Hall receiving bay
+Purchase reference: NH-RCV-38
+Portal batch: 03A
+AMOUNT  /  USD
+1,842.60
+SIMULATED BUSINESS RECORD  |  Mail export copy
+1 / 1
+
