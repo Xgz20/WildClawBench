@@ -6,6 +6,7 @@ in a dataset's private scoring materials. It never writes the source workbook.
 from __future__ import annotations
 
 import hashlib
+from decimal import Decimal, InvalidOperation
 import io
 import json
 import os
@@ -32,6 +33,8 @@ RENDER_PROFILE = "offline-pptx-to-pdf-with-fonts/v1"
 DOCX_RENDER_AUDIT_SCHEMA = "wildclawbench.office-docx-render/v1"
 DOCX_RENDER_PROFILE = "offline-docx-to-pdf-with-fonts/v1"
 EMBEDDED_AUDIT_SCHEMA = "wildclawbench.office-embedded-xlsx/v1"
+COUNTERFACTUAL_AUDIT_SCHEMA = "wildclawbench.office-xlsx-counterfactual/v1"
+COUNTERFACTUAL_PROFILE = "offline-xlsx-numeric-input-change/v1"
 RENDER_FILTER = {"ExportHiddenSlides": {"type": "boolean", "value": "true"},
                  "ExportNotesPages": {"type": "boolean", "value": "false"},
                  "ExportOnlyNotesPages": {"type": "boolean", "value": "false"}}
@@ -235,6 +238,147 @@ def recalculate_xlsx(source, lock, output_dir, *, timeout_seconds=60):
         json.dump(audit, handle, ensure_ascii=False, sort_keys=True, indent=2)
         handle.write("\n")
     return {"path": str(target), "audit_path": str(receipt), "audit": audit}
+
+
+def _numeric_literal(value):
+    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "numeric literals only")
+    text = str(value)
+    if len(text) > 64 or not re.fullmatch(r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?", text):
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "invalid numeric literal")
+    try:
+        number = Decimal(text)
+    except InvalidOperation as exc:
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "invalid numeric literal") from exc
+    if not number.is_finite() or abs(number) > Decimal("1e15") or (number and number.adjusted() < -15):
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "numeric literal outside supported range")
+    if not number:
+        return "0"
+    literal = format(number, "f")
+    return literal.rstrip("0").rstrip(".") if "." in literal else literal
+
+
+def _counterfactual_parts(data, changes):
+    """Replay declared numeric input edits without changing formulas or other parts."""
+    _clean_package(data)  # bounded, offline package validation; do not use its cache-cleared bytes
+    if not isinstance(changes, list) or not 1 <= len(changes) <= 100:
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "need 1 to 100 cell edits")
+    requested = {}
+    for change in changes:
+        if (not isinstance(change, dict) or set(change) != {"sheet", "cell", "value"}
+                or not isinstance(change["sheet"], str) or not change["sheet"]
+                or not isinstance(change["cell"], str) or not re.fullmatch(r"[A-Z]{1,3}[1-9][0-9]{0,6}", change["cell"])):
+            raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "invalid sheet/cell edit")
+        key = (change["sheet"], change["cell"])
+        if key in requested:
+            raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_CHANGE_INVALID", "duplicate target")
+        requested[key] = _numeric_literal(change["value"])
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        parts = {info.filename: archive.read(info) for info in archive.infolist()}
+        workbook = ET.fromstring(parts["xl/workbook.xml"])
+        relationships = ET.fromstring(parts["xl/_rels/workbook.xml.rels"])
+        relation_ids = [item.get("Id") for item in relationships]
+        if len(relation_ids) != len(set(relation_ids)):
+            raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "ambiguous workbook relationships")
+        targets = {item.get("Id"): item.get("Target") for item in relationships if item.get("TargetMode") != "External"}
+        sheets = {}
+        for sheet in workbook.findall(S + "sheets/" + S + "sheet"):
+            name = sheet.get("name")
+            target = targets.get(sheet.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"))
+            if name in sheets or not isinstance(target, str):
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "ambiguous worksheet")
+            part = target.lstrip("/") if target.startswith("/") else posixpath.normpath("xl/" + target)
+            if not part.startswith("xl/worksheets/") or ".." in part.split("/") or part not in parts:
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "worksheet unavailable")
+            sheets[name] = part
+        if len(sheets.values()) != len(set(sheets.values())):
+            raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "shared worksheet part")
+        modified, records, parsed = {}, [], {}
+        for (name, address), value in sorted(requested.items()):
+            if name not in sheets:
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "worksheet missing")
+            part = sheets[name]
+            if part not in parsed:
+                parsed[part] = ET.fromstring(parts[part])
+            cells = [cell for cell in parsed[part].iter(S + "c") if cell.get("r") == address]
+            if len(cells) != 1:
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "numeric input cell missing/ambiguous")
+            cell = cells[0]
+            values = cell.findall(S + "v")
+            if (cell.get("t", "n") != "n" or cell.find(S + "f") is not None
+                    or cell.find(S + "is") is not None or len(values) != 1 or values[0].text is None):
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "target must be an existing literal numeric input")
+            original = values[0].text
+            _numeric_literal(original)
+            values[0].text = value
+            records.append({"sheet": name, "cell": address, "value": value, "original_value": original})
+        for part, node in parsed.items():
+            modified[part] = ET.tostring(node, encoding="utf-8", xml_declaration=True)
+        return parts, modified, records
+
+
+def prepare_xlsx_counterfactual(source, changes, output_dir):
+    """Create a disposable numeric-input variant and a replayable provenance receipt."""
+    source = Path(source)
+    if source.is_symlink() or not source.is_file() or source.stat().st_size > MAX_INPUT_BYTES:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "counterfactual source unavailable")
+    data = source.read_bytes()
+    _, modified, records = _counterfactual_parts(data, changes)
+    output = Path(output_dir).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    prepared, receipt = output / "prepared.xlsx", output / "counterfactual-audit.json"
+    if prepared.exists() or receipt.exists():
+        raise OfficeRuntimeError("OFFICE_OUTPUT_EXISTS", "counterfactual artifacts are immutable")
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(data)) as incoming, zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as outgoing:
+        for info in incoming.infolist():
+            outgoing.writestr(info, modified.get(info.filename, incoming.read(info)))
+    digest = hashlib.sha256(data).hexdigest()
+    if sha(source) != digest:
+        raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "counterfactual source changed")
+    with prepared.open("xb") as handle:
+        handle.write(buffer.getvalue())
+    audit = {"schema_version": COUNTERFACTUAL_AUDIT_SCHEMA, "profile": COUNTERFACTUAL_PROFILE,
+             "source_sha256": digest, "prepared_sha256": sha(prepared), "source_unchanged": True,
+             "changes": records}
+    with receipt.open("x", encoding="utf-8") as handle:
+        json.dump(audit, handle, ensure_ascii=False, sort_keys=True, indent=2)
+        handle.write("\n")
+    return {"path": str(prepared), "audit_path": str(receipt), "audit": audit}
+
+
+def verify_xlsx_counterfactual(source, prepared, audit):
+    """Verify archived bytes against frozen source, independently of Office availability."""
+    source, prepared = Path(source), Path(prepared)
+    if (source.is_symlink() or prepared.is_symlink() or not source.is_file() or not prepared.is_file()
+            or max(source.stat().st_size, prepared.stat().st_size) > MAX_INPUT_BYTES
+            or not isinstance(audit, dict) or audit.get("schema_version") != COUNTERFACTUAL_AUDIT_SCHEMA
+            or audit.get("profile") != COUNTERFACTUAL_PROFILE or audit.get("source_unchanged") is not True
+            or audit.get("source_sha256") != sha(source) or audit.get("prepared_sha256") != sha(prepared)
+            or not isinstance(audit.get("changes"), list)
+            or any(not isinstance(row, dict) or set(row) != {"sheet", "cell", "value", "original_value"} for row in audit["changes"])):
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", "counterfactual binding mismatch")
+    edits = [{key: row[key] for key in ("sheet", "cell", "value")} for row in audit["changes"]]
+    parts, modified, replayed = _counterfactual_parts(source.read_bytes(), edits)
+    if audit["changes"] != replayed:
+        raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", "declared edits do not match original inputs")
+    data = prepared.read_bytes()
+    _clean_package(data)
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        if set(archive.namelist()) != set(parts):
+            raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", "package member set changed")
+        for name, original in parts.items():
+            observed = archive.read(name)
+            if name in modified:
+                # Check XML semantics rather than ZIP compression or serializer prefixes.
+                expected_xml = ET.canonicalize(modified[name], rewrite_prefixes=True)
+                actual_xml = ET.canonicalize(observed, rewrite_prefixes=True)
+                equal = expected_xml == actual_xml
+            else:
+                equal = observed == original
+            if not equal:
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", "undeclared change: " + name)
+    return audit
 
 
 def office_render_lock_digest(lock):

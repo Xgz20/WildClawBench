@@ -57,3 +57,23 @@ calculated = recalculate_xlsx(original["path"], office_lock, evidence_root / "ca
 归档保留两层文件及回执，`verify-score --archived`可在引擎不存在时检查这条链，不重新计算分数。合法等价公式仍应清缓存后真正运行；正确显示缓存不能替代实际公式结果。此操作只证明来源与计算观察，不证明图表类目、语义或可编辑应用行为；冻结任务规则与独立Judge仍须核验原生对象。
 
 本Profile要求OPC content-type manifest有正确默认命名空间。前缀改写可能使XML仍可解析而Office无法加载；此类已识别包错误会显式报告`OFFICE_INPUT_INVALID`，不伪装成引擎可用性失败。UTF-16默认命名空间manifest同样支持。
+## 数值输入扰动
+
+score-general-e2e 0.19.0、grading-core 0.11.0支持从冻结XLSX建立可回溯的数值输入变体：
+
+```python
+variant = prepare_xlsx_counterfactual(
+    source,
+    [{"sheet": "Lines", "cell": "E6", "value": 2}],
+    derived / "quantity-variant",
+)
+result = recalculate_xlsx(variant["path"], office_lock, derived / "quantity-result")
+```
+
+输入为1至100项不重复的`sheet/cell/value`编辑；只接受已存在、非公式、非布尔/文本的数值单元格，数值须有限且在支持范围内。不能用该接口改公式、插入缺失输入、修复候选或修改原始文件。目标字段必须属于题目明确允许编辑的模型输入，规则应先核对实际源参数和交付契约，再选择扰动位置；接口本身不证明该单元格具有业务意义。
+
+`prepared.xlsx`保留原公式及其缓存，`counterfactual-audit.json`绑定源/变体SHA和每个输入的原值、新值。后续可信Office入口才清空缓存并实际重算。目录内文件不可覆盖；缺引擎、helper或回执漂移保持评测异常。候选模型缺少可编辑数值输入、写死输出或计算错误，则按该任务已冻结的业务规则评分，不擅自把环境故障计为候选零分。
+
+语义catalog、合分和归档验证先从冻结候选或私有参考找到源工作簿，再重放声明编辑：不变部件逐字节比对，目标worksheet比对完整XML语义，仅允许声明的数值变化。ZIP压缩和XML前缀差异不决定业务正确性；修改公式、旧缓存、其它输入、样式、工作簿配置或新增部件都会拒绝。只有验证成功的变体SHA才可作为重算来源；删除变体回执、重新索引错误父源或错误原值均不能绕过来源校验。不支持将未知变体或内嵌工作簿直接冒充冻结源，链式输入扰动需另行设计。
+
+作者仍须用独立计算路径比较扰动后的实际重算结果，覆盖承诺的输入与边界。该机制证明来源和实际重算链，不证明公式关系、预算口径、语义质量或目标Excel应用可用性。`verify-score --archived`无需原Office安装，但继续核验上述全部绑定字节。
