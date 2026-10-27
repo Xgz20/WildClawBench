@@ -6,6 +6,7 @@ in a dataset's private scoring materials. It never writes the source workbook.
 from __future__ import annotations
 
 import hashlib
+import copy
 from decimal import Decimal, InvalidOperation
 import io
 import json
@@ -37,6 +38,8 @@ DOCX_RENDER_PROFILE = "offline-docx-to-pdf-with-fonts/v1"
 EMBEDDED_AUDIT_SCHEMA = "wildclawbench.office-embedded-xlsx/v1"
 COUNTERFACTUAL_AUDIT_SCHEMA = "wildclawbench.office-xlsx-counterfactual/v1"
 COUNTERFACTUAL_PROFILE = "offline-xlsx-numeric-input-change/v1"
+MARKER_INTERVENTION_AUDIT_SCHEMA = "wildclawbench.office-xlsx-marker-intervention/v1"
+MARKER_INTERVENTION_PROFILE = "offline-xlsx-binary-marker-intervention/v1"
 RENDER_FILTER = {"ExportHiddenSlides": {"type": "boolean", "value": "true"},
                  "ExportNotesPages": {"type": "boolean", "value": "false"},
                  "ExportOnlyNotesPages": {"type": "boolean", "value": "false"}}
@@ -380,6 +383,201 @@ def verify_xlsx_counterfactual(source, prepared, audit):
                 equal = observed == original
             if not equal:
                 raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", "undeclared change: " + name)
+    return audit
+
+
+def _marker_intervention_parts(data, changes):
+    """Override declared binary intermediate markers, preserving a full before image.
+
+    This is a summary-dependency experiment, not a repair or a claim that the
+    original marker formula is correct. The caller must verify baseline markers
+    and their business role independently before choosing intervention cells.
+    """
+    _clean_package(data)
+    invalid = "OFFICE_MARKER_INTERVENTION_CHANGE_INVALID"
+    target_invalid = "OFFICE_MARKER_INTERVENTION_TARGET_INVALID"
+    unsupported = "OFFICE_MARKER_INTERVENTION_UNSUPPORTED"
+    if not isinstance(changes, list) or not 1 <= len(changes) <= 100:
+        raise OfficeRuntimeError(invalid, "need 1 to 100 marker edits")
+    requested = {}
+    for change in changes:
+        if (not isinstance(change, dict) or set(change) != {"sheet", "cell", "value"}
+                or not isinstance(change["sheet"], str) or not change["sheet"]
+                or not isinstance(change["cell"], str)
+                or not re.fullmatch(r"[A-Z]{1,3}[1-9][0-9]{0,6}", change["cell"])):
+            raise OfficeRuntimeError(invalid, "invalid marker sheet/cell edit")
+        key = change["sheet"], change["cell"]
+        if key in requested:
+            raise OfficeRuntimeError(invalid, "duplicate marker target")
+        try:
+            value = _numeric_literal(change["value"])
+        except OfficeRuntimeError as exc:
+            raise OfficeRuntimeError(invalid, exc.message) from exc
+        if value not in {"0", "1"}:
+            raise OfficeRuntimeError(invalid, "marker interventions must be zero or one")
+        requested[key] = value
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        parts = {info.filename: archive.read(info) for info in archive.infolist()}
+        workbook = ET.fromstring(parts["xl/workbook.xml"])
+        relationships = ET.fromstring(parts["xl/_rels/workbook.xml.rels"])
+        ids = [n.get("Id") for n in relationships]
+        if len(ids) != len(set(ids)):
+            raise OfficeRuntimeError(target_invalid, "ambiguous workbook relationships")
+        targets = {n.get("Id"): n.get("Target") for n in relationships if n.get("TargetMode") != "External"}
+        sheets = {}
+        for sheet in workbook.findall(S + "sheets/" + S + "sheet"):
+            name = sheet.get("name")
+            target = targets.get(sheet.get("{http://schemas.openxmlformats.org/officeDocument/2006/relationships}id"))
+            if name in sheets or not isinstance(target, str):
+                raise OfficeRuntimeError(target_invalid, "ambiguous worksheet")
+            part = target.lstrip("/") if target.startswith("/") else posixpath.normpath("xl/" + target)
+            if not part.startswith("xl/worksheets/") or ".." in part.split("/") or part not in parts:
+                raise OfficeRuntimeError(target_invalid, "worksheet unavailable")
+            sheets[name] = part
+        if len(sheets.values()) != len(set(sheets.values())):
+            raise OfficeRuntimeError(target_invalid, "shared worksheet part")
+        shared = []
+        if "xl/sharedStrings.xml" in parts:
+            shared = ["".join(t.text or "" for t in si.iter(S + "t"))
+                      for si in ET.fromstring(parts["xl/sharedStrings.xml"])]
+        parsed, records = {}, []
+        for (name, address), value in sorted(requested.items()):
+            if name not in sheets:
+                raise OfficeRuntimeError(target_invalid, "worksheet missing")
+            part = sheets[name]
+            if part not in parsed:
+                parsed[part] = ET.fromstring(parts[part])
+            def position(ref):
+                match = re.fullmatch(r"\$?([A-Z]{1,3})\$?([1-9][0-9]{0,6})", ref)
+                if match is None:
+                    raise OfficeRuntimeError(unsupported, "unsupported formula range")
+                col = 0
+                for char in match[1]:
+                    col = col * 26 + ord(char) - 64
+                return int(match[2]), col
+            row_number, column_number = position(address)
+            for f in parsed[part].iter(S + "f"):
+                if f.get("ref"):
+                    ends = f.get("ref").split(":")
+                    if len(ends) == 1:
+                        ends.append(ends[0])
+                    if len(ends) != 2:
+                        raise OfficeRuntimeError(unsupported, "unsupported formula range")
+                    (r1, c1), (r2, c2) = map(position, ends)
+                    if r1 <= row_number <= r2 and c1 <= column_number <= c2:
+                        raise OfficeRuntimeError(unsupported, "marker belongs to a shared or array formula range")
+            cells = [c for c in parsed[part].iter(S + "c") if c.get("r") == address]
+            if len(cells) != 1:
+                raise OfficeRuntimeError(target_invalid, "marker cell missing or ambiguous")
+            cell = cells[0]
+            formulas, values = cell.findall(S + "f"), cell.findall(S + "v")
+            kind = cell.get("t", "n")
+            if (len(formulas) > 1 or len(values) > 1 or cell.get("cm") is not None
+                    or cell.get("vm") is not None
+                    or any(f.get("t", "normal") != "normal" or f.get("ref") is not None for f in formulas)):
+                raise OfficeRuntimeError(unsupported, "shared, array or metadata-backed markers require another intervention profile")
+            if formulas:
+                if not formulas[0].text or cell.find(S + "is") is not None:
+                    raise OfficeRuntimeError(target_invalid, "invalid scalar marker formula")
+            else:
+                original = values[0].text if values else None
+                if kind == "inlineStr":
+                    original = "".join(t.text or "" for t in cell.iter(S + "t"))
+                elif kind == "s":
+                    try:
+                        index = int(original)
+                        if index < 0:
+                            raise ValueError("negative string index")
+                        original = shared[index]
+                    except (ValueError, TypeError, IndexError) as exc:
+                        raise OfficeRuntimeError(target_invalid, "invalid shared marker text") from exc
+                elif kind not in {"n", "b", "str"}:
+                    raise OfficeRuntimeError(target_invalid, "not a binary marker")
+                try:
+                    binary = _numeric_literal(original.strip() if isinstance(original, str) else original)
+                except OfficeRuntimeError as exc:
+                    raise OfficeRuntimeError(target_invalid, "existing marker must be binary") from exc
+                if binary not in {"0", "1"}:
+                    raise OfficeRuntimeError(target_invalid, "existing marker must be binary")
+            before_cell = copy.deepcopy(cell)
+            before_cell.tail = None
+            before = ET.canonicalize(ET.tostring(before_cell, encoding="unicode"), rewrite_prefixes=True)
+            if len(before.encode("utf-8")) > 65536:
+                raise OfficeRuntimeError(unsupported, "marker before image exceeds supported size")
+            records.append({"sheet": name, "cell": address, "value": value, "original_cell": before})
+            for child in list(cell):
+                if child.tag in {S + "f", S + "v", S + "is"}:
+                    cell.remove(child)
+            if kind in {"s", "str", "inlineStr"}:
+                cell.set("t", "inlineStr")
+                ET.SubElement(ET.SubElement(cell, S + "is"), S + "t").text = value
+            else:
+                cell.set("t", "b" if kind == "b" else "n")
+                ET.SubElement(cell, S + "v").text = value
+        modified = {part: ET.tostring(node, encoding="utf-8", xml_declaration=True) for part, node in parsed.items()}
+        return parts, modified, records
+
+
+def prepare_xlsx_marker_intervention(source, changes, output_dir):
+    """Make an immutable binary-marker experiment; never rewrite the source."""
+    source = Path(source)
+    if source.is_symlink() or not source.is_file() or source.stat().st_size > MAX_INPUT_BYTES:
+        raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "marker intervention source unavailable")
+    data = source.read_bytes()
+    _, modified, records = _marker_intervention_parts(data, changes)
+    output = Path(output_dir).resolve()
+    output.mkdir(parents=True, exist_ok=True)
+    prepared, receipt = output / "prepared.xlsx", output / "marker-intervention-audit.json"
+    if prepared.exists() or receipt.exists():
+        raise OfficeRuntimeError("OFFICE_OUTPUT_EXISTS", "marker artifacts are immutable")
+    buffer = io.BytesIO()
+    with zipfile.ZipFile(io.BytesIO(data)) as incoming, zipfile.ZipFile(buffer, "w", compression=zipfile.ZIP_DEFLATED) as outgoing:
+        for info in incoming.infolist():
+            outgoing.writestr(info, modified.get(info.filename, incoming.read(info)))
+    digest = hashlib.sha256(data).hexdigest()
+    if sha(source) != digest:
+        raise OfficeRuntimeError("OFFICE_SOURCE_DRIFT", "marker source changed")
+    with prepared.open("xb") as handle:
+        handle.write(buffer.getvalue())
+    audit = {"schema_version": MARKER_INTERVENTION_AUDIT_SCHEMA, "profile": MARKER_INTERVENTION_PROFILE,
+             "source_sha256": digest, "prepared_sha256": sha(prepared), "source_unchanged": True, "changes": records}
+    with receipt.open("x", encoding="utf-8") as handle:
+        json.dump(audit, handle, ensure_ascii=False, sort_keys=True, indent=2)
+        handle.write("\n")
+    return {"path": str(prepared), "audit_path": str(receipt), "audit": audit}
+
+
+def verify_xlsx_marker_intervention(source, prepared, audit):
+    """Replay only declared marker cells, including their original formula/cache."""
+    source, prepared = Path(source), Path(prepared)
+    invalid = "OFFICE_MARKER_INTERVENTION_AUDIT_INVALID"
+    keys = {"schema_version", "profile", "source_sha256", "prepared_sha256", "source_unchanged", "changes"}
+    if (source.is_symlink() or prepared.is_symlink() or not source.is_file() or not prepared.is_file()
+            or max(source.stat().st_size, prepared.stat().st_size) > MAX_INPUT_BYTES
+            or not isinstance(audit, dict) or set(audit) != keys
+            or audit.get("schema_version") != MARKER_INTERVENTION_AUDIT_SCHEMA
+            or audit.get("profile") != MARKER_INTERVENTION_PROFILE or audit.get("source_unchanged") is not True
+            or audit.get("source_sha256") != sha(source) or audit.get("prepared_sha256") != sha(prepared)
+            or not isinstance(audit.get("changes"), list)
+            or any(not isinstance(row, dict) or set(row) != {"sheet", "cell", "value", "original_cell"} for row in audit["changes"])):
+        raise OfficeRuntimeError(invalid, "marker intervention binding mismatch")
+    edits = [{key: row[key] for key in ("sheet", "cell", "value")} for row in audit["changes"]]
+    parts, modified, records = _marker_intervention_parts(source.read_bytes(), edits)
+    if records != audit["changes"]:
+        raise OfficeRuntimeError(invalid, "original marker cells or declared edits differ")
+    data = prepared.read_bytes()
+    _clean_package(data)
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        if set(archive.namelist()) != set(parts):
+            raise OfficeRuntimeError(invalid, "marker package member set changed")
+        for name, original in parts.items():
+            observed = archive.read(name)
+            if name in modified:
+                equal = ET.canonicalize(modified[name], rewrite_prefixes=True) == ET.canonicalize(observed, rewrite_prefixes=True)
+            else:
+                equal = original == observed
+            if not equal:
+                raise OfficeRuntimeError(invalid, "undeclared marker change: " + name)
     return audit
 
 

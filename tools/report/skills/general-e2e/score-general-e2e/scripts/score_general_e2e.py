@@ -2410,22 +2410,47 @@ def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_r
             raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", artifact["path"])
         embedded_hashes.add(digest)
     counterfactual_hashes = set()
+    variants = []
+    prepared_paths = set()
     for artifact in artifacts:
-        if not artifact["path"].endswith("/counterfactual-audit.json"):
+        marker = artifact["path"].endswith("/marker-intervention-audit.json")
+        if not marker and not artifact["path"].endswith("/counterfactual-audit.json"):
             continue
         _import_grading_core()
-        from wildclawbench_grading_core.office_runtime import OfficeRuntimeError, verify_xlsx_counterfactual
+        from wildclawbench_grading_core.office_runtime import (
+            OfficeRuntimeError, verify_xlsx_counterfactual, verify_xlsx_marker_intervention,
+        )
         receipt_path = root / artifact["path"]
-        receipt = _read_json(receipt_path, code="OFFICE_COUNTERFACTUAL_AUDIT_INVALID")
-        source = workbooks.get(receipt.get("source_sha256"))
+        code = "OFFICE_MARKER_INTERVENTION_AUDIT_INVALID" if marker else "OFFICE_COUNTERFACTUAL_AUDIT_INVALID"
+        receipt = _read_json(receipt_path, code=code)
         prepared = receipt_path.with_name("prepared.xlsx")
-        if source is None or not prepared.is_file():
-            raise ScoringRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", artifact["path"])
-        try:
-            verify_xlsx_counterfactual(source, prepared, receipt)
-        except (OfficeRuntimeError, ValueError, TypeError, KeyError, UnicodeError, zipfile.BadZipFile) as exc:
-            raise ScoringRuntimeError("OFFICE_COUNTERFACTUAL_AUDIT_INVALID", str(exc)) from exc
-        counterfactual_hashes.add(_sha256_file(prepared))
+        parent = receipt.get("source_sha256")
+        if (not isinstance(parent, str) or not re.fullmatch(r"[0-9a-f]{64}", parent)
+                or not prepared.is_file() or prepared in prepared_paths):
+            raise ScoringRuntimeError(code, artifact["path"])
+        prepared_paths.add(prepared)
+        variants.append((artifact["path"], parent, prepared, receipt,
+                         verify_xlsx_marker_intervention if marker else verify_xlsx_counterfactual, code))
+    if len(variants) > 1024:
+        raise ScoringRuntimeError("OFFICE_VARIANT_GRAPH_LIMIT")
+    # Artifact-index order is not provenance order. Only an exactly replayed
+    # child of an authorized root/parent becomes a source for later variants.
+    pending = sorted(variants, key=lambda row: row[0])
+    while pending:
+        ready, waiting = [], []
+        for item in pending:
+            (ready if item[1] in workbooks else waiting).append(item)
+        if not ready:
+            raise ScoringRuntimeError(waiting[0][5], "unrooted or cyclic variant parents: " + repr([r[0] for r in waiting]))
+        for relative, parent, prepared, receipt, verify, code in ready:
+            try:
+                verify(workbooks[parent], prepared, receipt)
+            except (OfficeRuntimeError, ValueError, TypeError, KeyError, UnicodeError, zipfile.BadZipFile) as exc:
+                raise ScoringRuntimeError(code, str(exc)) from exc
+            digest = _sha256_file(prepared)
+            workbooks[digest] = prepared
+            counterfactual_hashes.add(digest)
+        pending = waiting
     for artifact in artifacts:
         if artifact["path"].endswith("/render-audit.json"):
             _import_grading_core()

@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.21.0`增加扎根于冻结候选/私有GT的连续XLSX变体验证和独立二进制标记干预Profile。归档校验按依赖重放每一层，只有已核验变体可成为后续父源，制品索引顺序不影响合法链。`prepare_xlsx_marker_intervention()`在副本中干预声明的0/1中间标记，保留原公式、缓存与类型的完整单元格记录；原基线和允许干预的业务对象须由任务规则先行核验。普通数值输入API的非公式限制保持。共享/数组/元数据型标记明确报告暂不支持，不自动当作候选零分。详见[连续变体与标记干预](references/office-recalculation.md#连续变体与二进制标记干预)。
+
 `0.20.0`增加显式Word/PPTX双格式渲染锁：`bootstrap-office-render --document-format both`冻结v2锁，共享一个引擎和一份字体清单，两类PDF分别保留原格式的固定导出选项、来源和回执，并共同绑定完整v2锁SHA。新helper的`office_render_lock_formats()`给出实际授权格式；正常与归档核验逐份核对Word结构及PPTX页/内嵌表声明。默认仍为原PPTX v1锁，`docx`仍为原Word v1锁，不自动扩大旧锁或旧私有helper的能力。详见[双格式渲染](references/office-rendering.md#word与pptx共同渲染)。
 
 `0.19.0`增加可归档的XLSX数值输入扰动链：`prepare_xlsx_counterfactual()`只在一次性副本修改已存在的数值输入，保留公式和其余部件；随后由原锁定Office清缓存重算。回执记录冻结源、实际输入单元格/原值/新值、变体与重算产物。正常及归档核验重新对照源包，拒绝未声明的公式/缓存/其它部件变更；归档不要求Office仍存在。任务作者仍须独立计算扰动后的业务真值，不能把“有公式”或导出成功当成模型正确。详见[数值输入扰动](references/office-recalculation.md#数值输入扰动)。

@@ -12,9 +12,10 @@ from .office_runtime import render_docx_pdf
 from .office_runtime import office_render_lock_formats
 from .office_runtime import read_embedded_xlsx, extract_embedded_xlsx
 from .office_runtime import prepare_xlsx_counterfactual, verify_xlsx_counterfactual
+from .office_runtime import prepare_xlsx_marker_intervention, verify_xlsx_marker_intervention
 from .image_evidence import ImageEvidenceError, is_image_evidence_format, read_image_evidence
 
-CORE_VERSION = "0.12.0"
+CORE_VERSION = "0.13.0"
 
 __all__ = (
     "CORE_VERSION",
@@ -41,6 +42,8 @@ __all__ = (
     "extract_embedded_xlsx",
     "prepare_xlsx_counterfactual",
     "verify_xlsx_counterfactual",
+    "prepare_xlsx_marker_intervention",
+    "verify_xlsx_marker_intervention",
     "ImageEvidenceError",
     "is_image_evidence_format",
     "read_image_evidence",

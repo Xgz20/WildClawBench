@@ -74,6 +74,30 @@ result = recalculate_xlsx(variant["path"], office_lock, derived / "quantity-resu
 
 `prepared.xlsx`保留原公式及其缓存，`counterfactual-audit.json`绑定源/变体SHA和每个输入的原值、新值。后续可信Office入口才清空缓存并实际重算。目录内文件不可覆盖；缺引擎、helper或回执漂移保持评测异常。候选模型缺少可编辑数值输入、写死输出或计算错误，则按该任务已冻结的业务规则评分，不擅自把环境故障计为候选零分。
 
-语义catalog、合分和归档验证先从冻结候选或私有参考找到源工作簿，再重放声明编辑：不变部件逐字节比对，目标worksheet比对完整XML语义，仅允许声明的数值变化。ZIP压缩和XML前缀差异不决定业务正确性；修改公式、旧缓存、其它输入、样式、工作簿配置或新增部件都会拒绝。只有验证成功的变体SHA才可作为重算来源；删除变体回执、重新索引错误父源或错误原值均不能绕过来源校验。不支持将未知变体或内嵌工作簿直接冒充冻结源，链式输入扰动需另行设计。
+语义catalog、合分和归档验证先从冻结候选或私有参考找到源工作簿，再重放声明编辑：不变部件逐字节比对，目标worksheet比对完整XML语义，仅允许声明的数值变化。ZIP压缩和XML前缀差异不决定业务正确性；修改公式、旧缓存、其它输入、样式、工作簿配置或新增部件都会拒绝。只有验证成功的变体SHA才可作为重算来源；删除变体回执、重新索引错误父源或错误原值均不能绕过来源校验。未知变体或内嵌工作簿仍不能直接冒充冻结源；0.21起，已逐层验证的连续变体可按下节协议成为父源。
 
 作者仍须用独立计算路径比较扰动后的实际重算结果，覆盖承诺的输入与边界。该机制证明来源和实际重算链，不证明公式关系、预算口径、语义质量或目标Excel应用可用性。`verify-score --archived`无需原Office安装，但继续核验上述全部绑定字节。
+
+## 连续变体与二进制标记干预
+
+score-general-e2e 0.21.0、core 0.13.0支持连续派生父源。归档索引可以先列子源；验证器从冻结候选或私有GT工作簿出发，按依赖顺序重放所有变体，只有完全核验的`prepared.xlsx`才加入可信父源集合。未扎根或无法从合法父源解析的循环、同一prepared路径绑定多个变体回执、源/变体摘要漂移或未声明修改均拒绝。每个attempt最多1024个变体回执；每步普通数值编辑仍最多100处。旧单步Profile及其字面数值限制保持不变。
+
+题级有效/命中标记可由普通标量公式计算。需要验证汇总是否依赖这些标记时，使用独立API：
+
+```python
+intervention = prepare_xlsx_marker_intervention(
+    source,
+    [{"sheet": "题级底稿", "cell": "E8", "value": 0}],
+    derived / "marker-step",
+)
+verify_xlsx_marker_intervention(source, intervention["path"], intervention["audit"])
+result = recalculate_xlsx(intervention["path"], office_lock, derived / "marker-result")
+```
+
+该操作是对声明中间标记的受控干预。规则必须先独立核验原始基线标记与其业务身份，再选择题面允许的字段；它不修复原候选，也不证明原标记公式正确。不能用它绕过数值输入接口的非公式限制，或将任意错误输出替换成正确值后声称候选模型通过。
+
+每次接受1至100个不重复的sheet/cell/0或1编辑。普通标量公式可以有陈旧、错误或缺失缓存；原公式、缓存、类型与样式等单元格XML完整记录在`marker-intervention-audit.json`的`original_cell`。字面二进制数值、布尔和文本标记也可干预，文本仍输出文本、布尔仍输出布尔。变体只覆盖声明单元格的值/公式内容，所有其它单元格、包内共享字符串和部件继续核验。新回执使用`wildclawbench.office-xlsx-marker-intervention/v1`与`offline-xlsx-binary-marker-intervention/v1`，不混用旧counterfactual回执。
+
+对整个中间标记向量做干预时，应完整声明该向量的目标格，包括当前值已经等于干预值的公式格；未被冻结的公式可能因其它标记变化而重算出新值。题目规则须独立构造完整的预期向量，不能只改当前非零项。
+
+共享/数组公式范围（含非公式子格）及带cell/value元数据的标记当前报告`OFFICE_MARKER_INTERVENTION_UNSUPPORTED`，不隐式展开或破坏其它格。任务规则应保留此类运行时能力异常，不能据此给合法候选补零或强制其改用字面标记。新增支持需要单独Profile和真实引擎验收。纯归档重放无需Office安装；实际评分仍须固定Office清缓存并重算，独立比较干预后的完整业务结果。

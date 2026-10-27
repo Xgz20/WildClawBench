@@ -94,8 +94,8 @@ class NumericInputVariantTests(unittest.TestCase):
 class CounterfactualEvidenceChainTests(unittest.TestCase):
     def setUp(self):office_tests.OfficeRuntimeTests.setUp(self)
 
-    def make_attempt(self,name):
-        rule='''def grade(**kwargs):
+    def make_attempt(self,name,rule=None):
+        rule=rule or '''def grade(**kwargs):
     from pathlib import Path
     import os,json,runpy
     root=Path(kwargs['workspace_path'])
