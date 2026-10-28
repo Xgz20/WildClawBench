@@ -511,7 +511,7 @@ import json
 import sys
 sys.path.insert(0, sys.argv[1])
 import wildclawbench_grading_core as core
-payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api')
+payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api\\nfrom PIL import Image')
 print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'], 'marker_api': callable(core.prepare_xlsx_marker_intervention) and callable(core.verify_xlsx_marker_intervention), 'numeric_api': callable(core.prepare_xlsx_numeric_intervention) and callable(core.verify_xlsx_numeric_intervention), 'html_api': all(callable(getattr(core,n)) for n in ['create_html_lock','validate_html_lock','html_lock_digest','observe_html','verify_html_observation'])}))
 """
         completed = subprocess.run(
@@ -524,7 +524,7 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'],
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(payload["version"], "0.15.2")
+        self.assertEqual(payload["version"], "0.15.3")
         self.assertTrue(payload["marker_api"])
         self.assertTrue(payload["numeric_api"])
         self.assertTrue(payload["html_api"])
@@ -532,7 +532,7 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'],
         self.assertEqual(component["version"], payload["version"])
         self.assertEqual(
             {item["distribution"] for item in payload["external"]},
-            {"PyYAML", "playwright"},
+            {"PyYAML", "playwright", "pillow"},
         )
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
 

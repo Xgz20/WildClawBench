@@ -35,7 +35,7 @@ def local_fixture_executor(source: str, context: dict) -> dict:
 
 class GradingCoreTests(unittest.TestCase):
     def test_public_api_and_same_fixture_match_legacy_combiner(self) -> None:
-        self.assertEqual(CORE_VERSION, "0.15.2")
+        self.assertEqual(CORE_VERSION, "0.15.3")
         source = """
 def grade(transcript: list, workspace_path: str) -> dict:
     assert workspace_path == "/tmp_workspace"
@@ -159,6 +159,22 @@ def grade(transcript: list, workspace_path: str) -> dict:
             GradingCoreError, "RULE_DYNAMIC_IMPORT_UNSUPPORTED"
         ):
             inspect_rule_dependencies("import importlib\nimportlib.import_module('yaml')")
+
+    def test_direct_pil_import_maps_to_optional_pillow_dependency(self) -> None:
+        for source in ("from PIL import Image", "import PIL.Image"):
+            with self.subTest(source=source):
+                discovered = inspect_rule_dependencies(source)
+                self.assertEqual(discovered["imports"], ["PIL"])
+                self.assertEqual(discovered["external"], [{
+                    "import_root": "PIL",
+                    "distribution": "pillow",
+                    "runtime_assets": [],
+                }])
+        catalog = json.loads((
+            REPO_ROOT / "src/wildclawbench_grading_core/rule-runtime-dependencies.json"
+        ).read_text(encoding="utf-8"))
+        pillow = next(item for item in catalog["dependencies"] if item["distribution"] == "pillow")
+        self.assertEqual(pillow["version_policy"], "optional-freeze-in-supplied-managed-runtime")
 
     def test_rule_values_and_keys_are_strict(self) -> None:
         source = "def grade(**kwargs): return {'quality': True, 'overall_score': 1.0}"

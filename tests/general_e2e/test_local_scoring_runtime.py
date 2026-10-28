@@ -296,7 +296,9 @@ class Fixture:
                 archive.writestr(zip_info(f"{package_root}/{private_root}/gt/{name}"), content)
         self.output_root = root / "attempts"
 
-    def prepare(self, attempt_id: str = "score-attempt") -> Path:
+    def prepare(
+        self, attempt_id: str = "score-attempt", *, runtime_lock_path: Path = LOCK_PATH
+    ) -> Path:
         semantic = self.grading_type != "automated"
         result = RUNTIME.prepare_attempt(
             unit_root=self.unit_root,
@@ -305,7 +307,7 @@ class Fixture:
             task_id=self.task_id,
             scoring_attempt_id=attempt_id,
             output_root=self.output_root,
-            runtime_lock_path=LOCK_PATH,
+            runtime_lock_path=runtime_lock_path,
             judge_protocol="codex-agent-judge-v1" if semantic else None,
             judge_model="gpt-fixture" if semantic else None,
             judge_reasoning_effort="high" if semantic else None,
@@ -545,6 +547,7 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         }
         self.assertEqual(versions["PyYAML"], "6.0.3")
         self.assertEqual(versions["playwright"], "1.55.0")
+        self.assertNotIn("pillow", versions)
         browser = next(
             asset
             for item in lock["dependencies"]
@@ -571,6 +574,39 @@ class LocalScoringRuntimeTests(unittest.TestCase):
                 runtime_lock_path=LOCK_PATH,
                 required_import_roots=["playwright"],
             )
+
+    def test_optional_pillow_runtime_failures_remain_evaluation_errors(self) -> None:
+        rule = "from PIL import Image\ndef grade(**kwargs): return {'fixture': 1.0, 'overall_score': 1.0}"
+        for declared, code in (
+            (False, "RUNTIME_DEPENDENCY_UNDECLARED"),
+            (True, "RUNTIME_PROBE_FAILED"),
+        ):
+            with self.subTest(declared=declared):
+                case_root = self.root / code
+                case_root.mkdir()
+                lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
+                lock["python"] = {"major": sys.version_info.major, "minor": sys.version_info.minor}
+                lock["dependencies"] = ([{
+                    "distribution": "pillow", "version": "12.3.0",
+                    "import_roots": ["PIL"], "runtime_assets": [],
+                }] if declared else [])
+                lock_path = case_root / "runtime-lock.json"
+                lock_path.write_text(json.dumps(lock), encoding="utf-8")
+                fixture = Fixture(case_root, rule=rule)
+                attempt = fixture.prepare(runtime_lock_path=lock_path)
+                with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, code):
+                    RUNTIME.run_rules_attempt(
+                        attempt_root=attempt, runtime_python=self.runtime_python,
+                        timeout_seconds=10,
+                    )
+                audit = json.loads((attempt / "rule-audit.json").read_text(encoding="utf-8"))
+                self.assertEqual(audit["error"]["code"], code)
+                self.assertFalse((attempt / "rule-component.json").exists())
+                RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+                score = RUNTIME.finalize_score_attempt(attempt_root=attempt)["score"]
+                self.assertEqual(score["evaluation"]["status"], "evaluation_error")
+                self.assertIsNone(score["result"]["total_score"])
+                self.assertFalse(score["result"]["valid"])
 
     def test_package_paths_duplicates_and_symlink_escape_are_rejected(self) -> None:
         traversal = self.root / "traversal.zip"

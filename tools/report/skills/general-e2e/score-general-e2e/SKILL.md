@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.27.1`装配core `0.15.3`，规则依赖目录增加可选`pillow`/`PIL`，允许直接静态导入`from PIL import Image`。实际受管Worker的冻结锁仍须声明`PIL`与安装版本，并通过版本和导入探测；缺包、缺声明或版本不符均为评测异常，不计能力零分。默认安装Profile与requirements不增加Pillow，旧任务和冻结材料不自动改写。详见[本地受管规则运行时](references/local-rule-runtime.md)。
+
 `0.27.0`装配不变的core `0.15.2`。所有受管规则均获得独立的`GENERAL_E2E_RULE_EVIDENCE_DIR`；派生文件按路径、SHA和大小完整保管，进入verify及语义目录/查询，不能借Office/HTML声明才能保存普通规则证据。这份回执只证明保管事实，不证明业务成功。旧版无派生文件索引的普通审计和0.26 Office证据继续兼容，未索引文件、越界或符号链接会失败关闭。
 
 可信private policy v2继续保留DOCX/XLSX原件、part/节点或sheet/cell、公式文本和存储缓存。短引复用可在明确DOCX段落/表行/单元格或XLSX单元格范围内组合冻结原记录，不整文无界拼接。0.26 v2 collector以原字节静态封存，只用于验证其已知SHA绑定的历史来源；当前采集和复用资格使用新实现。v1 collector保持原字节，旧policy、GT和冻结来源包不改。不调用Office、不执行宏/外链、不重算来源公式；旧OLE、宏包、损坏/超限和类型欺骗明确报错。具体字段与边界见[独立公开来源取证](references/research-sources.md)。

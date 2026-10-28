@@ -38,6 +38,8 @@ python scripts/score_general_e2e.py bootstrap-runtime \
 
 0.15.0的允许目录含可选PDF规则依赖`pdfplumber`、`pypdf`。默认3.11安装Profile和requirements保持原样，不自动安装这两个可选包。使用它们的规则须提供真实、处于虚拟环境中的解释器，以及声明实际版本和import roots的冻结runtime锁；缺少声明会在Worker启动前拒绝。现成受管库可通过独立虚拟环境共享并逐项probe，但这种已有环境快照不等于默认bootstrap可重建，也不锁每个库文件；校准前仍须统一可信安装制品。
 
+score 0.27.1/core 0.15.3同样允许可选图像依赖`pillow`（import root为`PIL`），可在规则正文直接写`from PIL import Image`。允许目录只声明受支持的导入，不保证Worker已安装：实际锁必须声明`PIL`和精确安装版本。缺声明报`RUNTIME_DEPENDENCY_UNDECLARED`，缺包或导入失败报`RUNTIME_PROBE_FAILED`，版本不符报`RUNTIME_DEPENDENCY_MISMATCH`；三者均停止执行并保留评测异常，不生成能力零分。默认Profile和requirements不增加Pillow，也不自动安装或从动态GT helper推断依赖。
+
 ## 准备私有 attempt
 
 ```bash

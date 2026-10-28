@@ -24,6 +24,12 @@
       "import_roots": ["pypdf"],
       "runtime_assets": [],
       "version_policy": "optional-freeze-in-supplied-managed-runtime"
+    },
+    {
+      "distribution": "pillow",
+      "import_roots": ["PIL"],
+      "runtime_assets": [],
+      "version_policy": "optional-freeze-in-supplied-managed-runtime"
     }
   ]
 }

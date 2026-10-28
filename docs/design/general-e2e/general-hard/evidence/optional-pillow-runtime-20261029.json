@@ -1,0 +1,206 @@
+{
+  "schema_version": "general-e2e-optional-pillow-review/v1",
+  "status": "AUTHOR_MECHANISMS_VERIFIED_NOT_HARNESS_SCORE",
+  "score_version": "0.27.1",
+  "core_version": "0.15.3",
+  "handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/handoff.json",
+    "sha256": "7ebef8cea9f3c08415ae079668cbab501889adadb981a5ad7f2bc9c4a9302fb5"
+  },
+  "catalog_change": "Optional pillow distribution/PIL import-root mapping; existing managed lock/version/import checks unchanged.",
+  "tests": [
+    {
+      "name": "focused-core-runtime-tests",
+      "count": 14,
+      "status": "PASS"
+    },
+    {
+      "name": "focused-detached-zip-tests",
+      "count": 2,
+      "status": "PASS"
+    }
+  ],
+  "actual_integration": {
+    "core_version": "0.15.3",
+    "score_version": "0.27.1",
+    "static_dependencies": {
+      "imports": [
+        "PIL",
+        "io"
+      ],
+      "stdlib": [
+        "io"
+      ],
+      "external": [
+        {
+          "import_root": "PIL",
+          "distribution": "pillow",
+          "runtime_assets": []
+        }
+      ]
+    },
+    "worker_probe": {
+      "status": "PASS",
+      "runtime_lock_sha256": "5362d6a2e6f7c83daa6c540e7a63eda6d45d56526281762c8359d106a42bd757",
+      "probe": {
+        "browser": null,
+        "dependencies": {
+          "pillow": "12.3.0"
+        },
+        "imports": [
+          "PIL"
+        ],
+        "python": {
+          "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+          "in_virtualenv": true,
+          "major": 3,
+          "minor": 12,
+          "patch": 14
+        }
+      }
+    },
+    "cases": [
+      {
+        "name": "existing-worker",
+        "expected_error": null,
+        "observed_error": null,
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/attempt-cases/existing-worker/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt",
+        "runtime_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+        "lock_sha256": "5362d6a2e6f7c83daa6c540e7a63eda6d45d56526281762c8359d106a42bd757",
+        "score_sha256": "dcfab42af80c75689b1bcb0788c4b06f69456aa663451c38c8373fbf223c7f4c",
+        "evaluation_status": "completed",
+        "result": {
+          "valid": true,
+          "total_score": 1.0,
+          "invalid_reason": null
+        }
+      },
+      {
+        "name": "wrong-version",
+        "expected_error": "RUNTIME_DEPENDENCY_MISMATCH",
+        "observed_error": "RUNTIME_DEPENDENCY_MISMATCH",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/attempt-cases/wrong-version/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt",
+        "runtime_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+        "lock_sha256": "14540dd77d99f677b4af9df96295c12e9d56e725212ec55b83710d37512afec0",
+        "score_sha256": "d3655fc5d580666032d314548858fd06509649d7e9356da735cc7ef8b1b708aa",
+        "evaluation_status": "evaluation_error",
+        "result": {
+          "valid": false,
+          "total_score": null,
+          "invalid_reason": "rules component is evaluation_error"
+        }
+      },
+      {
+        "name": "missing-declaration",
+        "expected_error": "RUNTIME_DEPENDENCY_UNDECLARED",
+        "observed_error": "RUNTIME_DEPENDENCY_UNDECLARED",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/attempt-cases/missing-declaration/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt",
+        "runtime_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+        "lock_sha256": "31e9af2a6a757cde38fbfbee656fd97f77a3263855092ce6d6f0c63f4b7dcfc0",
+        "score_sha256": "0e43e32ce068200af13e77e68462779b5fe6371cfcf84c56b69eefb6c3ee3ffa",
+        "evaluation_status": "evaluation_error",
+        "result": {
+          "valid": false,
+          "total_score": null,
+          "invalid_reason": "rules component is evaluation_error"
+        }
+      },
+      {
+        "name": "missing-package",
+        "expected_error": "RUNTIME_PROBE_FAILED",
+        "observed_error": "RUNTIME_PROBE_FAILED",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/attempt-cases/missing-package/attempts/batch-fixture__unit-fixture/task-fixture/score-attempt",
+        "runtime_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/tmp/empty-no-pip-venv/bin/python",
+        "lock_sha256": "f86b17c858575a2010575692a30df5b95c24f4e79a3cfc9cf30c33abea58881b",
+        "score_sha256": "e4a4cd104716cd8700f0caad15d9991ed68a68e96522758557d5e018f9e6d6f4",
+        "evaluation_status": "evaluation_error",
+        "result": {
+          "valid": false,
+          "total_score": null,
+          "invalid_reason": "rules component is evaluation_error"
+        }
+      }
+    ],
+    "independent_zip": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/dist/score-general-e2e-skill-v0.27.1.zip",
+      "sha256": "243e510d97b75fda79a9f10102cc3759f076d76e083c8aa1113bcdc76807dfa5",
+      "bytes": 850366,
+      "component": {
+        "name": "grading-core",
+        "version": "0.15.3",
+        "source_revision": "f6b34a5718dabc22f5b06428d97af5233cfead1d",
+        "source_root": "src/wildclawbench_grading_core",
+        "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+        "entrypoints": [
+          "__init__.py",
+          "native_text.py",
+          "office_runtime.py",
+          "image_evidence.py",
+          "html_runtime.py",
+          "html_observer.mjs"
+        ],
+        "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+        "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5"
+      },
+      "detached_result": {
+        "core_version": "0.15.3",
+        "score_version": "0.27.1",
+        "core_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-pillow-dependency-20261029/detached/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/__init__.py",
+        "rule_score": 1.0,
+        "dependencies": {
+          "imports": [
+            "PIL",
+            "io"
+          ],
+          "stdlib": [
+            "io"
+          ],
+          "external": [
+            {
+              "import_root": "PIL",
+              "distribution": "pillow",
+              "runtime_assets": []
+            }
+          ]
+        },
+        "probe": {
+          "status": "PASS",
+          "runtime_lock_sha256": "5362d6a2e6f7c83daa6c540e7a63eda6d45d56526281762c8359d106a42bd757",
+          "probe": {
+            "browser": null,
+            "dependencies": {
+              "pillow": "12.3.0"
+            },
+            "imports": [
+              "PIL"
+            ],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          }
+        }
+      }
+    },
+    "network_or_install": false
+  },
+  "preservation": {
+    "status": "PASS",
+    "files_checked": 14123,
+    "bytes_checked": 233698596,
+    "changed": [],
+    "added": []
+  },
+  "root_review": {
+    "all10files_equal_proposed_snapshot": true,
+    "no_silent_same_version_publication": true,
+    "original_source_collectors_and_default_runtime_not_modified": true,
+    "no_H040_source_GT_reference_or_annotations_changed": true
+  },
+  "independent_zip_is_mechanism_not_official_dataset_release": true,
+  "semantic_Judge_or_Harness": false,
+  "network_or_install": false
+}
