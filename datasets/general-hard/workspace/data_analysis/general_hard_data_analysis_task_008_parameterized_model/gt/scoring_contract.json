@@ -1,0 +1,29 @@
+{
+  "schema_version": "h024-scoring/v1",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "model_io.py": "2b585e282abb228d075924162fda3bdc575698a683889786bc972f763e893a1e",
+    "xlsx_observations.py": "992dbe965ed3aad3f5ee4e15f2a0e2facd751ea80fb9c279e20f46d9d670a089",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "business_model.py": "14b6e67343dc66ca4293f16e94991a5b84623e3865dd2bb47986fb218d33ef9c",
+    "independent_fraction_model.py": "f11e9493c27c326e2fd6b36610040dc48461a91ddb97997b305dd93155433629",
+    "expected.json": "7a3a71fd44808809919520e5a1d17d439f5247e57ded20ef112378681a6870f3",
+    "source_records.json": "45d0a68a1a78d6c7a8afbe1ddc706534ed06286f9a883cc52c011059a4577033",
+    "protected_sha256.json": "cc712f4237b0179489bbefd74f3107019642d7fc9ec0f2c1d243555368709980",
+    "independent_validation.json": "10df65468636475bef3627b2ba48b48fcd47af87b1ded69590a8af31772bc563",
+    "business_oracle.json": "9d3f791a78c246660691fad3977501192fd33093a29beff3639c75a504708110",
+    "counterexamples.json": "fc2bbcee4b563bb72936febfc8f079d71924d3abacc8a4c0a3146ee60efe278a",
+    "artifact_contract.json": "e676879c77f4823336cdb4bb8d971ec31e7246bae70d35cdff83874386c4ef6b",
+    "evidence_requirements.json": "42ce2b6f2f36c9e2ed3d7fc5cb7e1c84ea984f91a80a3e3f2cf0bb5535cca080",
+    "runtime_contract.json": "f3e4edf336b695833b88843be5f66b0da28f2c0b6235d0ed587324b532edd058",
+    "scenarios/base_july_rate/expected.json": "1e1e50fb10b893412e01ff957d516fe9603aec4c973e0fce254bdf3db4201f23",
+    "scenarios/growth_september_cap/expected.json": "cd6e9b6fa021aac80af7630d4fcd8c07733b0fd35f89bd806628decaa3b01bab",
+    "scenarios/guardrail_september_zero_cap/expected.json": "8a0b0d71a523599fdb438550b2fa46d5e07b5f461ca972edce346f1e8311788e"
+  },
+  "grading_source_sha256": "617222e9217e41e9b2da93520e7ec02043809ea0003f606bce51d38ab61d2397"
+}

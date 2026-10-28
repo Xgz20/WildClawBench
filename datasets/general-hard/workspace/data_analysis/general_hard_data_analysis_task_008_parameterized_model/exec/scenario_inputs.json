@@ -1,0 +1,122 @@
+{
+  "currency": "CNY",
+  "scenarios": [
+    {
+      "scenario_id": 1,
+      "scenario_name": "Base",
+      "month": "2026-07",
+      "salary_multiplier": "1.00",
+      "tier1_limit": "10000",
+      "tier2_limit": "20000",
+      "rate1": "0.0100",
+      "rate2": "0.0250",
+      "rate3": "0.0400",
+      "commission_cap": "1800",
+      "full_allowance": "200"
+    },
+    {
+      "scenario_id": 1,
+      "scenario_name": "Base",
+      "month": "2026-08",
+      "salary_multiplier": "1.00",
+      "tier1_limit": "10000",
+      "tier2_limit": "20000",
+      "rate1": "0.0110",
+      "rate2": "0.0260",
+      "rate3": "0.0410",
+      "commission_cap": "1600",
+      "full_allowance": "220"
+    },
+    {
+      "scenario_id": 1,
+      "scenario_name": "Base",
+      "month": "2026-09",
+      "salary_multiplier": "1.02",
+      "tier1_limit": "11000",
+      "tier2_limit": "21000",
+      "rate1": "0.0120",
+      "rate2": "0.0270",
+      "rate3": "0.0420",
+      "commission_cap": "2000",
+      "full_allowance": "240"
+    },
+    {
+      "scenario_id": 2,
+      "scenario_name": "Growth",
+      "month": "2026-07",
+      "salary_multiplier": "1.03",
+      "tier1_limit": "12000",
+      "tier2_limit": "22000",
+      "rate1": "0.0120",
+      "rate2": "0.0280",
+      "rate3": "0.0500",
+      "commission_cap": "2500",
+      "full_allowance": "280"
+    },
+    {
+      "scenario_id": 2,
+      "scenario_name": "Growth",
+      "month": "2026-08",
+      "salary_multiplier": "1.04",
+      "tier1_limit": "12000",
+      "tier2_limit": "22000",
+      "rate1": "0.0130",
+      "rate2": "0.0300",
+      "rate3": "0.0510",
+      "commission_cap": "2700",
+      "full_allowance": "300"
+    },
+    {
+      "scenario_id": 2,
+      "scenario_name": "Growth",
+      "month": "2026-09",
+      "salary_multiplier": "1.08",
+      "tier1_limit": "13000",
+      "tier2_limit": "23000",
+      "rate1": "0.0140",
+      "rate2": "0.0320",
+      "rate3": "0.0520",
+      "commission_cap": "3000",
+      "full_allowance": "320"
+    },
+    {
+      "scenario_id": 3,
+      "scenario_name": "Guardrail",
+      "month": "2026-07",
+      "salary_multiplier": "0.98",
+      "tier1_limit": "8000",
+      "tier2_limit": "18000",
+      "rate1": "0.0080",
+      "rate2": "0.0200",
+      "rate3": "0.0350",
+      "commission_cap": "1000",
+      "full_allowance": "100"
+    },
+    {
+      "scenario_id": 3,
+      "scenario_name": "Guardrail",
+      "month": "2026-08",
+      "salary_multiplier": "0.99",
+      "tier1_limit": "8000",
+      "tier2_limit": "18000",
+      "rate1": "0.0085",
+      "rate2": "0.0210",
+      "rate3": "0.0360",
+      "commission_cap": "900",
+      "full_allowance": "100"
+    },
+    {
+      "scenario_id": 3,
+      "scenario_name": "Guardrail",
+      "month": "2026-09",
+      "salary_multiplier": "1.00",
+      "tier1_limit": "9000",
+      "tier2_limit": "19000",
+      "rate1": "0.0090",
+      "rate2": "0.0220",
+      "rate3": "0.0370",
+      "commission_cap": "800",
+      "full_allowance": "120"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "schema_version": "h024-reference-provenance/v1",
+  "status": "AUTHOR_REFERENCE_V3_NATIVE_VERIFIED",
+  "authoring": "Artifact Tool; one shared scenario-keyed formula pattern, 8 worksheets; 108 payroll and216 retrospective rows; current-case36/72 view and live9-row comparison",
+  "user_approved_unified_scenarios": true,
+  "data_tables_used": false,
+  "static_comparison_snapshots": false,
+  "sources_precede_reference": true,
+  "independent_methods": [
+    "Decimal grouped monthly capped-curve refund differences",
+    "Integer-cent / Fraction band widths and sequential refund timeline"
+  ],
+  "source_truth_checks": 16848,
+  "native_checks": 37275,
+  "supplemental_same_copy_growth_restore_checks": 5566,
+  "reference_sha256": {
+    "validation.md": "4242a24306ef05da96e65bcbf3bca87bcb3b7cd08e4979f8b1f406ff8771a4ed",
+    "compensation_model.xlsx": "8560f8143e2989bd1bf71e5999c1153680ffec5100569c83cd44e814507eb98b"
+  },
+  "source_rows_verified": 192,
+  "parameter_rows_verified": 9,
+  "human_expert_review": false,
+  "previous_prototypes": "Rejected metric-selector v1 and material-stage snapshot retained externally; unified v2 proposed, final v3 adds explicit current-case IDs and complete retrospective fields."
+}

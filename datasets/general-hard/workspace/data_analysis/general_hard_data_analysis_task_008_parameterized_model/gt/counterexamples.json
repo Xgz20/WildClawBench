@@ -1,0 +1,42 @@
+{
+  "schema_version": "h024-counterexamples/v1",
+  "probes": [
+    {
+      "id": "growth_september_cap",
+      "scenario_id": 2,
+      "month": "2026-09",
+      "field": "commission_cap",
+      "new_value": 2100,
+      "truth": "scenarios/growth_september_cap/expected.json"
+    },
+    {
+      "id": "guardrail_september_zero_cap",
+      "scenario_id": 3,
+      "month": "2026-09",
+      "field": "commission_cap",
+      "new_value": 0,
+      "truth": "scenarios/guardrail_september_zero_cap/expected.json"
+    },
+    {
+      "id": "base_july_rate",
+      "scenario_id": 1,
+      "month": "2026-07",
+      "field": "rate1",
+      "new_value": 0.02,
+      "truth": "scenarios/base_july_rate/expected.json"
+    }
+  ],
+  "negative_mechanisms": [
+    "whole amount at highest tier",
+    "per sale rounding",
+    "current month refund rate",
+    "repeat prior clawback",
+    "ignore capped-origin counterfactual",
+    "clamp negative salary",
+    "zero attendance deletes commission",
+    "static outputs or constant formulas",
+    "static case comparison",
+    "selector only relabels",
+    "zero cap treated as unlimited"
+  ]
+}

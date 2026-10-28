@@ -1,0 +1,1492 @@
+{
+  "seed": 2026102624,
+  "period_start": "2026-07",
+  "period_end": "2026-09",
+  "currency": "CNY",
+  "months": [
+    "2026-07",
+    "2026-08",
+    "2026-09"
+  ],
+  "employees": [
+    {
+      "employee_id": "E01",
+      "employee_name": "示例员工01",
+      "base_monthly_salary": "1200.00"
+    },
+    {
+      "employee_id": "E02",
+      "employee_name": "示例员工02",
+      "base_monthly_salary": "2400.50"
+    },
+    {
+      "employee_id": "E03",
+      "employee_name": "示例员工03",
+      "base_monthly_salary": "2800.00"
+    },
+    {
+      "employee_id": "E04",
+      "employee_name": "示例员工04",
+      "base_monthly_salary": "3200.00"
+    },
+    {
+      "employee_id": "E05",
+      "employee_name": "示例员工05",
+      "base_monthly_salary": "3600.00"
+    },
+    {
+      "employee_id": "E06",
+      "employee_name": "示例员工06",
+      "base_monthly_salary": "4200.00"
+    },
+    {
+      "employee_id": "E07",
+      "employee_name": "示例员工07",
+      "base_monthly_salary": "4800.25"
+    },
+    {
+      "employee_id": "E08",
+      "employee_name": "示例员工08",
+      "base_monthly_salary": "5200.00"
+    },
+    {
+      "employee_id": "E09",
+      "employee_name": "示例员工09",
+      "base_monthly_salary": "5800.00"
+    },
+    {
+      "employee_id": "E10",
+      "employee_name": "示例员工10",
+      "base_monthly_salary": "6200.00"
+    },
+    {
+      "employee_id": "E11",
+      "employee_name": "示例员工11",
+      "base_monthly_salary": "1000.00"
+    },
+    {
+      "employee_id": "E12",
+      "employee_name": "示例员工12",
+      "base_monthly_salary": "500.00"
+    }
+  ],
+  "attendance": [
+    {
+      "attendance_id": "A001",
+      "employee_id": "E01",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A002",
+      "employee_id": "E02",
+      "month": "2026-07",
+      "paid_days": "11.5",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A003",
+      "employee_id": "E03",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A004",
+      "employee_id": "E04",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A005",
+      "employee_id": "E05",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A006",
+      "employee_id": "E06",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A007",
+      "employee_id": "E07",
+      "month": "2026-07",
+      "paid_days": "22.5",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A008",
+      "employee_id": "E08",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A009",
+      "employee_id": "E09",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A010",
+      "employee_id": "E10",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A011",
+      "employee_id": "E11",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A012",
+      "employee_id": "E12",
+      "month": "2026-07",
+      "paid_days": "23",
+      "standard_days": "23"
+    },
+    {
+      "attendance_id": "A013",
+      "employee_id": "E01",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A014",
+      "employee_id": "E02",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A015",
+      "employee_id": "E03",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A016",
+      "employee_id": "E04",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A017",
+      "employee_id": "E05",
+      "month": "2026-08",
+      "paid_days": "10.5",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A018",
+      "employee_id": "E06",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A019",
+      "employee_id": "E07",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A020",
+      "employee_id": "E08",
+      "month": "2026-08",
+      "paid_days": "19.75",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A021",
+      "employee_id": "E09",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A022",
+      "employee_id": "E10",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A023",
+      "employee_id": "E11",
+      "month": "2026-08",
+      "paid_days": "0",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A024",
+      "employee_id": "E12",
+      "month": "2026-08",
+      "paid_days": "21",
+      "standard_days": "21"
+    },
+    {
+      "attendance_id": "A025",
+      "employee_id": "E01",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A026",
+      "employee_id": "E02",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A027",
+      "employee_id": "E03",
+      "month": "2026-09",
+      "paid_days": "2E+1",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A028",
+      "employee_id": "E04",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A029",
+      "employee_id": "E05",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A030",
+      "employee_id": "E06",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A031",
+      "employee_id": "E07",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A032",
+      "employee_id": "E08",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A033",
+      "employee_id": "E09",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A034",
+      "employee_id": "E10",
+      "month": "2026-09",
+      "paid_days": "11",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A035",
+      "employee_id": "E11",
+      "month": "2026-09",
+      "paid_days": "22",
+      "standard_days": "22"
+    },
+    {
+      "attendance_id": "A036",
+      "employee_id": "E12",
+      "month": "2026-09",
+      "paid_days": "0",
+      "standard_days": "22"
+    }
+  ],
+  "sales": [
+    {
+      "sale_id": "S001",
+      "employee_id": "E01",
+      "month": "2026-07",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S002",
+      "employee_id": "E01",
+      "month": "2026-07",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S003",
+      "employee_id": "E01",
+      "month": "2026-07",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S004",
+      "employee_id": "E02",
+      "month": "2026-07",
+      "amount": "3699.63",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S005",
+      "employee_id": "E02",
+      "month": "2026-07",
+      "amount": "2899.71",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S006",
+      "employee_id": "E02",
+      "month": "2026-07",
+      "amount": "3399.66",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S007",
+      "employee_id": "E03",
+      "month": "2026-07",
+      "amount": "3700.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S008",
+      "employee_id": "E03",
+      "month": "2026-07",
+      "amount": "2900.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S009",
+      "employee_id": "E03",
+      "month": "2026-07",
+      "amount": "3400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S010",
+      "employee_id": "E04",
+      "month": "2026-07",
+      "amount": "3700.37",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S011",
+      "employee_id": "E04",
+      "month": "2026-07",
+      "amount": "2900.29",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S012",
+      "employee_id": "E04",
+      "month": "2026-07",
+      "amount": "3400.34",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S013",
+      "employee_id": "E05",
+      "month": "2026-07",
+      "amount": "7399.63",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S014",
+      "employee_id": "E05",
+      "month": "2026-07",
+      "amount": "5799.71",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S015",
+      "employee_id": "E05",
+      "month": "2026-07",
+      "amount": "6799.66",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S016",
+      "employee_id": "E06",
+      "month": "2026-07",
+      "amount": "7400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S017",
+      "employee_id": "E06",
+      "month": "2026-07",
+      "amount": "5800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S018",
+      "employee_id": "E06",
+      "month": "2026-07",
+      "amount": "6800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S019",
+      "employee_id": "E07",
+      "month": "2026-07",
+      "amount": "7400.37",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S020",
+      "employee_id": "E07",
+      "month": "2026-07",
+      "amount": "5800.29",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S021",
+      "employee_id": "E07",
+      "month": "2026-07",
+      "amount": "6800.34",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S022",
+      "employee_id": "E08",
+      "month": "2026-07",
+      "amount": "12950.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S023",
+      "employee_id": "E08",
+      "month": "2026-07",
+      "amount": "10150.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S024",
+      "employee_id": "E08",
+      "month": "2026-07",
+      "amount": "11900.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S025",
+      "employee_id": "E09",
+      "month": "2026-07",
+      "amount": "22200.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S026",
+      "employee_id": "E09",
+      "month": "2026-07",
+      "amount": "17400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S027",
+      "employee_id": "E09",
+      "month": "2026-07",
+      "amount": "20400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S028",
+      "employee_id": "E10",
+      "month": "2026-07",
+      "amount": "33300.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S029",
+      "employee_id": "E10",
+      "month": "2026-07",
+      "amount": "26100.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S030",
+      "employee_id": "E10",
+      "month": "2026-07",
+      "amount": "30600.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S031",
+      "employee_id": "E11",
+      "month": "2026-07",
+      "amount": "18500.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S032",
+      "employee_id": "E11",
+      "month": "2026-07",
+      "amount": "14500.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S033",
+      "employee_id": "E11",
+      "month": "2026-07",
+      "amount": "17000.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S034",
+      "employee_id": "E12",
+      "month": "2026-07",
+      "amount": "37000.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S035",
+      "employee_id": "E12",
+      "month": "2026-07",
+      "amount": "29000.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S036",
+      "employee_id": "E12",
+      "month": "2026-07",
+      "amount": "34000.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S037",
+      "employee_id": "E01",
+      "month": "2026-08",
+      "amount": "2960.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S038",
+      "employee_id": "E01",
+      "month": "2026-08",
+      "amount": "2320.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S039",
+      "employee_id": "E01",
+      "month": "2026-08",
+      "amount": "2720.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S040",
+      "employee_id": "E02",
+      "month": "2026-08",
+      "amount": "4440.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S041",
+      "employee_id": "E02",
+      "month": "2026-08",
+      "amount": "3480.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S042",
+      "employee_id": "E02",
+      "month": "2026-08",
+      "amount": "4080.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S043",
+      "employee_id": "E03",
+      "month": "2026-08",
+      "amount": "7400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S044",
+      "employee_id": "E03",
+      "month": "2026-08",
+      "amount": "5800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S045",
+      "employee_id": "E03",
+      "month": "2026-08",
+      "amount": "6800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S046",
+      "employee_id": "E04",
+      "month": "2026-08",
+      "amount": "8880.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S047",
+      "employee_id": "E04",
+      "month": "2026-08",
+      "amount": "6960.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S048",
+      "employee_id": "E04",
+      "month": "2026-08",
+      "amount": "8160.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S049",
+      "employee_id": "E05",
+      "month": "2026-08",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S050",
+      "employee_id": "E05",
+      "month": "2026-08",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S051",
+      "employee_id": "E05",
+      "month": "2026-08",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S052",
+      "employee_id": "E06",
+      "month": "2026-08",
+      "amount": "16650.09",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S053",
+      "employee_id": "E06",
+      "month": "2026-08",
+      "amount": "13050.07",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S054",
+      "employee_id": "E06",
+      "month": "2026-08",
+      "amount": "15300.09",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S055",
+      "employee_id": "E07",
+      "month": "2026-08",
+      "amount": "8140.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S056",
+      "employee_id": "E07",
+      "month": "2026-08",
+      "amount": "6380.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S057",
+      "employee_id": "E07",
+      "month": "2026-08",
+      "amount": "7480.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S058",
+      "employee_id": "E08",
+      "month": "2026-08",
+      "amount": "18500.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S059",
+      "employee_id": "E08",
+      "month": "2026-08",
+      "amount": "14500.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S060",
+      "employee_id": "E08",
+      "month": "2026-08",
+      "amount": "17000.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S061",
+      "employee_id": "E09",
+      "month": "2026-08",
+      "amount": "29600.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S062",
+      "employee_id": "E09",
+      "month": "2026-08",
+      "amount": "23200.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S063",
+      "employee_id": "E09",
+      "month": "2026-08",
+      "amount": "27200.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S064",
+      "employee_id": "E10",
+      "month": "2026-08",
+      "amount": "4440.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S065",
+      "employee_id": "E10",
+      "month": "2026-08",
+      "amount": "3480.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S066",
+      "employee_id": "E10",
+      "month": "2026-08",
+      "amount": "4080.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S067",
+      "employee_id": "E11",
+      "month": "2026-08",
+      "amount": "3700.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S068",
+      "employee_id": "E11",
+      "month": "2026-08",
+      "amount": "2900.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S069",
+      "employee_id": "E11",
+      "month": "2026-08",
+      "amount": "3400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S070",
+      "employee_id": "E12",
+      "month": "2026-08",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S071",
+      "employee_id": "E12",
+      "month": "2026-08",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S072",
+      "employee_id": "E12",
+      "month": "2026-08",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S073",
+      "employee_id": "E01",
+      "month": "2026-09",
+      "amount": "37.18",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S074",
+      "employee_id": "E01",
+      "month": "2026-09",
+      "amount": "29.14",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S075",
+      "employee_id": "E01",
+      "month": "2026-09",
+      "amount": "34.18",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S076",
+      "employee_id": "E02",
+      "month": "2026-09",
+      "amount": "5920.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S077",
+      "employee_id": "E02",
+      "month": "2026-09",
+      "amount": "4640.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S078",
+      "employee_id": "E02",
+      "month": "2026-09",
+      "amount": "5440.01",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S079",
+      "employee_id": "E03",
+      "month": "2026-09",
+      "amount": "10360.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S080",
+      "employee_id": "E03",
+      "month": "2026-09",
+      "amount": "8120.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S081",
+      "employee_id": "E03",
+      "month": "2026-09",
+      "amount": "9520.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S082",
+      "employee_id": "E04",
+      "month": "2026-09",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S083",
+      "employee_id": "E04",
+      "month": "2026-09",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S084",
+      "employee_id": "E04",
+      "month": "2026-09",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S085",
+      "employee_id": "E05",
+      "month": "2026-09",
+      "amount": "12950.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S086",
+      "employee_id": "E05",
+      "month": "2026-09",
+      "amount": "10150.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S087",
+      "employee_id": "E05",
+      "month": "2026-09",
+      "amount": "11900.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S088",
+      "employee_id": "E06",
+      "month": "2026-09",
+      "amount": "27750.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S089",
+      "employee_id": "E06",
+      "month": "2026-09",
+      "amount": "21750.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S090",
+      "employee_id": "E06",
+      "month": "2026-09",
+      "amount": "25500.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S091",
+      "employee_id": "E07",
+      "month": "2026-09",
+      "amount": "7400.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S092",
+      "employee_id": "E07",
+      "month": "2026-09",
+      "amount": "5800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S093",
+      "employee_id": "E07",
+      "month": "2026-09",
+      "amount": "6800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S094",
+      "employee_id": "E08",
+      "month": "2026-09",
+      "amount": "37000.01",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S095",
+      "employee_id": "E08",
+      "month": "2026-09",
+      "amount": "29000.01",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S096",
+      "employee_id": "E08",
+      "month": "2026-09",
+      "amount": "34000.03",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S097",
+      "employee_id": "E09",
+      "month": "2026-09",
+      "amount": "6660.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S098",
+      "employee_id": "E09",
+      "month": "2026-09",
+      "amount": "5220.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S099",
+      "employee_id": "E09",
+      "month": "2026-09",
+      "amount": "6120.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S100",
+      "employee_id": "E10",
+      "month": "2026-09",
+      "amount": "14800.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S101",
+      "employee_id": "E10",
+      "month": "2026-09",
+      "amount": "11600.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S102",
+      "employee_id": "E10",
+      "month": "2026-09",
+      "amount": "13600.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S103",
+      "employee_id": "E11",
+      "month": "2026-09",
+      "amount": "1850.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S104",
+      "employee_id": "E11",
+      "month": "2026-09",
+      "amount": "1450.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S105",
+      "employee_id": "E11",
+      "month": "2026-09",
+      "amount": "1700.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S106",
+      "employee_id": "E12",
+      "month": "2026-09",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S107",
+      "employee_id": "E12",
+      "month": "2026-09",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S108",
+      "employee_id": "E12",
+      "month": "2026-09",
+      "amount": "0.00",
+      "status": "posted"
+    },
+    {
+      "sale_id": "S109",
+      "employee_id": "E01",
+      "month": "2026-07",
+      "amount": "500000.00",
+      "status": "void"
+    },
+    {
+      "sale_id": "S110",
+      "employee_id": "E02",
+      "month": "2026-10",
+      "amount": "80000.00",
+      "status": "posted"
+    }
+  ],
+  "refunds": [
+    {
+      "refund_id": "R001",
+      "employee_id": "E02",
+      "refund_month": "2026-08",
+      "original_sale_id": "S004",
+      "amount": "3000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R002",
+      "employee_id": "E02",
+      "refund_month": "2026-09",
+      "original_sale_id": "S004",
+      "amount": "699.63",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R003",
+      "employee_id": "E02",
+      "refund_month": "2026-09",
+      "original_sale_id": "S005",
+      "amount": "800.37",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R004",
+      "employee_id": "E03",
+      "refund_month": "2026-08",
+      "original_sale_id": "S007",
+      "amount": "3333.33",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R005",
+      "employee_id": "E03",
+      "refund_month": "2026-09",
+      "original_sale_id": "S007",
+      "amount": "366.67",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R006",
+      "employee_id": "E03",
+      "refund_month": "2026-09",
+      "original_sale_id": "S008",
+      "amount": "633.33",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R007",
+      "employee_id": "E04",
+      "refund_month": "2026-08",
+      "original_sale_id": "S010",
+      "amount": "0.01",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R008",
+      "employee_id": "E04",
+      "refund_month": "2026-09",
+      "original_sale_id": "S010",
+      "amount": "1.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R009",
+      "employee_id": "E05",
+      "refund_month": "2026-08",
+      "original_sale_id": "S013",
+      "amount": "3500.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R010",
+      "employee_id": "E06",
+      "refund_month": "2026-08",
+      "original_sale_id": "S016",
+      "amount": "6500.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R011",
+      "employee_id": "E07",
+      "refund_month": "2026-08",
+      "original_sale_id": "S019",
+      "amount": "0.02",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R012",
+      "employee_id": "E08",
+      "refund_month": "2026-08",
+      "original_sale_id": "S022",
+      "amount": "12950.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R013",
+      "employee_id": "E08",
+      "refund_month": "2026-08",
+      "original_sale_id": "S023",
+      "amount": "7050.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R014",
+      "employee_id": "E09",
+      "refund_month": "2026-08",
+      "original_sale_id": "S025",
+      "amount": "1000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R015",
+      "employee_id": "E09",
+      "refund_month": "2026-09",
+      "original_sale_id": "S025",
+      "amount": "10000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R016",
+      "employee_id": "E10",
+      "refund_month": "2026-08",
+      "original_sale_id": "S028",
+      "amount": "20000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R017",
+      "employee_id": "E10",
+      "refund_month": "2026-09",
+      "original_sale_id": "S028",
+      "amount": "13300.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R018",
+      "employee_id": "E10",
+      "refund_month": "2026-09",
+      "original_sale_id": "S029",
+      "amount": "26100.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R019",
+      "employee_id": "E10",
+      "refund_month": "2026-09",
+      "original_sale_id": "S030",
+      "amount": "600.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R020",
+      "employee_id": "E11",
+      "refund_month": "2026-08",
+      "original_sale_id": "S031",
+      "amount": "1500.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R021",
+      "employee_id": "E11",
+      "refund_month": "2026-09",
+      "original_sale_id": "S031",
+      "amount": "2000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R022",
+      "employee_id": "E12",
+      "refund_month": "2026-09",
+      "original_sale_id": "S034",
+      "amount": "37000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R023",
+      "employee_id": "E12",
+      "refund_month": "2026-09",
+      "original_sale_id": "S035",
+      "amount": "29000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R024",
+      "employee_id": "E12",
+      "refund_month": "2026-09",
+      "original_sale_id": "S036",
+      "amount": "34000.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R025",
+      "employee_id": "E04",
+      "refund_month": "2026-09",
+      "original_sale_id": "S046",
+      "amount": "8880.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R026",
+      "employee_id": "E04",
+      "refund_month": "2026-09",
+      "original_sale_id": "S047",
+      "amount": "1120.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R027",
+      "employee_id": "E06",
+      "refund_month": "2026-09",
+      "original_sale_id": "S052",
+      "amount": "16650.09",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R028",
+      "employee_id": "E06",
+      "refund_month": "2026-09",
+      "original_sale_id": "S053",
+      "amount": "3349.91",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R029",
+      "employee_id": "E07",
+      "refund_month": "2026-09",
+      "original_sale_id": "S055",
+      "amount": "8140.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R030",
+      "employee_id": "E07",
+      "refund_month": "2026-09",
+      "original_sale_id": "S056",
+      "amount": "1860.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R031",
+      "employee_id": "E10",
+      "refund_month": "2026-09",
+      "original_sale_id": "S064",
+      "amount": "4440.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R032",
+      "employee_id": "E10",
+      "refund_month": "2026-09",
+      "original_sale_id": "S065",
+      "amount": "1560.00",
+      "status": "posted"
+    },
+    {
+      "refund_id": "R033",
+      "employee_id": "E09",
+      "refund_month": "2026-09",
+      "original_sale_id": "S025",
+      "amount": "10000.00",
+      "status": "cancelled"
+    },
+    {
+      "refund_id": "R034",
+      "employee_id": "E03",
+      "refund_month": "2026-10",
+      "original_sale_id": "S007",
+      "amount": "100.00",
+      "status": "posted"
+    }
+  ],
+  "parameters": [
+    {
+      "scenario_id": 1,
+      "scenario_name": "Base",
+      "month": "2026-07",
+      "salary_multiplier": "1.00",
+      "tier1_limit": "10000",
+      "tier2_limit": "20000",
+      "rate1": "0.0100",
+      "rate2": "0.0250",
+      "rate3": "0.0400",
+      "commission_cap": "1800",
+      "full_allowance": "200"
+    },
+    {
+      "scenario_id": 1,
+      "scenario_name": "Base",
+      "month": "2026-08",
+      "salary_multiplier": "1.00",
+      "tier1_limit": "10000",
+      "tier2_limit": "20000",
+      "rate1": "0.0110",
+      "rate2": "0.0260",
+      "rate3": "0.0410",
+      "commission_cap": "1600",
+      "full_allowance": "220"
+    },
+    {
+      "scenario_id": 1,
+      "scenario_name": "Base",
+      "month": "2026-09",
+      "salary_multiplier": "1.02",
+      "tier1_limit": "11000",
+      "tier2_limit": "21000",
+      "rate1": "0.0120",
+      "rate2": "0.0270",
+      "rate3": "0.0420",
+      "commission_cap": "2000",
+      "full_allowance": "240"
+    },
+    {
+      "scenario_id": 2,
+      "scenario_name": "Growth",
+      "month": "2026-07",
+      "salary_multiplier": "1.03",
+      "tier1_limit": "12000",
+      "tier2_limit": "22000",
+      "rate1": "0.0120",
+      "rate2": "0.0280",
+      "rate3": "0.0500",
+      "commission_cap": "2500",
+      "full_allowance": "280"
+    },
+    {
+      "scenario_id": 2,
+      "scenario_name": "Growth",
+      "month": "2026-08",
+      "salary_multiplier": "1.04",
+      "tier1_limit": "12000",
+      "tier2_limit": "22000",
+      "rate1": "0.0130",
+      "rate2": "0.0300",
+      "rate3": "0.0510",
+      "commission_cap": "2700",
+      "full_allowance": "300"
+    },
+    {
+      "scenario_id": 2,
+      "scenario_name": "Growth",
+      "month": "2026-09",
+      "salary_multiplier": "1.08",
+      "tier1_limit": "13000",
+      "tier2_limit": "23000",
+      "rate1": "0.0140",
+      "rate2": "0.0320",
+      "rate3": "0.0520",
+      "commission_cap": "3000",
+      "full_allowance": "320"
+    },
+    {
+      "scenario_id": 3,
+      "scenario_name": "Guardrail",
+      "month": "2026-07",
+      "salary_multiplier": "0.98",
+      "tier1_limit": "8000",
+      "tier2_limit": "18000",
+      "rate1": "0.0080",
+      "rate2": "0.0200",
+      "rate3": "0.0350",
+      "commission_cap": "1000",
+      "full_allowance": "100"
+    },
+    {
+      "scenario_id": 3,
+      "scenario_name": "Guardrail",
+      "month": "2026-08",
+      "salary_multiplier": "0.99",
+      "tier1_limit": "8000",
+      "tier2_limit": "18000",
+      "rate1": "0.0085",
+      "rate2": "0.0210",
+      "rate3": "0.0360",
+      "commission_cap": "900",
+      "full_allowance": "100"
+    },
+    {
+      "scenario_id": 3,
+      "scenario_name": "Guardrail",
+      "month": "2026-09",
+      "salary_multiplier": "1.00",
+      "tier1_limit": "9000",
+      "tier2_limit": "19000",
+      "rate1": "0.0090",
+      "rate2": "0.0220",
+      "rate3": "0.0370",
+      "commission_cap": "800",
+      "full_allowance": "120"
+    }
+  ]
+}

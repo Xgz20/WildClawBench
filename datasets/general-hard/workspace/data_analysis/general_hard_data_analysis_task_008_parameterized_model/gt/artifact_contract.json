@@ -1,0 +1,20 @@
+{
+  "schema_version": "h024-artifacts/v1",
+  "outputs": [
+    "results/compensation_model.xlsx",
+    "results/validation.md"
+  ],
+  "input_immutable": true,
+  "source_tables": "model_io.py FIELDS employees/attendance/sales/refunds/parameters",
+  "outputs_tables": "active payroll36/retro72, comparisons9; optional shared all-case builds108/216",
+  "selector": "visible known label immediately left of one literal numeric 1/2/3 input",
+  "equivalence": [
+    "renamed sheets",
+    "clear Chinese or English one-row headers",
+    "shifted/reordered columns and rows",
+    "equivalent ordinary scalar formulas or native sensitivity design",
+    "unified case-keyed formulas approved by user"
+  ],
+  "formula_count_threshold": null,
+  "max_deliverable_bytes": 5242880
+}
