@@ -1,11 +1,11 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 40
+  active_task_count: 41
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
-    file_operations: 5
+    file_operations: 6
     software_engineering: 2
     planning_coordination: 0
     content_operations: 0
@@ -1216,3 +1216,29 @@ tasks:
     attributes:
       requires_visual_input: true
       coding_primary: false
+  - task_id: general_hard_file_operations_task_005_split_bundle_restore
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-8d7839181ffe7fdb
+          query_hash: 8d7839181ffe7fdbbe817a044bed2742926209f916c83db031b1fa17597e2a68
+          observed_astudio_turns: 2
+          distinct_users: 2
+          distinct_sessions: 2
+          first_seen_local: '2026-09-26 22:09:34.175000'
+          last_seen_local: '2026-10-12 18:37:20.704000'
+          intent_summary: 恢复同版分包为离线工作台，复用现有代码资料且避免覆盖目录。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

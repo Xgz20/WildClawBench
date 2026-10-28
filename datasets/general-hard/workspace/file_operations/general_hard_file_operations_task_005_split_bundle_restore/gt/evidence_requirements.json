@@ -1,0 +1,11 @@
+{
+  "input_identity": "whole current part SHA + release_id/version/part_id + original member SHA/size, not filename-only",
+  "note_identity": "exact original note path/case/bytes, with casefold conflict detection and separate factory-byte preservation",
+  "graph_identity": "actual HTML/CSS/Markdown/catalog source-to-target/fragment parsed from restored native bytes; all paths case-sensitive",
+  "license": "original synthetic release and notes; LICENSE.txt is a preserved release member",
+  "browser_boundary": "Only authenticated original controlled reference assets were executed in a local-file author browser test. No arbitrary candidate code executed. Static consistency is not proof of candidate browser launch.",
+  "review_boundary": "Models authored and independently calculated; not human expert review. No real Harness/Judge/finalize, L4/discrimination unmeasured.",
+  "schema_version": "h039.evidence-requirements/v2",
+  "target_identity": "Resolve permitted relative/absolute/root-prefixed paths; compare actual restored SHA at the reported member/note target. Preserve verified/invalid/not_assessed distinctions in the rule-derived observation receipt. Static file inspection only.",
+  "independent_ownership": "Original content loss: business; wrong placement of present original bytes: layout; fabricated alternate audit target: evidence. Artifact damage at its canonical target makes target provenance unknown/neutral rather than an automatic second loss."
+}

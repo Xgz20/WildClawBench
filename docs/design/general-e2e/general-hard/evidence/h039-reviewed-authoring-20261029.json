@@ -1,0 +1,726 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 39,
+  "task_id": "general_hard_file_operations_task_005_split_bundle_restore",
+  "registered_task_index": 41,
+  "registered": 41,
+  "remaining": 19,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 2,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/file_operations/general_hard_file_operations_task_005_split_bundle_restore.md",
+      "sha256": "cfa1411faff677017e3332015a055440a03eb8c373b8c0890f5e97f58aec4350",
+      "size": 8690
+    },
+    "exec": [
+      {
+        "path": "existing_notes/2026/计划.md",
+        "sha256": "d98657cf25d81de28582bb2b076121ed998afc346da72e1f8216a952832993a7",
+        "size": 99
+      },
+      {
+        "path": "existing_notes/Case/ReadMe.md",
+        "sha256": "c03fb77a2cab155b97e37073bc4048ada1b4cbe2cd598e87d51ee312e8a9bdfb",
+        "size": 77
+      },
+      {
+        "path": "existing_notes/README.md",
+        "sha256": "ddb88133376dd85df9b62c089ba2af0d1ac58649f3d9a72f3e1eadcebbd9bb96",
+        "size": 112
+      },
+      {
+        "path": "existing_notes/prefs.json",
+        "sha256": "5d3a26b1b54de67cb2a911681f83ea411796c5ac0fbdd1888a5c4e15e3bd78bf",
+        "size": 53
+      },
+      {
+        "path": "existing_notes/resources/ref-card.txt",
+        "sha256": "a29b331f4fd96f60674a935bf3eb02f0356627b7de1d8ddfe2198f9e179a6ed4",
+        "size": 62
+      },
+      {
+        "path": "existing_notes/topic/links.md",
+        "sha256": "68a5707fa037f0a657153461137fd95d5ca1006ddc8808b96203984d220002e5",
+        "size": 64
+      },
+      {
+        "path": "parts/Workbench_bundle_A.zip",
+        "sha256": "5f9e75636fbc2683368f4ee02d04c664f0254752a25d0738a4d42718d7c2ba14",
+        "size": 5571
+      },
+      {
+        "path": "parts/Workbench_bundle_B.zip",
+        "sha256": "180361bdaed86ee858b0af5ec55b5a85e72616b8ec7fd8ec653ba0fb55811607",
+        "size": 4891
+      },
+      {
+        "path": "parts/Workbench_bundle_B_repack.zip",
+        "sha256": "c56602a30f72a494f30c23ee5d9a8a02751deecdc8722534c360dd1664e59fd8",
+        "size": 4798
+      },
+      {
+        "path": "parts/Workbench_bundle_C.zip",
+        "sha256": "c51d4fb6dc39bed11d824d26607a9aa731cfe1bb42850f33414572bcc6e1e7f5",
+        "size": 4727
+      },
+      {
+        "path": "release_manifest.json",
+        "sha256": "62d4525f6130652773ab1cc6862a010dfe9a2a48046da933986910a5276f91b2",
+        "size": 16430
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "d54a02dfa8c78beabd11ce379290527fc33ff1d84732762c481cea80508d6401",
+        "size": 3057
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "6e3ea491a55d23664ef2004e4bf6a5d8463b2973f10c7c0213ddf0beaef2857c",
+        "size": 19136
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "25b3a5c79d96b1aaeb6a330c9affca19de16c3de592ba2a8390e905b088c4723",
+        "size": 815
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "7042c3f3ac577474d20b8682e182d8908df37477db53c67b98039c2da417ce27",
+        "size": 1478
+      },
+      {
+        "path": "expected.json",
+        "sha256": "2ef3531938420c72cba10971bf842afabf3f383d997d8e6b8038c6938aab9643",
+        "size": 28429
+      },
+      {
+        "path": "grader.py",
+        "sha256": "381d52b15bdbde08549ad78ad61b2013d5bc8dbb787f5eee25d96195f344ff76",
+        "size": 10562
+      },
+      {
+        "path": "native_io.py",
+        "sha256": "a432fb1dbb8a77ff83f6989c4d0dc5003ad0293717d55a30ef02786735a671d1",
+        "size": 5960
+      },
+      {
+        "path": "original_usability_evidence.json",
+        "sha256": "d99cf58ffb5c669db23147928b5c739b51cb1f54a43e356418751688c6ba7afb",
+        "size": 7441
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "37fef1d895cf8c6cd4e0e0916d52538584e4430ba24909c21c55a7c3bcffe89d",
+        "size": 1130
+      },
+      {
+        "path": "trusted_files.json",
+        "sha256": "f8206c5a5dae621c20d321ca537220ce6df71936bb5b2ad6cdb8a34822b4ff43",
+        "size": 844
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v2/final-handoff.json",
+    "sha256": "af41f30cac72b7ac5bc0ef9ba39ac72f086f25b397869d8cd5a79aa39f39fed6",
+    "size": 3757
+  },
+  "review": {
+    "review_kind": "Independent root-style nonblind model review; no human expert",
+    "v1_original_freeze": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/freeze-v1/manifest.json",
+      "sha256": "8f84a7ee139cf182441978e5883865e51bc0aac06e92d76f35391d4b5418ee52",
+      "size": 30257
+    },
+    "v1_independent_snapshot": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v1/frozen-v1/snapshot.json",
+      "sha256": "50c4a0e34ed9f9a02bc794ff748fbf193d9a3d5152702d215afc0285a817a643",
+      "size": 24717
+    },
+    "v1_actual_current_Worker_proof_of_blockers": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v1/managed-probes-v1-1793226702392351000/summary.json",
+      "sha256": "41b043c6f595f5731c1f68cfc74b69e90de1ddd021714a356da5c0138bb76a9b",
+      "size": 88115
+    },
+    "v1_blockers": [
+      "Two original member byte streams permuted at fixed paths still scored all1.",
+      "All40 member targets or all6 note targets fabricated as nonexistent path still scored all1."
+    ],
+    "v2_authorized_changed_private_files": [
+      "grader.py",
+      "trusted_files.json",
+      "artifact_contract.json",
+      "evidence_requirements.json"
+    ],
+    "v2_revision": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v2/revision.json",
+      "sha256": "9b04b67fee7095c50572a73a62cec51604cf7ceda7403224b0eb8d7d8aeb5b42",
+      "size": 1549
+    },
+    "v2_private_wrapper_pins": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/authoring/private-contract.json",
+      "sha256": "2b3915c260df09b4deb7f1f45d2cefcc404e3db38db48639b609d8369cf6f9fa",
+      "size": 1519
+    },
+    "v2_freeze": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/freeze-v2/manifest.json",
+      "sha256": "da67749b8c8383e826467fa761f0c8416c1dccadfcc78d05c069ac587e481847",
+      "size": 42118
+    },
+    "v2_controls": {
+      "count": 24,
+      "actual_old_case_reruns": 18,
+      "new_controls": 6,
+      "summary": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v2/managed-controls-1793226860969622000/summary.json",
+        "sha256": "433877e2f9da023d69e0233c75d2b2368ae7fc2d0e05325cdd83cbadbb9af063",
+        "size": 307238
+      },
+      "cases": [
+        {
+          "name": "canonical_positive",
+          "status": "PASS",
+          "score": 1.0,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "equivalent_BOM_grouped_numeric_source_subset",
+          "status": "PASS",
+          "score": 1.0,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "detached_moved_archive_old_paths_absent",
+          "status": "PASS",
+          "score": 1.0,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "mixed_old_release_payload",
+          "status": "PASS",
+          "score": 0.9896875,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 0.98125,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "wrong_old_part_selected",
+          "status": "PASS",
+          "score": 0.9725,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 0.95,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "extra_wrapper_root",
+          "status": "PASS",
+          "score": 0.9000000000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "exact_case_dependency_renamed",
+          "status": "PASS",
+          "score": 0.9000000000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "user_note_overwritten_by_release_template",
+          "status": "PASS",
+          "score": 0.9000000000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "wrong_casefold_conflict_route",
+          "status": "PASS",
+          "score": 0.9750000000000001,
+          "criteria": {
+            "boundary_cases": 0.9,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "missing_interactive_slice",
+          "status": "PASS",
+          "score": 0.8896875000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 0.98125,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "wrong_member_source_binding",
+          "status": "PASS",
+          "score": 0.9995,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 0.99
+          },
+          "exception": null
+        },
+        {
+          "name": "wrong_resource_relation_report",
+          "status": "PASS",
+          "score": 0.9997142857142858,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 0.9942857142857143
+          },
+          "exception": null
+        },
+        {
+          "name": "input_note_changed",
+          "status": "PASS",
+          "score": 0.9100000000000001,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 0.4,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "handoff_missing",
+          "status": "PASS",
+          "score": 0.9625000000000001,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 0.75,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "audit_missing",
+          "status": "PASS",
+          "score": 0.74,
+          "criteria": {
+            "boundary_cases": 0.8,
+            "business_correctness": 0.75,
+            "delivery_integrity": 0.85,
+            "evidence_binding": 0.0
+          },
+          "exception": null
+        },
+        {
+          "name": "missing_expected_infrastructure",
+          "status": "PASS",
+          "score": null,
+          "criteria": null,
+          "exception": {
+            "type": "ScoringRuntimeError",
+            "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H039_TRUSTED_CONTEXT_MISSING_OR_DRIFT: expected.json'}"
+          }
+        },
+        {
+          "name": "missing_helper_infrastructure",
+          "status": "PASS",
+          "score": null,
+          "criteria": null,
+          "exception": {
+            "type": "ScoringRuntimeError",
+            "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H039_TRUSTED_CONTEXT_MISSING_OR_DRIFT: native_io.py'}"
+          }
+        },
+        {
+          "name": "missing_original_usability_evidence_infrastructure",
+          "status": "PASS",
+          "score": null,
+          "criteria": null,
+          "exception": {
+            "type": "ScoringRuntimeError",
+            "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H039_TRUSTED_CONTEXT_MISSING_OR_DRIFT: original_usability_evidence.json'}"
+          }
+        },
+        {
+          "name": "v2_swapped_release_docs_layout_only",
+          "status": "PASS",
+          "score": 0.9000000000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "v2_fabricated_all_member_targets_evidence_only",
+          "status": "PASS",
+          "score": 0.9800000000000001,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 0.6
+          },
+          "exception": null
+        },
+        {
+          "name": "v2_fabricated_all_note_targets_evidence_only",
+          "status": "PASS",
+          "score": 0.9900000000000001,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 0.8
+          },
+          "exception": null
+        },
+        {
+          "name": "v2_permitted_absolute_target_and_input_prefixes",
+          "status": "PASS",
+          "score": 1.0,
+          "criteria": {
+            "boundary_cases": 1.0,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "v2_truthful_wrapper_provenance_layout_only",
+          "status": "PASS",
+          "score": 0.9000000000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        },
+        {
+          "name": "v2_truthful_permuted_provenance_layout_only",
+          "status": "PASS",
+          "score": 0.9000000000000001,
+          "criteria": {
+            "boundary_cases": 0.6000000000000001,
+            "business_correctness": 1.0,
+            "delivery_integrity": 1.0,
+            "evidence_binding": 1.0
+          },
+          "exception": null
+        }
+      ]
+    },
+    "independent_source_review": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v2/source-review.json",
+      "sha256": "7e58f7db01b28aef724fce6021e2d93d43e1f5c987ed803daf6f220c36278a69",
+      "size": 1702
+    },
+    "target_observation_summary": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v2/binding-observation-summary.json",
+      "sha256": "67fde7886c3abecab1de057bd4864f66325fd086457ef2b88eac3ffc50663c2b",
+      "size": 767
+    },
+    "independent_ownership": "Wrong placement of present original bytes belongs to layout; fabricated alternate target belongs to provenance. Canonical targets already affected by artifact failure remain explicitly not_assessed, not verified. Actual wrapper paths can have true provenance while layout loses.",
+    "public11_oracle_original_notes_release_assets_and_references_unchanged": true,
+    "original_browser_only": {
+      "cases": 7,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/authoring-validation/browser-1793222692166/receipt.json",
+        "sha256": "1db303d8d98d75cf23d0bba7b109364ad658ea9029be274b58dd701ace9b0078",
+        "size": 13865
+      },
+      "new_browser_execution": false
+    },
+    "candidate_code_executed": false,
+    "Office_HTML_flags": false,
+    "existing40_materials": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/root-review-v2/formal-preparation/old40-postcheck.json",
+      "sha256": "9cfde7ec9b8f705477153ec1b7dfd793f6863b40821b065426a8146d220edfd6",
+      "size": 73
+    },
+    "git_allowlist_plan": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/registered-git-allowlist-plan.json",
+      "sha256": "f88f5dfd768a3fb093cb0c71d22f0877ea2e2e2380e580ccf7155a72c3280102",
+      "size": 4165
+    }
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_file_operations_task_005_split_bundle_restore",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/formal-detached-1793226971321803000/attempts/author-only-h039-formal__detached-zip-worker/general_hard_file_operations_task_005_split_bundle_restore/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/formal-detached-1793226971321803000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/formal-detached-1793226971321803000/attempts/author-only-h039-formal__detached-zip-worker/general_hard_file_operations_task_005_split_bundle_restore/author-only-formal-auto",
+      "candidate_sha256": "a59e76d6ad730ead224e6ee399bb1110cb063ce967dbc11b5e586fbc0dac8de9",
+      "entry_count": 85
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/formal-detached-1793226971321803000/moved-without-runtime",
+      "candidate_sha256": "a59e76d6ad730ead224e6ee399bb1110cb063ce967dbc11b5e586fbc0dac8de9",
+      "entry_count": 85
+    },
+    "nonruntime_same_byte_files": 88,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/path-byte-target-bindings.json",
+        "sha256": "edc5f8ba3f3d1357d637e240aa258b29b45b6d4cd1bb3632917ec0c7b88ec8cf",
+        "size": 31773
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/path-byte-target-bindings.json",
+        "sha256": "edc5f8ba3f3d1357d637e240aa258b29b45b6d4cd1bb3632917ec0c7b88ec8cf",
+        "size": 31773
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "76fe9dff5ac7ce934b700b4f799c7c610a736d65",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "76fe9dff5ac7ce934b700b4f799c7c610a736d65",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "76fe9dff5ac7ce934b700b4f799c7c610a736d65",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "1179cb3389e33fda4320d8a657447c0e2ba00f25792c2e7f7d305abce6e03be1",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "76fe9dff5ac7ce934b700b4f799c7c610a736d65",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "0a5ac40c9c375c322a084b597d18808f9398dc293b846c64177d7362849840c7"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/path-byte-target-bindings.json",
+          "sha256": "edc5f8ba3f3d1357d637e240aa258b29b45b6d4cd1bb3632917ec0c7b88ec8cf",
+          "size": 31773
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "b3723d116d8021b6e968fc7ca030d7a81791c40a273bb514c055ebed672fc4b6",
+        "file_count": 1,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T22:36:13.745446Z",
+      "identity": {
+        "batch_id": "author-only-h039-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_file_operations_task_005_split_bundle_restore",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "519f620d377174fe5101a97dd5cc02c9ad9bf590189b5557b7d3cadd61b63799",
+        "root_result_count": 48,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "16b5a1806e11361bd601a3274b977227f2cd428b17ec86f123e3efa4807f4988",
+        "initial_sha256": "16b5a1806e11361bd601a3274b977227f2cd428b17ec86f123e3efa4807f4988"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T22:36:13.274780Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 0.231849,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "6ed9fda47cf1d7878aff9f61d3235aeb9d20dc4beed74c2c24bd47b07bd6bc02",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "b8b2f40a6a05e1ce57334a9b4e331380ad42a52d01c69c206dec5c43d2a236c6",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "fc946aac61c25255065166b91834c665c6f67ed39bae025ea7882b0743db8b81",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 18101
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": null,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/formal-detached-1793226971321803000/validation.json",
+    "sha256": "45296b7cd59b29efe5866c4adf389151c7eda8acf006f074b70a7bd306317c69",
+    "size": 7344
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "1322bb973feab436696c44fc813aa289b7c9438727773471925d602823b50512",
+    "size": 21373
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/static-registered/20261028T223623Z_c58c4edfc9/report.json",
+      "sha256": "2ad946ceaded36adbdd6b971dc45bce1fca3864f32a487a7b9e800631e79402c",
+      "size": 1225
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h039/qa/static-building/20261028T223630Z_da4645df46/report.json",
+      "sha256": "c213a0d0f596906cdd9e440da48176e2c085a8aa4733ebc808ce3a832cee5089",
+      "size": 28356
+    },
+    "only_remaining_missing": 19
+  },
+  "source_summary": "11只读输入：3同版分包、1旧版干扰、6原创笔记、1发行清单。当前分包含42条payload记录并同字节去重为40发行成员；保留笔记及两冲突模板后46文件、69资源边。Node独立原ZIP/CRC/前缀/图/5功能数据样例与Python原真值及两参考一致；原发行7项本地UI验收仅是作者原件证明。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T22:37:37.516649+00:00"
+}

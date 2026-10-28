@@ -1,0 +1,885 @@
+{
+  "release_id": "WB-20261029-r7",
+  "version": "3.2.1",
+  "release_to_target": {
+    "index.html": "index.html",
+    "pages/guide.html": "pages/guide.html",
+    "pages/reports.html": "pages/reports.html",
+    "pages/notes.html": "pages/notes.html",
+    "assets/css/base.css": "assets/css/base.css",
+    "assets/css/Theme.css": "assets/css/Theme.css",
+    "assets/css/print.css": "assets/css/print.css",
+    "assets/js/app.js": "assets/js/app.js",
+    "LICENSE.txt": "LICENSE.txt",
+    "README.md": "README.md",
+    "build-info.json": "build-info.json",
+    "docs/item-01.md": "docs/item-01.md",
+    "docs/item-02.md": "docs/item-02.md",
+    "docs/item-03.md": "docs/item-03.md",
+    "docs/item-04.md": "docs/item-04.md",
+    "docs/item-05.md": "docs/item-05.md",
+    "docs/item-06.md": "docs/item-06.md",
+    "docs/item-07.md": "docs/item-07.md",
+    "docs/item-08.md": "docs/item-08.md",
+    "docs/usage.md": "docs/usage.md",
+    "docs/data-model.md": "docs/data-model.md",
+    "docs/troubleshooting.md": "docs/troubleshooting.md",
+    "docs/examples/sample.csv": "docs/examples/sample.csv",
+    "docs/examples/sample.tsv": "docs/examples/sample.tsv",
+    "docs/examples/README.md": "docs/examples/README.md",
+    "user_notes/README.md": "distribution_templates/user_notes/README.md",
+    "user_notes/case/README.md": "distribution_templates/user_notes/case/README.md",
+    "assets/js/catalog-data.js": "assets/js/catalog-data.js",
+    "assets/img/Logo.svg": "assets/img/Logo.svg",
+    "assets/img/icons/archive.svg": "assets/img/icons/archive.svg",
+    "assets/img/icons/notes.svg": "assets/img/icons/notes.svg",
+    "assets/img/icons/check.svg": "assets/img/icons/check.svg",
+    "assets/img/theme-grid.svg": "assets/img/theme-grid.svg",
+    "data/catalog.json": "data/catalog.json",
+    "data/schema.json": "data/schema.json",
+    "data/metrics.json": "data/metrics.json",
+    "data/release.json": "data/release.json",
+    "data/labels.csv": "data/labels.csv",
+    "data/sample-rows.csv": "data/sample-rows.csv",
+    "assets/fonts/readme.txt": "assets/fonts/readme.txt"
+  },
+  "expected_files": {
+    "LICENSE.txt": {
+      "sha256": "2ec2f2360806994d6ae457403db3f29da81338bea9a64d5e0d202c0070bfd5c4",
+      "bytes": 172
+    },
+    "README.md": {
+      "sha256": "da6b229ac09c2e5dba393554f0078bfc5a3b734afe8231d075ea768dd94af5b7",
+      "bytes": 91
+    },
+    "assets/css/Theme.css": {
+      "sha256": "766a7dee3c38d3f8a62ba80dc11abf1dc8840cdbfd6ea241f36f386ad1dc6c1e",
+      "bytes": 37
+    },
+    "assets/css/base.css": {
+      "sha256": "6d4cb3f982035fb68d2ce32d71d5d82402c37a553650e7d59b770d8fee6d464c",
+      "bytes": 783
+    },
+    "assets/css/print.css": {
+      "sha256": "da913244c15e5ca2fe9155b5166101ac1ffd348eda6f43aefdccb65f0d1e4452",
+      "bytes": 63
+    },
+    "assets/fonts/readme.txt": {
+      "sha256": "49fdd788c1c6c7e3c5d3f4143ad15ad45bba05fd07bdbeb87c8073cef2b0e01a",
+      "bytes": 62
+    },
+    "assets/img/Logo.svg": {
+      "sha256": "2def37df60267b8b2416002099e970086d9b28198cf02591a1ec1c280f4ebb18",
+      "bytes": 234
+    },
+    "assets/img/icons/archive.svg": {
+      "sha256": "e121f50a4a9d31890dfb624491fe4544005aeb29f6976fbcef00f6b97fbe059e",
+      "bytes": 234
+    },
+    "assets/img/icons/check.svg": {
+      "sha256": "bb404c0c82a98787f18b6121ba4fd2be642b9d41ea68c50fedf4279fd90483c1",
+      "bytes": 234
+    },
+    "assets/img/icons/notes.svg": {
+      "sha256": "964fd359b61c832c6d583aa2be64ddbd512ecf5da7f35c39054d08f68837c4d2",
+      "bytes": 234
+    },
+    "assets/img/theme-grid.svg": {
+      "sha256": "b088f9dd34810aab3f7aeeaf6cac950d45989e6085f2d7d6dfea5f106048b468",
+      "bytes": 117
+    },
+    "assets/js/app.js": {
+      "sha256": "4dafd96de25123f7818f031e7a6c15f021c0802c00dd1bf7f6e347dbaf730dd4",
+      "bytes": 1371
+    },
+    "assets/js/catalog-data.js": {
+      "sha256": "2e9f9ec6ff63ac1f34947e0abc498b0d601a658a16467ebb06c52225089ae302",
+      "bytes": 1649
+    },
+    "build-info.json": {
+      "sha256": "eb778d36443fd71f6b8d368837d38e1255f1df5947fba8367c0c6fec27b17b6a",
+      "bytes": 78
+    },
+    "data/catalog.json": {
+      "sha256": "719a6ee1a85b2730ce7bd8e97b50bab53c756f73950c31be4d758371d68f67f8",
+      "bytes": 1846
+    },
+    "data/labels.csv": {
+      "sha256": "d56b69d15d504437fe0727276cea9d240433bf6e6378a8602916ae2a31e7327a",
+      "bytes": 53
+    },
+    "data/metrics.json": {
+      "sha256": "bae2d4e135e233a519567642a1906ab1d0ee072b239c6a44f67bf23a83565376",
+      "bytes": 91
+    },
+    "data/release.json": {
+      "sha256": "5d435f652b367759cd46a1b82bd7883d5d639f0fd17e986b51a7b49dcabdfcba",
+      "bytes": 144
+    },
+    "data/sample-rows.csv": {
+      "sha256": "9aeeb7cff3392d2613cdd40ca90ebd783e7e3187c033c7125992eca864c22031",
+      "bytes": 37
+    },
+    "data/schema.json": {
+      "sha256": "5153c05dff35166e9502ea28b0011a57e82b3d4757ea818c25fe5e915feed152",
+      "bytes": 124
+    },
+    "distribution_templates/user_notes/README.md": {
+      "sha256": "83e5ca03d53f39a472f138e841ec0167586e05b6fb2415385f41a9afe1fbc481",
+      "bytes": 77
+    },
+    "distribution_templates/user_notes/case/README.md": {
+      "sha256": "523dabcc515800207c54c21e909c072460ca601fa4cd1344ab24d182c789cb74",
+      "bytes": 91
+    },
+    "docs/data-model.md": {
+      "sha256": "f98fe3a4f4b04545569d405838f4719e2f262e46d2fbf03522adabcaeae77cb3",
+      "bytes": 114
+    },
+    "docs/examples/README.md": {
+      "sha256": "d87e909fb14b5cf10491cac9764fc8827daff23b04aa5cec966381b3c204b01a",
+      "bytes": 79
+    },
+    "docs/examples/sample.csv": {
+      "sha256": "83a2f567b321178c933b1b698108e7aa845fd4635aa31853316f4f3ebd30b0a9",
+      "bytes": 39
+    },
+    "docs/examples/sample.tsv": {
+      "sha256": "8a68a1f989f6f1abcebf5afd0068342e212f6cc1c7749cefe54bef73da543e43",
+      "bytes": 28
+    },
+    "docs/item-01.md": {
+      "sha256": "6766642e1e418d0c3e357e764ae290165f06337bea4781fbee8bba608ffb01ec",
+      "bytes": 176
+    },
+    "docs/item-02.md": {
+      "sha256": "31efee5766be894901f3b0f093e14e25d1ed5a9c30ed66cef6305abb5a83f799",
+      "bytes": 190
+    },
+    "docs/item-03.md": {
+      "sha256": "91c8ec000666cccdd0a492b2e2e1aa7be947911427cda1670db4b4a1d9a123cb",
+      "bytes": 174
+    },
+    "docs/item-04.md": {
+      "sha256": "b38e19c7b269b4f056c9d896932deb88e7b268a30d35a7571ecc59f32118a9d7",
+      "bytes": 173
+    },
+    "docs/item-05.md": {
+      "sha256": "d6af5937ae50e0264c8f1bc398876390e6a39f29098ac4a79da4791633739799",
+      "bytes": 176
+    },
+    "docs/item-06.md": {
+      "sha256": "8e6973b9c4b25813e8ea7cfe3ab593ee4dc950d45d05fb12222c4affbe376e1d",
+      "bytes": 173
+    },
+    "docs/item-07.md": {
+      "sha256": "2a25fa3f2678d0402c619e1b1c444ed244ebf5769e4b486621988756e1961a8b",
+      "bytes": 176
+    },
+    "docs/item-08.md": {
+      "sha256": "bbb5332899f49b7720651d51177b29d8d8ade950ec2cdd8a7605ca6630fe567e",
+      "bytes": 170
+    },
+    "docs/troubleshooting.md": {
+      "sha256": "8c560d619a75d1c171826c5be5b1187e603e27aa6e2c691b6f74cea445a776b4",
+      "bytes": 108
+    },
+    "docs/usage.md": {
+      "sha256": "bc8471a200490579f7908bb5bfa6f47bc53d5369cb6e73be2185a153cd323c2f",
+      "bytes": 114
+    },
+    "index.html": {
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846",
+      "bytes": 1252
+    },
+    "pages/guide.html": {
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25",
+      "bytes": 950
+    },
+    "pages/notes.html": {
+      "sha256": "f0b2fc55da487b5b4ebbe11e6aac5c5df21604680bbc6e33b8630836232701df",
+      "bytes": 867
+    },
+    "pages/reports.html": {
+      "sha256": "1853c9fceaea4515fa37133350be277027bcbb743c653e39b7c494bb4809ac67",
+      "bytes": 893
+    },
+    "user_notes/2026/计划.md": {
+      "sha256": "d98657cf25d81de28582bb2b076121ed998afc346da72e1f8216a952832993a7",
+      "bytes": 99
+    },
+    "user_notes/Case/ReadMe.md": {
+      "sha256": "c03fb77a2cab155b97e37073bc4048ada1b4cbe2cd598e87d51ee312e8a9bdfb",
+      "bytes": 77
+    },
+    "user_notes/README.md": {
+      "sha256": "ddb88133376dd85df9b62c089ba2af0d1ac58649f3d9a72f3e1eadcebbd9bb96",
+      "bytes": 112
+    },
+    "user_notes/prefs.json": {
+      "sha256": "5d3a26b1b54de67cb2a911681f83ea411796c5ac0fbdd1888a5c4e15e3bd78bf",
+      "bytes": 53
+    },
+    "user_notes/resources/ref-card.txt": {
+      "sha256": "a29b331f4fd96f60674a935bf3eb02f0356627b7de1d8ddfe2198f9e179a6ed4",
+      "bytes": 62
+    },
+    "user_notes/topic/links.md": {
+      "sha256": "68a5707fa037f0a657153461137fd95d5ca1006ddc8808b96203984d220002e5",
+      "bytes": 64
+    }
+  },
+  "notes": [
+    {
+      "path": "2026/计划.md",
+      "bytes": 99,
+      "sha256": "d98657cf25d81de28582bb2b076121ed998afc346da72e1f8216a952832993a7"
+    },
+    {
+      "path": "Case/ReadMe.md",
+      "bytes": 77,
+      "sha256": "c03fb77a2cab155b97e37073bc4048ada1b4cbe2cd598e87d51ee312e8a9bdfb"
+    },
+    {
+      "path": "README.md",
+      "bytes": 112,
+      "sha256": "ddb88133376dd85df9b62c089ba2af0d1ac58649f3d9a72f3e1eadcebbd9bb96"
+    },
+    {
+      "path": "prefs.json",
+      "bytes": 53,
+      "sha256": "5d3a26b1b54de67cb2a911681f83ea411796c5ac0fbdd1888a5c4e15e3bd78bf"
+    },
+    {
+      "path": "resources/ref-card.txt",
+      "bytes": 62,
+      "sha256": "a29b331f4fd96f60674a935bf3eb02f0356627b7de1d8ddfe2198f9e179a6ed4"
+    },
+    {
+      "path": "topic/links.md",
+      "bytes": 64,
+      "sha256": "68a5707fa037f0a657153461137fd95d5ca1006ddc8808b96203984d220002e5"
+    }
+  ],
+  "conflicts": [
+    {
+      "release_path": "user_notes/README.md",
+      "retained_user_path": "user_notes/README.md",
+      "release_saved_as": "distribution_templates/user_notes/README.md",
+      "kind": "exact_path"
+    },
+    {
+      "release_path": "user_notes/case/README.md",
+      "retained_user_path": "user_notes/Case/ReadMe.md",
+      "release_saved_as": "distribution_templates/user_notes/case/README.md",
+      "kind": "casefold_path"
+    }
+  ],
+  "resources": [
+    {
+      "source": "index.html",
+      "kind": "href",
+      "raw_ref": "assets/css/base.css",
+      "target": "assets/css/base.css",
+      "fragment": "",
+      "sha256": "6d4cb3f982035fb68d2ce32d71d5d82402c37a553650e7d59b770d8fee6d464c"
+    },
+    {
+      "source": "index.html",
+      "kind": "src",
+      "raw_ref": "assets/img/Logo.svg",
+      "target": "assets/img/Logo.svg",
+      "fragment": "",
+      "sha256": "2def37df60267b8b2416002099e970086d9b28198cf02591a1ec1c280f4ebb18"
+    },
+    {
+      "source": "index.html",
+      "kind": "href",
+      "raw_ref": "index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "index.html",
+      "kind": "href",
+      "raw_ref": "pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "index.html",
+      "kind": "href",
+      "raw_ref": "pages/reports.html",
+      "target": "pages/reports.html",
+      "fragment": "",
+      "sha256": "1853c9fceaea4515fa37133350be277027bcbb743c653e39b7c494bb4809ac67"
+    },
+    {
+      "source": "index.html",
+      "kind": "href",
+      "raw_ref": "pages/notes.html",
+      "target": "pages/notes.html",
+      "fragment": "",
+      "sha256": "f0b2fc55da487b5b4ebbe11e6aac5c5df21604680bbc6e33b8630836232701df"
+    },
+    {
+      "source": "index.html",
+      "kind": "src",
+      "raw_ref": "assets/js/catalog-data.js",
+      "target": "assets/js/catalog-data.js",
+      "fragment": "",
+      "sha256": "2e9f9ec6ff63ac1f34947e0abc498b0d601a658a16467ebb06c52225089ae302"
+    },
+    {
+      "source": "index.html",
+      "kind": "src",
+      "raw_ref": "assets/js/app.js",
+      "target": "assets/js/app.js",
+      "fragment": "",
+      "sha256": "4dafd96de25123f7818f031e7a6c15f021c0802c00dd1bf7f6e347dbaf730dd4"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "href",
+      "raw_ref": "../assets/css/base.css",
+      "target": "assets/css/base.css",
+      "fragment": "",
+      "sha256": "6d4cb3f982035fb68d2ce32d71d5d82402c37a553650e7d59b770d8fee6d464c"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "src",
+      "raw_ref": "../assets/img/Logo.svg",
+      "target": "assets/img/Logo.svg",
+      "fragment": "",
+      "sha256": "2def37df60267b8b2416002099e970086d9b28198cf02591a1ec1c280f4ebb18"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "href",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "href",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "href",
+      "raw_ref": "../pages/reports.html",
+      "target": "pages/reports.html",
+      "fragment": "",
+      "sha256": "1853c9fceaea4515fa37133350be277027bcbb743c653e39b7c494bb4809ac67"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "href",
+      "raw_ref": "../pages/notes.html",
+      "target": "pages/notes.html",
+      "fragment": "",
+      "sha256": "f0b2fc55da487b5b4ebbe11e6aac5c5df21604680bbc6e33b8630836232701df"
+    },
+    {
+      "source": "pages/guide.html",
+      "kind": "href",
+      "raw_ref": "../docs/usage.md",
+      "target": "docs/usage.md",
+      "fragment": "",
+      "sha256": "bc8471a200490579f7908bb5bfa6f47bc53d5369cb6e73be2185a153cd323c2f"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../assets/css/base.css",
+      "target": "assets/css/base.css",
+      "fragment": "",
+      "sha256": "6d4cb3f982035fb68d2ce32d71d5d82402c37a553650e7d59b770d8fee6d464c"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "src",
+      "raw_ref": "../assets/img/Logo.svg",
+      "target": "assets/img/Logo.svg",
+      "fragment": "",
+      "sha256": "2def37df60267b8b2416002099e970086d9b28198cf02591a1ec1c280f4ebb18"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../pages/reports.html",
+      "target": "pages/reports.html",
+      "fragment": "",
+      "sha256": "1853c9fceaea4515fa37133350be277027bcbb743c653e39b7c494bb4809ac67"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../pages/notes.html",
+      "target": "pages/notes.html",
+      "fragment": "",
+      "sha256": "f0b2fc55da487b5b4ebbe11e6aac5c5df21604680bbc6e33b8630836232701df"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../data/release.json",
+      "target": "data/release.json",
+      "fragment": "",
+      "sha256": "5d435f652b367759cd46a1b82bd7883d5d639f0fd17e986b51a7b49dcabdfcba"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../LICENSE.txt",
+      "target": "LICENSE.txt",
+      "fragment": "",
+      "sha256": "2ec2f2360806994d6ae457403db3f29da81338bea9a64d5e0d202c0070bfd5c4"
+    },
+    {
+      "source": "pages/reports.html",
+      "kind": "href",
+      "raw_ref": "../docs/examples/sample.csv",
+      "target": "docs/examples/sample.csv",
+      "fragment": "",
+      "sha256": "83a2f567b321178c933b1b698108e7aa845fd4635aa31853316f4f3ebd30b0a9"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../assets/css/base.css",
+      "target": "assets/css/base.css",
+      "fragment": "",
+      "sha256": "6d4cb3f982035fb68d2ce32d71d5d82402c37a553650e7d59b770d8fee6d464c"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "src",
+      "raw_ref": "../assets/img/Logo.svg",
+      "target": "assets/img/Logo.svg",
+      "fragment": "",
+      "sha256": "2def37df60267b8b2416002099e970086d9b28198cf02591a1ec1c280f4ebb18"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../pages/reports.html",
+      "target": "pages/reports.html",
+      "fragment": "",
+      "sha256": "1853c9fceaea4515fa37133350be277027bcbb743c653e39b7c494bb4809ac67"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../pages/notes.html",
+      "target": "pages/notes.html",
+      "fragment": "",
+      "sha256": "f0b2fc55da487b5b4ebbe11e6aac5c5df21604680bbc6e33b8630836232701df"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../user_notes/README.md",
+      "target": "user_notes/README.md",
+      "fragment": "",
+      "sha256": "ddb88133376dd85df9b62c089ba2af0d1ac58649f3d9a72f3e1eadcebbd9bb96"
+    },
+    {
+      "source": "pages/notes.html",
+      "kind": "href",
+      "raw_ref": "../user_notes/2026/计划.md",
+      "target": "user_notes/2026/计划.md",
+      "fragment": "",
+      "sha256": "d98657cf25d81de28582bb2b076121ed998afc346da72e1f8216a952832993a7"
+    },
+    {
+      "source": "assets/css/base.css",
+      "kind": "css_url",
+      "raw_ref": "Theme.css",
+      "target": "assets/css/Theme.css",
+      "fragment": "",
+      "sha256": "766a7dee3c38d3f8a62ba80dc11abf1dc8840cdbfd6ea241f36f386ad1dc6c1e"
+    },
+    {
+      "source": "assets/css/base.css",
+      "kind": "css_url",
+      "raw_ref": "../img/theme-grid.svg",
+      "target": "assets/img/theme-grid.svg",
+      "fragment": "",
+      "sha256": "b088f9dd34810aab3f7aeeaf6cac950d45989e6085f2d7d6dfea5f106048b468"
+    },
+    {
+      "source": "README.md",
+      "kind": "markdown",
+      "raw_ref": "index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "README.md",
+      "kind": "markdown",
+      "raw_ref": "pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-01.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-01.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-02.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-02.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-03.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-03.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-04.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-04.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-05.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-05.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-06.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-06.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-07.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-07.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/item-08.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/item-08.md",
+      "kind": "markdown",
+      "raw_ref": "../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "docs/usage.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/data-model.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/troubleshooting.md",
+      "kind": "markdown",
+      "raw_ref": "../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "docs/examples/README.md",
+      "kind": "markdown",
+      "raw_ref": "sample.csv",
+      "target": "docs/examples/sample.csv",
+      "fragment": "",
+      "sha256": "83a2f567b321178c933b1b698108e7aa845fd4635aa31853316f4f3ebd30b0a9"
+    },
+    {
+      "source": "docs/examples/README.md",
+      "kind": "markdown",
+      "raw_ref": "sample.tsv",
+      "target": "docs/examples/sample.tsv",
+      "fragment": "",
+      "sha256": "8a68a1f989f6f1abcebf5afd0068342e212f6cc1c7749cefe54bef73da543e43"
+    },
+    {
+      "source": "docs/examples/README.md",
+      "kind": "markdown",
+      "raw_ref": "../../index.html",
+      "target": "index.html",
+      "fragment": "",
+      "sha256": "58f775c8d67c340c8399b0eb21de1260ed597f4b975b4ab35fcc72cb17ff0846"
+    },
+    {
+      "source": "user_notes/README.md",
+      "kind": "markdown",
+      "raw_ref": "2026/计划.md",
+      "target": "user_notes/2026/计划.md",
+      "fragment": "",
+      "sha256": "d98657cf25d81de28582bb2b076121ed998afc346da72e1f8216a952832993a7"
+    },
+    {
+      "source": "user_notes/2026/计划.md",
+      "kind": "markdown",
+      "raw_ref": "../resources/ref-card.txt",
+      "target": "user_notes/resources/ref-card.txt",
+      "fragment": "",
+      "sha256": "a29b331f4fd96f60674a935bf3eb02f0356627b7de1d8ddfe2198f9e179a6ed4"
+    },
+    {
+      "source": "user_notes/topic/links.md",
+      "kind": "markdown",
+      "raw_ref": "../../pages/guide.html#workflow",
+      "target": "pages/guide.html",
+      "fragment": "workflow",
+      "sha256": "6434f5aaf845ad03eac49ae50102454e881c90bacb26e34490f7ae64af0a2b25"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-01.md",
+      "target": "docs/item-01.md",
+      "fragment": "",
+      "sha256": "6766642e1e418d0c3e357e764ae290165f06337bea4781fbee8bba608ffb01ec"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-02.md",
+      "target": "docs/item-02.md",
+      "fragment": "",
+      "sha256": "31efee5766be894901f3b0f093e14e25d1ed5a9c30ed66cef6305abb5a83f799"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-03.md",
+      "target": "docs/item-03.md",
+      "fragment": "",
+      "sha256": "91c8ec000666cccdd0a492b2e2e1aa7be947911427cda1670db4b4a1d9a123cb"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-04.md",
+      "target": "docs/item-04.md",
+      "fragment": "",
+      "sha256": "b38e19c7b269b4f056c9d896932deb88e7b268a30d35a7571ecc59f32118a9d7"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-05.md",
+      "target": "docs/item-05.md",
+      "fragment": "",
+      "sha256": "d6af5937ae50e0264c8f1bc398876390e6a39f29098ac4a79da4791633739799"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-06.md",
+      "target": "docs/item-06.md",
+      "fragment": "",
+      "sha256": "8e6973b9c4b25813e8ea7cfe3ab593ee4dc950d45d05fb12222c4affbe376e1d"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-07.md",
+      "target": "docs/item-07.md",
+      "fragment": "",
+      "sha256": "2a25fa3f2678d0402c619e1b1c444ed244ebf5769e4b486621988756e1961a8b"
+    },
+    {
+      "source": "data/catalog.json",
+      "kind": "catalog_href",
+      "raw_ref": "docs/item-08.md",
+      "target": "docs/item-08.md",
+      "fragment": "",
+      "sha256": "bbb5332899f49b7720651d51177b29d8d8ade950ec2cdd8a7605ca6630fe567e"
+    }
+  ],
+  "functional_cases": [
+    {
+      "query": "",
+      "group": "",
+      "ids": [
+        "D01",
+        "D02",
+        "D03",
+        "D04",
+        "D05",
+        "D06",
+        "D07",
+        "D08"
+      ]
+    },
+    {
+      "query": "hash",
+      "group": "",
+      "ids": [
+        "D02",
+        "D03"
+      ]
+    },
+    {
+      "query": "",
+      "group": "archive",
+      "ids": [
+        "D01",
+        "D02",
+        "D03"
+      ]
+    },
+    {
+      "query": "离线",
+      "group": "notes",
+      "ids": [
+        "D07"
+      ]
+    },
+    {
+      "query": "not-present",
+      "group": "",
+      "ids": []
+    }
+  ],
+  "summary": {
+    "release_id": "WB-20261029-r7",
+    "entrypoint": "index.html",
+    "release_member_count": 40,
+    "note_count": 6,
+    "restored_file_count": 46,
+    "resource_edge_count": 69
+  }
+}

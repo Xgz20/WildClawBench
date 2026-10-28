@@ -1,0 +1,27 @@
+{
+  "mixed_version_member": "docs/item-03.md",
+  "extra_wrapper_breaks_entrypoint": "index.html",
+  "case_sensitive_resource_targets": [
+    "assets/css/Theme.css",
+    "assets/img/Logo.svg"
+  ],
+  "note_conflicts": [
+    {
+      "release_path": "user_notes/README.md",
+      "retained_user_path": "user_notes/README.md",
+      "release_saved_as": "distribution_templates/user_notes/README.md",
+      "kind": "exact_path"
+    },
+    {
+      "release_path": "user_notes/case/README.md",
+      "retained_user_path": "user_notes/Case/ReadMe.md",
+      "release_saved_as": "distribution_templates/user_notes/case/README.md",
+      "kind": "casefold_path"
+    }
+  ],
+  "missing_slice_must_not_regenerate": "assets/js/catalog-data.js",
+  "same_release_duplicate_members": [
+    "LICENSE.txt",
+    "build-info.json"
+  ]
+}

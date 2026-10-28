@@ -484,3 +484,12 @@ general_hard_file_operations_task_006_visual_file_mapping:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_file_operations_task_005_split_bundle_restore:
+  business_correctness:
+    - data_processing
+  boundary_cases:
+    - reasoning_planning
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

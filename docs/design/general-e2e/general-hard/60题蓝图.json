@@ -16311,35 +16311,67 @@
         "exec": "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_005_split_bundle_restore/exec",
         "gt": "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_005_split_bundle_restore/gt"
       },
-      "prompt_draft": "请完成以下工作：识别同版分包，按清单在新目录恢复可离线使用的工作台，保留用户笔记，验证相对链接和资源，不能重新生成或整体覆盖内容。\n\n输入材料：\n- /tmp_workspace/parts/：3份相同发行版分包和1份旧版干扰包\n- /tmp_workspace/release_manifest.json：完整版本清单与校验值\n- /tmp_workspace/existing_notes/：必须保留的用户笔记\n\n交付：\n- /tmp_workspace/results/restored/：完整离线目录\n- /tmp_workspace/results/restore_audit.json：版本、成员与校验\n- /tmp_workspace/results/handoff.md：启动与验证结果\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请识别同版分包，按发行清单在新目录恢复完整离线资料工作台，保留现有笔记，核验原字节、相对资源与本地可用性；不要重新生成应用、资料或缺片。\n\n只读输入：/tmp_workspace/parts/有3个同版ZIP和1个旧版干扰ZIP；/tmp_workspace/release_manifest.json给出发行ID/版本、当前分包整体SHA、PART_INFO、payload_prefix、每成员原字节大小/SHA、来源、单层根、笔记冲突策略及本地功能样例；/tmp_workspace/existing_notes/是必须保留的原创虚构用户笔记。输入保持原字节，不移动、删除或覆盖。按真实元数据与SHA判断，不按文件名猜同版；同版重复路径只有字节相等才合并，否则阻止并报告。不要执行不明归档代码或联网安装。\n\n只在/tmp_workspace/results交付：\n1. restored/：完整原生离线目录。剥离每个当前分包各自声明的payload_prefix，index.html直接位于restored根，不能多套Workbench等包装目录。所有发行成员原字节恢复，大小写/Unicode路径严格依清单。原existing_notes/<path>映射为user_notes/<path>并保留原路径/大小写/原字节；用NFC+casefold检测与发行成员的冲突，用户优先，发行原成员旁存distribution_templates/<发行原路径>，两份都不能丢。不能整体覆盖用户笔记，也不能把旧版资料补入新版本。\n2. restore_audit.json：JSON object，含release_id、version、selected_parts（part_id/path/sha256）、excluded_parts（path/release_id/reason）、members（release_path/target_path/sha256/bytes/part_ids）、notes（source_path/target_path/sha256/bytes）、conflicts（release_path/retained_user_path/release_saved_as/kind）、resource_checks、input_sha256。conflicts.kind为exact_path或casefold_path。part_ids为实际合法来源分包的非空集合，相同发行重复成员任选一个或保留多个真实来源都可。目标路径相对restored根，也接受/tmp_workspace/results/restored/绝对路径；输入路径相对/tmp_workspace，或其等价绝对路径。\n   resource_checks按实际恢复内容列source/kind/raw_ref/target/fragment/status=resolved；source与target相对restored根。可每边一行，也可按source分组、links数组列子边，status可放父组。kind为描述性类型（href/src/css_url/markdown/catalog_href等），关系绑定以真实source/target/片段为准，不按说明措辞评分。HTML href/src、CSS url/import、Markdown和catalog（base=root）均要核验，资源按精确大小写存在且HTML片段有效。所有输入原字节SHA放input_sha256。\n3. handoff.md：写清精确入口、选版/排除、单层根/相对资源、笔记冲突去向与实际核验范围。入口可双击restored/index.html，以file URL离线打开；原发行内嵌目录与受控经典JS不需服务器、账号、fetch/CDN或外部依赖。以Markdown两列表或fenced JSON附摘要release_id、entrypoint=index.html、release_member_count、note_count、restored_file_count、resource_edge_count。正文措辞自由。\n\n本题要求恢复原字节和相对资源图，不要求候选重新写前端。可静态核原字节/资源图并如实写浏览器not_run/unknown；若实际打开本地页面再验证筛选/空状态/清空/导航，应依据真实工具结果，不把静态检查说成应用已启动。已恢复原发行脚本与数据且资源图全部一致，才有离线功能一致性的依据。不得执行自行合成的缺片或任意未知归档脚本。所有源代码/素材均是本题受控原创内容，不需访问真实服务。\n\n允许JSON字段/成员重排、BOM、Unicode NFC/NFD、SHA大小写、整数等价和版本v前缀。中文键可用发行编号/版本/选用分包/排除分包/成员/笔记/冲突/资源核验/输入哈希、分包编号/路径/内容哈希/发行路径/目标路径/字节数/来源分包/原路径/保留用户路径/发行旁存路径/类型/来源/原引用/目标/片段/状态/链接；摘要可用入口/发行成员数/笔记数/恢复文件数/资源关系数。所有真正的原字节与必要固定相对路径不因输出表示等价而改变。\n\n仅读本题exec映射输入，不读GT或评分说明，不扫描真实用户目录，不联网、不访问账号、不发送消息或调用付费接口；所有新交付只放results。源输入保持原字节，结论区分实际核验、推断与未知。无需脚本/源码之外的重新开发成果。",
       "inputs": [
         {
-          "path": "parts/",
-          "specification": "3份相同发行版分包和1份旧版干扰包"
+          "path": "existing_notes/2026/计划.md",
+          "specification": "原创虚构用户笔记；保留原路径、大小写及原字节，user_notes映射优先。"
+        },
+        {
+          "path": "existing_notes/Case/ReadMe.md",
+          "specification": "原创虚构用户笔记；保留原路径、大小写及原字节，user_notes映射优先。"
+        },
+        {
+          "path": "existing_notes/README.md",
+          "specification": "原创虚构用户笔记；保留原路径、大小写及原字节，user_notes映射优先。"
+        },
+        {
+          "path": "existing_notes/prefs.json",
+          "specification": "原创虚构用户笔记；保留原路径、大小写及原字节，user_notes映射优先。"
+        },
+        {
+          "path": "existing_notes/resources/ref-card.txt",
+          "specification": "原创虚构用户笔记；保留原路径、大小写及原字节，user_notes映射优先。"
+        },
+        {
+          "path": "existing_notes/topic/links.md",
+          "specification": "原创虚构用户笔记；保留原路径、大小写及原字节，user_notes映射优先。"
+        },
+        {
+          "path": "parts/Workbench_bundle_A.zip",
+          "specification": "当前同版原始ZIP；按整体SHA、PART_INFO和声明payload_prefix验证，不按文件名猜版。"
+        },
+        {
+          "path": "parts/Workbench_bundle_B.zip",
+          "specification": "当前同版原始ZIP；按整体SHA、PART_INFO和声明payload_prefix验证，不按文件名猜版。"
+        },
+        {
+          "path": "parts/Workbench_bundle_B_repack.zip",
+          "specification": "旧版干扰ZIP，须按真实发行/成员核验后排除，不混入恢复结果。"
+        },
+        {
+          "path": "parts/Workbench_bundle_C.zip",
+          "specification": "当前同版原始ZIP；按整体SHA、PART_INFO和声明payload_prefix验证，不按文件名猜版。"
         },
         {
           "path": "release_manifest.json",
-          "specification": "完整版本清单与校验值"
-        },
-        {
-          "path": "existing_notes/",
-          "specification": "必须保留的用户笔记"
+          "specification": "完整发行/分包/成员清单、原字节SHA和大小、笔记冲突/单层根/资源及交付契约。"
         }
       ],
       "outputs": [
         {
           "path": "/tmp_workspace/results/restored/",
-          "requirement": "完整离线目录",
+          "requirement": "单层根原字节离线目录：40发行成员、6用户笔记及两冲突模板旁存，69资源边按精确大小写和片段核验；不重写缺片。",
           "kind": "result_artifact"
         },
         {
           "path": "/tmp_workspace/results/restore_audit.json",
-          "requirement": "版本、成员与校验",
+          "requirement": "版本/来源/成员和笔记的实际目标SHA、冲突、输入及资源关系账本；允许公开结构等价。",
           "kind": "result_artifact"
         },
         {
           "path": "/tmp_workspace/results/handoff.md",
-          "requirement": "启动与验证结果",
+          "requirement": "精确入口、选版/排除、单层根与笔记冲突、6项可审计摘要及真实核验范围；浏览器not_run/unknown可如实交付。",
           "kind": "result_artifact"
         }
       ],
@@ -16356,19 +16388,24 @@
         "覆盖用户笔记"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102639,
-        "construction": "GT记录发行成员与许可、相对资源图及笔记哈希；检查缺片、混版和路径大小写三类错误，允许工具等价，不依赖真实账号。",
+        "construction": "源先行Python成员/笔记/资源图真值与独立Node原ZIP计算一致，再制作原生参考。root先保留v1及真实Worker满分漏检，最小v2仅修固定位置与实际目标SHA绑定；公开11、独立oracle、原始笔记/发行素材和两参考未改。24项本轮真实Worker控制（18旧场景重跑+6新增）与正式独立ZIP基线/归档通过。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "original_usability_evidence.json",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "模型作者及root源码/原ZIP/资源图复核；Node源计算不读GT/参考，原浏览器回执SHA和46原件核对。非人工专家，无候选脚本/应用执行或真实Harness/Judge。",
+        "equivalence": "JSON/BOM/中文键、字段重排、NFC/NFD、SHA大小写、整数等价、v版本前缀、真实同字节重复来源子集、按source分组资源边、自由交接措辞及许可的相对/绝对/root前缀；原字节与固定恢复拓扑仍须符合契约。",
+        "authoring_evidence": "evidence/h039-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -16393,7 +16430,7 @@
               "reasoning_planning"
             ],
             "criterion": "逐项识别并正确处理：混合不同版本；多嵌套一层致链接失效；覆盖用户笔记。以独立反例验证，不只检索关键词。",
-            "oracle_reference": "gt/counterexamples.json"
+            "oracle_reference": "gt/expected.json + gt/business_oracle.json + v2 path-byte placement checks"
           },
           {
             "key": "delivery_integrity",
@@ -16411,12 +16448,18 @@
               "verification_delivery"
             ],
             "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
-            "oracle_reference": "gt/evidence_requirements.json"
+            "oracle_reference": "gt/evidence_requirements.json + actual static member/note target SHA observations"
           }
         ],
-        "rule_aggregation": "返回各检查点及按上列权重计算的overall_score；overall_score不重复映射能力；正式落题前核对当前规则Worker消费契约。",
+        "rule_aggregation": "纯自动A=.55业务+.25边界+.15交付完整+.05证据绑定；作者基线A1不代表候选Harness成绩。",
         "llm_rubric": [],
-        "infrastructure_boundary": "缺GT、规则崩溃、网络基础设施不可用与候选错误分开记录；不得将评测异常补为能力零分。"
+        "infrastructure_boundary": "缺GT、规则崩溃、网络基础设施不可用与候选错误分开记录；不得将评测异常补为能力零分。",
+        "scoring_ownership_v2": {
+          "business_correctness": "internal .75 actual release byte preservation (any placement for independent content credit; layout owned by boundary) + .25 actual selected-part SHA eligibility and top release/version fields",
+          "boundary_cases": "internal .40 original note bytes/path preservation + .40 single-root exact-case fixed paths and all intact-source graph edges + .20 recorded exact/casefold conflict routing. Changed-byte sources own their missing graph edges to avoid cascade; an extra wrapper preserves independent note-byte credit; v2 additionally binds every present original release byte to its required target, so a permutation cannot pass. Missing original byte checks remain owned by business content.",
+          "delivery_integrity": "internal .60 input SHA/member protection + .15 native audit JSON + .10 native handoff summary + .15 six summary facts",
+          "evidence_binding": "internal .40 original member hashes/sizes/nonempty subset of valid source part IDs + .20 original note provenance + .20 actual resource relation identity + .10 input hashes + .10 old-release exclusion identity/reason; v2 binds reported member/note target paths to actual restored SHA. Canonical targets affected by an already-scored artifact mismatch are explicitly not_assessed (neutral), not verified. A fabricated alternate path fails; reporting the actual path of a misplaced wrapper remains valid provenance and layout loses separately."
+        }
       },
       "anticipated_failures": [
         "混合不同版本",
@@ -16489,23 +16532,29 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec11/GT10，新建安装score0.27.1/core0.15.3 ZIP、checkout外-I入口、实际Worker四键/A1；1份普通规则派生绑定回执和88非runtime文件正常/无runtime搬移核验，无Office/HTML运行时标志、候选代码执行、Harness/Judge/finalize。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h039-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [
           "可映射的独立/tmp_workspace目录、读写文件和本地命令能力；所需依赖在开跑前统一预置，不要求候选安装。"
         ],
         "scoring": [
-          "锁定的General规则Worker和可解析v2 Rubric的语义Judge；独立只读评分材料。"
+          "独立安装并验证的score0.27.1/core0.15.3和锁定Python3.12 Worker；私有helper/GT由新wrapper及trusted_files SHA绑定。",
+          "标准库静态读取恢复原字节、HTML/CSS/Markdown/catalog相对资源和HTML片段；通用规则派生目录保存绑定观察，不需Office/HTML运行时标志。",
+          "不执行候选源码或应用；原发行作者浏览器回执仅证明已认证原字节的原件可用性，不能替代候选真实轨迹。"
         ],
         "skills": [],
         "env": [],
         "warmup": [],
-        "preflight_status": "not_executed",
-        "limit": "所有版本、素材许可和真实可用性在正式制作/发行前锁定；上述能力未做本题四端运行验证。"
+        "preflight_status": "author_only_formal_ZIP_actual_Worker_and_normal_moved_archive_verified",
+        "limit": "未做本题四端Harness、独立Judge、人工专家或L4/区分度实测；基础产物失败对应的规范目标绑定明确not_assessed。"
       },
       "proposed_frontmatter": {
         "id": "general_hard_file_operations_task_005_split_bundle_restore",
@@ -16525,7 +16574,16 @@
           "general-hard"
         ]
       },
-      "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"
+      "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。",
+      "materialization_revision": {
+        "private_contract": "root-reviewed-v2-path-byte-target-binding",
+        "v1_failures_preserved": true,
+        "v2_actual_Worker_controls": 24,
+        "exec_files": 11,
+        "GT_files": 10,
+        "candidate_code_executed": false,
+        "evidence": "evidence/h039-reviewed-authoring-20261029.json"
+      }
     },
     {
       "order": 40,
