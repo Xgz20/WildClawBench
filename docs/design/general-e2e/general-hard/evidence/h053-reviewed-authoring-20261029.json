@@ -1,0 +1,575 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 53,
+  "task_id": "general_hard_planning_coordination_task_001_measurable_roadmap",
+  "registered_task_index": 45,
+  "registered": 45,
+  "remaining": 15,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 5,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6,
+    "planning_coordination": 1
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/planning_coordination/general_hard_planning_coordination_task_001_measurable_roadmap.md",
+      "sha256": "fde8e9418fed092f5b95c97c468347d34e6711a031d97619387ff959d0c08776",
+      "size": 8498
+    },
+    "exec": [
+      {
+        "path": "baseline.csv",
+        "sha256": "97c837afd6ec867f821a2f49585e3b8f7a61bc037d06a4a0825b5ea8447ed0e5",
+        "size": 2927
+      },
+      {
+        "path": "constraints.md",
+        "sha256": "437b9067c49cdae933f626a552fe6885855d50a1b2b490510aea421c38cdbeef",
+        "size": 6668
+      },
+      {
+        "path": "strategy_notes.docx",
+        "sha256": "521b1d5f20a5320bbe25bcd71656f26dba1afad96ab925e4580cac52eddd7d68",
+        "size": 37712
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "96700a540d155558e2f733c72a56ce8949ff545823312aa66b6d0be245e5605a",
+        "size": 3032
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "faec8005e3a6d71e712ece786d6a08787193c38baa2b9455f837bd1854f8bbef",
+        "size": 5799
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "e87f358e405fbc73019b8e00b80c54b48beb91c8c82a54cf0e64d9c75620c4fc",
+        "size": 1333
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "c661ebf67f2c2f0778c4351e0c9bd36bae5fcf95f2f376d7717b0b103984e2c5",
+        "size": 791
+      },
+      {
+        "path": "expected.json",
+        "sha256": "1d2f7f954aaaa7d81eefecb1c014fac2fce67fbc5f85c0f06f257e0ed0b3768b",
+        "size": 858
+      },
+      {
+        "path": "grader.py",
+        "sha256": "1b4473da6064b7b9edec868a6c3633dd8c8464d565ac6928f4d541b00abd9ac7",
+        "size": 14356
+      },
+      {
+        "path": "native_io.py",
+        "sha256": "9ecab45187cb8330b15841f2b9165499d6173ee162d41b47dd81b8c285f89386",
+        "size": 7073
+      },
+      {
+        "path": "office_runtime.py",
+        "sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+        "size": 65333
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "30e55ce39a436b45133a6320b6a7e85fa004d942da786af2213474a08e0a0b66",
+        "size": 270
+      },
+      {
+        "path": "trusted_files.json",
+        "sha256": "f4dec1b5454b258e30286d772b91e4e7eab3c562ed58c07c4c38a22fb614bcb3",
+        "size": 829
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/handoff.json",
+    "sha256": "6ea430684e66f021e2785ef7bbf85f9fe45c20adb3a89d4751975db43eeac3b1",
+    "size": 3441
+  },
+  "review": {
+    "root_review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/root-review-v1/review.json",
+    "review_kind": "model root review; not human expert",
+    "controls": 29,
+    "old_failures_retained": true,
+    "current_formal_baseline_is_new_run_not_all_control_rerun_claim": true,
+    "retained_formal_driver_failure": "First author-tools-v2 run lacked office_render lock; OFFICE_RENDER_RUNTIME_REQUIRED before Worker, no candidate zero. v3 copies preexisting full author runtime lock; no GT/material changes."
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_planning_coordination_task_001_measurable_roadmap",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/attempts/author-only-h053-formal__detached-zip-worker/general_hard_planning_coordination_task_001_measurable_roadmap/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/attempts/author-only-h053-formal__detached-zip-worker/general_hard_planning_coordination_task_001_measurable_roadmap/author-only-formal-auto",
+      "candidate_sha256": "87f841850745b919c2ab1c6ebadfa521af4e96cec4dc04a0576630329599b6ee",
+      "entry_count": 6
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/moved-without-runtime",
+      "candidate_sha256": "87f841850745b919c2ab1c6ebadfa521af4e96cec4dc04a0576630329599b6ee",
+      "entry_count": 6
+    },
+    "nonruntime_same_byte_files": 53,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/document/render-audit.json",
+        "sha256": "f40b4c461c9979c7f2d7fba635885228f8eacd41c649582ac7c04567b2174814",
+        "size": 1852
+      },
+      {
+        "path": "worker/derived/document/rendered.pdf",
+        "sha256": "6b8acca790e3076e6d1dabfd551e8e9aa1a4bfd9dd82e89e1cc463a5d7dfaa9b",
+        "size": 133296
+      },
+      {
+        "path": "worker/derived/h053-analysis.json",
+        "sha256": "7193c277e4cdf0dc7b60bfde0a29154e064c2a15749de38d103c93ff30063ec8",
+        "size": 12065
+      },
+      {
+        "path": "worker/derived/recalculated/office-audit.json",
+        "sha256": "50a20f6696d2d80bba3c808730c31b85c78501b8616dc603afc3ad903b759e29",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/recalculated/recalculated.xlsx",
+        "sha256": "f85369b0ee637d04cbee4582130deb5b5e994969d1b4f1fce7304d52bd36a737",
+        "size": 14249
+      },
+      {
+        "path": "worker/derived/variants/denominator/calculated/office-audit.json",
+        "sha256": "a7ab0c380655705e26c6e979b4bd186770c0367c7f6646ca83e0b1aaf5781a3b",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/variants/denominator/calculated/recalculated.xlsx",
+        "sha256": "3b6753955ccd2fb4d7cf0ed4b0d904e9fa58f6742cdfa584bd8dd7cacb7b3852",
+        "size": 14254
+      },
+      {
+        "path": "worker/derived/variants/denominator/prepared/numeric-intervention-audit.json",
+        "sha256": "da6dbc3e3c86df802532cb626a197b9e87e16c9def2c6c65c6b68648d9f246be",
+        "size": 1825
+      },
+      {
+        "path": "worker/derived/variants/denominator/prepared/prepared.xlsx",
+        "sha256": "5c278923e41147cd7b917e8ae017ae454793ae52f0fe342dfa99bb6c5ac5702c",
+        "size": 10326
+      },
+      {
+        "path": "worker/derived/variants/numerator/calculated/office-audit.json",
+        "sha256": "941c4b05e2dd26f818a9fa7b17eb55eea15039ecfeb39017873204fd796597b3",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/variants/numerator/calculated/recalculated.xlsx",
+        "sha256": "ad7bf009f723a1c9b4321518cabcd08de7b40f642a1cf32ab33ab3d9f4e9f43e",
+        "size": 14255
+      },
+      {
+        "path": "worker/derived/variants/numerator/prepared/numeric-intervention-audit.json",
+        "sha256": "6c5fecd18b6b5851346e83bc61eb09f2816e27289e4e44c6d74c68dba5029046",
+        "size": 1820
+      },
+      {
+        "path": "worker/derived/variants/numerator/prepared/prepared.xlsx",
+        "sha256": "5f7ccd2fccf52d1e462908b93bc18ff20eef5133e5d20c9cacaf5c0a6313a361",
+        "size": 10326
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "775f6824b77cd46dc9965ad39c9007aa642030f21ec1c54d0d0b6194ba79d560"
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/document/render-audit.json",
+        "sha256": "f40b4c461c9979c7f2d7fba635885228f8eacd41c649582ac7c04567b2174814",
+        "size": 1852
+      },
+      {
+        "path": "worker/derived/document/rendered.pdf",
+        "sha256": "6b8acca790e3076e6d1dabfd551e8e9aa1a4bfd9dd82e89e1cc463a5d7dfaa9b",
+        "size": 133296
+      },
+      {
+        "path": "worker/derived/h053-analysis.json",
+        "sha256": "7193c277e4cdf0dc7b60bfde0a29154e064c2a15749de38d103c93ff30063ec8",
+        "size": 12065
+      },
+      {
+        "path": "worker/derived/recalculated/office-audit.json",
+        "sha256": "50a20f6696d2d80bba3c808730c31b85c78501b8616dc603afc3ad903b759e29",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/recalculated/recalculated.xlsx",
+        "sha256": "f85369b0ee637d04cbee4582130deb5b5e994969d1b4f1fce7304d52bd36a737",
+        "size": 14249
+      },
+      {
+        "path": "worker/derived/variants/denominator/calculated/office-audit.json",
+        "sha256": "a7ab0c380655705e26c6e979b4bd186770c0367c7f6646ca83e0b1aaf5781a3b",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/variants/denominator/calculated/recalculated.xlsx",
+        "sha256": "3b6753955ccd2fb4d7cf0ed4b0d904e9fa58f6742cdfa584bd8dd7cacb7b3852",
+        "size": 14254
+      },
+      {
+        "path": "worker/derived/variants/denominator/prepared/numeric-intervention-audit.json",
+        "sha256": "da6dbc3e3c86df802532cb626a197b9e87e16c9def2c6c65c6b68648d9f246be",
+        "size": 1825
+      },
+      {
+        "path": "worker/derived/variants/denominator/prepared/prepared.xlsx",
+        "sha256": "5c278923e41147cd7b917e8ae017ae454793ae52f0fe342dfa99bb6c5ac5702c",
+        "size": 10326
+      },
+      {
+        "path": "worker/derived/variants/numerator/calculated/office-audit.json",
+        "sha256": "941c4b05e2dd26f818a9fa7b17eb55eea15039ecfeb39017873204fd796597b3",
+        "size": 1118
+      },
+      {
+        "path": "worker/derived/variants/numerator/calculated/recalculated.xlsx",
+        "sha256": "ad7bf009f723a1c9b4321518cabcd08de7b40f642a1cf32ab33ab3d9f4e9f43e",
+        "size": 14255
+      },
+      {
+        "path": "worker/derived/variants/numerator/prepared/numeric-intervention-audit.json",
+        "sha256": "6c5fecd18b6b5851346e83bc61eb09f2816e27289e4e44c6d74c68dba5029046",
+        "size": 1820
+      },
+      {
+        "path": "worker/derived/variants/numerator/prepared/prepared.xlsx",
+        "sha256": "5f7ccd2fccf52d1e462908b93bc18ff20eef5133e5d20c9cacaf5c0a6313a361",
+        "size": 10326
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "775f6824b77cd46dc9965ad39c9007aa642030f21ec1c54d0d0b6194ba79d560"
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "5dc7013375e5c3eda31b312adf4f79826c5bb7c1",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "5dc7013375e5c3eda31b312adf4f79826c5bb7c1",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "5dc7013375e5c3eda31b312adf4f79826c5bb7c1",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "499ac8489bc22c57a7783b515ff52319a56fd44578fc89783b2b6b787c7e46cc",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "5dc7013375e5c3eda31b312adf4f79826c5bb7c1",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "0ca6cc2304a5fdcaec1b1f2d50821f6634efbdf71e50ebade5eddfeb459ebb3b"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/document/render-audit.json",
+          "sha256": "f40b4c461c9979c7f2d7fba635885228f8eacd41c649582ac7c04567b2174814",
+          "size": 1852
+        },
+        {
+          "path": "worker/derived/document/rendered.pdf",
+          "sha256": "6b8acca790e3076e6d1dabfd551e8e9aa1a4bfd9dd82e89e1cc463a5d7dfaa9b",
+          "size": 133296
+        },
+        {
+          "path": "worker/derived/h053-analysis.json",
+          "sha256": "7193c277e4cdf0dc7b60bfde0a29154e064c2a15749de38d103c93ff30063ec8",
+          "size": 12065
+        },
+        {
+          "path": "worker/derived/recalculated/office-audit.json",
+          "sha256": "50a20f6696d2d80bba3c808730c31b85c78501b8616dc603afc3ad903b759e29",
+          "size": 1118
+        },
+        {
+          "path": "worker/derived/recalculated/recalculated.xlsx",
+          "sha256": "f85369b0ee637d04cbee4582130deb5b5e994969d1b4f1fce7304d52bd36a737",
+          "size": 14249
+        },
+        {
+          "path": "worker/derived/variants/denominator/calculated/office-audit.json",
+          "sha256": "a7ab0c380655705e26c6e979b4bd186770c0367c7f6646ca83e0b1aaf5781a3b",
+          "size": 1118
+        },
+        {
+          "path": "worker/derived/variants/denominator/calculated/recalculated.xlsx",
+          "sha256": "3b6753955ccd2fb4d7cf0ed4b0d904e9fa58f6742cdfa584bd8dd7cacb7b3852",
+          "size": 14254
+        },
+        {
+          "path": "worker/derived/variants/denominator/prepared/numeric-intervention-audit.json",
+          "sha256": "da6dbc3e3c86df802532cb626a197b9e87e16c9def2c6c65c6b68648d9f246be",
+          "size": 1825
+        },
+        {
+          "path": "worker/derived/variants/denominator/prepared/prepared.xlsx",
+          "sha256": "5c278923e41147cd7b917e8ae017ae454793ae52f0fe342dfa99bb6c5ac5702c",
+          "size": 10326
+        },
+        {
+          "path": "worker/derived/variants/numerator/calculated/office-audit.json",
+          "sha256": "941c4b05e2dd26f818a9fa7b17eb55eea15039ecfeb39017873204fd796597b3",
+          "size": 1118
+        },
+        {
+          "path": "worker/derived/variants/numerator/calculated/recalculated.xlsx",
+          "sha256": "ad7bf009f723a1c9b4321518cabcd08de7b40f642a1cf32ab33ab3d9f4e9f43e",
+          "size": 14255
+        },
+        {
+          "path": "worker/derived/variants/numerator/prepared/numeric-intervention-audit.json",
+          "sha256": "6c5fecd18b6b5851346e83bc61eb09f2816e27289e4e44c6d74c68dba5029046",
+          "size": 1820
+        },
+        {
+          "path": "worker/derived/variants/numerator/prepared/prepared.xlsx",
+          "sha256": "5f7ccd2fccf52d1e462908b93bc18ff20eef5133e5d20c9cacaf5c0a6313a361",
+          "size": 10326
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "24f0bd016fd796407738cf5165d68c192478e01b746509715b7127c7f392f3e4",
+        "file_count": 13,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T22:46:56.774981Z",
+      "identity": {
+        "batch_id": "author-only-h053-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_planning_coordination_task_001_measurable_roadmap",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "c4f8ae9ae6a44b9d6e37ccbafccd9fe02dae7a93d2d791c5456283bab62824c2",
+        "root_result_count": 2,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "610d9f0a67dc399a81a8950b4c991847b88e710a30c1ab23c98b1f40a480f99f",
+        "initial_sha256": "610d9f0a67dc399a81a8950b4c991847b88e710a30c1ab23c98b1f40a480f99f"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T22:46:46.900108Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 9.760951,
+        "environment_keys": [
+          "GENERAL_E2E_OFFICE_LOCK",
+          "GENERAL_E2E_OFFICE_RENDER_LOCK",
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "office_render_runtime": {
+          "path": "worker/office-render-runtime.json",
+          "sha256": "775f6824b77cd46dc9965ad39c9007aa642030f21ec1c54d0d0b6194ba79d560"
+        },
+        "office_runtime": {
+          "path": "worker/office-runtime.json",
+          "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+        },
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "d1df5a0ba3ea9877d9100daaa7fd3ffb50258e1fa27342afc58a8f8865463070",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "fcd35a5e6c0babc9ff4c77afea520b6c9b5f5b2279c5531ea5418e502405cbb4",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 41392
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": {
+      "prepared": true,
+      "preparation_result": {
+        "status": "PASS",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/attempts/author-only-h053-formal__detached-zip-worker/general_hard_planning_coordination_task_001_measurable_roadmap/author-only-formal-auto",
+        "grading_type": "hybrid",
+        "evidence_catalog": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/attempts/author-only-h053-formal__detached-zip-worker/general_hard_planning_coordination_task_001_measurable_roadmap/author-only-formal-auto/semantic/evidence-catalog.json",
+        "request": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/attempts/author-only-h053-formal__detached-zip-worker/general_hard_planning_coordination_task_001_measurable_roadmap/author-only-formal-auto/semantic/request.json",
+        "semantic_status": "awaiting_response",
+        "response_template": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/attempts/author-only-h053-formal__detached-zip-worker/general_hard_planning_coordination_task_001_measurable_roadmap/author-only-formal-auto/semantic/response-template.json"
+      },
+      "queries": [
+        {
+          "evidence_id": "evidence-0007",
+          "path": "candidate-original/workspace/results/explanation.docx",
+          "receipt": "semantic-query-1.json",
+          "sha256": "3cbab3bf7de20fbf7259d3700e632fb4454d9409a5d985928b15926d3eeee1cd",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0008",
+          "path": "candidate-original/workspace/results/roadmap.xlsx",
+          "receipt": "semantic-query-2.json",
+          "sha256": "940440a268046ad5a5af54566c83a9af9c72eb7b3efb063309a2d1ee6899587b",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0026",
+          "path": "worker/derived/recalculated/recalculated.xlsx",
+          "receipt": "semantic-query-3.json",
+          "sha256": "c5f51af4f956c129fc7d0ec7b6f9a370246efeb59983591b5642fb3a42fe1ce3",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        }
+      ],
+      "catalog_sha256": "0c5c056e2913ba2caf2010e4a1e955a48519b1f18b9db84b75c848ff4a7ccc2e",
+      "frozen_configuration_only": true,
+      "Judge_called": false,
+      "semantic_response_submitted": false
+    },
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/formal-detached-1793227605499363000/validation.json",
+    "sha256": "4adf35b52a9433899a89c1143cf8030e0a58f01087548296b03fbcf3f8ab9c01",
+    "size": 18015
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "cc06faebb510f91e82207e32c23bfdd93277f11e43fcc665812d4ab9aebbc69e",
+    "size": 19687
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/static-root-single/20261028T224723Z_f0f087aa65/report.json",
+      "sha256": "1b3deb3362a2234cf93eef153fe98dcab4d8c67f3aaaf9aea2b1efb90151ecfd",
+      "size": 1249
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/static-root-full/20261028T224731Z_3efa3db1e4/report.json",
+      "sha256": "76be489b84bbac72206bb369c0c37f9593ceb8b2b9ac63e1b2152e07b5cf586a",
+      "size": 26947
+    },
+    "only_remaining_missing": 15
+  },
+  "source_summary": "规划协作首题，L2设计预估，办公格式非视觉依赖。2参考原生工作簿/Word；源文件1页+参考各2页共5页，12工作簿关键视图由作者全看，root另抽看4视图。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T22:47:31.443295+00:00",
+  "git_materialization": {
+    "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h053/qa/root-finalize-boundary-v1/receipt.json",
+    "sha256": "7c740145d19d16e3c36db956d12815326d534fd74c84e0312c529564c851d31b",
+    "original_failure_retained": true,
+    "frozen_material_bytes_unchanged": true
+  }
+}

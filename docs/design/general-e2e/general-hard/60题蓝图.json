@@ -20292,7 +20292,7 @@
         "exec": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_001_measurable_roadmap/exec",
         "gt": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_001_measurable_roadmap/gt"
       },
-      "prompt_draft": "请完成以下工作：把规划改为有目标、基线、动作、责任、验收和时间边界的行动表；每项指标有可测定义，不承诺材料无法支持的增长。\n\n输入材料：\n- /tmp_workspace/strategy_notes.docx：含模糊目标的工作规划\n- /tmp_workspace/baseline.csv：现状指标和资源\n- /tmp_workspace/constraints.md：季度目标与可用角色\n\n交付：\n- /tmp_workspace/results/roadmap.xlsx：目标/动作/指标/责任/验收\n- /tmp_workspace/results/explanation.docx：依据、假设和取舍\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请把含模糊目标的工作规划改为有目标、基线、动作、责任、验收和时间边界的可衡量季度行动方案。只依据本题材料，不承诺材料无法支持的增长。\n\n输入：/tmp_workspace/strategy_notes.docx 是讨论纪要；/tmp_workspace/baseline.csv 是现状指标和已确认资源；/tmp_workspace/constraints.md 是已批准季度目标、周期、角色容量、成果成本与依赖、许可状态和交付字段。约束C01-C06优先于讨论愿望，先核对原始分子分母和旧口径差异。\n\n交付仅放 /tmp_workspace/results：roadmap.xlsx（原生可编辑Excel）和 explanation.docx（原生Word，说明依据、假设、未知与取舍）。不用交代码，不需要真正开展试点。工作簿覆盖G1-G4及O1-O8，有可测定义、基线、拟议目标、动作、一个牵头角色、验收、分期工时和依赖；未知不能替换为0，未决许可和资源不能默认到位。\n\n保留C06要求的四类有表头记录goals/actions/loads/decisions及字段，页名、列顺序、动作ID和措辞自由，可同页/多页，中文/英文表头均可。业务编号和角色代码按材料保留；中文列名可用目标编号/目标/指标编号/可测定义/基线分子/基线分母/基线比率/基线状态/目标分子/目标分母/目标比率/目标类型/责任角色/截止周期/验收/依据、动作编号/成果编号/方法/关联目标/动作/开始周期/结束周期/前置依赖/状态、周期/项目经理/运营/分析师、决策编号/复核周期/处置。各动作按outcome写行，可拆合、选支持的方法和合理排期，但不能消除最低工作量。前置成果全部完成后的下一周期才能开始，待条件动作仍预留工时。目标比率与基线比率由分子/分母计算，修改这些数字后应更新。说明文档附C06的fact_id/value事实核对表。\n\nsource_ref定位为baseline.csv#M1@2026-10-01/2026-10-28等真实指标及期间，或constraints.md#C01至C06、strategy_notes.docx#N1至N5。允许更大合理样本、不同动作拆合/并行/排期和不同措辞，不按参考解排期硬匹配；自然语言动作、验收和取舍须有业务含义，单有格式不代表方案有效。说明未来目标是拟议方向，当前基线、推断与未知分开，计划不等于已执行或已实现。\n\n仅读取本题exec映射到/tmp_workspace的材料，不读GT或评分说明、不扫描真实用户目录。原输入只读，不删除、移动或覆盖；所有新交付只放results。离线完成，不联网安装、不访问真实账号、不发送消息、不调用真实付费接口。",
       "inputs": [
         {
           "path": "strategy_notes.docx",
@@ -20332,19 +20332,24 @@
         "动作与目标无关"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102653,
-        "construction": "作者预设目标分解约束和不应虚构的基线；GT按可核验字段、依赖和资源上界检查，接受多种有效行动组合。",
+        "construction": "公开3输入、4目标含未知M4、8成果/3角色/6双周的可选方法和资源约束；Python/Node两路源先行oracle一致。两原生参考，真实清缓存重算与24个分子分母干预比率。29Worker/38静态作者控制通过，原unknown-as-zero失败保留；正式10GT当前ZIP独立重算/渲染及搬移验收。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "office_runtime.py",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许替代方法、成果拆合、不同合法排期与拟定整数目标；未知分母/权限保留unknown，不固定参考行动文字和时刻；自然语言充分性由独立Judge判断。",
+        "authoring_evidence": "evidence/h053-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -20496,10 +20501,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "当前正式MD/exec/GT、独立score0.27.1/core0.15.3 ZIP真实Worker、正常与删除runtime搬移核验；作者自动组件，无Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h053-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

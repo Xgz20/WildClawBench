@@ -26,3 +26,5 @@ datasets/general-hard/workspace/software_engineering/general_hard_software_engin
 datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/gt/hidden_tests/runner.py whitespace=-blank-at-eof
 # H045独立SQLite测试已逐字节绑定，保留原末尾空行。
 datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_005_sql_compatibility/gt/hidden_tests/runner.py whitespace=-blank-at-eof
+# H053基线CSV按保护契约保留BOM及标准CRLF。
+datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_001_measurable_roadmap/exec/baseline.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

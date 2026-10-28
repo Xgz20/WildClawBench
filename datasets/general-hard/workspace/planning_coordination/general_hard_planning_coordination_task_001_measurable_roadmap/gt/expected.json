@@ -1,0 +1,42 @@
+{
+  "schema": "h053.expected/v1",
+  "blueprint_order": 53,
+  "task_id": "general_hard_planning_coordination_task_001_measurable_roadmap",
+  "difficulty": "L2",
+  "difficulty_status": "design_estimate_unvalidated",
+  "known_baselines": {
+    "M1": 0.78,
+    "M2": 0.6,
+    "M3": 0.6
+  },
+  "unknown": [
+    "M4 baseline and growth target",
+    "Q1 permission",
+    "PRODUCT available capacity"
+  ],
+  "mandatory_goals": [
+    "G1",
+    "G2",
+    "G3",
+    "G4"
+  ],
+  "mandatory_outcomes": [
+    "O1",
+    "O2",
+    "O3",
+    "O4",
+    "O5",
+    "O6",
+    "O7",
+    "O8"
+  ],
+  "future_results": "proposed only; planning does not establish effect",
+  "automatic_weight": 0.75,
+  "semantic_weight": 0.25,
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  }
+}

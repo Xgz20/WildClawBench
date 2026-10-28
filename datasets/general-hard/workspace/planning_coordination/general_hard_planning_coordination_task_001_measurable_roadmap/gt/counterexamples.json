@@ -1,0 +1,33 @@
+{
+  "schema": "h053.counterexamples/v1",
+  "negative_business": [
+    "empty acceptance or measurable definition despite polished wording",
+    "wrong goal linkage",
+    "insufficient per-outcome effort after split/merge",
+    "hardcoded baseline or target rate that ignores numerator/denominator edits",
+    "future target sample below bound"
+  ],
+  "negative_boundary": [
+    "retired 90% or invented known baseline",
+    "M4 unknown replaced by zero/rate/unsupported growth",
+    "P3 operations overload",
+    "same-period predecessor",
+    "Q1 treated as granted",
+    "unconfirmed PRODUCT owner or capacity"
+  ],
+  "negative_delivery": [
+    "missing/non-native deliverable",
+    "fact table contradicted by supported inputs or candidate workbook",
+    "protected input mutation"
+  ],
+  "negative_evidence": [
+    "nonexistent source locator"
+  ],
+  "infrastructure": [
+    "missing or drifted GT/helper",
+    "missing Office/context/font runtime",
+    "legitimate unsupported scalar intervention representation"
+  ],
+  "denominator_policy": "Each subcheck denominator is fixed by required goals/outcomes or all submitted relevant records; omission is not a smaller denominator",
+  "protected_input_policy": "Only delivery protection subcheck owns input mutation; business/constraints always use immutable independent oracle"
+}
