@@ -1,0 +1,426 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 36,
+  "registered_task_index": 35,
+  "task_id": "general_hard_file_operations_task_002_versioned_archive",
+  "release": "building",
+  "registered": 35,
+  "remaining": 25,
+  "author_handoff": {
+    "status": "AUTHORING_VALIDATED_READY_FOR_INDEPENDENT_REVIEW",
+    "task_id": "general_hard_file_operations_task_002_versioned_archive",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036",
+    "case_spec": "authoring/case-spec.json",
+    "exec_files": 50,
+    "incoming_files": 48,
+    "gt_files": 9,
+    "reference_roots": [
+      "reference/canonical/results",
+      "reference/equivalent/results"
+    ],
+    "archive_files_per_reference": 33,
+    "manifest_rows_per_reference": 48,
+    "selection_unique_counts": {
+      "current": 5,
+      "superseded": 19,
+      "conflict": 4,
+      "unknown": 5
+    },
+    "selection_source_counts": {
+      "current": 10,
+      "superseded": 24,
+      "conflict": 8,
+      "unknown": 6
+    },
+    "automated_internal_weights": {
+      "business_correctness": 0.55,
+      "boundary_cases": 0.25,
+      "delivery_integrity": 0.15,
+      "evidence_binding": 0.05
+    },
+    "freeze_manifest": "qa/freeze-v1/manifest.json",
+    "freeze_sha256": "52981524dcb62259dd91468cbb2ecfbe2af55fb49e34fc1c836966c1bc86bef0",
+    "controls_summary": "qa/authoring-validation/controls-1793219221739721000/summary.json",
+    "static_summary": "qa/authoring-validation/static-1793219304670861000/summary.json",
+    "next_owner_steps": [
+      "Independent review of actual input contents, public rules, GT/helper/grader and native outputs",
+      "Root alone assembles/registers in approved worktree",
+      "Run full registered single-task validator and official normal/moved scoring package verification",
+      "Commit only reviewed task-related files under the user-approved Chinese Conventional Commit policy"
+    ],
+    "limits": [
+      "L2 is design estimate; no real model difficulty/discrimination evidence",
+      "No actual Harness/Judge/finalize or real tool trace; explicit fixture trace is synthetic",
+      "Model-authored cross-check is not human expert review",
+      "Final input bytes do not prove absence of transient actions; formal trace inspection remains necessary",
+      "All sources are original inert synthetic payloads, no copied production wording/user files/network/download/installation",
+      "Only bundled Python/Node author tools and existing managed Python3.12 rule runtime were used; no Office"
+    ]
+  },
+  "root_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036/qa/root-review-v1/review.json",
+    "sha256": "5158a62dcfb27e389a9887f12e89b814c43a7a55f80c9ed7e7eeb8c7e8b3e787"
+  },
+  "source_first_independent_calculation": "Python source construction/oracle then public-input-only Node parsing/ranking/SHA; both before reference construction. Original synthetic inert content.",
+  "source_counts": {
+    "incoming": 48,
+    "exec": 50,
+    "GT": 9,
+    "distinct_bytes": 33,
+    "duplicate_sources": 15
+  },
+  "selection_unique_counts": {
+    "current": 5,
+    "superseded": 19,
+    "conflict": 4,
+    "unknown": 5
+  },
+  "controls": [
+    {
+      "name": "canonical_positive",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "equivalent_chinese_bom_reordered_paths_representative",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "detached_moved_archive_old_paths_absent",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "lexical_version_or_timestamp_priority_wrong",
+      "status": "PASS",
+      "A": 0.9942708333333334,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9895833333333334,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "draft_over_approved",
+      "status": "PASS",
+      "A": 0.9942708333333334,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9895833333333334,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "parallel_top_version_arbitrarily_current",
+      "status": "PASS",
+      "A": 0.9942708333333334,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9895833333333334,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "business_category_from_extension_wrong",
+      "status": "PASS",
+      "A": 0.999045138888889,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9982638888888888,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "unknown_fabricated_metadata",
+      "status": "PASS",
+      "A": 0.999045138888889,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9982638888888888,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "content_format_from_extension_wrong",
+      "status": "PASS",
+      "A": 0.9992187500000002,
+      "criteria": {
+        "boundary_cases": 0.996875,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "same_basename_overwrite",
+      "status": "PASS",
+      "A": 0.9901515151515153,
+      "criteria": {
+        "boundary_cases": 0.9606060606060607,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "same_content_different_name_not_deduplicated",
+      "status": "PASS",
+      "A": 0.9950757575757577,
+      "criteria": {
+        "boundary_cases": 0.9803030303030305,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "source_ledger_row_lost",
+      "status": "PASS",
+      "A": 0.9885416666666668,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 0.9791666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "duplicate_representative_wrong",
+      "status": "PASS",
+      "A": 0.9950757575757577,
+      "criteria": {
+        "boundary_cases": 0.9803030303030305,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "source_path_binding_wrong",
+      "status": "PASS",
+      "A": 0.9989583333333334,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9791666666666666
+      },
+      "exception": null
+    },
+    {
+      "name": "input_changed",
+      "status": "PASS",
+      "A": 0.9100000000000001,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.4,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "input_deleted",
+      "status": "PASS",
+      "A": 0.9100000000000001,
+      "criteria": {
+        "boundary_cases": 1.0,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.4,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "manifest_missing",
+      "status": "PASS",
+      "A": 0.3325,
+      "criteria": {
+        "boundary_cases": 0.8500000000000001,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.0
+      },
+      "exception": null
+    },
+    {
+      "name": "archive_copy_missing",
+      "status": "PASS",
+      "A": 0.9950757575757577,
+      "criteria": {
+        "boundary_cases": 0.9803030303030305,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "missing_expected_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H036_TRUSTED_CONTEXT_MISSING_OR_DRIFT: expected.json'}"
+      }
+    },
+    {
+      "name": "missing_helper_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H036_TRUSTED_CONTEXT_MISSING_OR_DRIFT: native_io.py'}"
+      }
+    },
+    {
+      "name": "missing_trusted_manifest_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H036_TRUSTED_RULE_MISSING_OR_DRIFT: trusted_files.json'}"
+      }
+    }
+  ],
+  "control_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036/qa/authoring-validation/controls-1793219221739721000/summary.json",
+    "sha256": "662b046d0e31313370a481a5fbfd29ab44ab3eff7b76a337d2adc69122a0c27a"
+  },
+  "formal_detached": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036/qa/formal-detached-1793219604579648000/validation.json",
+    "sha256": "c376b33163ec50f4c533d8e2f97230449bb2960afeeba50b973af0b68e010341",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "same_byte_nonruntime_archive_files": 112,
+    "derived_count": 0,
+    "repository_sys_path_absent": true,
+    "normal_and_moved_verified": true,
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.26.0.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "c5d56c145923f0ab7f22a4548baf899bfeb33969b2862e7fbc0c3be2d9885e9d",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.2"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "099ac6bb6dcbaf45132ebfb00c92919c507e1eb7e8eecd695ca40917aa3bf444",
+      "development_repository_references": [],
+      "file_count": 46,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+      "version": "0.26.0",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "9c42ab11f22dd7d85a35df88a6d8a965c6c234a439d9719cbee014e238be6095"
+    }
+  },
+  "static": {
+    "single_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036/qa/static-registered/20261028T203357Z_10ef34ef37/report.json",
+    "single_sha256": "3a731a29aa87e1dc5137cf7e13c22b2b6aee3a5f92680e8bd73a1d76a4eb6ece",
+    "single": "PASS",
+    "building_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036/qa/static-building/20261028T203403Z_ffec364f05/report.json",
+    "building_sha256": "b7e5b42678e3f97d48ef5605118f158a834d2442d68bae1e68feed7b74ee9598",
+    "registered": 35,
+    "missing_only": 25
+  },
+  "frozen_QA": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h036/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "3b7e6e6410abc387182ffd3dce9384edf26436a32bcd1c25a3dc363fed74f35f",
+    "bound_files": 6981
+  },
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "limits": {
+    "pure_automated": true,
+    "author_A_not_Harness_score": true,
+    "model_review_not_human_expert": true,
+    "real_Harness": false,
+    "Judge": false,
+    "Office": false,
+    "difficulty": "L2 design estimate, uncalibrated",
+    "final_bytes_do_not_prove_transient_actions_or_original_copy_mechanism": true,
+    "runtime_source_GT_reference_unchanged": true
+  },
+  "git_material_preservation": {
+    "source_bytes_unchanged": true,
+    "initial_diff_check": "Frozen BOM/CRLF CSV hidden under varied extensions and deliberately preserved EOF blank lines were flagged as whitespace.",
+    "resolution": "Path-scoped incoming fixture attributes allow CRLF/EOF blank lines; genuine end-of-line spaces remain checked. No byte or GT normalization."
+  }
+}

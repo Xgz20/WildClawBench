@@ -420,3 +420,12 @@ general_hard_research_verification_task_006_paper_comparison:
     - retrieval_verification
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_file_operations_task_002_versioned_archive:
+  business_correctness:
+    - data_processing
+  boundary_cases:
+    - reasoning_planning
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

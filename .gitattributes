@@ -15,3 +15,5 @@ datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_00
 # H032的PDF含合法ASCII交叉引用空格，作为二进制原件保留；CSV保留标准CRLF。
 datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/**/*.pdf binary
 datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/**/metadata.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# H036源文件刻意混合扩展名、CRLF/BOM与尾空行，内容字节参与去重身份。
+datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/** whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol

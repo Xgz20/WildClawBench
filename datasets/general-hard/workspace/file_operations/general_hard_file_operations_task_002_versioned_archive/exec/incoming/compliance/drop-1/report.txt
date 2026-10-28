@@ -1,0 +1,8 @@
+{
+  "business_area": "compliance",
+  "document_id": "RÉTENTION",
+  "version": "1.9",
+  "state": "approved",
+  "issued_at": "2026-09-15T00:00:00Z",
+  "body": "Original fictional H036 compliance revision A. No operational instructions."
+}

@@ -1,11 +1,11 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 34
+  active_task_count: 35
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 5
-    file_operations: 1
+    file_operations: 2
     software_engineering: 2
     planning_coordination: 0
     content_operations: 0
@@ -1054,3 +1054,29 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       retrieval_group: local_evidence
+  - task_id: general_hard_file_operations_task_002_versioned_archive
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-c2ddae5742f0931a
+          query_hash: c2ddae5742f0931aab8354790912201e4f537f2628bd5befae276c61594aeeac
+          observed_astudio_turns: 4
+          distinct_users: 2
+          distinct_sessions: 4
+          first_seen_local: '2026-09-21 21:00:06.021000'
+          last_seen_local: '2026-09-29 03:09:03.521000'
+          intent_summary: 按类型复制文件到分类目录，处理无后缀文件并统计数量。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated
