@@ -546,9 +546,9 @@ def normalize_spec(raw: Any, *, repo_root: Path, spec_dir: Path, dataset_id: str
         raise SpecError("注册数据集必须提供真实workspace.gt材料")
     judge_evidence = _require_mapping(spec.get("judge_evidence", {}), "judge_evidence")
     scoring_runtime = _require_mapping(spec.get("scoring_runtime", {}), "scoring_runtime")
-    if (set(scoring_runtime) - {"office", "office_render", "html_render"} or any(type(value) is not bool for value in scoring_runtime.values())
+    if (set(scoring_runtime) - {"office", "office_render", "html_render", "research_sources"} or any(type(value) is not bool for value in scoring_runtime.values())
             or scoring_runtime.get("office_render") and not scoring_runtime.get("office")):
-        raise SpecError("scoring_runtime只支持boolean office/office_render/html_render，office_render须同时声明office；不注入被测端Env")
+        raise SpecError("scoring_runtime只支持boolean office/office_render/html_render/research_sources，office_render须同时声明office；不注入被测端Env")
     if set(judge_evidence) - {"required"}:
         raise SpecError("judge_evidence只支持required清单")
     required_evidence = judge_evidence.get("required", [])

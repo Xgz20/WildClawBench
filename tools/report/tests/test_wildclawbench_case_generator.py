@@ -474,6 +474,16 @@ class RegisteredCaseGeneratorTest(unittest.TestCase):
         metadata = yaml.safe_load(Path(result["task_path"]).read_text(encoding="utf-8").split("---", 2)[1])
         self.assertEqual(metadata["scoring_runtime"], {"html_render": True})
 
+    def test_research_requirement_is_private_boolean_metadata(self):
+        with self.assertRaisesRegex(generator.SpecError, "scoring_runtime"):
+            generator.assemble_case({**self.spec(), "scoring_runtime": {"research_sources": 1}},
+                repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        self.install_validator_wrapper()
+        result = generator.assemble_case({**self.spec(), "scoring_runtime": {"research_sources": True}},
+            repo_root=self.repo, spec_dir=self.repo)
+        metadata = yaml.safe_load(Path(result["task_path"]).read_text(encoding="utf-8").split("---", 2)[1])
+        self.assertEqual(metadata["scoring_runtime"], {"research_sources": True})
+
     def test_rejects_symbolic_material_source_and_module_level_network_import(self):
         (self.repo / "linked.md").symlink_to("input.md")
         spec = self.spec()

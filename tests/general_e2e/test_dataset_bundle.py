@@ -40,7 +40,11 @@ class GeneralDatasetCacheFilteringTests(unittest.TestCase):
             {"sha256": "a" * 64}, {"sha256": "b" * 64})
         self.assertEqual(html_execution, execution)
         self.assertEqual(html_scoring["scoring_runtime"], {"html_render": True})
-        for invalid in ({"office_render": True}, {"office": False, "office_render": True}, {"office": True, "office_render": 1}, {"html_render": 1}):
+        research_execution, research_scoring = _task_contracts("task", {"scoring_runtime": {"research_sources": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(research_execution, execution)
+        self.assertEqual(research_scoring["scoring_runtime"], {"research_sources": True})
+        for invalid in ({"office_render": True}, {"office": False, "office_render": True}, {"office": True, "office_render": 1}, {"html_render": 1}, {"research_sources": 1}):
             with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):
                 _task_contracts("task", {"scoring_runtime": invalid}, {}, {"sha256": "a" * 64}, {"sha256": "b" * 64})
         with self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):

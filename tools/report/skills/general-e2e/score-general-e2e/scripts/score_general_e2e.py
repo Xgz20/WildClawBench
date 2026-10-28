@@ -32,6 +32,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
+import research_sources
 
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
@@ -123,6 +124,42 @@ class ApiJudgeAttemptError(ScoringRuntimeError):
         self.http_status = http_status
         self.response_text = response_text
         super().__init__(code, detail)
+
+
+def _research_source_binding(root: Path, *, required: bool = False, archived: bool = False) -> dict | None:
+    try:
+        binding = research_sources.verify(root, required=required, archived=archived)
+    except research_sources.ResearchSourceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.detail) from exc
+    if binding is None:
+        return None
+    audit_path = root / "rule-audit.json"
+    if audit_path.is_file():
+        audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+        expected = {key: binding[key] for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}
+        worker_binding = audit.get("worker")
+        if (audit.get("research_sources") != expected
+                or worker_binding and worker_binding.get("research_sources") != expected
+                or audit.get("status") == "completed" and not worker_binding):
+            raise ScoringRuntimeError("RESEARCH_SOURCE_RULE_BINDING_INVALID")
+    catalog_path = root / "semantic/evidence-catalog.json"
+    if catalog_path.is_file():
+        catalog = _read_json(catalog_path, code="SEMANTIC_CATALOG_INVALID")
+        references = [row.get("reference") for row in catalog.get("evidence_index", {}).get("entries", [])]
+        if any(reference not in references for reference in binding["references"]):
+            raise ScoringRuntimeError("RESEARCH_SOURCE_SEMANTIC_BINDING_INVALID")
+    return binding
+
+
+def collect_research_sources_attempt(*, attempt_root: Path, curl: Path | None = None) -> dict:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    try:
+        result = research_sources.collect(root, curl=curl)
+    except research_sources.ResearchSourceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.detail) from exc
+    _research_source_binding(root, required=True)
+    return {**result, "attempt_root": str(root)}
 
 
 def _now() -> str:
@@ -1792,6 +1829,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         if (not rule_workspace.is_dir() or rule_workspace.is_symlink()
             or not (rule_workspace / "gt").is_dir()):
             raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
+    _research_source_binding(root, archived=not require_runtime)
     return {
         "status": "PASS",
         "attempt_root": str(root),
@@ -2123,6 +2161,7 @@ class _WorkerExecutor:
         office_runtime: dict | None = None,
         office_render_runtime: dict | None = None,
         html_runtime: dict | None = None,
+        research_source_binding: dict | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
@@ -2132,6 +2171,7 @@ class _WorkerExecutor:
         self.office_runtime = office_runtime
         self.office_render_runtime = office_render_runtime
         self.html_runtime = html_runtime
+        self.research_source_binding = research_source_binding
         if office_render_runtime is not None and (office_runtime is None or office_render_runtime.get("office_runtime") != office_runtime):
             raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
         self.audit: dict[str, Any] = {}
@@ -2171,6 +2211,9 @@ class _WorkerExecutor:
             self.runtime_python,
             playwright_browsers_path=self.playwright_browsers_path,
         )
+        if self.research_source_binding is not None:
+            env["GENERAL_E2E_RESEARCH_SOURCE_BUNDLE"] = str(self.attempt_root / self.research_source_binding["path"])
+            env["GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"] = self.research_source_binding["manifest_sha256"]
         office_binding = None
         render_binding = None
         html_binding = None
@@ -2262,6 +2305,9 @@ class _WorkerExecutor:
             **({"office_runtime": office_binding} if office_binding else {}),
             **({"office_render_runtime": render_binding} if render_binding else {}),
             **({"html_runtime": html_binding} if html_binding else {}),
+            **({"research_sources": {key: self.research_source_binding[key]
+                                     for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}}
+               if self.research_source_binding is not None else {}),
         }
         if timed_out:
             raise ScoringRuntimeError("RULE_WORKER_TIMEOUT")
@@ -2666,6 +2712,9 @@ def _materialize_rule_component_evidence(
             "candidate_artifact",
         ),
     ]
+    research_binding = _research_source_binding(attempt_root, required=True)
+    if research_binding is not None:
+        shared_evidence.extend(research_binding["references"])
     correction_path = attempt_root / "rule-source-correction.json"
     if correction_path.is_file():
         shared_evidence.append(
@@ -2776,10 +2825,11 @@ def run_rules_attempt(
     contract_path = _resolve_within(attempt_root, manifest["paths"]["contract"], "contract")
     contract = _read_json(contract_path, code="SCORING_CONTRACT_INVALID")
     requirements = contract.get("scoring_runtime") or {}
-    if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render", "html_render"}
+    if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render", "html_render", "research_sources"}
             or any(type(value) is not bool for value in requirements.values())
             or requirements.get("office_render") and not requirements.get("office")):
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "scoring_runtime")
+    research_binding = _research_source_binding(attempt_root, required=True)
     office_runtime = None
     if office_runtime_lock_path is not None:
         office_runtime = _load_office_runtime(office_runtime_lock_path)
@@ -2854,6 +2904,7 @@ def run_rules_attempt(
         office_runtime=office_runtime,
         office_render_runtime=render_runtime,
         html_runtime=html_runtime,
+        research_source_binding=research_binding,
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -2921,6 +2972,8 @@ def run_rules_attempt(
         },
         "error": error,
     }
+    if research_binding is not None:
+        audit["research_sources"] = {key: research_binding[key] for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}
     if office_runtime is not None or html_runtime is not None:
         derived = attempt_root / "worker/derived"
         audit["derived_artifacts"] = [{"path": path.relative_to(attempt_root).as_posix(), "sha256": _sha256_file(path), "size": path.stat().st_size}
@@ -3071,6 +3124,9 @@ def _semantic_reference_inputs(
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
     references: list[dict[str, Any]] = []
     event_locations: dict[str, dict[str, Any]] = {}
+    research_binding = _research_source_binding(attempt_root, required=True)
+    if research_binding is not None:
+        references.extend(research_binding["references"])
 
     def add_file(evidence_type: str, path: Path) -> None:
         references.append(
@@ -3444,6 +3500,14 @@ def _build_api_input(
                 high = middle - 1
         include(low)
     user_prompt = serialized_user()
+    research_binding = _research_source_binding(root, required=True)
+    if research_binding is not None:
+        required_paths = {research_sources.LOCK_PATH, f"{research_sources.BUNDLE_PATH}/manifest.json"}
+        required_paths.update(row["path"] for row in research_binding["references"]
+                              if row["path"].endswith(("/text.txt", "/response.json")))
+        supplied = {row["path"] for row in packet_entries if row["content_status"] == "complete"}
+        if not required_paths <= supplied:
+            raise ScoringRuntimeError("RESEARCH_SOURCE_API_INPUT_INCOMPLETE", "required independent source content was omitted or truncated")
     if len(system_prompt) + len(user_prompt) > maximum:
         raise ScoringRuntimeError("API_JUDGE_INPUT_BUDGET_EXCEEDED")
     included_ids = [row["evidence_id"] for row in packet_entries]
@@ -5255,13 +5319,19 @@ def _score_source_digests(root: Path) -> dict[str, str | None]:
     def digest_if_file(path: Path) -> str | None:
         return _sha256_file(path) if path.is_file() and not path.is_symlink() else None
 
-    return {
+    result = {
         "attempt_manifest_sha256": _sha256_file(root / "attempt-manifest.json"),
         "rule_component_sha256": digest_if_file(root / "rule-component.json"),
         "rule_audit_sha256": digest_if_file(root / "rule-audit.json"),
         "semantic_component_sha256": digest_if_file(semantic_paths["component"]),
         "semantic_audit_sha256": digest_if_file(semantic_paths["audit"]),
     }
+    # verify_score already validates the bundle with the appropriate normal or
+    # archive policy. Digests themselves must not require the collection tools.
+    manifest = _read_json(root / "attempt-manifest.json")
+    if (_read_json(root / manifest["paths"]["contract"]).get("scoring_runtime") or {}).get("research_sources"):
+        result["research_sources_lock_sha256"] = digest_if_file(root / research_sources.LOCK_PATH)
+    return result
 
 
 def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> None:
@@ -5487,6 +5557,7 @@ def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
     _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
     try:
         contract = _read_json(root / manifest["paths"]["contract"])
+        _research_source_binding(root, required=True)
         _verify_rule_derived_evidence(root, contract.get("scoring_runtime") or {})
         _verify_semantic_terminal(root, manifest)
         score = _build_standard_score(
@@ -5552,6 +5623,7 @@ def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[
     )
     _verify_rule_source_correction(root, manifest)
     contract = _read_json(root / manifest["paths"]["contract"])
+    _research_source_binding(root, required=True, archived=archived)
     _verify_rule_derived_evidence(root, contract.get("scoring_runtime") or {}, archived=archived)
     if (
         audit.get("schema_version") != SCORE_AUDIT_SCHEMA
@@ -5834,6 +5906,10 @@ def prepare_rescore_attempt(
             },
         }
         _write_new_json(staging / "attempt-manifest.json", manifest)
+        try:
+            research_sources.copy_for_rescore(source_root, staging)
+        except research_sources.ResearchSourceError as exc:
+            raise ScoringRuntimeError(exc.code, exc.detail) from exc
         os.replace(staging, destination)
     except BaseException:
         _remove_tree(staging)
@@ -6062,6 +6138,10 @@ def main(argv: list[str] | None = None) -> int:
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
 
+    research = subparsers.add_parser("collect-research-sources")
+    research.add_argument("--attempt-root", required=True, type=Path)
+    research.add_argument("--curl", type=Path)
+
     run = subparsers.add_parser("run-rules")
     run.add_argument("--attempt-root", required=True, type=Path)
     run.add_argument("--runtime-python", required=True, type=Path)
@@ -6174,6 +6254,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)
+        elif args.command == "collect-research-sources":
+            result = collect_research_sources_attempt(attempt_root=args.attempt_root, curl=args.curl)
         elif args.command == "run-rules":
             result = run_rules_attempt(
                 attempt_root=args.attempt_root,

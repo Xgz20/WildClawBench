@@ -83,6 +83,8 @@ PPTX渲染另声明`scoring_runtime: {office: true, office_render: true}`，通�
 
 ### 逐检查点理由与证据
 
+开放研究题可另声明`scoring_runtime: {research_sources: true}`并冻结GT policy，在prepare后、规则/语义准备前执行[独立公开来源取证](research-sources.md)。规则Worker仅增加可信bundle目录和manifest SHA环境变量；来源位于`private/research-sources/`及独立补充锁，不写入候选、GT或runtime Workspace。缺必要来源包/依赖或获取失败阻断评分，坏账本与候选缺交仍按原契约判断。
+
 新执行产生 `wildclawbench.general-e2e-rule-component/v2`。每个 criterion 都记录中文 `reason` 和 `decision`：分数为 `1.0` 时标记 `full_score`，为 `0.0` 时标记 `zero_score`，其余合法值标记 `partial_score`。理由只解释 Worker 已返回的分值状态，不让模型推测自动规则的业务含义。
 
 每项 `evidence` 都物化并校验 SHA-256，至少包含：

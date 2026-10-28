@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.24.0`装配core `0.15.2`，增加显式`scoring_runtime: {research_sources: true}`与`collect-research-sources`。prepare后由可信评分侧独立获取候选实际阅读/引用的公开URL，封存原件、文本投影、HTTP/提取回执和独立补充锁；不修改候选、GT或原attempt manifest。规则通过专用环境路径读同包，语义目录实际纳入来源，正常/归档与rescore保留同一来源链。缺独立供证、获取或提取失败不补零；历史发布身份和正文语义仍须单独核验，不以参考URL池排除合法来源。使用前读[独立公开来源取证](references/research-sources.md)。
+
 `0.23.2`装配core `0.15.2`，数值输入扰动兼容原生ISO日期单元格（OOXML `t=d`）。调用方按工作簿日期系统和业务口径给定新Excel序列值；变体保留样式，使用等价原生数值编码，回执保存原ISO词法值及新值。原文件、公式和其它部件不改；像日期的普通文本仍拒绝。旧冻结helper和历史回执不自动改写。
 
 `0.23.1`装配core `0.15.1`，修复HTML回执跨Python/系统MIME表复核：冻结请求继续绑定实际使用的content_type，源资源清单按路径、大小及SHA比较，不用回放机器的MIME推断改写历史HTTP上下文。实际3.12 Worker与3.11校验的Markdown资源可正常归档；文件增删/字节或请求上下文漂移仍拒绝。
