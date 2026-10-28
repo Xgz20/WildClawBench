@@ -1,0 +1,513 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 43,
+  "task_id": "general_hard_software_engineering_task_003_async_lifecycle",
+  "registered_task_index": 42,
+  "registered": 42,
+  "remaining": 18,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 3,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/software_engineering/general_hard_software_engineering_task_003_async_lifecycle.md",
+      "sha256": "eb6d3200b425e7f0f717ec68eb0ee187bf8adf314804359cb5b676a2d7721c98",
+      "size": 6679
+    },
+    "exec": [
+      {
+        "path": "contract.md",
+        "sha256": "7c3403d775071d5518fe203e708e8d11849ff05ff04673e86f60e410ba8ce933",
+        "size": 4678
+      },
+      {
+        "path": "project/__init__.py",
+        "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+        "size": 56
+      },
+      {
+        "path": "project/resources.py",
+        "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+        "size": 1283
+      },
+      {
+        "path": "project/worker.py",
+        "sha256": "d0d8596078ae4ed2773b7791fc89439da137f0c315271037879ff6af090d545b",
+        "size": 1689
+      },
+      {
+        "path": "runtime.json",
+        "sha256": "189a110aa775762ff81075cce4768211beab1e1a9e2e6de3fb391899ceb4a37c",
+        "size": 190
+      },
+      {
+        "path": "tests_public/test_normal.py",
+        "sha256": "b9e4747534ae15825f6544d905288419292a5eeb35649f60ed5c139f8634a110",
+        "size": 1202
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "a1b4fb8324ee313e005540a588fcaf8fabfaabfcad886c1579742531cea5b0b7",
+        "size": 1394
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "eff95cbb88cc27a89f88b54a0eecba863d8611cbc97100684f22ed7dd7b89889",
+        "size": 1323
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "a53e2727c4cdfb162bf174e7ef5a729e9d0db2528f6d8118e9225ead84606259",
+        "size": 1537
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "131dadf86d958cec2b572173c98cfbae145749fc93c213eca3d26b6763b2b16e",
+        "size": 967
+      },
+      {
+        "path": "expected.json",
+        "sha256": "df949fa0f7d2985c720d9c45e88da59ab3624b189e6e3e4b8001ff605b6bbce1",
+        "size": 3006
+      },
+      {
+        "path": "grader.py",
+        "sha256": "135e3db398862db645ed51879c70ce3ffcb0f5904a635eca2b2743b2926461ee",
+        "size": 10570
+      },
+      {
+        "path": "hidden_tests/run_oracle.py",
+        "sha256": "7e21a4f52a2dfa0f60b7c88ca78f69c73d80563d45faf7ee84965c1e17824771",
+        "size": 2630
+      },
+      {
+        "path": "hidden_tests/test_lifecycle.py",
+        "sha256": "8b347716b28c080b416dca00e3bb1805bfa3f54ac23d8ec1e1844eed614faa7e",
+        "size": 14976
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "f63f84f96ebe771289e497bf75ec3603740a3c3dc8e4ac35ae35dfe8ad496d64",
+        "size": 462
+      },
+      {
+        "path": "provenance/oracle-ownership-v2-receipt.json",
+        "sha256": "85ed6304dc596c4df9304ef0aeb7fc383febfacdb6c53b2d66a49eb3572f11a8",
+        "size": 7498
+      },
+      {
+        "path": "provenance/source-truth-freeze.json",
+        "sha256": "d3bec75d6b6c6d1fe2e1c42dd5fb7d93e08857501512652e34daa21c312d4211",
+        "size": 2763
+      },
+      {
+        "path": "reference/v1/project/__init__.py",
+        "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+        "size": 56
+      },
+      {
+        "path": "reference/v1/project/resources.py",
+        "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+        "size": 1283
+      },
+      {
+        "path": "reference/v1/project/worker.py",
+        "sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+        "size": 3078
+      },
+      {
+        "path": "reference/v1/provenance.json",
+        "sha256": "afc5d69a4cbb1a33b25f6da12e59ac8fddac95a07bdcda0ee47f9b5d64b97504",
+        "size": 612
+      },
+      {
+        "path": "reference/v1/results/lifecycle.md",
+        "sha256": "7aabe76bfdb13216b00d8fd357340e06241f47de0e47f516c7f0bbc56d06f32f",
+        "size": 831
+      },
+      {
+        "path": "reference/v1/results/tests.txt",
+        "sha256": "b3f7d0a2253bb584bfd970fe2c1f43555589411ccb8c118d9a7699733b142f17",
+        "size": 810
+      },
+      {
+        "path": "runtime_contract.json",
+        "sha256": "db06a5a1d70d3c9f9a9a2456487297b2e1d85d88ccee9cbd460a9d656feff2fb",
+        "size": 1414
+      },
+      {
+        "path": "scoring_contract.json",
+        "sha256": "748b9f9d95dc047a04a3e2b2267b1e1d0dafb87c30c8d7e36c3721f4a65a969c",
+        "size": 3041
+      },
+      {
+        "path": "source_originals/contract.md",
+        "sha256": "7c3403d775071d5518fe203e708e8d11849ff05ff04673e86f60e410ba8ce933",
+        "size": 4678
+      },
+      {
+        "path": "source_originals/project/__init__.py",
+        "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+        "size": 56
+      },
+      {
+        "path": "source_originals/project/resources.py",
+        "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+        "size": 1283
+      },
+      {
+        "path": "source_originals/project/worker.py",
+        "sha256": "d0d8596078ae4ed2773b7791fc89439da137f0c315271037879ff6af090d545b",
+        "size": 1689
+      },
+      {
+        "path": "source_originals/runtime.json",
+        "sha256": "189a110aa775762ff81075cce4768211beab1e1a9e2e6de3fb391899ceb4a37c",
+        "size": 190
+      },
+      {
+        "path": "source_originals/tests_public/test_normal.py",
+        "sha256": "b9e4747534ae15825f6544d905288419292a5eeb35649f60ed5c139f8634a110",
+        "size": 1202
+      },
+      {
+        "path": "trusted_project/__init__.py",
+        "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+        "size": 56
+      },
+      {
+        "path": "trusted_project/resources.py",
+        "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+        "size": 1283
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/final-handoff.json",
+    "sha256": "6f1ee054e01c91aa47ece38c6ccbda62672f0f0f30735ba98b91f302e1ca0c66",
+    "size": 7787
+  },
+  "review": {
+    "root_review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/root-review-v1/review.json",
+    "review_kind": "model root review; not human expert",
+    "controls": 16,
+    "old_failures_retained": true,
+    "current_formal_baseline_is_new_run_not_all_control_rerun_claim": true
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_software_engineering_task_003_async_lifecycle",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/formal-detached-1793227201233103000/attempts/author-only-h043-formal__detached-zip-worker/general_hard_software_engineering_task_003_async_lifecycle/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/formal-detached-1793227201233103000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/formal-detached-1793227201233103000/attempts/author-only-h043-formal__detached-zip-worker/general_hard_software_engineering_task_003_async_lifecycle/author-only-formal-auto",
+      "candidate_sha256": "d9ee7456945760ce0c952e078df94b0225d95ac5e172c7895b7d221a3f317121",
+      "entry_count": 11
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/formal-detached-1793227201233103000/moved-without-runtime",
+      "candidate_sha256": "d9ee7456945760ce0c952e078df94b0225d95ac5e172c7895b7d221a3f317121",
+      "entry_count": 11
+    },
+    "nonruntime_same_byte_files": 60,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/program/project/__init__.py",
+        "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+        "size": 56
+      },
+      {
+        "path": "worker/derived/program/project/resources.py",
+        "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+        "size": 1283
+      },
+      {
+        "path": "worker/derived/program/project/worker.py",
+        "sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+        "size": 3078
+      },
+      {
+        "path": "worker/derived/rule-observations.json",
+        "sha256": "cae7d15616d32607318f060e5cddf60fd169fb954804208d08548d8d0dd76f07",
+        "size": 24854
+      },
+      {
+        "path": "worker/derived/test-results.json",
+        "sha256": "1d37a90ec7a5ec642cba6769d28392ae31bb7fec59387d6f94812ff512dd21fb",
+        "size": 19148
+      },
+      {
+        "path": "worker/derived/tests.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "worker/derived/tests.stdout.log",
+        "sha256": "9d039a79eeacbac1c7d3ebc8d2ce4160840ecffffd5d820d3ab2e4d377cf78c3",
+        "size": 272
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/program/project/__init__.py",
+        "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+        "size": 56
+      },
+      {
+        "path": "worker/derived/program/project/resources.py",
+        "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+        "size": 1283
+      },
+      {
+        "path": "worker/derived/program/project/worker.py",
+        "sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+        "size": 3078
+      },
+      {
+        "path": "worker/derived/rule-observations.json",
+        "sha256": "cae7d15616d32607318f060e5cddf60fd169fb954804208d08548d8d0dd76f07",
+        "size": 24854
+      },
+      {
+        "path": "worker/derived/test-results.json",
+        "sha256": "1d37a90ec7a5ec642cba6769d28392ae31bb7fec59387d6f94812ff512dd21fb",
+        "size": 19148
+      },
+      {
+        "path": "worker/derived/tests.stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "worker/derived/tests.stdout.log",
+        "sha256": "9d039a79eeacbac1c7d3ebc8d2ce4160840ecffffd5d820d3ab2e4d377cf78c3",
+        "size": 272
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "7c25dfdd141ac4073f06c4422b1439a4ac25a9ac",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "7c25dfdd141ac4073f06c4422b1439a4ac25a9ac",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "7c25dfdd141ac4073f06c4422b1439a4ac25a9ac",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "7ba7ffe330f9d12de4b77041170bbb732b82e71b2bb51b451af7349440be4eb3",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "7c25dfdd141ac4073f06c4422b1439a4ac25a9ac",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "3e3f05a2aa030451ebb01dee082160f67424372bb0edece30532b7c24c8c90d5"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/program/project/__init__.py",
+          "sha256": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+          "size": 56
+        },
+        {
+          "path": "worker/derived/program/project/resources.py",
+          "sha256": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+          "size": 1283
+        },
+        {
+          "path": "worker/derived/program/project/worker.py",
+          "sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+          "size": 3078
+        },
+        {
+          "path": "worker/derived/rule-observations.json",
+          "sha256": "cae7d15616d32607318f060e5cddf60fd169fb954804208d08548d8d0dd76f07",
+          "size": 24854
+        },
+        {
+          "path": "worker/derived/test-results.json",
+          "sha256": "1d37a90ec7a5ec642cba6769d28392ae31bb7fec59387d6f94812ff512dd21fb",
+          "size": 19148
+        },
+        {
+          "path": "worker/derived/tests.stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "worker/derived/tests.stdout.log",
+          "sha256": "9d039a79eeacbac1c7d3ebc8d2ce4160840ecffffd5d820d3ab2e4d377cf78c3",
+          "size": 272
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "a977f3df8ebb939f27ec66925a075c849e1bdb444770aebf5f4069980551265d",
+        "file_count": 7,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T22:40:03.457188Z",
+      "identity": {
+        "batch_id": "author-only-h043-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_software_engineering_task_003_async_lifecycle",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "312695a3452d9a0b640c0d454776d1d59f3cd2064d140381004aa07767f50feb",
+        "root_result_count": 2,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "24d59dd536808ae51ed674da81f6dd14a1f3037e736d822ac4d1b92039f42cb7",
+        "initial_sha256": "24d59dd536808ae51ed674da81f6dd14a1f3037e736d822ac4d1b92039f42cb7"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T22:40:02.667700Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 0.637727,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "5a05e76c46b4af7ddeff2fc170e805442145082fad800082ba24d823ac1af561",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "b8b2f40a6a05e1ce57334a9b4e331380ad42a52d01c69c206dec5c43d2a236c6",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "a9ea0bf5f9c9767d6437663efb32f513cdc152b6e3c068a5c204cd69b8fc62b4",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 29338
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": null,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/formal-detached-1793227201233103000/validation.json",
+    "sha256": "818c95026e392e5b1872c6dd4984bd418053650131478b113128830253def0ae",
+    "size": 10433
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "4ebcbafb3aa412e4b4eb3c72fd746a408e2d0041f4350b93ce09ab26bd0e0431",
+    "size": 24778
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/static-root-single/20261028T224126Z_d5cf3658cd/report.json",
+      "sha256": "be8256a1441186d1f807aa545fce2af131952f9912c20ae0dd812808169aa74b",
+      "size": 1235
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/static-root-full/20261028T224133Z_00068fec23/report.json",
+      "sha256": "b9717114683b8bbfdb9bffc714ffc02adaf33f844a682a193be217ffef44085e",
+      "size": 28004
+    },
+    "only_remaining_missing": 18
+  },
+  "source_summary": "6公开输入，27GT；原工程的取消、失败、终态与回收问题真实复现。5业务/5边界的独立机会。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T22:41:33.878116+00:00"
+}

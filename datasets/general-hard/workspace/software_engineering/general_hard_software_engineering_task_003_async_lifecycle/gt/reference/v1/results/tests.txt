@@ -1,0 +1,12 @@
+最终源码 SHA256: d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3
+实际命令: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python -m unittest discover -s tests_public -v
+returncode: 0
+test_empty_batch_does_not_touch_providers (test_normal.NormalBatchTests.test_empty_batch_does_not_touch_providers) ... ok
+test_success_is_ordered_and_balanced (test_normal.NormalBatchTests.test_success_is_ordered_and_balanced) ... ok
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.010s
+
+OK
+
+公开测试覆盖正常并发顺序与资源平衡、空输入。其它取消/截止/终态/回收边界另由作者独立离线验收；不把此公开测试记录当真实服务或四端验证。

@@ -1,0 +1,50 @@
+{
+  "schema_version": "h043-counterexamples/v1",
+  "boundary_opportunities": [
+    {
+      "id": "E01",
+      "owner": "boundary_cases",
+      "label": "取消等待acquire不伪造资源所有权",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E02",
+      "owner": "boundary_cases",
+      "label": "异步释放期间重复取消仍等一次回收",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E03",
+      "owner": "boundary_cases",
+      "label": "终态接受后取消ack不重复终态",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E04",
+      "owner": "boundary_cases",
+      "label": "acquire抛错不释放未取得资源",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E05",
+      "owner": "boundary_cases",
+      "label": "预置截止、空/非法输入与批次隔离",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    }
+  ],
+  "distinguishing_mutants": [
+    "swallow caller cancellation while cleanup succeeds",
+    "release twice in cleanup",
+    "abandon release on repeated cancel",
+    "emit a second cancellation terminal after accepted success",
+    "return on first error without draining sibling",
+    "return success on deadline",
+    "constant happy-path outputs matching only public examples"
+  ],
+  "all_observable_not_patch_string_checks": true
+}

@@ -17454,7 +17454,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_003_async_lifecycle/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_003_async_lifecycle/gt"
       },
-      "prompt_draft": "请完成以下工作：修复并发处理器，取消、错误和成功路径都正确释放资源且不重复提交结果；保持外部接口兼容。\n\n输入材料：\n- /tmp_workspace/project/worker.py：并发处理器含取消泄漏\n- /tmp_workspace/project/resources.py：可观测资源计数器\n- /tmp_workspace/tests_public/：正常场景\n- /tmp_workspace/contract.md：取消、超时与清理语义\n\n交付：\n- /tmp_workspace/project/worker.py：生命周期修复\n- /tmp_workspace/results/tests.txt：验证记录\n- /tmp_workspace/results/lifecycle.md：失败路径说明\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请修复 /tmp_workspace/project/worker.py 中并发批处理器的取消与资源生命周期问题，保持公开接口和正常业务语义兼容。先阅读 /tmp_workspace/contract.md；源码已有能完成正常批次的实际实现，不是待填空模板。/tmp_workspace/project/resources.py 是可观测的内存资源和提交provider，/tmp_workspace/tests_public/ 提供正常场景，/tmp_workspace/runtime.json 声明离线Python环境。\n\n保留 BatchTimeoutError（TimeoutError子类）和异步接口 run_batch(items, pool, work, sink, *, concurrency=2, deadline=None)。完整成功的值保持输入顺序；正确调用实际work，不以给定样例结果写死答案。取消、work/provider错误、事件截止均不能伪装成功；失败后应停止并等待本批次其它工作收口。成功取得的不透明lease只能释放一次且必须等待释放完成，未取得的不能释放。异步release期间再次取消也不能遗留资源；终态提交在接受后等待ack时被取消或失败，不得再提交第二个终态。run_batch返回或抛出时，不遗留它持有的工作、截止观察或清理任务。\n\ndeadline由调用方asyncio.Event置位表示到期，独立批次不得互相取消。允许合法的调度、状态命名、内部函数和实现差异，不要求固定启动/完成顺序；详细语义与输入校验见公开contract.md。不使用机器相关的毫秒性能阈值。\n\n交付：\n- /tmp_workspace/project/worker.py：主要代码修复。\n- /tmp_workspace/results/tests.txt：真实验证记录，写实际命令、退出结果、覆盖/未核边界，并包含最终worker.py完整SHA256；不得伪造已运行。\n- /tmp_workspace/results/lifecycle.md：原始故障与成功、错误、取消、截止、终态和回收路径说明。\n\n仅可修改project/worker.py，内部结构自由。project/resources.py、project/__init__.py、tests_public/、contract.md、runtime.json保持原字节；测试产生的__pycache__不作业务产物。所有额外报告只写results。使用已预置Python3.11+标准库，可运行 PYTHONDONTWRITEBYTECODE=1 python -m unittest discover -s tests_public -v；不安装依赖、不联网、不调用真实服务/账号、不发消息或真实办理。仅读取本题映射材料，不访问私有GT或评分说明。评分侧会独立执行最终冻结源码并绑定源码/测试/命令/returncode，自述成功不替代验证。",
       "inputs": [
         {
           "path": "project/worker.py",
@@ -17503,20 +17503,41 @@
         "表面返回成功但资源泄漏"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102643,
-        "construction": "独立调度器按固定事件序列触发取消和失败，用资源计数及提交次数判定；不使用机器相关的毫秒性能阈值。",
+        "construction": "公开6输入与独立10机会oracle先于参考，Python事件/协议观察实际核销、终态、资源与异常。原代码公开2/2却私有7故障；取消传播只归B03，回收/终态独立观察。16选定作者Worker控制、当前正式ZIP再次实际执行10机会及正常/无runtime归档核验通过；原失败保留。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "hidden_tests/run_oracle.py",
+          "hidden_tests/test_lifecycle.py",
+          "protected_sha256.json",
+          "provenance/oracle-ownership-v2-receipt.json",
+          "provenance/source-truth-freeze.json",
+          "reference/v1/project/__init__.py",
+          "reference/v1/project/resources.py",
+          "reference/v1/project/worker.py",
+          "reference/v1/provenance.json",
+          "reference/v1/results/lifecycle.md",
+          "reference/v1/results/tests.txt",
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "source_originals/contract.md",
+          "source_originals/project/__init__.py",
+          "source_originals/project/resources.py",
+          "source_originals/project/worker.py",
+          "source_originals/runtime.json",
+          "source_originals/tests_public/test_normal.py",
+          "trusted_project/__init__.py",
+          "trusted_project/resources.py"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "公开API/语义不变即可使用不同内部实现与合法调度；固定事件与资源/终态观察，不用补丁关键词、参考实现输出或机器毫秒性能阈值。",
+        "authoring_evidence": "evidence/h043-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -17531,7 +17552,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "修复并发处理器，取消、错误和成功路径都正确释放资源且不重复提交结果；保持外部接口兼容。",
+            "criterion": "固定5项公开业务机会：成功顺序/并发/重入、work与取得资源错误的失败传播和收口、外部取消、事件截止、终态提交故障；通过独立不透明provider的实际执行判定。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -17540,7 +17561,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：吞取消异常；重复finally清理；表面返回成功但资源泄漏。以独立反例验证，不只检索关键词。",
+            "criterion": "固定5项边界机会：等待acquire取消、异步清理中重复取消、终态接受后ack取消、取得前抛错、预置截止/空非法输入与批次隔离。边界观察资源/提交/隔离，不重复仅因同一个异常标签失分。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -17549,7 +17570,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "保护5份输入与修改范围、两份UTF8报告的存在和可读性；保护输入变化只影响对应保护义务，不全局清零或改变业务测试provider。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -17558,7 +17579,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "独立实际执行的最终源码/可信测试/命令/returncode绑定，以及tests.txt的当前源码完整SHA256；不依据自述通过、补丁字符串或固定内部状态。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -17641,10 +17662,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "当前正式MD/exec/GT、独立score0.27.1/core0.15.3 ZIP真实Worker、正常与删除runtime搬移核验；作者自动组件，无Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h043-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

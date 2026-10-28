@@ -1,0 +1,85 @@
+{
+  "schema_version": "h043-independent-behavior-oracle/v1",
+  "construction": "Public observable protocol, fixed event sequences and independent opaque providers; specified before reference implementation.",
+  "source_first": true,
+  "not_generated_from_candidate_or_reference_output": true,
+  "opportunities": [
+    {
+      "id": "B01",
+      "owner": "business_correctness",
+      "label": "成功、输入顺序、并发上限与后续批次重入",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "B02",
+      "owner": "business_correctness",
+      "label": "work异常后等待兄弟工作与资源收口",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "B03",
+      "owner": "business_correctness",
+      "label": "外部取消传播与取得资源的恰一次释放",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "B04",
+      "owner": "business_correctness",
+      "label": "事件截止不伪装成功并等待清理",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "B05",
+      "owner": "business_correctness",
+      "label": "提交拒绝/ack错误不重试且不泄漏",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E01",
+      "owner": "boundary_cases",
+      "label": "取消等待acquire不伪造资源所有权",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E02",
+      "owner": "boundary_cases",
+      "label": "异步释放期间重复取消仍等一次回收",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E03",
+      "owner": "boundary_cases",
+      "label": "终态接受后取消ack不重复终态",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E04",
+      "owner": "boundary_cases",
+      "label": "acquire抛错不释放未取得资源",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    },
+    {
+      "id": "E05",
+      "owner": "boundary_cases",
+      "label": "预置截止、空/非法输入与批次隔离",
+      "expected": "all public lifecycle predicates pass",
+      "score": 1.0
+    }
+  ],
+  "owner_denominators": {
+    "business_correctness": 5,
+    "boundary_cases": 5
+  },
+  "tolerance": "Exact ownership/terminal counts and values; no machine-dependent millisecond performance threshold. Watchdogs only bound nontermination.",
+  "free_implementation": "No internal field/status/task naming, source string, exact patch, coroutine scheduling or private implementation assertions.",
+  "ownership_revision": "v2: failure propagation is scored in B02/B03/B04/B05; E opportunities observe their resource/publication/isolation obligation without repeating the same exception-label loss"
+}
