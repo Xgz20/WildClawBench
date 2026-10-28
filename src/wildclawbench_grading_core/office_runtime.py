@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import copy
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
 import io
 import json
@@ -312,11 +313,27 @@ def _counterfactual_parts(data, changes):
                 raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "numeric input cell missing/ambiguous")
             cell = cells[0]
             values = cell.findall(S + "v")
-            if (cell.get("t", "n") != "n" or cell.find(S + "f") is not None
+            kind = cell.get("t", "n")
+            if (kind not in {"n", "d"} or cell.find(S + "f") is not None
                     or cell.find(S + "is") is not None or len(values) != 1 or values[0].text is None):
-                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "target must be an existing literal numeric input")
+                raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "target must be an existing literal numeric or native-date input")
             original = values[0].text
-            _numeric_literal(original)
+            if kind == "d":
+                # OOXML also permits literal dates encoded as ISO 8601 (t=d).
+                # The caller supplies the new Excel serial using the workbook's
+                # date system and declared business timezone. Preserve the old
+                # lexical value in the source-bound receipt, then use the
+                # equivalent native numeric encoding with the same cell style.
+                if (not re.fullmatch(r"\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}:\d{2}(?:\.\d{1,6})?(?:Z|[+-]\d{2}:\d{2})?)?", original)
+                        or cell.get("cm") is not None or cell.get("vm") is not None):
+                    raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "native-date target must be a plain literal ISO date")
+                try:
+                    datetime.fromisoformat(original.replace("Z", "+00:00"))
+                except ValueError as exc:
+                    raise OfficeRuntimeError("OFFICE_COUNTERFACTUAL_TARGET_INVALID", "invalid native ISO date") from exc
+                cell.set("t", "n")
+            else:
+                _numeric_literal(original)
             values[0].text = value
             records.append({"sheet": name, "cell": address, "value": value, "original_value": original})
         for part, node in parsed.items():
@@ -325,7 +342,7 @@ def _counterfactual_parts(data, changes):
 
 
 def prepare_xlsx_counterfactual(source, changes, output_dir):
-    """Create a disposable numeric-input variant and a replayable provenance receipt."""
+    """Change literal numeric/native-date inputs with replayable source binding."""
     source = Path(source)
     if source.is_symlink() or not source.is_file() or source.stat().st_size > MAX_INPUT_BYTES:
         raise OfficeRuntimeError("OFFICE_INPUT_INVALID", "counterfactual source unavailable")

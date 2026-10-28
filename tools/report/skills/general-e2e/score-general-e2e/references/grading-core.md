@@ -1,5 +1,7 @@
 # General E2E 评分 core 接口
 
+score-general-e2e0.23.2/core0.15.2让`prepare_xlsx_counterfactual()`兼容普通字面原生ISO日期（`t=d`）。新值仍由调用方提供Excel数值序列，保留日期样式；源绑定回执记录原ISO值，正常/归档重放继续拒绝额外公式、缓存、样式或部件变更。接口不推断时区或日期系统，普通文本不获日期权限，冻结旧helper不变。
+
 score-general-e2e0.23.1/core0.15.1修复HTML资源回执跨Python/系统MIME表的误报。冻结request/audit仍核对实际content_type，源清单的跨机身份只比较路径、大小和SHA；旧观察脚本、锁、截图及回执不重写。文件或请求上下文漂移仍拒绝。
 
 score-general-e2e 0.23.0装配core 0.15.0，增加`HtmlRuntimeError`、`create_html_lock()`、`validate_html_lock()`、`html_lock_digest()`、`observe_html()`及`verify_html_observation()`。Python包装器与`html_observer.mjs`共同分发，实际运行使用显式冻结的外部Node/Playwright core/Chromium。返回浏览器观测和来源回执，不决定业务正确性。归档验证保留源文件、资源、脚本、请求、观测和截图的绑定，无需执行浏览器；不声称密码学证明渲染真实发生。见[HTML运行时观测](html-observation.md)。

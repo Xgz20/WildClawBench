@@ -89,12 +89,43 @@ class NumericInputVariantTests(unittest.TestCase):
         with self.assertRaisesRegex(OfficeRuntimeError,'OFFICE_COUNTERFACTUAL_AUDIT_INVALID'):
             verify_xlsx_counterfactual(self.source,result['path'],audit)
 
+    def native_date_source(self, value='2026-10-10T12:00:00.000Z', kind='d', metadata=False):
+        def replace(raw):
+            node=ET.fromstring(raw);cell=node.find(f".//{S}c[@r='A1']")
+            cell.set('t',kind);cell.set('s','0')
+            if metadata:cell.set('cm','1')
+            cell.find(S+'v').text=value
+            return ET.tostring(node,encoding='utf-8',xml_declaration=True)
+        self.source.write_bytes(replace_part(workbook_bytes(),'xl/worksheets/sheet1.xml',replace))
+
+    def test_native_iso_date_is_editable_without_touching_formulas_or_source(self):
+        self.native_date_source();before=self.source.read_bytes();result=self.prepare(value='46299.5')
+        self.assertEqual(verify_xlsx_counterfactual(self.source,result['path'],result['audit']),result['audit'])
+        self.assertEqual(result['audit']['changes'][0]['original_value'],'2026-10-10T12:00:00.000Z')
+        self.assertEqual(self.source.read_bytes(),before)
+        with zipfile.ZipFile(result['path']) as archive:
+            node=ET.fromstring(archive.read('xl/worksheets/sheet1.xml'));cell=node.find(f".//{S}c[@r='A1']")
+            self.assertEqual(cell.get('t'),'n');self.assertEqual(cell.get('s'),'0')
+            self.assertEqual(cell.find(S+'v').text,'46299.5')
+            self.assertEqual(node.find(f".//{S}c[@r='B1']/{S}f").text,'A1*3')
+            self.assertEqual(node.find(f".//{S}c[@r='B1']/{S}v").text,'999')
+        audit=json.loads(json.dumps(result['audit']));audit['changes'][0]['original_value']='2026-10-09T12:00:00.000Z'
+        with self.assertRaisesRegex(OfficeRuntimeError,'OFFICE_COUNTERFACTUAL_AUDIT_INVALID'):
+            verify_xlsx_counterfactual(self.source,result['path'],audit)
+
+    def test_date_looking_text_invalid_calendar_dates_and_metadata_are_not_plain_date_inputs(self):
+        for i,(value,kind,metadata) in enumerate([('2026-10-10T12:00:00Z','str',False),('2026-02-30T12:00:00Z','d',False),('not-a-date','d',False),('2026-10-10T12:00:00Z','d',True)]):
+            with self.subTest(value=value,kind=kind,metadata=metadata):
+                self.native_date_source(value,kind,metadata)
+                with self.assertRaisesRegex(OfficeRuntimeError,'OFFICE_COUNTERFACTUAL_TARGET_INVALID'):self.prepare(str(i),value=46299.5)
+                self.assertFalse((self.root/str(i)/'prepared.xlsx').exists())
+
 
 @unittest.skipIf(os.name == 'nt','Unix fake engine; real Windows acceptance is separate')
 class CounterfactualEvidenceChainTests(unittest.TestCase):
     def setUp(self):office_tests.OfficeRuntimeTests.setUp(self)
 
-    def make_attempt(self,name,rule=None):
+    def make_attempt(self,name,rule=None,source_bytes=None):
         rule=rule or '''def grade(**kwargs):
     from pathlib import Path
     import os,json,runpy
@@ -108,7 +139,7 @@ class CounterfactualEvidenceChainTests(unittest.TestCase):
 '''
         fixture=Fixture(self.root/name,rule=rule,scoring_runtime={'office':True},
             extra_gt_files={'office_runtime.py':(ROOT/'src/wildclawbench_grading_core/office_runtime.py').read_bytes()})
-        (fixture.candidate/'budget.xlsx').write_bytes(workbook_bytes())
+        (fixture.candidate/'budget.xlsx').write_bytes(source_bytes or workbook_bytes())
         entries,digest=RUNTIME._inventory_tree(fixture.candidate)
         path=fixture.candidate.parent/'candidate-artifact.json';value=json.loads(path.read_text());value.update(entries=entries,expected_sha256=digest);path.write_text(json.dumps(value))
         value=json.loads(fixture.execution_record.read_text());value['candidate']['frozen_sha256']=digest;fixture.execution_record.write_text(json.dumps(value))
@@ -127,6 +158,16 @@ class CounterfactualEvidenceChainTests(unittest.TestCase):
         paths={row['path'] for row in refs if row['type']=='rule_derived_artifact'}
         self.assertTrue({'worker/derived/variant/prepared.xlsx','worker/derived/variant/counterfactual-audit.json',
             'worker/derived/calculated/recalculated.xlsx','worker/derived/calculated/office-audit.json'}<=paths)
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt);RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        self.binary.unlink();shutil.rmtree(attempt/'runtime')
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt,archived=True)['score_valid'])
+
+    def test_native_iso_date_variant_keeps_worker_and_archived_provenance(self):
+        data=replace_part(workbook_bytes(),'xl/worksheets/sheet1.xml',
+            lambda raw:raw.replace(b'<c r="A1"><v>2</v></c>',b'<c r="A1" t="d"><v>2026-10-10T12:00:00.000Z</v></c>'))
+        attempt=self.make_attempt('date-chain',source_bytes=data)
+        receipt=json.loads((attempt/'worker/derived/variant/counterfactual-audit.json').read_text())
+        self.assertEqual(receipt['changes'][0]['original_value'],'2026-10-10T12:00:00.000Z')
         RUNTIME.prepare_semantics_attempt(attempt_root=attempt);RUNTIME.finalize_score_attempt(attempt_root=attempt)
         self.binary.unlink();shutil.rmtree(attempt/'runtime')
         self.assertTrue(RUNTIME.verify_score_attempt(attempt,archived=True)['score_valid'])

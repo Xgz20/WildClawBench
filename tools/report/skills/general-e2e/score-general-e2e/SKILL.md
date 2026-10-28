@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.23.2`装配core `0.15.2`，数值输入扰动兼容原生ISO日期单元格（OOXML `t=d`）。调用方按工作簿日期系统和业务口径给定新Excel序列值；变体保留样式，使用等价原生数值编码，回执保存原ISO词法值及新值。原文件、公式和其它部件不改；像日期的普通文本仍拒绝。旧冻结helper和历史回执不自动改写。
+
 `0.23.1`装配core `0.15.1`，修复HTML回执跨Python/系统MIME表复核：冻结请求继续绑定实际使用的content_type，源资源清单按路径、大小及SHA比较，不用回放机器的MIME推断改写历史HTTP上下文。实际3.12 Worker与3.11校验的Markdown资源可正常归档；文件增删/字节或请求上下文漂移仍拒绝。
 
 `0.23.0`装配core `0.15.0`，增加显式`scoring_runtime: {html_render: true}`和`bootstrap-html`。受管Worker可用锁定的Node、Playwright core及Chromium，对原HTML和有界公共素材作离线DOM、SVG、Canvas2D及像素观测。派生截图、请求、脚本、回执和运行时身份进入证据与正常/归档核验；旧任务不自动获得浏览器依赖。观测不直接给业务分；未覆盖的合法图形表达保留异常，不能判能力零分。详见[HTML运行时观测](references/html-observation.md)。
