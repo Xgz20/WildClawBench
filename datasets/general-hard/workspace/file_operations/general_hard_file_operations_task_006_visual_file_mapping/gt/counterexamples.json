@@ -1,0 +1,272 @@
+{
+  "excluded_source_paths": [
+    "source_tree/复核/客户甲/2026春/交付清单.txt",
+    "source_tree/复核/客户甲/2026春/方案.md",
+    "source_tree/复核/客户甲/2026春/预算.csv",
+    "source_tree/复核/客户甲/2026秋/预算.csv",
+    "source_tree/外包协作/客户甲/2026春/交付清单.txt",
+    "source_tree/外包协作/客户甲/2026春/方案.md",
+    "source_tree/外包协作/客户甲/2026秋/交付清单.txt",
+    "source_tree/外包协作/客户甲/2026秋/方案.md",
+    "source_tree/外包协作/客户甲/2026秋/预算.csv",
+    "source_tree/客户乙/2026春/交付清单.txt",
+    "source_tree/客户乙/2026春/方案.md",
+    "source_tree/客户乙/2026春/预算.csv",
+    "source_tree/客户乙/2026秋/交付清单.txt",
+    "source_tree/客户甲/2026春/交付清单.txt",
+    "source_tree/客户甲/2026春/方案.md",
+    "source_tree/客户甲/2026春/预算.csv",
+    "source_tree/客户甲/2026秋/交付清单.txt",
+    "source_tree/客户甲/2026秋/方案.md",
+    "source_tree/客户甲/2026秋/预算.csv",
+    "source_tree/联合项目/2026春/交付清单.txt",
+    "source_tree/联合项目/2026春/方案.md",
+    "source_tree/联合项目/2026春/预算.csv",
+    "source_tree/联合项目/2026秋/交付清单.txt",
+    "source_tree/联合项目/2026秋/方案.md",
+    "source_tree/联合项目/2026秋/预算.csv"
+  ],
+  "visible_exclusions": [
+    {
+      "scene_id": "S01",
+      "source_path": "source_tree/复核/客户甲/2026秋/预算.csv",
+      "panel": "活动中间",
+      "reason": "行底色为白色，未选中",
+      "visual_evidence": {
+        "scene_id": "S01",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          477,
+          326,
+          1106,
+          402
+        ],
+        "visible_object": "预算.csv 白色行",
+        "selection_relation": "排除未选文件"
+      }
+    },
+    {
+      "scene_id": "S01",
+      "source_path": "source_tree/客户甲/2026秋/预算.csv",
+      "panel": "右侧对照",
+      "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+      "visual_evidence": {
+        "scene_id": "S01",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          326,
+          1759,
+          403
+        ],
+        "visible_object": "预算.csv 灰色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S01",
+      "source_path": "source_tree/客户甲/2026秋/交付清单.txt",
+      "panel": "右侧对照",
+      "reason": "面板为对照；且仅细边框光标、无底色",
+      "visual_evidence": {
+        "scene_id": "S01",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          405,
+          1759,
+          479
+        ],
+        "visible_object": "交付清单.txt 白色细边框行",
+        "selection_relation": "对照及无底色光标双重排除"
+      }
+    },
+    {
+      "scene_id": "S01",
+      "source_path": "source_tree/客户甲/2026秋/方案.md",
+      "panel": "右侧对照",
+      "reason": "对照列表且白色未选中",
+      "visual_evidence": {
+        "scene_id": "S01",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          249,
+          1759,
+          324
+        ],
+        "visible_object": "方案.md 白色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S02",
+      "source_path": "source_tree/外包协作/客户甲/2026春/方案.md",
+      "panel": "活动右侧",
+      "reason": "行底色为白色，未选中",
+      "visual_evidence": {
+        "scene_id": "S02",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          249,
+          1759,
+          324
+        ],
+        "visible_object": "方案.md 白色行",
+        "selection_relation": "排除未选文件"
+      }
+    },
+    {
+      "scene_id": "S02",
+      "source_path": "source_tree/外包协作/客户甲/2026春/交付清单.txt",
+      "panel": "活动右侧",
+      "reason": "仅有细边框光标，行底色为白色，不算选中",
+      "visual_evidence": {
+        "scene_id": "S02",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          405,
+          1759,
+          479
+        ],
+        "visible_object": "交付清单.txt 白色细边框行",
+        "selection_relation": "排除光标行"
+      }
+    },
+    {
+      "scene_id": "S02",
+      "source_path": "source_tree/客户甲/2026春/方案.md",
+      "panel": "左侧对照",
+      "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+      "visual_evidence": {
+        "scene_id": "S02",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          477,
+          249,
+          1106,
+          324
+        ],
+        "visible_object": "方案.md 灰色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S02",
+      "source_path": "source_tree/客户甲/2026春/交付清单.txt",
+      "panel": "左侧对照",
+      "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+      "visual_evidence": {
+        "scene_id": "S02",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          477,
+          404,
+          1106,
+          480
+        ],
+        "visible_object": "交付清单.txt 灰色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S02",
+      "source_path": "source_tree/客户甲/2026春/预算.csv",
+      "panel": "左侧对照",
+      "reason": "对照列表且白色未选中",
+      "visual_evidence": {
+        "scene_id": "S02",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          477,
+          326,
+          1106,
+          402
+        ],
+        "visible_object": "预算.csv 白色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S03",
+      "source_path": "source_tree/客户乙/2026秋/交付清单.txt",
+      "panel": "活动中间",
+      "reason": "仅有细边框光标，行底色为白色，不算选中",
+      "visual_evidence": {
+        "scene_id": "S03",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          477,
+          405,
+          1106,
+          479
+        ],
+        "visible_object": "交付清单.txt 白色细边框行",
+        "selection_relation": "排除光标行"
+      }
+    },
+    {
+      "scene_id": "S03",
+      "source_path": "source_tree/联合项目/2026秋/交付清单.txt",
+      "panel": "右侧对照",
+      "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+      "visual_evidence": {
+        "scene_id": "S03",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          404,
+          1759,
+          480
+        ],
+        "visible_object": "交付清单.txt 灰色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S03",
+      "source_path": "source_tree/联合项目/2026秋/方案.md",
+      "panel": "右侧对照",
+      "reason": "对照列表且白色未选中",
+      "visual_evidence": {
+        "scene_id": "S03",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          249,
+          1759,
+          324
+        ],
+        "visible_object": "方案.md 白色行",
+        "selection_relation": "对照列表排除"
+      }
+    },
+    {
+      "scene_id": "S03",
+      "source_path": "source_tree/联合项目/2026秋/预算.csv",
+      "panel": "右侧对照",
+      "reason": "对照列表且白色未选中",
+      "visual_evidence": {
+        "scene_id": "S03",
+        "coordinate_space": "original_pixels",
+        "bbox": [
+          1130,
+          326,
+          1759,
+          403
+        ],
+        "visible_object": "预算.csv 白色行",
+        "selection_relation": "对照列表排除"
+      }
+    }
+  ],
+  "boundary_checks": [
+    "no extra control, cursor, unselected, directory-copy, duplicate-byte target or overwrite object",
+    "active panel role points at the actual blue frame",
+    "selected row role identifies filled row in active panel",
+    "ancestor geometry covers the complete visual chain, preserving same-name directory identity"
+  ],
+  "geometry_role_scoring": "Boundary score averages no-extra-output and mean per-selection local-role quality; role failures do not erase separately correct byte-object credit."
+}

@@ -1,0 +1,335 @@
+{
+  "created_at_utc": "2026-10-28T21:40:15.220251+00:00",
+  "stage": "nonblind_source_first_GT_author",
+  "human_expert_review": false,
+  "annotation_inputs": [
+    {
+      "path": "qa/annotation-a-v1/annotation-report.md",
+      "sha256": "d912ddeb0e508ba88a9f8de791d70105c3c82d7034fb30310dbb9bd661752183",
+      "size_bytes": 4093
+    },
+    {
+      "path": "qa/annotation-a-v1/freeze_manifest.json",
+      "sha256": "3837f678936dd2171bcd8163b22420e8d63b63db87973987e47ee9261edfbaff",
+      "size_bytes": 9702
+    },
+    {
+      "path": "qa/annotation-a-v1/freeze_manifest.sha256",
+      "sha256": "3b0aa18d6a865a97ea696712e0d2c256201c0bff6ed658f0a8819dcc8df3fa87",
+      "size_bytes": 87
+    },
+    {
+      "path": "qa/annotation-a-v1/independent-conclusion.json",
+      "sha256": "bb5ba26f67910b8212e2ebad6d33a81fd7e4e89ca9d16a8b9b950ea7288b65e3",
+      "size_bytes": 25209
+    },
+    {
+      "path": "qa/annotation-a-v1/public-input-sha256.json",
+      "sha256": "0218b5c641d4bba19f39a487980021eb1f531d5811a583507c6450a2dbfc6204",
+      "size_bytes": 6515
+    },
+    {
+      "path": "qa/annotation-a-v1/raw-before-source-match.json",
+      "sha256": "4686d81145b1daea806fc7a55ec92b01f3435a506efee4d1ce54d9002e075e24",
+      "size_bytes": 17917
+    },
+    {
+      "path": "qa/annotation-a-v1/raw-before-source-match.sha256",
+      "sha256": "18fb52cd2295668e40c7ed0b6ff59722d445e343ff3028f7722740ea6365a8bf",
+      "size_bytes": 95
+    },
+    {
+      "path": "qa/annotation-b-v1/freeze_manifest.json",
+      "sha256": "e4071d499bfa300323352aa5da60104789673f295994743e8596a9d38bb06878",
+      "size_bytes": 9204
+    },
+    {
+      "path": "qa/annotation-b-v1/freeze_manifest.sha256",
+      "sha256": "bac240c797f1de813344a2ed06acbe051c583c4a81d7f830c883a444928e14bf",
+      "size_bytes": 87
+    },
+    {
+      "path": "qa/annotation-b-v1/independent-conclusion.json",
+      "sha256": "c1bb8889bbb9698751f5745296cbcd5bead5661980580e40ef620d529e824421",
+      "size_bytes": 36197
+    },
+    {
+      "path": "qa/annotation-b-v1/public-inputs-sha256.json",
+      "sha256": "aca32d79b706e98ade033da51249961621fc06e3f57a9506392dbd848d337f2b",
+      "size_bytes": 7810
+    },
+    {
+      "path": "qa/annotation-b-v1/raw-before-source-match.json",
+      "sha256": "03a1b25ae5cb085b2c9de67ac24856bcf27a0a4ed249fda5669ae623ef5901f9",
+      "size_bytes": 17088
+    },
+    {
+      "path": "qa/annotation-b-v1/raw-before-source-match.sha256",
+      "sha256": "2cf52215541b4ec266f691d1cc37dcfe54ceaab610737a7110f70747e4950a83",
+      "size_bytes": 95
+    }
+  ],
+  "annotation_a_early_source_filename_exposure": {
+    "early_source_filename_exposure": true,
+    "details": "查看图片前用find枚举exec成员，一次输出了30个source_tree公开路径名，未打开源文件内容。不声称完全未见源文件名。raw仍先于源路径匹配和源文件字节读取而冻结。"
+  },
+  "ab_agreement": "All five scene/full-source-path/SHA triples equal; no selection discrepancy. Geometry reconciled by A/B envelopes and role semantics.",
+  "private_construction_or_svg_read": false,
+  "reference_existed_when_source_truth_created": false,
+  "source_first_gt_before_reference": true,
+  "blueprint_path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/docs/design/general-e2e/general-hard/60题蓝图.json",
+  "blueprint_sha256": "6a059e445f89ef727522c5cdca5b28949a6b3f2aad10305a2eebaa74452a22e9",
+  "blueprint_order": 40,
+  "task_id": "general_hard_file_operations_task_006_visual_file_mapping",
+  "grading_type": "automated",
+  "criterion_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "source_input_members": [
+    {
+      "path": "copy_request.md",
+      "sha256": "1e5fdd0006b7400846ae82f5a729ab31331a8c1670b02b5119356dbd95f175a3",
+      "size_bytes": 1547,
+      "kind": "file"
+    },
+    {
+      "path": "delivery_contract.md",
+      "sha256": "ef037d4d7aedf31cc876eb591ab51f0237f6e56bd5d70c138a3d81c3eb02b1f7",
+      "size_bytes": 1305,
+      "kind": "file"
+    },
+    {
+      "path": "screenshots/S01.png",
+      "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+      "size_bytes": 133636,
+      "kind": "file"
+    },
+    {
+      "path": "screenshots/S02.png",
+      "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+      "size_bytes": 133295,
+      "kind": "file"
+    },
+    {
+      "path": "screenshots/S03.png",
+      "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+      "size_bytes": 133746,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026春/交付清单.txt",
+      "sha256": "c15b3920f6a972d781c40cbe37988a9c5ed38def57d23b707005ef02f8568161",
+      "size_bytes": 160,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026春/方案.md",
+      "sha256": "b9a4025d0f550685e6edf04fe00de086d583fb7c088fe3df0bfb2c98e51fbbf4",
+      "size_bytes": 148,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026春/预算.csv",
+      "sha256": "e2a7accdcaf7b81509c674c681d80c0be33e2e1a61071cab466a0b82566ce6bd",
+      "size_bytes": 107,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026秋/交付清单.txt",
+      "sha256": "1785364873a3742bd6c7d2e2651512bbeaec015645b61030d0acb01205fbdcba",
+      "size_bytes": 160,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026秋/方案.md",
+      "sha256": "02cdc433b2abef24ff7308e72147f813a6f50e37c293b126d82a383c3aba4d90",
+      "size_bytes": 148,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026秋/预算.csv",
+      "sha256": "d8cb1c9e00033dbbad98da9a76489db76a8480c8e787678c743b55f02b26c1c2",
+      "size_bytes": 107,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026春/交付清单.txt",
+      "sha256": "d56fc0236679ff91e20b4ae719d2e52586b980a6963decf0d0cabfeb0e6e7232",
+      "size_bytes": 166,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026春/方案.md",
+      "sha256": "55533295d3e092784becd2ec77738918b9438311761d06d195871fd1c4f2e875",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026春/预算.csv",
+      "sha256": "59a0c8fb1cac3abc8c83c77bd8f18c0c806610290b71f1cedc949961032943a2",
+      "size_bytes": 119,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026秋/交付清单.txt",
+      "sha256": "b1e2149cb47aa86ee9a7a97d37053d5ffca37af00b417b0438ea383d2b0c81d1",
+      "size_bytes": 166,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026秋/方案.md",
+      "sha256": "7a3a7a5a977d466183bab2f1f1ba19c71c4715a21dd7ad9f28c0533d09e1e629",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026秋/预算.csv",
+      "sha256": "6c40c61906d6e03277ffe2a294b64805ec1ec1769c5a4f67c8d1846f0b3edf8e",
+      "size_bytes": 119,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026春/交付清单.txt",
+      "sha256": "d2343bc583b82079ed04a82e754535dd534ee2d9264e6d162d6eb1f63f27f541",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026春/方案.md",
+      "sha256": "6285f3ecbc748677219cb07a2e414849cc539dbdb315a8915aa915b5455085ae",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026春/预算.csv",
+      "sha256": "622041a66792b83e6a7e99ab76455d4e4f4e25b5817c0d496744232b56d06b1e",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026秋/交付清单.txt",
+      "sha256": "8bff2396409c69e195f277cb6cd6497b0e719a75c05d793d7268e52984508688",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026秋/方案.md",
+      "sha256": "272adeeb4ecb063f0bc2ec67561a01ed5d64068a451a6a6aea1b3090ec105588",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026秋/预算.csv",
+      "sha256": "717f2ec544a952363f8ac70ea1b07f05e15c46dc64f987e6623fec68a0468ecb",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026春/交付清单.txt",
+      "sha256": "6f62e77d83012298e7b42507b75fada61104868b21c9d0aa008120af226c29e8",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026春/方案.md",
+      "sha256": "c8f0e351800776367dee9b2f5f265d3e9396601500fcb2718319836358a1043d",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026春/预算.csv",
+      "sha256": "179db1a37e93a349c465224022dc428cb8eff001836e39af3449062f083af42b",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026秋/交付清单.txt",
+      "sha256": "75d1570baf49be5574012c40ca4a103f17faebd7525d1d15e96610c1d71b6c90",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026秋/方案.md",
+      "sha256": "cb5d3a2dbcf6ee5003ad256ef795684b12cdb217fbec30a6a71af94f3f3061a2",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026秋/预算.csv",
+      "sha256": "ec1aced6c57a4df1b7bee59e569cf4fb61d8436cce4d25831f332c75323903f4",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026春/交付清单.txt",
+      "sha256": "40ec160997dffe06723bf9899b044e2f8d725fb59499609e29a7604b81f9b67a",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026春/方案.md",
+      "sha256": "6f35164fd3c5b246231338c20ba4ef84ad088212b116788c68ab4200f8109a8b",
+      "size_bytes": 142,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026春/预算.csv",
+      "sha256": "a1e83ee97397284a2d0eac65a50dd71df23a1103aba74056936b14647d360a22",
+      "size_bytes": 99,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026秋/交付清单.txt",
+      "sha256": "b9970e78e26a5efdc884f3f541322625a2b3f651d9aba7f2e1aa67e40092fecf",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026秋/方案.md",
+      "sha256": "378a2c39090dc3f8d25c306fd0ab400c85d26bb29ab3488fbd69dbdd8a17aaf6",
+      "size_bytes": 142,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026秋/预算.csv",
+      "sha256": "e85af451614a3731b1a03ab13a83391c71987e817de32a37ffbba5c3aed2cb67",
+      "size_bytes": 99,
+      "kind": "file"
+    }
+  ],
+  "png_decode": [
+    {
+      "scene_id": "S01",
+      "path": "source_images/S01.png",
+      "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "ba4824724c5fbff10045296f0dc6f25b9f242edb58cfcbf23f06fbaebea613f9"
+    },
+    {
+      "scene_id": "S02",
+      "path": "source_images/S02.png",
+      "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "b2fb99c37f45b375fdce6018b59645ab819ffb3c62ab0ae3dec0a62afa29cef6"
+    },
+    {
+      "scene_id": "S03",
+      "path": "source_images/S03.png",
+      "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "2d37c875aaa6c0c754f06d8155e8ee02e605fe295d746163c0d1043d3f778be5"
+    }
+  ]
+}

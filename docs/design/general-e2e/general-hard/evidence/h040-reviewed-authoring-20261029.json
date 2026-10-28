@@ -1,0 +1,506 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 40,
+  "task_id": "general_hard_file_operations_task_006_visual_file_mapping",
+  "registered_task_index": 40,
+  "registered": 40,
+  "remaining": 20,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 2,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 5
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/file_operations/general_hard_file_operations_task_006_visual_file_mapping.md",
+      "sha256": "5a20102d98eb6184150ef564b37eab58eafc247c30d30d0f1d1c4cfa7ab54213",
+      "size": 6399
+    },
+    "exec": [
+      {
+        "path": "copy_request.md",
+        "sha256": "1e5fdd0006b7400846ae82f5a729ab31331a8c1670b02b5119356dbd95f175a3",
+        "size": 1547
+      },
+      {
+        "path": "delivery_contract.md",
+        "sha256": "ef037d4d7aedf31cc876eb591ab51f0237f6e56bd5d70c138a3d81c3eb02b1f7",
+        "size": 1305
+      },
+      {
+        "path": "screenshots/S01.png",
+        "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+        "size": 133636
+      },
+      {
+        "path": "screenshots/S02.png",
+        "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+        "size": 133295
+      },
+      {
+        "path": "screenshots/S03.png",
+        "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+        "size": 133746
+      },
+      {
+        "path": "source_tree/复核/客户甲/2026春/交付清单.txt",
+        "sha256": "c15b3920f6a972d781c40cbe37988a9c5ed38def57d23b707005ef02f8568161",
+        "size": 160
+      },
+      {
+        "path": "source_tree/复核/客户甲/2026春/方案.md",
+        "sha256": "b9a4025d0f550685e6edf04fe00de086d583fb7c088fe3df0bfb2c98e51fbbf4",
+        "size": 148
+      },
+      {
+        "path": "source_tree/复核/客户甲/2026春/预算.csv",
+        "sha256": "e2a7accdcaf7b81509c674c681d80c0be33e2e1a61071cab466a0b82566ce6bd",
+        "size": 107
+      },
+      {
+        "path": "source_tree/复核/客户甲/2026秋/交付清单.txt",
+        "sha256": "1785364873a3742bd6c7d2e2651512bbeaec015645b61030d0acb01205fbdcba",
+        "size": 160
+      },
+      {
+        "path": "source_tree/复核/客户甲/2026秋/方案.md",
+        "sha256": "02cdc433b2abef24ff7308e72147f813a6f50e37c293b126d82a383c3aba4d90",
+        "size": 148
+      },
+      {
+        "path": "source_tree/复核/客户甲/2026秋/预算.csv",
+        "sha256": "d8cb1c9e00033dbbad98da9a76489db76a8480c8e787678c743b55f02b26c1c2",
+        "size": 107
+      },
+      {
+        "path": "source_tree/外包协作/客户甲/2026春/交付清单.txt",
+        "sha256": "d56fc0236679ff91e20b4ae719d2e52586b980a6963decf0d0cabfeb0e6e7232",
+        "size": 166
+      },
+      {
+        "path": "source_tree/外包协作/客户甲/2026春/方案.md",
+        "sha256": "55533295d3e092784becd2ec77738918b9438311761d06d195871fd1c4f2e875",
+        "size": 154
+      },
+      {
+        "path": "source_tree/外包协作/客户甲/2026春/预算.csv",
+        "sha256": "59a0c8fb1cac3abc8c83c77bd8f18c0c806610290b71f1cedc949961032943a2",
+        "size": 119
+      },
+      {
+        "path": "source_tree/外包协作/客户甲/2026秋/交付清单.txt",
+        "sha256": "b1e2149cb47aa86ee9a7a97d37053d5ffca37af00b417b0438ea383d2b0c81d1",
+        "size": 166
+      },
+      {
+        "path": "source_tree/外包协作/客户甲/2026秋/方案.md",
+        "sha256": "7a3a7a5a977d466183bab2f1f1ba19c71c4715a21dd7ad9f28c0533d09e1e629",
+        "size": 154
+      },
+      {
+        "path": "source_tree/外包协作/客户甲/2026秋/预算.csv",
+        "sha256": "6c40c61906d6e03277ffe2a294b64805ec1ec1769c5a4f67c8d1846f0b3edf8e",
+        "size": 119
+      },
+      {
+        "path": "source_tree/客户乙/2026春/交付清单.txt",
+        "sha256": "d2343bc583b82079ed04a82e754535dd534ee2d9264e6d162d6eb1f63f27f541",
+        "size": 151
+      },
+      {
+        "path": "source_tree/客户乙/2026春/方案.md",
+        "sha256": "6285f3ecbc748677219cb07a2e414849cc539dbdb315a8915aa915b5455085ae",
+        "size": 139
+      },
+      {
+        "path": "source_tree/客户乙/2026春/预算.csv",
+        "sha256": "622041a66792b83e6a7e99ab76455d4e4f4e25b5817c0d496744232b56d06b1e",
+        "size": 93
+      },
+      {
+        "path": "source_tree/客户乙/2026秋/交付清单.txt",
+        "sha256": "8bff2396409c69e195f277cb6cd6497b0e719a75c05d793d7268e52984508688",
+        "size": 151
+      },
+      {
+        "path": "source_tree/客户乙/2026秋/方案.md",
+        "sha256": "272adeeb4ecb063f0bc2ec67561a01ed5d64068a451a6a6aea1b3090ec105588",
+        "size": 139
+      },
+      {
+        "path": "source_tree/客户乙/2026秋/预算.csv",
+        "sha256": "717f2ec544a952363f8ac70ea1b07f05e15c46dc64f987e6623fec68a0468ecb",
+        "size": 93
+      },
+      {
+        "path": "source_tree/客户甲/2026春/交付清单.txt",
+        "sha256": "6f62e77d83012298e7b42507b75fada61104868b21c9d0aa008120af226c29e8",
+        "size": 151
+      },
+      {
+        "path": "source_tree/客户甲/2026春/方案.md",
+        "sha256": "c8f0e351800776367dee9b2f5f265d3e9396601500fcb2718319836358a1043d",
+        "size": 139
+      },
+      {
+        "path": "source_tree/客户甲/2026春/预算.csv",
+        "sha256": "179db1a37e93a349c465224022dc428cb8eff001836e39af3449062f083af42b",
+        "size": 93
+      },
+      {
+        "path": "source_tree/客户甲/2026秋/交付清单.txt",
+        "sha256": "75d1570baf49be5574012c40ca4a103f17faebd7525d1d15e96610c1d71b6c90",
+        "size": 151
+      },
+      {
+        "path": "source_tree/客户甲/2026秋/方案.md",
+        "sha256": "cb5d3a2dbcf6ee5003ad256ef795684b12cdb217fbec30a6a71af94f3f3061a2",
+        "size": 139
+      },
+      {
+        "path": "source_tree/客户甲/2026秋/预算.csv",
+        "sha256": "ec1aced6c57a4df1b7bee59e569cf4fb61d8436cce4d25831f332c75323903f4",
+        "size": 93
+      },
+      {
+        "path": "source_tree/联合项目/2026春/交付清单.txt",
+        "sha256": "40ec160997dffe06723bf9899b044e2f8d725fb59499609e29a7604b81f9b67a",
+        "size": 154
+      },
+      {
+        "path": "source_tree/联合项目/2026春/方案.md",
+        "sha256": "6f35164fd3c5b246231338c20ba4ef84ad088212b116788c68ab4200f8109a8b",
+        "size": 142
+      },
+      {
+        "path": "source_tree/联合项目/2026春/预算.csv",
+        "sha256": "a1e83ee97397284a2d0eac65a50dd71df23a1103aba74056936b14647d360a22",
+        "size": 99
+      },
+      {
+        "path": "source_tree/联合项目/2026秋/交付清单.txt",
+        "sha256": "b9970e78e26a5efdc884f3f541322625a2b3f651d9aba7f2e1aa67e40092fecf",
+        "size": 154
+      },
+      {
+        "path": "source_tree/联合项目/2026秋/方案.md",
+        "sha256": "378a2c39090dc3f8d25c306fd0ab400c85d26bb29ab3488fbd69dbdd8a17aaf6",
+        "size": 142
+      },
+      {
+        "path": "source_tree/联合项目/2026秋/预算.csv",
+        "sha256": "e85af451614a3731b1a03ab13a83391c71987e817de32a37ffbba5c3aed2cb67",
+        "size": 99
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "396b74b1ae0cd7f18c281b13220506a17a4378101bab41a872c3839e479c03a1",
+        "size": 1766
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "0f08a63f623b65d75249b75e3a5bae0c8a4f61975fd5d466667839d6038559d1",
+        "size": 424
+      },
+      {
+        "path": "check_visual_mapping.py",
+        "sha256": "a5af7b92e4de64e499cf398dbd747778db5091234c684705ddb25630e666f5ea",
+        "size": 19165
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "f3c737562be6959494185fbf51a7de5ccb3afcb196b9782465fe59e49940093d",
+        "size": 8542
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "fb00782417f70a232f83c1a01031d7ea0423188d5fc978d235a9ea9c7f7606c2",
+        "size": 2066
+      },
+      {
+        "path": "expected.json",
+        "sha256": "59d0d1d2bd59ed24b7f3e9fbc3e56a27ca74acfc79fa30e8cd6c332f9cad8f0f",
+        "size": 3005
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "5e59ad43609746b72f4225934aea41529225112b4eeb4e89fc999015753c8096",
+        "size": 7278
+      },
+      {
+        "path": "source_images/S01.png",
+        "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+        "size": 133636
+      },
+      {
+        "path": "source_images/S02.png",
+        "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+        "size": 133295
+      },
+      {
+        "path": "source_images/S03.png",
+        "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+        "size": 133746
+      },
+      {
+        "path": "source_truth_lineage.json",
+        "sha256": "73d9bfc10643888ce88ccf3a02720b0ab842fc94a14be2e0e5df2fa1a2230cc5",
+        "size": 12047
+      },
+      {
+        "path": "trusted_files.json",
+        "sha256": "35873a212992ec2edddc5c3ff695a11296d1d75bde5453c773f362e07d8fbcf4",
+        "size": 1685
+      },
+      {
+        "path": "visual_regions.json",
+        "sha256": "cd8e8f81390ed7ec45ec2505816bd2f2348b7c7ca30e42f1db3814b9fb44fac9",
+        "size": 17601
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/authoring/freeze-handoff.json",
+    "sha256": "2a862c0e634783d3e5d44b43c4a5e9490a4f2f226d47023368e394e70dd275ee",
+    "size": 3087
+  },
+  "review": {
+    "review_kind": "nonblind root model review after two independent model image annotations, not human expert",
+    "revision": "root v2; old wrapper/helper and all22 old controls retained separately",
+    "current_controls": 26,
+    "real_PIL_version": "12.3.0",
+    "case_spec_declares_PIL": true,
+    "old_enumeration_A": 0.875,
+    "new_full_enumeration_A": 0.37958333333333333,
+    "new_whole_directory_A": 0.79375,
+    "image_source_truth_reference_and_AB_unchanged": true
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_file_operations_task_006_visual_file_mapping",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/formal-detached-1793226781563862000/attempts/author-only-h040-formal__detached-zip-worker/general_hard_file_operations_task_006_visual_file_mapping/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/formal-detached-1793226781563862000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/formal-detached-1793226781563862000/attempts/author-only-h040-formal__detached-zip-worker/general_hard_file_operations_task_006_visual_file_mapping/author-only-formal-auto",
+      "candidate_sha256": "ec29a0a919b231344d641b697f8d330d1670d7738652ccd8a596ef03e0d601f0",
+      "entry_count": 70
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/formal-detached-1793226781563862000/moved-without-runtime",
+      "candidate_sha256": "ec29a0a919b231344d641b697f8d330d1670d7738652ccd8a596ef03e0d601f0",
+      "entry_count": 70
+    },
+    "nonruntime_same_byte_files": 73,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/h040-rule-evidence.json",
+        "sha256": "439de571b904a53d6d0f881784d5ce88be6ca2d70757e50a5c29b655c0763724",
+        "size": 6644
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/h040-rule-evidence.json",
+        "sha256": "439de571b904a53d6d0f881784d5ce88be6ca2d70757e50a5c29b655c0763724",
+        "size": 6644
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "7c58576e9bd35128e0e7a0c39cc1dc006a74e6c8",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "7c58576e9bd35128e0e7a0c39cc1dc006a74e6c8",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "7c58576e9bd35128e0e7a0c39cc1dc006a74e6c8",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "9ef91ff584a185ec80f2b682b673f6cb22d8cbfe15e27b816d14c38f38d76ccc",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "7c58576e9bd35128e0e7a0c39cc1dc006a74e6c8",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "865af369c01cf12d598d5e8cf702a70c8f789574eeb89bb55ea5a40010d06745"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/h040-rule-evidence.json",
+          "sha256": "439de571b904a53d6d0f881784d5ce88be6ca2d70757e50a5c29b655c0763724",
+          "size": 6644
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "1ad65b6a3a31907c812728032a16cdcf2d9db70945b350c8d9888602de1a7e32",
+        "file_count": 1,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T22:33:03.559879Z",
+      "identity": {
+        "batch_id": "author-only-h040-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_file_operations_task_006_visual_file_mapping",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "1d89b82f8ec40e61e9fed6184fa9c563950324eedc198d6ed5463571d52544e6",
+        "root_result_count": 6,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "549b3bbc413fd7ce7023df2fd351b391ffaba1499a0738899213f0336ed194a1",
+        "initial_sha256": "549b3bbc413fd7ce7023df2fd351b391ffaba1499a0738899213f0336ed194a1"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T22:33:02.921086Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 0.515046,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "1b6329e073bab0d99773079bbcf7b08515412b5cc3395403864cc2e561134861",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {
+              "pillow": "12.3.0"
+            },
+            "imports": [
+              "PIL"
+            ],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "b8b2f40a6a05e1ce57334a9b4e331380ad42a52d01c69c206dec5c43d2a236c6",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 9313
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": null,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/formal-detached-1793226781563862000/validation.json",
+    "sha256": "3fe8cd605655954c0b19cf17699329c527bad90b3963627d4a9e2a409ffc559f",
+    "size": 7385
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "e8ce8a8039df5cea22ee5a645fee6490a3e2165aebcfa08f4028b9d251dcdba2",
+    "size": 31722
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/static-registered/20261028T223352Z_cfef24b3f2/report.json",
+      "sha256": "40fc7609ed9b51a19badd96925c5d4bd2c3280ba1b5b55c6f063cab7cebd78eb",
+      "size": 1222
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h040/qa/static-building/20261028T223359Z_74a1981ba5/report.json",
+      "sha256": "50d541787252fd89113ecb28d5db865389af2511bea96d63e2b68f6e80d1b8c1",
+      "size": 28713
+    },
+    "only_remaining_missing": 20
+  },
+  "source_summary": "35公开输入含30真实合成文件、3张1800×1100原创PNG及2契约。A/B先图观察与非盲源先行真值一致，5正确原字节副本，模型复核非人工专家。构图SVG/选择数组不进入exec或GT。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T22:34:11.958726+00:00"
+}

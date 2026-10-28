@@ -1,0 +1,216 @@
+{
+  "entries": [
+    {
+      "path": "copy_request.md",
+      "sha256": "1e5fdd0006b7400846ae82f5a729ab31331a8c1670b02b5119356dbd95f175a3",
+      "size_bytes": 1547,
+      "kind": "file"
+    },
+    {
+      "path": "delivery_contract.md",
+      "sha256": "ef037d4d7aedf31cc876eb591ab51f0237f6e56bd5d70c138a3d81c3eb02b1f7",
+      "size_bytes": 1305,
+      "kind": "file"
+    },
+    {
+      "path": "screenshots/S01.png",
+      "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+      "size_bytes": 133636,
+      "kind": "file"
+    },
+    {
+      "path": "screenshots/S02.png",
+      "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+      "size_bytes": 133295,
+      "kind": "file"
+    },
+    {
+      "path": "screenshots/S03.png",
+      "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+      "size_bytes": 133746,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026春/交付清单.txt",
+      "sha256": "c15b3920f6a972d781c40cbe37988a9c5ed38def57d23b707005ef02f8568161",
+      "size_bytes": 160,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026春/方案.md",
+      "sha256": "b9a4025d0f550685e6edf04fe00de086d583fb7c088fe3df0bfb2c98e51fbbf4",
+      "size_bytes": 148,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026春/预算.csv",
+      "sha256": "e2a7accdcaf7b81509c674c681d80c0be33e2e1a61071cab466a0b82566ce6bd",
+      "size_bytes": 107,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026秋/交付清单.txt",
+      "sha256": "1785364873a3742bd6c7d2e2651512bbeaec015645b61030d0acb01205fbdcba",
+      "size_bytes": 160,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026秋/方案.md",
+      "sha256": "02cdc433b2abef24ff7308e72147f813a6f50e37c293b126d82a383c3aba4d90",
+      "size_bytes": 148,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/复核/客户甲/2026秋/预算.csv",
+      "sha256": "d8cb1c9e00033dbbad98da9a76489db76a8480c8e787678c743b55f02b26c1c2",
+      "size_bytes": 107,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026春/交付清单.txt",
+      "sha256": "d56fc0236679ff91e20b4ae719d2e52586b980a6963decf0d0cabfeb0e6e7232",
+      "size_bytes": 166,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026春/方案.md",
+      "sha256": "55533295d3e092784becd2ec77738918b9438311761d06d195871fd1c4f2e875",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026春/预算.csv",
+      "sha256": "59a0c8fb1cac3abc8c83c77bd8f18c0c806610290b71f1cedc949961032943a2",
+      "size_bytes": 119,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026秋/交付清单.txt",
+      "sha256": "b1e2149cb47aa86ee9a7a97d37053d5ffca37af00b417b0438ea383d2b0c81d1",
+      "size_bytes": 166,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026秋/方案.md",
+      "sha256": "7a3a7a5a977d466183bab2f1f1ba19c71c4715a21dd7ad9f28c0533d09e1e629",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/外包协作/客户甲/2026秋/预算.csv",
+      "sha256": "6c40c61906d6e03277ffe2a294b64805ec1ec1769c5a4f67c8d1846f0b3edf8e",
+      "size_bytes": 119,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026春/交付清单.txt",
+      "sha256": "d2343bc583b82079ed04a82e754535dd534ee2d9264e6d162d6eb1f63f27f541",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026春/方案.md",
+      "sha256": "6285f3ecbc748677219cb07a2e414849cc539dbdb315a8915aa915b5455085ae",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026春/预算.csv",
+      "sha256": "622041a66792b83e6a7e99ab76455d4e4f4e25b5817c0d496744232b56d06b1e",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026秋/交付清单.txt",
+      "sha256": "8bff2396409c69e195f277cb6cd6497b0e719a75c05d793d7268e52984508688",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026秋/方案.md",
+      "sha256": "272adeeb4ecb063f0bc2ec67561a01ed5d64068a451a6a6aea1b3090ec105588",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户乙/2026秋/预算.csv",
+      "sha256": "717f2ec544a952363f8ac70ea1b07f05e15c46dc64f987e6623fec68a0468ecb",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026春/交付清单.txt",
+      "sha256": "6f62e77d83012298e7b42507b75fada61104868b21c9d0aa008120af226c29e8",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026春/方案.md",
+      "sha256": "c8f0e351800776367dee9b2f5f265d3e9396601500fcb2718319836358a1043d",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026春/预算.csv",
+      "sha256": "179db1a37e93a349c465224022dc428cb8eff001836e39af3449062f083af42b",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026秋/交付清单.txt",
+      "sha256": "75d1570baf49be5574012c40ca4a103f17faebd7525d1d15e96610c1d71b6c90",
+      "size_bytes": 151,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026秋/方案.md",
+      "sha256": "cb5d3a2dbcf6ee5003ad256ef795684b12cdb217fbec30a6a71af94f3f3061a2",
+      "size_bytes": 139,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/客户甲/2026秋/预算.csv",
+      "sha256": "ec1aced6c57a4df1b7bee59e569cf4fb61d8436cce4d25831f332c75323903f4",
+      "size_bytes": 93,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026春/交付清单.txt",
+      "sha256": "40ec160997dffe06723bf9899b044e2f8d725fb59499609e29a7604b81f9b67a",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026春/方案.md",
+      "sha256": "6f35164fd3c5b246231338c20ba4ef84ad088212b116788c68ab4200f8109a8b",
+      "size_bytes": 142,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026春/预算.csv",
+      "sha256": "a1e83ee97397284a2d0eac65a50dd71df23a1103aba74056936b14647d360a22",
+      "size_bytes": 99,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026秋/交付清单.txt",
+      "sha256": "b9970e78e26a5efdc884f3f541322625a2b3f651d9aba7f2e1aa67e40092fecf",
+      "size_bytes": 154,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026秋/方案.md",
+      "sha256": "378a2c39090dc3f8d25c306fd0ab400c85d26bb29ab3488fbd69dbdd8a17aaf6",
+      "size_bytes": 142,
+      "kind": "file"
+    },
+    {
+      "path": "source_tree/联合项目/2026秋/预算.csv",
+      "sha256": "e85af451614a3731b1a03ab13a83391c71987e817de32a37ffbba5c3aed2cb67",
+      "size_bytes": 99,
+      "kind": "file"
+    }
+  ],
+  "terminal_state_only": true,
+  "temporal_limit": "Terminal hashes cannot prove absence of transient writes or actual image viewing."
+}

@@ -1,11 +1,11 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 39
+  active_task_count: 40
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
-    file_operations: 4
+    file_operations: 5
     software_engineering: 2
     planning_coordination: 0
     content_operations: 0
@@ -1202,3 +1202,17 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       retrieval_group: directed_web_retrieval
+  - task_id: general_hard_file_operations_task_006_visual_file_mapping
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - gaia
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: true
+      coding_primary: false
