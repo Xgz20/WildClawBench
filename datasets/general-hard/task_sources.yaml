@@ -1,11 +1,11 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 37
+  active_task_count: 38
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 6
-    file_operations: 3
+    file_operations: 4
     software_engineering: 2
     planning_coordination: 0
     content_operations: 0
@@ -1136,3 +1136,18 @@ tasks:
       requires_visual_input: true
       coding_primary: false
       retrieval_group: local_evidence
+  - task_id: general_hard_file_operations_task_004_resumable_inventory
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

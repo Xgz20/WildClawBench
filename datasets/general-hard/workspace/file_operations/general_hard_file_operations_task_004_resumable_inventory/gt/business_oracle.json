@@ -1,0 +1,323 @@
+{
+  "origin": "source-first original clean bytes and actively constructed controlled interruption; no candidate/reference read",
+  "partial_sha256": {
+    "batch-01/report.txt": "c978e17cd69bd7bcf5279fd4fe166fdb01ed1f028f893e9d27522fcc0450aa96",
+    "batch-01/资料 02.txt": "18c35cd84958eeaf37812c89090b7c2a9e439873968dd15978cb978e0e4f8c27",
+    "batch-01/资料 03.txt": "74a4967557225751b9ef01f77a64c2241c3eb80b97e9d503d58b90e790eb073b",
+    "batch-01/资料 04.txt": "bac58fb22a8951aeb4a9d06d6bf9564792200d951f4edf3f8696b5695bae0b0b",
+    "batch-01/资料 05.txt": "5229fe5d7332458e4ccfdab3e61515721cde711cba9cada8c40c3230b20e1bc1",
+    "batch-01/资料 06.txt": "dc6c69c395f64282fe8320244ab60e977e80b15f07fbf04626cc5c1a1a2b0184",
+    "batch-01/资料 07.txt": "4bd7f91ffa2717fe298dda7542d23000b91d9daf6316187033dae339614bb152",
+    "batch-01/资料 08.txt": "7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984",
+    "batch-01/资料 09.txt": "b81deedec858d31110bac381a51b68fbf8d6c0b69645cc883934a852cd8db79e",
+    "batch-01/资料 10.txt": "b0ba9e640d5bc86a584c7476e6fc7233d6f99e7e35082543b0bf8eef7e47c122",
+    "batch-02/report.txt": "db85251a0f874dd664e5ffc70e22e834dec2e3f42b2620ae57b4ae57fa382d39",
+    "batch-02/资料 02.txt": "7e4651233122fb15ec3dc12706749907c2f81dd2f96bdea648835483a636411d",
+    "batch-02/资料 03.txt": "53f607a2398c9e51633be88dc7045a6448dc220dd3c4b44671b14b6532266640",
+    "batch-02/资料 04.txt": "5b774e187c2261166db443090dc143dbb77db3f7e5a66deaf724def771af6562",
+    "batch-02/资料 05.txt": "64e0a80e54633bcf42d036d73b82ae5997ede9ebfdbc9d8e1a468089433a8414",
+    "batch-02/资料 06.txt": "40be748d1c896624e56208948e1850430c0711169fcd3614baf91c23e7477288",
+    "batch-02/资料 07.txt": "56c9fcc7248cd1eb4135783d468da32d7d7351425113482f63bab5951404e09d",
+    "batch-02/资料 08.txt": "e4a7aa023381063d68852b95f0094e3f82f309f0857d357ad7d37b6a7424173b",
+    "batch-02/资料 09.txt": "6cd234ffee0a7cc65d0b6d586a08f5b5a136bce13991a987752f16403fbf7528",
+    "batch-02/资料 10.txt": "075c76054a575c4be537561e5b43d16cbe2a8ca596f4a8f72720317c1cfa608a",
+    "batch-03/report.txt": "4dc05eef5db455a1ca268c5ce67c914241a2421f724b23d3eb2daa76d206d041",
+    "batch-03/café.txt": "d2a101e7017564e9dca35541c7c841a773d4d8de1d31b4f01ab00c374c06404b",
+    "batch-03/资料 03.txt": "99e7e0b3ef40cef9aa4f21420d9eaa7f45df70023e931cd8abe6bb7a45ada1bb",
+    "batch-03/资料 04.txt": "c5030917d9364339a9f55a990d95dbc98e2a2fb935a2a353c14956cb682d0411",
+    "batch-04/report.txt": "db8f5e695ffa3657204baa831e2715441f17550bd0a7ae103eed28e310667308",
+    "batch-04/资料 02.txt": "66cd09af80ba0ce3503a25a8d717adb389f35b6a1e2197d0eafd8b5c744fd9bc",
+    "batch-04/资料 03.txt": "406128ac923f094e08ff46674cfbaaf6cf72292618736bc7461e9441f4d7eae5"
+  },
+  "manifest_raw_rows": [
+    {
+      "key": "batch-01/report.txt",
+      "source_path": "source_tree/batch-01/report.txt",
+      "sha256": "c978e17cd69bd7bcf5279fd4fe166fdb01ed1f028f893e9d27522fcc0450aa96",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/report.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 02.txt",
+      "source_path": "source_tree/batch-01/资料 02.txt",
+      "sha256": "18c35cd84958eeaf37812c89090b7c2a9e439873968dd15978cb978e0e4f8c27",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 02.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 03.txt",
+      "source_path": "source_tree/batch-01/资料 03.txt",
+      "sha256": "74a4967557225751b9ef01f77a64c2241c3eb80b97e9d503d58b90e790eb073b",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 03.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 04.txt",
+      "source_path": "source_tree/batch-01/资料 04.txt",
+      "sha256": "bac58fb22a8951aeb4a9d06d6bf9564792200d951f4edf3f8696b5695bae0b0b",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 04.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 05.txt",
+      "source_path": "source_tree/batch-01/资料 05.txt",
+      "sha256": "5229fe5d7332458e4ccfdab3e61515721cde711cba9cada8c40c3230b20e1bc1",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 05.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 06.txt",
+      "source_path": "source_tree/batch-01/资料 06.txt",
+      "sha256": "dc6c69c395f64282fe8320244ab60e977e80b15f07fbf04626cc5c1a1a2b0184",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 06.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 07.txt",
+      "source_path": "source_tree/batch-01/资料 07.txt",
+      "sha256": "4bd7f91ffa2717fe298dda7542d23000b91d9daf6316187033dae339614bb152",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 07.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 08.txt",
+      "source_path": "source_tree/batch-01/资料 08.txt",
+      "sha256": "7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 08.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 08.txt",
+      "source_path": "source_tree/batch-01/资料 08.txt",
+      "sha256": "7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 08.txt",
+      "status": "pending"
+    },
+    {
+      "key": "batch-01/资料 09.txt",
+      "source_path": "source_tree/batch-01/资料 09.txt",
+      "sha256": "b81deedec858d31110bac381a51b68fbf8d6c0b69645cc883934a852cd8db79e",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 09.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-01/资料 10.txt",
+      "source_path": "source_tree/batch-01/资料 10.txt",
+      "sha256": "b0ba9e640d5bc86a584c7476e6fc7233d6f99e7e35082543b0bf8eef7e47c122",
+      "bytes": 65,
+      "archive_path": "archive/batch-01/资料 10.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-02/report.txt",
+      "source_path": "source_tree/batch-02/report.txt",
+      "sha256": "db85251a0f874dd664e5ffc70e22e834dec2e3f42b2620ae57b4ae57fa382d39",
+      "bytes": 65,
+      "archive_path": "archive/batch-02/report.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-02/资料 02.txt",
+      "source_path": "source_tree/batch-02/资料 02.txt",
+      "sha256": "7e4651233122fb15ec3dc12706749907c2f81dd2f96bdea648835483a636411d",
+      "bytes": 65,
+      "archive_path": "archive/batch-02/资料 02.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-02/资料 09.txt",
+      "source_path": "source_tree/batch-02/资料 09.txt",
+      "sha256": "4665f54528d8b88cfab136eac4bea1c2b6fe88c723e07d08b5e0d2950849f5f0",
+      "bytes": 65,
+      "archive_path": "archive/batch-02/资料 09.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-02/资料 10.txt",
+      "source_path": "source_tree/batch-02/资料 10.txt",
+      "sha256": "3949597c656ad0f15280e05b4f06b489833fc56f5c98dcdbfceffad93e9635e6",
+      "bytes": 65,
+      "archive_path": "archive/batch-02/资料 10.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/report.txt",
+      "source_path": "source_tree/batch-03/report.txt",
+      "sha256": "1df5b107f37b9eea82dbd94a511f2e1729e2b885eccf9bd9f41f0ccebb7c92d2",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/report.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/café.txt",
+      "source_path": "source_tree/batch-03/café.txt",
+      "sha256": "ca727960e67a4f43e35c0c2e7de147d485c669d72b726546c9d171521d941d26",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/café.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 03.txt",
+      "source_path": "source_tree/batch-03/资料 03.txt",
+      "sha256": "66f4af898f784dd3e7425e1553c12fd354a14b212957fe4a6669494ea3960732",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 03.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 04.txt",
+      "source_path": "source_tree/batch-03/资料 04.txt",
+      "sha256": "afdbc3492b85cc036a8839a8d0d2670b851bd4adf1684010f3421aa5de8eab88",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 04.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 05.txt",
+      "source_path": "source_tree/batch-03/资料 05.txt",
+      "sha256": "711f4edb76c0ff134857f510f706dfe85afd3d33b08e22b2b8dfd1edd5cca718",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 05.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 06.txt",
+      "source_path": "source_tree/batch-03/资料 06.txt",
+      "sha256": "a0e138dc6581f821b7e688eaf7345e49c7f949a2c111e09c16c4682371c2850a",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 06.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 07.txt",
+      "source_path": "source_tree/batch-03/资料 07.txt",
+      "sha256": "ba43c10ada7592bd7d197216555f1bf16ef614deb56510ab83e1d7f37e0255b3",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 07.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 08.txt",
+      "source_path": "source_tree/batch-03/资料 08.txt",
+      "sha256": "8f3e388c8b2f74308d2f9c2202988c88b361fc0b1f5b83a91c276963d75228ab",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 08.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 09.txt",
+      "source_path": "source_tree/batch-03/资料 09.txt",
+      "sha256": "007392ad677990a7a5f1abefa4a61ceaff13f76eb3c1c67e393ea87fe05463df",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 09.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-03/资料 10.txt",
+      "source_path": "source_tree/batch-03/资料 10.txt",
+      "sha256": "5a9040a5e4d382c4788e3b1eb1f734c6de46123123a5fc1232a2bac0a71712f6",
+      "bytes": 65,
+      "archive_path": "archive/batch-03/资料 10.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-04/report.txt",
+      "source_path": "source_tree/batch-04/report.txt",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 999,
+      "archive_path": "archive/batch-04/report.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-04/资料 02.txt",
+      "source_path": "source_tree/batch-04/资料 02.txt",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 999,
+      "archive_path": "archive/batch-04/资料 02.txt",
+      "status": "verified"
+    },
+    {
+      "key": "batch-04/资料 03.txt",
+      "source_path": "source_tree/batch-04/资料 03.txt",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "bytes": 999,
+      "archive_path": "archive/batch-04/资料 03.txt",
+      "status": "verified"
+    },
+    {
+      "key": "../not-a-source",
+      "source_path": "source_tree/../outside-placeholder",
+      "archive_path": "../../escape.txt",
+      "sha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "bytes": 123,
+      "status": "verified"
+    }
+  ],
+  "checkpoint": {
+    "schema": "h038.interrupted-state/v1",
+    "checkpoint_sequence": 999,
+    "completed_count": 60,
+    "last_key": "batch-06/end.bin",
+    "claimed_complete_keys": [
+      "batch-01/report.txt",
+      "batch-01/资料 02.txt",
+      "batch-01/资料 03.txt",
+      "batch-01/资料 04.txt",
+      "batch-01/资料 05.txt",
+      "batch-01/资料 06.txt",
+      "batch-01/资料 07.txt",
+      "batch-01/资料 08.txt",
+      "batch-01/资料 09.txt",
+      "batch-01/资料 10.txt",
+      "batch-02/report.txt",
+      "batch-02/资料 02.txt",
+      "batch-02/资料 03.txt",
+      "batch-02/资料 04.txt",
+      "batch-02/资料 05.txt",
+      "batch-02/资料 06.txt",
+      "batch-02/资料 07.txt",
+      "batch-02/资料 08.txt",
+      "batch-02/资料 09.txt",
+      "batch-02/资料 10.txt",
+      "batch-03/report.txt",
+      "batch-03/café.txt",
+      "batch-03/资料 03.txt",
+      "batch-03/资料 04.txt",
+      "batch-03/资料 05.txt",
+      "batch-03/资料 06.txt",
+      "batch-03/资料 07.txt",
+      "batch-03/资料 08.txt",
+      "batch-03/资料 09.txt",
+      "batch-03/资料 10.txt",
+      "batch-06/资料 05.txt",
+      "batch-06/资料 06.txt",
+      "batch-06/资料 07.txt",
+      "batch-06/无后缀",
+      "batch-06/资料 09.txt",
+      "batch-06/end.bin"
+    ],
+    "note": "Controlled interrupted checkpoint claims; verify real bytes, not this text."
+  },
+  "resolution_counts": {
+    "adopt_unregistered": 6,
+    "copy_missing": 27,
+    "correct_index": 3,
+    "dedupe_index": 1,
+    "recopy_missing": 6,
+    "repair_corrupt": 6,
+    "reuse_verified": 11
+  },
+  "actual_verified_before_resume": 21,
+  "false_checkpoint_completed_count": 18,
+  "orphan_partial_sha256": "1562a8c6913d8362561786b3bf8d7a54a38a1a7ab7cf7d6590ded293a3c1e04b"
+}
