@@ -421,6 +421,21 @@
   "git_material_preservation": {
     "source_bytes_unchanged": true,
     "initial_diff_check": "Frozen BOM/CRLF CSV hidden under varied extensions and deliberately preserved EOF blank lines were flagged as whitespace.",
-    "resolution": "Path-scoped incoming fixture attributes allow CRLF/EOF blank lines; genuine end-of-line spaces remain checked. No byte or GT normalization."
+    "resolution": "Path-scoped incoming fixture attributes allow CRLF/EOF blank lines; genuine end-of-line spaces remain checked. No byte or GT normalization.",
+    "ignored_material_correction": {
+      "root_cause": ".gitignore:23 *.bin",
+      "missing_from_initial_commit": [
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/compliance/drop-6/same-content.bin",
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/finance/drop-6/same-content.bin",
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/operations/drop-6/same-content.bin",
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/people/drop-6/same-content.bin",
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/procurement/drop-6/same-content.bin",
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/research/drop-6/same-content.bin",
+        "datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/sales/drop-6/same-content.bin"
+      ],
+      "disk_and_formal_package_were_complete": true,
+      "correction": "Explicit force-add only the seven expected immutable task fixtures. All59 workspace files verified byte-identical against Git index.",
+      "all_workspace_index_blobs_verified": 59
+    }
   }
 }
