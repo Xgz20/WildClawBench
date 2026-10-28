@@ -7,7 +7,9 @@ historical publication dates, or semantic support labels.
 
 from __future__ import annotations
 
+from contextvars import ContextVar
 from datetime import date, datetime, timezone
+from html import unescape
 from html.parser import HTMLParser
 import hashlib
 import ipaddress
@@ -31,6 +33,8 @@ PROJECTION_SCHEMA = "wildclawbench.research-source-text/v1"
 BUNDLE_PATH = "private/research-sources"
 LOCK_PATH = "research-sources.lock.json"
 POLICY_PATH = "research_source_policy.json"
+REUSE_SCHEMA = "wildclawbench.research-source-reuse-receipt/v1"
+_REUSE_DEPTH: ContextVar[int] = ContextVar("research_source_reuse_depth", default=0)
 POLICY_DEFAULTS = {
     "sources_key": "sources", "source_id_key": "source_id", "url_key": "url",
     "access_status_key": "access_status", "collect_statuses": ["read_full", "read_excerpt"],
@@ -397,14 +401,223 @@ def _seal_lock(root: Path, manifest: dict, specification: dict, parent: dict | N
             "acquisition_identity": document["acquisition_identity"], "parent_lock": parent}
     write(root / LOCK_PATH, lock)
     for path in bundle.rglob("*"):
+        # Original mode-aware GT inventories must retain their historical modes.
+        # All capsule bytes remain covered by the outer immutable lock inventory.
+        if path.relative_to(bundle).parts[0] == "origins":
+            continue
         path.chmod(0o555 if path.is_dir() else 0o444)
     bundle.chmod(0o555)
     (root / LOCK_PATH).chmod(0o444)
     return lock
 
 
+def _origin_identity(root: Path, relative: str) -> dict:
+    manifest = read(root / "attempt-manifest.json")
+    lock = read(root / LOCK_PATH)
+    return {"path": relative, "identity": manifest["identity"],
+            "attempt_manifest_sha256": sha(root / "attempt-manifest.json"),
+            "lock_sha256": sha(root / LOCK_PATH),
+            "bundle_manifest_sha256": lock["bundle_manifest_sha256"],
+            "capsule_inventory_sha256": hashlib.sha256(encoded(inventory(root))).hexdigest()}
+
+
+def _origin_reference(proof: Any) -> str:
+    if not isinstance(proof, dict):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "origin proof must be an object")
+    relative = proof.get("path")
+    if not isinstance(relative, str) or not relative.startswith("origins/") or not relative.endswith("/attempt"):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "capsule path")
+    return relative
+
+
+def _provenance_origin(provenance: Any) -> str:
+    if not isinstance(provenance, dict):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "provenance must be an object")
+    relative = provenance.get("origin_path")
+    if not isinstance(relative, str) or not relative:
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "provenance origin path")
+    return relative
+
+
+def _verify_origin(root: Path, proof: dict, attempt_verifier: Callable | None) -> Path:
+    if attempt_verifier is None or _REUSE_DEPTH.get() >= 8:
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "trusted attempt verifier required; maximum lineage depth 8")
+    relative = _origin_reference(proof)
+    origin = within(root, relative)
+    if proof != _origin_identity(origin, relative):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "origin identity or inventory drift")
+    token = _REUSE_DEPTH.set(_REUSE_DEPTH.get() + 1)
+    try:
+        # Trusted current verifier reads frozen evidence; never import/run origin code.
+        if not within(origin, LOCK_PATH).is_file():
+            raise ResearchSourceError("RESEARCH_SOURCE_BUNDLE_REQUIRED", "origin has no successful collection lock")
+        attempt_verifier(origin, require_runtime=False)
+    finally:
+        _REUSE_DEPTH.reset(token)
+    return origin
+
+
+def _reuse_candidates(root: Path, manifest: dict, paths: tuple[Path, ...],
+                      attempt_verifier: Callable | None) -> list[Path]:
+    origins = []
+    forbidden = [within(root, manifest["paths"][key]).resolve()
+                 for key in ("candidate_original", "gt", "runtime_workspace")]
+    for value in paths:
+        expanded = value.expanduser().absolute()
+        if any(part.is_symlink() for part in (expanded, *expanded.parents)):
+            raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "symlink origin")
+        try:
+            origin = expanded.resolve(strict=True)
+        except OSError as exc:
+            raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "missing/unreadable origin") from exc
+        if (origin == root or origin in root.parents or root in origin.parents
+                or any(origin == tree or tree in origin.parents for tree in forbidden)):
+            raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "origin inside current input tree")
+        if origin in origins:
+            continue
+        if attempt_verifier is None:
+            raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "trusted attempt verifier required")
+        if not within(origin, LOCK_PATH).is_file():
+            raise ResearchSourceError("RESEARCH_SOURCE_BUNDLE_REQUIRED", "origin has no successful collection lock")
+        attempt_verifier(origin, require_runtime=False)
+        origins.append(origin)
+    return origins
+
+
+def _copy_origin(origin: Path, staging: Path, index: int, attempt_verifier: Callable) -> dict:
+    relative = f"origins/origin-{index:04d}/attempt"
+    capsule = staging / relative
+    capsule.mkdir(parents=True)
+    # Full original input/source capsule, without executable runtime or score state.
+    # Preserve modes so the original GT's mode-aware frozen inventory still verifies.
+    for name in ("candidate-original", "private", "trace", "attempt-manifest.json", LOCK_PATH):
+        source = within(origin, name)
+        if not source.exists():
+            continue
+        if source.is_dir():
+            inventory(source)  # Reject links/special files before copy, not dereference.
+            shutil.copytree(source, capsule / name)
+        else:
+            shutil.copy2(source, capsule / name)
+    proof = _origin_identity(capsule, relative)
+    _verify_origin(staging, proof, attempt_verifier)
+    return proof
+
+
+def _public_receipt(receipt: dict, source_id: str) -> None:
+    """Validate historical public-address evidence without doing a new DNS lookup."""
+    _validate_receipt(receipt, source_id)
+    try:
+        if receipt["public_address_policy"] != "global-unicast-dns-pinned-no-proxy/v1":
+            raise ValueError("public address policy")
+        for url in (receipt["requested_url"], receipt["final_url"],
+                    *(row["url"] for row in receipt["responses"])):
+            parsed = urlsplit(url)
+            if (parsed.scheme not in {"http", "https"} or not parsed.hostname
+                    or parsed.username is not None or parsed.password is not None
+                    or any(ord(char) <= 32 or ord(char) == 127 for char in url)
+                    or parsed.hostname.rstrip(".").lower() == "localhost"
+                    or parsed.hostname.rstrip(".").lower().endswith(".localhost")):
+                raise ValueError("public HTTP URL")
+            if parsed.port is not None and not 1 <= parsed.port <= 65535:
+                raise ValueError("HTTP port")
+            try:
+                address = ipaddress.ip_address(parsed.hostname)
+            except ValueError:
+                pass
+            else:
+                if not address.is_global or address.is_multicast or address.is_reserved:
+                    raise ValueError("non-public URL address")
+        for response in receipt["responses"]:
+            addresses = [ipaddress.ip_address(value) for value in response["validated_addresses"]]
+            if (not addresses or any(not address.is_global or address.is_multicast or address.is_reserved
+                                     or address.is_unspecified for address in addresses)
+                    or ipaddress.ip_address(response["connected_address"]) not in addresses):
+                raise ValueError("public DNS pinning")
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", f"historical public receipt: {source_id}") from exc
+
+
+def _snapshot_covers(origin: Path, old: dict, row: dict, specification: dict) -> bool:
+    """Mechanical snapshot suitability, never a semantic-support verdict."""
+    bundle = within(origin, BUNDLE_PATH)
+    old_policy = read(bundle / "manifest.json")["policy"]
+    if any(old_policy[key] != specification[key] for key in ("as_of_inclusive", "timezone")):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "different research cutoff/timezone")
+    receipt = read(within(bundle, old.get("original_receipt_path", old["receipt_path"])))
+    finished = datetime.fromisoformat(receipt["finished_at"].replace("Z", "+00:00"))
+    if finished.astimezone(ZoneInfo(specification["timezone"])).date() <= date.fromisoformat(specification["as_of_inclusive"]):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "snapshot acquired before inclusive research cutoff ended")
+    _public_receipt(receipt, row["source_id"])
+    projection = read(within(bundle, old["projection_path"]))
+    # Raw UTF-8 evidence includes metadata omitted by the body-text projector,
+    # such as JSON-LD dates. Binary formats rely on their frozen projection.
+    body = within(bundle, old["body_path"])
+    evidence = [record["text"] for record in projection["records"]]
+    evidence.append(json.dumps(projection.get("raw_metadata", {}), ensure_ascii=False))
+    media_type = receipt["media_type"]
+    payload = body.read_bytes()
+    if (not payload.startswith(b"%PDF-") and (media_type.startswith("text/")
+            or media_type in {"application/json", "application/xml", "application/xhtml+xml"})):
+        try:
+            raw = payload.decode("utf-8-sig")
+        except UnicodeDecodeError:
+            pass  # Never discard invalid bytes to manufacture a text quote match.
+        else:
+            if not any(ord(char) < 32 and char not in "\t\r\n" for char in raw):
+                evidence.append(raw)
+    normalized = [re.sub(r"\s+", "", unescape(value)) for value in evidence]
+    for citation in row["citations"]:
+        quote = citation.get(specification["quote_key"])
+        if isinstance(quote, str) and quote.strip():
+            needle = re.sub(r"\s+", "", unescape(quote))
+            if not any(needle in value for value in normalized):
+                return False
+    return True
+
+
+def _reuse_source(staging: Path, folder: Path, row: dict, old: dict,
+                  origin: Path, proof: dict, specification: dict) -> None:
+    old_bundle = within(origin, BUNDLE_PATH)
+    original_receipt = within(old_bundle, old.get("original_receipt_path", old["receipt_path"]))
+    receipt = read(original_receipt)
+    _public_receipt(receipt, row["source_id"])
+    if receipt["requested_url"] != row["url"] or old["url"] != row["url"]:
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "exact requested URL required")
+    body = within(old_bundle, old["body_path"])
+    if body.stat().st_size > specification["max_bytes_per_source"]:
+        raise ResearchSourceError("RESEARCH_SOURCE_BUDGET_INSUFFICIENT", "reused body bytes")
+    relative = folder.relative_to(staging).as_posix()
+    for key, name in (("body_path", body.name), ("projection_path", "text.json"), ("text_path", "text.txt")):
+        shutil.copy2(within(old_bundle, old[key]), folder / name)
+        row[key] = f"{relative}/{name}"
+    shutil.copy2(original_receipt, folder / "original-response.json")
+    provenance = {"kind": "verified_snapshot_reuse", "origin_path": proof["path"],
+                  "prior_identity": proof["identity"],
+                  "prior_attempt_manifest_sha256": proof["attempt_manifest_sha256"],
+                  "prior_lock_sha256": proof["lock_sha256"],
+                  "prior_bundle_manifest_sha256": proof["bundle_manifest_sha256"],
+                  "prior_source_id": old["source_id"],
+                  "prior_source_sha256": hashlib.sha256(encoded(old)).hexdigest(),
+                  "prior_receipt_sha256": old["receipt_sha256"],
+                  "original_receipt_sha256": sha(original_receipt),
+                  "projection_kind": "verified_frozen_origin_bytes", "reused_at": now()}
+    row.update({key: old[key] for key in ("body_sha256", "projection_sha256", "text_sha256", "media_type", "final_url")})
+    row.update({"status": "acquired", "source_path": relative, "provenance": provenance,
+                "original_receipt_path": f"{relative}/original-response.json", "receipt_path": f"{relative}/response.json"})
+    # This is a reuse event, deliberately not an HTTP receipt with new GET times.
+    write(folder / "response.json", {"schema_version": REUSE_SCHEMA, "provenance": provenance,
+          "collector_sha256": sha(Path(__file__)),
+          "requested_url": row["url"], "final_url": row["final_url"], "media_type": row["media_type"],
+          "body_sha256": row["body_sha256"], "body_size": body.stat().st_size,
+          "original_receipt_path": row["original_receipt_path"],
+          "original_receipt_sha256": sha(original_receipt)})
+    row["receipt_sha256"] = sha(folder / "response.json")
+
+
 def collect(root: Path, *, curl: Path | None = None,
-            fetcher: Callable | None = None) -> dict:
+            fetcher: Callable | None = None, reuse_sources_from: tuple[Path, ...] = (),
+            attempt_verifier: Callable | None = None) -> dict:
     """Called only after the outer entrypoint verifies the original attempt."""
     manifest = read(root / "attempt-manifest.json")
     specification = policy(root, manifest)
@@ -415,16 +628,36 @@ def collect(root: Path, *, curl: Path | None = None,
     if any((root / name).exists() for name in ("worker", "semantic", "score.json")):
         raise ResearchSourceError("RESEARCH_SOURCE_COLLECTION_TOO_LATE")
     inputs, input_status, selected = _candidate_inputs(root, manifest, specification)
+    origins = _reuse_candidates(root, manifest, reuse_sources_from, attempt_verifier)
     parent = root / "private"
     parent.mkdir(exist_ok=True)
     staging = Path(tempfile.mkdtemp(prefix=".research-sources-", dir=parent))
     try:
+        proofs, matches = [], {}
+        for origin in origins:
+            old_document = read(within(origin, BUNDLE_PATH) / "manifest.json")
+            for old in old_document["sources"]:
+                if old["status"] == "acquired":
+                    matches.setdefault(old["url"], (origin, old))
+        used = {}
         for index, row in enumerate(selected, 1):
             if row["status"] == "candidate_invalid":
                 continue
             relative = f"sources/source-{index:04d}"
             folder = staging / relative
             folder.mkdir(parents=True)
+            match = matches.get(row["url"])
+            if match is not None and _snapshot_covers(match[0], match[1], row, specification):
+                origin, old = match
+                if origin not in used:
+                    used[origin] = _copy_origin(origin, staging, len(used) + 1, attempt_verifier)
+                    proofs.append(used[origin])
+                # Use the verified copied capsule, preventing a later original-path dependency.
+                capsule = within(staging, used[origin]["path"])
+                old = next(value for value in read(capsule / BUNDLE_PATH / "manifest.json")["sources"]
+                           if value["source_id"] == old["source_id"])
+                _reuse_source(staging, folder, row, old, capsule, used[origin], specification)
+                continue
             body = folder / "body.bin"
             receipt = (fetcher or fetch)(row["url"], body, specification, curl)
             if (not body.is_file() or receipt.get("body_sha256") != sha(body)
@@ -451,14 +684,18 @@ def collect(root: Path, *, curl: Path | None = None,
                     "errors": input_status["errors"], "sources": selected,
                     "collector_sha256": sha(Path(__file__)),
                     "collector_python": {"version": sys.version.split()[0], "executable_sha256": sha(Path(sys.executable).resolve())},
-                    "historical_publication_verified": False}
+                    "historical_publication_verified": False,
+                    "reuse_origins": proofs,
+                    "acquisition_summary": {"fresh_get_count": sum(row["status"] == "acquired" and "provenance" not in row for row in selected),
+                                            "reused_snapshot_count": sum("provenance" in row for row in selected)}}
         write(staging / "manifest.json", document)
         staging.rename(root / BUNDLE_PATH)
         lock = _seal_lock(root, manifest, specification)
         return {"status": "PASS", "bundle_path": BUNDLE_PATH, "lock_path": LOCK_PATH,
                 "bundle_manifest_sha256": lock["bundle_manifest_sha256"],
                 "candidate_input_status": input_status["status"],
-                "acquired_count": sum(row["status"] == "acquired" for row in selected)}
+                "acquired_count": sum(row["status"] == "acquired" for row in selected),
+                **document["acquisition_summary"]}
     except BaseException as exc:
         # Failure audits are separate from the immutable successful bundle/lock.
         if isinstance(exc, ResearchSourceError):
@@ -468,6 +705,11 @@ def collect(root: Path, *, curl: Path | None = None,
         raise
     finally:
         if staging.exists():
+            # Copied frozen capsules contain read-only directories. Only mutate
+            # our unpublished temporary copy, never the selected original.
+            for path in (staging, *staging.rglob("*")):
+                if path.is_dir() and not path.is_symlink():
+                    path.chmod(0o755)
             shutil.rmtree(staging)
 
 
@@ -510,7 +752,52 @@ def _validate_receipt(receipt: dict, source_id: str) -> None:
         raise ResearchSourceError("RESEARCH_SOURCE_RECEIPT_INVALID", source_id)
 
 
-def _verify(root: Path, *, required: bool = False, archived: bool = False) -> dict | None:
+def _verify_reused_source(bundle: Path, row: dict, receipt: dict, origins: dict, collector_sha256: str) -> tuple[dict, str]:
+    provenance = row["provenance"]
+    origin_path = _provenance_origin(provenance)
+    if provenance.get("kind") != "verified_snapshot_reuse" or origin_path not in origins:
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "provenance")
+    origin, proof = origins[origin_path]
+    old_document = read(origin / BUNDLE_PATH / "manifest.json")
+    candidates = [old for old in old_document["sources"] if old.get("source_id") == provenance.get("prior_source_id")]
+    if len(candidates) != 1:
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "prior source identity")
+    old = candidates[0]
+    old_bundle = origin / BUNDLE_PATH
+    if not _snapshot_covers(origin, old, row, read(bundle / "manifest.json")["policy"]):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "new citation not covered by original snapshot")
+    original_path = within(old_bundle, old.get("original_receipt_path", old["receipt_path"]))
+    expected_provenance = {"kind": "verified_snapshot_reuse", "origin_path": proof["path"],
+            "prior_identity": proof["identity"], "prior_attempt_manifest_sha256": proof["attempt_manifest_sha256"],
+            "prior_lock_sha256": proof["lock_sha256"], "prior_bundle_manifest_sha256": proof["bundle_manifest_sha256"],
+            "prior_source_id": old["source_id"], "prior_source_sha256": hashlib.sha256(encoded(old)).hexdigest(),
+            "prior_receipt_sha256": old["receipt_sha256"], "original_receipt_sha256": sha(original_path),
+            "projection_kind": "verified_frozen_origin_bytes", "reused_at": provenance.get("reused_at")}
+    original = read(within(bundle, row["original_receipt_path"]))
+    _public_receipt(original, row["source_id"])
+    expected_receipt = {"schema_version": REUSE_SCHEMA, "provenance": expected_provenance,
+            "collector_sha256": collector_sha256,
+            "requested_url": row["url"], "final_url": row["final_url"], "media_type": row["media_type"],
+            "body_sha256": row["body_sha256"], "body_size": original["body_size"],
+            "original_receipt_path": row["original_receipt_path"], "original_receipt_sha256": sha(original_path)}
+    if not isinstance(provenance.get("reused_at"), str):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "reused_at must be a UTC timestamp string")
+    try:
+        reused_at = datetime.fromisoformat(provenance["reused_at"].replace("Z", "+00:00"))
+        finished = datetime.fromisoformat(original["finished_at"].replace("Z", "+00:00"))
+        time_valid = reused_at.utcoffset() == timezone.utc.utcoffset(reused_at) and reused_at >= finished
+    except (KeyError, TypeError, ValueError):
+        time_valid = False
+    if (provenance != expected_provenance or receipt != expected_receipt or not time_valid
+            or old.get("status") != "acquired" or row["url"] != old["url"]
+            or any(row.get(key) != old.get(key) for key in ("body_sha256", "projection_sha256", "text_sha256", "media_type", "final_url"))
+            or sha(within(bundle, row["original_receipt_path"])) != sha(original_path)):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "source/receipt lineage drift")
+    return original, original["collector_sha256"]
+
+
+def _verify(root: Path, *, required: bool = False, archived: bool = False,
+            attempt_verifier: Callable | None = None) -> dict | None:
     manifest = read(root / "attempt-manifest.json")
     specification = policy(root, manifest)
     lock_path = within(root, LOCK_PATH)
@@ -539,10 +826,28 @@ def _verify(root: Path, *, required: bool = False, archived: bool = False) -> di
             or document.get("acquisition_identity") != lock.get("acquisition_identity")
             or document.get("candidate_input_status") != input_status["status"]
             or document.get("errors") != input_status["errors"]
-            or not isinstance(document.get("sources"), list) or len(document["sources"]) != len(selected)):
+            or not isinstance(document.get("sources"), list) or len(document["sources"]) != len(selected)
+            or not all(isinstance(row, dict) for row in document["sources"])):
         raise ResearchSourceError("RESEARCH_SOURCE_BUNDLE_INVALID")
     if not archived and document.get("collector_sha256") != sha(Path(__file__)):
         raise ResearchSourceError("RESEARCH_SOURCE_COLLECTOR_DRIFT")
+    proofs = document.get("reuse_origins", [])
+    if not isinstance(proofs, list):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "reuse_origins must be an array")
+    origins = {}
+    for proof in proofs:
+        relative = _origin_reference(proof)
+        if relative in origins:
+            raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "duplicate origin")
+        origins[relative] = (_verify_origin(bundle, proof, attempt_verifier), proof)
+    provenance_paths = {_provenance_origin(row["provenance"]) for row in document["sources"] if "provenance" in row}
+    reused_count = sum("provenance" in row for row in document["sources"])
+    summary = {"fresh_get_count": sum(row["status"] == "acquired" for row in document["sources"]) - reused_count,
+               "reused_snapshot_count": reused_count}
+    if (document.get("acquisition_summary", summary) != summary
+            or bool(origins) != bool(reused_count)
+            or set(origins) != provenance_paths):
+        raise ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "acquisition summary/origins")
     for expected, row in zip(selected, document["sources"]):
         if any(row.get(key) != expected[key] for key in ("source_id", "url", "citations", "reason")):
             raise ResearchSourceError("RESEARCH_SOURCE_BUNDLE_INVALID", "ledger source binding")
@@ -554,42 +859,49 @@ def _verify(root: Path, *, required: bool = False, archived: bool = False) -> di
             raise ResearchSourceError("RESEARCH_SOURCE_BUNDLE_REQUIRED", "source not acquired")
         body = within(bundle, row["body_path"])
         receipt = read(within(bundle, row["receipt_path"]))
-        _validate_receipt(receipt, row["source_id"])
+        expected_collector = document["collector_sha256"]
+        reused = "provenance" in row
+        if reused:
+            receipt, expected_collector = _verify_reused_source(bundle, row, receipt, origins, document["collector_sha256"])
+        else:
+            _validate_receipt(receipt, row["source_id"])
         projection = read(within(bundle, row["projection_path"]))
         text = within(bundle, row["text_path"])
         if (row.get("body_sha256") != sha(body) or receipt.get("body_sha256") != sha(body)
                 or row.get("receipt_sha256") != sha(within(bundle, row["receipt_path"]))
                 or row.get("projection_sha256") != sha(within(bundle, row["projection_path"]))
+                or body.stat().st_size > specification["max_bytes_per_source"]
                 or receipt.get("body_size") != body.stat().st_size or receipt.get("requested_url") != row["url"]
                 or receipt.get("final_url") != row.get("final_url") or receipt.get("media_type") != row.get("media_type")
-                or receipt.get("collector_sha256") != document["collector_sha256"]
+                or receipt.get("collector_sha256") != expected_collector
                 or projection.get("schema_version") != PROJECTION_SCHEMA or projection.get("source_sha256") != sha(body)
                 or projection.get("complete") is not True or row.get("text_sha256") != sha(text)
                 or text.read_text(encoding="utf-8") != projection_text(projection)):
             raise ResearchSourceError("RESEARCH_SOURCE_RECEIPT_INVALID", row["source_id"])
         # Archive mode trusts the frozen extraction receipt; it does not require
         # curl/pypdf on the replay host or claim to re-run acquisition/extraction.
-        if not archived and projection != project(body, row["media_type"]):
+        if not archived and not reused and projection != project(body, row["media_type"]):
             raise ResearchSourceError("RESEARCH_SOURCE_PROJECTION_DRIFT", row["source_id"])
     references = [{"type": "research_source_lock", "path": LOCK_PATH, "sha256": sha(lock_path)}]
     references += [{"type": "independent_research_source", "path": f"{BUNDLE_PATH}/{row['path']}", "sha256": row["sha256"]}
-                   for row in lock["entries"]]
+                   for row in lock["entries"] if not row["path"].startswith("origins/")]
     return {"path": BUNDLE_PATH, "manifest_sha256": lock["bundle_manifest_sha256"],
             "lock_path": LOCK_PATH, "lock_sha256": sha(lock_path), "references": references,
             "candidate_input_status": document["candidate_input_status"]}
 
 
-def verify(root: Path, *, required: bool = False, archived: bool = False) -> dict | None:
+def verify(root: Path, *, required: bool = False, archived: bool = False,
+           attempt_verifier: Callable | None = None) -> dict | None:
     try:
-        return _verify(root, required=required, archived=archived)
+        return _verify(root, required=required, archived=archived, attempt_verifier=attempt_verifier)
     except ResearchSourceError:
         raise
     except (OSError, ValueError, KeyError, TypeError, IndexError) as exc:
         raise ResearchSourceError("RESEARCH_SOURCE_BUNDLE_INVALID", str(exc)) from exc
 
 
-def copy_for_rescore(source: Path, target: Path) -> None:
-    binding = verify(source, required=True)
+def copy_for_rescore(source: Path, target: Path, *, attempt_verifier: Callable | None = None) -> None:
+    binding = verify(source, required=True, attempt_verifier=attempt_verifier)
     if binding is None:
         return
     source_lock = read(source / LOCK_PATH)
@@ -597,4 +909,4 @@ def copy_for_rescore(source: Path, target: Path) -> None:
     manifest = read(target / "attempt-manifest.json")
     specification = policy(target, manifest)
     _seal_lock(target, manifest, specification, source_lock)
-    verify(target, required=True)
+    verify(target, required=True, attempt_verifier=attempt_verifier)

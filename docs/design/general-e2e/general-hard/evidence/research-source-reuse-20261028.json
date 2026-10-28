@@ -1,0 +1,516 @@
+{
+  "schema_version": "general-hard-research-source-reuse-validation/v1",
+  "date_local": "2026-10-28",
+  "status": "FRAMEWORK_AUTHOR_VALIDATION_PASS",
+  "scope": "Explicit reuse of verified independently collected public-source snapshots; not H029 business, Harness or semantic scoring.",
+  "repository": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_head": "60c8e81f",
+  "versions": {
+    "score-general-e2e": "0.25.0",
+    "core": "0.15.2"
+  },
+  "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+  "applied_files": [
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+      "before_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+      "after_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "before_sha256": "b1cebf4992b47994583a78468a75bb6965c1cdd6a77ff819a53c42c9186d57a7",
+      "after_sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "before_sha256": "e97e5175fec2f70ecbc2dfacda6fae8dde71c2b9da4d39d9aa20410353050829",
+      "after_sha256": "c86813d41be567927faf32af3738e9f472d9e4769baf74e0227b1049d8e45925"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "before_sha256": "acd54d5caaea6772110e9d594b21b94fe94575b7593b3d2d62920ed55fa1b687",
+      "after_sha256": "5d9e2def11e1c4669af0b8581a4f398a440330f31c3d3d275d85e7a884699887"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md",
+      "before_sha256": "ccbc5cd2ef3d202874647cd07babd3bdcb52deac17604214339a7acd1a476ad2",
+      "after_sha256": "360f9d2270f17a2220003562b323118bc83cea5ff209f8cb67c25dc1bdbdf69f"
+    },
+    {
+      "path": "tests/general_e2e/test_research_sources.py",
+      "before_sha256": "e69a38abb949008034016f6002978e054634d31273a6358bf61e7c98176a5ab1",
+      "after_sha256": "6cfdee4c8be553b7e36fe94dc8715ba1098583a604057359b94e763492dce1fa"
+    }
+  ],
+  "version_sync": {
+    "status": "PASS",
+    "registry_score_version": "0.25.0",
+    "get_skill_spec_version": "0.25.0",
+    "canonical_version": "0.25.0",
+    "standalone_package_version": "0.25.0",
+    "metadata_exactly_equal": true,
+    "observed_static_pre_apply_drift": "test_skill_layout expected 0.23.2 while stages constant was 0.24.0; root synchronized both to 0.25.0 before the layout test executed",
+    "stages_sha256": "6a07035920cd501a8d68f40354581cb74f881b5b8289cc566b9152475a6f5731",
+    "layout_test_sha256": "4acaaa10f5d984367a722429748fe8000960568e51f70f7184454cdac8b4541b"
+  },
+  "regression": {
+    "status": "PASS",
+    "completed_at": "2026-10-28T12:29:53.156320+00:00",
+    "module_count": 4,
+    "test_count": 54,
+    "modules": [
+      {
+        "module": "tests.general_e2e.test_research_sources",
+        "command": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-m",
+          "unittest",
+          "tests.general_e2e.test_research_sources",
+          "-q"
+        ],
+        "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+        "python": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+        "python_realpath": "/Users/gzx/.local/share/uv/python/cpython-3.11.14-macos-x86_64-none/bin/python3.11",
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "TMPDIR": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression/test_research_sources/tmp"
+        },
+        "started_at": "2026-10-28T12:28:58.493391+00:00",
+        "finished_at": "2026-10-28T12:29:15.306258+00:00",
+        "elapsed_seconds": 16.812,
+        "returncode": 0,
+        "test_count": 24,
+        "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+        "status": "PASS"
+      },
+      {
+        "module": "tests.general_e2e.test_local_scoring_runtime",
+        "command": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-m",
+          "unittest",
+          "tests.general_e2e.test_local_scoring_runtime",
+          "-q"
+        ],
+        "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+        "python": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+        "python_realpath": "/Users/gzx/.local/share/uv/python/cpython-3.11.14-macos-x86_64-none/bin/python3.11",
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "TMPDIR": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression/test_local_scoring_runtime/tmp"
+        },
+        "started_at": "2026-10-28T12:28:58.493529+00:00",
+        "finished_at": "2026-10-28T12:29:00.072873+00:00",
+        "elapsed_seconds": 1.579,
+        "returncode": 0,
+        "test_count": 10,
+        "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+        "status": "PASS"
+      },
+      {
+        "module": "tests.general_e2e.test_general_semantic_scoring",
+        "command": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-m",
+          "unittest",
+          "tests.general_e2e.test_general_semantic_scoring",
+          "-q"
+        ],
+        "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+        "python": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+        "python_realpath": "/Users/gzx/.local/share/uv/python/cpython-3.11.14-macos-x86_64-none/bin/python3.11",
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "TMPDIR": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression/test_general_semantic_scoring/tmp"
+        },
+        "started_at": "2026-10-28T12:28:58.493475+00:00",
+        "finished_at": "2026-10-28T12:29:00.818197+00:00",
+        "elapsed_seconds": 2.324,
+        "returncode": 0,
+        "test_count": 13,
+        "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+        "status": "PASS"
+      },
+      {
+        "module": "tests.general_e2e.test_skill_layout",
+        "command": [
+          "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+          "-m",
+          "unittest",
+          "tests.general_e2e.test_skill_layout",
+          "-q"
+        ],
+        "cwd": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+        "python": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+        "python_realpath": "/Users/gzx/.local/share/uv/python/cpython-3.11.14-macos-x86_64-none/bin/python3.11",
+        "environment": {
+          "PYTHONDONTWRITEBYTECODE": "1",
+          "TMPDIR": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression/test_skill_layout/tmp"
+        },
+        "started_at": "2026-10-28T12:28:58.493418+00:00",
+        "finished_at": "2026-10-28T12:28:59.017061+00:00",
+        "elapsed_seconds": 0.523,
+        "returncode": 0,
+        "test_count": 7,
+        "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+        "status": "PASS"
+      }
+    ],
+    "version_check": {
+      "status": "PASS",
+      "registry_score_version": "0.25.0",
+      "get_skill_spec_version": "0.25.0",
+      "canonical_version": "0.25.0",
+      "standalone_package_version": "0.25.0",
+      "metadata_exactly_equal": true,
+      "observed_static_pre_apply_drift": "test_skill_layout expected 0.23.2 while stages constant was 0.24.0; root synchronized both to 0.25.0 before the layout test executed",
+      "stages_sha256": "6a07035920cd501a8d68f40354581cb74f881b5b8289cc566b9152475a6f5731",
+      "layout_test_sha256": "4acaaa10f5d984367a722429748fe8000960568e51f70f7184454cdac8b4541b"
+    },
+    "applied_six_files_unchanged": [
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+        "expected_after_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+        "actual_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+        "matches": true
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+        "expected_after_sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684",
+        "actual_sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684",
+        "matches": true
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+        "expected_after_sha256": "c86813d41be567927faf32af3738e9f472d9e4769baf74e0227b1049d8e45925",
+        "actual_sha256": "c86813d41be567927faf32af3738e9f472d9e4769baf74e0227b1049d8e45925",
+        "matches": true
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+        "expected_after_sha256": "5d9e2def11e1c4669af0b8581a4f398a440330f31c3d3d275d85e7a884699887",
+        "actual_sha256": "5d9e2def11e1c4669af0b8581a4f398a440330f31c3d3d275d85e7a884699887",
+        "matches": true
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md",
+        "expected_after_sha256": "360f9d2270f17a2220003562b323118bc83cea5ff209f8cb67c25dc1bdbdf69f",
+        "actual_sha256": "360f9d2270f17a2220003562b323118bc83cea5ff209f8cb67c25dc1bdbdf69f",
+        "matches": true
+      },
+      {
+        "path": "tests/general_e2e/test_research_sources.py",
+        "expected_after_sha256": "6cfdee4c8be553b7e36fe94dc8715ba1098583a604057359b94e763492dce1fa",
+        "actual_sha256": "6cfdee4c8be553b7e36fe94dc8715ba1098583a604057359b94e763492dce1fa",
+        "matches": true
+      }
+    ],
+    "tracked_diff_paths_after_tests": [
+      "eval_general_e2e/stages.py",
+      "tests/general_e2e/test_research_sources.py",
+      "tests/general_e2e/test_skill_layout.py",
+      "tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md",
+      "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+      "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json"
+    ],
+    "constraints": {
+      "read_only_repo_work": true,
+      "no_commit": true,
+      "old_h029_qa_not_run": true,
+      "evidence_and_temporary_fixtures_under": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression"
+    }
+  },
+  "independent_model_review": {
+    "reviewer": "independent model code review, not a human security expert",
+    "status": "no_blocking_findings",
+    "blocking_findings": [],
+    "scope": "Read-only review of external overlay patch, tests and frozen smoke evidence; not a formal security proof or full H029 scoring acceptance.",
+    "reviewed_files": [
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+        "sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a"
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+        "sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684"
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+        "sha256": "c86813d41be567927faf32af3738e9f472d9e4769baf74e0227b1049d8e45925"
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+        "sha256": "5d9e2def11e1c4669af0b8581a4f398a440330f31c3d3d275d85e7a884699887"
+      },
+      {
+        "path": "tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md",
+        "sha256": "360f9d2270f17a2220003562b323118bc83cea5ff209f8cb67c25dc1bdbdf69f"
+      },
+      {
+        "path": "tests/general_e2e/test_research_sources.py",
+        "sha256": "6cfdee4c8be553b7e36fe94dc8715ba1098583a604057359b94e763492dce1fa"
+      }
+    ],
+    "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+    "entry_sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684",
+    "code_checks": [
+      {
+        "topic": "trusted prior-attempt validation without old-code execution",
+        "basis": "research_sources.py:442-504; current score verify_attempt:1623-1842 verifies old candidate/private/GT/manifest/trace/source lock with require_runtime=False; no origin Python import or rule execution."
+      },
+      {
+        "topic": "exact URL, cutoff/TZ and source quote suitability",
+        "basis": "research_sources.py:541-576,635-660; exact requested URL, equal inclusive cutoff/timezone, post-cutoff acquisition, strict UTF-8 text-only raw fallback, PDF raw excluded; missing quote follows existing fresh path."
+      },
+      {
+        "topic": "self-contained origin capsule and file modes",
+        "basis": "research_sources.py:394-410,487-504,834-850; copy2/copytree retain source modes, seal skips capsule modes; copied capsule verified and outer inventory locked; no chmod/write on explicit original."
+      },
+      {
+        "topic": "new candidate/ledger/policy binding and fresh/reuse time distinction",
+        "basis": "research_sources.py:387-401,579-615,681-698,755-884; current candidate/declared deliverable/policy hashes rebound; original GET receipt remains byte-identical; new wrapper has separate schema, collector and reused_at."
+      },
+      {
+        "topic": "body/receipt/projection/wrapper/provenance binding and malformed proof shape",
+        "basis": "research_sources.py:424-458,755-884; proof/provenance container/path/time guards, original capsule and source row hashes, new wrapper exact equality, preserved frozen projection chain verified."
+      },
+      {
+        "topic": "catalog/API exclude prior answer material",
+        "basis": "research_sources.py:885-891 excludes origins/ from references; score entry forwards those references and requires original-response.json in API packet. Prior candidate/GT content stays provenance-only, not registered as current facts."
+      }
+    ],
+    "observed_tests": {
+      "path": "source-reuse-patch/test-results.json",
+      "sha256": "eea4818616c5e554ba8d9042c7ee2d075286a54b09401f0f2b577e250fa93148",
+      "result": "24 source tests passed in recorded run; not rerun by this reviewer",
+      "test_file_sha256": "6cfdee4c8be553b7e36fe94dc8715ba1098583a604057359b94e763492dce1fa"
+    },
+    "independent_offline_evidence_checks": {
+      "smoke_evidence": "source-reuse-patch/real-legacy-smoke-reviewed/evidence.json",
+      "smoke_evidence_sha256": "12990508b1a286ab7b5fdefce2fc2cc1df44bae36c1fa1d6a67c5b9a72606b79",
+      "same_reviewed_collector_SHA": true,
+      "legacy_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+      "selected_sources": 13,
+      "fresh_get_count": 0,
+      "reused_snapshot_count": 13,
+      "v5_ledger_new_binding_verified": true,
+      "all13_body_text_projection_and_original_GET_receipt_bytes_match_capsule": true,
+      "new_wrapper_has_no_fabricated_GET_times": true,
+      "moved_archive_body_and_wrapper_SHA_match": true,
+      "recorded_archive_verification": "PASS with explicit selected old path absent and runtime omitted",
+      "old_GT_file_modes_preserved_in_capsule": true,
+      "standalone_zip_sha256": "9ba9bb439db4a0106d052d0c3270d91cdcf5679159e9599e39cc97e1fa67a3eb",
+      "zip_entry_bytes_match_reviewed_code": true
+    },
+    "limits": [
+      "No network, Office, old code, tests, or scoring/semantic pipeline executed by this reviewer. Existing smoke and test outcomes are identified as recorded evidence.",
+      "Origin hashes verify frozen binding, not independent internet authenticity; operator selection of a trusted prior attempt remains a documented boundary.",
+      "Review is bounded to the exact recorded SHA/version. H029 private consumers must explicitly understand reuse wrappers and original receipt/projection lineage before formal acceptance.",
+      "No semantic correctness, hybrid score, live availability, historical-publication truth, or formal security proof is claimed."
+    ]
+  },
+  "real_legacy_source_only_validation": {
+    "archived_verification": {
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/real-legacy-smoke-reviewed/moved/archive-v025",
+      "candidate_sha256": "51e764225ee9d697d977f3c626662b370d7cfa7b76d659b7c6bcd6757eb1ee17",
+      "entry_count": 5,
+      "status": "PASS"
+    },
+    "candidate_gt_manifest_unchanged": true,
+    "collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+    "explicit_original_path_absent": true,
+    "legacy_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+    "original_qa_unchanged": true,
+    "result": {
+      "acquired_count": 13,
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/real-legacy-smoke-reviewed/current-fixture/attempts/batch-fixture__unit-fixture/task-fixture/new-source-binding-v025",
+      "bundle_manifest_sha256": "e308fbef5ab859423c482088fbb77730d989e1abfceda54a413014b36fc110c9",
+      "bundle_path": "private/research-sources",
+      "candidate_input_status": "valid",
+      "fresh_get_count": 0,
+      "lock_path": "research-sources.lock.json",
+      "reused_snapshot_count": 13,
+      "status": "PASS"
+    },
+    "scope": "source-only fixture; no H029 business scoring or official run",
+    "source_attempt_manifest_sha256": "31fddd3ed89009d7870b4b8a105d91effb64295b1b6a054edd8effe1bb770cfe",
+    "sources": [
+      {
+        "body_sha256": "c88466ce402b1eab1352a2142b6f3c642ce0393a1193c6412539370e0143f208",
+        "finished_at": "2026-10-28T11:35:34.770108Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "e990b840ae33ed566b17580a7d9953eb564caff28090bc19889a5d6032002b66",
+        "source_id": "S01",
+        "started_at": "2026-10-28T11:35:31.304519Z",
+        "url": "https://blog.google/products-and-platforms/products/search/football-features-google-search/"
+      },
+      {
+        "body_sha256": "8d15d4814e1ecda45604f70a34bb24e41b694dcce89e93ef0765ed267534a894",
+        "finished_at": "2026-10-28T11:35:38.460742Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "c5f81f89a0c03b85a24348fb0d6e1de2e8504b56e8b6a1d7370940532ac82987",
+        "source_id": "S02",
+        "started_at": "2026-10-28T11:35:34.820746Z",
+        "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/"
+      },
+      {
+        "body_sha256": "4aa820facba18eb18d7c251bd17721c94b6f4af9489b9ab44f5b98c0a35d1dd6",
+        "finished_at": "2026-10-28T11:35:41.299706Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "13b98d32fc698648bfa4a78bb2ff5c8c36d1f1d173a752dc7b04dfa85710ebbb",
+        "source_id": "S03",
+        "started_at": "2026-10-28T11:35:38.513800Z",
+        "url": "https://blog.youtube/news-and-events/made-on-youtube-viewer-custom-feeds-shopping-tools/"
+      },
+      {
+        "body_sha256": "5d35f80a41f6cd6f85b8e71d17d3ce409bedf8ee62ad9dd10ff7bd78633ccabc",
+        "finished_at": "2026-10-28T11:35:45.993545Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "13653d94bb6b34066cbd7567e7b0e256b1d8f30b60dd0430cf456af76c634b0f",
+        "source_id": "S04",
+        "started_at": "2026-10-28T11:35:41.318007Z",
+        "url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E6%96%B0%E5%8A%9F%E8%83%BD%E5%8F%91%E5%B8%83%E8%AE%B0%E5%BD%95_1792068421.pdf"
+      },
+      {
+        "body_sha256": "aca2922858b9add6ed0f60b7138bfb35366d4752d3e1d02460054bab12c9f78c",
+        "finished_at": "2026-10-28T11:35:51.548368Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "1f21df3eab25e89fc15f3c1485cb775fc33cd628f9da0f47d7bfdbeacef97ca2",
+        "source_id": "S05",
+        "started_at": "2026-10-28T11:35:46.270069Z",
+        "url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2%20Global%E7%89%88_1790074639.pdf"
+      },
+      {
+        "body_sha256": "d759255c3e588fd6ee28c52615d0b6d091ddd90836ceb861673adbc453713f9b",
+        "finished_at": "2026-10-28T11:35:53.022048Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "d24b3b1b90179dbb16594c0ac0840bc422bdad1d147c45311c42cb32d7e5a9b8",
+        "source_id": "S06",
+        "started_at": "2026-10-28T11:35:52.154734Z",
+        "url": "https://policies.google.com/terms/embedded?hl=en-US"
+      },
+      {
+        "body_sha256": "423e174cd805337f317f6cc3ccd126f3c3f47c560f203a2525ceff003ad0c8f5",
+        "finished_at": "2026-10-28T11:35:53.814434Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "7fb34a61a32a5153ac09a29704a2ecc26276eb8aa03806c727c091ef0e53c020",
+        "source_id": "S07",
+        "started_at": "2026-10-28T11:35:53.047063Z",
+        "url": "https://docs.volcengine.com/docs/legal-agreements/products-and-services-agreement?lang=zh"
+      },
+      {
+        "body_sha256": "96b9a8f5948d9bfbb1750186e702e7926c6a428fd72ce64f08e1cb2bedf7f787",
+        "finished_at": "2026-10-28T11:35:54.469986Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "3092f9920b1d251bf3f0002b4255a33c099f9b23cbcc19f4f9321985eea80d5c",
+        "source_id": "S08",
+        "started_at": "2026-10-28T11:35:53.835759Z",
+        "url": "https://banshi.whlyj.beijing.gov.cn/publish/6897521451094312.pdf"
+      },
+      {
+        "body_sha256": "d78a6f818c6ff632f1977bcbb26c0f9d39825ed4de7d8a43e39f5443cc446c91",
+        "finished_at": "2026-10-28T11:35:55.564894Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "506fa97ef5d296506338c13e7c2cfd609b14d14c374c0a72fedefe0c568bc9c2",
+        "source_id": "S09",
+        "started_at": "2026-10-28T11:35:54.531960Z",
+        "url": "https://policies.google.com/"
+      },
+      {
+        "body_sha256": "e2b1b695d8d46b0d285fd8963f0a9199eaad3606ab48e48c55597d5c2c75d55b",
+        "finished_at": "2026-10-28T11:35:57.750131Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "3eedab6a3f8821f4a79392c3bfd9d55ccbe75e9a7517105241415594d2cdfd6c",
+        "source_id": "S10",
+        "started_at": "2026-10-28T11:35:55.601865Z",
+        "url": "https://9to5google.com/2026/09/09/google-search-kicks-off-the-nfl-season-with-live-game-feeds-and-fantasy-football-advice/"
+      },
+      {
+        "body_sha256": "47099b8658a373edd6e029a4c597d4264e33355ecd2f57f784270ae560aa1a6a",
+        "finished_at": "2026-10-28T11:36:00.551930Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "cec20d569856f93fab1ce7797ccb1648193fe00dd7df03d63f6a7de6e60c8d85",
+        "source_id": "S11",
+        "started_at": "2026-10-28T11:35:57.770623Z",
+        "url": "https://www.seroundtable.com/google-search-live-gemini-3-8-42094.html"
+      },
+      {
+        "body_sha256": "e73e4ad8adae65f9536beff355fd6d2180d59e2b3f87a1110354013b84a58cf0",
+        "finished_at": "2026-10-28T11:36:12.243682Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "ca293f8b490bd059e45406bff95e8d04157a5e5e32c08ffda623abe6cb2b2439",
+        "source_id": "S12",
+        "started_at": "2026-10-28T11:36:00.570816Z",
+        "url": "https://www.searchenginejournal.com/youtube-shopping-ask-youtube-ai-search/590662/"
+      },
+      {
+        "body_sha256": "0e0e2fa377987f747540ece88d989afbbe5a70a7cdf6d764ebb9316c29b6c77e",
+        "finished_at": "2026-10-28T11:36:13.820301Z",
+        "old_collector_sha256": "5074baabbe989b0f7fa59462fe04b226c17e90c95178b35939e3ef3c3852130d",
+        "original_receipt_sha256": "76b8834a27d6879c39dce6b571addd95e8d48a4ed91e19ed30f85cab26a7c9ad",
+        "source_id": "S13",
+        "started_at": "2026-10-28T11:36:12.279632Z",
+        "url": "https://51allai.com/posts/2026/09/doubao-search-visual-search/"
+      }
+    ]
+  },
+  "trust_boundary": "Operator explicitly selects a trusted prior attempt. Current archive verifier validates its frozen inputs/source lock/bytes; hashes alone do not authenticate a maliciously rebuilt prior package.",
+  "limits": [
+    "Fresh GET remains the default; exact URL, cutoff/timezone, public-network receipt and quote gates constrain explicit reuse.",
+    "The original GET time, original collector and raw body/projection/receipt bytes remain unchanged. reused_at is not a retrieval timestamp.",
+    "Self-contained original input/GT capsules are verified as lineage and excluded from the new semantic evidence catalog/API.",
+    "Replay does not establish current URL availability, current page identity, historical publication truth or semantic support.",
+    "The four regression modules contain 54 tests; the separate overlay source test run repeats 24 of them and is not added as 24 new cases.",
+    "No real Harness, semantic Judge result or hybrid score has been generated."
+  ],
+  "evidence_files": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/patch.diff",
+      "sha256": "04f7da90b62c6351e878351acfc783944ad1f4269cb5205c13a2d8049039cbf1",
+      "size": 61977
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/files.json",
+      "sha256": "e6d5275f8748504ed984c970362617203d9640285dcf3e59c33fcaf034e1ae42",
+      "size": 1774
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/REVIEW.md",
+      "sha256": "42373105d6f1a0a82a619755a7a0d245ba063d614a74f8686c163a3763d4c7a5",
+      "size": 5393
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/independent-review.json",
+      "sha256": "ef4d15c0a5f818201ff6f0aa0c7ad2079ee83ff7bb049243cf390d706e2191ee",
+      "size": 5496
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/independent-review.md",
+      "sha256": "c2d1aea5ba1a5499f8b2bc109317bdcca9401c01d2edc7ffe7828b326b728494",
+      "size": 2281
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression/summary.json",
+      "sha256": "407e320fe8cf97c158b464704e9f874f411136191a41e21bab3a212ad6850f58",
+      "size": 8207
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/repo-regression/version-check.json",
+      "sha256": "169c3f916d8bce9250a5d7a7b08f5e5542e05edb67a19d46ffb551928989296a",
+      "size": 560
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/real-legacy-smoke-reviewed/evidence.json",
+      "sha256": "12990508b1a286ab7b5fdefce2fc2cc1df44bae36c1fa1d6a67c5b9a72606b79",
+      "size": 8521
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/source-reuse-patch/standalone-package/score-general-e2e-skill-v0.25.0.zip",
+      "sha256": "9ba9bb439db4a0106d052d0c3270d91cdcf5679159e9599e39cc97e1fa67a3eb",
+      "size": 734426
+    }
+  ]
+}

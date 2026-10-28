@@ -99,3 +99,32 @@ API Judge 若预算未能完整送入锁、来源清单、关键 text.txt 和 re
 该版本不执行动态浏览器/OCR，不判正文对主张的语义支持，不把 HTTP 日期、URL 年份或 retrieval_at 当历史发布证明。200 登录/挑战页面可能产生非空文本，须由题内规则/独立 Judge 核实文档身份。需要历史身份时使用绑定原件的独立发布记录/版本 oracle，并为池外合法来源保留同标准判定或 unresolved。
 
 SHA 证明封存后未漂移；可信独立 collector 是互联网来源的信任边界。候选原快照或 trace 工具返回不自动成为独立获取证据。独立重新获取到相同字节是合法情况，不能仅凭字节相同否定独立性。来源包同样不能单独证明候选实际读过正文；行为主张须结合完整绑定轨迹。
+
+
+## 0.25 显式复用已验证来源快照
+
+core 仍为 `0.15.2`。默认不提供复用目录，所有选中来源仍独立 GET；可显式多次指定：
+
+```bash
+"<frozen-python>" -X utf8 <score-skill>/scripts/score_general_e2e.py collect-research-sources \
+  --attempt-root /absolute/new-attempt \
+  --reuse-sources-from /absolute/prior-successful-source-attempt
+```
+
+这里的成功指原 attempt 已封存成功来源锁，不要求已有业务得分。当前可信入口先以归档模式完整复核原 candidate、GT、不可变 attempt manifest、来源 lock、body、HTTP receipt、projection 和 inventory；不执行原 attempt 或候选中的代码，也不要求其 runtime 仍存在。失败、缺锁、缺件、漂移、符号链接目录、与新 attempt 重叠及位于新 candidate/GT/runtime 中的路径拒绝。复用链深度最多8。旧 `0.24.0` 以原字节和旧 collector/engine SHA验证，不用新脚本 hash 冒充旧脚本，不执行旧采集器代码。
+
+只按原 `requested_url` 字符串精确匹配；域名相同、不同query、不同fragment或仅最终URL相同均不能替代。重复来源目录按参数顺序选择首个精确命中。旧来源没有引用也可供新候选新增引用，但新 source_id、citations、账本、三份交付和当前私有 policy 重新绑定，正文是否支持新主张仍由规则/Judge 判断。未命中执行原安全 fresh GET。当前 max_sources/max_bytes_per_source 仍生效；原获取回执必须证明公共 HTTP/HTTPS、global-unicast DNS钉IP、无代理及默认TLS校验，复用不发新DNS或GET。
+
+新 sources 条目的 `provenance.kind=verified_snapshot_reuse` 保存原 attempt identity、manifest/lock/bundle SHA、原 source 行及receipt SHA和 `reused_at`。`response.json` 是独立 schema `wildclawbench.research-source-reuse-receipt/v1` 的复用事件，记录当前 collector SHA，刻意不带伪造的 started_at/finished_at。`original-response.json` 保留最终原 GET 的完整未改回执；body、text.json、text.txt也保持原字节。`projection_kind=verified_frozen_origin_bytes` 明示使用已封存提取回执；fresh源正常重新投影核当前引擎，reuse源的正常/归档验证均核原封存投影链，不要求旧提取运行时或执行旧代码。返回 `acquired_count`，并分别返回 `fresh_get_count` / `reused_snapshot_count`。
+
+当前 bundle 的 `origins/` 包含每个实际命中的原 attempt 证明胶囊：原 candidate-original/private/trace、原 attempt manifest 和来源 lock；省略 runtime、worker、semantic、score 状态，原文件和manifest不改。原 GT 的mode参与历史inventory，胶囊保留原mode；完整胶囊字节和成员仍由外层来源锁覆盖。新验证器对胶囊重新运行当前归档输入及来源校验，另核胶囊inventory摘要，不能只信 `verified=true`。原目录删除或新包移目录后仍能独立验证谱系；重复复用也保留完整原GET链。大来源包因完整胶囊而增加体积，这是保留完整输入绑定的取舍。
+
+胶囊仅作来源谱系验证，不注册为新 attempt 的语义事实证据；query-evidence/API目录提供当前已选来源的body/text/projection/复用与原GET回执，以及当前manifest内必要origin摘要。旧candidate、GT、task不会变成新题答案参考。消费者需按receipt schema区分fresh GET与复用事件；新manifest仍沿用bundle/lock v1的兼容字段，旧冻结独立ZIP保持原样。
+
+
+复用还要求旧/新 policy 的 `as_of_inclusive` 与 `timezone` 相同，且原 GET 完成时刻已晚于该时区 inclusive 截止日。新非空quote须机械命中原projection、原metadata或UTF-8原body（包含JSON-LD原字段）；仅HTML实体解码、忽略空白，不判事实支持。未命中视为该缓存不适用并回到fresh；若fresh获取失败则供证未决，不能直接拿陈旧缓存给新引文记0。无quote或格式错误仍留给原候选契约核验。
+
+复用证明所选冻结时点曾成功取得这些字节，不证明当前URL仍可达、当前网页未改或历史发布身份成立。动态或“最新”研究应选择适合研究窗口的冻结快照；默认fresh行为保留。
+
+
+raw body的机械引文匹配只接受明确文本media type、严格UTF-8解码且不含非文本C0控制字符的内容；不丢弃坏字节。PDF magic即使误报text/plain也不使用raw字节查引文，PDF/非文本来源仅用已封存projection和raw_metadata。origins/provenance容器、路径和复用时间的畸形类型明确返回结构化RESEARCH_SOURCE错误，不进入评分或变成能力0。

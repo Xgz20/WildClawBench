@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.25.0`装配core `0.15.2`，新增显式可重复的`--reuse-sources-from`。仅按精确requested URL复用已完整验证的成功来源attempt；新receipt标明`verified_snapshot_reuse`，原GET时刻和原件/提取回执保持原字节。自包含来源证明胶囊保留旧输入、GT和来源锁，归档不依赖旧绝对路径；胶囊仅用于验证来源谱系，不进入新题语义事实目录。默认继续独立fresh GET，fresh/reuse计数分别输出。
+
 `0.24.0`装配core `0.15.2`，增加显式`scoring_runtime: {research_sources: true}`与`collect-research-sources`。prepare后由可信评分侧独立获取候选实际阅读/引用的公开URL，封存原件、文本投影、HTTP/提取回执和独立补充锁；不修改候选、GT或原attempt manifest。规则通过专用环境路径读同包，语义目录实际纳入来源，正常/归档与rescore保留同一来源链。缺独立供证、获取或提取失败不补零；历史发布身份和正文语义仍须单独核验，不以参考URL池排除合法来源。使用前读[独立公开来源取证](references/research-sources.md)。
 
 `0.23.2`装配core `0.15.2`，数值输入扰动兼容原生ISO日期单元格（OOXML `t=d`）。调用方按工作簿日期系统和业务口径给定新Excel序列值；变体保留样式，使用等价原生数值编码，回执保存原ISO词法值及新值。原文件、公式和其它部件不改；像日期的普通文本仍拒绝。旧冻结helper和历史回执不自动改写。

@@ -128,7 +128,7 @@ class ApiJudgeAttemptError(ScoringRuntimeError):
 
 def _research_source_binding(root: Path, *, required: bool = False, archived: bool = False) -> dict | None:
     try:
-        binding = research_sources.verify(root, required=required, archived=archived)
+        binding = research_sources.verify(root, required=required, archived=archived, attempt_verifier=verify_attempt)
     except research_sources.ResearchSourceError as exc:
         raise ScoringRuntimeError(exc.code, exc.detail) from exc
     if binding is None:
@@ -151,11 +151,13 @@ def _research_source_binding(root: Path, *, required: bool = False, archived: bo
     return binding
 
 
-def collect_research_sources_attempt(*, attempt_root: Path, curl: Path | None = None) -> dict:
+def collect_research_sources_attempt(*, attempt_root: Path, curl: Path | None = None,
+                                     reuse_sources_from: tuple[Path, ...] = ()) -> dict:
     root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(root)
     try:
-        result = research_sources.collect(root, curl=curl)
+        result = research_sources.collect(root, curl=curl, reuse_sources_from=reuse_sources_from,
+                                          attempt_verifier=verify_attempt)
     except research_sources.ResearchSourceError as exc:
         raise ScoringRuntimeError(exc.code, exc.detail) from exc
     _research_source_binding(root, required=True)
@@ -3504,7 +3506,7 @@ def _build_api_input(
     if research_binding is not None:
         required_paths = {research_sources.LOCK_PATH, f"{research_sources.BUNDLE_PATH}/manifest.json"}
         required_paths.update(row["path"] for row in research_binding["references"]
-                              if row["path"].endswith(("/text.txt", "/response.json")))
+                              if row["path"].endswith(("/text.txt", "/response.json", "/original-response.json")))
         supplied = {row["path"] for row in packet_entries if row["content_status"] == "complete"}
         if not required_paths <= supplied:
             raise ScoringRuntimeError("RESEARCH_SOURCE_API_INPUT_INCOMPLETE", "required independent source content was omitted or truncated")
@@ -5907,7 +5909,7 @@ def prepare_rescore_attempt(
         }
         _write_new_json(staging / "attempt-manifest.json", manifest)
         try:
-            research_sources.copy_for_rescore(source_root, staging)
+            research_sources.copy_for_rescore(source_root, staging, attempt_verifier=verify_attempt)
         except research_sources.ResearchSourceError as exc:
             raise ScoringRuntimeError(exc.code, exc.detail) from exc
         os.replace(staging, destination)
@@ -6141,6 +6143,8 @@ def main(argv: list[str] | None = None) -> int:
     research = subparsers.add_parser("collect-research-sources")
     research.add_argument("--attempt-root", required=True, type=Path)
     research.add_argument("--curl", type=Path)
+    research.add_argument("--reuse-sources-from", type=Path, action="append", default=[],
+                          help="Explicit prior successful source attempt; exact requested-URL reuse only (repeatable)")
 
     run = subparsers.add_parser("run-rules")
     run.add_argument("--attempt-root", required=True, type=Path)
@@ -6255,7 +6259,8 @@ def main(argv: list[str] | None = None) -> int:
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)
         elif args.command == "collect-research-sources":
-            result = collect_research_sources_attempt(attempt_root=args.attempt_root, curl=args.curl)
+            result = collect_research_sources_attempt(attempt_root=args.attempt_root, curl=args.curl,
+                                                      reuse_sources_from=tuple(args.reuse_sources_from))
         elif args.command == "run-rules":
             result = run_rules_attempt(
                 attempt_root=args.attempt_root,
