@@ -10,6 +10,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 from src.wildclawbench_grading_core import html_runtime as H
 from tests.general_e2e.test_local_scoring_runtime import Fixture, LOCK_PATH, RUNTIME
@@ -172,6 +173,10 @@ fetch('https://remote.invalid/secret').catch(()=>{});new WebSocket('wss://remote
         result, _ = self.observe('<link rel=stylesheet href=style.css><p>evidence</p>')
         out = self.root / "render"
         audit = result["audit"]
+        # Actual bytes/request context remain identical when the replay host's
+        # MIME registry assigns another type to the same extension.
+        with patch.object(H.mimetypes, 'guess_type', return_value=('application/octet-stream', None)):
+            H.verify_html_observation(self.source, out, audit, self.lock, archived=True)
         png = out / "page.png"
         before = png.read_bytes()
         png.write_bytes(before + b"tampered")
@@ -180,16 +185,20 @@ fetch('https://remote.invalid/secret').catch(()=>{});new WebSocket('wss://remote
         png.write_bytes(before)
         request = out / "request.json"
         old = request.read_bytes()
-        value = json.loads(old)
-        value["source_resource_path"] = "wrong.html"
-        request.write_text(json.dumps(value), encoding="utf-8")
-        forged = copy.deepcopy(audit)
-        forged["request_sha256"] = H.sha(request)
-        for row in forged["artifacts"]:
-            if row["path"] == "request.json":
-                row.update(size=request.stat().st_size, sha256=H.sha(request))
-        with self.assertRaisesRegex(H.HtmlRuntimeError, "request context"):
-            H.verify_html_observation(self.source, out, forged, self.lock, archived=True)
+        for mutation in ['source_path', 'served_mime']:
+            value = json.loads(old)
+            if mutation == 'source_path':
+                value["source_resource_path"] = "wrong.html"
+            else:
+                value['resources'][0]['content_type'] = 'text/plain'
+            request.write_text(json.dumps(value), encoding="utf-8")
+            forged = copy.deepcopy(audit)
+            forged["request_sha256"] = H.sha(request)
+            for row in forged["artifacts"]:
+                if row["path"] == "request.json":
+                    row.update(size=request.stat().st_size, sha256=H.sha(request))
+            with self.subTest(mutation=mutation), self.assertRaisesRegex(H.HtmlRuntimeError, "request context"):
+                H.verify_html_observation(self.source, out, forged, self.lock, archived=True)
         request.write_bytes(old)
         (self.public / "added.js").write_bytes(b"new asset")
         with self.assertRaisesRegex(H.HtmlRuntimeError, "resource inventory"):

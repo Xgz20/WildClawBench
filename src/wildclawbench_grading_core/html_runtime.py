@@ -206,5 +206,10 @@ def verify_html_observation(source,output_dir,audit,lock,*,resource_root=None,ar
         if not isinstance(row,dict) or set(row)!={'path','size','sha256','content_type'} or not isinstance(row['path'],str) or not _relative(row['path']) or not isinstance(row['sha256'],str) or not re.fullmatch('[0-9a-f]{64}',row['sha256']) or type(row['size']) is not int or row['size']<0 or not isinstance(row['content_type'],str):raise invalid('resource binding')
         original=root/row['path'];copy=out/'resources'/(row['sha256']+'.bin')
         if original.is_symlink() or any(x.is_symlink() for x in original.parents if x!=root and root in x.parents) or not original.is_file() or original.stat().st_size!=row['size'] or sha(original)!=row['sha256'] or not copy.is_file() or sha(copy)!=row['sha256']:raise invalid('resource source bytes')
-    if _resources(root,source)!=audit['resources']:raise invalid('public resource inventory changed')
+    # MIME is a frozen HTTP serving choice in request.json, not an intrinsic
+    # property of source bytes. Python/OS MIME registries can differ on replay
+    # (for example .md between Python3.11 and3.12). The request/audit context
+    # above still binds the exact content_type actually used by the observer.
+    identity=lambda rows:[{key:row[key] for key in ['path','size','sha256']} for row in rows]
+    if identity(_resources(root,source))!=identity(audit['resources']):raise invalid('public resource inventory changed')
     return audit

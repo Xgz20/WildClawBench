@@ -5,6 +5,8 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
+`0.23.1`装配core `0.15.1`，修复HTML回执跨Python/系统MIME表复核：冻结请求继续绑定实际使用的content_type，源资源清单按路径、大小及SHA比较，不用回放机器的MIME推断改写历史HTTP上下文。实际3.12 Worker与3.11校验的Markdown资源可正常归档；文件增删/字节或请求上下文漂移仍拒绝。
+
 `0.23.0`装配core `0.15.0`，增加显式`scoring_runtime: {html_render: true}`和`bootstrap-html`。受管Worker可用锁定的Node、Playwright core及Chromium，对原HTML和有界公共素材作离线DOM、SVG、Canvas2D及像素观测。派生截图、请求、脚本、回执和运行时身份进入证据与正常/归档核验；旧任务不自动获得浏览器依赖。观测不直接给业务分；未覆盖的合法图形表达保留异常，不能判能力零分。详见[HTML运行时观测](references/html-observation.md)。
 
 `0.22.0`装配core `0.14.0`，增加独立的`prepare_xlsx_numeric_intervention()`/`verify_xlsx_numeric_intervention()`。它可在副本中对普通标量公式或数值中间量做声明式有限数值干预，保留原单元格公式、缓存、类型的完整记录，并纳入连续来源重放。只证明下游依赖，原值及业务角色须先独立核验。原普通字面数值接口和0/1标记接口保持各自限制；共享/数组/元数据形态仍明确报告不支持。详见[标量数值中间量干预](references/office-recalculation.md#标量数值中间量干预)。

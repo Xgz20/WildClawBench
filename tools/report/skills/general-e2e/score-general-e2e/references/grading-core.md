@@ -1,5 +1,7 @@
 # General E2E 评分 core 接口
 
+score-general-e2e0.23.1/core0.15.1修复HTML资源回执跨Python/系统MIME表的误报。冻结request/audit仍核对实际content_type，源清单的跨机身份只比较路径、大小和SHA；旧观察脚本、锁、截图及回执不重写。文件或请求上下文漂移仍拒绝。
+
 score-general-e2e 0.23.0装配core 0.15.0，增加`HtmlRuntimeError`、`create_html_lock()`、`validate_html_lock()`、`html_lock_digest()`、`observe_html()`及`verify_html_observation()`。Python包装器与`html_observer.mjs`共同分发，实际运行使用显式冻结的外部Node/Playwright core/Chromium。返回浏览器观测和来源回执，不决定业务正确性。归档验证保留源文件、资源、脚本、请求、观测和截图的绑定，无需执行浏览器；不声称密码学证明渲染真实发生。见[HTML运行时观测](html-observation.md)。
 
 score-general-e2e 0.22.0装配core 0.14.0，新增普通标量公式/数值中间量干预API `prepare_xlsx_numeric_intervention()`、`verify_xlsx_numeric_intervention()`。有限数值范围沿用已有numeric literal约束，逐格保存完整`original_cell`并以新的审计schema/Profile重放；不扩大旧字面数值或二进制标记接口。它与原两种Profile共用扎根来源图，归档不依赖引擎仍在场。见[标量数值中间量干预](office-recalculation.md#标量数值中间量干预)。
