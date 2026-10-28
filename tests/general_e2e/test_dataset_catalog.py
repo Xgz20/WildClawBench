@@ -184,6 +184,41 @@ class DatasetCatalogTests(unittest.TestCase):
         report = json.loads((Path(output.getvalue().strip()) / "report.json").read_text())
         self.assertIn("DATASET_RELEASE_CONTRACT_INVALID", {issue["code"] for issue in report["issues"]})
 
+    def test_action_summary_counts_match_lists_with_missing_ids_outside_existing_tasks(self) -> None:
+        script = REPO_ROOT / "tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py"
+        spec = importlib.util.spec_from_file_location("action_summary_validator_test", script)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        failed_id = "sample_research_task_003_fail"
+        review_id = "sample_research_task_004_review"
+        missing_id = "sample_research_task_999_missing"
+        self.add_task(failed_id)
+        self.add_task(review_id)
+        task_ids = [*self.ids, failed_id, review_id, self.ids[0]]
+        issues = [
+            module.Issue(module.FAIL, "FRONTMATTER_FIELD_MISSING", "existing task failed", task_id=failed_id),
+            module.Issue(module.REVIEW, "BOUNDARY_REVIEW", "existing task needs review", task_id=review_id),
+            module.Issue(module.FAIL, "TASK_ID_NOT_FOUND", "selected ID is not materialized", task_id=missing_id),
+        ]
+        original_task_ids, original_issues = list(task_ids), deepcopy(issues)
+
+        summary = module.build_action_summary(task_ids, issues)
+
+        self.assertEqual(summary["tasks_pass"], self.ids)
+        self.assertEqual([item["task_id"] for item in summary["tasks_to_fix"]], [failed_id, missing_id])
+        self.assertEqual([item["task_id"] for item in summary["tasks_for_review"]], [review_id])
+        self.assertEqual(summary["counts"], {"tasks_to_fix": 2, "tasks_for_review": 1, "tasks_pass": 2})
+        for key, items in (("tasks_to_fix", summary["tasks_to_fix"]),
+                           ("tasks_for_review", summary["tasks_for_review"]),
+                           ("tasks_pass", summary["tasks_pass"])):
+            self.assertEqual(summary["counts"][key], len(items))
+        self.assertNotIn(missing_id, task_ids)
+        self.assertFalse((self.base / "tasks/research" / f"{missing_id}.md").exists())
+        self.assertEqual(module.status_for_issues(issues), module.FAIL)
+        self.assertEqual(summary["decision"], "先修复需要修改的用例，再重新运行静态校验。")
+        self.assertEqual(task_ids, original_task_ids)
+        self.assertEqual(issues, original_issues)
+
     def test_missing_selected_tasks_and_missing_required_tags_fail_closed(self) -> None:
         path = self.base / "tasks/research" / f"{self.ids[0]}.md"
         original = path.read_text()

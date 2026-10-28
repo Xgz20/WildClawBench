@@ -424,12 +424,13 @@ def build_action_summary(task_ids: list[str], issues: list[Issue]) -> dict[str, 
         decision = "静态契约未发现确定性错误，但需要人工确认 REVIEW 用例。"
     else:
         decision = "选定范围内未发现静态校验问题。"
+    passed_tasks = sorted(set(task_ids) - {item["task_id"] for item in to_fix} - {item["task_id"] for item in to_review})
     return {
         "decision": decision,
-        "counts": {"tasks_to_fix": len(to_fix), "tasks_for_review": len(to_review), "tasks_pass": max(0, len(set(task_ids)) - len(to_fix) - len(to_review))},
+        "counts": {"tasks_to_fix": len(to_fix), "tasks_for_review": len(to_review), "tasks_pass": len(passed_tasks)},
         "tasks_to_fix": to_fix,
         "tasks_for_review": to_review,
-        "tasks_pass": sorted(set(task_ids) - {item["task_id"] for item in to_fix} - {item["task_id"] for item in to_review}),
+        "tasks_pass": passed_tasks,
         "global_actions": global_actions,
     }
 
