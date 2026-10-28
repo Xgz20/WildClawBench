@@ -1,0 +1,3287 @@
+{
+  "status": "SOURCE_PIXEL_TRUTH_ADOPTED_REFERENCE_RULES_AND_RUNTIME_PENDING",
+  "stage": "non-blind reconciliation and source-truth proposal authoring",
+  "author_role": "Model annotator A, now a non-blind reconciliation author; not a third independent annotator, human expert, Harness executor or formal Judge.",
+  "review_state": "Root adopted source observations and interpretation boundaries; no formal task or empirical difficulty claim.",
+  "source_boundary": "Only the isolated seven-file source package and the two frozen A/B annotation directories were read. No author arrays, private SVG, plotting code, construction geometry or other tasks were accessed.",
+  "source_truth_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/source_truth.json",
+  "approved_region_proposal_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/approved_regions.proposal.json",
+  "source_qa_freezes_retained": true,
+  "schema": "h034-visual-regions-proposal/v1",
+  "coordinate_system": {
+    "pixels": [
+      1800,
+      1260
+    ],
+    "origin": "top-left",
+    "box_format": "xyxy"
+  },
+  "region_policy": "These are approval candidates, not root-approved final regions. All boxes are two-annotator observed overlap or conservative union, never author construction coordinates. Collections retain point boxes rather than whole-image/group enclosing boxes.",
+  "regions": [
+    {
+      "region_id": "R-F01-x-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        180,
+        1074,
+        1710,
+        1135
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F01-x-ticks",
+      "lineage": [
+        {
+          "ref": "A:F01-x-ticks",
+          "original_box": [
+            180,
+            1074,
+            1698,
+            1132
+          ],
+          "object": "budget ticks and baseline"
+        },
+        {
+          "ref": "B:raw:F01-x-ticks",
+          "original_box": [
+            180,
+            1075,
+            1710,
+            1135
+          ],
+          "object": "budget ticks 1, 10, 100"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        180,
+        1075,
+        1698,
+        1132
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F01-x-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        710,
+        1174,
+        1235,
+        1220
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F01-x-label",
+      "lineage": [
+        {
+          "ref": "A:F01-x-label",
+          "original_box": [
+            710,
+            1175,
+            1235,
+            1220
+          ],
+          "object": "budget unit label"
+        },
+        {
+          "ref": "B:raw:F01-x-label",
+          "original_box": [
+            712,
+            1174,
+            1218,
+            1220
+          ],
+          "object": "budget axis label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        712,
+        1175,
+        1218,
+        1220
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F01-y-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        148,
+        282,
+        207,
+        1097
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F01-y-ticks",
+      "lineage": [
+        {
+          "ref": "A:F01-y-ticks",
+          "original_box": [
+            148,
+            287,
+            200,
+            1097
+          ],
+          "object": "percent ticks"
+        },
+        {
+          "ref": "B:raw:F01-y-ticks",
+          "original_box": [
+            148,
+            282,
+            207,
+            1095
+          ],
+          "object": "pass percentage ticks"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        148,
+        287,
+        200,
+        1095
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F01-y-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        190,
+        133,
+        538,
+        176
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F01-y-label",
+      "lineage": [
+        {
+          "ref": "A:F01-y-label",
+          "original_box": [
+            191,
+            136,
+            537,
+            174
+          ],
+          "object": "percent label"
+        },
+        {
+          "ref": "B:raw:F01-y-label",
+          "original_box": [
+            190,
+            133,
+            538,
+            176
+          ],
+          "object": "mean pass label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        191,
+        136,
+        537,
+        174
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F01-legend-A",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "legend_binding",
+      "bbox_xyxy_px": [
+        265,
+        248,
+        490,
+        290
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F01-legend-A",
+      "lineage": [
+        {
+          "ref": "A:F01-legend-A",
+          "original_box": [
+            265,
+            250,
+            490,
+            288
+          ],
+          "object": "Method A binding"
+        },
+        {
+          "ref": "B:raw:F01-legend-A",
+          "original_box": [
+            265,
+            248,
+            482,
+            290
+          ],
+          "object": "blue line, open circular markers"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        265,
+        250,
+        482,
+        288
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F01-legend-B",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "legend_binding",
+      "bbox_xyxy_px": [
+        265,
+        299,
+        490,
+        342
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F01-legend-B",
+      "lineage": [
+        {
+          "ref": "A:F01-legend-B",
+          "original_box": [
+            265,
+            301,
+            490,
+            339
+          ],
+          "object": "Method B binding"
+        },
+        {
+          "ref": "B:raw:F01-legend-B",
+          "original_box": [
+            265,
+            299,
+            482,
+            342
+          ],
+          "object": "orange line, filled square markers"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        265,
+        301,
+        482,
+        339
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F01-A-1-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        184,
+        831,
+        212,
+        858
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F01-A-1",
+          "original_box": [
+            184,
+            806,
+            213,
+            881
+          ],
+          "object": "F01-A-1"
+        },
+        {
+          "ref": "B:raw:F01-A-1:mean",
+          "original_box": [
+            184,
+            831,
+            212,
+            858
+          ],
+          "object": "F01-A-1 mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        184,
+        831,
+        212,
+        858
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-A-1-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        181,
+        804,
+        215,
+        883
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F01-A-1",
+          "original_box": [
+            184,
+            806,
+            213,
+            881
+          ],
+          "object": "F01-A-1"
+        },
+        {
+          "ref": "B:raw:F01-A-1:error",
+          "original_box": [
+            181,
+            804,
+            215,
+            883
+          ],
+          "object": "F01-A-1 error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        184,
+        806,
+        213,
+        881
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-B-1-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        183,
+        784,
+        213,
+        813
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F01-B-1",
+          "original_box": [
+            183,
+            744,
+            214,
+            851
+          ],
+          "object": "F01-B-1"
+        },
+        {
+          "ref": "B:raw:F01-B-1:mean",
+          "original_box": [
+            183,
+            784,
+            213,
+            813
+          ],
+          "object": "F01-B-1 mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        183,
+        784,
+        213,
+        813
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-B-1-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        181,
+        744,
+        215,
+        852
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F01-B-1",
+          "original_box": [
+            183,
+            744,
+            214,
+            851
+          ],
+          "object": "F01-B-1"
+        },
+        {
+          "ref": "B:raw:F01-B-1:error",
+          "original_box": [
+            181,
+            744,
+            215,
+            852
+          ],
+          "object": "F01-B-1 error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        183,
+        744,
+        214,
+        851
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-A-10-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        922,
+        569,
+        950,
+        596
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F01-A-10",
+          "original_box": [
+            920,
+            528,
+            951,
+            637
+          ],
+          "object": "F01-A-10"
+        },
+        {
+          "ref": "B:raw:F01-A-10:mean",
+          "original_box": [
+            922,
+            569,
+            950,
+            596
+          ],
+          "object": "F01-A-10 mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        922,
+        569,
+        950,
+        596
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-A-10-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        919,
+        528,
+        953,
+        637
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F01-A-10",
+          "original_box": [
+            920,
+            528,
+            951,
+            637
+          ],
+          "object": "F01-A-10"
+        },
+        {
+          "ref": "B:raw:F01-A-10:error",
+          "original_box": [
+            919,
+            528,
+            953,
+            637
+          ],
+          "object": "F01-A-10 error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        920,
+        528,
+        951,
+        637
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-B-10-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        920,
+        691,
+        952,
+        720
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F01-B-10",
+          "original_box": [
+            919,
+            635,
+            952,
+            775
+          ],
+          "object": "F01-B-10"
+        },
+        {
+          "ref": "B:raw:F01-B-10:mean",
+          "original_box": [
+            920,
+            691,
+            952,
+            720
+          ],
+          "object": "F01-B-10 mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        920,
+        691,
+        952,
+        720
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-B-10-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        919,
+        635,
+        953,
+        775
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F01-B-10",
+          "original_box": [
+            919,
+            635,
+            952,
+            775
+          ],
+          "object": "F01-B-10"
+        },
+        {
+          "ref": "B:raw:F01-B-10:error",
+          "original_box": [
+            919,
+            635,
+            953,
+            775
+          ],
+          "object": "F01-B-10 error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        919,
+        635,
+        952,
+        775
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-A-100-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        1660,
+        385,
+        1689,
+        413
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F01-A-100",
+          "original_box": [
+            1657,
+            360,
+            1691,
+            438
+          ],
+          "object": "F01-A-100"
+        },
+        {
+          "ref": "B:raw:F01-A-100:mean",
+          "original_box": [
+            1660,
+            385,
+            1689,
+            413
+          ],
+          "object": "F01-A-100 mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1660,
+        385,
+        1689,
+        413
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-A-100-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        1657,
+        360,
+        1691,
+        438
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F01-A-100",
+          "original_box": [
+            1657,
+            360,
+            1691,
+            438
+          ],
+          "object": "F01-A-100"
+        },
+        {
+          "ref": "B:raw:F01-A-100:error",
+          "original_box": [
+            1657,
+            360,
+            1691,
+            438
+          ],
+          "object": "F01-A-100 error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1657,
+        360,
+        1691,
+        438
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-B-100-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        1659,
+        474,
+        1690,
+        503
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F01-B-100",
+          "original_box": [
+            1657,
+            434,
+            1691,
+            543
+          ],
+          "object": "F01-B-100"
+        },
+        {
+          "ref": "B:raw:F01-B-100:mean",
+          "original_box": [
+            1659,
+            474,
+            1690,
+            503
+          ],
+          "object": "F01-B-100 mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1659,
+        474,
+        1690,
+        503
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-B-100-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        1657,
+        434,
+        1691,
+        543
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F01-B-100",
+          "original_box": [
+            1657,
+            434,
+            1691,
+            543
+          ],
+          "object": "F01-B-100"
+        },
+        {
+          "ref": "B:raw:F01-B-100:error",
+          "original_box": [
+            1657,
+            434,
+            1691,
+            543
+          ],
+          "object": "F01-B-100 error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1657,
+        434,
+        1691,
+        543
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F02-x-categories",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        528,
+        1089,
+        1356,
+        1130
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Method A and Method B category labels",
+      "lineage": [
+        {
+          "ref": "A:F02-x",
+          "original_box": [
+            525,
+            1085,
+            1356,
+            1218
+          ],
+          "object": "method categories and label"
+        },
+        {
+          "ref": "B:raw:F02-x-categories",
+          "original_box": [
+            528,
+            1089,
+            1371,
+            1130
+          ],
+          "object": "method category labels"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        528,
+        1089,
+        1356,
+        1130
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-x-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        884,
+        1174,
+        1019,
+        1216
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Method axis label",
+      "lineage": [
+        {
+          "ref": "A:F02-x",
+          "original_box": [
+            525,
+            1085,
+            1356,
+            1218
+          ],
+          "object": "method categories and label"
+        },
+        {
+          "ref": "B:raw:F02-x-label",
+          "original_box": [
+            884,
+            1174,
+            1019,
+            1216
+          ],
+          "object": "method axis label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        884,
+        1174,
+        1019,
+        1216
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-y-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        146,
+        230,
+        205,
+        1097
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F02-y-ticks",
+      "lineage": [
+        {
+          "ref": "A:F02-y-ticks",
+          "original_box": [
+            148,
+            235,
+            202,
+            1097
+          ],
+          "object": "percent ticks"
+        },
+        {
+          "ref": "B:raw:F02-y-ticks",
+          "original_box": [
+            146,
+            230,
+            205,
+            1096
+          ],
+          "object": "percentage ticks 60 to 95"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        148,
+        235,
+        202,
+        1096
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-y-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        191,
+        134,
+        538,
+        175
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F02-y-label",
+      "lineage": [
+        {
+          "ref": "A:F02-y-label",
+          "original_box": [
+            191,
+            136,
+            536,
+            174
+          ],
+          "object": "percent label"
+        },
+        {
+          "ref": "B:raw:F02-y-label",
+          "original_box": [
+            191,
+            134,
+            538,
+            175
+          ],
+          "object": "mean pass label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        191,
+        136,
+        536,
+        174
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-binding-A",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "series_binding",
+      "bbox_xyxy_px": [
+        425,
+        589,
+        778,
+        642
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Bar top and mark/category binding for Method A",
+      "lineage": [
+        {
+          "ref": "A:F02-A-mean",
+          "original_box": [
+            425,
+            589,
+            778,
+            620
+          ],
+          "object": "A bar-top and mean marker"
+        },
+        {
+          "ref": "B:raw:F02-binding-A",
+          "original_box": [
+            428,
+            592,
+            773,
+            642
+          ],
+          "object": "left pale-blue bar with blue outline and open circular mean marker"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        428,
+        592,
+        773,
+        620
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-binding-B",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "series_binding",
+      "bbox_xyxy_px": [
+        1094,
+        495,
+        1449,
+        537
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Bar top and mark/category binding for Method B",
+      "lineage": [
+        {
+          "ref": "A:F02-B-mean",
+          "original_box": [
+            1094,
+            495,
+            1449,
+            526
+          ],
+          "object": "B bar-top and mean marker"
+        },
+        {
+          "ref": "B:raw:F02-binding-B",
+          "original_box": [
+            1099,
+            496,
+            1444,
+            537
+          ],
+          "object": "right pale-orange bar with orange outline and filled square mean marker"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1099,
+        496,
+        1444,
+        526
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-SD",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "figure_annotation",
+      "bbox_xyxy_px": [
+        1145,
+        239,
+        1360,
+        280
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F02-SD",
+      "lineage": [
+        {
+          "ref": "A:F02-SD",
+          "original_box": [
+            1145,
+            239,
+            1360,
+            278
+          ],
+          "object": "error type label"
+        },
+        {
+          "ref": "B:raw:F02-error-type",
+          "original_box": [
+            1146,
+            240,
+            1356,
+            280
+          ],
+          "object": "Error bars: SD"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1146,
+        240,
+        1356,
+        278
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-n",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "figure_annotation",
+      "bbox_xyxy_px": [
+        1145,
+        291,
+        1466,
+        332
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F02-n",
+      "lineage": [
+        {
+          "ref": "A:F02-n",
+          "original_box": [
+            1145,
+            291,
+            1464,
+            328
+          ],
+          "object": "sample/pairing label"
+        },
+        {
+          "ref": "B:raw:F02-n",
+          "original_box": [
+            1146,
+            291,
+            1466,
+            332
+          ],
+          "object": "n = 12 paired batches"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1146,
+        291,
+        1464,
+        328
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F02-A-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        586,
+        591,
+        615,
+        619
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F02-A",
+          "original_box": [
+            584,
+            451,
+            617,
+            757
+          ],
+          "object": "F02-A"
+        },
+        {
+          "ref": "B:raw:F02-A:mean",
+          "original_box": [
+            586,
+            591,
+            615,
+            619
+          ],
+          "object": "F02-A mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        586,
+        591,
+        615,
+        619
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F02-A-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        582,
+        451,
+        619,
+        757
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F02-A",
+          "original_box": [
+            584,
+            451,
+            617,
+            757
+          ],
+          "object": "F02-A"
+        },
+        {
+          "ref": "B:raw:F02-A:error",
+          "original_box": [
+            582,
+            454,
+            619,
+            755
+          ],
+          "object": "F02-A error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        584,
+        454,
+        617,
+        755
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F02-B-mean",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        1256,
+        495,
+        1288,
+        524
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Mean marker localized by B mean box within A observed mean/error region",
+      "lineage": [
+        {
+          "ref": "A:F02-B",
+          "original_box": [
+            1253,
+            429,
+            1289,
+            591
+          ],
+          "object": "F02-B"
+        },
+        {
+          "ref": "B:raw:F02-B:mean",
+          "original_box": [
+            1256,
+            495,
+            1288,
+            524
+          ],
+          "object": "F02-B mean"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1256,
+        495,
+        1288,
+        524
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F02-B-error",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F02_intervals.png",
+      "kind": "error_bar_and_caps",
+      "bbox_xyxy_px": [
+        1253,
+        429,
+        1290,
+        591
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "Displayed full error bar, with both endpoint readings in source_truth",
+      "lineage": [
+        {
+          "ref": "A:F02-B",
+          "original_box": [
+            1253,
+            429,
+            1289,
+            591
+          ],
+          "object": "F02-B"
+        },
+        {
+          "ref": "B:raw:F02-B:error",
+          "original_box": [
+            1253,
+            431,
+            1290,
+            589
+          ],
+          "object": "F02-B error"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1253,
+        431,
+        1289,
+        589
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-x-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        181,
+        1072,
+        1701,
+        1135
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-x-ticks",
+      "lineage": [
+        {
+          "ref": "A:F03-x-ticks",
+          "original_box": [
+            184,
+            1072,
+            1697,
+            1131
+          ],
+          "object": "worker ticks"
+        },
+        {
+          "ref": "B:raw:F03-x-ticks",
+          "original_box": [
+            181,
+            1075,
+            1701,
+            1135
+          ],
+          "object": "worker ticks 1, 2, 4, 8, 16"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        184,
+        1075,
+        1697,
+        1131
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F03-x-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        787,
+        1175,
+        1120,
+        1220
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-x-label",
+      "lineage": [
+        {
+          "ref": "A:F03-x-label",
+          "original_box": [
+            787,
+            1175,
+            1101,
+            1220
+          ],
+          "object": "worker unit label"
+        },
+        {
+          "ref": "B:raw:F03-x-label",
+          "original_box": [
+            791,
+            1175,
+            1120,
+            1220
+          ],
+          "object": "concurrent workers label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        791,
+        1175,
+        1101,
+        1220
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F03-y-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        99,
+        208,
+        206,
+        1098
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-y-ticks",
+      "lineage": [
+        {
+          "ref": "A:F03-y-ticks",
+          "original_box": [
+            99,
+            209,
+            203,
+            1097
+          ],
+          "object": "elapsed-time ticks"
+        },
+        {
+          "ref": "B:raw:F03-y-ticks",
+          "original_box": [
+            100,
+            208,
+            206,
+            1098
+          ],
+          "object": "milliseconds ticks on log scale"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        100,
+        209,
+        203,
+        1097
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F03-y-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        190,
+        134,
+        489,
+        175
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-y-label",
+      "lineage": [
+        {
+          "ref": "A:F03-y-label",
+          "original_box": [
+            190,
+            135,
+            481,
+            175
+          ],
+          "object": "elapsed-time unit label"
+        },
+        {
+          "ref": "B:raw:F03-y-label",
+          "original_box": [
+            191,
+            134,
+            489,
+            175
+          ],
+          "object": "elapsed time and milliseconds label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        191,
+        135,
+        481,
+        175
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F03-legend-A",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "legend_binding",
+      "bbox_xyxy_px": [
+        264,
+        249,
+        486,
+        291
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-legend-A",
+      "lineage": [
+        {
+          "ref": "A:F03-legend-A",
+          "original_box": [
+            264,
+            249,
+            486,
+            289
+          ],
+          "object": "Method A binding"
+        },
+        {
+          "ref": "B:raw:F03-legend-A",
+          "original_box": [
+            265,
+            249,
+            482,
+            291
+          ],
+          "object": "blue line, open circular markers"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        265,
+        249,
+        482,
+        289
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F03-legend-B",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "legend_binding",
+      "bbox_xyxy_px": [
+        264,
+        300,
+        486,
+        343
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-legend-B",
+      "lineage": [
+        {
+          "ref": "A:F03-legend-B",
+          "original_box": [
+            264,
+            300,
+            486,
+            340
+          ],
+          "object": "Method B binding"
+        },
+        {
+          "ref": "B:raw:F03-legend-B",
+          "original_box": [
+            265,
+            300,
+            483,
+            343
+          ],
+          "object": "orange line, filled square markers"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        265,
+        300,
+        483,
+        340
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F03-A-1-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        183,
+        561,
+        214,
+        593
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-A-1-point",
+      "lineage": [
+        {
+          "ref": "A:F03-A-1",
+          "original_box": [
+            184,
+            561,
+            213,
+            593
+          ],
+          "object": "F03-A-1"
+        },
+        {
+          "ref": "B:raw:F03-A-1:point",
+          "original_box": [
+            183,
+            562,
+            214,
+            591
+          ],
+          "object": "F03-A-1 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        184,
+        562,
+        213,
+        591
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-A-2-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        281,
+        657,
+        313,
+        688
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-A-2-point",
+      "lineage": [
+        {
+          "ref": "A:F03-A-2",
+          "original_box": [
+            281,
+            657,
+            313,
+            688
+          ],
+          "object": "F03-A-2"
+        },
+        {
+          "ref": "B:raw:F03-A-2:point",
+          "original_box": [
+            281,
+            657,
+            312,
+            687
+          ],
+          "object": "F03-A-2 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        281,
+        657,
+        312,
+        687
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-A-4-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        477,
+        748,
+        510,
+        781
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-A-4-point",
+      "lineage": [
+        {
+          "ref": "A:F03-A-4",
+          "original_box": [
+            477,
+            748,
+            510,
+            781
+          ],
+          "object": "F03-A-4"
+        },
+        {
+          "ref": "B:raw:F03-A-4:point",
+          "original_box": [
+            477,
+            748,
+            510,
+            779
+          ],
+          "object": "F03-A-4 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        477,
+        748,
+        510,
+        779
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-A-8-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        871,
+        860,
+        903,
+        892
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-A-8-point",
+      "lineage": [
+        {
+          "ref": "A:F03-A-8",
+          "original_box": [
+            871,
+            860,
+            903,
+            892
+          ],
+          "object": "F03-A-8"
+        },
+        {
+          "ref": "B:raw:F03-A-8:point",
+          "original_box": [
+            871,
+            860,
+            902,
+            891
+          ],
+          "object": "F03-A-8 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        871,
+        860,
+        902,
+        891
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-A-16-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        1658,
+        918,
+        1690,
+        950
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-A-16-point",
+      "lineage": [
+        {
+          "ref": "A:F03-A-16",
+          "original_box": [
+            1658,
+            918,
+            1690,
+            950
+          ],
+          "object": "F03-A-16"
+        },
+        {
+          "ref": "B:raw:F03-A-16:point",
+          "original_box": [
+            1659,
+            918,
+            1690,
+            950
+          ],
+          "object": "F03-A-16 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1659,
+        918,
+        1690,
+        950
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-B-1-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        183,
+        602,
+        214,
+        635
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-B-1-point",
+      "lineage": [
+        {
+          "ref": "A:F03-B-1",
+          "original_box": [
+            183,
+            602,
+            214,
+            635
+          ],
+          "object": "F03-B-1"
+        },
+        {
+          "ref": "B:raw:F03-B-1:point",
+          "original_box": [
+            183,
+            604,
+            214,
+            634
+          ],
+          "object": "F03-B-1 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        183,
+        604,
+        214,
+        634
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-B-2-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        280,
+        588,
+        312,
+        620
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-B-2-point",
+      "lineage": [
+        {
+          "ref": "A:F03-B-2",
+          "original_box": [
+            280,
+            588,
+            312,
+            620
+          ],
+          "object": "F03-B-2"
+        },
+        {
+          "ref": "B:raw:F03-B-2:point",
+          "original_box": [
+            281,
+            588,
+            312,
+            619
+          ],
+          "object": "F03-B-2 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        281,
+        588,
+        312,
+        619
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-B-4-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        477,
+        527,
+        509,
+        559
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-B-4-point",
+      "lineage": [
+        {
+          "ref": "A:F03-B-4",
+          "original_box": [
+            477,
+            527,
+            509,
+            559
+          ],
+          "object": "F03-B-4"
+        },
+        {
+          "ref": "B:raw:F03-B-4:point",
+          "original_box": [
+            478,
+            528,
+            509,
+            558
+          ],
+          "object": "F03-B-4 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        478,
+        528,
+        509,
+        558
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-B-8-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        870,
+        432,
+        903,
+        465
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-B-8-point",
+      "lineage": [
+        {
+          "ref": "A:F03-B-8",
+          "original_box": [
+            870,
+            432,
+            903,
+            465
+          ],
+          "object": "F03-B-8"
+        },
+        {
+          "ref": "B:raw:F03-B-8:point",
+          "original_box": [
+            871,
+            433,
+            902,
+            464
+          ],
+          "object": "F03-B-8 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        871,
+        433,
+        902,
+        464
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-B-16-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "mean_mark",
+      "bbox_xyxy_px": [
+        1658,
+        338,
+        1690,
+        370
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F03-B-16-point",
+      "lineage": [
+        {
+          "ref": "A:F03-B-16",
+          "original_box": [
+            1658,
+            338,
+            1690,
+            370
+          ],
+          "object": "F03-B-16"
+        },
+        {
+          "ref": "B:raw:F03-B-16:point",
+          "original_box": [
+            1659,
+            338,
+            1690,
+            369
+          ],
+          "object": "F03-B-16 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1659,
+        338,
+        1690,
+        369
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-x-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        250,
+        1072,
+        1625,
+        1134
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-x-ticks",
+      "lineage": [
+        {
+          "ref": "A:F04-x-ticks",
+          "original_box": [
+            250,
+            1072,
+            1620,
+            1133
+          ],
+          "object": "planning-length ticks"
+        },
+        {
+          "ref": "B:raw:F04-x-ticks",
+          "original_box": [
+            252,
+            1074,
+            1625,
+            1134
+          ],
+          "object": "planning steps ticks"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        252,
+        1074,
+        1620,
+        1133
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F04-x-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        713,
+        1173,
+        1250,
+        1219
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-x-label",
+      "lineage": [
+        {
+          "ref": "A:F04-x-label",
+          "original_box": [
+            713,
+            1173,
+            1250,
+            1218
+          ],
+          "object": "planning-length label"
+        },
+        {
+          "ref": "B:raw:F04-x-label",
+          "original_box": [
+            714,
+            1175,
+            1200,
+            1219
+          ],
+          "object": "mean planning length label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        714,
+        1175,
+        1200,
+        1218
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F04-y-ticks",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "axis_ticks",
+      "bbox_xyxy_px": [
+        129,
+        207,
+        205,
+        1098
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-y-ticks",
+      "lineage": [
+        {
+          "ref": "A:F04-y-ticks",
+          "original_box": [
+            129,
+            207,
+            200,
+            1098
+          ],
+          "object": "pass ticks"
+        },
+        {
+          "ref": "B:raw:F04-y-ticks",
+          "original_box": [
+            136,
+            209,
+            205,
+            1097
+          ],
+          "object": "observed target pass percentage ticks"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        136,
+        209,
+        200,
+        1097
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F04-y-label",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "axis_label",
+      "bbox_xyxy_px": [
+        190,
+        134,
+        601,
+        177
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-y-label",
+      "lineage": [
+        {
+          "ref": "A:F04-y-label",
+          "original_box": [
+            190,
+            135,
+            601,
+            174
+          ],
+          "object": "pass label"
+        },
+        {
+          "ref": "B:raw:F04-y-label",
+          "original_box": [
+            191,
+            134,
+            598,
+            177
+          ],
+          "object": "observed pass label"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        191,
+        135,
+        598,
+        174
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F04-legend-G1",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "legend_binding",
+      "bbox_xyxy_px": [
+        1235,
+        930,
+        1463,
+        975
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-legend-G1",
+      "lineage": [
+        {
+          "ref": "A:F04-legend-G1",
+          "original_box": [
+            1235,
+            930,
+            1463,
+            975
+          ],
+          "object": "G1 binding"
+        },
+        {
+          "ref": "B:raw:F04-legend-G1",
+          "original_box": [
+            1236,
+            932,
+            1457,
+            973
+          ],
+          "object": "blue open circles"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1236,
+        932,
+        1457,
+        973
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F04-legend-G2",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "legend_binding",
+      "bbox_xyxy_px": [
+        1235,
+        981,
+        1463,
+        1027
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-legend-G2",
+      "lineage": [
+        {
+          "ref": "A:F04-legend-G2",
+          "original_box": [
+            1235,
+            981,
+            1463,
+            1027
+          ],
+          "object": "G2 binding"
+        },
+        {
+          "ref": "B:raw:F04-legend-G2",
+          "original_box": [
+            1236,
+            982,
+            1457,
+            1025
+          ],
+          "object": "orange filled squares"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1236,
+        982,
+        1457,
+        1025
+      ],
+      "use_limit": "Axis/legend context alone cannot replace the relevant marks and readable values."
+    },
+    {
+      "region_id": "R-F04-G1-1-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        255,
+        697,
+        286,
+        729
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G1-1-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G1-1",
+          "original_box": [
+            255,
+            697,
+            286,
+            729
+          ],
+          "object": "F04-G1-1"
+        },
+        {
+          "ref": "B:raw:F04-G1-1:point",
+          "original_box": [
+            255,
+            698,
+            286,
+            728
+          ],
+          "object": "F04-G1-1 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        255,
+        698,
+        286,
+        728
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G1-2-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        376,
+        747,
+        407,
+        779
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G1-2-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G1-2",
+          "original_box": [
+            376,
+            747,
+            407,
+            779
+          ],
+          "object": "F04-G1-2"
+        },
+        {
+          "ref": "B:raw:F04-G1-2:point",
+          "original_box": [
+            376,
+            748,
+            407,
+            778
+          ],
+          "object": "F04-G1-2 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        376,
+        748,
+        407,
+        778
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G1-3-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        496,
+        798,
+        529,
+        830
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G1-3-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G1-3",
+          "original_box": [
+            496,
+            798,
+            529,
+            830
+          ],
+          "object": "F04-G1-3"
+        },
+        {
+          "ref": "B:raw:F04-G1-3:point",
+          "original_box": [
+            497,
+            799,
+            528,
+            829
+          ],
+          "object": "F04-G1-3 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        497,
+        799,
+        528,
+        829
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G1-4-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        617,
+        843,
+        650,
+        875
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G1-4-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G1-4",
+          "original_box": [
+            617,
+            843,
+            650,
+            875
+          ],
+          "object": "F04-G1-4"
+        },
+        {
+          "ref": "B:raw:F04-G1-4:point",
+          "original_box": [
+            618,
+            844,
+            649,
+            874
+          ],
+          "object": "F04-G1-4 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        618,
+        844,
+        649,
+        874
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G1-5-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        738,
+        895,
+        770,
+        927
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G1-5-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G1-5",
+          "original_box": [
+            738,
+            895,
+            770,
+            927
+          ],
+          "object": "F04-G1-5"
+        },
+        {
+          "ref": "B:raw:F04-G1-5:point",
+          "original_box": [
+            739,
+            896,
+            770,
+            926
+          ],
+          "object": "F04-G1-5 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        739,
+        896,
+        770,
+        926
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G2-8-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        1101,
+        334,
+        1134,
+        366
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G2-8-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G2-8",
+          "original_box": [
+            1101,
+            334,
+            1134,
+            366
+          ],
+          "object": "F04-G2-8"
+        },
+        {
+          "ref": "B:raw:F04-G2-8:point",
+          "original_box": [
+            1101,
+            334,
+            1133,
+            365
+          ],
+          "object": "F04-G2-8 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1101,
+        334,
+        1133,
+        365
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G2-9-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        1222,
+        379,
+        1255,
+        412
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G2-9-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G2-9",
+          "original_box": [
+            1222,
+            379,
+            1255,
+            412
+          ],
+          "object": "F04-G2-9"
+        },
+        {
+          "ref": "B:raw:F04-G2-9:point",
+          "original_box": [
+            1222,
+            380,
+            1254,
+            411
+          ],
+          "object": "F04-G2-9 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1222,
+        380,
+        1254,
+        411
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G2-10-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        1343,
+        430,
+        1376,
+        463
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G2-10-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G2-10",
+          "original_box": [
+            1343,
+            430,
+            1376,
+            463
+          ],
+          "object": "F04-G2-10"
+        },
+        {
+          "ref": "B:raw:F04-G2-10:point",
+          "original_box": [
+            1343,
+            431,
+            1375,
+            462
+          ],
+          "object": "F04-G2-10 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1343,
+        431,
+        1375,
+        462
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G2-11-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        1464,
+        477,
+        1497,
+        510
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G2-11-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G2-11",
+          "original_box": [
+            1464,
+            477,
+            1497,
+            510
+          ],
+          "object": "F04-G2-11"
+        },
+        {
+          "ref": "B:raw:F04-G2-11:point",
+          "original_box": [
+            1464,
+            477,
+            1496,
+            508
+          ],
+          "object": "F04-G2-11 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1464,
+        477,
+        1496,
+        508
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G2-12-point",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point",
+      "bbox_xyxy_px": [
+        1585,
+        529,
+        1618,
+        562
+      ],
+      "construction_method": "conservative_union",
+      "purpose": "R-F04-G2-12-point",
+      "lineage": [
+        {
+          "ref": "A:F04-G2-12",
+          "original_box": [
+            1585,
+            529,
+            1618,
+            562
+          ],
+          "object": "F04-G2-12"
+        },
+        {
+          "ref": "B:raw:F04-G2-12:point",
+          "original_box": [
+            1585,
+            530,
+            1617,
+            561
+          ],
+          "object": "F04-G2-12 point"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1585,
+        530,
+        1617,
+        561
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-x-tick-1",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "selected_tick",
+      "bbox_xyxy_px": [
+        180,
+        1075,
+        218,
+        1132
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Budget tick 1; selected from two observed axis regions",
+      "lineage": [
+        {
+          "ref": "A:F01-x-ticks",
+          "original_box": [
+            180,
+            1074,
+            1698,
+            1132
+          ],
+          "object": "budget ticks and baseline"
+        },
+        {
+          "ref": "B:claim:C02:0/bbox",
+          "original_box": [
+            180,
+            1075,
+            218,
+            1134
+          ],
+          "object": "预算1刻度"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        180,
+        1075,
+        218,
+        1132
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-x-tick-10",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "selected_tick",
+      "bbox_xyxy_px": [
+        910,
+        1075,
+        962,
+        1132
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Budget tick 10; selected from two observed axis regions",
+      "lineage": [
+        {
+          "ref": "A:F01-x-ticks",
+          "original_box": [
+            180,
+            1074,
+            1698,
+            1132
+          ],
+          "object": "budget ticks and baseline"
+        },
+        {
+          "ref": "B:claim:C02:1/bbox",
+          "original_box": [
+            910,
+            1075,
+            962,
+            1134
+          ],
+          "object": "预算10刻度"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        910,
+        1075,
+        962,
+        1132
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F01-x-tick-100",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F01_budget.png",
+      "kind": "selected_tick",
+      "bbox_xyxy_px": [
+        1638,
+        1075,
+        1698,
+        1132
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Budget tick 100; selected from two observed axis regions",
+      "lineage": [
+        {
+          "ref": "A:F01-x-ticks",
+          "original_box": [
+            180,
+            1074,
+            1698,
+            1132
+          ],
+          "object": "budget ticks and baseline"
+        },
+        {
+          "ref": "B:claim:C02:2/bbox",
+          "original_box": [
+            1638,
+            1075,
+            1710,
+            1134
+          ],
+          "object": "预算100刻度"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        1638,
+        1075,
+        1698,
+        1132
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F03-x-tick-8",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F03_latency.png",
+      "kind": "selected_tick",
+      "bbox_xyxy_px": [
+        867,
+        1075,
+        906,
+        1131
+      ],
+      "construction_method": "two_model_overlap",
+      "purpose": "Worker8 tick",
+      "lineage": [
+        {
+          "ref": "A:F03-x-ticks",
+          "original_box": [
+            184,
+            1072,
+            1697,
+            1131
+          ],
+          "object": "worker ticks"
+        },
+        {
+          "ref": "B:claim:C05:0/bbox",
+          "original_box": [
+            867,
+            1075,
+            906,
+            1135
+          ],
+          "object": "8 workers刻度"
+        }
+      ],
+      "two_model_overlap_xyxy_px": [
+        867,
+        1075,
+        906,
+        1131
+      ],
+      "use_limit": "Use together with matching axis/unit and legend or category binding."
+    },
+    {
+      "region_id": "R-F04-G1-all-points",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point_collection",
+      "member_region_ids": [
+        "R-F04-G1-1-point",
+        "R-F04-G1-2-point",
+        "R-F04-G1-3-point",
+        "R-F04-G1-4-point",
+        "R-F04-G1-5-point"
+      ],
+      "point_bboxes_xyxy_px": [
+        [
+          255,
+          697,
+          286,
+          729
+        ],
+        [
+          376,
+          747,
+          407,
+          779
+        ],
+        [
+          496,
+          798,
+          529,
+          830
+        ],
+        [
+          617,
+          843,
+          650,
+          875
+        ],
+        [
+          738,
+          895,
+          770,
+          927
+        ]
+      ],
+      "construction_method": "collection_of_two-model-conservative-point-unions",
+      "purpose": "Within-group direction without enclosing an entire blank plotting area",
+      "lineage": [
+        {
+          "ref": "A:F04-G1-1",
+          "original_box": [
+            255,
+            697,
+            286,
+            729
+          ],
+          "object": "F04-G1-1"
+        },
+        {
+          "ref": "B:raw:F04-G1-1:point",
+          "original_box": [
+            255,
+            698,
+            286,
+            728
+          ],
+          "object": "F04-G1-1 point"
+        },
+        {
+          "ref": "A:F04-G1-2",
+          "original_box": [
+            376,
+            747,
+            407,
+            779
+          ],
+          "object": "F04-G1-2"
+        },
+        {
+          "ref": "B:raw:F04-G1-2:point",
+          "original_box": [
+            376,
+            748,
+            407,
+            778
+          ],
+          "object": "F04-G1-2 point"
+        },
+        {
+          "ref": "A:F04-G1-3",
+          "original_box": [
+            496,
+            798,
+            529,
+            830
+          ],
+          "object": "F04-G1-3"
+        },
+        {
+          "ref": "B:raw:F04-G1-3:point",
+          "original_box": [
+            497,
+            799,
+            528,
+            829
+          ],
+          "object": "F04-G1-3 point"
+        },
+        {
+          "ref": "A:F04-G1-4",
+          "original_box": [
+            617,
+            843,
+            650,
+            875
+          ],
+          "object": "F04-G1-4"
+        },
+        {
+          "ref": "B:raw:F04-G1-4:point",
+          "original_box": [
+            618,
+            844,
+            649,
+            874
+          ],
+          "object": "F04-G1-4 point"
+        },
+        {
+          "ref": "A:F04-G1-5",
+          "original_box": [
+            738,
+            895,
+            770,
+            927
+          ],
+          "object": "F04-G1-5"
+        },
+        {
+          "ref": "B:raw:F04-G1-5:point",
+          "original_box": [
+            739,
+            896,
+            770,
+            926
+          ],
+          "object": "F04-G1-5 point"
+        }
+      ]
+    },
+    {
+      "region_id": "R-F04-G2-all-points",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "group_point_collection",
+      "member_region_ids": [
+        "R-F04-G2-8-point",
+        "R-F04-G2-9-point",
+        "R-F04-G2-10-point",
+        "R-F04-G2-11-point",
+        "R-F04-G2-12-point"
+      ],
+      "point_bboxes_xyxy_px": [
+        [
+          1101,
+          334,
+          1134,
+          366
+        ],
+        [
+          1222,
+          379,
+          1255,
+          412
+        ],
+        [
+          1343,
+          430,
+          1376,
+          463
+        ],
+        [
+          1464,
+          477,
+          1497,
+          510
+        ],
+        [
+          1585,
+          529,
+          1618,
+          562
+        ]
+      ],
+      "construction_method": "collection_of_two-model-conservative-point-unions",
+      "purpose": "Within-group direction without enclosing an entire blank plotting area",
+      "lineage": [
+        {
+          "ref": "A:F04-G2-8",
+          "original_box": [
+            1101,
+            334,
+            1134,
+            366
+          ],
+          "object": "F04-G2-8"
+        },
+        {
+          "ref": "B:raw:F04-G2-8:point",
+          "original_box": [
+            1101,
+            334,
+            1133,
+            365
+          ],
+          "object": "F04-G2-8 point"
+        },
+        {
+          "ref": "A:F04-G2-9",
+          "original_box": [
+            1222,
+            379,
+            1255,
+            412
+          ],
+          "object": "F04-G2-9"
+        },
+        {
+          "ref": "B:raw:F04-G2-9:point",
+          "original_box": [
+            1222,
+            380,
+            1254,
+            411
+          ],
+          "object": "F04-G2-9 point"
+        },
+        {
+          "ref": "A:F04-G2-10",
+          "original_box": [
+            1343,
+            430,
+            1376,
+            463
+          ],
+          "object": "F04-G2-10"
+        },
+        {
+          "ref": "B:raw:F04-G2-10:point",
+          "original_box": [
+            1343,
+            431,
+            1375,
+            462
+          ],
+          "object": "F04-G2-10 point"
+        },
+        {
+          "ref": "A:F04-G2-11",
+          "original_box": [
+            1464,
+            477,
+            1497,
+            510
+          ],
+          "object": "F04-G2-11"
+        },
+        {
+          "ref": "B:raw:F04-G2-11:point",
+          "original_box": [
+            1464,
+            477,
+            1496,
+            508
+          ],
+          "object": "F04-G2-11 point"
+        },
+        {
+          "ref": "A:F04-G2-12",
+          "original_box": [
+            1585,
+            529,
+            1618,
+            562
+          ],
+          "object": "F04-G2-12"
+        },
+        {
+          "ref": "B:raw:F04-G2-12:point",
+          "original_box": [
+            1585,
+            530,
+            1617,
+            561
+          ],
+          "object": "F04-G2-12 point"
+        }
+      ]
+    },
+    {
+      "region_id": "R-F04-pooled-points",
+      "proposal_state": "DRAFT_FOR_ROOT",
+      "file": "figures/F04_grouping.png",
+      "kind": "pooled_point_collection",
+      "member_region_ids": [
+        "R-F04-G1-all-points",
+        "R-F04-G2-all-points"
+      ],
+      "construction_method": "collection of original group point collections",
+      "purpose": "Pooled between-group association; must be interpreted with both legend bindings",
+      "lineage_refs": [
+        "A:F04-G1-1",
+        "B:raw:F04-G1-1:point",
+        "A:F04-G1-2",
+        "B:raw:F04-G1-2:point",
+        "A:F04-G1-3",
+        "B:raw:F04-G1-3:point",
+        "A:F04-G1-4",
+        "B:raw:F04-G1-4:point",
+        "A:F04-G1-5",
+        "B:raw:F04-G1-5:point",
+        "A:F04-G2-8",
+        "B:raw:F04-G2-8:point",
+        "A:F04-G2-9",
+        "B:raw:F04-G2-9:point",
+        "A:F04-G2-10",
+        "B:raw:F04-G2-10:point",
+        "A:F04-G2-11",
+        "B:raw:F04-G2-11:point",
+        "A:F04-G2-12",
+        "B:raw:F04-G2-12:point"
+      ]
+    }
+  ],
+  "complete_original_region_lineage_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/source_region_lineage.json",
+  "claim_bindings": {
+    "C01": [
+      "R-F01-x-tick-10",
+      "R-F01-y-ticks",
+      "R-F01-y-label",
+      "R-F01-legend-A",
+      "R-F01-legend-B",
+      "R-F01-A-10-mean",
+      "R-F01-B-10-mean"
+    ],
+    "C02": [
+      "R-F01-x-tick-1",
+      "R-F01-x-tick-10",
+      "R-F01-x-tick-100",
+      "R-F01-x-label"
+    ],
+    "C03": [
+      "R-F02-x-categories",
+      "R-F02-y-ticks",
+      "R-F02-y-label",
+      "R-F02-binding-A",
+      "R-F02-binding-B",
+      "R-F02-A-mean",
+      "R-F02-B-mean",
+      "R-F02-A-error",
+      "R-F02-B-error",
+      "R-F02-SD"
+    ],
+    "C04": [
+      "R-F02-y-ticks",
+      "R-F02-A-mean",
+      "R-F02-B-mean",
+      "R-F02-A-error",
+      "R-F02-B-error",
+      "R-F02-SD",
+      "R-F02-n"
+    ],
+    "C05": [
+      "R-F03-x-tick-8",
+      "R-F03-x-label",
+      "R-F03-y-ticks",
+      "R-F03-y-label",
+      "R-F03-legend-A",
+      "R-F03-legend-B",
+      "R-F03-A-8-point",
+      "R-F03-B-8-point"
+    ],
+    "C06": [
+      "R-F03-x-tick-8",
+      "R-F03-y-label",
+      "R-F03-y-ticks",
+      "R-F03-legend-A",
+      "R-F03-legend-B",
+      "R-F03-A-8-point",
+      "R-F03-B-8-point"
+    ],
+    "C07": [
+      "R-F04-x-ticks",
+      "R-F04-x-label",
+      "R-F04-y-ticks",
+      "R-F04-y-label",
+      "R-F04-legend-G1",
+      "R-F04-legend-G2",
+      "R-F04-G1-all-points",
+      "R-F04-G2-all-points",
+      "R-F04-pooled-points"
+    ],
+    "C08": [
+      "R-F04-x-ticks",
+      "R-F04-x-label",
+      "R-F04-y-ticks",
+      "R-F04-y-label",
+      "R-F04-legend-G1",
+      "R-F04-legend-G2",
+      "R-F04-G1-all-points",
+      "R-F04-G2-all-points",
+      "R-F04-pooled-points"
+    ]
+  },
+  "root_adoption": {
+    "at_UTC": "2026-10-28T19:30:12.658058+00:00",
+    "initial_independent_model_pixel_annotations": 2,
+    "later_reconciliation_is_nonblind": true,
+    "human_expert": false,
+    "formal_Judge": false,
+    "hidden_arrays_used_for_GT": false,
+    "root_actually_viewed_all_final_images": true,
+    "public_tolerance_is_minimum_acceptance_width": true,
+    "model_consensus_narrow_intervals_must_not_tighten_public_tolerance": true,
+    "C04": "Refute explicit proof-sufficiency; actual significance and equivalence remain unknown.",
+    "C06": "Insufficient factual final-quality comparison; explicit refutation of low-latency-suffices metaclaim also admissible only while preserving actual lower latency and unknown quality.",
+    "C07": "Do not erase within-group graphical counterevidence with generic uncertainty. Actual causal effect remains unknown.",
+    "absolute_author_paths": "Historical provenance only; runtime uses the self-contained private evidence copies and source image hashes."
+  }
+}

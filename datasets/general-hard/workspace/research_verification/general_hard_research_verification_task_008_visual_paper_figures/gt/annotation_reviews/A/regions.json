@@ -1,0 +1,654 @@
+{
+  "schema": "independent-pixel-regions-v1",
+  "coordinate_system": {
+    "image_size_px": [
+      1800,
+      1260
+    ],
+    "origin": "top-left",
+    "box": "[x_min,y_min,x_max,y_max]"
+  },
+  "provenance": "Regions were estimated from original PNG views before the claim text was read; copied from immutable raw observations. No author construction geometry used.",
+  "regions": [
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-x-ticks",
+      "object": "budget ticks and baseline",
+      "bbox_xyxy_px": [
+        180,
+        1074,
+        1698,
+        1132
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-x-label",
+      "object": "budget unit label",
+      "bbox_xyxy_px": [
+        710,
+        1175,
+        1235,
+        1220
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-y-ticks",
+      "object": "percent ticks",
+      "bbox_xyxy_px": [
+        148,
+        287,
+        200,
+        1097
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-y-label",
+      "object": "percent label",
+      "bbox_xyxy_px": [
+        191,
+        136,
+        537,
+        174
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-legend-A",
+      "object": "Method A binding",
+      "bbox_xyxy_px": [
+        265,
+        250,
+        490,
+        288
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-legend-B",
+      "object": "Method B binding",
+      "bbox_xyxy_px": [
+        265,
+        301,
+        490,
+        339
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-A-1",
+      "object": "F01-A-1",
+      "bbox_xyxy_px": [
+        184,
+        806,
+        213,
+        881
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-B-1",
+      "object": "F01-B-1",
+      "bbox_xyxy_px": [
+        183,
+        744,
+        214,
+        851
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-A-10",
+      "object": "F01-A-10",
+      "bbox_xyxy_px": [
+        920,
+        528,
+        951,
+        637
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-B-10",
+      "object": "F01-B-10",
+      "bbox_xyxy_px": [
+        919,
+        635,
+        952,
+        775
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-A-100",
+      "object": "F01-A-100",
+      "bbox_xyxy_px": [
+        1657,
+        360,
+        1691,
+        438
+      ]
+    },
+    {
+      "figure": "F01",
+      "source_image": "figures/F01_budget.png",
+      "id": "F01-B-100",
+      "object": "F01-B-100",
+      "bbox_xyxy_px": [
+        1657,
+        434,
+        1691,
+        543
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-x",
+      "object": "method categories and label",
+      "bbox_xyxy_px": [
+        525,
+        1085,
+        1356,
+        1218
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-y-ticks",
+      "object": "percent ticks",
+      "bbox_xyxy_px": [
+        148,
+        235,
+        202,
+        1097
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-y-label",
+      "object": "percent label",
+      "bbox_xyxy_px": [
+        191,
+        136,
+        536,
+        174
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-A-mean",
+      "object": "A bar-top and mean marker",
+      "bbox_xyxy_px": [
+        425,
+        589,
+        778,
+        620
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-B-mean",
+      "object": "B bar-top and mean marker",
+      "bbox_xyxy_px": [
+        1094,
+        495,
+        1449,
+        526
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-SD",
+      "object": "error type label",
+      "bbox_xyxy_px": [
+        1145,
+        239,
+        1360,
+        278
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-n",
+      "object": "sample/pairing label",
+      "bbox_xyxy_px": [
+        1145,
+        291,
+        1464,
+        328
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-A",
+      "object": "F02-A",
+      "bbox_xyxy_px": [
+        584,
+        451,
+        617,
+        757
+      ]
+    },
+    {
+      "figure": "F02",
+      "source_image": "figures/F02_intervals.png",
+      "id": "F02-B",
+      "object": "F02-B",
+      "bbox_xyxy_px": [
+        1253,
+        429,
+        1289,
+        591
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-x-ticks",
+      "object": "worker ticks",
+      "bbox_xyxy_px": [
+        184,
+        1072,
+        1697,
+        1131
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-x-label",
+      "object": "worker unit label",
+      "bbox_xyxy_px": [
+        787,
+        1175,
+        1101,
+        1220
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-y-ticks",
+      "object": "elapsed-time ticks",
+      "bbox_xyxy_px": [
+        99,
+        209,
+        203,
+        1097
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-y-label",
+      "object": "elapsed-time unit label",
+      "bbox_xyxy_px": [
+        190,
+        135,
+        481,
+        175
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-legend-A",
+      "object": "Method A binding",
+      "bbox_xyxy_px": [
+        264,
+        249,
+        486,
+        289
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-legend-B",
+      "object": "Method B binding",
+      "bbox_xyxy_px": [
+        264,
+        300,
+        486,
+        340
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-A-1",
+      "object": "F03-A-1",
+      "bbox_xyxy_px": [
+        184,
+        561,
+        213,
+        593
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-A-2",
+      "object": "F03-A-2",
+      "bbox_xyxy_px": [
+        281,
+        657,
+        313,
+        688
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-A-4",
+      "object": "F03-A-4",
+      "bbox_xyxy_px": [
+        477,
+        748,
+        510,
+        781
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-A-8",
+      "object": "F03-A-8",
+      "bbox_xyxy_px": [
+        871,
+        860,
+        903,
+        892
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-A-16",
+      "object": "F03-A-16",
+      "bbox_xyxy_px": [
+        1658,
+        918,
+        1690,
+        950
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-B-1",
+      "object": "F03-B-1",
+      "bbox_xyxy_px": [
+        183,
+        602,
+        214,
+        635
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-B-2",
+      "object": "F03-B-2",
+      "bbox_xyxy_px": [
+        280,
+        588,
+        312,
+        620
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-B-4",
+      "object": "F03-B-4",
+      "bbox_xyxy_px": [
+        477,
+        527,
+        509,
+        559
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-B-8",
+      "object": "F03-B-8",
+      "bbox_xyxy_px": [
+        870,
+        432,
+        903,
+        465
+      ]
+    },
+    {
+      "figure": "F03",
+      "source_image": "figures/F03_latency.png",
+      "id": "F03-B-16",
+      "object": "F03-B-16",
+      "bbox_xyxy_px": [
+        1658,
+        338,
+        1690,
+        370
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-x-ticks",
+      "object": "planning-length ticks",
+      "bbox_xyxy_px": [
+        250,
+        1072,
+        1620,
+        1133
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-x-label",
+      "object": "planning-length label",
+      "bbox_xyxy_px": [
+        713,
+        1173,
+        1250,
+        1218
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-y-ticks",
+      "object": "pass ticks",
+      "bbox_xyxy_px": [
+        129,
+        207,
+        200,
+        1098
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-y-label",
+      "object": "pass label",
+      "bbox_xyxy_px": [
+        190,
+        135,
+        601,
+        174
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-legend-G1",
+      "object": "G1 binding",
+      "bbox_xyxy_px": [
+        1235,
+        930,
+        1463,
+        975
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-legend-G2",
+      "object": "G2 binding",
+      "bbox_xyxy_px": [
+        1235,
+        981,
+        1463,
+        1027
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G1-1",
+      "object": "F04-G1-1",
+      "bbox_xyxy_px": [
+        255,
+        697,
+        286,
+        729
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G1-2",
+      "object": "F04-G1-2",
+      "bbox_xyxy_px": [
+        376,
+        747,
+        407,
+        779
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G1-3",
+      "object": "F04-G1-3",
+      "bbox_xyxy_px": [
+        496,
+        798,
+        529,
+        830
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G1-4",
+      "object": "F04-G1-4",
+      "bbox_xyxy_px": [
+        617,
+        843,
+        650,
+        875
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G1-5",
+      "object": "F04-G1-5",
+      "bbox_xyxy_px": [
+        738,
+        895,
+        770,
+        927
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G2-8",
+      "object": "F04-G2-8",
+      "bbox_xyxy_px": [
+        1101,
+        334,
+        1134,
+        366
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G2-9",
+      "object": "F04-G2-9",
+      "bbox_xyxy_px": [
+        1222,
+        379,
+        1255,
+        412
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G2-10",
+      "object": "F04-G2-10",
+      "bbox_xyxy_px": [
+        1343,
+        430,
+        1376,
+        463
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G2-11",
+      "object": "F04-G2-11",
+      "bbox_xyxy_px": [
+        1464,
+        477,
+        1497,
+        510
+      ]
+    },
+    {
+      "figure": "F04",
+      "source_image": "figures/F04_grouping.png",
+      "id": "F04-G2-12",
+      "object": "F04-G2-12",
+      "bbox_xyxy_px": [
+        1585,
+        529,
+        1618,
+        562
+      ]
+    }
+  ],
+  "limitations": [
+    "Boxes cover identified axes, labels, legend symbols, means and/or error marks; no whole-image evidence box is used.",
+    "Pixel boxes are approximate annotations, not claims about hidden exact plotting coordinates."
+  ]
+}

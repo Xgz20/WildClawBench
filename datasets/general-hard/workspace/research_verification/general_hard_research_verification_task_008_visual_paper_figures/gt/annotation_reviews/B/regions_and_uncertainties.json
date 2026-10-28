@@ -1,0 +1,28 @@
+{
+  "schema_version": "h034-independent-regions-uncertainties-v1",
+  "annotator": "model-annotator-B",
+  "coordinate_system": "Original pixels, 1800x1260, top-left origin; all boxes and point boxes are manually read local regions.",
+  "region_sources": {
+    "raw_visual_observations.json": "Full axes, legends, all 6 F01 means and error endpoints, both F02 means/endpoints, all 10 F03 series points, all 10 F04 group points.",
+    "claim_assessments.json": "Each of 8 items binds its proposition to source file, specific mark/axis/legend boxes, text E paragraph, reading units and uncertainty."
+  },
+  "coverage": [
+    {"figure": "F01", "claim_ids": ["C01", "C02"], "critical_bindings": ["budget ticks 1/10/100 and log spacing", "Method A blue open circle versus Method B orange square", "both means at budget10", "percentage y-axis"]},
+    {"figure": "F02", "claim_ids": ["C03", "C04"], "critical_bindings": ["A left blue marker, B right orange marker", "both mean and SD endpoint regions", "visible overlap", "printed SD and n=12 paired batches"]},
+    {"figure": "F03", "claim_ids": ["C05", "C06"], "critical_bindings": ["worker8 tick", "A at about300 ms and B at about3000 ms", "logarithmic time axis", "legend and ms unit", "missing quality measurement"]},
+    {"figure": "F04", "claim_ids": ["C07", "C08"], "critical_bindings": ["G1 blue circles and G2 orange squares", "all10 points in raw observations", "per-group endpoints and all-point boxes in claim evidence", "linear steps and percentage axes", "pooled cross-cluster up versus per-group down"]}
+  ],
+  "uncertainties": [
+    {"id": "U-pixel", "scope": ["C01", "C03", "C05", "C07", "C08"], "type": "measurement", "statement": "Source values are visual intervals, with no access to hidden arrays. Manual boxes allow a few pixels of imprecision. Decimal interval boundaries describe reading allowance, not observed source precision."},
+    {"id": "U-F01-inference", "scope": ["C01"], "type": "unreported inferential data", "statement": "E01 identifies SD and12 batches only after raw observation save; significance, paired differences and extrapolation remain unknown."},
+    {"id": "U-F02-significance", "scope": ["C04"], "type": "unreported inferential data", "statement": "No paired differences, covariance or test result. Actual significance is unknown; overlap does not decide it."},
+    {"id": "U-F02-equivalence", "scope": ["C04"], "type": "unreported equivalence design", "statement": "No prespecified equivalence bound or corresponding interval. Actual equivalence/equality is unknown."},
+    {"id": "U-F03-variation", "scope": ["C05"], "type": "unreported variability", "statement": "No runtime uncertainty is displayed; about10x applies to shown representative elapsed values and E03 hardware/timing boundaries."},
+    {"id": "U-F03-quality", "scope": ["C06"], "type": "missing target measure", "statement": "Final target quality at8 workers is unreported for both methods; do not assign zero, equality, superiority or inferiority."},
+    {"id": "U-F04-causality", "scope": ["C07", "C08"], "type": "causal identification", "statement": "E04 observational summaries of different workloads/distributions do not identify a planning-length intervention effect. Negative within-group association is not proof of a negative causal effect."},
+    {"id": "U-F04-pooled", "scope": ["C07", "C08"], "type": "association metric", "statement": "Pooled direction is visually supported by separated group positions; no correlation coefficient is printed or reconstructed."}
+  ],
+  "unreadable_required_values": [],
+  "unresolved_required_image_objects": [],
+  "epistemic_limits": "No hidden precision, fabricated experiment, significance value, quality result or causal parameter has been supplied. Missing evidence is retained as unknown."
+}

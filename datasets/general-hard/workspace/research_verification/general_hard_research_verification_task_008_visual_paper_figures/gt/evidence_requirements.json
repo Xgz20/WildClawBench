@@ -1,0 +1,32 @@
+{
+  "schema_version": "h034-evidence-requirements/v1",
+  "source_images": [
+    {
+      "path": "figures/F01_budget.png",
+      "private_original": "source_originals/figures/F01_budget.png",
+      "sha256": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61"
+    },
+    {
+      "path": "figures/F02_intervals.png",
+      "private_original": "source_originals/figures/F02_intervals.png",
+      "sha256": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8"
+    },
+    {
+      "path": "figures/F03_latency.png",
+      "private_original": "source_originals/figures/F03_latency.png",
+      "sha256": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb"
+    },
+    {
+      "path": "figures/F04_grouping.png",
+      "private_original": "source_originals/figures/F04_grouping.png",
+      "sha256": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745"
+    }
+  ],
+  "minimum_Judge_image_budget": 4,
+  "actual_pixel_reading_required": true,
+  "image_catalog_alone_or_OCR_labels_not_sufficient": true,
+  "originals_are_flat_single_frame_PNG_no_hidden_text_or_EXIF": true,
+  "initial_model_annotations_separate_from_nonblind_reconciliation": true,
+  "infrastructure_missing_images_decoders_or_bindings": "evaluation_error_not_ability_zero",
+  "actual_Harness_image_understanding_and_semantic_Judge_not_executed": true
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "h034-reference-copy-provenance/v1",
+  "reference_kind": "nonblind author example; independent model review frozen before this rule-author role",
+  "reference_originals": {
+    "review_notes.docx": "547dc047ab12c0a072d43551c60971aff2631488a3ce48c1257ce7986e1e1d9e",
+    "figure_review.xlsx": "bec4b82dac5e8c9d07c530c52769965a09f43fb8af7977c9583e1b7b3d0b1edb"
+  },
+  "private_reference_copies": {
+    "review_notes.docx": "547dc047ab12c0a072d43551c60971aff2631488a3ce48c1257ce7986e1e1d9e",
+    "figure_review.xlsx": "bec4b82dac5e8c9d07c530c52769965a09f43fb8af7977c9583e1b7b3d0b1edb"
+  },
+  "source_truth_sha256": "1b23329fd38d7e9e21a4f43c1907f0b7f5a01682303953ca4d22f38c8ede32b0",
+  "initial_independent_review_manifest_sha256": "35759990d04842e96ceba7ef5481cbd1e44940a4012351624e833ef48e7281b8",
+  "initial_independent_raw_before_reference_sha256": "5cc09acea952fb5960e669515e4e8c13d03b8e730ad78437d0b3f1203da16fa2",
+  "reference_used_as_scoring_oracle": false,
+  "expert_review": false,
+  "Harness_Judge": false
+}

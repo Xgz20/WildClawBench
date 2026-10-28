@@ -1,0 +1,222 @@
+{
+  "status": "SOURCE_PIXEL_TRUTH_ADOPTED_REFERENCE_RULES_AND_RUNTIME_PENDING",
+  "stage": "non-blind reconciliation and source-truth proposal authoring",
+  "author_role": "Model annotator A, now a non-blind reconciliation author; not a third independent annotator, human expert, Harness executor or formal Judge.",
+  "review_state": "Root adopted source observations and interpretation boundaries; no formal task or empirical difficulty claim.",
+  "source_boundary": "Only the isolated seven-file source package and the two frozen A/B annotation directories were read. No author arrays, private SVG, plotting code, construction geometry or other tasks were accessed.",
+  "source_truth_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/source_truth.json",
+  "approved_region_proposal_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/approved_regions.proposal.json",
+  "source_qa_freezes_retained": true,
+  "schema": "h034-reference-source-manifest-proposal/v1",
+  "source_inputs": [
+    {
+      "file": "qa/independent-annotation-input-v1/annotation_instructions.md",
+      "bytes": 1704,
+      "mode": "0o644",
+      "sha256": "4772dd26b1c65e26e4ae8b64b0c63554fe61ecf78c3d6ea8e498e4ec92ba9ef3"
+    },
+    {
+      "file": "qa/independent-annotation-input-v1/paper_excerpts.md",
+      "bytes": 3629,
+      "mode": "0o644",
+      "sha256": "ff890163fc46f1292a70279a1df8a21625c5e3cf5d0fa9c5fcad2e72010c7318"
+    },
+    {
+      "file": "qa/independent-annotation-input-v1/reading_tolerance.json",
+      "bytes": 1976,
+      "mode": "0o644",
+      "sha256": "35d038372eb3dba02e7a146975adfc22659ccef46ff64f0b4f397975ff05271b"
+    },
+    {
+      "file": "qa/independent-annotation-input-v1/figures/F01_budget.png",
+      "bytes": 77419,
+      "mode": "0o644",
+      "sha256": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61"
+    },
+    {
+      "file": "qa/independent-annotation-input-v1/figures/F02_intervals.png",
+      "bytes": 71201,
+      "mode": "0o644",
+      "sha256": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8"
+    },
+    {
+      "file": "qa/independent-annotation-input-v1/figures/F03_latency.png",
+      "bytes": 70616,
+      "mode": "0o644",
+      "sha256": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb"
+    },
+    {
+      "file": "qa/independent-annotation-input-v1/figures/F04_grouping.png",
+      "bytes": 68539,
+      "mode": "0o644",
+      "sha256": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745"
+    }
+  ],
+  "frozen_annotation_inputs": [
+    {
+      "file": "qa/annotation-a-v1/claim_assessments.json",
+      "bytes": 21270,
+      "mode": "0o444",
+      "sha256": "3683eadff4b94d3d49617439c5d8e2feec62e7f118cad6b71ce39040d94b08da"
+    },
+    {
+      "file": "qa/annotation-a-v1/freeze_manifest.json",
+      "bytes": 1859,
+      "mode": "0o444",
+      "sha256": "d59d74d6c6f402dc634f97980ce375d5278b9c058770c3e6fa2b45ceedfb2474"
+    },
+    {
+      "file": "qa/annotation-a-v1/input_sha_after.json",
+      "bytes": 2086,
+      "mode": "0o444",
+      "sha256": "6e7dc3da3f1178af8c186ff0593f0738c29d8eb3d3ae4e568ef3af731f320aea"
+    },
+    {
+      "file": "qa/annotation-a-v1/input_sha_before.json",
+      "bytes": 1427,
+      "mode": "0o444",
+      "sha256": "93cd2ba9db3cf64b8ec3b739723ce31a828081f71328a65dc63e0608b16fbef0"
+    },
+    {
+      "file": "qa/annotation-a-v1/process_receipt.json",
+      "bytes": 950,
+      "mode": "0o444",
+      "sha256": "c4bf648a3ae8d65b6791bb142b0802ad467e5ded32fc1e83e3a5e2fef1756e9f"
+    },
+    {
+      "file": "qa/annotation-a-v1/raw_visual_observations.json",
+      "bytes": 25654,
+      "mode": "0o444",
+      "sha256": "3e4d317172837332fe874c0566d4484d9dbc7fa6aa004a3fe20fb034657eeb92"
+    },
+    {
+      "file": "qa/annotation-a-v1/regions.json",
+      "bytes": 12638,
+      "mode": "0o444",
+      "sha256": "15d9d8643e1fb4d44d63b5c44777fe385a7ca48216dde7ec79911d29c22db7d5"
+    },
+    {
+      "file": "qa/annotation-a-v1/review.md",
+      "bytes": 2497,
+      "mode": "0o444",
+      "sha256": "fcdd58085bdacf5ca03e62eb9518b0cdd62ed544a474dc2fc7dd311646cee76f"
+    },
+    {
+      "file": "qa/annotation-b-v1/claim_assessments.json",
+      "bytes": 20381,
+      "mode": "0o644",
+      "sha256": "50d93ba7ca797dbbfd56ab14c188cfad2c8b26df309a7883a4aa459ce893a034"
+    },
+    {
+      "file": "qa/annotation-b-v1/freeze.json",
+      "bytes": 2893,
+      "mode": "0o644",
+      "sha256": "f521a98d634d4540588ed41bd4245df6a54d76ed3938ca5f504ec4448f0ecf77"
+    },
+    {
+      "file": "qa/annotation-b-v1/input_sha_receipt.json",
+      "bytes": 3305,
+      "mode": "0o644",
+      "sha256": "2490eeae4676aa23427cd002ec0e7bc9794083bb434aeb6169086d246d9fa898"
+    },
+    {
+      "file": "qa/annotation-b-v1/raw_visual_observations.json",
+      "bytes": 13039,
+      "mode": "0o644",
+      "sha256": "d01226e1fcd8940135a5c770802993881667dcd0caa6ff942ae43d15af7b70a8"
+    },
+    {
+      "file": "qa/annotation-b-v1/regions_and_uncertainties.json",
+      "bytes": 3802,
+      "mode": "0o644",
+      "sha256": "d0378dfd9d60815b0e8dcd64be356f97f8b1ae0d30a4a811631e44f995e7d029"
+    },
+    {
+      "file": "qa/annotation-b-v1/review.md",
+      "bytes": 3859,
+      "mode": "0o644",
+      "sha256": "814cb24d64f2566a8d57eae70707cf2dd65e6a4c557791865f84eacff36593db"
+    }
+  ],
+  "initial_freeze_verification": [
+    {
+      "annotation": "A",
+      "file": "claim_assessments.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "A",
+      "file": "input_sha_after.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "A",
+      "file": "input_sha_before.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "A",
+      "file": "process_receipt.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "A",
+      "file": "raw_visual_observations.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "A",
+      "file": "regions.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "A",
+      "file": "review.md",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "B",
+      "file": "claim_assessments.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "B",
+      "file": "input_sha_receipt.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "B",
+      "file": "raw_visual_observations.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "B",
+      "file": "regions_and_uncertainties.json",
+      "freeze_sha_matches": true
+    },
+    {
+      "annotation": "B",
+      "file": "review.md",
+      "freeze_sha_matches": true
+    }
+  ],
+  "preserved_annotation_copies_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/preserved_record_manifest.json",
+  "no_author_construction_sources": true,
+  "no_office_reference_generated": true,
+  "proposal_status": "All entries are DRAFT_FOR_ROOT, pending root approval.",
+  "root_adoption": {
+    "at_UTC": "2026-10-28T19:30:12.661914+00:00",
+    "initial_independent_model_pixel_annotations": 2,
+    "later_reconciliation_is_nonblind": true,
+    "human_expert": false,
+    "formal_Judge": false,
+    "hidden_arrays_used_for_GT": false,
+    "root_actually_viewed_all_final_images": true,
+    "public_tolerance_is_minimum_acceptance_width": true,
+    "model_consensus_narrow_intervals_must_not_tighten_public_tolerance": true,
+    "C04": "Refute explicit proof-sufficiency; actual significance and equivalence remain unknown.",
+    "C06": "Insufficient factual final-quality comparison; explicit refutation of low-latency-suffices metaclaim also admissible only while preserving actual lower latency and unknown quality.",
+    "C07": "Do not erase within-group graphical counterevidence with generic uncertainty. Actual causal effect remains unknown.",
+    "absolute_author_paths": "Historical provenance only; runtime uses the self-contained private evidence copies and source image hashes."
+  }
+}

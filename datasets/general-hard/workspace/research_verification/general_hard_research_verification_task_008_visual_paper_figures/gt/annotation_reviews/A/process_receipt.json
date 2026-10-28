@@ -1,0 +1,27 @@
+{
+  "scope": "Only seven allowed inputs and assigned output files accessed for task content.",
+  "original_images_actually_opened": [
+    "figures/F01_budget.png",
+    "figures/F02_intervals.png",
+    "figures/F03_latency.png",
+    "figures/F04_grouping.png"
+  ],
+  "original_image_view_detail": "original",
+  "raw_saved_before_claim_text_read": true,
+  "raw_file_mode": "0o444",
+  "no_network": true,
+  "no_office_or_marker": true,
+  "no_research_code_or_dependency_install": true,
+  "no_GT_arrays_geometry_other_annotations": true,
+  "no_input_mutation": true,
+  "checks": {
+    "four_figures": true,
+    "eight_claims": true,
+    "region_count": 53,
+    "all_region_references_resolve": true,
+    "all_regions_inside_original_image": true,
+    "input_sha_before_after_equal": true,
+    "four_image_shas_match_public_tolerance": true
+  },
+  "role": "Independent model pixel annotation; not human expert, Harness, formal Judge or semantic score."
+}

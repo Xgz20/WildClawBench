@@ -1,0 +1,34 @@
+{
+  "schema": "h034-scoring-design/v1",
+  "grading_type": "hybrid",
+  "grading_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "automatic_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "semantic_weights": {
+    "decision_grounding": 0.7,
+    "usable_handoff": 0.3
+  },
+  "automatic_business": ".65 numeric role/unit/setting/series/SD observations on10 claim-minimum point identities, all other actually reported known points included without padding dilution; .35 source-consistent descriptive verdict routes onC01/C03/C05/C08.",
+  "automatic_boundary": "C02 log-tick arithmetic context, C04 proof-sufficiency versus unknown facts, C06 lower latency versus unknown quality, C07 compound direct graphical counterevidence versus unknown real intervention. A bounded route parser is not complete semantic verification.",
+  "automatic_delivery": "Visible editable native XLSX and DOCX, protected original and auxiliary inputs, actual explicit same-target transfer conflicts; no compulsory mirror or fixed cells.",
+  "automatic_binding": "8 fixed claim slots; every approved source target must be covered by actual source-file-linked candidate local regions, including all members for groups. SHA/dimensions/localization do not prove actual looking.",
+  "semantic_duties": [
+    "actual pixels and8 argument chains",
+    "axis/legend interpretation and SD rather than CI",
+    "C04 actual statistics unknown; sufficient-proof assertion rejected",
+    "C06 real quality unknown; inference invalid; cannot import unbound F01/F02 quality",
+    "C07 preserve group-down graphical counterevidence; actual causal effect unknown",
+    "alternative explanations are compatible hypotheses rather than measured mechanisms",
+    "free legal prose/geometry and factual versus metaproposition targets",
+    "Word handoff and cross-artifact scope consistency"
+  ],
+  "no_Harness_Judge_or_hybrid_score_this_phase": true,
+  "original_6_exec_and28_GT_immutable": true
+}

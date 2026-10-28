@@ -17,3 +17,5 @@ datasets/general-hard/workspace/research_verification/general_hard_research_veri
 datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/**/metadata.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # H036源文件刻意混合扩展名、CRLF/BOM与尾空行，内容字节参与去重身份。
 datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_002_versioned_archive/exec/incoming/** whitespace=blank-at-eol,-blank-at-eof,space-before-tab,cr-at-eol
+# H034原生读取器是已绑定的逐字节副本，保留其现有文件末尾空行。
+datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_008_visual_paper_figures/gt/native_base.py whitespace=-blank-at-eof

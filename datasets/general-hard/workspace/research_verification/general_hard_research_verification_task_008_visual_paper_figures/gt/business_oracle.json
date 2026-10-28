@@ -1,0 +1,150 @@
+{
+  "status": "SOURCE_PIXEL_TRUTH_ADOPTED_REFERENCE_RULES_AND_RUNTIME_PENDING",
+  "stage": "non-blind reconciliation and source-truth proposal authoring",
+  "author_role": "Model annotator A, now a non-blind reconciliation author; not a third independent annotator, human expert, Harness executor or formal Judge.",
+  "review_state": "Root adopted source observations and interpretation boundaries; no formal task or empirical difficulty claim.",
+  "source_boundary": "Only the isolated seven-file source package and the two frozen A/B annotation directories were read. No author arrays, private SVG, plotting code, construction geometry or other tasks were accessed.",
+  "source_truth_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/source_truth.json",
+  "approved_region_proposal_ref": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/reconciliation-v1/approved_regions.proposal.json",
+  "source_qa_freezes_retained": true,
+  "schema": "h034-business-oracle-proposal/v1",
+  "purpose": "Domain meaning and evidence boundaries only.",
+  "task_nature": "Original controlled fictional research record, not real model/human experiment.",
+  "business_concepts": {
+    "completion": "Mean/observed final target pass, expressed as percentage; figure-specific conditions remain bound.",
+    "budget": "Total tool calls/task; F01 log positions encode multiplicative budgets.",
+    "uncertainty": "F01/F02 SD describes batch spread, not proof of significance or equivalence.",
+    "elapsed_time": "F03 representative ms under fixed hardware/timing conditions; does not measure final quality.",
+    "planning_length": "F04 observational steps for distinct workloads and task distributions; does not identify an intervention effect."
+  },
+  "method_paragraphs": {
+    "E01": "F01使用同一任务集、相同模型设置和统一最终目标谓词，两方法仅在图示总工具调用预算下汇总。每点是12个评估批次均值，误差棒为批次标准差。不同预算是不同设置，不是额外任务身份。没有发布配对差值、不确定性检验或其它条件下的外推实验。",
+    "E02": "F02两方法在相同12个配对评估批次上运行，均值及标准差绘在图中。图中误差棒不是95%置信区间。未提供原始配对差值、协方差、显著性检验或预先设定的等效界；不能仅由误差棒交叠/不交叠确定显著或等效。",
+    "E03": "F03同硬件和计时边界，仅记录图示worker设置下的耗时代表值。该图没有记录最终目标质量，也没有给出跨硬件或其它并发条件的保证。单位和轴尺度须实际读图。",
+    "E04": "F04为观察性记录。每个点汇总一种不同工作负载，G1与G2来自不同任务分布；并非随机把同一任务分配到不同计划长度。没有控制所有混杂因素，没有因果干预试验。"
+  },
+  "claim_boundaries": [
+    {
+      "claim_id": "C01",
+      "judgment_object": "预算10处两方法图示均值及同设置描述的边界",
+      "limits": [
+        "Only the budget10 descriptive means under E01 same settings are claimed.",
+        "No significance, causal effect, unplotted budget or cross-task/hardware guarantee follows."
+      ],
+      "interpretations": [
+        "Approximate72%/64% or compatible intervals within public tolerance, with budget10, correct methods and descriptive scope."
+      ]
+    },
+    {
+      "claim_id": "C02",
+      "judgment_object": "由图上等距推出预算绝对增量相等",
+      "limits": [
+        "Equal horizontal distances represent equal budget ratios on a log axis.",
+        "Compare labeled settings only; no invented intermediate experiment."
+      ],
+      "interpretations": [
+        "Explain unequal absolute increments9 and90, or equivalent arithmetic using1/10/100 and log scale; equal factor10 is compatible."
+      ]
+    },
+    {
+      "claim_id": "C03",
+      "judgment_object": "均值顺序和显示误差区间的交叠",
+      "limits": [
+        "Overlap concerns displayed SD ranges on the percentage axis, not paired-difference confidence intervals.",
+        "B>A is a mean ordering, not a significance/equivalence result."
+      ],
+      "interpretations": [
+        "Report B mean above A and SD overlap, with roughly80/84 and endpoints74–86/81–87, preserving percent/SD scope."
+      ]
+    },
+    {
+      "claim_id": "C04",
+      "judgment_object": "“交叠已证明不显著且等效”的证据充分性断言",
+      "limits": [
+        "Refuted applies to the claim that overlap has already proved non-significance and equality.",
+        "Actual significance and actual equivalence/equality remain unknown; no p-value, paired variance, equivalence bound or adverse experiment may be invented."
+      ],
+      "interpretations": [
+        "State the evidence-sufficiency proposition is refuted/invalid while the underlying non-significance and equivalence facts are unknown.",
+        "A fact-targeted insufficient-evidence subassessment is meaningful only when clearly separated from the rejected “already proved” proposition."
+      ]
+    },
+    {
+      "claim_id": "C05",
+      "judgment_object": "8 workers处B/A耗时比及比较范围",
+      "limits": [
+        "Approximate representative elapsed-time ratio at8 workers only, same hardware/timing boundary.",
+        "Read ms and logarithmic y values; no variability, throughput, quality or cross-hardware guarantee."
+      ],
+      "interpretations": [
+        "About10x B/A from roughly3000/300 ms at8 workers; equivalent units may be converted explicitly, preserving the same ratio and conditions."
+      ]
+    },
+    {
+      "claim_id": "C06",
+      "judgment_object": "从低耗时推出最终目标质量更高；主判断为质量事实是否可由现有证据确定",
+      "limits": [
+        "The empirical final-quality comparison is unreported/unknown/insufficient.",
+        "The inference that lower latency alone is sufficient can be separately refuted if its judgment object is explicit.",
+        "Never infer A quality is worse, equal, zero or measured; F01/F02 pass rates are not bound to F03 worker8 quality."
+      ],
+      "interpretations": [
+        "Quality-targeted insufficient/unknown/unreported is the primary factual result.",
+        "A reasoning-targeted refutation is legitimate when it explicitly targets “latency is sufficient to prove quality” and still records real quality as unknown."
+      ]
+    },
+    {
+      "claim_id": "C07",
+      "judgment_object": "复合论述的组内方向与因果证据充分性；不是仅判断合并相关方向",
+      "limits": [
+        "Retain pooled-positive support and within-both-groups-negative graphical counterevidence.",
+        "Do not relabel the whole compound claim insufficient while ignoring the visible within-group counterevidence.",
+        "The claim that causal proof exists is refuted as an evidential assertion; the real intervention effect remains unknown.",
+        "Observational negative within-group slopes do not establish a negative causal effect."
+      ],
+      "interpretations": [
+        "Refute the compound overclaim through both per-group downward graphical trends and missing causal design; retain pooled-positive subclaim.",
+        "Treat real causal effect as unknown; group/workload distribution is a compatible confounding explanation, not a measured causal mechanism."
+      ]
+    },
+    {
+      "claim_id": "C08",
+      "judgment_object": "合并/分组方向与现有观察的因果边界",
+      "limits": [
+        "Pooled up and G1/G2 within-group down are descriptive directions, not a printed numeric correlation coefficient.",
+        "Cannot confirm a positive intervention effect does not prove zero or negative effect."
+      ],
+      "interpretations": [
+        "Support the pooled/within-group direction reversal and limited causal conclusion, using actual groups/points and E04."
+      ]
+    }
+  ],
+  "unknowns": {
+    "F02_significance": "unknown",
+    "F02_equivalence_or_equality": "unknown",
+    "F03_worker8_final_quality_order": "unknown",
+    "F04_true_intervention_effect": "unknown"
+  },
+  "prohibited_inference_patterns": [
+    "Do not infer absolute budget equality from equal log-axis pixel spacing.",
+    "Do not infer non-significance/equivalence solely from SD overlap.",
+    "Do not infer quality order from latency or borrow an unbound figure’s quality.",
+    "Do not infer causal effects from pooled or within-group observation slopes."
+  ],
+  "scope": "No grade, score, operational acceptance rule or fixed label-frequency requirement is defined.",
+  "root_adoption": {
+    "at_UTC": "2026-10-28T19:30:12.651792+00:00",
+    "initial_independent_model_pixel_annotations": 2,
+    "later_reconciliation_is_nonblind": true,
+    "human_expert": false,
+    "formal_Judge": false,
+    "hidden_arrays_used_for_GT": false,
+    "root_actually_viewed_all_final_images": true,
+    "public_tolerance_is_minimum_acceptance_width": true,
+    "model_consensus_narrow_intervals_must_not_tighten_public_tolerance": true,
+    "C04": "Refute explicit proof-sufficiency; actual significance and equivalence remain unknown.",
+    "C06": "Insufficient factual final-quality comparison; explicit refutation of low-latency-suffices metaclaim also admissible only while preserving actual lower latency and unknown quality.",
+    "C07": "Do not erase within-group graphical counterevidence with generic uncertainty. Actual causal effect remains unknown.",
+    "absolute_author_paths": "Historical provenance only; runtime uses the self-contained private evidence copies and source image hashes."
+  }
+}

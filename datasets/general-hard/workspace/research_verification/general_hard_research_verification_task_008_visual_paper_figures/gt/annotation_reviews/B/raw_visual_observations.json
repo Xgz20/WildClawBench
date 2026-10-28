@@ -1,0 +1,113 @@
+{
+  "schema_version": "h034-independent-pixel-observations-v1",
+  "annotator": "model-annotator-B",
+  "role_boundary": "Independent model pixel annotation; not human expert, formal Judge, Harness execution or semantic score.",
+  "stage": "Saved after opening all four original PNGs and before reading paper_excerpts.md or reading_tolerance.json.",
+  "input_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/independent-annotation-input-v1",
+  "image_dimensions_px": [1800, 1260],
+  "coordinate_convention": "Original image pixels, origin top-left; boxes [left, top, right, bottom], approximate manual localization.",
+  "reading_policy": "All numeric readings are visual intervals, not recovered underlying values. Error bars are reported only where visible; error type is unknown unless printed on figure. Pixel centers are approximate observations, not source geometry.",
+  "images_opened": ["figures/F01_budget.png", "figures/F02_intervals.png", "figures/F03_latency.png", "figures/F04_grouping.png"],
+  "figures": [
+    {
+      "figure_id": "F01",
+      "file": "figures/F01_budget.png",
+      "title": "Tool budget and target completion",
+      "axes": {
+        "x": {"label": "Total tool-call budget per task", "ticks": [1, 10, 100], "scale": "logarithmic inferred from decade ticks at equal horizontal intervals", "regions": [{"id": "F01-x-ticks", "box": [180, 1075, 1710, 1135], "object": "budget ticks 1, 10, 100"}, {"id": "F01-x-label", "box": [712, 1174, 1218, 1220], "object": "budget axis label"}]},
+        "y": {"label": "Mean target pass (%)", "ticks": [40, 50, 60, 70, 80, 90], "scale": "linear; displayed lower limit 40, top extends above 90", "regions": [{"id": "F01-y-ticks", "box": [148, 282, 207, 1095], "object": "pass percentage ticks"}, {"id": "F01-y-label", "box": [190, 133, 538, 176], "object": "mean pass label"}]}
+      },
+      "legend": [
+        {"series": "Method A", "binding": "blue line, open circular markers", "region_id": "F01-legend-A", "box": [265, 248, 482, 290]},
+        {"series": "Method B", "binding": "orange line, filled square markers", "region_id": "F01-legend-B", "box": [265, 299, 482, 342]}
+      ],
+      "readings": [
+        {"id": "F01-A-1", "series": "Method A", "budget": 1, "mean_percent_interval": [54.5, 56.0], "error_lower_percent_interval": [52.5, 54.0], "error_upper_percent_interval": [56.5, 58.0], "mean_box": [184, 831, 212, 858], "error_box": [181, 804, 215, 883]},
+        {"id": "F01-B-1", "series": "Method B", "budget": 1, "mean_percent_interval": [57.4, 58.8], "error_lower_percent_interval": [54.5, 55.8], "error_upper_percent_interval": [60.4, 61.8], "mean_box": [183, 784, 213, 813], "error_box": [181, 744, 215, 852]},
+        {"id": "F01-A-10", "series": "Method A", "budget": 10, "mean_percent_interval": [71.3, 72.7], "error_lower_percent_interval": [68.4, 69.7], "error_upper_percent_interval": [74.3, 75.7], "mean_box": [922, 569, 950, 596], "error_box": [919, 528, 953, 637]},
+        {"id": "F01-B-10", "series": "Method B", "budget": 10, "mean_percent_interval": [63.4, 64.8], "error_lower_percent_interval": [59.5, 60.8], "error_upper_percent_interval": [67.4, 68.8], "mean_box": [920, 691, 952, 720], "error_box": [919, 635, 953, 775]},
+        {"id": "F01-A-100", "series": "Method A", "budget": 100, "mean_percent_interval": [83.1, 84.5], "error_lower_percent_interval": [81.1, 82.5], "error_upper_percent_interval": [85.1, 86.5], "mean_box": [1660, 385, 1689, 413], "error_box": [1657, 360, 1691, 438]},
+        {"id": "F01-B-100", "series": "Method B", "budget": 100, "mean_percent_interval": [77.3, 78.7], "error_lower_percent_interval": [74.3, 75.7], "error_upper_percent_interval": [80.3, 81.7], "mean_box": [1659, 474, 1690, 503], "error_box": [1657, 434, 1691, 543]}
+      ],
+      "observed_directions": ["Both series increase from budget 1 to 10 to 100.", "At 1 the orange mean is above blue; at 10 and 100 the blue mean is above orange.", "Blue increases by about 17 percentage points from 1 to 10 and about 12 from 10 to 100; orange increases by about 6 then 14 percentage points."],
+      "uncertainties": ["The figure does not identify the error-bar type or sample size.", "Line interpolation does not establish unplotted budget values.", "No more than approximate percentage-point precision is claimed."]
+    },
+    {
+      "figure_id": "F02",
+      "file": "figures/F02_intervals.png",
+      "title": "Completion on shared evaluation batches",
+      "axes": {
+        "x": {"label": "Method", "categories": ["Method A", "Method B"], "scale": "categorical", "regions": [{"id": "F02-x-categories", "box": [528, 1089, 1371, 1130], "object": "method category labels"}, {"id": "F02-x-label", "box": [884, 1174, 1019, 1216], "object": "method axis label"}]},
+        "y": {"label": "Mean target pass (%)", "ticks": [60, 65, 70, 75, 80, 85, 90, 95], "scale": "linear, baseline displayed at 60", "regions": [{"id": "F02-y-ticks", "box": [146, 230, 205, 1096], "object": "percentage ticks 60 to 95"}, {"id": "F02-y-label", "box": [191, 134, 538, 175], "object": "mean pass label"}]}
+      },
+      "series_bindings": [
+        {"series": "Method A", "binding": "left pale-blue bar with blue outline and open circular mean marker", "region_id": "F02-binding-A", "box": [428, 592, 773, 642]},
+        {"series": "Method B", "binding": "right pale-orange bar with orange outline and filled square mean marker", "region_id": "F02-binding-B", "box": [1099, 496, 1444, 537]}
+      ],
+      "figure_text": [
+        {"id": "F02-error-type", "text": "Error bars: SD", "box": [1146, 240, 1356, 280]},
+        {"id": "F02-n", "text": "n = 12 paired batches", "box": [1146, 291, 1466, 332]}
+      ],
+      "readings": [
+        {"id": "F02-A", "series": "Method A", "mean_percent_interval": [79.5, 80.5], "error_lower_percent_interval": [73.4, 74.6], "error_upper_percent_interval": [85.4, 86.6], "mean_box": [586, 591, 615, 619], "error_box": [582, 454, 619, 755]},
+        {"id": "F02-B", "series": "Method B", "mean_percent_interval": [83.5, 84.5], "error_lower_percent_interval": [80.4, 81.6], "error_upper_percent_interval": [86.4, 87.6], "mean_box": [1256, 495, 1288, 524], "error_box": [1253, 431, 1290, 589]}
+      ],
+      "observed_directions": ["B mean is about 4 percentage points above A.", "A displayed SD span is about 74 to 86; B about 81 to 87. Their vertical ranges overlap approximately 81 to 86.", "A error bar is visibly longer than B."],
+      "uncertainties": ["No individual batch points, paired differences, correlation, p-value or confidence interval is shown.", "SD overlap is a visual observation; its inferential consequence is not encoded by the pixels alone."]
+    },
+    {
+      "figure_id": "F03",
+      "file": "figures/F03_latency.png",
+      "title": "Elapsed time by worker setting",
+      "axes": {
+        "x": {"label": "Concurrent workers", "ticks": [1, 2, 4, 8, 16], "scale": "linear: spacing grows in proportion to numeric differences", "regions": [{"id": "F03-x-ticks", "box": [181, 1075, 1701, 1135], "object": "worker ticks 1, 2, 4, 8, 16"}, {"id": "F03-x-label", "box": [791, 1175, 1120, 1220], "object": "concurrent workers label"}]},
+        "y": {"label": "Elapsed time (ms)", "ticks": [100, 300, 1000, 3000, 10000], "scale": "logarithmic; 100-to-1000 and 1000-to-10000 have equal vertical distance", "regions": [{"id": "F03-y-ticks", "box": [100, 208, 206, 1098], "object": "milliseconds ticks on log scale"}, {"id": "F03-y-label", "box": [191, 134, 489, 175], "object": "elapsed time and milliseconds label"}]}
+      },
+      "legend": [
+        {"series": "Method A", "binding": "blue line, open circular markers", "region_id": "F03-legend-A", "box": [265, 249, 482, 291]},
+        {"series": "Method B", "binding": "orange line, filled square markers", "region_id": "F03-legend-B", "box": [265, 300, 483, 343]}
+      ],
+      "readings": [
+        {"id": "F03-A-1", "series": "Method A", "workers": 1, "elapsed_ms_interval": [1400, 1600], "box": [183, 562, 214, 591]},
+        {"id": "F03-B-1", "series": "Method B", "workers": 1, "elapsed_ms_interval": [1120, 1280], "box": [183, 604, 214, 634]},
+        {"id": "F03-A-2", "series": "Method A", "workers": 2, "elapsed_ms_interval": [850, 950], "box": [281, 657, 312, 687]},
+        {"id": "F03-B-2", "series": "Method B", "workers": 2, "elapsed_ms_interval": [1220, 1380], "box": [281, 588, 312, 619]},
+        {"id": "F03-A-4", "series": "Method A", "workers": 4, "elapsed_ms_interval": [510, 590], "box": [477, 748, 510, 779]},
+        {"id": "F03-B-4", "series": "Method B", "workers": 4, "elapsed_ms_interval": [1700, 1900], "box": [478, 528, 509, 558]},
+        {"id": "F03-A-8", "series": "Method A", "workers": 8, "elapsed_ms_interval": [280, 320], "box": [871, 860, 902, 891]},
+        {"id": "F03-B-8", "series": "Method B", "workers": 8, "elapsed_ms_interval": [2800, 3200], "box": [871, 433, 902, 464]},
+        {"id": "F03-A-16", "series": "Method A", "workers": 16, "elapsed_ms_interval": [205, 235], "box": [1659, 918, 1690, 950]},
+        {"id": "F03-B-16", "series": "Method B", "workers": 16, "elapsed_ms_interval": [4700, 5300], "box": [1659, 338, 1690, 369]}
+      ],
+      "observed_directions": ["A elapsed time decreases with workers; B elapsed time increases.", "B is below A at 1 worker, above A at all later plotted settings.", "At 8 workers the blue point lies on the 300 ms gridline and orange on the 3000 ms gridline, giving approximately a tenfold B-to-A time ratio."],
+      "uncertainties": ["No error bars or runtime variability are visible.", "The figure reports elapsed time; reciprocal throughput or full utilization is not directly displayed.", "Ratios may be read from labeled log-axis values; equal pixel differences are not equal millisecond differences."]
+    },
+    {
+      "figure_id": "F04",
+      "file": "figures/F04_grouping.png",
+      "title": "Planning length and observed completion",
+      "axes": {
+        "x": {"label": "Mean planning length (steps)", "ticks": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12], "scale": "linear", "regions": [{"id": "F04-x-ticks", "box": [252, 1074, 1625, 1134], "object": "planning steps ticks"}, {"id": "F04-x-label", "box": [714, 1175, 1200, 1219], "object": "mean planning length label"}]},
+        "y": {"label": "Observed target pass (%)", "ticks": [65, 70, 75, 80, 85, 90, 95, 100], "scale": "linear", "regions": [{"id": "F04-y-ticks", "box": [136, 209, 205, 1097], "object": "observed target pass percentage ticks"}, {"id": "F04-y-label", "box": [191, 134, 598, 177], "object": "observed pass label"}]}
+      },
+      "legend": [
+        {"series": "Group G1", "binding": "blue open circles", "region_id": "F04-legend-G1", "box": [1236, 932, 1457, 973]},
+        {"series": "Group G2", "binding": "orange filled squares", "region_id": "F04-legend-G2", "box": [1236, 982, 1457, 1025]}
+      ],
+      "readings": [
+        {"id": "F04-G1-1", "group": "G1", "steps_interval": [0.9, 1.1], "pass_percent_interval": [79.3, 80.7], "box": [255, 698, 286, 728]},
+        {"id": "F04-G1-2", "group": "G1", "steps_interval": [1.9, 2.1], "pass_percent_interval": [77.3, 78.7], "box": [376, 748, 407, 778]},
+        {"id": "F04-G1-3", "group": "G1", "steps_interval": [2.9, 3.1], "pass_percent_interval": [75.2, 76.6], "box": [497, 799, 528, 829]},
+        {"id": "F04-G1-4", "group": "G1", "steps_interval": [3.9, 4.1], "pass_percent_interval": [73.3, 74.7], "box": [618, 844, 649, 874]},
+        {"id": "F04-G1-5", "group": "G1", "steps_interval": [4.9, 5.1], "pass_percent_interval": [71.2, 72.6], "box": [739, 896, 770, 926]},
+        {"id": "F04-G2-8", "group": "G2", "steps_interval": [7.9, 8.1], "pass_percent_interval": [94.2, 95.6], "box": [1101, 334, 1133, 365]},
+        {"id": "F04-G2-9", "group": "G2", "steps_interval": [8.9, 9.1], "pass_percent_interval": [92.3, 93.7], "box": [1222, 380, 1254, 411]},
+        {"id": "F04-G2-10", "group": "G2", "steps_interval": [9.9, 10.1], "pass_percent_interval": [90.2, 91.6], "box": [1343, 431, 1375, 462]},
+        {"id": "F04-G2-11", "group": "G2", "steps_interval": [10.9, 11.1], "pass_percent_interval": [88.3, 89.7], "box": [1464, 477, 1496, 508]},
+        {"id": "F04-G2-12", "group": "G2", "steps_interval": [11.9, 12.1], "pass_percent_interval": [86.2, 87.6], "box": [1585, 530, 1617, 561]}
+      ],
+      "observed_directions": ["Within G1, pass decreases from about 80% at 1 step to about 72% at 5 steps.", "Within G2, pass decreases from about 95% at 8 steps to about 87% at 12 steps.", "G2 points occupy larger x and higher y than all G1 points, so the pooled point cloud has a positive between-group direction while each group trends downward."],
+      "uncertainties": ["No group meaning, intervention, assignment mechanism, individual task observations, fitted regression or causal design is visible in this figure.", "Pooled direction is visually clear across clusters but no correlation coefficient is printed.", "No error bars are shown."]
+    }
+  ]
+}

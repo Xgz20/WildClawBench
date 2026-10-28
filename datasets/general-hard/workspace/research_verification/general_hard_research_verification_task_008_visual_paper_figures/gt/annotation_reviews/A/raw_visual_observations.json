@@ -1,0 +1,1086 @@
+{
+  "schema": "independent-pixel-observation-v1",
+  "annotator": "A",
+  "role": "independent model pixel annotator; not human expert or formal Judge",
+  "input_constraints": "Only four original PNGs and neutral annotation instruction inspected semantically before this file was saved. Excerpt and tolerance files have only been hashed, not opened as text.",
+  "image_size_px": [
+    1800,
+    1260
+  ],
+  "coordinate_convention": "origin top-left; xyxy pixel bounding boxes; regions estimated from actual original-image view, not plotting geometry",
+  "reading_policy": "Numeric intervals are visual reading uncertainty, not statistical confidence intervals. No private exact array values inferred.",
+  "observation_sequence": [
+    "annotation_instructions.md",
+    "F01_budget.png original view",
+    "F02_intervals.png original view",
+    "F03_latency.png original view",
+    "F04_grouping.png original view",
+    "save raw_visual_observations.json before reading claims"
+  ],
+  "figures": [
+    {
+      "figure": "F01",
+      "file": "figures/F01_budget.png",
+      "title": "Tool budget and target completion",
+      "axes": {
+        "x": {
+          "label": "Total tool-call budget per task",
+          "ticks": [
+            1,
+            10,
+            100
+          ],
+          "scale_observation": "Multiplicative ticks 1,10,100 are equally spaced; logarithmic budget axis.",
+          "regions": [
+            {
+              "id": "F01-x-ticks",
+              "object": "budget ticks and baseline",
+              "bbox_xyxy_px": [
+                180,
+                1074,
+                1698,
+                1132
+              ]
+            },
+            {
+              "id": "F01-x-label",
+              "object": "budget unit label",
+              "bbox_xyxy_px": [
+                710,
+                1175,
+                1235,
+                1220
+              ]
+            }
+          ]
+        },
+        "y": {
+          "label": "Mean target pass (%)",
+          "ticks": [
+            40,
+            50,
+            60,
+            70,
+            80,
+            90
+          ],
+          "scale_observation": "Linear; 10 percentage-point intervals equally spaced.",
+          "regions": [
+            {
+              "id": "F01-y-ticks",
+              "object": "percent ticks",
+              "bbox_xyxy_px": [
+                148,
+                287,
+                200,
+                1097
+              ]
+            },
+            {
+              "id": "F01-y-label",
+              "object": "percent label",
+              "bbox_xyxy_px": [
+                191,
+                136,
+                537,
+                174
+              ]
+            }
+          ]
+        }
+      },
+      "legend_bindings": [
+        {
+          "series": "Method A",
+          "mark": "blue line with hollow blue circles",
+          "region": {
+            "id": "F01-legend-A",
+            "object": "Method A binding",
+            "bbox_xyxy_px": [
+              265,
+              250,
+              490,
+              288
+            ]
+          }
+        },
+        {
+          "series": "Method B",
+          "mark": "orange line with solid orange squares",
+          "region": {
+            "id": "F01-legend-B",
+            "object": "Method B binding",
+            "bbox_xyxy_px": [
+              265,
+              301,
+              490,
+              339
+            ]
+          }
+        }
+      ],
+      "points": [
+        {
+          "id": "F01-A-1",
+          "x_reading": 1,
+          "y_readable_interval": [
+            54.5,
+            55.7
+          ],
+          "region": {
+            "id": "F01-A-1",
+            "object": "F01-A-1",
+            "bbox_xyxy_px": [
+              184,
+              806,
+              213,
+              881
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              52.6,
+              53.6
+            ],
+            "upper": [
+              56.6,
+              57.6
+            ]
+          }
+        },
+        {
+          "id": "F01-B-1",
+          "x_reading": 1,
+          "y_readable_interval": [
+            57.5,
+            58.7
+          ],
+          "region": {
+            "id": "F01-B-1",
+            "object": "F01-B-1",
+            "bbox_xyxy_px": [
+              183,
+              744,
+              214,
+              851
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              54.6,
+              55.6
+            ],
+            "upper": [
+              60.6,
+              61.6
+            ]
+          }
+        },
+        {
+          "id": "F01-A-10",
+          "x_reading": 10,
+          "y_readable_interval": [
+            71.5,
+            72.6
+          ],
+          "region": {
+            "id": "F01-A-10",
+            "object": "F01-A-10",
+            "bbox_xyxy_px": [
+              920,
+              528,
+              951,
+              637
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              68.5,
+              69.5
+            ],
+            "upper": [
+              74.5,
+              75.5
+            ]
+          }
+        },
+        {
+          "id": "F01-B-10",
+          "x_reading": 10,
+          "y_readable_interval": [
+            63.6,
+            64.7
+          ],
+          "region": {
+            "id": "F01-B-10",
+            "object": "F01-B-10",
+            "bbox_xyxy_px": [
+              919,
+              635,
+              952,
+              775
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              59.6,
+              60.6
+            ],
+            "upper": [
+              67.6,
+              68.6
+            ]
+          }
+        },
+        {
+          "id": "F01-A-100",
+          "x_reading": 100,
+          "y_readable_interval": [
+            83.2,
+            84.4
+          ],
+          "region": {
+            "id": "F01-A-100",
+            "object": "F01-A-100",
+            "bbox_xyxy_px": [
+              1657,
+              360,
+              1691,
+              438
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              81.3,
+              82.3
+            ],
+            "upper": [
+              85.3,
+              86.3
+            ]
+          }
+        },
+        {
+          "id": "F01-B-100",
+          "x_reading": 100,
+          "y_readable_interval": [
+            77.4,
+            78.6
+          ],
+          "region": {
+            "id": "F01-B-100",
+            "object": "F01-B-100",
+            "bbox_xyxy_px": [
+              1657,
+              434,
+              1691,
+              543
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              74.5,
+              75.5
+            ],
+            "upper": [
+              80.5,
+              81.5
+            ]
+          }
+        }
+      ],
+      "directions": [
+        "Both series rise from budget 1 to 10 to 100.",
+        "At budget 1, B is above A. At budgets 10 and 100, A is above B.",
+        "A gains roughly 17 percentage points from 1 to 10; B gains roughly 6 points in that interval."
+      ],
+      "uncertainties": [
+        "Error bars are visible but their statistical type is not stated on this PNG.",
+        "Lines join sampled budgets; intermediate budgets are not separately observed."
+      ]
+    },
+    {
+      "figure": "F02",
+      "file": "figures/F02_intervals.png",
+      "title": "Completion on shared evaluation batches",
+      "axes": {
+        "x": {
+          "label": "Method",
+          "categories": [
+            "Method A",
+            "Method B"
+          ],
+          "region": {
+            "id": "F02-x",
+            "object": "method categories and label",
+            "bbox_xyxy_px": [
+              525,
+              1085,
+              1356,
+              1218
+            ]
+          }
+        },
+        "y": {
+          "label": "Mean target pass (%)",
+          "ticks": [
+            60,
+            65,
+            70,
+            75,
+            80,
+            85,
+            90,
+            95
+          ],
+          "scale_observation": "Linear, 5 percentage-point intervals; visible bars start at 60, not zero.",
+          "regions": [
+            {
+              "id": "F02-y-ticks",
+              "object": "percent ticks",
+              "bbox_xyxy_px": [
+                148,
+                235,
+                202,
+                1097
+              ]
+            },
+            {
+              "id": "F02-y-label",
+              "object": "percent label",
+              "bbox_xyxy_px": [
+                191,
+                136,
+                536,
+                174
+              ]
+            }
+          ]
+        }
+      },
+      "legend_bindings": [
+        {
+          "series": "Method A",
+          "mark": "pale blue bar with blue outline and hollow circle on top; blue vertical capped error bar",
+          "region": {
+            "id": "F02-A-mean",
+            "object": "A bar-top and mean marker",
+            "bbox_xyxy_px": [
+              425,
+              589,
+              778,
+              620
+            ]
+          }
+        },
+        {
+          "series": "Method B",
+          "mark": "pale orange bar with orange outline and solid square on top; orange vertical capped error bar",
+          "region": {
+            "id": "F02-B-mean",
+            "object": "B bar-top and mean marker",
+            "bbox_xyxy_px": [
+              1094,
+              495,
+              1449,
+              526
+            ]
+          }
+        }
+      ],
+      "visible_annotations": [
+        {
+          "text": "Error bars: SD",
+          "region": {
+            "id": "F02-SD",
+            "object": "error type label",
+            "bbox_xyxy_px": [
+              1145,
+              239,
+              1360,
+              278
+            ]
+          }
+        },
+        {
+          "text": "n = 12 paired batches",
+          "region": {
+            "id": "F02-n",
+            "object": "sample/pairing label",
+            "bbox_xyxy_px": [
+              1145,
+              291,
+              1464,
+              328
+            ]
+          }
+        }
+      ],
+      "points": [
+        {
+          "id": "F02-A",
+          "x_reading": "Method A",
+          "y_readable_interval": [
+            79.5,
+            80.5
+          ],
+          "region": {
+            "id": "F02-A",
+            "object": "F02-A",
+            "bbox_xyxy_px": [
+              584,
+              451,
+              617,
+              757
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              73.5,
+              74.5
+            ],
+            "upper": [
+              85.5,
+              86.5
+            ]
+          }
+        },
+        {
+          "id": "F02-B",
+          "x_reading": "Method B",
+          "y_readable_interval": [
+            83.5,
+            84.5
+          ],
+          "region": {
+            "id": "F02-B",
+            "object": "F02-B",
+            "bbox_xyxy_px": [
+              1253,
+              429,
+              1289,
+              591
+            ]
+          },
+          "error_endpoints_readable_intervals": {
+            "lower": [
+              80.5,
+              81.5
+            ],
+            "upper": [
+              86.5,
+              87.5
+            ]
+          }
+        }
+      ],
+      "directions": [
+        "B mean is about 4 percentage points above A.",
+        "The displayed SD spans overlap; visual shared span is approximately 81 to 86 percent."
+      ],
+      "uncertainties": [
+        "No paired batch-level differences, test statistic, p-value, or difference confidence interval appears in the PNG.",
+        "SD endpoint reading does not establish significance."
+      ]
+    },
+    {
+      "figure": "F03",
+      "file": "figures/F03_latency.png",
+      "title": "Elapsed time by worker setting",
+      "axes": {
+        "x": {
+          "label": "Concurrent workers",
+          "ticks": [
+            1,
+            2,
+            4,
+            8,
+            16
+          ],
+          "scale_observation": "Linear worker axis: distances increase with successive tick gaps 1,2,4,8.",
+          "regions": [
+            {
+              "id": "F03-x-ticks",
+              "object": "worker ticks",
+              "bbox_xyxy_px": [
+                184,
+                1072,
+                1697,
+                1131
+              ]
+            },
+            {
+              "id": "F03-x-label",
+              "object": "worker unit label",
+              "bbox_xyxy_px": [
+                787,
+                1175,
+                1101,
+                1220
+              ]
+            }
+          ]
+        },
+        "y": {
+          "label": "Elapsed time (ms)",
+          "ticks": [
+            100,
+            300,
+            1000,
+            3000,
+            10000
+          ],
+          "scale_observation": "Logarithmic elapsed-time axis; numeric ratios, not vertical distances, determine speed/time ratios.",
+          "regions": [
+            {
+              "id": "F03-y-ticks",
+              "object": "elapsed-time ticks",
+              "bbox_xyxy_px": [
+                99,
+                209,
+                203,
+                1097
+              ]
+            },
+            {
+              "id": "F03-y-label",
+              "object": "elapsed-time unit label",
+              "bbox_xyxy_px": [
+                190,
+                135,
+                481,
+                175
+              ]
+            }
+          ]
+        }
+      },
+      "legend_bindings": [
+        {
+          "series": "Method A",
+          "mark": "blue line, hollow circles",
+          "region": {
+            "id": "F03-legend-A",
+            "object": "Method A binding",
+            "bbox_xyxy_px": [
+              264,
+              249,
+              486,
+              289
+            ]
+          }
+        },
+        {
+          "series": "Method B",
+          "mark": "orange line, solid squares",
+          "region": {
+            "id": "F03-legend-B",
+            "object": "Method B binding",
+            "bbox_xyxy_px": [
+              264,
+              300,
+              486,
+              340
+            ]
+          }
+        }
+      ],
+      "points": [
+        {
+          "id": "F03-A-1",
+          "x_reading": 1,
+          "y_readable_interval": [
+            1420,
+            1580
+          ],
+          "region": {
+            "id": "F03-A-1",
+            "object": "F03-A-1",
+            "bbox_xyxy_px": [
+              184,
+              561,
+              213,
+              593
+            ]
+          }
+        },
+        {
+          "id": "F03-A-2",
+          "x_reading": 2,
+          "y_readable_interval": [
+            860,
+            950
+          ],
+          "region": {
+            "id": "F03-A-2",
+            "object": "F03-A-2",
+            "bbox_xyxy_px": [
+              281,
+              657,
+              313,
+              688
+            ]
+          }
+        },
+        {
+          "id": "F03-A-4",
+          "x_reading": 4,
+          "y_readable_interval": [
+            520,
+            580
+          ],
+          "region": {
+            "id": "F03-A-4",
+            "object": "F03-A-4",
+            "bbox_xyxy_px": [
+              477,
+              748,
+              510,
+              781
+            ]
+          }
+        },
+        {
+          "id": "F03-A-8",
+          "x_reading": 8,
+          "y_readable_interval": [
+            290,
+            310
+          ],
+          "region": {
+            "id": "F03-A-8",
+            "object": "F03-A-8",
+            "bbox_xyxy_px": [
+              871,
+              860,
+              903,
+              892
+            ]
+          }
+        },
+        {
+          "id": "F03-A-16",
+          "x_reading": 16,
+          "y_readable_interval": [
+            210,
+            230
+          ],
+          "region": {
+            "id": "F03-A-16",
+            "object": "F03-A-16",
+            "bbox_xyxy_px": [
+              1658,
+              918,
+              1690,
+              950
+            ]
+          }
+        },
+        {
+          "id": "F03-B-1",
+          "x_reading": 1,
+          "y_readable_interval": [
+            1140,
+            1270
+          ],
+          "region": {
+            "id": "F03-B-1",
+            "object": "F03-B-1",
+            "bbox_xyxy_px": [
+              183,
+              602,
+              214,
+              635
+            ]
+          }
+        },
+        {
+          "id": "F03-B-2",
+          "x_reading": 2,
+          "y_readable_interval": [
+            1230,
+            1370
+          ],
+          "region": {
+            "id": "F03-B-2",
+            "object": "F03-B-2",
+            "bbox_xyxy_px": [
+              280,
+              588,
+              312,
+              620
+            ]
+          }
+        },
+        {
+          "id": "F03-B-4",
+          "x_reading": 4,
+          "y_readable_interval": [
+            1710,
+            1900
+          ],
+          "region": {
+            "id": "F03-B-4",
+            "object": "F03-B-4",
+            "bbox_xyxy_px": [
+              477,
+              527,
+              509,
+              559
+            ]
+          }
+        },
+        {
+          "id": "F03-B-8",
+          "x_reading": 8,
+          "y_readable_interval": [
+            2900,
+            3100
+          ],
+          "region": {
+            "id": "F03-B-8",
+            "object": "F03-B-8",
+            "bbox_xyxy_px": [
+              870,
+              432,
+              903,
+              465
+            ]
+          }
+        },
+        {
+          "id": "F03-B-16",
+          "x_reading": 16,
+          "y_readable_interval": [
+            4750,
+            5250
+          ],
+          "region": {
+            "id": "F03-B-16",
+            "object": "F03-B-16",
+            "bbox_xyxy_px": [
+              1658,
+              338,
+              1690,
+              370
+            ]
+          }
+        }
+      ],
+      "directions": [
+        "A decreases with more workers across all five visible settings.",
+        "B increases with more workers across all five visible settings.",
+        "At one worker B is below A; at two or more workers A is below B."
+      ],
+      "uncertainties": [
+        "No error bars are visible.",
+        "Log interpolation supports approximate ranges rather than private exact millisecond values."
+      ]
+    },
+    {
+      "figure": "F04",
+      "file": "figures/F04_grouping.png",
+      "title": "Planning length and observed completion",
+      "axes": {
+        "x": {
+          "label": "Mean planning length (steps)",
+          "ticks": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12
+          ],
+          "scale_observation": "Linear; one-step ticks equally spaced.",
+          "regions": [
+            {
+              "id": "F04-x-ticks",
+              "object": "planning-length ticks",
+              "bbox_xyxy_px": [
+                250,
+                1072,
+                1620,
+                1133
+              ]
+            },
+            {
+              "id": "F04-x-label",
+              "object": "planning-length label",
+              "bbox_xyxy_px": [
+                713,
+                1173,
+                1250,
+                1218
+              ]
+            }
+          ]
+        },
+        "y": {
+          "label": "Observed target pass (%)",
+          "ticks": [
+            65,
+            70,
+            75,
+            80,
+            85,
+            90,
+            95,
+            100
+          ],
+          "scale_observation": "Linear; 5 percentage-point ticks equally spaced.",
+          "regions": [
+            {
+              "id": "F04-y-ticks",
+              "object": "pass ticks",
+              "bbox_xyxy_px": [
+                129,
+                207,
+                200,
+                1098
+              ]
+            },
+            {
+              "id": "F04-y-label",
+              "object": "pass label",
+              "bbox_xyxy_px": [
+                190,
+                135,
+                601,
+                174
+              ]
+            }
+          ]
+        }
+      },
+      "legend_bindings": [
+        {
+          "series": "Group G1",
+          "mark": "hollow blue circles",
+          "region": {
+            "id": "F04-legend-G1",
+            "object": "G1 binding",
+            "bbox_xyxy_px": [
+              1235,
+              930,
+              1463,
+              975
+            ]
+          }
+        },
+        {
+          "series": "Group G2",
+          "mark": "solid orange squares",
+          "region": {
+            "id": "F04-legend-G2",
+            "object": "G2 binding",
+            "bbox_xyxy_px": [
+              1235,
+              981,
+              1463,
+              1027
+            ]
+          }
+        }
+      ],
+      "points": [
+        {
+          "id": "F04-G1-1",
+          "x_reading": 1,
+          "y_readable_interval": [
+            79.5,
+            80.5
+          ],
+          "region": {
+            "id": "F04-G1-1",
+            "object": "F04-G1-1",
+            "bbox_xyxy_px": [
+              255,
+              697,
+              286,
+              729
+            ]
+          }
+        },
+        {
+          "id": "F04-G1-2",
+          "x_reading": 2,
+          "y_readable_interval": [
+            77.5,
+            78.5
+          ],
+          "region": {
+            "id": "F04-G1-2",
+            "object": "F04-G1-2",
+            "bbox_xyxy_px": [
+              376,
+              747,
+              407,
+              779
+            ]
+          }
+        },
+        {
+          "id": "F04-G1-3",
+          "x_reading": 3,
+          "y_readable_interval": [
+            75.4,
+            76.4
+          ],
+          "region": {
+            "id": "F04-G1-3",
+            "object": "F04-G1-3",
+            "bbox_xyxy_px": [
+              496,
+              798,
+              529,
+              830
+            ]
+          }
+        },
+        {
+          "id": "F04-G1-4",
+          "x_reading": 4,
+          "y_readable_interval": [
+            73.5,
+            74.5
+          ],
+          "region": {
+            "id": "F04-G1-4",
+            "object": "F04-G1-4",
+            "bbox_xyxy_px": [
+              617,
+              843,
+              650,
+              875
+            ]
+          }
+        },
+        {
+          "id": "F04-G1-5",
+          "x_reading": 5,
+          "y_readable_interval": [
+            71.4,
+            72.4
+          ],
+          "region": {
+            "id": "F04-G1-5",
+            "object": "F04-G1-5",
+            "bbox_xyxy_px": [
+              738,
+              895,
+              770,
+              927
+            ]
+          }
+        },
+        {
+          "id": "F04-G2-8",
+          "x_reading": 8,
+          "y_readable_interval": [
+            94.4,
+            95.4
+          ],
+          "region": {
+            "id": "F04-G2-8",
+            "object": "F04-G2-8",
+            "bbox_xyxy_px": [
+              1101,
+              334,
+              1134,
+              366
+            ]
+          }
+        },
+        {
+          "id": "F04-G2-9",
+          "x_reading": 9,
+          "y_readable_interval": [
+            92.5,
+            93.5
+          ],
+          "region": {
+            "id": "F04-G2-9",
+            "object": "F04-G2-9",
+            "bbox_xyxy_px": [
+              1222,
+              379,
+              1255,
+              412
+            ]
+          }
+        },
+        {
+          "id": "F04-G2-10",
+          "x_reading": 10,
+          "y_readable_interval": [
+            90.4,
+            91.4
+          ],
+          "region": {
+            "id": "F04-G2-10",
+            "object": "F04-G2-10",
+            "bbox_xyxy_px": [
+              1343,
+              430,
+              1376,
+              463
+            ]
+          }
+        },
+        {
+          "id": "F04-G2-11",
+          "x_reading": 11,
+          "y_readable_interval": [
+            88.5,
+            89.5
+          ],
+          "region": {
+            "id": "F04-G2-11",
+            "object": "F04-G2-11",
+            "bbox_xyxy_px": [
+              1464,
+              477,
+              1497,
+              510
+            ]
+          }
+        },
+        {
+          "id": "F04-G2-12",
+          "x_reading": 12,
+          "y_readable_interval": [
+            86.4,
+            87.4
+          ],
+          "region": {
+            "id": "F04-G2-12",
+            "object": "F04-G2-12",
+            "bbox_xyxy_px": [
+              1585,
+              529,
+              1618,
+              562
+            ]
+          }
+        }
+      ],
+      "directions": [
+        "Within G1, pass decreases as planning steps increase from 1 through 5.",
+        "Within G2, pass decreases as planning steps increase from 8 through 12.",
+        "Across pooled cloud, high-x G2 has higher pass values than low-x G1, giving an overall positive between-cluster direction. This does not make each within-group direction positive."
+      ],
+      "uncertainties": [
+        "No points at planning lengths 6 or 7 are visible.",
+        "No error bars, regression coefficients, randomization, intervention or causal identification appears on this PNG.",
+        "Group names do not describe what the grouping variable means."
+      ]
+    }
+  ]
+}

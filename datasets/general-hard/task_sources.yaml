@@ -1,10 +1,10 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 36
+  active_task_count: 37
   category_task_counts:
     office_documents: 16
     data_analysis: 10
-    research_verification: 5
+    research_verification: 6
     file_operations: 3
     software_engineering: 2
     planning_coordination: 0
@@ -1106,3 +1106,33 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_research_verification_task_008_visual_paper_figures
+    origin:
+      mode: internal_benchmark_inspired_with_open_benchmark_methods
+      production_refs: []
+      external_source_ids:
+        - gaia
+      direct_task_copy: false
+      internal_reference_ids:
+        - astudio-search108
+      reference_benchmark_refs:
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 104
+          row: 106
+          query_hash: 3a94b7a778521315eb8a181f4a8d1f0fe1d862a72ab2cb6a7f8bd50d02c11499
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 108
+          row: 110
+          query_hash: 88e8ce13ea933fd17c401996a23bc4f151370472a3e97302fe9d1aba1e28c88a
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+    network:
+      mode: offline
+    attributes:
+      requires_visual_input: true
+      coding_primary: false
+      retrieval_group: local_evidence
