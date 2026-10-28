@@ -1,0 +1,813 @@
+{
+  "schema": "h035.expected/v1",
+  "rows": [
+    {
+      "file_id": "F001",
+      "path": "sandbox_tree/cache/browser/part-01.cache",
+      "sha256": "c60a391658ac88431e25d612fdb18d3a048a4bc3c76e8f91393a838d5e600b40",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 8396800,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F002",
+      "path": "sandbox_tree/cache/browser/part-02.cache",
+      "sha256": "41aafb3f89b0bd90eb2070f3ef6e54e062baa84a9ae837cf7a0245c9dcbb45dd",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 8400896,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F003",
+      "path": "sandbox_tree/cache/browser/part-03.cache",
+      "sha256": "8c5cf6797dcd40cfe15a8f739ef24fc75412547dca5f34fcfb6a891e4e361187",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 12599296,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F004",
+      "path": "sandbox_tree/cache/browser/part-04.cache",
+      "sha256": "1c30d50a04bb1f8234ad645e3e3a9284ed8b0ecc12150a9da7ad7169eba1ed88",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 12603392,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F005",
+      "path": "sandbox_tree/cache/browser/part-05.cache",
+      "sha256": "167c87cf2e8a194a91bc079c36ee86a12a2956870ffe8df07f0d64ed399c8b11",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 5267456,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F006",
+      "path": "sandbox_tree/cache/browser/part-06.cache",
+      "sha256": "9ccf5940b9654017f361f0251dbd63c15cd13e3f8efb65f6fd1497f335405694",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 5271552,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F007",
+      "path": "sandbox_tree/cache/browser/part-07.cache",
+      "sha256": "dba259d11db1400a1e058df0ca16d44f08bfc70a1397d6974f73e7e45d559b78",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 2101248,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F008",
+      "path": "sandbox_tree/cache/browser/part-08.cache",
+      "sha256": "59813e8f9c7fabf3e53d1dfbbbb050e508ec522a35282409770a02545c1aadb1",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F009",
+      "path": "sandbox_tree/cache/browser/part-09.cache",
+      "sha256": "9c79eb73297575bb72a4973967215df26f2f34d8c1d1bc5d402cb300e4684e38",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F010",
+      "path": "sandbox_tree/cache/browser/part-10.cache",
+      "sha256": "a4b5b1ff640f36fdf48d6b67beb9fb6754bc913e5c8c3337f1aaa327b3d9a3db",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F011",
+      "path": "sandbox_tree/cache/build/part-11.cache",
+      "sha256": "9a5f7fa9a65a439b44e7781170f314c82a0c066901c63cdb021d9a6596a3a01c",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F012",
+      "path": "sandbox_tree/cache/build/part-12.cache",
+      "sha256": "39798f0856d5dbd84f55e279d0f2f9a33bc1e69ffdca6a3730292b8e5375e06b",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F013",
+      "path": "sandbox_tree/cache/build/part-13.cache",
+      "sha256": "cfa34e85e56bf0ab3aebaa403dea8c9c413d01b99c41d3be5fdb376dd13ee109",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F014",
+      "path": "sandbox_tree/cache/build/part-14.cache",
+      "sha256": "b04e9c9bd54869465d2292abd1a8dd4f8b81291e3980e2c4aa5ea337dc2265d2",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F015",
+      "path": "sandbox_tree/cache/build/part-15.cache",
+      "sha256": "3014cc4e6aed220689327ac1ddf0e0c7ed1419e0a06719124510a9b5551a980a",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F016",
+      "path": "sandbox_tree/cache/build/part-16.cache",
+      "sha256": "62d3012bf84dad2a0329ea59aa2c1510c3647d03ba2121570fade9335251f961",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F017",
+      "path": "sandbox_tree/cache/build/part-17.cache",
+      "sha256": "7a5f3401180febbea89937c3f591d54ac0a62072f76df4022a49375c220d7343",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F018",
+      "path": "sandbox_tree/cache/build/part-18.cache",
+      "sha256": "12d21da791afa74dc973b549f7660a3cc1d68a8d9b4f4ddf435d97644974c48d",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F019",
+      "path": "sandbox_tree/cache/build/part-19.cache",
+      "sha256": "85833897ae0519359a35892b4891d68806b0ef8431bb1182c7562e1d2376df07",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F020",
+      "path": "sandbox_tree/cache/build/part-20.cache",
+      "sha256": "97723e361ff11dcad3a48302bc804e50673c5338add9d4a95dd94b41b09386d4",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F021",
+      "path": "sandbox_tree/cache/渲染缓存/café.cache",
+      "sha256": "74cb344fcac86dfaa363b933652dc826a1cb180c2af54ca49358bf0c7103b3ff",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 16781312,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F022",
+      "path": "sandbox_tree/cache/渲染缓存/report.txt",
+      "sha256": "ee6b5874adafd5ca374f050825b01e888527fb64561c3fc7a7dd119900aa0c26",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 16785408,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F023",
+      "path": "sandbox_tree/cache/渲染缓存/part [1].tmp",
+      "sha256": "f509775a173f57476647c72386b410eca31e9d0abce323427f58c98d39ec7d0f",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 16789504,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F024",
+      "path": "sandbox_tree/cache/渲染缓存/旧 缓存.tmp",
+      "sha256": "e9f6336cc0c23bc9f808ac615424c885c3913385bb0357a1a0c6a718c29d7e49",
+      "decision": "cleanable",
+      "rule_id": "R06",
+      "allocated_known_bytes": 16793600,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F025",
+      "path": "sandbox_tree/cache/recent/recent-25.cache",
+      "sha256": "c888fb7582f843f0da2c7be233f78f4b36720262c3410dee546313142c646e6a",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F026",
+      "path": "sandbox_tree/cache/recent/recent-26.cache",
+      "sha256": "2712b94ada57b0b491619484e7b4a32036f873dfefe50a329a12b994b80a2acc",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F027",
+      "path": "sandbox_tree/cache/recent/recent-27.cache",
+      "sha256": "896ff7f5f92c6e32dc757955b80674c651f007cb3de3b321d7da340b7fa68835",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F028",
+      "path": "sandbox_tree/cache/recent/recent-28.cache",
+      "sha256": "5180718438f46c991ed0427943efc03edeb312c474a6ed6cf9e89cacfab16b5b",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F029",
+      "path": "sandbox_tree/cache/uncertain/unknown-29.cache",
+      "sha256": "f8c495f2363fb0468146b0957ec4b2fa370922db914d5ccc220d35761931b5c4",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F030",
+      "path": "sandbox_tree/cache/uncertain/unknown-30.cache",
+      "sha256": "335f583d2902490474af99c504c5f75ac224de608542673605a6a8fc66334de0",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F031",
+      "path": "sandbox_tree/cache/uncertain/unknown-31.cache",
+      "sha256": "9a1f15e57062dbe55227ab853d15e24ed0d585c577f830f440b6480c45989dbd",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F032",
+      "path": "sandbox_tree/cache/uncertain/unknown-32.cache",
+      "sha256": "2d50e838b904bd9f97522998af4912a553e82cca2b3e8551a5407efe3a619f4b",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F033",
+      "path": "sandbox_tree/downloads/report.txt",
+      "sha256": "5e0b2065b4658d33502f4ed4f268d2211dbf5ea46b5439bb47b608fefb1d19a0",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 2121728,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F034",
+      "path": "sandbox_tree/downloads/batch-34.txt",
+      "sha256": "9ea4d187016367a948eef7f489e4ca9e64f22b25046c2d1e7523944dc6e1e130",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 3174400,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F035",
+      "path": "sandbox_tree/downloads/batch-35.txt",
+      "sha256": "bc4a6bac08b4aeeb50e5c20dd11fc2e228842cd45a37476b0720c50f80aa226c",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 3149824,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F036",
+      "path": "sandbox_tree/downloads/batch-36.txt",
+      "sha256": "eb02aea429ae970090ade6f51616790b527e6211cc28b819ec6d148300be94d5",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F037",
+      "path": "sandbox_tree/downloads/batch-37.txt",
+      "sha256": "655aebdf088263dc4e76e28ffd14d883b9a1e51f24e341c7a7f1d9ac83e43a62",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F038",
+      "path": "sandbox_tree/downloads/batch-38.txt",
+      "sha256": "dd41211a9e8eca52bf2ff70141bfadf28d22b4eebea9ab5e02fe6a34afae172b",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F039",
+      "path": "sandbox_tree/downloads/batch-39.txt",
+      "sha256": "f6bada1ad8f0cb9c880196c61680d53325196e5d370b80b5aec3a5f8d3d93bf8",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F040",
+      "path": "sandbox_tree/downloads/batch-40.txt",
+      "sha256": "8b542c6af1b8d793e5ad2c7947693583d537790c99be0c9594acb41c7a1131b5",
+      "decision": "needs_confirmation",
+      "rule_id": "R07",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F041",
+      "path": "sandbox_tree/records/report.txt",
+      "sha256": "18bf0c47ed044cb2c644b9c05a13465c43245db019f7d03600de0e3afbeb0e6f",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 16805888,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F042",
+      "path": "sandbox_tree/records/record-42.txt",
+      "sha256": "76ea97370acb8ac87b5658525d05ef7e5a04a41b974636c3d3964abb614b8517",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F043",
+      "path": "sandbox_tree/records/record-43.txt",
+      "sha256": "651525010800b6a57c69df3f81dd9840c912dd4471fa892703a298efd90f1d57",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F044",
+      "path": "sandbox_tree/records/record-44.txt",
+      "sha256": "7868ae54f3bd17989fc5f2d6bd2e729f9bcef909452d0bd495a90a8af035d4cc",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F045",
+      "path": "sandbox_tree/records/record-45.txt",
+      "sha256": "816728ca033ba3122344e7cd1852c94b067a24ee3ea256810c5c20eeb858b624",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F046",
+      "path": "sandbox_tree/records/record-46.txt",
+      "sha256": "0de6ab7b59671ce3c97747c7ac2d92569eec555c60740a0c22f1659f44681d0c",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F047",
+      "path": "sandbox_tree/records/record-47.txt",
+      "sha256": "a433a5e12037e293bfd7f399361ccbc4ddc963624cde2618da21d41b79aab2d8",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F048",
+      "path": "sandbox_tree/records/record-48.txt",
+      "sha256": "0982a58bb55b236e69c306f7e9802d4123272bf2602ccb1969fcd775f2cc7625",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F049",
+      "path": "sandbox_tree/records/record-49.txt",
+      "sha256": "c66a59742b8869022aca1555352c6e7382d19d6f335b6802c560cca93577f3e1",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F050",
+      "path": "sandbox_tree/records/record-50.txt",
+      "sha256": "5eaec940bcaf4c137f312bafd36b8ec14cc420a3c49260d1460dc33f06553bd2",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F051",
+      "path": "sandbox_tree/projects/live/draft-51.txt",
+      "sha256": "3d2c1ba8905ebcdd2ca221ded72fa57af57e45e01a5ac402c08e5b12e3315f20",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F052",
+      "path": "sandbox_tree/projects/live/équipe/café.txt",
+      "sha256": "1c4be45ff2892bac0fd433ff5b5dec943eae04038bbea2acbb3fe53407ba4237",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F053",
+      "path": "sandbox_tree/projects/live/draft-53.txt",
+      "sha256": "517089cf9bb6ede198f5e7ca2f00f86aa5997a6633bbdf2a0cb0fcf685e5f942",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F054",
+      "path": "sandbox_tree/projects/live/draft-54.txt",
+      "sha256": "cde58cc475342ff31dce4d0a2bd910cf3a7d001835e7d45a411b0bdd9f4312d7",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F055",
+      "path": "sandbox_tree/projects/live/draft-55.txt",
+      "sha256": "3edde29060681cb8a23686305cb7bfb3fa4b7738e526b459efc1dbe596923624",
+      "decision": "must_keep",
+      "rule_id": "R02",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F056",
+      "path": "sandbox_tree/cache/running/job-56.cache",
+      "sha256": "3c3c38c5c8578d7687f94740109abdb34bf9a0943d55f9df077d80f83113d41c",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F057",
+      "path": "sandbox_tree/cache/running/job-57.cache",
+      "sha256": "a3238e44be9637db0fc0b413b552ce7c887f2e7959bafbd3f0721f710d1f5a93",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F058",
+      "path": "sandbox_tree/cache/running/job-58.cache",
+      "sha256": "80da854b7b9d7ac33a58c51167dd02a59a7453d2fcf87185b91b6928e79fe97e",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F059",
+      "path": "sandbox_tree/cache/running/job-59.cache",
+      "sha256": "d39a8b9f7f23de70721f003a2ad21c229835d970220cf45eb58c3f8ee65be8c7",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F060",
+      "path": "sandbox_tree/cache/running/job-56.lock",
+      "sha256": "e934d9bb877a289e60568c36848d006bb63853ec6d8dd0c226047da284410090",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F061",
+      "path": "sandbox_tree/cache/running/job-57.lock",
+      "sha256": "0317645700fac7161c1f25308d2fb4787f9fff2abad7c3f5b3a2e94ce79b014a",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F062",
+      "path": "sandbox_tree/cache/running/job-58.lock",
+      "sha256": "6466debdb46d801f980d35e83b5b9935eb5c901301e28a49e97a0aa8d11a7733",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F063",
+      "path": "sandbox_tree/cache/running/job-59.lock",
+      "sha256": "90be3b7b956715f6964313905f165bf11def7cca8e77555e10b29d01e151cd46",
+      "decision": "must_keep",
+      "rule_id": "R03",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F064",
+      "path": "sandbox_tree/cache/unmeasured/opaque-64.cache",
+      "sha256": "de8aaeca46bb32de4920eb525e9d2c84881ceaeb32fdc4a87d8c0c0ba685346f",
+      "decision": "needs_confirmation",
+      "rule_id": "R05",
+      "allocated_known_bytes": 0,
+      "allocation_complete": false,
+      "freeable_if_alone_bytes": null
+    },
+    {
+      "file_id": "F065",
+      "path": "sandbox_tree/cache/unmeasured/opaque-65.cache",
+      "sha256": "1a4f221f2bef498f363a0bfd94c1900d880f7d888d92fc1f751ed6191307e06b",
+      "decision": "needs_confirmation",
+      "rule_id": "R05",
+      "allocated_known_bytes": 0,
+      "allocation_complete": false,
+      "freeable_if_alone_bytes": null
+    },
+    {
+      "file_id": "F066",
+      "path": "sandbox_tree/cache/unmeasured/opaque-66.cache",
+      "sha256": "9916b6abe1dfc18719ee8e389ccd09852b0a6ea5a1cb160b795fd2ada7e62d1c",
+      "decision": "needs_confirmation",
+      "rule_id": "R05",
+      "allocated_known_bytes": 0,
+      "allocation_complete": false,
+      "freeable_if_alone_bytes": null
+    },
+    {
+      "file_id": "F067",
+      "path": "sandbox_tree/cache/unmeasured/opaque-67.cache",
+      "sha256": "51dad40eec8ba49227aa205210c5ed6307509a2f1e084893bbaf2e156be64530",
+      "decision": "needs_confirmation",
+      "rule_id": "R05",
+      "allocated_known_bytes": 0,
+      "allocation_complete": false,
+      "freeable_if_alone_bytes": null
+    },
+    {
+      "file_id": "F068",
+      "path": "sandbox_tree/cache2/report.txt",
+      "sha256": "67e3d0cfc36f59773f60971cb38d2d64efab07cf15e6a7da1b9f2dd784a3931c",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F069",
+      "path": "sandbox_tree/cache2/saved-69.txt",
+      "sha256": "a5ccd5140e2096a78c55b857b22d1dd9d9485e30650186a261b4ff73065d002a",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F070",
+      "path": "sandbox_tree/cache2/saved-70.txt",
+      "sha256": "895aa0dc6212f639fa456a6849f4dcba95d3490cd89d80c247ec05d4666949a1",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F071",
+      "path": "sandbox_tree/cache2/saved-71.txt",
+      "sha256": "fe22c4e008c102a949237c4e33ed1d9c777ff12a7b4a5da22794ac7432969bf5",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F072",
+      "path": "sandbox_tree/archives/saved-72.txt",
+      "sha256": "349a217f00eefca50120433b059aeb3367e0f1c63c178aac772699248195ea68",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F073",
+      "path": "sandbox_tree/archives/saved-73.txt",
+      "sha256": "2140b9242ff14900e3b622ffebb1062c97f836c0b862ecfa338ee9bafc0dbaf0",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    },
+    {
+      "file_id": "F074",
+      "path": "sandbox_tree/archives/saved-74.txt",
+      "sha256": "f3cb5e3d04115d50346f0fdc0b17f3e5a58e7c9c33a036cdeec569815dd82b27",
+      "decision": "must_keep",
+      "rule_id": "R04",
+      "allocated_known_bytes": 20480,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 20480
+    },
+    {
+      "file_id": "F075",
+      "path": "sandbox_tree/links/remote-75.url",
+      "sha256": "fae552daafb620648054e69eced3482e8c9faa0759fc8426258bac376804b8c3",
+      "decision": "must_keep",
+      "rule_id": "R01",
+      "allocated_known_bytes": 24576,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 24576
+    },
+    {
+      "file_id": "F076",
+      "path": "sandbox_tree/links/remote-76.webloc",
+      "sha256": "41c463c164da3827c40c5a2722cd99fbff63634b820ceae48b7b103cb4653576",
+      "decision": "must_keep",
+      "rule_id": "R01",
+      "allocated_known_bytes": 28672,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 28672
+    },
+    {
+      "file_id": "F077",
+      "path": "sandbox_tree/links/remote-77.url",
+      "sha256": "bee9f716b5318ba5a7cd1e85106ab6fbb4aab8b42c1e9f1874f9d2b9835b7f85",
+      "decision": "must_keep",
+      "rule_id": "R01",
+      "allocated_known_bytes": 4096,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 4096
+    },
+    {
+      "file_id": "F078",
+      "path": "sandbox_tree/links/remote-78.webloc",
+      "sha256": "9662feca1eba0de2202333d6a56a5d0b277fa3d39c51700388851a30b5beceda",
+      "decision": "must_keep",
+      "rule_id": "R01",
+      "allocated_known_bytes": 8192,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 8192
+    },
+    {
+      "file_id": "F079",
+      "path": "sandbox_tree/links/remote-79.url",
+      "sha256": "54bf1172f48677eade16da4d7fd7bbe0e440d02ee677cfba9d6d1a3385ecd0cd",
+      "decision": "must_keep",
+      "rule_id": "R01",
+      "allocated_known_bytes": 12288,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 12288
+    },
+    {
+      "file_id": "F080",
+      "path": "sandbox_tree/links/remote-80.webloc",
+      "sha256": "693c297dd35f39c9223d91db6d2824e1f0a577c0227bc683d22d4b77b9d0967d",
+      "decision": "must_keep",
+      "rule_id": "R01",
+      "allocated_known_bytes": 16384,
+      "allocation_complete": true,
+      "freeable_if_alone_bytes": 16384
+    }
+  ],
+  "summary": {
+    "file_count": 80,
+    "known_allocated_union_bytes": 49475584,
+    "unknown_block_count": 4,
+    "cleanable_set_freeable_bytes": 21352448,
+    "confirmation": "pending",
+    "executed": false
+  }
+}

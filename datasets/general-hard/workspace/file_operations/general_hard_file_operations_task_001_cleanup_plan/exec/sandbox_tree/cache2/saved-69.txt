@@ -1,0 +1,4 @@
+H035 fictional distributable sample
+file_id=F069
+role=archive
+This small payload is not the allocation ledger.

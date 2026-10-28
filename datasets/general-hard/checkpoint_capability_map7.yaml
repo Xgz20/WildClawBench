@@ -394,3 +394,16 @@ general_hard_research_verification_task_004_site_search_literature_screening:
     - reasoning_planning
   llm_judge.bounded_conclusions:
     - reasoning_planning
+general_hard_file_operations_task_001_cleanup_plan:
+  automated.business_correctness:
+    - data_processing
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - verification_delivery
+  llm_judge.decision_grounding:
+    - data_processing
+  llm_judge.usable_handoff:
+    - verification_delivery

@@ -1,11 +1,11 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 32
+  active_task_count: 33
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 4
-    file_operations: 0
+    file_operations: 1
     software_engineering: 2
     planning_coordination: 0
     content_operations: 0
@@ -993,4 +993,30 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       retrieval_group: directed_web_retrieval
+      difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_file_operations_task_001_cleanup_plan
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-514d8747198d5338
+          query_hash: 514d8747198d5338f6d5b56b5dffe2e7fbf26314e7708ce4139941b4cf0e547e
+          observed_astudio_turns: 7
+          distinct_users: 1
+          distinct_sessions: 6
+          first_seen_local: '2026-09-11 07:57:09.399000'
+          last_seen_local: '2026-10-14 15:53:11.235000'
+          intent_summary: 先检查磁盘文件并列清理候选，用户确认后才允许执行。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
       difficulty_status: design_estimate_unvalidated
