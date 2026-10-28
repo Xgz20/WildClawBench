@@ -1,0 +1,13 @@
+{
+  "schema_version": "h023-evidence/v1",
+  "required": [
+    "native cache-cleared baseline",
+    "three replayable actual candidate-input interventions",
+    "all raw source records preserved",
+    "record_id/source_file/source_locator-bound exceptions",
+    "disclosed fixed periods and controls"
+  ],
+  "source_oracle_independent_of_candidate": true,
+  "model_harness_result": null,
+  "difficulty": "L4_design_estimate_unvalidated"
+}
