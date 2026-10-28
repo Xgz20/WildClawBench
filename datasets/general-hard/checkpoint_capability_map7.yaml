@@ -333,3 +333,19 @@ general_hard_data_analysis_task_010_visual_voucher_match:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_research_verification_task_001_open_mineral_fact_discovery:
+  automated.record_contract:
+    - verification_delivery
+  automated.time_and_scope:
+    - retrieval_verification
+  automated.citation_resolution:
+    - retrieval_verification
+  automated.protected_delivery:
+    - verification_delivery
+  llm_judge.factual_support:
+    - retrieval_verification
+  llm_judge.coverage_and_independence:
+    - retrieval_verification
+    - reasoning_planning
+  llm_judge.bounded_conclusions:
+    - reasoning_planning

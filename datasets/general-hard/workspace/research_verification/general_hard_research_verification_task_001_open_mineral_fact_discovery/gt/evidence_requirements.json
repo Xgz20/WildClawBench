@@ -1,0 +1,58 @@
+{
+  "schema_version": "h027-evidence-requirements/v1",
+  "required_candidate": [
+    "results/findings.xlsx",
+    "results/source_ledger.json",
+    "results/answer.md"
+  ],
+  "protected_inputs": [
+    "answer_contract.json",
+    "as_of.json",
+    "research_request.md"
+  ],
+  "managed_environment": [
+    "GENERAL_E2E_OFFICE_LOCK",
+    "GENERAL_E2E_RULE_EVIDENCE_DIR",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"
+  ],
+  "required_private": [
+    "expected.json",
+    "protected_sha256.json",
+    "artifact_contract.json",
+    "research_source_policy.json",
+    "runtime_contract.json",
+    "research_io.py",
+    "grader.py",
+    "office_runtime.py"
+  ],
+  "independent_source_bundle": {
+    "manifest": "manifest.json",
+    "manifest_sha": "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256",
+    "source_files": [
+      "body",
+      "text",
+      "projection",
+      "receipt"
+    ],
+    "source_file_sha_required": true,
+    "source_text_schema": "wildclawbench.research-source-text/v1",
+    "pdf_locator": "actual PDF page, not printed-page substitution",
+    "quote": "verbatim with whitespace/line-wrap or explicitly omitted ordered-fragment normalization only"
+  },
+  "rule_observations": "GENERAL_E2E_RULE_EVIDENCE_DIR/h027-analysis.json",
+  "native_formula_evidence": "GENERAL_E2E_RULE_EVIDENCE_DIR/recalculated when formulas exist",
+  "judge_evidence": [
+    "Source-first expected metadata, tables and critical boundaries",
+    "Candidate findings, narrative and ledger",
+    "Independent source bodies, text projections and response receipts",
+    "Automatic observations with explicit semantic boundary"
+  ],
+  "judge_must_not_infer": [
+    "Discovery queries actually executed solely because candidate claims them",
+    "Historical cutoff bytes solely from current HTTP response timestamps",
+    "Independent primary support from mirrored/reposted pages",
+    "Semantic correctness solely from automatic overall_score=1"
+  ],
+  "evidence_written_outside_workspace": true
+}

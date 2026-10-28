@@ -1,0 +1,22 @@
+{
+  "schema_version": "h027-reference-provenance/v1",
+  "version": "v4",
+  "reference_sha256": {
+    "source_ledger.json": "cc50673d2a0cb0286db135579c778322c930e4e7049e1dfd7949c9a5d0c9afe3",
+    "findings.xlsx": "7abb4bb73fe245f9797e229bd3784caf1cb6d675b1e73393584cd74758150315",
+    "answer.md": "93aec0480f401351031c355a07deee92dbf2a43ee6efed07565d03f8b0f0cfc4"
+  },
+  "source_truth_precedes_reference": true,
+  "source_review_fields": 120,
+  "independent_calculation_checks": 35,
+  "native_checks": 798,
+  "native_validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/native-reference-v3-1793176584981614000/validation.json",
+  "native_validation_sha256": "970b2a5c6e264f0d766f4f44878da7af9faabc385c1276da34e0b7e30c82d411",
+  "actual_visual_views": 6,
+  "reference_v1_workbook_rejected": "literal equals tokens parsed as formulas; raw error scan and draft preserved",
+  "reference_v2_to_v3": "Only citation multiline display and freeze pane adjustment; no source facts/formula changes",
+  "reference_v3_to_v4": "Same XLSX and answer bytes; only2 citation locators changed to actual official h3 title, all27quotes remain",
+  "model_reference_not_real_Harness": true,
+  "human_expert": false,
+  "formal_semantic_score": null
+}

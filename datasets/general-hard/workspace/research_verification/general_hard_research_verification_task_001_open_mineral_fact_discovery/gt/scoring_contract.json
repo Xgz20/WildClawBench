@@ -1,0 +1,59 @@
+{
+  "schema_version": "h027-scoring-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "semantic_checkpoint_weights": {
+    "source_supported_facts_and_rankings": 0.5,
+    "restatement_and_comparison_reasoning": 0.3,
+    "evidence_quality_and_uncertainty": 0.2
+  },
+  "private_sha256": {
+    "artifact_contract.json": "c3a81199039b6099762782ed5c51bd0dad6843374f66890469515ed55302863e",
+    "counterexamples.json": "90a9dacbd9d223168565784800e7dc2d814b8a20754c7ed278c9b3b900c66e54",
+    "evidence_requirements.json": "d1c5ccc13a3bbd488c087de8ff387d5b343f62ba694576a99c7175e28ca22685",
+    "expected.json": "af2855d81b14a811a7add114bba3782c4190f6d8fd77032b2752545a46df73ce",
+    "grader.py": "7cf26441ad6a422e15ff35653973397902af10c309fb6a6bc176b83a30080c1b",
+    "independent_calculation.json": "7b3fd3453dee90ad479a72dcfb3009a49ff2eea30f277c3c83009fe1e7b9a561",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "protected_sha256.json": "270b154e51fb3ab719b60575470374e38e5f8d27d3511ef2e2a7b7275ea1f9b7",
+    "reference_source_manifest.json": "b892074074b3ee19688093ab891894af5166266358eef996d86b8051fb3a76c0",
+    "research_io.py": "6e2f840897a141b8df9c8df6a17f808f3699cf1299be63aabd5fe390533413e4",
+    "research_source_policy.json": "e087bdf60c82c51286294b25454654e358158f63906ac36c8dadcec2f2023034",
+    "runtime_contract.json": "48efaee390da26bd657014023c47954784aac7748309dd3323bd77d98918dd30",
+    "source_observations.json": "5ed73140b7e5d0e814661abda2f4e214d0909b7b3494550596d253ed50618998",
+    "source_review_reconciliation.json": "be7d41a9e292c6fb07b73049f69245ca2187c41957943522b8818ff8f26c4db3",
+    "source_reviews/source-review-a.json": "a210f8512c35c6c13b8e92f3df856c67792fa966b6146c83d1315d0a8429e371",
+    "source_reviews/source-review-b.json": "3388f036faa46ad9ed58e3eb39f1ca4c0020ce4b282604e56a30080b36dcce38",
+    "sources/mcs2025-appendixes-layout.txt": "f4c7bfafccef78b316f19a440f80eb305e6feac1f6696100baa56c1ac7c34080",
+    "sources/mcs2025-appendixes.pdf": "9039f2195e217a24ea16d898d683cf214e8a4a8e56810f76b89da6048c373f16",
+    "sources/mcs2025-publication-text.txt": "83326776ac774064947a6c989c492068b6382e25078ceb5432ad76ff1bb7ac23",
+    "sources/mcs2025-publication.html": "57f8e4670a6d77b7fbef280aa1d5926dc2aaf7a1d9467869878e49b253cae0fb",
+    "sources/mcs2025-rare-earths-layout.txt": "3a5af84f3e0691dad65665ad111dbaeda2fb0239719aa3832ce76820d2a38e2d",
+    "sources/mcs2025-rare-earths.pdf": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+    "sources/mcs2025-versionHist.txt": "9876665d3af354a5da3fac78ac2025e5f28e3cae35c2000e19e59b1e3a1cf280",
+    "sources/mcs2026-appendixes-layout.txt": "c2eea4738fc0050d24d3688325e6145e8c43640b7943cb69ecae738708b315eb",
+    "sources/mcs2026-appendixes.pdf": "39878d03df6dbdf59d90a4794bc408988a560fb9565a36863c608a9a9dd8811d",
+    "sources/mcs2026-publication-text.txt": "30fdf1be2916feb141b90b0d993bc5d7826afc454a13b84e1875e1635ea5a816",
+    "sources/mcs2026-publication.html": "6254ed1c06af00aa3072ed9198c05d0d9ecb96572d3a5572a8cd269b8c965c93",
+    "sources/mcs2026-rare-earths-layout.txt": "dc692b41955b1b0b53f6b39f0bc33efd59bc9cbb3b92310d9226d45874737faa",
+    "sources/mcs2026-rare-earths.pdf": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+    "sources/mcs2026-versionHist.txt": "276d675d1d753697f611c385d0692c865f2c00b8a417c282ff2e8e1f84932e2e",
+    "sources/usgs-publication-faq.html": "ecd1d5a103c4321418cd647eccd956898418aa3f8890f0382676b64eb2cf53a3"
+  },
+  "source_before_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "semantic_rubric": {
+    "source_supported_facts_and_rankings": "Judge evaluates all reported country data, top-three definitions, shared-year row completeness, original world totals, numeric facts and unknown/zero boundaries against source-first oracle and independently acquired sources. Exact matches are insufficient when source scope is misrepresented.",
+    "restatement_and_comparison_reasoning": "Judge distinguishes same-statistical-year revisions from changes between different production years, assesses reserve world lower bounds and China share strict upper bounds, rounded estimate limits, version choice at cutoff and table/prose consistency. Reasoning quality requires reading the actual answer; no keyword scoring.",
+    "evidence_quality_and_uncertainty": "Judge evaluates primary versus mirror/secondary sources, actual source support, version/date evidence and dated-revision versus historical-snapshot limits, truthful search/read account, unavailable/unknown and single-source boundaries. No invented independent-source count."
+  }
+}

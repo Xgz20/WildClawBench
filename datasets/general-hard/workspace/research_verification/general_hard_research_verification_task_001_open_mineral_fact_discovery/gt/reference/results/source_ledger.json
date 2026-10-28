@@ -1,0 +1,696 @@
+{
+  "schema_version": "h027-author-reference-source-ledger/v1",
+  "author_reference": true,
+  "purpose": "作者参考的真实来源研究过程与已冻结复核结果组合。原始公开搜索、官方下载及独立来源提取先完成，随后按作者契约并参照冻结expected/reconciliation整理此台账；不冒称候选Harness实跑或新的独立专家复核。",
+  "candidate_harness_run": false,
+  "human_expert_review": false,
+  "formal_semantic_score": null,
+  "as_of_inclusive": "2026-09-30",
+  "assembled_at": "2026-10-28T08:23:27.905121+00:00",
+  "searches": [
+    {
+      "search_id": "research-search-1",
+      "kind": "public_web_search",
+      "query": "site.usgs.gov mineral commodity summaries 2026 rare earths",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2026-metadata"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-search-2",
+      "kind": "public_web_search",
+      "query": "site.usgs.gov mineral commodity summaries 2025 rare earths",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2025-metadata"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-search-3",
+      "kind": "public_web_search",
+      "query": "site.pubs.usgs.gov/periodicals/mcs2026 \"rare-earths.pdf\"",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2026-chapter"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-search-4",
+      "kind": "public_web_search",
+      "query": "site.pubs.usgs.gov/publication/mcs2025 \"First posted\" \"Revised\"",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2025-metadata"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-search-5",
+      "kind": "public_web_search",
+      "query": "site.pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf \"World Mine Production and Reserves\"",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2026-chapter"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-search-6",
+      "kind": "public_web_search",
+      "query": "site.pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf \"World Mine Production and Reserves\"",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2025-chapter"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-search-7",
+      "kind": "public_web_search",
+      "query": "site.pubs.usgs.gov/periodicals/mcs2026/versionHist.txt \"Rare Earths\"",
+      "observed_at": null,
+      "observed_at_status": "unknown: the original search-service tool result did not record an exact UTC search timestamp; no time is reconstructed from file mtime.",
+      "candidate_source_ids": [
+        "src-2026-history"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2025-chapter",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+      "query": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+      "observed_at": "2026-10-28T08:02:14.012464+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2025-chapter"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2026-chapter",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+      "query": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+      "observed_at": "2026-10-28T08:02:12.969537+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2026-chapter"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2025-history",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/periodicals/mcs2025/versionHist.txt",
+      "query": "https://pubs.usgs.gov/periodicals/mcs2025/versionHist.txt",
+      "observed_at": "2026-10-28T08:03:07.899887+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2025-history"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2026-history",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/periodicals/mcs2026/versionHist.txt",
+      "query": "https://pubs.usgs.gov/periodicals/mcs2026/versionHist.txt",
+      "observed_at": "2026-10-28T08:02:13.631187+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2026-history"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2025-metadata",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/publication/mcs2025",
+      "query": "https://pubs.usgs.gov/publication/mcs2025",
+      "observed_at": "2026-10-28T08:02:12.962713+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2025-metadata"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2026-metadata",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/publication/mcs2026",
+      "query": "https://pubs.usgs.gov/publication/mcs2026",
+      "observed_at": "2026-10-28T08:02:12.962087+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2026-metadata"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2025-appendix",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-appendixes.pdf",
+      "query": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-appendixes.pdf",
+      "observed_at": "2026-10-28T08:03:07.902445+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2025-appendix"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    },
+    {
+      "search_id": "research-navigation-src-2026-appendix",
+      "kind": "official_url_navigation_and_download",
+      "navigation_condition": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-appendixes.pdf",
+      "query": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-appendixes.pdf",
+      "observed_at": "2026-10-28T08:03:07.906038+00:00",
+      "observed_at_basis": "The real curl request start recorded in source-review-a original download manifest; response completion is sources.accessed_at.",
+      "candidate_source_ids": [
+        "src-2026-appendix"
+      ],
+      "performed_by": "source-review-a during the original source-research pass",
+      "author_reference": true
+    }
+  ],
+  "sources": [
+    {
+      "source_id": "src-2025-chapter",
+      "url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T08:02:17.060815+00:00",
+      "access_started_at": "2026-10-28T08:02:14.012464+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Mineral Commodity Summaries 2025: Rare Earths",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2025,
+      "citations": [
+        {
+          "citation_id": "c25-table",
+          "locator": {
+            "page": 2,
+            "printed_page": 145,
+            "heading": "World Mine Production and Reserves"
+          },
+          "quote": "World Mine Production and Reserves: Reserves for Russia, South Africa, the United States, and Vietnam were \nrevised based on company and Government reports. \n    Mine productione Reserves11 \n 2023 2024  \nUnited States 41,600 45,000 1,900,000 \nAustralia 1216,000 1213,000 135,700,000 \nBrazil 140 20 21,000,000 \nBurma 1243,000 1231,000 NA \nCanada —  —  830,000 \nChina 14255,000 14270,000 44,000,000 \nGreenland —  —  1,500,000 \nIndia 2,900 2,900 6,900,000 \nMadagascar 122,100 122,000 NA \nMalaysia 12310 12130 NA \nNigeria 127,200 1213,000 NA \nRussia 2,500 2,500 3,800,000 \nSouth Africa —  —  860,000 \nTanzania —  —  890,000 \nThailand 123,600 1213,000 4,500 \nVietnam 12300 12300 3,500,000 \nOther     1,440       1,100                NA \nWorld total (rounded) 376,000 390,000 >90,000,000"
+        },
+        {
+          "citation_id": "c25-unit",
+          "locator": {
+            "page": 1,
+            "printed_page": 144,
+            "heading": "RARE EARTHS"
+          },
+          "quote": "[Data in metric tons, rare-earth-oxide (REO) equivalent, unless otherwise specified]"
+        },
+        {
+          "citation_id": "c25-footnote",
+          "locator": {
+            "page": 2,
+            "printed_page": 145,
+            "heading": "Footnotes"
+          },
+          "quote": "11See Appendix C for resource and reserve definitions and information concerning data sources.  \n12Estimated based on reported import data for China. Source: Zen Innovations, Global Trade Tracker. \n13For Australia, Joint Ore Reserves Committee-compliant or equivalent reserves were 3.3 million tons. \n14Production quota; does not include undocumented production."
+        },
+        {
+          "citation_id": "c25-symbols",
+          "locator": {
+            "page": 2,
+            "printed_page": 145,
+            "heading": "Footnotes: e, E, NA, dash"
+          },
+          "quote": "eEstimated. E Net exporter. NA Not available. — Zero."
+        },
+        {
+          "citation_id": "c25-scope",
+          "locator": {
+            "page": 2,
+            "printed_page": 145,
+            "heading": "Footnote 1"
+          },
+          "quote": "1Data include lanthanides and yttrium but exclude most scandium. See also the Scandium and Yttrium chapters."
+        }
+      ],
+      "sha256": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+      "bytes": 726098,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2025-rare-earths.pdf",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "pypdf 6.10.0 PageObject.extract_text() with default options, raw line breaks and footnote-number adjacency preserved",
+      "author_reference": true,
+      "version_binding_citation_ids": [
+        "h25-version",
+        "m25-ident"
+      ]
+    },
+    {
+      "source_id": "src-2026-chapter",
+      "url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T08:02:16.851678+00:00",
+      "access_started_at": "2026-10-28T08:02:12.969537+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Mineral Commodity Summaries 2026: Rare Earths",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2026,
+      "citations": [
+        {
+          "citation_id": "c26-table",
+          "locator": {
+            "page": 2,
+            "printed_page": 153,
+            "heading": "World Mine Production and Reserves"
+          },
+          "quote": "World Mine Production and Reserves: Significant revisions were made to the 2024 production for Australia, \nBrazil, Burma, Madagascar, Nigeria, and Vietnam based on Government and industry reports. Reserves for \nAustralia, Brazil, and Malaysia were revised based on Government reports.  \n Mine productione Reserves10 \n2024 2025 \nUnited States 1145,500 51,000 1,900,000 \nAustralia 29,000 29,000 136,300,000 \nBrazil 560 2,000 11,000,000 \nBurma 1227,000 1222,000 NA \nCanada —  —  830,000 \nChina 270,000 270,000 44,000,000 \nGreenland —  —  1,500,000 \nIndia 2,900 2,900 14NA \nMadagascar 121,400 122,700 NA \nMalaysia 12140 12110 710,000 \nNigeria 1,500 1,500 NA \nRussia 2,600 2,600 3,800,000 \nSouth Africa —  —  860,000 \nTanzania —  —  890,000 \nThailand 122,100 124,800 NA \nVietnam 12300 12150 3,500,000 \nOther       1,000  550  NA \nWorld total (rounded) 380,000 390,000 >75,000,000"
+        },
+        {
+          "citation_id": "c26-unit",
+          "locator": {
+            "page": 1,
+            "printed_page": 152,
+            "heading": "RARE EARTHS"
+          },
+          "quote": "[Data in metric tons, rare-earth-oxide (REO) equivalent, unless otherwise specified]"
+        },
+        {
+          "citation_id": "c26-footnote",
+          "locator": {
+            "page": 2,
+            "printed_page": 153,
+            "heading": "Footnotes"
+          },
+          "quote": "10See Appendix C for resource and reserve definitions and information concerning data sources.  \n11Reported. \n12Estimated based on reported import data for China. Source: Trade Data Monitor Inc. \n13For Australia, Joint Ore Reserves Committee-compliant or equivalent reserves were 3.3 million tons. \n14A 2015 report from OSCOM indicated that monazite reserves from their operations were 256,000 tons; rare-earth reserves were not reported."
+        },
+        {
+          "citation_id": "c26-symbols",
+          "locator": {
+            "page": 2,
+            "printed_page": 153,
+            "heading": "Footnotes: e, E, NA, dash"
+          },
+          "quote": "eEstimated. E Net exporter. NA Not available. — Zero."
+        },
+        {
+          "citation_id": "c26-scope",
+          "locator": {
+            "page": 2,
+            "printed_page": 153,
+            "heading": "Footnote 1"
+          },
+          "quote": "1Data include lanthanides and yttrium but exclude most scandium. See also the Rare Earths (Heavy), Scandium, and Yttrium chapters."
+        }
+      ],
+      "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "bytes": 639984,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2026-rare-earths.pdf",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "pypdf 6.10.0 PageObject.extract_text() with default options, raw line breaks and footnote-number adjacency preserved",
+      "author_reference": true,
+      "version_binding_citation_ids": [
+        "h26-version",
+        "m26-ident",
+        "h26-brazil"
+      ]
+    },
+    {
+      "source_id": "src-2025-history",
+      "url": "https://pubs.usgs.gov/periodicals/mcs2025/versionHist.txt",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T08:03:10.249808+00:00",
+      "access_started_at": "2026-10-28T08:03:07.899887+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Revision History for U.S. Geological Survey Mineral Commodity Summaries 2025",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2025,
+      "citations": [
+        {
+          "citation_id": "h25-version",
+          "locator": {
+            "lines": [
+              26,
+              26
+            ]
+          },
+          "quote": "Revised and reposted March 3, 2025, as version 1.2"
+        },
+        {
+          "citation_id": "h25-first",
+          "locator": {
+            "lines": [
+              6,
+              6
+            ]
+          },
+          "quote": "First posted online January 31, 2025"
+        },
+        {
+          "citation_id": "h25-v11-repost",
+          "locator": {
+            "lines": [
+              9,
+              9
+            ]
+          },
+          "quote": "Revised and reposted February 28, 2025, as version 1.1"
+        }
+      ],
+      "sha256": "9876665d3af354a5da3fac78ac2025e5f28e3cae35c2000e19e59b1e3a1cf280",
+      "bytes": 2496,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2025-versionHist.txt",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "Original UTF-8 text",
+      "author_reference": true,
+      "reported_revision_label": "version 1.2",
+      "reported_revision_date": "2025-03-03",
+      "source_date_citation_ids": [
+        "h25-version"
+      ]
+    },
+    {
+      "source_id": "src-2026-history",
+      "url": "https://pubs.usgs.gov/periodicals/mcs2026/versionHist.txt",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T08:02:14.744601+00:00",
+      "access_started_at": "2026-10-28T08:02:13.631187+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Revision History for U.S. Geological Survey Mineral Commodity Summaries 2026",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2026,
+      "citations": [
+        {
+          "citation_id": "h26-version",
+          "locator": {
+            "lines": [
+              25,
+              25
+            ]
+          },
+          "quote": "Revised and reposted May 27, 2026, as version 1.3"
+        },
+        {
+          "citation_id": "h26-first",
+          "locator": {
+            "lines": [
+              6,
+              6
+            ]
+          },
+          "quote": "First posted online February 6, 2026"
+        },
+        {
+          "citation_id": "h26-brazil",
+          "locator": {
+            "lines": [
+              29,
+              29
+            ]
+          },
+          "quote": "On p. 153, the value of reserves for Brazil was changed from \"21,000,000\" to \"11,000,000\" and the total was revised down from \">85,000,000\" to \">75,000,000\" to reflect this change. In addition, the sentence before the table was revised from Reserves for Australia and Malaysia were revised based on Government reports.\" to \"Reserves for Australia, Brazil, and Malaysia were revised based on Government reports.\""
+        },
+        {
+          "citation_id": "h26-footnote-revision",
+          "locator": {
+            "lines": [
+              15,
+              15
+            ]
+          },
+          "quote": "On p. 153, in the world mine production and reserves table, footnote 14 was removed from China's 2024 mine production and added to India's reserves. The text of footnote 14 at the bottom of the page was changed from \"Production quota; does not include undocumented production.\" to \"A 2015 report from OSCOM indicated that monazite reserves from their operations were 256,000 tons; rare-earth reserves were not reported.\" "
+        }
+      ],
+      "sha256": "276d675d1d753697f611c385d0692c865f2c00b8a417c282ff2e8e1f84932e2e",
+      "bytes": 1914,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2026-versionHist.txt",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "Original UTF-8 text",
+      "author_reference": true,
+      "reported_revision_label": "version 1.3",
+      "reported_revision_date": "2026-05-27",
+      "source_date_citation_ids": [
+        "h26-version"
+      ]
+    },
+    {
+      "source_id": "src-2025-metadata",
+      "url": "https://pubs.usgs.gov/publication/mcs2025",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T08:02:13.779255+00:00",
+      "access_started_at": "2026-10-28T08:02:12.962713+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Mineral commodity summaries 2025 - publication record",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2025,
+      "citations": [
+        {
+          "citation_id": "m25-ident",
+          "locator": {
+            "heading": "Introduction",
+            "secondary_heading": "Suggested Citation",
+            "visible_text_span": "First posted through the suggested citation; page HTTP dates are not used."
+          },
+          "quote": "First posted January 31, 2025 Revised March 3, 2025 For additional information, contact: Director, National Minerals Information Center U.S. Geological Survey 12201 Sunrise Valley Drive 988 National Center Reston, VA 20192 Email: [email protected] Suggested Citation U.S. Geological Survey, 2025, Mineral commodity summaries 2025 (ver. 1.2, March 2025): U.S. Geological Survey, 212 p., https://doi.org/10.3133/mcs2025."
+        },
+        {
+          "citation_id": "m25-edition",
+          "locator": {
+            "heading": "Mineral Commodity Summaries 2025",
+            "field": "Edition",
+            "section": "publication details table / Edition row",
+            "heading_tag": "h3"
+          },
+          "quote": "Version 1.0: January 31, 2025; Version 1.1: February 25, 2025; Version 1.2: March 3, 2025"
+        }
+      ],
+      "sha256": "57f8e4670a6d77b7fbef280aa1d5926dc2aaf7a1d9467869878e49b253cae0fb",
+      "bytes": 71082,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2025-publication.html",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "HTML visible text via HTMLParser, excluding script/style; whitespace collapsed",
+      "author_reference": true,
+      "reported_publication_date": "2025-01-31",
+      "reported_revision_label": "version 1.2",
+      "reported_revision_date": "2025-03-03",
+      "source_date_citation_ids": [
+        "m25-ident"
+      ]
+    },
+    {
+      "source_id": "src-2026-metadata",
+      "url": "https://pubs.usgs.gov/publication/mcs2026",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T08:02:14.011875+00:00",
+      "access_started_at": "2026-10-28T08:02:12.962087+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Mineral commodity summaries 2026 - publication record",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2026,
+      "citations": [
+        {
+          "citation_id": "m26-ident",
+          "locator": {
+            "heading": "Introduction",
+            "secondary_heading": "Suggested Citation",
+            "visible_text_span": "First posted through the suggested citation; page HTTP dates are not used."
+          },
+          "quote": "First posted February 6, 2026 Revised May 27, 2026 For additional information, contact: Director, National Minerals Information Center U.S. Geological Survey 12201 Sunrise Valley Drive 988 National Center Reston, VA 20192 Email: [email protected] Suggested Citation U.S. Geological Survey, 2026, Mineral commodity summaries 2026 (ver. 1.3, May 2026): U.S. Geological Survey, 222 p., https://doi.org/10.3133/mcs2026."
+        },
+        {
+          "citation_id": "m26-edition",
+          "locator": {
+            "heading": "Mineral Commodity Summaries 2026",
+            "field": "Edition",
+            "section": "publication details table / Edition row",
+            "heading_tag": "h3"
+          },
+          "quote": "Version 1.0: February 2026; Version 1.1: March 2026; Version 1.2: April 2026; Version 1.3: May 2026"
+        }
+      ],
+      "sha256": "6254ed1c06af00aa3072ed9198c05d0d9ecb96572d3a5572a8cd269b8c965c93",
+      "bytes": 59883,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2026-publication.html",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "HTML visible text via HTMLParser, excluding script/style; whitespace collapsed",
+      "author_reference": true,
+      "reported_publication_date": "2026-02-06",
+      "reported_revision_label": "version 1.3",
+      "reported_revision_date": "2026-05-27",
+      "source_date_citation_ids": [
+        "m26-ident"
+      ]
+    },
+    {
+      "source_id": "src-2025-appendix",
+      "url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-appendixes.pdf",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T08:03:11.385891+00:00",
+      "access_started_at": "2026-10-28T08:03:07.902445+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Mineral Commodity Summaries 2025: Appendixes A-D",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2025,
+      "citations": [
+        {
+          "citation_id": "a25-basis",
+          "locator": {
+            "page": 5,
+            "printed_page": 210,
+            "heading": "Part B—Sources of Reserves Data"
+          },
+          "quote": "Reserves for \nAustralia in the Mineral Commodity Summaries 2025 \nare Accessible EDR. For more information, see \n“Australia’s Estimated Ore Reserves as at December \n2022—Table 2 ” (https://www.ga.gov.au/aimr2023/\naustralias-estimated-ore-reserves)."
+        },
+        {
+          "citation_id": "a25-historical",
+          "locator": {
+            "page": 5,
+            "printed_page": 210,
+            "heading": "Part B—Sources of Reserves Data"
+          },
+          "quote": "A national estimate may be assembled from the \nfollowing: historically reported reserves information \ncarried for years without alteration because no new \ninformation is available, historically reported reserves \nreduced by the amount of historical production, and \ncompany-reported reserves. International minerals \navailability studies conducted by the U.S. Bureau of \nMines before 1996 and estimates of identified resources \nby an international collaborative effort (the International \nStrategic Minerals Inventory) are the bases for some \nreserves estimates. The USGS collects some qualitative \ninformation about the quantity and quality of mineral \nresources but does not directly measure reserves or \nresources, and companies or governments do not \ndirectly report information about reserves or resources \nto the USGS. Reassessment of reserves is a continuing \nprocess, and the intensity of this process differs by \nmineral commodity, country, and time period."
+        },
+        {
+          "citation_id": "a25-national",
+          "locator": {
+            "page": 5,
+            "printed_page": 210,
+            "heading": "Part B—Sources of Reserves Data"
+          },
+          "quote": "Some countries have specific definitions for reserves \ndata, and reserves for each country are assessed \nseparately, based on reported data and definitions. An \nattempt is made to make reserves consistent among \ncountries for a mineral commodity and its byproducts."
+        }
+      ],
+      "sha256": "9039f2195e217a24ea16d898d683cf214e8a4a8e56810f76b89da6048c373f16",
+      "bytes": 933026,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2025-appendixes.pdf",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "pypdf 6.10.0 PageObject.extract_text() with default options, raw line breaks and footnote-number adjacency preserved",
+      "author_reference": true
+    },
+    {
+      "source_id": "src-2026-appendix",
+      "url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-appendixes.pdf",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T08:03:10.187317+00:00",
+      "access_started_at": "2026-10-28T08:03:07.906038+00:00",
+      "access_time_basis": "Original official network retrieval recorded in source-review-a curl manifest; not the later author-reference assembly time.",
+      "title": "Mineral Commodity Summaries 2026: Appendixes A-D",
+      "publisher": "U.S. Geological Survey",
+      "report_year": 2026,
+      "citations": [
+        {
+          "citation_id": "a26-basis",
+          "locator": {
+            "page": 5,
+            "printed_page": null,
+            "heading": "Part B—Sources of Reserves Data",
+            "printed_page_status": "Not visible in this separate appendix PDF/default text projection; not inferred from full-volume pagination."
+          },
+          "quote": "Reserves for \nAustralia in the Mineral Commodity Summaries 2026 \nare Accessible EDR. For more information, see \n“Australia’s Estimated Ore Reserves as at December \n2023—Table 2 ” (https://www.ga.gov.au/aimr2024/\naustralias-estimated-ore-reserves)."
+        },
+        {
+          "citation_id": "a26-historical",
+          "locator": {
+            "page": 5,
+            "printed_page": null,
+            "heading": "Part B—Sources of Reserves Data",
+            "printed_page_status": "Not visible in this separate appendix PDF/default text projection; not inferred from full-volume pagination."
+          },
+          "quote": "A national estimate may be assembled from the \nfollowing: historically reported reserves information \ncarried for years without alteration because no new \ninformation is available, historically reported reserves \nreduced by the amount of historical production, and \ncompany-reported reserves. International minerals \navailability studies conducted by the U.S. Bureau of \nMines before 1996 and estimates of identified resources \nby an international collaborative effort (the International \nStrategic Minerals Inventory) are the bases for some \nreserves estimates. The USGS collects some qualitative \ninformation about the quantity and quality of mineral \nresources but does not directly measure reserves or \nresources, and companies or governments do not \ndirectly report information about reserves or resources \nto the USGS. Reassessment of reserves is a continuing \nprocess, and the intensity of this process differs by \nmineral commodity, country, and time period."
+        },
+        {
+          "citation_id": "a26-national",
+          "locator": {
+            "page": 5,
+            "printed_page": null,
+            "heading": "Part B—Sources of Reserves Data",
+            "printed_page_status": "Not visible in this separate appendix PDF/default text projection; not inferred from full-volume pagination."
+          },
+          "quote": "Some countries have specific definitions for reserves \ndata, and reserves for each country are assessed \nseparately, based on reported data and definitions. An \nattempt is made to make reserves consistent among \ncountries for a mineral commodity and its byproducts."
+        }
+      ],
+      "sha256": "39878d03df6dbdf59d90a4794bc408988a560fb9565a36863c608a9a9dd8811d",
+      "bytes": 315412,
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2026-appendixes.pdf",
+      "retrieval_method": "System curl, successful official URL response, default TLS validation; no verification bypass.",
+      "extraction_projection": "pypdf 6.10.0 PageObject.extract_text() with default options, raw line breaks and footnote-number adjacency preserved",
+      "author_reference": true
+    }
+  ],
+  "limitations": [
+    "截止日是2026-09-30；官方源字节实际下载于2026-10-28。截止日前版本身份由USGS首次发布和修订记录支持，未持有2026-09-30当日独立网络快照，不能声称当前SHA就是截止日现场采集。",
+    "原始搜索工具没有提供精确UTC调用时间，相关observed_at为null并明确unknown；官方URL下载时间取真实curl manifest，未伪造搜索或读取轨迹。",
+    "公开搜索结果曾夹带未请求的Harnyx仪表盘及第三方摘要；没有打开这些页面或采用其数字。全部数值来自官方PDF，所有来源属于USGS同一来源家族，不把页面数量当独立交叉证据。",
+    "原始来源独立复核与此次作者参考组装分阶段进行；本次获授权读取冻结expected与reconciliation，不能将本台账冒称未接触参考结果的候选Harness答案。",
+    "储量列没有统一统计年标题；报告年度不是储量统计年度。附录说明估计可沿用历史数据、采用各国不同定义和来源，澳大利亚资料时点也不同；两版储量统计年均保持null。",
+    "排名仅限已公布数值的国家行，排除Other/World；NA未知不能当0，产量破折号按原脚注表示0。未知储量国家的全球真实排名无法由表内资料证明。",
+    "世界产量为原文rounded值，必须直接作分母；国家行求和不是世界原数。世界储量仅给>阈值，所得为中国份额严格上界，不能当精确占比。",
+    "pypdf默认投影中脚注号与数字可能黏连；引用保留原文投影，计算时根据明确脚注解释，不能把1145,500或136,300,000误读为数量。",
+    "2025 metadata将v1.1列为2025-02-25，而版本历史记reposted 2025-02-28；保留两者差异，不以PDF创建时间/HTTP Last-Modified冒充首次发布日期。最新v1.2的2025-03-03日期一致。",
+    "2026独立附录PDF页5的默认提取未显示印刷页号，locator.printed_page为null；其实际PDF页码为5。",
+    "USGS官方FAQ将USGS authored/produced信息列为美国公有领域并允许署名使用；冻结研究保留该官方FAQ工具读取证据。此报告章节转载依据不等同于单独Data Release产品的CC0标签；第三方图片/标识不在此授权判断内。",
+    "原始urllib证书链验证失败后改用系统curl正常TLS验证；部分搜索工具open/USGS站点页面返回403。所列8个来源均已通过系统curl取得原字节，chapter/history已读完整相关正文，metadata/appendix仅声称read_excerpt。"
+  ],
+  "original_research_evidence": {
+    "review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/review.json",
+    "download_manifests": [
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/curl-fetch-manifest.json",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/curl-fetch-manifest-extra.json"
+    ],
+    "original_initial_search_snapshot": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/search-initial.json"
+  },
+  "citation_validation": {
+    "pdf_projection": "pypdf default PageObject.extract_text()",
+    "pypdf_version": "6.10.0",
+    "all_quotes_verified_as_exact_substrings_of_declared_projection": true,
+    "citation_ids": [
+      "a25-basis",
+      "a25-historical",
+      "a25-national",
+      "a26-basis",
+      "a26-historical",
+      "a26-national",
+      "c25-footnote",
+      "c25-scope",
+      "c25-symbols",
+      "c25-table",
+      "c25-unit",
+      "c26-footnote",
+      "c26-scope",
+      "c26-symbols",
+      "c26-table",
+      "c26-unit",
+      "h25-first",
+      "h25-v11-repost",
+      "h25-version",
+      "h26-brazil",
+      "h26-first",
+      "h26-footnote-revision",
+      "h26-version",
+      "m25-edition",
+      "m25-ident",
+      "m26-edition",
+      "m26-ident"
+    ]
+  }
+}

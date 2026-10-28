@@ -1,0 +1,759 @@
+{
+  "schema_version": "h027-reviewed-source-oracle/v1",
+  "status": "TWO_INDEPENDENT_MODEL_SOURCE_READS_RECONCILED",
+  "as_of_inclusive": "2026-09-30",
+  "observations": [
+    {
+      "report_year": 2025,
+      "version": "1.2",
+      "first_posted": "2025-01-31",
+      "revision_date": "2025-03-03",
+      "doi": "10.3133/mcs2025",
+      "latest_production_year": 2024,
+      "reserves_statistical_year": null,
+      "unit": "tonnes_REO",
+      "printed_pages": [
+        144,
+        145
+      ],
+      "source_pdf_sha256": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+      "rows": [
+        {
+          "country": "United States",
+          "production": {
+            "2023": 41600,
+            "2024": 45000
+          },
+          "reserves_value": 1900000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Australia",
+          "production": {
+            "2023": 16000,
+            "2024": 13000
+          },
+          "reserves_value": 5700000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Brazil",
+          "production": {
+            "2023": 140,
+            "2024": 20
+          },
+          "reserves_value": 21000000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Burma",
+          "production": {
+            "2023": 43000,
+            "2024": 31000
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Canada",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves_value": 830000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "China",
+          "production": {
+            "2023": 255000,
+            "2024": 270000
+          },
+          "reserves_value": 44000000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Greenland",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves_value": 1500000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "India",
+          "production": {
+            "2023": 2900,
+            "2024": 2900
+          },
+          "reserves_value": 6900000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Madagascar",
+          "production": {
+            "2023": 2100,
+            "2024": 2000
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Malaysia",
+          "production": {
+            "2023": 310,
+            "2024": 130
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Nigeria",
+          "production": {
+            "2023": 7200,
+            "2024": 13000
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Russia",
+          "production": {
+            "2023": 2500,
+            "2024": 2500
+          },
+          "reserves_value": 3800000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "South Africa",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves_value": 860000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Tanzania",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves_value": 890000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Thailand",
+          "production": {
+            "2023": 3600,
+            "2024": 13000
+          },
+          "reserves_value": 4500,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Vietnam",
+          "production": {
+            "2023": 300,
+            "2024": 300
+          },
+          "reserves_value": 3500000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Other",
+          "production": {
+            "2023": 1440,
+            "2024": 1100
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "World",
+          "production": {
+            "2023": 376000,
+            "2024": 390000
+          },
+          "reserves_value": 90000000,
+          "reserves_relation": ">"
+        }
+      ]
+    },
+    {
+      "report_year": 2026,
+      "version": "1.3",
+      "first_posted": "2026-02-06",
+      "revision_date": "2026-05-27",
+      "doi": "10.3133/mcs2026",
+      "latest_production_year": 2025,
+      "reserves_statistical_year": null,
+      "unit": "tonnes_REO",
+      "printed_pages": [
+        152,
+        153
+      ],
+      "source_pdf_sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "rows": [
+        {
+          "country": "United States",
+          "production": {
+            "2024": 45500,
+            "2025": 51000
+          },
+          "reserves_value": 1900000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Australia",
+          "production": {
+            "2024": 29000,
+            "2025": 29000
+          },
+          "reserves_value": 6300000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Brazil",
+          "production": {
+            "2024": 560,
+            "2025": 2000
+          },
+          "reserves_value": 11000000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Burma",
+          "production": {
+            "2024": 27000,
+            "2025": 22000
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Canada",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves_value": 830000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "China",
+          "production": {
+            "2024": 270000,
+            "2025": 270000
+          },
+          "reserves_value": 44000000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Greenland",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves_value": 1500000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "India",
+          "production": {
+            "2024": 2900,
+            "2025": 2900
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Madagascar",
+          "production": {
+            "2024": 1400,
+            "2025": 2700
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Malaysia",
+          "production": {
+            "2024": 140,
+            "2025": 110
+          },
+          "reserves_value": 710000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Nigeria",
+          "production": {
+            "2024": 1500,
+            "2025": 1500
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Russia",
+          "production": {
+            "2024": 2600,
+            "2025": 2600
+          },
+          "reserves_value": 3800000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "South Africa",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves_value": 860000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Tanzania",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves_value": 890000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Thailand",
+          "production": {
+            "2024": 2100,
+            "2025": 4800
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "Vietnam",
+          "production": {
+            "2024": 300,
+            "2025": 150
+          },
+          "reserves_value": 3500000,
+          "reserves_relation": "="
+        },
+        {
+          "country": "Other",
+          "production": {
+            "2024": 1000,
+            "2025": 550
+          },
+          "reserves_value": null,
+          "reserves_relation": "unknown"
+        },
+        {
+          "country": "World",
+          "production": {
+            "2024": 380000,
+            "2025": 390000
+          },
+          "reserves_value": 75000000,
+          "reserves_relation": ">"
+        }
+      ]
+    }
+  ],
+  "rankings": [
+    {
+      "report_year": 2025,
+      "metric": "mine_production",
+      "statistical_year": 2024,
+      "rank": 1,
+      "country": "China",
+      "value": 270000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2025,
+      "metric": "mine_production",
+      "statistical_year": 2024,
+      "rank": 2,
+      "country": "United States",
+      "value": 45000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2025,
+      "metric": "mine_production",
+      "statistical_year": 2024,
+      "rank": 3,
+      "country": "Burma",
+      "value": 31000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2025,
+      "metric": "reserves",
+      "statistical_year": null,
+      "rank": 1,
+      "country": "China",
+      "value": 44000000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2025,
+      "metric": "reserves",
+      "statistical_year": null,
+      "rank": 2,
+      "country": "Brazil",
+      "value": 21000000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2025,
+      "metric": "reserves",
+      "statistical_year": null,
+      "rank": 3,
+      "country": "India",
+      "value": 6900000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2026,
+      "metric": "mine_production",
+      "statistical_year": 2025,
+      "rank": 1,
+      "country": "China",
+      "value": 270000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2026,
+      "metric": "mine_production",
+      "statistical_year": 2025,
+      "rank": 2,
+      "country": "United States",
+      "value": 51000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2026,
+      "metric": "mine_production",
+      "statistical_year": 2025,
+      "rank": 3,
+      "country": "Australia",
+      "value": 29000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2026,
+      "metric": "reserves",
+      "statistical_year": null,
+      "rank": 1,
+      "country": "China",
+      "value": 44000000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2026,
+      "metric": "reserves",
+      "statistical_year": null,
+      "rank": 2,
+      "country": "Brazil",
+      "value": 11000000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    },
+    {
+      "report_year": 2026,
+      "metric": "reserves",
+      "statistical_year": null,
+      "rank": 3,
+      "country": "Australia",
+      "value": 6300000,
+      "unit": "tonnes_REO",
+      "ranking_scope": "published_numeric_country_rows"
+    }
+  ],
+  "china_shares": [
+    {
+      "report_year": 2025,
+      "metric": "mine_production",
+      "statistical_year": 2024,
+      "china_value": 270000,
+      "world_value": 390000,
+      "world_relation": "=",
+      "share_relation": "approximately_equal",
+      "share_value": "0.6923076923076923076923076923",
+      "exact_share_known": false,
+      "basis": "printed estimated values with rounded world total"
+    },
+    {
+      "report_year": 2025,
+      "metric": "reserves",
+      "statistical_year": null,
+      "china_value": 44000000,
+      "world_value": 90000000,
+      "world_relation": ">",
+      "share_relation": "<",
+      "share_value": "0.4888888888888888888888888889",
+      "exact_share_known": false,
+      "basis": "strict upper bound from printed world lower bound"
+    },
+    {
+      "report_year": 2026,
+      "metric": "mine_production",
+      "statistical_year": 2025,
+      "china_value": 270000,
+      "world_value": 390000,
+      "world_relation": "=",
+      "share_relation": "approximately_equal",
+      "share_value": "0.6923076923076923076923076923",
+      "exact_share_known": false,
+      "basis": "printed estimated values with rounded world total"
+    },
+    {
+      "report_year": 2026,
+      "metric": "reserves",
+      "statistical_year": null,
+      "china_value": 44000000,
+      "world_value": 75000000,
+      "world_relation": ">",
+      "share_relation": "<",
+      "share_value": "0.5866666666666666666666666667",
+      "exact_share_known": false,
+      "basis": "strict upper bound from printed world lower bound"
+    }
+  ],
+  "common_year_revisions": [
+    {
+      "country": "United States",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 45000,
+      "newer_value": 45500,
+      "delta": 500,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Australia",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 13000,
+      "newer_value": 29000,
+      "delta": 16000,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Brazil",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 20,
+      "newer_value": 560,
+      "delta": 540,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Burma",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 31000,
+      "newer_value": 27000,
+      "delta": -4000,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Canada",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 0,
+      "newer_value": 0,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "China",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 270000,
+      "newer_value": 270000,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Greenland",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 0,
+      "newer_value": 0,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "India",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 2900,
+      "newer_value": 2900,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Madagascar",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 2000,
+      "newer_value": 1400,
+      "delta": -600,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Malaysia",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 130,
+      "newer_value": 140,
+      "delta": 10,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Nigeria",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 13000,
+      "newer_value": 1500,
+      "delta": -11500,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Russia",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 2500,
+      "newer_value": 2600,
+      "delta": 100,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "South Africa",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 0,
+      "newer_value": 0,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Tanzania",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 0,
+      "newer_value": 0,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Thailand",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 13000,
+      "newer_value": 2100,
+      "delta": -10900,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Vietnam",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 300,
+      "newer_value": 300,
+      "delta": 0,
+      "changed": false,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "Other",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 1100,
+      "newer_value": 1000,
+      "delta": -100,
+      "changed": true,
+      "unit": "tonnes_REO"
+    },
+    {
+      "country": "World",
+      "statistical_year": 2024,
+      "older_report": 2025,
+      "newer_report": 2026,
+      "older_value": 390000,
+      "newer_value": 380000,
+      "delta": -10000,
+      "changed": true,
+      "unit": "tonnes_REO"
+    }
+  ],
+  "common_year_china_share": {
+    "statistical_year": 2024,
+    "older": "0.6923076923076923076923076923",
+    "newer": "0.7105263157894736842105263158",
+    "change_percentage_points": "1.821862348178137651821862350"
+  },
+  "critical_boundaries": {
+    "reserve_year_is_not_report_year": true,
+    "unavailable_reserves_are_not_zero": true,
+    "dash_production_is_zero": true,
+    "world_reserves_greater_than_threshold_not_exact": true,
+    "reported_numeric_top3_not_proven_global_unknown_ranking": true,
+    "world_denominator_not_sum_of_country_rows": true,
+    "vietnam_2024_table_unchanged_despite_significant_revision_prose": true,
+    "latest_2026_chapter_contains_v13_brazil_11m_world_gt75m": true,
+    "appendix_and_footnote_not_same_across_versions": true
+  },
+  "source_before_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "human_expert": false,
+  "formal_semantic_score": null,
+  "historical_limit": "Original files acquired on2026-10-28; pre-cutoff release identity supported by official dated version history, not a contemporaneous2026-09-30 capture."
+}

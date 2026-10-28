@@ -11897,7 +11897,7 @@
         "exec": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_001_open_mineral_fact_discovery/exec",
         "gt": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_001_open_mineral_fact_discovery/gt"
       },
-      "prompt_draft": "请完成以下工作：自主发现截至2026-09-30最新可公开获取的USGS稀土年报及上一版，分别核对储量和矿山产量前三名、对应统计年/单位，计算中国占世界比重；说明两版对同一统计年的数字是否有修订。题面不提供答案URL，不以当前搜索排序代替版本核验。\n\n输入材料：\n- /tmp_workspace/research_request.md：检索USGS稀土年报，要求区分储量、矿山产量和统计年\n- /tmp_workspace/as_of.json：截止2026-09-30的固定公开信息范围\n- /tmp_workspace/answer_contract.json：8项必要字段、单位、排名及证据要求，不给报告标题或网址\n\n交付：\n- /tmp_workspace/results/findings.xlsx：两版、统计年、两类指标及可复算占比\n- /tmp_workspace/results/source_ledger.json：检索候选、实际读取文档、发布身份和定位\n- /tmp_workspace/results/answer.md：主要结论与无法核实项\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 自主搜索题不提供答案URL或候选名单，按给定时点与范围自行发现；可以使用不同的有效搜索策略。\n- 引用须指向具体证据；域名正确或URL存在不等于正文支持结论。摘要只支持其中明确出现的事实，不能冒充已读全文。\n- 先保留搜索候选，再记录实际读取来源和最终引用；不可用来源、单源事实和冲突要明确标注，不补造事实。\n- 核心判据须有可提取文本/元数据证据，不要求额外视觉理解；本分类图像理解仅由H034考察。",
+      "prompt_draft": "请自主检索并核验USGS稀土年度摘要中的世界矿山产量与储量，交付可复算、可回查的比较结果。\n\n只读取本地输入 /tmp_workspace/research_request.md、/tmp_workspace/as_of.json 和 /tmp_workspace/answer_contract.json；按三份材料完成。本题所指是按年发布、包含World Mine Production and Reserves表的稀土摘要，要求找到截至2026-09-30（Asia/Shanghai，含当日）的最新年度版和上一年度版，采用各版在截止日以前最新公开修订。题面不给答案网址或来源候选名单，也不指定首条搜索Query、语言或工具名称。可使用可用公开搜索、浏览、站内导航及正文读取方式；不得登录真实账号、发送消息或使用真实付费接口。\n\n分别核对储量与每版最新产量统计年的已公布数值国家行前三名（不把Other/World当国家、不把NA当0），说明统计年、REO单位、脚注与未知。计算中国/世界占比，保留原文上下界与约数；储量年未明确时不猜。对两版共用产量统计年，逐行对照所有国家、Other及World，包括未变行，计算新版减旧版的修订差额，比较同年重述前后中国占比；世界总计使用报告原数，不用国家行求和替代。说明所用章节的版本更正及可比性边界，不以当前搜索排序、网页Updated或HTTP时间替代首次发布/修订记录，不编造逐国修订原因。\n\n将以下三份实际交付写入/tmp_workspace/results，每份不超过5MiB：\n1. findings.xlsx：原生可编辑、自包含且核心表可见；按answer_contract.json的versions、rankings、shares、revisions四类语义表交付，允许不同Sheet名/坐标/行列顺序/分表合表、清楚中文别名及辅助列。各对象唯一。版本表2条、排名表两版各两指标的前三名、占比表含两版两指标及新版对共用年的产量比、修订表覆盖共用年的全部原表行。静态正确表或实际可重算公式均接受，不要求公式数量或动态模型；不带宏/外部数据连接。比例用0至1数值并保留分子/分母与关系；正常百分比两位小数舍入允许0.00005比例绝对误差（0.005个百分点），不改变界限方向。空白/未知与真实0区分。\n2. source_ledger.json：按answer_contract.json记录真实searches、sources和limitations。保留发现候选与实际读取状态、来源ID/URL/访问时间/身份；每个citation含唯一ID、原文quote及实际locator，PDF页与印刷页分开，HTML/文本给实际标题或行段。表格和文字通过citation ID对应。未读、只见摘要、不可用、单源/转载与无法核实之处均明确，不把候选自写快照当独立证据，不虚构检索调用或已读全文。\n3. answer.md：主要结论、算式/版本选择、同年修订与跨年变化的区别、范围/脚注、未知与来源限制；和工作簿一致，并引用稳定citation ID。\n\n原输入保持字节不变、不删除/覆盖；所有新交付在results内。不要访问GT或评分材料。此题只需可提取文本的资料与本地文件读写，不要求图像理解。",
       "inputs": [
         {
           "path": "research_request.md",
@@ -11945,23 +11945,53 @@
         "只读摘要漏掉修订与单位"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "REVIEWED_OFFICIAL_SOURCE_NATIVE_REFERENCE_RULES_AND_DETACHED_RUNTIME_VERIFIED",
         "synthetic_seed": 2026102627,
-        "construction": "正式制作先独立检索并锁定USGS报告身份、发布日期、版本与相关表格快照；两名审核者核算排名/占比及同年重述。允许官方等价落地页、PDF和DOI，不按唯一URL或搜索结果名次给分；事实未在证据中明确的字段允许标未知。",
+        "construction": "截至2026-09-30的USGS年度/修订身份由官方版本记录支持；两名隔离模型各实际公开检索并下载原件，120原字段一致，另SQLite/Decimal35项核算。参考原生798检查、6实际视图；最终24规则控制及真实DOI独立等价来源单控通过，正式MD/3exec/37GT独立ZIP自动Worker与来源包取证链验证。均为作者验收，非人工专家、无正式候选语义分、混合总分或Harness成绩。",
         "private_files": [
-          "expected.json",
-          "business_oracle.json",
-          "counterexamples.json",
           "artifact_contract.json",
-          "protected_sha256.json",
+          "authoring_validation.json",
+          "counterexamples.json",
           "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "independent_calculation.json",
+          "office_runtime.py",
+          "protected_sha256.json",
+          "reference/results/answer.md",
+          "reference/results/findings.xlsx",
+          "reference/results/source_ledger.json",
+          "reference_provenance.json",
           "reference_source_manifest.json",
-          "claim_evidence_oracle.json"
+          "research_io.py",
+          "research_source_policy.json",
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "source_observations.json",
+          "source_review_reconciliation.json",
+          "source_reviews/source-review-a.json",
+          "source_reviews/source-review-b.json",
+          "sources/mcs2025-appendixes-layout.txt",
+          "sources/mcs2025-appendixes.pdf",
+          "sources/mcs2025-publication-text.txt",
+          "sources/mcs2025-publication.html",
+          "sources/mcs2025-rare-earths-layout.txt",
+          "sources/mcs2025-rare-earths.pdf",
+          "sources/mcs2025-versionHist.txt",
+          "sources/mcs2026-appendixes-layout.txt",
+          "sources/mcs2026-appendixes.pdf",
+          "sources/mcs2026-publication-text.txt",
+          "sources/mcs2026-publication.html",
+          "sources/mcs2026-rare-earths-layout.txt",
+          "sources/mcs2026-rare-earths.pdf",
+          "sources/mcs2026-versionHist.txt",
+          "sources/usgs-publication-faq.html"
         ],
         "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
         "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。",
         "answer_policy": "参考库不是唯一合法答案；固定事实用独立oracle，池外合法来源/对象由Judge独立核验，不能因不在名单失分。",
-        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。"
+        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。",
+        "historical_evidence_limit": "原始字节于2026-10-28取得；截止日前版别依据官方明确首次发布及修订记录，未冒称2026-09-30当天存档。"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -11976,7 +12006,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "交付和证据账本可解析，必要字段及工作/事件标识齐全；不以字数或表格漂亮代替事实。",
+            "criterion": "四类可见原生表和检索/来源账本具必要字段；未知按题意保留，不以文件存在替代事实。",
             "oracle_reference": "gt/artifact_contract.json"
           },
           {
@@ -11985,8 +12015,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "依据独立取得的来源元数据核对时间窗、版本/事件/论文范围；不能仅信任候选填写的日期。",
-            "oracle_reference": "gt/reference_source_manifest.json + scoring-side independently acquired sources"
+            "criterion": "与独立官方元数据oracle核两年度版的首次发布/截止日前最新修订、产量统计年、储量年未知与REO单位；不以候选自填日期自证。",
+            "oracle_reference": "gt/expected.json + gt/reference_source_manifest.json"
           },
           {
             "key": "citation_resolution",
@@ -11994,8 +12024,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "引用ID、文件/URL、实际片段和定位可对应到独立冻结的源证据；片段对主张的语义支持由Judge另核，不只检查域名。",
-            "oracle_reference": "gt/evidence_requirements.json + scoring-side independently acquired sources"
+            "criterion": "引用ID、独立取得的真实来源原字节、完整投影、实际页/段定位及原文片段可对应。机械解析不证明原文支持主张；池外有效来源按相同标准判断，不按URL名单。",
+            "oracle_reference": "independent scoring-side research-sources lock/body/projection/receipt"
           },
           {
             "key": "protected_delivery",
@@ -12003,11 +12033,11 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "保护输入未改、交付可打开，数值或结构控制项符合契约；缺核心文件不能靠聊天自述补交。",
-            "oracle_reference": "gt/protected_sha256.json + gt/artifact_contract.json"
+            "criterion": "原输入SHA未改、三交付可读、核心表可见且跨表比例/差额可复算。若使用公式，须清除缓存后实际Office重算；静态正确表与合理舍入同样接受。",
+            "oracle_reference": "gt/protected_sha256.json + managed native Office + arithmetic"
           }
         ],
-        "rule_aggregation": "按上列权重输出规则overall_score；语义正确性与开放答案覆盖由独立Judge核验，不用候选名单硬匹配。",
+        "rule_aggregation": "自动内部.2/.25/.4/.15，外层自动.4/语义.6；自动只验证结构、时点口径、独立原文定位及内部数学，不用URL白名单，也不将quote存在等同事实支持。语义三项.5/.3/.2。缺独立供证保留错误/unresolved，结构正确而事实错可自动1，须实际Judge核验。",
         "llm_rubric": [
           {
             "key": "factual_support",
@@ -12015,11 +12045,13 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "对开放搜索：矿产年报版本与指标口径的关键事实、数值、版本和判断，逐项独立核验正文/元数据是否真实支持；对池外来源按同一标准判断。",
+            "criterion": "实际读取候选原生XLSX/可信原生投影、answer.md、source_ledger及评分侧独立取得的来源正文和元数据，逐项核两年度版与最新修订、两指标前三名/数值/REO单位、储量统计年未知、世界总计和中国占比、共同统计年逐行修订。将带脚注的数字、NA、真实0、资源/储量、不同储量定义分开。不能只看引用域名/URL或候选自己写的日期/源快照；quote存在不等于支持主张。对参考池外的正文、DOI/等价页面或完整卷用同一事实标准，不能因不在参考URL列表而扣分。所需来源未独立取得、历史身份不能核实或提供方输入缺关键原文时记unresolved/评测异常，不补能力零分。",
             "score_bands": {
-              "1.0": "关键事实均被可追溯原文支持，时空口径正确，无捏造来源或实验结果。",
-              "0.5": "主结论成立但存在非关键字段或支撑缺失，未将未知说成已证实。",
-              "0.0": "关键结论与原文冲突、捏造出处/事件/全文结果，或没有完成核心事实核验。"
+              "1.0": "关键版本、范围、数值、排名与同年修订均有实际原文支持；上下界和未知处理正确，源脚注没有造成数量或口径误读。",
+              "0.75": "主要版本/指标/统计年/数值及界限均正确，只有少量不改变结论的非关键定位或脚注说明缺口；明确列出受影响对象和证据。",
+              "0.5": "能从实际正文支持主要分支，但一个版本、指标或同年修订存在关键遗漏/错数；不得用结构正确或漂亮表格抵消事实错误。",
+              "0.25": "只有少数可信事实，多个关键版本、统计年、单位、数值、NA/0或界限被误读/无依据；具体指出被原文反驳的主张。",
+              "0.0": "必要评分材料齐全，但核心事实核验未完成、关键结论整体被正文反驳或捏造来源/已读全文。评分侧缺来源本身不使用此档替代异常。"
             }
           },
           {
@@ -12029,11 +12061,11 @@
               "retrieval_verification",
               "reasoning_planning"
             ],
-            "criterion": "满足本题实体、主题、时间、版本去重与资料筛选要求；分清一手、转载、独立支持及可比性，不机械按URL数量计覆盖。",
+            "criterion": "依据交付和可观测完整轨迹核是否自主发现两年度资料、选择截止日前最新修订，并覆盖两个指标、所有共用年国家/Other/World行及版本历史。不要把同一工作不同URL、官方页面和章PDF算成独立统计机构；摘要、正文、转载、同源与独立支持分清。允许不同搜索/导航方式、不同合格来源和诚实的单源边界。轨迹缺失时保留unknown，不能凭工具次数或只见最终答案推定未搜索；完整轨迹明确未完成必要检索时按实际缺口判断。",
             "score_bands": {
-              "1.0": "所有关键分支有合格覆盖，重复/版本/转载已合并，独立性或无法交叉验证的边界说明准确。",
-              "0.5": "满足主范围但漏一个非关键分支，未用不合格材料凑数。",
-              "0.0": "核心分支缺失、反复转载或同一工作版本冒充多项独立结果，无法支撑主要比较。"
+              "1.0": "两版和最新修订选择有依据；全部必要分支覆盖、同年18行核对完整，真实检索/读取可追溯，来源家族和单源限制说明准确。",
+              "0.5": "覆盖主范围并有可核实发现/读源过程，但漏非关键分支或部分逐行修订；没有用转载/重复URL冒充独立支持或虚构过程。",
+              "0.0": "核心年度/指标/同年修订或必要发现缺失，主要依赖不合格摘要或重复来源凑数，或在必要证据齐全时可证实捏造检索过程。"
             }
           },
           {
@@ -12042,11 +12074,11 @@
             "capabilities": [
               "reasoning_planning"
             ],
-            "criterion": "趋势、选型与建设建议限定在材料可证明范围，区分事实、官方宣称、静态实现、实验和推断；允许有依据的不同结论。",
+            "criterion": "核结论区分报告年、最新产量统计年、未明确的储量年、同年重述与跨年变化；世界储量为下限时只能得占比上界，世界产量用报告总数而非国家求和替代。版本修订不自行推为实际储量消耗或因果。原文数字/脚注/说明互有差异时据表列清事实和待核项，不补造原因；原始资料取得晚于截止日时说明官方历史记录与当前字节的证据边界。",
             "score_bands": {
-              "1.0": "取舍可追溯且限制清楚，不把缺证据当否定或运行保证。",
-              "0.5": "主要建议有依据，但漏一项非关键条件或后续验证。",
-              "0.0": "主要建议与证据矛盾、无条件外推，或用不可比排名作关键依据。"
+              "1.0": "算式、口径、界限、同源/时点与未知均清楚，原生工作簿和文字一致，同事可沿citation ID回查；没有超出证据的增长、因果或精确占比主张。",
+              "0.5": "主结论有依据且可复核，但漏一项非关键可比性、精度或时点说明，没有反向界限或无条件外推。",
+              "0.0": "主要解释混淆报告/统计年份或同年/跨年，丢失上下界、NA/0或以国家和替世界原数，并据此作出被证据反驳的主要结论；或核心交接矛盾不可复核。"
             }
           }
         ],
@@ -12148,10 +12180,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "author reference: complete formal MD and private materials in detached skill ZIP, trusted public-source collection, managed automatic Worker, source/derived normal/archive checks; no actual Harness or semantic score",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h027-reviewed-authoring-20261028.json"
       },
       "retrieval_profile": {
         "primary_mode": "open_web_search",
@@ -12175,15 +12211,16 @@
           "公共搜索/站内搜索或浏览器导航入口与正文访问，按题目检索类型预检；不依赖固定工具名。"
         ],
         "scoring": [
-          "锁定的General规则Worker和可解析v2 Rubric的语义Judge；独立只读评分材料。",
-          "openpyxl>=3.1或等价原生表格读写能力",
-          "固定版本LibreOffice或等价已验证引擎实际重算；对公式题运行参数扰动并读取重算结果。",
-          "独立来源获取与快照冻结阶段，将实际正文/元数据提供给只读规则与Judge；开放来源需工具型Judge或已完整供证的等价裁判。"
+          "score-general-e2e0.24.0/core0.15.2或兼容冻结入口；按题内policy在prepare后、规则/语义前独立collect来源，不改GT/候选/原attempt manifest。",
+          "公共URL逐跳global DNS钉住/TLS获取与只读来源锁；动态/扫描/编码/代理网络限制须先预检，缺取证不补能力零分。",
+          "匹配pypdf的正常投影重放及足够完整的语义正文预算；归档核验信任封存提取回执并核SHA/谱系，不冒称在归档机重提取。",
+          "固定Office实际清缓存重算原生公式；允许完整静态表及明示的0.00005比例绝对舍入容差。",
+          "工具型独立Judge或已完整供证的等价API Judge，实际核元数据/正文、池外合法来源及可观测检索过程；无本题正式语义成绩。"
         ],
         "skills": [],
         "env": [],
         "warmup": [],
-        "preflight_status": "not_executed",
+        "preflight_status": "author_source_rule_and_detached_scoring_verified_actual_harness_pending",
         "limit": "所有版本、素材许可和真实可用性在正式制作/发行前锁定；上述能力未做本题四端运行验证。"
       },
       "proposed_frontmatter": {
@@ -12218,6 +12255,10 @@
               "role": "candidate_deliverable"
             }
           ]
+        },
+        "scoring_runtime": {
+          "office": true,
+          "research_sources": true
         }
       },
       "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"

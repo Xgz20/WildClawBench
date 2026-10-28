@@ -1,0 +1,151 @@
+Mineral commodity summaries 2025
+USGS Publications Warehouse
+Skip to main content
+An official website of the United States government
+Here’s how you know
+Here’s how you know
+Official websites use .gov
+A .gov website belongs to an official government organization in the
+United States.
+Secure .gov websites use HTTPS
+A lock (
+LockA locked padlock
+) or https:// means you’ve safely connected to the .gov website. Share sensitive information only on official, secure websites.
+Menu
+USGS Publications Warehouse
+Explore
+Explore recent publications by USGS authors
+Browse all of Pubs Warehouse by publication type and year
+Documentation
+About
+FAQs
+Web service documentation
+Other resources
+Descriptions of US Geological Survey Report Series
+Contact
+Disclaimer
+Search
+Mineral Commodity Summaries 2025
+Mineral Commodity Summaries
+2025
+By: U.S. Geological Survey
+https://doi.org/10.3133/mcs2025
+Metrics
+Cited by 208 publications in Crossref
+Metrics definitions
+Links
+Document:
+Report
+(9.94 MB pdf)
+Additional Report Piece:
+Data visualization
+Related Works:
+Mineral Commodity Summaries Prior to 2025
+Commodity Statistics and Information
+Data Release:
+USGS data release
+- U.S. Geological Survey Mineral Commodity Summaries 2025 Data Release (ver. 2.0, April 2025)
+Version History:
+Version History
+(2.43 KB txt)
+NGMDB Index Page:
+National Geologic Map Database Index Page
+(html)
+Download citation as: RIS
+|
+Dublin
+Core
+Introduction
+Each mineral commodity chapter of the 2025 edition of the U.S. Geological Survey (USGS) Mineral Commodity Summaries (MCS) includes information on events, trends, and issues for each mineral commodity as well as discussions and tabular presentations on domestic industry structure, Government programs, tariffs, 5-year salient statistics, and world production, reserves, and resources. The MCS is the earliest comprehensive source of 2024 mineral production data for the world. More than 90 individual minerals and materials are covered by two-page synopses.
+Abbreviations and units of measure and definitions of selected terms used in the report are in Appendix A and Appendix B, respectively. Reserves and resources information is in Appendix C, which includes “Part A—Resource and Reserve Classification for Minerals” and “Part B—Sources of Reserves Data.” A directory of USGS minerals information country specialists and their responsibilities is in Appendix D.
+The USGS continually strives to improve the value of its publications to users. Constructive comments and suggestions by readers of the MCS 2025 are welcomed.
+First posted January 31, 2025
+Revised March 3, 2025
+For additional information, contact:
+Director, National Minerals Information Center
+U.S. Geological Survey
+12201 Sunrise Valley Drive
+988 National Center
+Reston, VA 20192
+Email: [email protected]
+Suggested Citation
+U.S. Geological Survey, 2025, Mineral commodity summaries 2025 (ver. 1.2, March 2025): U.S. Geological Survey, 212 p., https://doi.org/10.3133/mcs2025.
+ISSN: 2379-9803 (online)
+ISSN: 0160-5151 (print)
+Table of Contents
+Introduction
+Figure 1—The Role of Nonfuel Mineral Commodities in the U.S. Economy
+Significant Events, Trends, and Issues
+Figure 2—2024 U.S. Net Import Reliance
+Figure 3—Leading Import Sources (2020–23) of Nonfuel Mineral Commodities
+Table 1—U.S. Mineral Industry Trends
+Table 2—U.S. Mineral-Related Economic Trends
+Table 3—Value of Nonfuel Mineral Production in the United States in 2024
+Figures 4–8—Value of Nonfuel Minerals Produced in 2024
+Table 4—The 2022 U.S. Critical Minerals List
+U.S. Critical Minerals Update
+Table 5—Salient Critical Minerals Statistics in 2024
+Figure 9—20-Year Trend of U.S. Net Import Reliance for Critical Minerals
+Figure 10—Estimated 1-Year Percent Change and 5-Year Compound Annual Growth Rate in Prices of Critical Minerals
+Figures 11–12—Changes in U.S. Consumption of Nonfuel Mineral Commodities
+Figure 13—Value of Old Scrap Domestically Recycled, Imported, and Exported
+Figure 14—Relation Between Byproduct Elements and Host Metals
+Mineral Commodities
+Appendix A—Abbreviations and Units of Measure
+Appendix B—Definitions of Selected Terms Used in This Report
+Appendix C—Reserves and Resources
+Appendix D—Country Specialists Directory
+Publication Type
+Report
+Publication Subtype
+USGS Numbered Series
+Title
+Mineral commodity summaries 2025
+Series Title
+Mineral Commodity Summaries
+Series Number
+2025
+ISBN
+978-1-4113-4595-9
+DOI
+10.3133/mcs2025
+Edition
+Version 1.0: January 31, 2025; Version 1.1: February 25, 2025; Version 1.2: March 3, 2025
+Publication Date
+January 31, 2025
+Year Published
+2025
+Language
+English
+Publisher
+U.S. Geological Survey
+Publisher Location
+Reston, VA
+Contributing Office(s)
+National Minerals Information Center
+Description
+Report: 212 p.; Data Release; Data Visualization
+Online Only (Y/N)
+N
+Additional Online Files (Y/N)
+Y
+Additional Publication Details
+Part or all of this report is presented in Portable Document Format
+(PDF). For best results viewing and printing PDF documents, it is recommended that you download
+the documents to your computer and open them with Adobe Reader. PDF documents opened from your
+browser may not display or print as intended. Download the latest version of Adobe Reader, free of charge. More information
+about viewing, downloading, and printing report files can be found at the common download problems FAQ.
+*Disclaimer: English is the official language and authoritative version of all federal information.
+X
+Loading...
+DOI Privacy Policy |
+Legal |
+Accessibility |
+Site Map |
+Contact USGS
+U.S. Department of the Interior |
+DOI Inspector General |
+White House |
+E-gov |
+No Fear Act |
+FOIA

@@ -1,0 +1,985 @@
+{
+  "schema_version": "h027-independent-source-review-v1",
+  "reviewer_id": "source-review-a",
+  "created_utc": "2026-10-28T08:06:50.762528+00:00",
+  "knowledge_cutoff_requested": "2026-09-30",
+  "review_kind": "Independent model source verification, not human expert review; no candidate semantic scoring.",
+  "work_scope": {
+    "authorized_write_directory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a",
+    "repository_modified": false,
+    "other_review_directory_read": false,
+    "expected_ground_truth_accessed": false,
+    "candidate_semantic_scoring_performed": false
+  },
+  "independence_boundary": {
+    "public_search_used": true,
+    "search_queries": [
+      "site.usgs.gov mineral commodity summaries 2026 rare earths",
+      "site.usgs.gov mineral commodity summaries 2025 rare earths",
+      "site.pubs.usgs.gov/periodicals/mcs2026 \"rare-earths.pdf\"",
+      "site.pubs.usgs.gov/publication/mcs2025 \"First posted\" \"Revised\"",
+      "site.usgs.gov \"Copyrights and Credits\" \"public domain\"",
+      "site.pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf \"World Mine Production and Reserves\"",
+      "site.pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf \"World Mine Production and Reserves\"",
+      "site.pubs.usgs.gov/periodicals/mcs2026/versionHist.txt \"Rare Earths\""
+    ],
+    "search_snapshot_file": "search-initial.json",
+    "incidental_search_exposure": "Some public search calls returned unrelated Harnyx dashboard snippets and third-party summaries. Those pages were not opened or used as authorities. All numerical values and version conclusions in this review were independently read from the downloaded official USGS PDFs, HTML metadata, and versionHist text. No local expected GT or other source review was read."
+  },
+  "discovery_conclusion": {
+    "latest_annual_mcs_rare_earths_edition_found_by_cutoff": 2026,
+    "previous_edition": 2025,
+    "latest_2026_report_version_before_cutoff": "1.3 (reposted 2026-05-27)",
+    "latest_2025_report_version_before_cutoff": "1.2 (reposted 2025-03-03)",
+    "basis": "Official annual-series search result identifies MCS 2026; official publication metadata and revision histories give release dates and versions. Actual 2026 official chapter URL was discovered from the official directory, not guessed.",
+    "historical_snapshot_limit": "Files were accessed on 2026-10-28. The as-of selection is supported by official publication/version records dated before the cutoff; this review has no independently archived 2026-09-30 network snapshot proving byte identity at that instant. The downloaded bytes are frozen now with SHA-256."
+  },
+  "documents": [
+    {
+      "edition_year": 2025,
+      "title": "Mineral Commodity Summaries 2025 - Rare Earths",
+      "series": "Mineral Commodity Summaries",
+      "not_minerals_yearbook": true,
+      "publisher": "U.S. Geological Survey",
+      "doi": "10.3133/mcs2025",
+      "annual_report_identity": {
+        "version": "1.2",
+        "first_posted_online": "2025-01-31",
+        "latest_report_revised_and_reposted": "2025-03-03",
+        "metadata_file": "mcs2025-publication-text.txt",
+        "metadata_lines": [
+          62,
+          72
+        ],
+        "edition_metadata_lines": [
+          112,
+          115
+        ],
+        "version_history_file": "mcs2025-versionHist.txt"
+      },
+      "chapter_version_binding": "Current chapter contains the Rare Earths revisions described in annual report v1.1; v1.2 only changes a zinc overview table and describes no Rare Earths changes.",
+      "public_availability": "Official publication metadata and version history establish release before 2026-09-30; direct official PDF download succeeded during this review.",
+      "frozen_pdf": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2025-rare-earths.pdf",
+        "final_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+        "requested_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+        "sha256": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+        "bytes": 726098,
+        "access_started_utc": "2026-10-28T08:02:14.012464+00:00",
+        "access_finished_utc": "2026-10-28T08:02:17.060815+00:00"
+      },
+      "printed_pages": [
+        144,
+        145
+      ],
+      "pdf_pages_1based": [
+        1,
+        2
+      ],
+      "text_extraction": {
+        "tool": "pdftotext -layout (system Poppler)",
+        "text_file": "mcs2025-rare-earths-layout.txt",
+        "numbered_text_file": "mcs2025-rare-earths-layout-numbered.txt",
+        "page_break": "form feed",
+        "line_number_definition": "1-based Python str.splitlines(), also frozen in numbered text file",
+        "table_heading": "World Mine Production and Reserves",
+        "table_pdf_page_1based": 2,
+        "table_printed_page": 145,
+        "table_line_range": [
+          85,
+          122
+        ],
+        "unit_line": 3,
+        "footnote_line_range": [
+          129,
+          161
+        ]
+      },
+      "unit": "metric tons, rare-earth-oxide (REO) equivalent, unless otherwise specified",
+      "scope": "Lanthanides and yttrium; excludes most scandium. The chapter footnote directs readers to separate Scandium and Yttrium chapters (and Heavy Rare Earths in 2026).",
+      "production_statistical_years": [
+        2023,
+        2024
+      ],
+      "most_recent_production_statistical_year": 2024,
+      "reserve_statistical_year": null,
+      "reserve_time_basis": "The reserves column has no year heading. Report-edition basis only; a common 2024/2025 year-end stock date is not explicitly established by these chapters or Appendix C.",
+      "country_rows_transcribed": [
+        {
+          "country_source_label": "United States",
+          "production": {
+            "2023": 41600,
+            "2024": 45000
+          },
+          "reserves": 1900000,
+          "reserves_printed": "1900000"
+        },
+        {
+          "country_source_label": "Australia",
+          "production": {
+            "2023": 16000,
+            "2024": 13000
+          },
+          "reserves": 5700000,
+          "reserves_printed": "5700000"
+        },
+        {
+          "country_source_label": "Brazil",
+          "production": {
+            "2023": 140,
+            "2024": 20
+          },
+          "reserves": 21000000,
+          "reserves_printed": "21000000"
+        },
+        {
+          "country_source_label": "Burma",
+          "production": {
+            "2023": 43000,
+            "2024": 31000
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Canada",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves": 830000,
+          "reserves_printed": "830000"
+        },
+        {
+          "country_source_label": "China",
+          "production": {
+            "2023": 255000,
+            "2024": 270000
+          },
+          "reserves": 44000000,
+          "reserves_printed": "44000000"
+        },
+        {
+          "country_source_label": "Greenland",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves": 1500000,
+          "reserves_printed": "1500000"
+        },
+        {
+          "country_source_label": "India",
+          "production": {
+            "2023": 2900,
+            "2024": 2900
+          },
+          "reserves": 6900000,
+          "reserves_printed": "6900000"
+        },
+        {
+          "country_source_label": "Madagascar",
+          "production": {
+            "2023": 2100,
+            "2024": 2000
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Malaysia",
+          "production": {
+            "2023": 310,
+            "2024": 130
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Nigeria",
+          "production": {
+            "2023": 7200,
+            "2024": 13000
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Russia",
+          "production": {
+            "2023": 2500,
+            "2024": 2500
+          },
+          "reserves": 3800000,
+          "reserves_printed": "3800000"
+        },
+        {
+          "country_source_label": "South Africa",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves": 860000,
+          "reserves_printed": "860000"
+        },
+        {
+          "country_source_label": "Tanzania",
+          "production": {
+            "2023": 0,
+            "2024": 0
+          },
+          "reserves": 890000,
+          "reserves_printed": "890000"
+        },
+        {
+          "country_source_label": "Thailand",
+          "production": {
+            "2023": 3600,
+            "2024": 13000
+          },
+          "reserves": 4500,
+          "reserves_printed": "4500"
+        },
+        {
+          "country_source_label": "Vietnam",
+          "production": {
+            "2023": 300,
+            "2024": 300
+          },
+          "reserves": 3500000,
+          "reserves_printed": "3500000"
+        },
+        {
+          "country_source_label": "Other",
+          "production": {
+            "2023": 1440,
+            "2024": 1100
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        }
+      ],
+      "world_totals": {
+        "production": {
+          "2023": 376000,
+          "2024": 390000
+        },
+        "production_totals_are_rounded": true,
+        "reserves_relation": ">",
+        "reserves_threshold": 90000000
+      },
+      "top3_rule": "Descending numeric values among named country rows only. Excludes Other and World total. NA is unavailable, not zero; dash denotes zero. This does not rank unknown reserves.",
+      "production_top3_by_year": {
+        "2023": [
+          {
+            "rank": 1,
+            "country_source_label": "China",
+            "country_zh": "中国",
+            "value": 255000
+          },
+          {
+            "rank": 2,
+            "country_source_label": "Burma",
+            "country_zh": "缅甸",
+            "value": 43000
+          },
+          {
+            "rank": 3,
+            "country_source_label": "United States",
+            "country_zh": "美国",
+            "value": 41600
+          }
+        ],
+        "2024": [
+          {
+            "rank": 1,
+            "country_source_label": "China",
+            "country_zh": "中国",
+            "value": 270000
+          },
+          {
+            "rank": 2,
+            "country_source_label": "United States",
+            "country_zh": "美国",
+            "value": 45000
+          },
+          {
+            "rank": 3,
+            "country_source_label": "Burma",
+            "country_zh": "缅甸",
+            "value": 31000
+          }
+        ]
+      },
+      "reserves_top3_reported_numeric_country_rows": [
+        {
+          "rank": 1,
+          "country_source_label": "China",
+          "country_zh": "中国",
+          "value": 44000000
+        },
+        {
+          "rank": 2,
+          "country_source_label": "Brazil",
+          "country_zh": "巴西",
+          "value": 21000000
+        },
+        {
+          "rank": 3,
+          "country_source_label": "India",
+          "country_zh": "印度",
+          "value": 6900000
+        }
+      ],
+      "china_world_share": {
+        "production": {
+          "2023": {
+            "numerator": 255000,
+            "denominator_printed_rounded": 376000,
+            "formula": "255000/376000*100",
+            "percent": 67.81914893617021,
+            "display_percent_2dp": 67.82,
+            "qualification": "Derived ratio of printed values; world total is explicitly rounded, so this is approximate."
+          },
+          "2024": {
+            "numerator": 270000,
+            "denominator_printed_rounded": 390000,
+            "formula": "270000/390000*100",
+            "percent": 69.23076923076923,
+            "display_percent_2dp": 69.23,
+            "qualification": "Derived ratio of printed values; world total is explicitly rounded, so this is approximate."
+          }
+        },
+        "reserves": {
+          "numerator": 44000000,
+          "denominator_relation": ">",
+          "denominator_threshold": 90000000,
+          "exact_percent": null,
+          "upper_bound_percent_from_printed_threshold": 48.888888888888886,
+          "formula": "world reserves > 90000000, so printed numerator 44000000 / world < 44000000/90000000*100",
+          "display": "<48.89% (approximate threshold display; exact share unavailable)",
+          "qualification": "The greater-than sign is material. A point estimate using the threshold as an exact total is unsupported; values are rounded estimates."
+        }
+      },
+      "material_footnotes": [
+        "China production figures are a quota and exclude undocumented production (footnote 14).",
+        "Several production entries use estimates based on China import data, source Zen Innovations/Global Trade Tracker (footnote 12).",
+        "Australia table reserves 5.7m differ from JORC-compliant or equivalent reserves 3.3m (footnote 13)."
+      ]
+    },
+    {
+      "edition_year": 2026,
+      "title": "Mineral Commodity Summaries 2026 - Rare Earths",
+      "series": "Mineral Commodity Summaries",
+      "not_minerals_yearbook": true,
+      "publisher": "U.S. Geological Survey",
+      "doi": "10.3133/mcs2026",
+      "annual_report_identity": {
+        "version": "1.3",
+        "first_posted_online": "2026-02-06",
+        "latest_report_revised_and_reposted": "2026-05-27",
+        "metadata_file": "mcs2026-publication-text.txt",
+        "metadata_lines": [
+          62,
+          72
+        ],
+        "edition_metadata_lines": [
+          112,
+          115
+        ],
+        "version_history_file": "mcs2026-versionHist.txt"
+      },
+      "chapter_version_binding": "Current chapter contains the v1.3 Brazil reserve and world-total changes exactly as described in official version history.",
+      "public_availability": "Official publication metadata and version history establish release before 2026-09-30; direct official PDF download succeeded during this review.",
+      "frozen_pdf": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h027/qa/source-review-a/mcs2026-rare-earths.pdf",
+        "final_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+        "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+        "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+        "bytes": 639984,
+        "access_started_utc": "2026-10-28T08:02:12.969537+00:00",
+        "access_finished_utc": "2026-10-28T08:02:16.851678+00:00"
+      },
+      "printed_pages": [
+        152,
+        153
+      ],
+      "pdf_pages_1based": [
+        1,
+        2
+      ],
+      "text_extraction": {
+        "tool": "pdftotext -layout (system Poppler)",
+        "text_file": "mcs2026-rare-earths-layout.txt",
+        "numbered_text_file": "mcs2026-rare-earths-layout-numbered.txt",
+        "page_break": "form feed",
+        "line_number_definition": "1-based Python str.splitlines(), also frozen in numbered text file",
+        "table_heading": "World Mine Production and Reserves",
+        "table_pdf_page_1based": 2,
+        "table_printed_page": 153,
+        "table_line_range": [
+          88,
+          121
+        ],
+        "unit_line": 3,
+        "footnote_line_range": [
+          129,
+          158
+        ]
+      },
+      "unit": "metric tons, rare-earth-oxide (REO) equivalent, unless otherwise specified",
+      "scope": "Lanthanides and yttrium; excludes most scandium. The chapter footnote directs readers to separate Scandium and Yttrium chapters (and Heavy Rare Earths in 2026).",
+      "production_statistical_years": [
+        2024,
+        2025
+      ],
+      "most_recent_production_statistical_year": 2025,
+      "reserve_statistical_year": null,
+      "reserve_time_basis": "The reserves column has no year heading. Report-edition basis only; a common 2024/2025 year-end stock date is not explicitly established by these chapters or Appendix C.",
+      "country_rows_transcribed": [
+        {
+          "country_source_label": "United States",
+          "production": {
+            "2024": 45500,
+            "2025": 51000
+          },
+          "reserves": 1900000,
+          "reserves_printed": "1900000"
+        },
+        {
+          "country_source_label": "Australia",
+          "production": {
+            "2024": 29000,
+            "2025": 29000
+          },
+          "reserves": 6300000,
+          "reserves_printed": "6300000"
+        },
+        {
+          "country_source_label": "Brazil",
+          "production": {
+            "2024": 560,
+            "2025": 2000
+          },
+          "reserves": 11000000,
+          "reserves_printed": "11000000"
+        },
+        {
+          "country_source_label": "Burma",
+          "production": {
+            "2024": 27000,
+            "2025": 22000
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Canada",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves": 830000,
+          "reserves_printed": "830000"
+        },
+        {
+          "country_source_label": "China",
+          "production": {
+            "2024": 270000,
+            "2025": 270000
+          },
+          "reserves": 44000000,
+          "reserves_printed": "44000000"
+        },
+        {
+          "country_source_label": "Greenland",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves": 1500000,
+          "reserves_printed": "1500000"
+        },
+        {
+          "country_source_label": "India",
+          "production": {
+            "2024": 2900,
+            "2025": 2900
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Madagascar",
+          "production": {
+            "2024": 1400,
+            "2025": 2700
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Malaysia",
+          "production": {
+            "2024": 140,
+            "2025": 110
+          },
+          "reserves": 710000,
+          "reserves_printed": "710000"
+        },
+        {
+          "country_source_label": "Nigeria",
+          "production": {
+            "2024": 1500,
+            "2025": 1500
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Russia",
+          "production": {
+            "2024": 2600,
+            "2025": 2600
+          },
+          "reserves": 3800000,
+          "reserves_printed": "3800000"
+        },
+        {
+          "country_source_label": "South Africa",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves": 860000,
+          "reserves_printed": "860000"
+        },
+        {
+          "country_source_label": "Tanzania",
+          "production": {
+            "2024": 0,
+            "2025": 0
+          },
+          "reserves": 890000,
+          "reserves_printed": "890000"
+        },
+        {
+          "country_source_label": "Thailand",
+          "production": {
+            "2024": 2100,
+            "2025": 4800
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        },
+        {
+          "country_source_label": "Vietnam",
+          "production": {
+            "2024": 300,
+            "2025": 150
+          },
+          "reserves": 3500000,
+          "reserves_printed": "3500000"
+        },
+        {
+          "country_source_label": "Other",
+          "production": {
+            "2024": 1000,
+            "2025": 550
+          },
+          "reserves": null,
+          "reserves_printed": "NA"
+        }
+      ],
+      "world_totals": {
+        "production": {
+          "2024": 380000,
+          "2025": 390000
+        },
+        "production_totals_are_rounded": true,
+        "reserves_relation": ">",
+        "reserves_threshold": 75000000
+      },
+      "top3_rule": "Descending numeric values among named country rows only. Excludes Other and World total. NA is unavailable, not zero; dash denotes zero. This does not rank unknown reserves.",
+      "production_top3_by_year": {
+        "2024": [
+          {
+            "rank": 1,
+            "country_source_label": "China",
+            "country_zh": "中国",
+            "value": 270000
+          },
+          {
+            "rank": 2,
+            "country_source_label": "United States",
+            "country_zh": "美国",
+            "value": 45500
+          },
+          {
+            "rank": 3,
+            "country_source_label": "Australia",
+            "country_zh": "澳大利亚",
+            "value": 29000
+          }
+        ],
+        "2025": [
+          {
+            "rank": 1,
+            "country_source_label": "China",
+            "country_zh": "中国",
+            "value": 270000
+          },
+          {
+            "rank": 2,
+            "country_source_label": "United States",
+            "country_zh": "美国",
+            "value": 51000
+          },
+          {
+            "rank": 3,
+            "country_source_label": "Australia",
+            "country_zh": "澳大利亚",
+            "value": 29000
+          }
+        ]
+      },
+      "reserves_top3_reported_numeric_country_rows": [
+        {
+          "rank": 1,
+          "country_source_label": "China",
+          "country_zh": "中国",
+          "value": 44000000
+        },
+        {
+          "rank": 2,
+          "country_source_label": "Brazil",
+          "country_zh": "巴西",
+          "value": 11000000
+        },
+        {
+          "rank": 3,
+          "country_source_label": "Australia",
+          "country_zh": "澳大利亚",
+          "value": 6300000
+        }
+      ],
+      "china_world_share": {
+        "production": {
+          "2024": {
+            "numerator": 270000,
+            "denominator_printed_rounded": 380000,
+            "formula": "270000/380000*100",
+            "percent": 71.05263157894737,
+            "display_percent_2dp": 71.05,
+            "qualification": "Derived ratio of printed values; world total is explicitly rounded, so this is approximate."
+          },
+          "2025": {
+            "numerator": 270000,
+            "denominator_printed_rounded": 390000,
+            "formula": "270000/390000*100",
+            "percent": 69.23076923076923,
+            "display_percent_2dp": 69.23,
+            "qualification": "Derived ratio of printed values; world total is explicitly rounded, so this is approximate."
+          }
+        },
+        "reserves": {
+          "numerator": 44000000,
+          "denominator_relation": ">",
+          "denominator_threshold": 75000000,
+          "exact_percent": null,
+          "upper_bound_percent_from_printed_threshold": 58.666666666666664,
+          "formula": "world reserves > 75000000, so printed numerator 44000000 / world < 44000000/75000000*100",
+          "display": "<58.67% (approximate threshold display; exact share unavailable)",
+          "qualification": "The greater-than sign is material. A point estimate using the threshold as an exact total is unsupported; values are rounded estimates."
+        }
+      },
+      "material_footnotes": [
+        "US 2024 production 45,500 is reported (footnote 11), despite estimated status on general production heading.",
+        "Several production entries use estimates based on China import data, source Trade Data Monitor Inc. (footnote 12).",
+        "Australia table reserves 6.3m differ from JORC-compliant or equivalent reserves 3.3m (footnote 13).",
+        "India reserves are NA; footnote 14 cites a 2015 OSCOM monazite reserve figure and states rare-earth reserves were not reported. Do not turn monazite gross tonnage into REO reserves.",
+        "The former China quota footnote was removed in v1.1; do not incorrectly apply the 2025-edition footnote number to this edition."
+      ]
+    }
+  ],
+  "common_year_production_revision": {
+    "statistical_year": 2024,
+    "unit": "metric tons REO equivalent",
+    "comparison": "MCS 2025 current official chapter versus MCS 2026 current official chapter; this is a revision for the same statistical year, not year-over-year growth.",
+    "country_and_other_rows": [
+      {
+        "country_source_label": "United States",
+        "mcs2025_value": 45000,
+        "mcs2026_value": 45500,
+        "absolute_revision": 500,
+        "revision_percent": 1.1111111111111112,
+        "changed": true
+      },
+      {
+        "country_source_label": "Australia",
+        "mcs2025_value": 13000,
+        "mcs2026_value": 29000,
+        "absolute_revision": 16000,
+        "revision_percent": 123.07692307692308,
+        "changed": true
+      },
+      {
+        "country_source_label": "Brazil",
+        "mcs2025_value": 20,
+        "mcs2026_value": 560,
+        "absolute_revision": 540,
+        "revision_percent": 2700.0,
+        "changed": true
+      },
+      {
+        "country_source_label": "Burma",
+        "mcs2025_value": 31000,
+        "mcs2026_value": 27000,
+        "absolute_revision": -4000,
+        "revision_percent": -12.903225806451612,
+        "changed": true
+      },
+      {
+        "country_source_label": "Canada",
+        "mcs2025_value": 0,
+        "mcs2026_value": 0,
+        "absolute_revision": 0,
+        "revision_percent": null,
+        "changed": false
+      },
+      {
+        "country_source_label": "China",
+        "mcs2025_value": 270000,
+        "mcs2026_value": 270000,
+        "absolute_revision": 0,
+        "revision_percent": 0.0,
+        "changed": false
+      },
+      {
+        "country_source_label": "Greenland",
+        "mcs2025_value": 0,
+        "mcs2026_value": 0,
+        "absolute_revision": 0,
+        "revision_percent": null,
+        "changed": false
+      },
+      {
+        "country_source_label": "India",
+        "mcs2025_value": 2900,
+        "mcs2026_value": 2900,
+        "absolute_revision": 0,
+        "revision_percent": 0.0,
+        "changed": false
+      },
+      {
+        "country_source_label": "Madagascar",
+        "mcs2025_value": 2000,
+        "mcs2026_value": 1400,
+        "absolute_revision": -600,
+        "revision_percent": -30.0,
+        "changed": true
+      },
+      {
+        "country_source_label": "Malaysia",
+        "mcs2025_value": 130,
+        "mcs2026_value": 140,
+        "absolute_revision": 10,
+        "revision_percent": 7.6923076923076925,
+        "changed": true
+      },
+      {
+        "country_source_label": "Nigeria",
+        "mcs2025_value": 13000,
+        "mcs2026_value": 1500,
+        "absolute_revision": -11500,
+        "revision_percent": -88.46153846153845,
+        "changed": true
+      },
+      {
+        "country_source_label": "Russia",
+        "mcs2025_value": 2500,
+        "mcs2026_value": 2600,
+        "absolute_revision": 100,
+        "revision_percent": 4.0,
+        "changed": true
+      },
+      {
+        "country_source_label": "South Africa",
+        "mcs2025_value": 0,
+        "mcs2026_value": 0,
+        "absolute_revision": 0,
+        "revision_percent": null,
+        "changed": false
+      },
+      {
+        "country_source_label": "Tanzania",
+        "mcs2025_value": 0,
+        "mcs2026_value": 0,
+        "absolute_revision": 0,
+        "revision_percent": null,
+        "changed": false
+      },
+      {
+        "country_source_label": "Thailand",
+        "mcs2025_value": 13000,
+        "mcs2026_value": 2100,
+        "absolute_revision": -10900,
+        "revision_percent": -83.84615384615385,
+        "changed": true
+      },
+      {
+        "country_source_label": "Vietnam",
+        "mcs2025_value": 300,
+        "mcs2026_value": 300,
+        "absolute_revision": 0,
+        "revision_percent": 0.0,
+        "changed": false
+      },
+      {
+        "country_source_label": "Other",
+        "mcs2025_value": 1100,
+        "mcs2026_value": 1000,
+        "absolute_revision": -100,
+        "revision_percent": -9.090909090909092,
+        "changed": true
+      }
+    ],
+    "world_total": {
+      "mcs2025": 390000,
+      "mcs2026": 380000,
+      "absolute_revision": -10000,
+      "revision_percent": -2.564102564102564,
+      "both_totals_rounded": true
+    },
+    "china_share_old_percent": 69.23076923076923,
+    "china_share_revised_percent": 71.05263157894737,
+    "china_share_change_percentage_points": 1.8218623481781435,
+    "top3_old": [
+      {
+        "rank": 1,
+        "country_source_label": "China",
+        "country_zh": "中国",
+        "value": 270000
+      },
+      {
+        "rank": 2,
+        "country_source_label": "United States",
+        "country_zh": "美国",
+        "value": 45000
+      },
+      {
+        "rank": 3,
+        "country_source_label": "Burma",
+        "country_zh": "缅甸",
+        "value": 31000
+      }
+    ],
+    "top3_revised": [
+      {
+        "rank": 1,
+        "country_source_label": "China",
+        "country_zh": "中国",
+        "value": 270000
+      },
+      {
+        "rank": 2,
+        "country_source_label": "United States",
+        "country_zh": "美国",
+        "value": 45500
+      },
+      {
+        "rank": 3,
+        "country_source_label": "Australia",
+        "country_zh": "澳大利亚",
+        "value": 29000
+      }
+    ],
+    "source_explanatory_note": "2026 text names Australia, Brazil, Burma, Madagascar, Nigeria, Vietnam as significant 2024 revisions. The printed 2024 Vietnam value is nevertheless 300 in both frozen editions. Table differences also show US, Malaysia, Russia, Thailand, and Other revisions; the paragraph is not an exhaustive row-difference list.",
+    "no_false_explanation": "The PDFs establish revisions and describe Government/industry sources in general; they do not establish a separate country-specific causal reason for every difference."
+  },
+  "within_edition_revision_materiality": [
+    {
+      "edition": 2026,
+      "version": "1.1",
+      "reposted": "2026-03-05",
+      "official_version_history_lines": [
+        9,
+        15
+      ],
+      "effect": "China 2024 quota footnote removed and footnote 14 attached to India reserve NA, with OSCOM text. No main table numeric change stated in this item."
+    },
+    {
+      "edition": 2026,
+      "version": "1.3",
+      "reposted": "2026-05-27",
+      "official_version_history_lines": [
+        25,
+        29
+      ],
+      "effect": "Brazil reserves 21,000,000 -> 11,000,000; world reserves >85,000,000 -> >75,000,000. Both old and new 2026 values are pre-cutoff, but latest-before-cutoff requires v1.3."
+    }
+  ],
+  "reserve_time_and_comparability": {
+    "uniform_year_end_date_explicit": false,
+    "safe_labels": [
+      "MCS 2025 edition reserves",
+      "MCS 2026 v1.3 edition reserves"
+    ],
+    "unsupported_labels": [
+      "All reserves measured as of 2024-12-31",
+      "All reserves measured as of 2025-12-31"
+    ],
+    "appendix_c_basis": "Reserves are dynamic and may combine historical estimates, government assessments, company reports and different national definitions. Appendix C defines reserves at the time of determination; it supplies no common stock date for every country in these chapter tables.",
+    "australia_specific_evidence": {
+      "2025_appendix_c": "The edition uses Accessible EDR and refers to Australia estimated ore reserves as at December 2022, Table 2 (AIMR2023).",
+      "2026_appendix_c": "The edition uses Accessible EDR and refers to Australia estimated ore reserves as at December 2023, Table 2 (AIMR2024).",
+      "locator_2025": {
+        "file": "mcs2025-appendixes-layout.txt",
+        "heading": "Part B-Sources of Reserves Data",
+        "pdf_page_1based": 5,
+        "printed_page": 210,
+        "line_range": [
+          198,
+          233
+        ]
+      },
+      "locator_2026": {
+        "file": "mcs2026-appendixes-layout.txt",
+        "heading": "Part B-Sources of Reserves Data",
+        "pdf_page_1based": 5,
+        "line_range": [
+          197,
+          232
+        ]
+      }
+    }
+  },
+  "metadata_disagreements": [
+    {
+      "issue": "MCS 2025 v1.1 date",
+      "publication_metadata": "Version 1.1: February 25, 2025 (mcs2025-publication-text.txt lines 112-113)",
+      "official_version_history": "Revised and reposted February 28, 2025 (mcs2025-versionHist.txt line 9)",
+      "resolution": "Record both; do not silently equate file creation, edition metadata, and repost date. Latest annual version v1.2 March 3 agrees and target table values are readable in the frozen current chapter."
+    }
+  ],
+  "redistribution": {
+    "work_status": "USGS-authored U.S. Government information; USGS policy identifies it as U.S. public domain and permits use without permission with attribution.",
+    "official_policy_url": "https://www.usgs.gov/faqs/are-usgs-reportspublications-copyrighted?qt-news_science_products=0",
+    "policy_evidence": "copyright-web.json, official FAQ open result lines 3-14, retrieved during this review; direct raw HTML curl was HTTP 403. The tool-rendered official FAQ text is retained, but no raw policy HTML SHA is claimed.",
+    "credit": "Credit: U.S. Geological Survey; include report DOI and edition/version.",
+    "limits": "USGS policy notes exceptions for marked third-party copyrighted material. The frozen Rare Earths text/tables and appendices are USGS-authored government publication content; this review does not license unrelated third-party images or trademarks.",
+    "no_inferred_cc0_for_report": "The data-release search result has CC0 metadata, but that is a separate product. This review relies on USGS government-work/public-domain policy for these report chapters, not a guessed CC0 label."
+  },
+  "retrieval_and_extraction_limits": [
+    "urllib first failed local certificate verification; system curl then succeeded with default TLS validation. No TLS-verification bypass was used.",
+    "search-service open returned 403 for the official publication/PDF URLs, while direct system curl retrieved the official bytes successfully.",
+    "Some usgs.gov Drupal pages return HTTP 403 to direct curl; official publication metadata and PDFs at pubs.usgs.gov were available.",
+    "Text extraction provides sufficient table/header/footnote evidence for this review; no visual-layout or screenshot QA is claimed. One 2025 appendix extraction emitted an optional-content warning while producing complete relevant text; no numeric chapter extraction warning occurred."
+  ],
+  "evidence_retrieval_manifests": [
+    "fetch-manifest.json",
+    "curl-fetch-manifest.json",
+    "curl-fetch-manifest-extra.json"
+  ],
+  "source_review_result": "Completed source verification with explicit temporal, reserve-date, ratio-bound, and metadata-conflict limits. No human expert sign-off or candidate score is implied."
+}

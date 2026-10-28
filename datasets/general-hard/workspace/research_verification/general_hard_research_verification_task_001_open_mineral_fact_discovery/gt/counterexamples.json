@@ -1,0 +1,37 @@
+{
+  "schema_version": "h027-author-controls/v1",
+  "positive_controls": [
+    "static_values",
+    "formula_share_and_delta",
+    "chinese_headers_shifted_reordered",
+    "scaled_units",
+    "valid_source_outside_reference_pool",
+    "extra_search_only_source",
+    "rounded_share_values"
+  ],
+  "negative_controls": {
+    "wrong_pdf_page": "citation_resolution decreases",
+    "fabricated_quote": "citation_resolution decreases",
+    "only_url_no_citations": "citation_resolution decreases",
+    "report_year_as_reserve_year": "time_and_scope decreases",
+    "wrong_version_dates": "time_and_scope decreases",
+    "missing_workbook": "record_contract/protected_delivery decrease",
+    "corrupt_workbook": "candidate parse error and protected_delivery decrease, no evaluation error",
+    "malformed_ledger": "candidate parse error and citation_resolution=0, no evaluation error",
+    "protected_input_mutated": "protected_delivery=0",
+    "hidden_core_results": "protected_delivery decreases",
+    "broken_share_or_delta": "protected_delivery decreases"
+  },
+  "semantic_boundary_control": {
+    "structurally_valid_wrong_fact": "Correct structure/time/citations/own math can pass automatic checks. A wrong non-China ranking value must still lose substantive-facts Judge credit. The author control records NEEDS_JUDGE and never invents semantic pass/fail."
+  },
+  "evaluation_error_controls": [
+    "missing_source_bundle_context",
+    "trusted_source_body_drift",
+    "trusted_text_projection_drift",
+    "missing_office_context",
+    "private_oracle_drift"
+  ],
+  "source_before_reference": true,
+  "scope": "Author fixture checks only; not a formal Harness execution, semantic score or measured difficulty result."
+}

@@ -1,0 +1,160 @@
+{
+  "schema_version": "h027-reference-source-manifest/v1",
+  "files": [
+    {
+      "file": "sources/mcs2026-publication.html",
+      "requested_url": "https://pubs.usgs.gov/publication/mcs2026",
+      "final_url": "https://pubs.usgs.gov/publication/mcs2026",
+      "sha256": "6254ed1c06af00aa3072ed9198c05d0d9ecb96572d3a5572a8cd269b8c965c93",
+      "size": 59883,
+      "accessed_utc": "2026-10-28T08:02:14.011875+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2025-publication.html",
+      "requested_url": "https://pubs.usgs.gov/publication/mcs2025",
+      "final_url": "https://pubs.usgs.gov/publication/mcs2025",
+      "sha256": "57f8e4670a6d77b7fbef280aa1d5926dc2aaf7a1d9467869878e49b253cae0fb",
+      "size": 71082,
+      "accessed_utc": "2026-10-28T08:02:13.779255+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2026-rare-earths.pdf",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+      "final_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-rare-earths.pdf",
+      "sha256": "0116a192336fec41c38d8e11dad553bb7703308c1fbd1f97dc14b75c7e7d9900",
+      "size": 639984,
+      "accessed_utc": "2026-10-28T08:02:16.851678+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2026-versionHist.txt",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/versionHist.txt",
+      "final_url": "https://pubs.usgs.gov/periodicals/mcs2026/versionHist.txt",
+      "sha256": "276d675d1d753697f611c385d0692c865f2c00b8a417c282ff2e8e1f84932e2e",
+      "size": 1914,
+      "accessed_utc": "2026-10-28T08:02:14.744601+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2025-rare-earths.pdf",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+      "final_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-rare-earths.pdf",
+      "sha256": "87e73bd28fd9d87b99a2ea58d104d6e41467e3488c181c61161e0abf22c6c7a1",
+      "size": 726098,
+      "accessed_utc": "2026-10-28T08:02:17.060815+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2025-versionHist.txt",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2025/versionHist.txt",
+      "final_url": "https://pubs.usgs.gov/periodicals/mcs2025/versionHist.txt",
+      "sha256": "9876665d3af354a5da3fac78ac2025e5f28e3cae35c2000e19e59b1e3a1cf280",
+      "size": 2496,
+      "accessed_utc": "2026-10-28T08:03:10.249808+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2025-appendixes.pdf",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-appendixes.pdf",
+      "final_url": "https://pubs.usgs.gov/periodicals/mcs2025/mcs2025-appendixes.pdf",
+      "sha256": "9039f2195e217a24ea16d898d683cf214e8a4a8e56810f76b89da6048c373f16",
+      "size": 933026,
+      "accessed_utc": "2026-10-28T08:03:11.385891+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2026-appendixes.pdf",
+      "requested_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-appendixes.pdf",
+      "final_url": "https://pubs.usgs.gov/periodicals/mcs2026/mcs2026-appendixes.pdf",
+      "sha256": "39878d03df6dbdf59d90a4794bc408988a560fb9565a36863c608a9a9dd8811d",
+      "size": 315412,
+      "accessed_utc": "2026-10-28T08:03:10.187317+00:00",
+      "acquisition": "independent system curl, TLS verification enabled"
+    },
+    {
+      "file": "sources/mcs2025-rare-earths-layout.txt",
+      "sha256": "3a5af84f3e0691dad65665ad111dbaeda2fb0239719aa3832ce76820d2a38e2d",
+      "size": 12822,
+      "kind": "independent source text projection",
+      "original_in_sources": true
+    },
+    {
+      "file": "sources/mcs2025-appendixes-layout.txt",
+      "sha256": "f4c7bfafccef78b316f19a440f80eb305e6feac1f6696100baa56c1ac7c34080",
+      "size": 37570,
+      "kind": "independent source text projection",
+      "original_in_sources": true
+    },
+    {
+      "file": "sources/mcs2025-publication-text.txt",
+      "sha256": "83326776ac774064947a6c989c492068b6382e25078ceb5432ad76ff1bb7ac23",
+      "size": 5669,
+      "kind": "independent source text projection",
+      "original_in_sources": true
+    },
+    {
+      "file": "sources/mcs2026-rare-earths-layout.txt",
+      "sha256": "dc692b41955b1b0b53f6b39f0bc33efd59bc9cbb3b92310d9226d45874737faa",
+      "size": 12855,
+      "kind": "independent source text projection",
+      "original_in_sources": true
+    },
+    {
+      "file": "sources/mcs2026-appendixes-layout.txt",
+      "sha256": "c2eea4738fc0050d24d3688325e6145e8c43640b7943cb69ecae738708b315eb",
+      "size": 37226,
+      "kind": "independent source text projection",
+      "original_in_sources": true
+    },
+    {
+      "file": "sources/mcs2026-publication-text.txt",
+      "sha256": "30fdf1be2916feb141b90b0d993bc5d7826afc454a13b84e1875e1635ea5a816",
+      "size": 5665,
+      "kind": "independent source text projection",
+      "original_in_sources": true
+    },
+    {
+      "file": "sources/usgs-publication-faq.html",
+      "sha256": "ecd1d5a103c4321418cd647eccd956898418aa3f8890f0382676b64eb2cf53a3",
+      "size": 35465,
+      "requested_url": "https://pubs.usgs.gov/documentation/faq",
+      "kind": "public-domain policy evidence"
+    }
+  ],
+  "selection_as_of": "2026-09-30",
+  "acquisition_date": "2026-10-28",
+  "reference_pool_is_not_url_allowlist": true,
+  "pre_cutoff_identity_basis": "Official publication and version-history records; current Rare Earths tables contain described revisions. No contemporaneous cutoff-day byte capture claimed.",
+  "license": {
+    "status": "U.S. public domain for USGS-authored text/tables; no custom CC0 license invented for these PDFs",
+    "direct_publication_basis": {
+      "files": [
+        "raw/mcs2026-full.pdf: front matter PDF p4",
+        "raw/mcs2025-full.pdf: front matter PDF p4"
+      ],
+      "verbatim": "Although this report is in the public domain, permission must be secured from the individual copyright owners to reproduce any copyrighted material contained within this report."
+    },
+    "official_policy_snapshot": {
+      "filename": "raw/usgs-publication-faq.html",
+      "requested_url": "https://pubs.usgs.gov/documentation/faq",
+      "final_url": "https://pubs.usgs.gov/documentation/faq",
+      "retrieval_started_utc": "2026-10-28T08:03:16.206605+00:00",
+      "retrieval_completed_utc": "2026-10-28T08:03:17.385384+00:00",
+      "http_status": 200,
+      "exit_code": 0,
+      "content_type": "text/html; charset=utf-8",
+      "ssl_verify_result": 0,
+      "client": "system curl; TLS verification enabled",
+      "sha256": "ecd1d5a103c4321418cd647eccd956898418aa3f8890f0382676b64eb2cf53a3",
+      "byte_size": 35465,
+      "response_headers_path": "raw/usgs-publication-faq.html.headers.txt",
+      "manifest_reconciliation_note": "Captured during official acquisition; merged after independent acquisition commands completed."
+    },
+    "policy_findings": "USGS Publications Warehouse FAQ 明示 USGS-published report PDF 和 USGS-authored/produced data/information 为 public domain；第三方材料可能仍有版权；使用要求给 USGS 适当署名，USGS logo 有限制。",
+    "research_use": "本复核摘录的是 USGS编制的稀土统计表、说明和脚注，并署名来源；不把第三方封面照片或logo宣称为无限制公共领域素材。",
+    "acknowledgement": "Source: U.S. Geological Survey, Mineral Commodity Summaries 2026 (ver. 1.3, May 2026), Rare Earths, pp. 152–153; Mineral Commodity Summaries 2025 (ver. 1.2, March 2025), Rare Earths, pp. 144–145."
+  },
+  "independent_review_fields": 120
+}
