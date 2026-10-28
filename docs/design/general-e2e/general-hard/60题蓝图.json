@@ -18644,7 +18644,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_007_bounded_performance/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_007_bounded_performance/gt"
       },
-      "prompt_draft": "请完成以下工作：改进匹配实现，在降低重复扫描次数的同时保持匹配优先级、重复记录和稳定顺序；提交可复核的前后比较。\n\n输入材料：\n- /tmp_workspace/project/matcher.py：含重复全表扫描的匹配程序\n- /tmp_workspace/fixtures/：小规模反例和较大固定数据\n- /tmp_workspace/instrumentation.py：调用次数计数\n- /tmp_workspace/contract.md：匹配优先级与输出顺序\n\n交付：\n- /tmp_workspace/project/matcher.py：优化源码\n- /tmp_workspace/results/benchmark.json：操作次数与结果摘要\n- /tmp_workspace/results/review.md：取舍和边界\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请优化 /tmp_workspace/project/matcher.py 的匹配实现，减少重复全目录扫描，同时保持优先级、全部重复记录和稳定顺序。先阅读 /tmp_workspace/contract.md、/tmp_workspace/instrumentation.py、/tmp_workspace/profile.py 和 /tmp_workspace/runtime.json。所有数据为本题原创合成内容，离线完成，不需要真实账号、安装依赖或多线程。\n\n只允许修改 project/matcher.py；它必须提供 match_records(queries, catalog)。参数是公开契约的只读序列，记录/查询提供 .id 和 .key(kind)，kind为email、phone、name_region。Key已按公开规则规范化，仅支持hash/等值，缺键为None；hash可能碰撞，不能当身份。优先级是email→phone→name_region，只有较高优先级无任何匹配才降级。返回每条原查询的 query_id、matched_by、row_ids；命中同级所有目录记录按原目录顺序保留，重复ID不去重，重复query_id也不能合并或重排。未匹配为unmatched及空列表。list/tuple的JSON等价表示允许。\n\n输入另有 /tmp_workspace/baseline_matcher.py（不可改的原始慢速实现）、/tmp_workspace/fixtures/（三个公开夹具）、/tmp_workspace/benchmark.py 和 /tmp_workspace/tests_public/。除 project/matcher.py 外所有输入原路径/原字节只读；不得改计数器、基准、测试、夹具、协议或依赖，不扫描真实用户目录、不读私有GT。新文件只写results。\n\n本题性能判据是可信侧实际累计的catalog_visits、query_visits、key_probes、key_hashes、key_equalities和id_reads之和。复制序列仍保留受控Key，C层list.index/count等比较也会计入等值次数。对结果等价的工作量用例，上界为32*(n+q)+4*m+128，n/q是输入长度，m是独立真值的输出ID总数。这个宽松线性上界不要求照抄某参考计数；准备/规范化/序列化不计入匹配核心。耗时只作信息，不作跨机器硬阈值，也不能把一次观测外推为CPU/内存或多线程保证。\n\n采用公开纯函数profile真实验证：允许函数/辅助函数、collections/itertools/functools及future annotations、不可变模块常量与函数内局部结构。不得用类/装饰器、全局或nonlocal缓存、可变/动态默认参数、私有属性/反射、动态format字段遍历、IO/网络/进程/解释器接口。合法但超出该支持范围的实现会保留typed未评估，不虚构候选零分；该profile不是OS安全沙箱。不要跨调用缓存受控视图。优先改善索引和重复访问，而不是规避计数协议。\n\n可用 python -B -m unittest discover -s tests_public 运行公开测试；用 python -B benchmark.py --matcher project/matcher.py --output results/benchmark.json 生成真实前后比较。交付：\n- /tmp_workspace/project/matcher.py：实际优化源码。\n- /tmp_workspace/results/benchmark.json：按公开schema记录原基准和当前源码SHA、协议SHA、三个固定公开用例的fixture和output的SHA及before/after实际六项计数、总工作量、状态和真实等价结论。耗时可保留但不作门槛，不得编造。JSON字段/行重排、BOM、SHA大小写、等价整数表示可接受；增加padding不稀释既有义务。\n- /tmp_workspace/results/review.md：自由说明算法取舍、顺序/重复项、空间成本及验证边界，并用一个fenced JSON附algorithm_family（描述性非空文本）、before_source_sha256、after_source_sha256、public_case_ids、work_measure=\"h047-counted-keys/v1\"、wall_time_is_gate=false和threads_required=false。不把静态分析、自述或原基准结果说成真实Harness轨迹。\n\n不得联网、安装、登录、发消息、调用付费或真实业务接口。结论区分实际计数、推断与未知；900是任务运行元数据，不是能力分的墙钟截止。",
       "inputs": [
         {
           "path": "project/matcher.py",
@@ -18693,20 +18693,36 @@
         "篡改计数器或基准"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102647,
-        "construction": "独立慢速参考算法核对结果，按明确的查找次数上界检查复杂度，固定输入并检查计数器未改；耗时仅记录，不作跨机器硬门槛。",
+        "construction": "公开原匹配源、合成case和计数语义先于参考，Python/Node独立真值一致；可信侧计数访问/key/hash/等值/ID，复制视图和C层index也受计数。两方向索引参考均A1，31选定受管控制与7typed未评估边界透明保留，pilot不重复计。CPython3.11/3.12公开计数/输出相同，55文件归档及派生保管验证通过；当前正式MD/11exec/22GT独立ZIP再次真实重放。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "hidden_cases.json",
+          "protected_sha256.json",
+          "runner.py",
+          "runtime_contract.json",
+          "source_originals/baseline_matcher.py",
+          "source_originals/benchmark.py",
+          "source_originals/contract.md",
+          "source_originals/fixtures/public_adversarial.json",
+          "source_originals/fixtures/public_smoke.json",
+          "source_originals/fixtures/public_workload.json",
+          "source_originals/instrumentation.py",
+          "source_originals/profile.py",
+          "source_originals/project/matcher.py",
+          "source_originals/runtime.json",
+          "source_originals/tests_public/test_matcher.py",
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许两种索引方向、纯函数合法辅助实现、map/filter/hash与slice等支持profile调用；匹配输出和工作量上界固定，不匹配参考代码/精确计数。超出声明受支持profile的合法实现保留typed待审，不能当性能0或OS安全沙箱。",
+        "authoring_evidence": "evidence/h047-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -18721,7 +18737,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "改进匹配实现，在降低重复扫描次数的同时保持匹配优先级、重复记录和稳定顺序；提交可复核的前后比较。",
+            "criterion": "独立核全部固定源用例的优先级、降级、完整重复记录及目录/查询顺序；工作量用例也必须有语义真值，不能用错误结果规避正确性。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -18730,7 +18746,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：快但改变顺序；丢重复项；篡改计数器或基准。以独立反例验证，不只检索关键词。",
+            "criterion": "在结果等价的固定规模用例中，以真实受控访问/hash/等值/ID读取之和验证公开线性上界；不信候选自报计数，不以耗时硬门槛评分。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -18739,7 +18755,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "除允许的matcher源码外保护原始基准、计数器、profile、测试和夹具；报告为原生可解析文本，额外输入写入按保护义务处理。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -18748,7 +18764,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "来源、fixture、前后output SHA与实际六项计数/状态可重放核对；自由报告措辞及真实非等价不被强制改成参考答案。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -18831,10 +18847,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec11/GT22、明确matcher.py参考overlay，独立score0.27.1/core0.15.3 ZIP真实Worker按可信工作量重放、正常/删除runtime搬移；无wall-time能力门槛/Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h047-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

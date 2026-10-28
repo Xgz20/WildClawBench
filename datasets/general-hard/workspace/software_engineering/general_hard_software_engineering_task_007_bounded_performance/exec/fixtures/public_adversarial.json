@@ -1,0 +1,99 @@
+{
+  "case_id": "public_adversarial",
+  "group": "public",
+  "catalog": [
+    {
+      "record_id": "Z",
+      "email": "repeat@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "record_id": "A",
+      "email": "repeat@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "record_id": "Z",
+      "email": "repeat@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "record_id": "C",
+      "email": "other@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "record_id": "H-1",
+      "email": "collision:one@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "record_id": "H-2",
+      "email": "collision:two@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "record_id": "H-3",
+      "email": "collision:one@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    }
+  ],
+  "queries": [
+    {
+      "query_id": "same",
+      "email": "repeat@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "query_id": "same",
+      "email": "other@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "query_id": "same",
+      "email": "repeat@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "query_id": "Q-h1",
+      "email": "collision:two@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "query_id": "Q-h2",
+      "email": "collision:absent@x",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    },
+    {
+      "query_id": "blank",
+      "email": " ",
+      "phone": null,
+      "display_name": null,
+      "region": null
+    }
+  ]
+}
