@@ -1,0 +1,57 @@
+{
+  "status": "SOURCE_LOGIC_AND_RASTER_PROOFS_PASS_VISUAL_ANNOTATION_PENDING",
+  "source_files": 6,
+  "flat_images": 4,
+  "claims": 8,
+  "author_predicate_checks": {
+    "C01": "refuted",
+    "C02": "supported",
+    "C03": "refuted",
+    "C04": "supported",
+    "C05": "refuted",
+    "C06": "uncertain",
+    "C07": "refuted",
+    "C08": "uncertain"
+  },
+  "precision_witness": {
+    "canonical_increment_people": "60000.00",
+    "alternate_increment_people": "60002.000",
+    "same_png_sha256": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+    "same_pixels_different_precision_truth": true
+  },
+  "text_equivalent_graphic_counterexamples": [
+    {
+      "chart": "A",
+      "claim": "C02",
+      "from": "supported",
+      "to": "refuted"
+    },
+    {
+      "chart": "B",
+      "claim": "C03",
+      "from": "refuted",
+      "to": "supported"
+    },
+    {
+      "chart": "C",
+      "claim": "C05",
+      "from": "refuted",
+      "to": "supported"
+    },
+    {
+      "chart": "C",
+      "claim": "C06",
+      "from": "uncertain",
+      "to": "refuted_by_scale"
+    }
+  ],
+  "source_sha256": {
+    "chart_pages/chart_A.png": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+    "chart_pages/chart_B.png": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+    "chart_pages/chart_C.png": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+    "chart_pages/chart_D.png": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465",
+    "claims.docx": "54a9fcdd888012a793c1f7d7714d8bc8ed7f2489d0359aaa1e9bc31be488cbf1",
+    "reading_rules.md": "6a2845e9dc6229e09331d85d49e5499dfd43cb362e2ccb92ef410a2821b2c826"
+  },
+  "scope": "Source/pixel metadata and arithmetic checks only. Literal drawing text equivalence is not an OCR-engine run; independent visual annotations and final interval GT remain pending."
+}

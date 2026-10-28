@@ -1,0 +1,28 @@
+{
+  "status": "AUTHOR_REFERENCE_VERIFIED_AGAINST_INDEPENDENTLY_ANNOTATED_SOURCES",
+  "source_annotation_sha256": "10f2790b0586ddb6212faf9b883ccae94be5cb6079e6c72acf1ea237a75c718e",
+  "source_sha256": {
+    "chart_pages/chart_A.png": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+    "chart_pages/chart_B.png": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+    "chart_pages/chart_C.png": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+    "chart_pages/chart_D.png": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465",
+    "claims.docx": "54a9fcdd888012a793c1f7d7714d8bc8ed7f2489d0359aaa1e9bc31be488cbf1",
+    "reading_rules.md": "6a2845e9dc6229e09331d85d49e5499dfd43cb362e2ccb92ef410a2821b2c826"
+  },
+  "reference_files": {
+    "claims_review.xlsx": "ab360cea3a0732783c4acd08d8d37e1fab7bf1eec8c4a52ad4da1088d1c46ff1",
+    "findings.md": "5687f834c967c23ef05e73395687b69244165b30a9a01fec8584c93fba2e3cbc"
+  },
+  "source_annotation_precedes_workbook_export": true,
+  "annotation_reviewers_saw_reference_workbook": false,
+  "native_validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/qa/native-proposal-v1/validation.json",
+  "visual_validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/qa/proposed-visual-review-v1.json",
+  "counts": {
+    "claims": 8,
+    "readings": 20,
+    "bounds": 40,
+    "formula_reference_controls": 3
+  },
+  "human_expert_review": false,
+  "limit": "Independent models reviewed original images and claims, not this workbook. Author reference was checked against those sources and real native Office. No business grader, candidate control matrix, formal MD Worker, independent candidate semantic score or Harness result yet."
+}

@@ -1,0 +1,238 @@
+{
+  "reviewer_identity": {"reviewer_id": "b", "kind": "model_agent", "description": "独立模型标注者；非人工、非母语专家，不提供正式语义分"},
+  "review_type": "independent_model_annotation",
+  "human_expert": false,
+  "stage": "stage_1_image_reading_frozen_before_docx_read",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/b",
+  "source_input_sha256": {
+    "input/chart_pages/chart_A.png": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+    "input/chart_pages/chart_B.png": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+    "input/chart_pages/chart_C.png": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+    "input/chart_pages/chart_D.png": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465",
+    "input/reading_rules.md": "6a2845e9dc6229e09331d85d49e5499dfd43cb362e2ccb92ef410a2821b2c826"
+  },
+  "actual_image_reads": [
+    {"path": "input/chart_pages/chart_A.png", "sha256": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e", "dimensions": {"width": 1467, "height": 960}, "read": true, "method": "view_image(detail=original)，原图逐张查看", "observation": "蓝色实线圆点为活跃用户，读左轴千人；橙色虚线方点为D1流失率，读右轴%。两者单位不同。09-18蓝点约13千人、橙点约11%；09-21蓝点约18千人、橙点约8%。底部定义D1为基准日活跃用户次日未再活跃的比例，无逐点原值。"},
+    {"path": "input/chart_pages/chart_B.png", "sha256": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267", "dimensions": {"width": 1467, "height": 960}, "read": true, "method": "view_image(detail=original)，原图逐张查看", "observation": "蓝色下层为新用户流失人数，橙色上层为老用户流失人数；同月自下而上堆叠。6月蓝层约120人、总高约300人；7月蓝层约90人、总高约300人。橙层应取总高减蓝层，分别约180人和210人。脚注未提供两类用户各自活跃基数。"},
+    {"path": "input/chart_pages/chart_C.png", "sha256": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027", "dimensions": {"width": 1467, "height": 960}, "read": true, "method": "view_image(detail=original)，原图逐张查看", "observation": "绿色圆点折线表示周末累计新增用户，单轴单位千人。W4约165千人，W5约225千人。脚注明确每周结束时累计值、所有周使用同一累计起点，故W5单周量由两点之差得到，约60千人。"},
+    {"path": "input/chart_pages/chart_D.png", "sha256": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465", "dimensions": {"width": 1467, "height": 960}, "read": true, "method": "view_image(detail=original)，原图逐张查看", "observation": "紫柱顶表示样本D1流失率，A约46.1%、B约47.8%；单轴45%至50%，柱底从45%起。A误差线约45.2%至47.0%，B约46.6%至49.0%，有可见重叠。脚注明确未给样本量、误差线含义或随机化设计；误差线不能自行命名为置信区间或据其重叠断言显著性。"}
+  ],
+  "readings": [
+    {
+      "reading_id": "R01", "chart": "A", "metric": "活跃用户", "period": "09-18", "axis": "left", "unit": "千人", "lower": 12.8, "upper": 13.3,
+      "basis": "蓝色圆点读左侧0至25千人轴，位于10与15之间、约13千人。范围为目视插值容差，不是隐藏原值。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [374,468,399,494], "role": "09-18蓝色数据圆点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [108,169,347,773], "role": "左轴刻度及千人单位"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [355,130,538,164], "role": "蓝色圆点活跃用户图例"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [355,778,421,809], "role": "09-18横轴时点"}
+      ]
+    },
+    {
+      "reading_id": "R02", "chart": "A", "metric": "D1流失率", "period": "09-18", "axis": "right", "unit": "%", "lower": 10.8, "upper": 11.2,
+      "basis": "橙色方点读右侧百分比轴，位于8%与12%之间、约11%。不是读左轴得到的约14，也不是人数。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [376,455,398,477], "role": "09-18橙色方点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [1205,169,1358,773], "role": "右轴百分比单位和刻度"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [783,130,963,164], "role": "橙色方点D1流失率图例"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [170,832,1070,902], "role": "D1定义及不同单位脚注"}
+      ]
+    },
+    {
+      "reading_id": "R03", "chart": "A", "metric": "活跃用户", "period": "09-21", "axis": "left", "unit": "千人", "lower": 17.7, "upper": 18.2,
+      "basis": "09-21蓝色圆点读左侧千人轴，接近18千人；图无逐点原值，不能确认小数尾数。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [874,365,899,391], "role": "09-21蓝色数据圆点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [108,169,347,773], "role": "左轴刻度及千人单位"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [355,130,538,164], "role": "活跃用户图例"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [850,778,922,809], "role": "09-21横轴时点"}
+      ]
+    },
+    {
+      "reading_id": "R04", "chart": "A", "metric": "D1流失率", "period": "09-21", "axis": "right", "unit": "%", "lower": 7.7, "upper": 8.2,
+      "basis": "09-21橙色方点对右轴约8%；右轴和左轴网格高度共享，但计量不同。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [875,538,899,558], "role": "09-21橙色方点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [1205,169,1358,773], "role": "右轴百分比单位和刻度"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [783,130,963,164], "role": "D1流失率图例"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [170,832,1070,902], "role": "D1定义和不同单位脚注"}
+      ]
+    },
+    {
+      "reading_id": "R05", "chart": "B", "metric": "新用户流失人数", "period": "6月", "axis": "single", "unit": "人", "lower": 117, "upper": 123,
+      "basis": "6月蓝色下层从0起，蓝橙分界约120人；读单轴人数，蓝层高度是新用户流失人数。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,622,928,641], "role": "6月蓝层上边界"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "单轴人数单位与刻度"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [350,128,622,164], "role": "蓝色新用户流失人数图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [830,778,875,810], "role": "6月横轴时点"}
+      ]
+    },
+    {
+      "reading_id": "R06", "chart": "B", "metric": "老用户流失人数", "period": "6月", "axis": "derived", "source_axis": "single", "unit": "人", "lower": 174, "upper": 186,
+      "input_reading_ids": ["R07", "R05"],
+      "calculation": {"formula": "R07 - R05", "interval_propagation": "[297-123,303-117]=[174,186]人", "method": "堆叠橙层的高度为柱顶减蓝橙分界；保守传播上下边界的目视容差"},
+      "basis": "6月橙层在约120至300人刻度之间，分项约180人；柱顶约300表示两类合计，不表示老用户分项。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,433,928,641], "role": "6月橙层的上下两个边界"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "单轴人数单位与刻度"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,128,1045,164], "role": "橙色老用户流失人数图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [170,833,1040,901], "role": "同月自下而上堆叠及未提供活跃基数脚注"}
+      ]
+    },
+    {
+      "reading_id": "R07", "chart": "B", "metric": "总流失人数", "period": "6月", "axis": "single", "unit": "人", "lower": 297, "upper": 303,
+      "basis": "6月堆叠柱顶落在约300人网格线上；两层合计约300人。此处为柱顶直接读数，不把分项独立区间再相加制造额外误差。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,433,928,447], "role": "6月堆叠柱顶"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "人数单轴"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [350,128,1045,164], "role": "新老用户两部分图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [170,833,1040,901], "role": "自下而上堆叠脚注"}
+      ]
+    },
+    {
+      "reading_id": "R08", "chart": "B", "metric": "新用户流失人数", "period": "7月", "axis": "single", "unit": "人", "lower": 87, "upper": 93,
+      "basis": "7月蓝色下层从0起，分界略低于100人、约90人。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [1050,654,1201,673], "role": "7月蓝层上边界"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "单轴人数单位与刻度"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [350,128,622,164], "role": "蓝色新用户流失人数图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [1105,778,1150,810], "role": "7月横轴时点"}
+      ]
+    },
+    {
+      "reading_id": "R09", "chart": "B", "metric": "老用户流失人数", "period": "7月", "axis": "derived", "source_axis": "single", "unit": "人", "lower": 204, "upper": 216,
+      "input_reading_ids": ["R10", "R08"],
+      "calculation": {"formula": "R10 - R08", "interval_propagation": "[297-93,303-87]=[204,216]人", "method": "橙色堆叠分项用总高减下层边界，并保守传播目视区间"},
+      "basis": "7月橙层约从90人刻度到300人刻度，高度约210人。不能直接把约300人的堆顶当成该分项。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [1050,433,1201,673], "role": "7月橙层上下边界"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "单轴人数单位与刻度"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,128,1045,164], "role": "橙色老用户流失人数图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [170,833,1040,901], "role": "堆叠及未提供活跃基数脚注"}
+      ]
+    },
+    {
+      "reading_id": "R10", "chart": "B", "metric": "总流失人数", "period": "7月", "axis": "single", "unit": "人", "lower": 297, "upper": 303,
+      "basis": "7月堆叠柱顶与6月同样接近300人网格线，表示两类流失人数合计。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [1050,433,1201,447], "role": "7月堆叠柱顶"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "人数单轴"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [350,128,1045,164], "role": "新老两部分图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [170,833,1040,901], "role": "自下而上堆叠脚注"}
+      ]
+    },
+    {
+      "reading_id": "R11", "chart": "C", "metric": "累计新增用户", "period": "W4", "axis": "single", "unit": "千人", "lower": 162, "upper": 168,
+      "basis": "W4绿色圆点位于150与200千人之间、接近165千人；这里是该周结束时的累计值。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [806,455,830,478], "role": "W4累计值圆点"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [105,169,400,773], "role": "单轴累计新增用户千人单位及刻度"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [568,130,864,164], "role": "周末累计值图例"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [796,778,840,810], "role": "W4时点"}
+      ]
+    },
+    {
+      "reading_id": "R12", "chart": "C", "metric": "累计新增用户", "period": "W5", "axis": "single", "unit": "千人", "lower": 222, "upper": 228,
+      "basis": "W5绿色圆点位于200与250千人中间附近、约225千人；不是W5单周新增人数。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [1003,348,1028,371], "role": "W5累计值圆点"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [105,169,400,773], "role": "单轴累计新增用户千人单位及刻度"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [568,130,864,164], "role": "周末累计值图例"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [993,778,1038,810], "role": "W5时点"}
+      ]
+    },
+    {
+      "reading_id": "R13", "chart": "C", "metric": "单周新增用户", "period": "W5", "axis": "derived", "source_axis": "single", "unit": "千人", "lower": 54, "upper": 66,
+      "input_reading_ids": ["R12", "R11"],
+      "calculation": {"formula": "R12 - R11", "interval_propagation": "[222-168,228-162]=[54,66]千人，即[54000,66000]人", "method": "同一累计起点下，相邻周末累计值相减；保守传播两点目视容差"},
+      "basis": "脚注明确所有周使用同一累计起点，W5单周新增约60千人，不应直接使用W5累计高度约225千人。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [806,455,830,478], "role": "相减输入W4圆点"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [1003,348,1028,371], "role": "相减输入W5圆点"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [105,169,400,773], "role": "千人单轴"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [170,833,1050,901], "role": "累计时点、同一累计起点及无原值表脚注"}
+      ]
+    },
+    {
+      "reading_id": "R14", "chart": "D", "metric": "样本D1流失率", "period": "A组", "axis": "single", "unit": "%", "lower": 46.0, "upper": 46.2,
+      "basis": "A组紫柱顶略高于46%，约46.1%；读轴刻度，不把从45%起的可见柱高当成完整比例。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [390,637,583,651], "role": "A组紫柱顶"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,169,405,773], "role": "样本流失率%单轴，45%至50%刻度"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [462,778,514,812], "role": "A组横轴分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,833,1110,899], "role": "45%截断柱底及样本、误差线说明脚注"}
+      ]
+    },
+    {
+      "reading_id": "R15", "chart": "D", "metric": "样本D1流失率", "period": "B组", "axis": "single", "unit": "%", "lower": 47.7, "upper": 47.9,
+      "basis": "B组紫柱顶略低于48%，约47.8%；只描述样本显示值。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [890,455,1083,470], "role": "B组紫柱顶"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,169,405,773], "role": "样本流失率%单轴"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [961,778,1015,812], "role": "B组横轴分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,833,1110,899], "role": "轴起点和缺失统计设计信息脚注"}
+      ]
+    },
+    {
+      "reading_id": "R16", "chart": "D", "metric": "误差线下端", "period": "A组", "axis": "single", "unit": "%", "lower": 45.1, "upper": 45.3,
+      "basis": "A组黑色误差线下横帽约45.2%。这里只标端点位置，不推断其统计含义。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [460,731,513,746], "role": "A组误差线下端横帽"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,211,179,773], "role": "单轴45%至50%刻度"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [462,778,514,812], "role": "A组分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,873,1110,899], "role": "误差线含义未提供脚注"}
+      ]
+    },
+    {
+      "reading_id": "R17", "chart": "D", "metric": "误差线上端", "period": "A组", "axis": "single", "unit": "%", "lower": 46.9, "upper": 47.1,
+      "basis": "A组黑色误差线上横帽在约47%位置。端点目视读数不是已知置信上界。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [460,539,513,554], "role": "A组误差线上端横帽"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,211,179,773], "role": "单轴百分比刻度"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [462,778,514,812], "role": "A组分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,873,1110,899], "role": "未提供误差线含义脚注"}
+      ]
+    },
+    {
+      "reading_id": "R18", "chart": "D", "metric": "误差线下端", "period": "B组", "axis": "single", "unit": "%", "lower": 46.5, "upper": 46.7,
+      "basis": "B组黑色误差线下横帽约46.6%，高于46%且低于47%。只记录可见端点。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [959,583,1014,597], "role": "B组误差线下端横帽"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,211,179,773], "role": "单轴百分比刻度"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [961,778,1015,812], "role": "B组分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,873,1110,899], "role": "未提供误差线含义脚注"}
+      ]
+    },
+    {
+      "reading_id": "R19", "chart": "D", "metric": "误差线上端", "period": "B组", "axis": "single", "unit": "%", "lower": 48.9, "upper": 49.1,
+      "basis": "B组黑色误差线上横帽在约49%位置；不可据此推定置信水平。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [959,327,1014,342], "role": "B组误差线上端横帽"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,211,179,773], "role": "单轴百分比刻度"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [961,778,1015,812], "role": "B组分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,873,1110,899], "role": "未提供误差线含义脚注"}
+      ]
+    },
+    {
+      "reading_id": "R20", "chart": "D", "metric": "B组流失率除以A组流失率", "period": "A组与B组", "axis": "derived", "source_axis": "single", "unit": "倍（无量纲）", "lower": 1.032, "upper": 1.042,
+      "input_reading_ids": ["R15", "R14"],
+      "calculation": {"formula": "R15 / R14", "interval_propagation": "[47.7/46.2,47.9/46.0]，向外保留三位小数为[1.032,1.042]倍", "method": "两组样本百分比均为正，分子下界除分母上界、分子上界除分母下界；百分比单位相消"},
+      "basis": "用实际轴值约47.8%除46.1%，比值约1.04。不能用从45%起的可见柱高之比替代。此视觉区间只传播读图误差，未描述总体比值的统计区间。",
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [390,637,583,651], "role": "分母A组柱顶"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [890,455,1083,470], "role": "分子B组柱顶"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,169,405,773], "role": "实际百分比轴及45%起点"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,833,1110,899], "role": "柱底截断及未给统计设计信息脚注"}
+      ]
+    }
+  ],
+  "scope_notes": [
+    "本记录在读取claims.docx正文之前完成并落盘；四张原图均真实调用view_image逐张打开，五份阶段一源输入SHA256均与input-sha256.json一致。",
+    "所有相对source_regions.path和actual_image_reads.path均相对于source_root，坐标为1467×960原图像素，左上角为原点。区域只定位标记、边界、轴、图例、时点或脚注；没有声称图内存在逐点原值标签。",
+    "lower和upper仅为独立模型目视读数与保守传播区间，不是隐藏原值、人工精密测量、置信区间或正式语义评分。20项均能读出有信息量的范围，无无法辨认而置null的项。",
+    "R06和R09以堆叠上下边界相减计算，axis标derived并保留source_axis=single；R07和R10直接读取合计柱顶。分项与总量共享边界，不能把这些区间当作统计独立量。",
+    "D图误差线的统计含义、样本量、置信水平、组间依赖性和随机化设计均未知；只记录端点与可见重叠，不从图中推出显著性、总体差异或因果。",
+    "未访问作者预期、GT、生成代码、原始数值、对照图、其他标注包或他人输出；未联网，未制作候选Office交付。阶段二不得覆盖本阶段原始记录。"
+  ]
+}

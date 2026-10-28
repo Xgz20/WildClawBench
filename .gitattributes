@@ -10,3 +10,5 @@ datasets/general-hard/workspace/software_engineering/general_hard_software_engin
 datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_001_heterogeneous_join/gt/reference/results/join_audit.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # H019原始人员CSV按冻结字节保留标准CRLF。
 datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_003_formula_repair/exec/cases.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# H022独立模型标注是原始证据，保留其结尾空行与已冻结SHA。
+datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_006_visual_chart_audit/gt/model_annotations/**/*.json whitespace=-blank-at-eof
