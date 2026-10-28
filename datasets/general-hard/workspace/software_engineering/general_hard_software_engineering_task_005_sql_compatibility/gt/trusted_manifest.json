@@ -1,0 +1,27 @@
+{
+  "schema": "h045-trusted-files/v1",
+  "files": {
+    "artifact_contract.json": "12ccd5f14627572fcf442d56524c41412959efe8d1ac2af21cc71c5c460ee45a",
+    "business_oracle.json": "d42dfd7f7ca730b89f2fb1bd380ee18a37cfba4241c99d904b08ce6ff1e7fef8",
+    "counterexamples.json": "873da4507cd45e85083191a35f2bf268b1f6e04b2672e3e415ba0cf42596c61d",
+    "evidence_requirements.json": "46951ab4f941e1634908571867531c7c20b0578bf1b63566d290c984c7c3c517",
+    "expected.json": "e691e3db2f350fe4db3d9a1bce8afb56e039153ed37980dacc34991670399f92",
+    "grader.py": "35c3a4b9cbd7ed9f40b48cdea7a073e58230cb0acc20a4ae4f2090462a01947e",
+    "hidden_tests/runner.py": "070454b255bf850c0291c5eee5b1021bc93cf07b92c31ba2a7df9b0d4abcf0ff",
+    "private_data.json": "6125e48a19814f1a96547675192ec7e44dbb2e6f4a431ecc2f86ad78cb7122f3",
+    "protected_inputs/contract.md": "35070b6c6145d1194ec5bde349beaa7b61e937dd3a2bb69be4bbfcc797297f93",
+    "protected_inputs/fixtures/data.json": "c139d4e97c9b05b8c8c11d1a9cfa3fbf08453635bd82cb3b9f07b07d52a8da94",
+    "protected_inputs/fixtures/queries.json": "1d4e17adfbca5b90a126325e8865880d58ddc079a87318a823673d4625268f06",
+    "protected_inputs/fixtures/schema.json": "ac6ad74504bed7cc4c52c8c3a15b7bed991ff8619cff8ff6f6bcb2f43164821f",
+    "protected_inputs/fixtures/schema.sql": "8a4bd7c68872445f62423c09746b63c060043f60400664f0eeaac1f380efbffc",
+    "protected_inputs/project/__init__.py": "df50a7e0b12788968b809124483f01af6945f5ba316ea7e18c271acb60adacec",
+    "protected_inputs/project/db_fixture.py": "66eb3725b43fb85aafefb875bcc9ae0fc09ccbe1c3c7415848847a72a6b25b2e",
+    "protected_inputs/project/test_public.py": "8898f18fcc39893cf410812784086550b8766df33fe235844237321b53199b7c",
+    "protected_inputs/requirements.lock": "1bcdb3d7524ee03ec0d87b2d1b0ca615b3f303a72453b9dc210d293f3d0d722a",
+    "protected_inputs/tools/run_regression.py": "3c4cec6d860cdeee5e3b2158eab588232b48363af09e4cc5750036627c33c7b3",
+    "protected_sha256.json": "3dd4719effd964eb4366c3a2d4dbdf658066e2962d395813b7bbaebbcc97f7e2",
+    "runtime_contract.json": "4598b874a6068a013cd4b0a2f71c3ec1086f0c334eda09cb99fe072484847312",
+    "schema.json": "ac6ad74504bed7cc4c52c8c3a15b7bed991ff8619cff8ff6f6bcb2f43164821f",
+    "schema.sql": "8a4bd7c68872445f62423c09746b63c060043f60400664f0eeaac1f380efbffc"
+  }
+}

@@ -18051,7 +18051,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_005_sql_compatibility/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_005_sql_compatibility/gt"
       },
-      "prompt_draft": "请完成以下工作：修复查询生成器并保持参数化，空集合、NULL与保留字处理符合契约，结果集合与参考语义一致。\n\n输入材料：\n- /tmp_workspace/project/query_builder.py：多条件生成器有语法和绑定错误\n- /tmp_workspace/fixtures/queries.json：空列表、NULL和保留字情境\n- /tmp_workspace/project/test_public.py：基础行为\n- /tmp_workspace/contract.md：查询语义\n\n交付：\n- /tmp_workspace/project/query_builder.py：修复源码\n- /tmp_workspace/results/query_audit.json：SQL与绑定检查\n- /tmp_workspace/results/tests.txt：回归结果\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "修复查询生成器的SQL边界语法与参数绑定，保持参数化，并让空集合、NULL、保留字、多条件分组和结果多重集合符合公开合同。只允许修改 /tmp_workspace/project/query_builder.py；不能通过放宽测试、改夹具或拼接输入值来制造通过。\n\n请先读取 /tmp_workspace/contract.md，保持公开build_query(spec)接口。输入包括：\n- /tmp_workspace/project/query_builder.py：存在语法、参数顺序与NULL/空集合语义问题的原始生成器。\n- /tmp_workspace/fixtures/queries.json：固定ID的空集合、NULL、保留字、嵌套条件、日期窗口和引号情境。\n- /tmp_workspace/fixtures/schema.json、/tmp_workspace/fixtures/schema.sql、/tmp_workspace/fixtures/data.json：两张惰性合成表的白名单、SQLite建库和确定性数据。\n- /tmp_workspace/project/test_public.py：基础兼容性公开测试；/tmp_workspace/project/db_fixture.py：受保护的本地内存库构造器。\n- /tmp_workspace/tools/run_regression.py：实际执行查询并记录回归结果的保护工具；/tmp_workspace/requirements.lock：仅用Python3.11+标准库sqlite3、SQLite3.35+，无需安装。\n\n交付修复后的 /tmp_workspace/project/query_builder.py，以及运行 python -B tools/run_regression.py 实际生成的 /tmp_workspace/results/query_audit.json 和 /tmp_workspace/results/tests.txt。tests.txt同样为JSON格式：保留真实命令、returncode、完整stdout/stderr、测试状态、最终源码和query_audit SHA；audit保留全部固定查询ID的实际SQL、params、结果/错误及源码/输入SHA。修改最终源码后须重跑，不能删掉失败项改变分母或写死输出。\n\n只读SELECT、标识符白名单、匿名?或:name绑定、可空成员集合、NULL安全相等/不等、布尔分组和排序/重复行语义以contract.md为准。SQL排版、引号方式及合法等价实现不限，评分按实际执行与重绑定结果核验。基础公开测试可能在原工程已通过，不能替代边界回归。本题不要求第二引擎、JOIN或聚合，不得虚构跨引擎实测。\n\n仅读取本题exec映射到/tmp_workspace的材料，GT和评分说明不提供给候选。只改列明的一份源码；project/__init__.py、公开测试、辅助模块、所有fixtures、合同、锁和工具保持原字节，不增添其它源码。所有新增报告写results，Python自动__pycache__/*.pyc可忽略。离线完成，不访问真实账号、不发送消息、不调用真实付费接口、真实数据库或网络，不安装依赖。结论区分事实、推断和未知，不虚构缺失信息。",
       "inputs": [
         {
           "path": "project/query_builder.py",
@@ -18100,20 +18100,37 @@
         "拼字符串取消绑定"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102645,
-        "construction": "独立关系运算oracle和SQLite沙箱核对结果集合，额外检查占位符与参数数目及不拼接原始输入；不要求固定SQL排版。",
+        "construction": "公开11输入、40固定私有机会与audit11固定ID；30有效查询及4次重绑定在参考前通过Python关系运算/独立手写SQLite核算，10非法输入先声明并另作透明结构补审。25实际Worker控制全部达预期，正确和命名参数等价40/40。正式23GT当前独立ZIP再执行与搬移核验。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "hidden_tests/runner.py",
+          "private_data.json",
+          "protected_inputs/contract.md",
+          "protected_inputs/fixtures/data.json",
+          "protected_inputs/fixtures/queries.json",
+          "protected_inputs/fixtures/schema.json",
+          "protected_inputs/fixtures/schema.sql",
+          "protected_inputs/project/__init__.py",
+          "protected_inputs/project/db_fixture.py",
+          "protected_inputs/project/test_public.py",
+          "protected_inputs/requirements.lock",
+          "protected_inputs/tools/run_regression.py",
+          "protected_sha256.json",
+          "runtime_contract.json",
+          "schema.json",
+          "schema.sql",
+          "trusted_manifest.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许匿名/命名参数、SQLite合法NULL等价语法、OR展开、括号/标识符引用/顺序变化；按实际结果多重集合/明确排序及绑定语义，不固定SQL字符串；SQLite评分版本锁定。",
+        "authoring_evidence": "evidence/h045-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -18128,7 +18145,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "修复查询生成器并保持参数化，空集合、NULL与保留字处理符合契约，结果集合与参考语义一致。",
+            "criterion": "固定12项真实SQLite结果语义：保留字、多个绑定及顺序、嵌套条件、ISO日期文本窗口、排序、投影和重复行；不比对参考SQL字符串。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -18137,7 +18154,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：只修语法不修语义；NULL比较错误；拼字符串取消绑定。以独立反例验证，不只检索关键词。",
+            "criterion": "固定28项边界：空集合/空组、NULL相等/不等和含NULL成员集合、非法标识符/类型、实际占位符绑定以及同一SQL参数重绑定后结果。漏项/异常不改变固定分母。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -18146,7 +18163,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "源码可读可解析(.30)、保护输入与修改范围完整(.40)、query_audit与tests两份交付可解析各(.15)；不因单一SQL错误清零无关项。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -18155,7 +18172,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "当前源码/输入SHA的audit绑定(.20)、tests源码绑定(.20)、固定11个公开查询的实际独立重放与当前生成结果一致(.40)、真实测试命令/退出码/状态与audit SHA一致(.20)。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -18238,10 +18255,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "当前正式MD/exec/GT、独立score0.27.1/core0.15.3 ZIP真实Worker、正常与删除runtime搬移核验；作者自动组件，无Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h045-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [
