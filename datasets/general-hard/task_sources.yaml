@@ -1,11 +1,11 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 35
+  active_task_count: 36
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 5
-    file_operations: 2
+    file_operations: 3
     software_engineering: 2
     planning_coordination: 0
     content_operations: 0
@@ -1066,6 +1066,32 @@ tasks:
           first_seen_local: '2026-09-21 21:00:06.021000'
           last_seen_local: '2026-09-29 03:09:03.521000'
           intent_summary: 按类型复制文件到分类目录，处理无后缀文件并统计数量。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_file_operations_task_003_nested_archives
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-eea1d2c8309e925b
+          query_hash: eea1d2c8309e925bdac9c7d99e6b53dcaf744c32647732edc9acfcdf7aa060c9
+          observed_astudio_turns: 3
+          distinct_users: 3
+          distinct_sessions: 3
+          first_seen_local: '2026-09-02 10:39:16.160000'
+          last_seen_local: '2026-09-08 06:19:42.748000'
+          intent_summary: 递归发现压缩包并提取到各自同名目录，避免混乱。
           review: accepted_intent_prototype
           review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。

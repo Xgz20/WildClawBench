@@ -429,3 +429,12 @@ general_hard_file_operations_task_002_versioned_archive:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_file_operations_task_003_nested_archives:
+  business_correctness:
+    - data_processing
+  boundary_cases:
+    - reasoning_planning
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery
