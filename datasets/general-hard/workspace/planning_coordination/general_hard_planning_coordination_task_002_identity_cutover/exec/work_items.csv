@@ -1,0 +1,15 @@
+﻿task_id,summary,duration_workdays,owner,environment,cohorts,predecessors,IAM,SEC,DEV,QA,OPS,TRAIN,acceptance
+T01,冻结身份清单,1,IAM,DESIGN,"EMP,VENDOR,SERVICE",-,4,0,0,0,0,0,稳定ID核对，记录重复别名；不按同邮箱自动合并
+T02,核对账号映射,2,IAM,SANDBOX,"EMP,VENDOR,SERVICE",T01,4,0,0,4,0,0,员工ID、供应商合同及服务主体分别核对，不导入真实凭据
+T03,复核最小权限矩阵,1,SEC,DESIGN,"EMP,VENDOR,SERVICE",T01,2,6,0,0,0,0,越权差异为0，供应商到期不继承员工权限，服务主体有人负责
+T04,授权与身份回归,2,QA,SANDBOX,"EMP,VENDOR,SERVICE","T02,T03",2,0,0,6,0,0,所有身份群体具正反用例，跨群体越权为0
+T05,演练跳转与回退入口,1,DEV,SANDBOX,"EMP,VENDOR",T04,2,0,6,0,0,0,旧/新入口和租户跳转均核对，失败可走旧入口
+T06,演练免密与备用登录,2,QA,SANDBOX,"EMP,VENDOR",T05,0,0,4,4,0,0,含免密失败、MFA与备用登录；服务主体不走交互免密
+T07,演练快照恢复与回滚,1,OPS,SANDBOX,"EMP,VENDOR,SERVICE",T04,2,0,0,2,6,0,恢复冻结映射/权限及旧入口，60分钟内完成，留核验表
+T08,准备操作培训材料,1,TRAIN,TRAINING,"EMP,VENDOR,SERVICE",T05,0,0,0,0,2,6,使用隔离演示身份，解释权限边界与失败求助
+T09,完成操作员培训验收,1,TRAIN,TRAINING,"EMP,VENDOR,SERVICE",T08,0,0,0,2,2,6,演示环境10项检查全部通过；不复用生产会话
+T10,评审切换前置与放行条件,1,SEC,DESIGN,"EMP,VENDOR,SERVICE","T06,T07,T09",2,4,0,2,2,0,检查全部前置、快照、Q1、值守与回滚入口；未获批只形成no-go
+T11,保留切换与冒烟观察窗口,1,OPS,PROD,"EMP,VENDOR,SERVICE",T10,4,0,2,4,6,0,Q1未知时conditional；先冻结快照再小批量切换与监测，触门槛回滚
+T12,安排切换后全面验证,1,QA,PROD,"EMP,VENDOR,SERVICE",T11,2,0,2,6,0,0,逐群体核账号/权限、跳转、免密及备用登录，记录实际结果
+T13,安排后续培训与交接,1,TRAIN,TRAINING,"EMP,VENDOR,SERVICE",T12,0,0,0,0,2,6,根据验证结果移交培训、值守和遗留风险，不宣称已执行
+T14,旧身份解绑与旧入口退役,1,IAM,PROD,"EMP,VENDOR,SERVICE","T12,T13",4,2,0,0,2,0,不可逆边界；Q2未知，至少保留5个完整给定工作日，当前计划deferred

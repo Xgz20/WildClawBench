@@ -1,13 +1,13 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 46
+  active_task_count: 47
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
     software_engineering: 6
-    planning_coordination: 1
+    planning_coordination: 2
     content_operations: 0
 tasks:
   - task_id: general_hard_software_engineering_task_001_delimiter_validation
@@ -1368,3 +1368,29 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
+  - task_id: general_hard_planning_coordination_task_002_identity_cutover
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-0320b8642a48fd28
+          query_hash: 0320b8642a48fd2848e632d4eb9ec58714a6a105c5b0dc2ee0b900af2467b7d9
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-17 10:56:25.088000'
+          last_seen_local: '2026-09-17 10:56:25.088000'
+          intent_summary: 账号和权限融合、系统切换、测试、免密及培训的项目推进计划。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

@@ -1,0 +1,31 @@
+{
+  "schema": "h054.counterexamples/v1",
+  "business": [
+    "cutover before identity/permission validation",
+    "missing required task/acceptance/cohort/role",
+    "pretend a supplied closed day is a workday",
+    "ignore per-task daily minimum effort",
+    "false window feasibility or buffer count",
+    "wrong/constant CPM with no intervention response"
+  ],
+  "boundary": [
+    "role daily overload or averaged capacities",
+    "parallel shared SANDBOX tasks",
+    "unknown Q1 treated approved/go",
+    "real/automatic cutover claim",
+    "T14 scheduled without Q2 or after incomplete calendar guess",
+    "missing or wrong rollback thresholds/interval/60-minute/snapshot boundary",
+    "employee email-only merge/vendor privilege inheritance/service interactive passwordless"
+  ],
+  "delivery": [
+    "missing/non-native/corrupted artifacts",
+    "cross-artifact fact contradictions",
+    "input mutation"
+  ],
+  "infrastructure": [
+    "missing GT/helper or trusted Office context",
+    "legitimate unsupported shared/array input"
+  ],
+  "protected_input_policy": "Use independent immutable source oracle; input mutation affects only its delivery protection subcheck, never a global zero",
+  "semantic_boundary": "Do not invent a semantic/hybrid score from author controls; .25 Judge evaluates plan usefulness and no-go/rollback narrative"
+}

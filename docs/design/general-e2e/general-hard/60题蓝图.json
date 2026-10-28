@@ -20632,7 +20632,7 @@
         "exec": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_002_identity_cutover/exec",
         "gt": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_002_identity_cutover/gt"
       },
-      "prompt_draft": "请完成以下工作：安排账号校验到系统切换、测试、培训的依赖计划，给出关键路径、回滚点与每项验收；资源和日期必须可行。\n\n输入材料：\n- /tmp_workspace/work_items.csv：账号、权限、跳转、免密和培训任务\n- /tmp_workspace/resources.xlsx：角色容量与不可用日期\n- /tmp_workspace/acceptance.md：切换/回滚门槛\n- /tmp_workspace/calendar.csv：固定工作日\n\n交付：\n- /tmp_workspace/results/cutover_plan.xlsx：依赖、日期、角色和验收\n- /tmp_workspace/results/runbook.docx：切换与回滚\n- /tmp_workspace/results/risks.json：条件和缓冲\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请安排账号体系切换的依赖、资源与验收计划，从账号校验、权限融合到跳转、免密、测试、培训和未来退役，给出关键路径、切换/回滚门槛及缓冲。只制作计划，不执行真实账号操作。\n\n输入：/tmp_workspace/work_items.csv（14项工作、身份范围、依赖、连续工作日工期和逐日角色最低小时）；/tmp_workspace/resources.xlsx（逐日角色容量及不可用日期）；/tmp_workspace/acceptance.md（A01-A07身份/环境/切换与回滚/未知批准/保留期及交付结构）；/tmp_workspace/calendar.csv（唯一固定工作日历）。全部只读，不按真实节假日猜补未来日历。\n\n仅在/tmp_workspace/results交付cutover_plan.xlsx、runbook.docx、risks.json。以T04身份授权就绪、T11切换、T12验证、T13交接为四个里程碑，分别核对源材料规定的必需前置和实际日期。缺前置只阻断实际依赖它的里程碑；新增无关声明不能让无关业务归零。条件性排期可满足依赖，不代表当前获得执行批准。完整保留T01-T14，T01-T13有可行排期；T14明确deferred、日期空白及待确认项。覆盖EMP/VENDOR/SERVICE的不同关联和权限边界，区分SANDBOX/TRAINING与未来PROD。所有依赖在前项完成后的下一个给定工作日开始；共享租户不可并行、逐日容量不可平均或跨日借用，待批动作仍预留工时。\n\n按A06保留schedule/loads/cpm三类有表头原生记录和字段。可同页/多页，页名和列序不限，中文/英文列名均可；对应中文为任务编号/任务说明/责任角色/环境/身份群体/开始日期/结束日期/状态/前置依赖/验收/依据，任务编号/日期/角色/小时，任务编号/工期/最早开始偏移/最早完成偏移/最晚开始偏移/最晚完成偏移/总时差/关键标记。CPM用原始T01-T13 DAG和工作日偏移，工期改变后前后推、时差和关键标记应更新；实际日期另核资源、共享租户及窗口，不把DAG偏移直接当真实日期。\n\nrisks.json按A06给出窗口可行性、所选窗口、准备与完成缓冲、至少一条真实关键路径、Q1未知批准、Q2/T14退役边界、三类回滚门槛与前置、身份控制和未决责任。可行窗口只表示存在条件性排期，不能据此授予批准；当前必须no_go。runbook.docx交接前置未满足的no-go、切换顺序、任一门槛触发的暂停/回滚、恢复验证及退役不可逆边界，附A07七项fact_id/value事实核对表。不要把计划写成已经执行，不用“必要时回滚”替代门槛。\n\n允许满足源约束的不同排期、合理并行、备选窗口、文案与至少一条有效关键路径，不按参考日期/措辞匹配。日期可原生日期或无歧义ISO文本；JSON可含BOM、字段重排、有限数字字符串与百分比阈值。source_ref定位到真实work_items.csv#Txx、resources.xlsx#capacity@YYYY-MM-DD、calendar.csv#YYYY-MM-DD或acceptance.md#A01-A07。中文JSON键可按下面对照（代码值保持材料规定）使用：mode=模式，current_go=当前执行结论，selected_window=选定窗口，window_feasibility=窗口可行性，ready_buffer_workdays=准备缓冲工作日，completion_buffer_workdays=完成缓冲工作日，critical_paths=关键路径，approval=切换批准，retirement=退役，rollback=回滚，identity_controls=身份控制，unresolved=未决项，window_id=窗口编号，feasible=可行，reason=原因，id=编号，status=状态，owner=责任角色，review_by=复核截止，task_id=任务编号，approval_id=批准编号，approval_status=批准状态，minimum_full_workdays=最少完整工作日，earliest_date_status=最早日期状态，earliest_date=最早日期，max_minutes=最长分钟，interval_minutes=观察间隔分钟，scope=范围，snapshot_required=需快照，validation_task=验证任务，triggers=门槛，metric_id=指标编号，operator=比较符，threshold=阈值，consecutive_checks=连续次数，cohort=身份群体，join_key=关联主键，forbid_email_only_merge=禁止仅邮箱合并，expires_on_contract=随合同到期，inherit_employee_access=继承员工权限，interactive_passwordless=交互免密，owner_review_required=需责任人复核，secret_rotation=秘密轮换，condition=条件，next_action=下一步，source_ref=依据。\n\n仅读本题exec映射到/tmp_workspace的材料，不读GT/评分说明、不扫描真实用户目录。所有新交付只放results，原输入不删除、移动或覆盖。离线，不访问真实账号、不发消息、不调用付费接口，不联网安装依赖。事实、推断和未知分开；缺前置、需确认与可回滚范围不能凭空乐观。",
       "inputs": [
         {
           "path": "work_items.csv",
@@ -20681,19 +20681,24 @@
         "无回滚门槛"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102654,
-        "construction": "独立DAG与日历验证器检查偏序、容量和门槛；GT枚举有限可行窗口并明确不可并行任务，不强制唯一排期。",
+        "construction": "两路源先行原生XLSX/CSV/MD与独立Node ZIP/OOXML/DAG排程复核一致，12工作日无资源CPM含2关键路径。两种合法窗口/共享租户顺序原生参考，真实清缓存重算/工期干预读回364标量。33受管行为控制/44静态检查均达预期，原变量异常、31旧政策及6旧新分对比保留。root冻结2508文件复核、原生只读源CPM独立核算与视觉抽查，无原材料变更；正式MD/当前ZIP再实际执行与搬移核验。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "office_runtime.py",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许W1/W2、不同合法共享租户顺序、中文/英文表头/列序/JSON键/百分比/BOM和有依据增加前置；不固定参考排期/措辞；角色逐日容量、必需前置和未知批准边界不得改。",
+        "authoring_evidence": "evidence/h054-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -20845,10 +20850,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec4/GT10、完整既有Office/render锁、独立score0.27.1/core0.15.3 ZIP真实Worker重算/渲染、正常/删除runtime搬移；无账号切换/Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h054-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

@@ -1,0 +1,237 @@
+{
+  "schema": "h054.artifact-contract/v1",
+  "required": [
+    "results/cutover_plan.xlsx",
+    "results/runbook.docx",
+    "results/risks.json"
+  ],
+  "tables": {
+    "schedule": {
+      "task_id": [
+        "任务编号"
+      ],
+      "summary": [
+        "任务说明"
+      ],
+      "owner": [
+        "责任角色"
+      ],
+      "environment": [
+        "环境"
+      ],
+      "cohorts": [
+        "身份群体"
+      ],
+      "start_date": [
+        "开始日期"
+      ],
+      "end_date": [
+        "结束日期"
+      ],
+      "status": [
+        "状态"
+      ],
+      "dependencies": [
+        "前置依赖"
+      ],
+      "acceptance": [
+        "验收"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "loads": {
+      "task_id": [
+        "任务编号"
+      ],
+      "date": [
+        "日期"
+      ],
+      "role": [
+        "角色"
+      ],
+      "hours": [
+        "小时"
+      ]
+    },
+    "cpm": {
+      "task_id": [
+        "任务编号"
+      ],
+      "duration": [
+        "工期"
+      ],
+      "es": [
+        "最早开始偏移"
+      ],
+      "ef": [
+        "最早完成偏移"
+      ],
+      "ls": [
+        "最晚开始偏移"
+      ],
+      "lf": [
+        "最晚完成偏移"
+      ],
+      "total_float": [
+        "总时差"
+      ],
+      "critical": [
+        "关键标记"
+      ]
+    }
+  },
+  "json_aliases": {
+    "mode": [
+      "模式"
+    ],
+    "current_go": [
+      "当前执行结论"
+    ],
+    "selected_window": [
+      "选定窗口"
+    ],
+    "window_feasibility": [
+      "窗口可行性"
+    ],
+    "ready_buffer_workdays": [
+      "准备缓冲工作日"
+    ],
+    "completion_buffer_workdays": [
+      "完成缓冲工作日"
+    ],
+    "critical_paths": [
+      "关键路径"
+    ],
+    "approval": [
+      "切换批准"
+    ],
+    "retirement": [
+      "退役"
+    ],
+    "rollback": [
+      "回滚"
+    ],
+    "identity_controls": [
+      "身份控制"
+    ],
+    "unresolved": [
+      "未决项"
+    ],
+    "window_id": [
+      "窗口编号"
+    ],
+    "feasible": [
+      "可行"
+    ],
+    "reason": [
+      "原因"
+    ],
+    "id": [
+      "编号"
+    ],
+    "status": [
+      "状态"
+    ],
+    "owner": [
+      "责任角色"
+    ],
+    "review_by": [
+      "复核截止"
+    ],
+    "task_id": [
+      "任务编号"
+    ],
+    "approval_id": [
+      "批准编号"
+    ],
+    "approval_status": [
+      "批准状态"
+    ],
+    "minimum_full_workdays": [
+      "最少完整工作日"
+    ],
+    "earliest_date_status": [
+      "最早日期状态"
+    ],
+    "earliest_date": [
+      "最早日期"
+    ],
+    "max_minutes": [
+      "最长分钟"
+    ],
+    "interval_minutes": [
+      "观察间隔分钟"
+    ],
+    "scope": [
+      "范围"
+    ],
+    "snapshot_required": [
+      "需快照"
+    ],
+    "validation_task": [
+      "验证任务"
+    ],
+    "triggers": [
+      "门槛"
+    ],
+    "metric_id": [
+      "指标编号"
+    ],
+    "operator": [
+      "比较符"
+    ],
+    "threshold": [
+      "阈值"
+    ],
+    "consecutive_checks": [
+      "连续次数"
+    ],
+    "cohort": [
+      "身份群体"
+    ],
+    "join_key": [
+      "关联主键"
+    ],
+    "forbid_email_only_merge": [
+      "禁止仅邮箱合并"
+    ],
+    "expires_on_contract": [
+      "随合同到期"
+    ],
+    "inherit_employee_access": [
+      "继承员工权限"
+    ],
+    "interactive_passwordless": [
+      "交互免密"
+    ],
+    "owner_review_required": [
+      "需责任人复核"
+    ],
+    "secret_rotation": [
+      "秘密轮换"
+    ],
+    "condition": [
+      "条件"
+    ],
+    "next_action": [
+      "下一步"
+    ],
+    "source_ref": [
+      "依据"
+    ]
+  },
+  "equivalence": [
+    "multiple source-feasible schedules/windows",
+    "arbitrary worksheet names and column order",
+    "Chinese/English declared headers and JSON aliases",
+    "native ISO/serial dates with 1900/1904 epoch",
+    "percentage or numeric threshold equivalence",
+    "at least one valid critical path, no exact wording match",
+    "formula implementation free; actual two-branch duration intervention required",
+    "JSON BOM/order/finite numeric strings"
+  ],
+  "unsupported": "Legal shared/array input intervention or bounded-reader overflow raises H054_UNSUPPORTED_REPRESENTATION, never candidate ability zero",
+  "semantic_boundary": "Record shape, dates/numbers/dependencies and explicit safety conditions only; natural-language quality and operational handoff remain blueprint Judge"
+}

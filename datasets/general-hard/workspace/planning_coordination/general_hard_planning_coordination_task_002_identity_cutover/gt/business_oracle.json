@@ -1,0 +1,872 @@
+{
+  "tasks": {
+    "T01": {
+      "summary": "冻结身份清单",
+      "duration": 1,
+      "owner": "IAM",
+      "environment": "DESIGN",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [],
+      "hours": {
+        "IAM": 4,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 0,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "稳定ID核对，记录重复别名；不按同邮箱自动合并"
+    },
+    "T02": {
+      "summary": "核对账号映射",
+      "duration": 2,
+      "owner": "IAM",
+      "environment": "SANDBOX",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T01"
+      ],
+      "hours": {
+        "IAM": 4,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 4,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "员工ID、供应商合同及服务主体分别核对，不导入真实凭据"
+    },
+    "T03": {
+      "summary": "复核最小权限矩阵",
+      "duration": 1,
+      "owner": "SEC",
+      "environment": "DESIGN",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T01"
+      ],
+      "hours": {
+        "IAM": 2,
+        "SEC": 6,
+        "DEV": 0,
+        "QA": 0,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "越权差异为0，供应商到期不继承员工权限，服务主体有人负责"
+    },
+    "T04": {
+      "summary": "授权与身份回归",
+      "duration": 2,
+      "owner": "QA",
+      "environment": "SANDBOX",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T02",
+        "T03"
+      ],
+      "hours": {
+        "IAM": 2,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 6,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "所有身份群体具正反用例，跨群体越权为0"
+    },
+    "T05": {
+      "summary": "演练跳转与回退入口",
+      "duration": 1,
+      "owner": "DEV",
+      "environment": "SANDBOX",
+      "cohorts": [
+        "EMP",
+        "VENDOR"
+      ],
+      "predecessors": [
+        "T04"
+      ],
+      "hours": {
+        "IAM": 2,
+        "SEC": 0,
+        "DEV": 6,
+        "QA": 0,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "旧/新入口和租户跳转均核对，失败可走旧入口"
+    },
+    "T06": {
+      "summary": "演练免密与备用登录",
+      "duration": 2,
+      "owner": "QA",
+      "environment": "SANDBOX",
+      "cohorts": [
+        "EMP",
+        "VENDOR"
+      ],
+      "predecessors": [
+        "T05"
+      ],
+      "hours": {
+        "IAM": 0,
+        "SEC": 0,
+        "DEV": 4,
+        "QA": 4,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "含免密失败、MFA与备用登录；服务主体不走交互免密"
+    },
+    "T07": {
+      "summary": "演练快照恢复与回滚",
+      "duration": 1,
+      "owner": "OPS",
+      "environment": "SANDBOX",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T04"
+      ],
+      "hours": {
+        "IAM": 2,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 2,
+        "OPS": 6,
+        "TRAIN": 0
+      },
+      "acceptance": "恢复冻结映射/权限及旧入口，60分钟内完成，留核验表"
+    },
+    "T08": {
+      "summary": "准备操作培训材料",
+      "duration": 1,
+      "owner": "TRAIN",
+      "environment": "TRAINING",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T05"
+      ],
+      "hours": {
+        "IAM": 0,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 0,
+        "OPS": 2,
+        "TRAIN": 6
+      },
+      "acceptance": "使用隔离演示身份，解释权限边界与失败求助"
+    },
+    "T09": {
+      "summary": "完成操作员培训验收",
+      "duration": 1,
+      "owner": "TRAIN",
+      "environment": "TRAINING",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T08"
+      ],
+      "hours": {
+        "IAM": 0,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 2,
+        "OPS": 2,
+        "TRAIN": 6
+      },
+      "acceptance": "演示环境10项检查全部通过；不复用生产会话"
+    },
+    "T10": {
+      "summary": "评审切换前置与放行条件",
+      "duration": 1,
+      "owner": "SEC",
+      "environment": "DESIGN",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T06",
+        "T07",
+        "T09"
+      ],
+      "hours": {
+        "IAM": 2,
+        "SEC": 4,
+        "DEV": 0,
+        "QA": 2,
+        "OPS": 2,
+        "TRAIN": 0
+      },
+      "acceptance": "检查全部前置、快照、Q1、值守与回滚入口；未获批只形成no-go"
+    },
+    "T11": {
+      "summary": "保留切换与冒烟观察窗口",
+      "duration": 1,
+      "owner": "OPS",
+      "environment": "PROD",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T10"
+      ],
+      "hours": {
+        "IAM": 4,
+        "SEC": 0,
+        "DEV": 2,
+        "QA": 4,
+        "OPS": 6,
+        "TRAIN": 0
+      },
+      "acceptance": "Q1未知时conditional；先冻结快照再小批量切换与监测，触门槛回滚"
+    },
+    "T12": {
+      "summary": "安排切换后全面验证",
+      "duration": 1,
+      "owner": "QA",
+      "environment": "PROD",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T11"
+      ],
+      "hours": {
+        "IAM": 2,
+        "SEC": 0,
+        "DEV": 2,
+        "QA": 6,
+        "OPS": 0,
+        "TRAIN": 0
+      },
+      "acceptance": "逐群体核账号/权限、跳转、免密及备用登录，记录实际结果"
+    },
+    "T13": {
+      "summary": "安排后续培训与交接",
+      "duration": 1,
+      "owner": "TRAIN",
+      "environment": "TRAINING",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T12"
+      ],
+      "hours": {
+        "IAM": 0,
+        "SEC": 0,
+        "DEV": 0,
+        "QA": 0,
+        "OPS": 2,
+        "TRAIN": 6
+      },
+      "acceptance": "根据验证结果移交培训、值守和遗留风险，不宣称已执行"
+    },
+    "T14": {
+      "summary": "旧身份解绑与旧入口退役",
+      "duration": 1,
+      "owner": "IAM",
+      "environment": "PROD",
+      "cohorts": [
+        "EMP",
+        "VENDOR",
+        "SERVICE"
+      ],
+      "predecessors": [
+        "T12",
+        "T13"
+      ],
+      "hours": {
+        "IAM": 4,
+        "SEC": 2,
+        "DEV": 0,
+        "QA": 0,
+        "OPS": 2,
+        "TRAIN": 0
+      },
+      "acceptance": "不可逆边界；Q2未知，至少保留5个完整给定工作日，当前计划deferred"
+    }
+  },
+  "calendar": [
+    {
+      "date": "2027-04-05",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-06",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-07",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-08",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-09",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-10",
+      "is_workday": "0",
+      "reason": "weekend"
+    },
+    {
+      "date": "2027-04-11",
+      "is_workday": "0",
+      "reason": "weekend"
+    },
+    {
+      "date": "2027-04-12",
+      "is_workday": "0",
+      "reason": "company_closure"
+    },
+    {
+      "date": "2027-04-13",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-14",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-15",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-16",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-17",
+      "is_workday": "0",
+      "reason": "weekend"
+    },
+    {
+      "date": "2027-04-18",
+      "is_workday": "0",
+      "reason": "weekend"
+    },
+    {
+      "date": "2027-04-19",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-20",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-21",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-22",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-23",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-24",
+      "is_workday": "0",
+      "reason": "weekend"
+    },
+    {
+      "date": "2027-04-25",
+      "is_workday": "0",
+      "reason": "weekend"
+    },
+    {
+      "date": "2027-04-26",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-27",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-28",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-29",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    },
+    {
+      "date": "2027-04-30",
+      "is_workday": "1",
+      "reason": "supplied_workday"
+    }
+  ],
+  "workdays": [
+    "2027-04-05",
+    "2027-04-06",
+    "2027-04-07",
+    "2027-04-08",
+    "2027-04-09",
+    "2027-04-13",
+    "2027-04-14",
+    "2027-04-15",
+    "2027-04-16",
+    "2027-04-19",
+    "2027-04-20",
+    "2027-04-21",
+    "2027-04-22",
+    "2027-04-23",
+    "2027-04-26",
+    "2027-04-27",
+    "2027-04-28",
+    "2027-04-29",
+    "2027-04-30"
+  ],
+  "capacities": {
+    "2027-04-05": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-06": {
+      "IAM": 0,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-07": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-08": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-09": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-13": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-14": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-15": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-16": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-19": {
+      "IAM": 6,
+      "SEC": 0,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-20": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-21": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 0,
+      "TRAIN": 6
+    },
+    "2027-04-22": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-23": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-26": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 0
+    },
+    "2027-04-27": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-28": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-29": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    },
+    "2027-04-30": {
+      "IAM": 6,
+      "SEC": 6,
+      "DEV": 6,
+      "QA": 6,
+      "OPS": 8,
+      "TRAIN": 6
+    }
+  },
+  "roles": [
+    "IAM",
+    "SEC",
+    "DEV",
+    "QA",
+    "OPS",
+    "TRAIN"
+  ],
+  "exclusive_tasks": [
+    "T04",
+    "T05",
+    "T06",
+    "T07"
+  ],
+  "windows": [
+    {
+      "window_id": "W0",
+      "date": "2027-04-20",
+      "start_time": "09:00",
+      "end_time": "17:00"
+    },
+    {
+      "window_id": "W1",
+      "date": "2027-04-22",
+      "start_time": "09:00",
+      "end_time": "17:00"
+    },
+    {
+      "window_id": "W2",
+      "date": "2027-04-27",
+      "start_time": "09:00",
+      "end_time": "17:00"
+    }
+  ],
+  "triggers": [
+    {
+      "metric_id": "error_rate",
+      "operator": ">",
+      "threshold": 0.01,
+      "consecutive_checks": 2
+    },
+    {
+      "metric_id": "privilege_mismatch",
+      "operator": ">",
+      "threshold": 0.0,
+      "consecutive_checks": 1
+    },
+    {
+      "metric_id": "login_success",
+      "operator": "<",
+      "threshold": 0.99,
+      "consecutive_checks": 2
+    }
+  ],
+  "cpm": {
+    "tasks": {
+      "T01": {
+        "duration": 1,
+        "es": 0,
+        "ef": 1,
+        "lf": 1,
+        "ls": 0,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T02": {
+        "duration": 2,
+        "es": 1,
+        "ef": 3,
+        "lf": 3,
+        "ls": 1,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T03": {
+        "duration": 1,
+        "es": 1,
+        "ef": 2,
+        "lf": 3,
+        "ls": 2,
+        "total_float": 1,
+        "critical": 0
+      },
+      "T04": {
+        "duration": 2,
+        "es": 3,
+        "ef": 5,
+        "lf": 5,
+        "ls": 3,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T05": {
+        "duration": 1,
+        "es": 5,
+        "ef": 6,
+        "lf": 6,
+        "ls": 5,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T06": {
+        "duration": 2,
+        "es": 6,
+        "ef": 8,
+        "lf": 8,
+        "ls": 6,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T07": {
+        "duration": 1,
+        "es": 5,
+        "ef": 6,
+        "lf": 8,
+        "ls": 7,
+        "total_float": 2,
+        "critical": 0
+      },
+      "T08": {
+        "duration": 1,
+        "es": 6,
+        "ef": 7,
+        "lf": 7,
+        "ls": 6,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T09": {
+        "duration": 1,
+        "es": 7,
+        "ef": 8,
+        "lf": 8,
+        "ls": 7,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T10": {
+        "duration": 1,
+        "es": 8,
+        "ef": 9,
+        "lf": 9,
+        "ls": 8,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T11": {
+        "duration": 1,
+        "es": 9,
+        "ef": 10,
+        "lf": 10,
+        "ls": 9,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T12": {
+        "duration": 1,
+        "es": 10,
+        "ef": 11,
+        "lf": 11,
+        "ls": 10,
+        "total_float": 0,
+        "critical": 1
+      },
+      "T13": {
+        "duration": 1,
+        "es": 11,
+        "ef": 12,
+        "lf": 12,
+        "ls": 11,
+        "total_float": 0,
+        "critical": 1
+      }
+    },
+    "duration": 12,
+    "critical_paths": [
+      [
+        "T01",
+        "T02",
+        "T04",
+        "T05",
+        "T06",
+        "T10",
+        "T11",
+        "T12",
+        "T13"
+      ],
+      [
+        "T01",
+        "T02",
+        "T04",
+        "T05",
+        "T08",
+        "T09",
+        "T10",
+        "T11",
+        "T12",
+        "T13"
+      ]
+    ]
+  },
+  "approvals": {
+    "Q1": {
+      "status": "unknown",
+      "owner": "SEC"
+    },
+    "Q2": {
+      "status": "unknown",
+      "owner": "IAM+SEC"
+    }
+  },
+  "retirement_full_workdays": 5,
+  "rollback_max_minutes": 60,
+  "rollback_interval_minutes": 5,
+  "identity_controls": [
+    {
+      "cohort": "EMP",
+      "join_key": "employee_id",
+      "forbid_email_only_merge": true
+    },
+    {
+      "cohort": "VENDOR",
+      "join_key": "vendor_id+contract_id",
+      "expires_on_contract": true,
+      "inherit_employee_access": false
+    },
+    {
+      "cohort": "SERVICE",
+      "interactive_passwordless": false,
+      "owner_review_required": true,
+      "secret_rotation": "not_in_this_plan"
+    }
+  ],
+  "source_sha256": {
+    "acceptance.md": "4368a1636e37eb5a176b85c327d5b34e5b965832d1393beae2034fc3567cc6da",
+    "calendar.csv": "a1c929fb634d1da1c1c971ec9c6dc7bea02d4f19f053dc6b57d9413931e6bac0",
+    "resources.xlsx": "debe4f04f24c964d503bde808dcc761c6faac68a31d9349b86a6ab5f735acd40",
+    "work_items.csv": "c1dfe0429f1a27942e3ed8ce649c86a59501f7c97206365defa8ce2a037dfe6c"
+  }
+}

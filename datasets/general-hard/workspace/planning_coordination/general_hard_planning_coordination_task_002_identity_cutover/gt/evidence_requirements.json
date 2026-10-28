@@ -1,0 +1,21 @@
+{
+  "schema": "h054.evidence/v1",
+  "candidate": "Source locators resolve to actual task/calendar/capacity/acceptance sections; no self-report as execution proof",
+  "trusted": [
+    "original candidate bytes and per-attempt SHA",
+    "actual Office recalculation and two parallel-branch duration intervention receipts",
+    "DOCX PDF source/renderer/font custody"
+  ],
+  "formal_later": [
+    "冻结输入和产物SHA",
+    "绑定的执行attempt和终态",
+    "实际工具结果及错误恢复",
+    "规则/Judge逐项证据"
+  ],
+  "limits": [
+    "No real identity/account operations, messages, network or dependency install",
+    "No candidate Harness/model/Judge/finalize",
+    "Model review is not human expert review",
+    "Four clients require preflight; L3/discrimination unmeasured"
+  ]
+}
