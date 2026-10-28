@@ -1,0 +1,215 @@
+{
+  "schema_version": "general-hard-native-source-runtime/v1",
+  "date_local": "2026-10-29",
+  "status": "FRAMEWORK_MECHANISMS_AND_EXISTING_OFFLINE_ORIGINAL_PROJECTIONS_VERIFIED_REAL_TASK_PENDING",
+  "score_skill_version": "0.26.0",
+  "core_version": "0.15.2",
+  "base_HEAD": "57a84c193cf1d6bc508c6adaec6ff73e9b059f62",
+  "changed_framework_files_sha256": {
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/stages.py": "d54b09eae75fea5d6f2612ea25b3fb7a8a87da68a48b77c219b4fc804a1482e8",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_research_sources.py": "fe653464c99c5d2fc7295c8368fa141182314882d08c87950eea149ccae785fb",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/SKILL.md": "bb84be81e12ed21f1f7c26e600912f80c6e5d9e321fa89b0d7803344b2c95bdb",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md": "f69c104970bdb02239205f0dc14fc027bad520582b3b02a6112513807b7c561f",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py": "faedb07f73331c4442ca37d27d350db6e8dee9fed026223bb9a947645e603a2a",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json": "88c144bef085d9082b16c33eb747a9d01cf7d7404ed75518b7c7b81fdf1bd790",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_research_sources_native.py": "2444064b7eb867e67b6d0aa942e05e950d6ca20d46b86968146b376892968c67",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/native_source_projection.py": "48d12c6666207fd51dc9824c12602f87d4092de9903d5b0dd368b8e62b1724ef",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/research_source_dispatch.py": "af4b6f7b72249764cc638a85176b4819e32e33ec89a89adc5858bd291157e4b9",
+    "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native.py": "a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240"
+  },
+  "original_v1_collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+  "old_task_GT_contracts_and_QA_modified": false,
+  "dispatch": "frozen private policy v1/v2 selects static code; no dynamic origin code imports",
+  "native_profile": "public-native-text-cells/v1",
+  "supported_native": [
+    "DOCX",
+    "XLSX"
+  ],
+  "unsupported_native": [
+    "legacy OLE XLS/DOC",
+    "macros/ActiveX",
+    "encrypted/unsafe/overbudget packages"
+  ],
+  "cache_role": "Source formulas and saved caches are observations only; no Office or recalculation used in this source projector.",
+  "regression": {
+    "passed": 87,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 26.965,
+    "module_counts": {
+      "test_research_sources": 24,
+      "test_research_sources_native": 17,
+      "test_local_scoring_runtime": 10,
+      "test_general_api_judge": 11,
+      "test_general_semantic_scoring": 13,
+      "test_image_semantic_transport": 12
+    },
+    "log": "full-regression-final.log",
+    "host": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.venv/bin/python",
+    "host_Python": "3.11.14",
+    "PyYAML": "6.0.3 pre-existing original checkout .venv; not installed",
+    "invalid_origin_controls": {
+      "cases": 16,
+      "policies": [
+        "v1",
+        "v2"
+      ],
+      "counterexamples": [
+        "missing",
+        "current",
+        "ancestor",
+        "candidate",
+        "private-GT",
+        "runtime",
+        "symlink",
+        "missing-lock"
+      ],
+      "typed_errors_preserved": true,
+      "no_GET_no_lock_no_bundle": true,
+      "no_origin_policy_open_before_admission": true,
+      "evidence": "invalid-origin-path-controls.json"
+    },
+    "static_compilation": "PASS 6 files",
+    "diff_check": "PASS",
+    "independent_skill_ZIP_closure": "PASS; current script hashes match archived members",
+    "old_test_assertions_weakened": false,
+    "root_bad_module_name_errors_in_prior_log": "test_evidence_catalog/test_api_judge do not exist; not rerun. Actual names discovered with rg --files.",
+    "full_regression_runs": [
+      {
+        "log": "full-regression.log",
+        "tests": 86,
+        "result": "PASS after origin-admission fix"
+      },
+      {
+        "log": "full-regression-final.log",
+        "tests": 87,
+        "result": "PASS after preserving earlier policy/stage/input priorities"
+      }
+    ],
+    "final_code_full_module_run_count": 1,
+    "priority_regression_control": "v1/v2 already-collected/too-late/candidate-budget errors plus source-policy-required take precedence over missing origin; old assertions unchanged"
+  },
+  "original_root_failure_preserved": "dispatcher opened origin manifest/policy before v1 origin admission; ancestor/current-input paths produced DOCUMENT_INVALID instead of legacy REUSE_INVALID",
+  "compatibility_fix": "v1._reuse_candidates admits origin paths/locks/trusted verifier before origin backend dispatch; original policy/stage/candidate-input error priority is also retained before that preflight; collector still repeats original admission checks",
+  "original_native_check": {
+    "schema_version": "h033-actual-native-original-projection-check/v1",
+    "status": "PASS_BOUNDED_READ_ONLY_PROJECTION",
+    "results": [
+      {
+        "kind": "docx",
+        "source": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/att-law-bonus-docx/body.bin",
+        "original_source_sha256": "b8c915b56563d6147e3d84572406ac5b719fdc43243d7e491a39ccf9906a16c0",
+        "original_HTTP_receipt_sha256": "f3aaabdb3ae41d37105e4a0cf5ce2c94733f06bbee99cfec4aa27af68cf9bc98",
+        "original_GET_time": "2026-10-28T16:17:17.845720Z",
+        "new_GET": false,
+        "source_unchanged": true,
+        "independent_engine": "python-docx paragraph/table read, no Office execution or physical pagination",
+        "checks": 508,
+        "passed": 508,
+        "projection_records": 499,
+        "projection_sha256": "2d30a54306408894c4a0761d5cece17f917e5ecd6bd4acb9d178109531510ef0",
+        "engine": {
+          "name": "stdlib-word-ooxml",
+          "version": "wildclawbench.docx-text/v1",
+          "module_sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+          "projector_sha256": "48d12c6666207fd51dc9824c12602f87d4092de9903d5b0dd368b8e62b1724ef",
+          "profile": "public-native-text-cells/v1"
+        },
+        "limitations": [
+          "Text, declared table grids/merges and explicit note relationships only; images, visual layout and editability are not interpreted.",
+          "Grid positions are declared OOXML intervals, not inferred from rendered geometry; invalid or orphan merges remain explicit.",
+          "Nested table text may be included in the parent cell; nested topology is not expanded.",
+          "Inserted text is included; deleted text stored as delText is excluded. Note IDs are package IDs, not rendered note numbers.",
+          "Text extraction is not a native-application or visual usability check.",
+          "Source formula caches are stored observations only; never recalculated or certified current.",
+          "Logical OOXML nodes/cells are not rendered physical pages; external relationships are not followed."
+        ]
+      },
+      {
+        "kind": "xlsx",
+        "source": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/att-law-master-catalog/body.bin",
+        "original_source_sha256": "95eb3ca2db8bad8680adbbbdc24c5bba8edac8fc3e5373ec0fba7838f0f593d0",
+        "original_HTTP_receipt_sha256": "44fdfcb3c31c003cf547d817012a5e4674d8ee962e83a08ebd0845e76f21e2b6",
+        "original_GET_time": "2026-10-28T16:17:17.745195Z",
+        "new_GET": false,
+        "source_unchanged": true,
+        "independent_engine": "openpyxl read-only all populated cells; formulas only stored-cache roles, not recalculation",
+        "checks": 74,
+        "passed": 74,
+        "projection_records": 75,
+        "projection_sha256": "9db0879c215c8da9140bd2b7f5999f2f1b43b719d7e82c5cd72a2d9344fc1436",
+        "engine": {
+          "name": "stdlib-ooxml",
+          "version": "wildclawbench.native-artifact-text/v1",
+          "module_sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+          "projector_sha256": "48d12c6666207fd51dc9824c12602f87d4092de9903d5b0dd368b8e62b1724ef",
+          "profile": "public-native-text-cells/v1"
+        },
+        "limitations": [
+          "Cell contents and stored formula caches only; formulas are not recalculated.",
+          "Charts, images, macros, external links and layout are not interpreted.",
+          "Date serials are annotated using stored number formats and the workbook epoch.",
+          "Text extraction is not a native-application or visual usability check.",
+          "Source formula caches are stored observations only; never recalculated or certified current.",
+          "Logical OOXML nodes/cells are not rendered physical pages; external relationships are not followed."
+        ]
+      }
+    ],
+    "checks": 582,
+    "passed": 582,
+    "scope": "Actual previously captured official DOCX/XLSX, offline read-only cross-engine projection; not a new HTTP acquisition or full H033 task/GT/reference/managed lifecycle acceptance.",
+    "source_formula_recalculation": false,
+    "source_scientific_semantics_proven": false,
+    "new_source_bundle": false,
+    "Harness": false,
+    "human_expert": false,
+    "formal_semantic_score": null
+  },
+  "author_failures_preserved": [
+    "native-original-projection-v1: author used body.bin with suffix-based core, corrected to production identified-format copy",
+    "native-original-projection-v2: author compared XML type=n lexical strings with openpyxl numbers; values matched, corrected to typed Decimal comparison"
+  ],
+  "four_harness_execution": false,
+  "H033_task_created": false,
+  "formal_semantic_score": null,
+  "full_release_tasks": 32,
+  "remaining_tasks": 28,
+  "release_status": "building",
+  "files": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/framework-native-sources-root-fix/root-fix-report.json",
+      "size": 6786,
+      "sha256": "783951dafaf396d64350a7ca7f4d9efb7d5ef4084fc4614e5f18b76f5ccd2e0b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/framework-native-sources-root-fix/full-regression-final.log",
+      "size": 17932,
+      "sha256": "669177382bf240a2fc5079974d191eec645f399737d462aa00e0d988414a7fa3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/framework-native-sources-root-fix/freeze.json",
+      "size": 3867,
+      "sha256": "acb484d085717fa5652e5aada024f1daca5821b368d7c2d6f68f404c16bd2a68"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/framework-native-sources-root-fix/skill-zip-verification.json",
+      "size": 1165,
+      "sha256": "667e796876b1b0a31316d55a30118645d132949ea5e4cae5d44c9a2f17a4e18e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/native-original-projection-v3/validation.json",
+      "size": 4304,
+      "sha256": "11d8984973b7cc5ecde5f0c4f69def32385604979559cb70e92d38ad18b5bd7f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/authoring/verify_native_source_originals.py",
+      "size": 4837,
+      "sha256": "1a0c69eabd97d93ba4273e8c32d0acd9c251a9f97c142dd058109bb41c6d9f50"
+    }
+  ],
+  "limitations": [
+    "87 tests are author mechanism/regression controls, not87 task samples.",
+    "582 native checks use previously acquired official originals offline; no new HTTP GET, managed H033 source bundle, business-judgment or task completion is claimed.",
+    "Independent runtime source acquisition, task32+ production and all60 freezing/calibration remain."
+  ]
+}

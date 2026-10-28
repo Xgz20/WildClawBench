@@ -33,6 +33,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
 import research_sources
+import research_source_dispatch
 
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
@@ -128,7 +129,7 @@ class ApiJudgeAttemptError(ScoringRuntimeError):
 
 def _research_source_binding(root: Path, *, required: bool = False, archived: bool = False) -> dict | None:
     try:
-        binding = research_sources.verify(root, required=required, archived=archived, attempt_verifier=verify_attempt)
+        binding = research_source_dispatch.verify(root, required=required, archived=archived, attempt_verifier=verify_attempt)
     except research_sources.ResearchSourceError as exc:
         raise ScoringRuntimeError(exc.code, exc.detail) from exc
     if binding is None:
@@ -151,12 +152,19 @@ def _research_source_binding(root: Path, *, required: bool = False, archived: bo
     return binding
 
 
+def _frozen_research_source_view(root: Path, path: Path, expected_sha: str | None, **kwargs) -> dict | None:
+    try:
+        return research_source_dispatch.frozen_file_view(root, path, expected_sha, **kwargs)
+    except research_sources.ResearchSourceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.detail) from exc
+
+
 def collect_research_sources_attempt(*, attempt_root: Path, curl: Path | None = None,
                                      reuse_sources_from: tuple[Path, ...] = ()) -> dict:
     root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(root)
     try:
-        result = research_sources.collect(root, curl=curl, reuse_sources_from=reuse_sources_from,
+        result = research_source_dispatch.collect(root, curl=curl, reuse_sources_from=reuse_sources_from,
                                           attempt_verifier=verify_attempt)
     except research_sources.ResearchSourceError as exc:
         raise ScoringRuntimeError(exc.code, exc.detail) from exc
@@ -3284,7 +3292,12 @@ def _api_evidence_sources(
             else:
                 path = _resolve_within(root, relative, "api evidence")
                 try:
-                    if images_enabled and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+                    frozen = _frozen_research_source_view(root, path, reference.get("sha256"))
+                    if frozen is not None:
+                        content, status = frozen["text"], "native_text"
+                        row["native_extraction"] = {key:value for key,value in frozen.items() if key != "text"}
+                        row["content_representation"] = "verified_frozen_source_records"
+                    elif images_enabled and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
                         content, status = None, "image_pending"
                     elif path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
                         projection = _native_evidence_text(path, reference.get("sha256"))
@@ -3504,9 +3517,7 @@ def _build_api_input(
     user_prompt = serialized_user()
     research_binding = _research_source_binding(root, required=True)
     if research_binding is not None:
-        required_paths = {research_sources.LOCK_PATH, f"{research_sources.BUNDLE_PATH}/manifest.json"}
-        required_paths.update(row["path"] for row in research_binding["references"]
-                              if row["path"].endswith(("/text.txt", "/response.json", "/original-response.json")))
+        required_paths = research_source_dispatch.required_api_paths(root, research_binding)
         supplied = {row["path"] for row in packet_entries if row["content_status"] == "complete"}
         if not required_paths <= supplied:
             raise ScoringRuntimeError("RESEARCH_SOURCE_API_INPUT_INCOMPLETE", "required independent source content was omitted or truncated")
@@ -4754,9 +4765,12 @@ def query_evidence_attempt(
         truncated_by_chars = False
         projection = None
         try:
-            if path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
-                projection = _native_evidence_text(path, reference.get("sha256"),
-                    record_offset=offset, record_limit=limit, max_chars=max_chars)
+            projection = _frozen_research_source_view(root, path, reference.get("sha256"),
+                record_offset=offset, record_limit=limit, max_chars=max_chars)
+            if projection is not None or path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
+                if projection is None:
+                    projection = _native_evidence_text(path, reference.get("sha256"),
+                        record_offset=offset, record_limit=limit, max_chars=max_chars)
                 total_lines = projection["record_count"]
                 lines = projection["text"].splitlines()
                 truncated_by_chars = projection["truncated"]
@@ -5909,7 +5923,7 @@ def prepare_rescore_attempt(
         }
         _write_new_json(staging / "attempt-manifest.json", manifest)
         try:
-            research_sources.copy_for_rescore(source_root, staging, attempt_verifier=verify_attempt)
+            research_source_dispatch.copy_for_rescore(source_root, staging, attempt_verifier=verify_attempt)
         except research_sources.ResearchSourceError as exc:
             raise ScoringRuntimeError(exc.code, exc.detail) from exc
         os.replace(staging, destination)

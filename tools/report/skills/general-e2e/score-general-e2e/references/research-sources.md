@@ -1,5 +1,39 @@
 # 独立公开来源取证
 
+## policy v2：原生公开来源（score 0.26.0）
+
+`research_source_policy.json`位于冻结private GT，外层仍使用`scoring_runtime: {research_sources: true}`。入口按这个可信文件的schema静态派发；不按候选自报版本或内容加载代码。v1仍调用原`research_sources.py`，collector SHA和既有bundle/lock/text schema不变；不修改旧题GT或既有冻结回执。
+
+v2最小示例：
+
+```json
+{
+  "schema_version": "wildclawbench.research-source-policy/v2",
+  "projection_profile": "public-native-text-cells/v1",
+  "allowed_formats": ["docx", "xlsx"],
+  "ledger_path": "results/source_ledger.json",
+  "deliverable_paths": ["results/source_ledger.json"],
+  "as_of_inclusive": "2026-09-30",
+  "timezone": "Asia/Shanghai"
+}
+```
+
+原v1的账本键、URL、时区、截止日和获取预算字段仍适用。`projection_profile`必须显式给出且只支持上述枚举。`allowed_formats`默认为`pdf/html/utf8/docx/xlsx`；可缩小，不能写代码路径或加入未实现格式。未知policy/profile明确拒绝。
+
+v2另有可缩小的资源上限：`max_projection_chars=4000000`（序列化UTF-8预算按同值保守检查）、`max_native_records=100000`、`max_zip_members=5000`、`max_uncompressed_bytes=104857600`、`max_part_bytes=16777216`、`max_compression_ratio=1000`、`max_xml_nodes=300000`、`max_xml_depth=128`、`max_sheets=256`。超限不截断后伪称完整。
+
+下载原HTTP字节和requested/final URL、响应MIME、TLS/公共地址回执原样保存。OOXML按ZIP内容类型和根关系识别，不仅相信URL后缀；MIME/扩展名与原件冲突、畸形ZIP/XML、重复/越界/加密/特殊成员、宏/ActiveX以及旧OLE `.xls/.doc`均为typed错误。generic octet-stream可按真实包识别，不将Office伪称UTF-8/PDF。来源原件不调用Office、不跟随外链、不执行宏或嵌入对象。
+
+DOCX保留package part SHA、逻辑paragraph/table/row/cell、合并与notes等helper实际可读结构；不把逻辑段落号或排版提示当真实物理页。XLSX保留sheet身份/state、worksheet part、原cell地址、实际XML行/cell序号、公式和attributes、缓存存在性/原值类型、日期注记，以及合并/行列/defined names/外部关系等观察。公式缓存标为`not_verified`，不声称重算、新鲜或正确；缺缓存、空字符串、0和false不合并。图像、嵌入对象、视觉布局及未解释对象的限制明确保留。
+
+bundle/lock/text使用v2 schema；路径仍为`private/research-sources`与`research-sources.lock.json`。投影含`profile/format/engine/coverage/limitations/record_count/records`，每条记录含稳定ID、typed locator、role、原text与native结构。`complete`仅指所声明text/stored-cell profile完整产生，绝不是视觉/语义完整或任务正确。正文与存储公式/缓存角色不同；机械quote覆盖不是语义支持判定。
+
+source body SHA、HTTP回执、投影/展示SHA、extractor/helper代码identity和part/节点/cell谱系一起封存。规则仍通过原四键binding/env取同一包；新题reader需显式识别v2。语义API必须完整得到投影JSON、可读记录和回执；预算不够报不完整，不自动认为已读。query原生来源原件使用对应冻结投影，而普通候选Office证据保留已有helper行为。
+
+reuse仍是显式opt-in、精确requested URL（含query）和原GET时间。仅相同后端/profile允许复用，v1与v2不自动迁移；Office ZIP原字节不能用作quote字符串池。普通verify重新生成并核全投影/engine；归档只核冻结字节、绑定及谱系，不要求提取依赖或网络。rescore复制原件和原profile投影，更新identity/parent lock，不重新获取、转换或重算。
+
+来源bundle不能来自candidate/GT/runtime树，也不能被派生输出覆写。原生附件同时是任务保护输入时，候选输入冻结与独立HTTP来源身份分别保留，不能用候选自带缓存自证官方来源。获取/可信提取失败或不支持是明确供证错误，不伪造能力零分或已读状态。
+
 score `0.24.0` 在评分 CLI 外围增加可选 `research_sources`，core 保持 `0.15.2`。它把候选实际阅读/引用的公开 URL 交给可信评分侧 collector 独立获取，再给离线规则和语义 Judge 提供同一份原件与文本。采集器不评分，不调用 LLM，不接受候选提供的快照作为独立原件。
 
 ## 准入和顺序

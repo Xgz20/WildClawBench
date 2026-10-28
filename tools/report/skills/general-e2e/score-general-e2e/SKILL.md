@@ -5,7 +5,9 @@ description: 对一个冻结的 General E2E 任务运行自动规则与指定语
 
 # 评分 General E2E 单题
 
-`0.25.0`装配core `0.15.2`，新增显式可重复的`--reuse-sources-from`。仅按精确requested URL复用已完整验证的成功来源attempt；新receipt标明`verified_snapshot_reuse`，原GET时刻和原件/提取回执保持原字节。自包含来源证明胶囊保留旧输入、GT和来源锁，归档不依赖旧绝对路径；胶囊仅用于验证来源谱系，不进入新题语义事实目录。默认继续独立fresh GET，fresh/reuse计数分别输出。
+`0.26.0`装配不变的core `0.15.2`，新增可信private policy v2静态派发和DOCX/XLSX原生公开来源投影。v1 collector保持原字节，旧policy、GT和冻结来源包继续走原路径。Office原件、part/节点或sheet/cell定位、公式文本和存储缓存分别封存；不调用Office、不执行宏/外链、不重算来源公式。旧OLE `.xls/.doc`、宏包、损坏/超限或类型欺骗明确报错。v2只复用相同profile快照；API/query使用已验证冻结投影，归档不重新提取。具体字段、资源上限及complete范围见[独立公开来源取证](references/research-sources.md)。
+
+`0.25.0`新增显式可重复的`--reuse-sources-from`。仅按精确requested URL复用已完整验证的成功来源attempt；新receipt标明`verified_snapshot_reuse`，原GET时刻和原件/提取回执保持原字节。自包含来源证明胶囊保留旧输入、GT和来源锁，归档不依赖旧绝对路径；胶囊仅用于验证来源谱系，不进入新题语义事实目录。默认继续独立fresh GET，fresh/reuse计数分别输出。
 
 `0.24.0`装配core `0.15.2`，增加显式`scoring_runtime: {research_sources: true}`与`collect-research-sources`。prepare后由可信评分侧独立获取候选实际阅读/引用的公开URL，封存原件、文本投影、HTTP/提取回执和独立补充锁；不修改候选、GT或原attempt manifest。规则通过专用环境路径读同包，语义目录实际纳入来源，正常/归档与rescore保留同一来源链。缺独立供证、获取或提取失败不补零；历史发布身份和正文语义仍须单独核验，不以参考URL池排除合法来源。使用前读[独立公开来源取证](references/research-sources.md)。
 
