@@ -1,13 +1,13 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 52
+  active_task_count: 53
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
     software_engineering: 10
-    planning_coordination: 2
+    planning_coordination: 3
     content_operations: 1
 tasks:
   - task_id: general_hard_software_engineering_task_001_delimiter_validation
@@ -1511,3 +1511,29 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
+  - task_id: general_hard_planning_coordination_task_003_learning_path
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-5901ac8e625b38a4
+          query_hash: 5901ac8e625b38a47b1db152c4cdf9c8404b3e09bfd7384f3deafb660fedc413
+          observed_astudio_turns: 23
+          distinct_users: 19
+          distinct_sessions: 23
+          first_seen_local: '2026-09-14 13:55:31.574000'
+          last_seen_local: '2026-10-15 14:27:23.855000'
+          intent_summary: 按月安排课程、项目与实习的学生成长路径。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

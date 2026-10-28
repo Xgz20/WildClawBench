@@ -21044,7 +21044,7 @@
         "exec": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_003_learning_path/exec",
         "gt": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_003_learning_path/gt"
       },
-      "prompt_draft": "请完成以下工作：形成两年按月成长计划，满足课程前置、周时间与费用上限；把学习、作品和实习串为可检查里程碑，不创建定时提醒。\n\n输入材料：\n- /tmp_workspace/profile.md：去身份化的学生基础与目标\n- /tmp_workspace/courses.csv：课程前置、时长和费用\n- /tmp_workspace/availability.xlsx：学期、考试与实习时间\n- /tmp_workspace/milestones.md：作品验收要求\n\n交付：\n- /tmp_workspace/results/learning_plan.xlsx：月度计划、预算和依赖\n- /tmp_workspace/results/portfolio.docx：作品验收与调整条件\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请形成2027-01至2028-12两年按月成长计划，满足课程/项目先修、逐周时间与费用上限，把学习、作品、实习准备和实践串成可检查里程碑。不要创建定时提醒、自动任务或日历事件。\n\n只读输入：/tmp_workspace/profile.md（起点、目标、选择与未知）；/tmp_workspace/courses.csv（17个活动的先修、时长、费用及班期/期限）；/tmp_workspace/availability.xlsx（96给定规划周、24月的时间与费用上限）；/tmp_workspace/milestones.md（M01-M04作品验收、调整与数据交接）。每月固定4个给定规划周，不用真实月历补充时间。考试周0是不可用，不能用月平均掩盖周峰值。\n\n只在/tmp_workspace/results交付learning_plan.xlsx和portfolio.docx。以P1/P2/P3/J1/L1的作品与交接为可检查机会，逐项核对必要时间/小时是否在真实周预算内得到提供，并区分先修顺序与能力证据。完整保留mandatory活动，MODEL_ONE与PRACTICE_ONE各选一项，按实际分配推导起止周，先修必须前一周或更早完成；允许材料支持的不同资源、排期、并行与有依据的额外小时。费用在首次正时间投入月一次记入，遵守月度、年度700/500及两年900上限。Q1机会/Q2资格未知，I1及依赖L1保留conditional且计完整时间；F1只是内部实践，不是实习经历，J1仍保留。课程/小时数/证书不能直接证明能力。\n\n按M03保留activities/allocations/weekly/monthly/milestones/settings有表头原生记录及字段，可同页/多页、页名与列序自由。中文/英文列名均可：activity_id=活动编号，name=名称，kind=类型，first_week=首次规划周，last_week=末次规划周，hours_required=材料小时，planned_hours=计划小时，fee=费用，status=状态，prerequisites=先修，acceptance=验收，source_ref=依据，week_id=规划周编号，hours=小时，week_order=规划周序号，month=月份，hours_cap=小时上限，remaining_hours=剩余小时，overload_hours=超出小时，year_fee=当年累计费用，cumulative_fee=两年累计费用，total_fee_remaining=总费用余额，focus=月度重点，criteria=标准编号，evidence_status=证据状态，capability_status=能力状态，adjustment_trigger=调整触发，next_action=下一步，key=键，value=值。首末周可用源周ID或全局1-96序号；无正时间显示unknown，不以0代缺失。完整24个月和96周，含0投入月/周；周小时、余额/超额、活动总小时/起止、月度/年度/两年费用均由原始分配与一次费用驱动，修改小时、正时间端点和费用后应更新。可用辅助列和不同公式，不要求固定模板或参考月份。\n\nportfolio.docx解释作品如何验收、何时调整、资源与时间取舍，以及未知实习条件/内部备选；覆盖M01五项和R01-R12、M04八项fact_id/value事实核对表。evidence_status当前not_assessed、capability_status=not_yet_verified，真实作品能否证明目标能力仍需未来审阅。设置offline_proposal/not_created是计划声明，不能冒充实际动作证据。\n\nsource_ref可用profile.md#P01-P05、courses.csv#活动ID、availability.xlsx#weekly@周ID或#monthly@YYYY-MM、milestones.md#M01-M04的真实定位。仅读本题exec映射到/tmp_workspace的材料，不读GT/评分说明、不扫描真实用户目录；原输入不删除、移动、覆盖，所有新交付只放results。离线，不访问账号、不发消息、不投递、不付费或联网安装。事实、推断与未知分开，不虚构测评、实习或就业结果。",
       "inputs": [
         {
           "path": "profile.md",
@@ -21088,19 +21088,25 @@
         "完成课程等同具备能力"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102655,
-        "construction": "独立前置DAG和时间预算验证器核对可行性，GT标注必须先修、冲突月份及费用上界；语义Judge核作品是否证明目标能力。",
+        "construction": "原生availability/CSV/MD先于参考，Python/Node独立核816可用小时、两实践×两课程选择可行性。两参考各616小时、不同资源/实践；root核2816冻结文件，以不导入GT的bundled openpyxl从实际allocations/原输入重新核周容量、先修和费用830/530，实际看两份6页Word与2表视图。作者独立新引擎读回3582干预字段、36最终控制/43静态通过；原中文列倒序失败和root错误假定sheet名失败均保留，只修各自parser/作者核验。正式独立ZIP再次真实Office清缓存重算/干预/渲染与归档。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "office_runtime.py",
+          "plan_model.py",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许C06A/C06B与I1/F1不同选择、合理增时与排期、中文列别名及表列页序；按源约束/实际分配和三数值干预核验，不匹配单一月份。课程完成及排满小时不证明能力，作品/触发语义留25%Judge；缺可信/合法未支持表示typed无能力0。",
+        "authoring_evidence": "evidence/h055-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -21252,10 +21258,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/4exec/11GT、完整作者Office/render锁，独立score0.27.1/core0.15.3 ZIP实际清缓存重算/3干预/Word渲染；仅自动A，正常/无runtime搬移同字节，无Harness/Judge/真实提醒。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h055-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

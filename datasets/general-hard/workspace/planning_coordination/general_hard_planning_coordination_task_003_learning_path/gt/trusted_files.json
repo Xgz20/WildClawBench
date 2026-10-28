@@ -1,0 +1,12 @@
+{
+  "artifact_contract.json": "853398b4c82092a6e89fcc93eeb57e4c391b3c8c97a5ec4e11791297a0ebfa3d",
+  "business_oracle.json": "37124b5d3311dd97f5699ebeea7d1656c219917efc118256160e9396e6d4eb3d",
+  "counterexamples.json": "dfe47eb3cf6eabb9dd034cafad5e2118cb6edd256e572ee8fc953a3926cca2c0",
+  "evidence_requirements.json": "f58933f79581fd6597fdeeae9bb5f1c1ef3408aa19450d52776735b503380a0f",
+  "expected.json": "e725b63acdbcee03c548b45d80d34f300856f603a9493a10e246f9ee5f284d6d",
+  "grader.py": "edbdd2c40f8d825d0010dd48d4141bdd19f87695168f1f838f2a2a0de12c5fbe",
+  "native_io.py": "515f0fc7621fd72cd1177b48ebb794e0783d0573aa7f404117fed8083ee33c65",
+  "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+  "plan_model.py": "c23de9deaa2637efbda5da82f312db976ab85bcc2db4729a4f69594e0f909a7d",
+  "protected_sha256.json": "9fa6be6d1238eef6986665b54b84e13df68059ed766a3c301a414ac83b55f0b9"
+}

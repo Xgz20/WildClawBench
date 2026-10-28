@@ -1,0 +1,28 @@
+{
+  "schema": "h055.counterexamples/v1",
+  "business": [
+    "month total fits but exam zero week overloaded",
+    "missing required month/week/portfolio acceptance",
+    "insufficient selected hours or deadline/start offering violation",
+    "hardcoded monthly/weekly totals, first positive endpoint or fee rollups"
+  ],
+  "boundary": [
+    "source predecessor unfinished, omitted/unselected OR alternative used as completed",
+    "fee omitted or moved from first positive allocation month",
+    "monthly/year/total fee limit violated",
+    "course completion claimed as verified competence without works",
+    "unknown internship offer/eligibility treated confirmed",
+    "internal F1 mislabeled as internship requires semantic Judge"
+  ],
+  "delivery": [
+    "missing or non-native workbook/docx",
+    "cross-artifact factual inconsistency",
+    "protected input drift"
+  ],
+  "infrastructure": [
+    "missing GT/model/parser/Office context",
+    "legal array/shared or engine-unresolved input representation"
+  ],
+  "causal_ownership": "Time budget/model/minimum hours and record completeness are business; prerequisite learning sequence, fee integrity, competence claims and unknown placement are boundary. Input protection is delivery only.",
+  "semantic_limit": "Do not replace portfolio proof quality with criterion IDs or author baseline scores; Judge .25 remains separate"
+}

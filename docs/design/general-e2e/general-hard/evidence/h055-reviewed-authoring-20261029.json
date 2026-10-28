@@ -1,0 +1,646 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 55,
+  "task_id": "general_hard_planning_coordination_task_003_learning_path",
+  "registered_task_index": 53,
+  "registered": 53,
+  "remaining": 7,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 10,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6,
+    "content_operations": 1,
+    "planning_coordination": 3
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/planning_coordination/general_hard_planning_coordination_task_003_learning_path.md",
+      "sha256": "7882741f2a027d163d9615e72e145ae0283565e8c73487a3a05e6a50f2a2be1b",
+      "size": 9613
+    },
+    "exec": [
+      {
+        "path": "availability.xlsx",
+        "sha256": "f374acf94c96f586016b724c82a01b7b09194567f9d3000f30f458749a7c25e7",
+        "size": 9416
+      },
+      {
+        "path": "courses.csv",
+        "sha256": "6540f67cf1ed112be9d4ddd2d0239a95b0ceef10acb7580165b5af47b0eab630",
+        "size": 2585
+      },
+      {
+        "path": "milestones.md",
+        "sha256": "06637f2901ee5bfb8312da5b6babcad3cb6d8aba2833331d748ea5a0c1ef3875",
+        "size": 4218
+      },
+      {
+        "path": "profile.md",
+        "sha256": "a34378b2fd1a4819dd554caf90f75fcd40c8ece06a4f43ecd0252a08496032d0",
+        "size": 2777
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "853398b4c82092a6e89fcc93eeb57e4c391b3c8c97a5ec4e11791297a0ebfa3d",
+        "size": 3305
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "37124b5d3311dd97f5699ebeea7d1656c219917efc118256160e9396e6d4eb3d",
+        "size": 27574
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "dfe47eb3cf6eabb9dd034cafad5e2118cb6edd256e572ee8fc953a3926cca2c0",
+        "size": 1385
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "f58933f79581fd6597fdeeae9bb5f1c1ef3408aa19450d52776735b503380a0f",
+        "size": 948
+      },
+      {
+        "path": "expected.json",
+        "sha256": "e725b63acdbcee03c548b45d80d34f300856f603a9493a10e246f9ee5f284d6d",
+        "size": 1214
+      },
+      {
+        "path": "grader.py",
+        "sha256": "edbdd2c40f8d825d0010dd48d4141bdd19f87695168f1f838f2a2a0de12c5fbe",
+        "size": 24027
+      },
+      {
+        "path": "native_io.py",
+        "sha256": "515f0fc7621fd72cd1177b48ebb794e0783d0573aa7f404117fed8083ee33c65",
+        "size": 9006
+      },
+      {
+        "path": "office_runtime.py",
+        "sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+        "size": 65333
+      },
+      {
+        "path": "plan_model.py",
+        "sha256": "c23de9deaa2637efbda5da82f312db976ab85bcc2db4729a4f69594e0f909a7d",
+        "size": 2113
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "9fa6be6d1238eef6986665b54b84e13df68059ed766a3c301a414ac83b55f0b9",
+        "size": 350
+      },
+      {
+        "path": "trusted_files.json",
+        "sha256": "05966c6bf1444a8d500a1a99dd64af0b3721b03bb82661c13ec0d4e9aef2bfa4",
+        "size": 916
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/handoff.json",
+    "sha256": "62cf6c70738d2dda5426de464cc47b72e286a78ca3a28337193568105d90db06",
+    "size": 3582
+  },
+  "review": {
+    "kind": "source-first independent Python/Node plus nonblind root model not human expert",
+    "frozen_files_verified": 2816,
+    "root_actual_DOCX_pages_seen": 6,
+    "root_workbook_views_seen": 2,
+    "all_author_workbook_views_seen_by_author": 24,
+    "source_weekly_hours": 816,
+    "reference_planned_hours": 616,
+    "root_native_allocations_prerequisites_fees_recomputed": true,
+    "current_managed_controls": 36,
+    "static_checks": 43,
+    "fresh_native_intervention_scalar_fields": 3582,
+    "root_script_name_assumption_failure_retained": true
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_planning_coordination_task_003_learning_path",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/attempts/author-only-h055-formal__detached-zip-worker/general_hard_planning_coordination_task_003_learning_path/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/attempts/author-only-h055-formal__detached-zip-worker/general_hard_planning_coordination_task_003_learning_path/author-only-formal-auto",
+      "candidate_sha256": "8a4d702504fc08036fb6d4bf7ea0f3ef67edd53ca028cc01cf25dd92ffd59c04",
+      "entry_count": 7
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/moved-without-runtime",
+      "candidate_sha256": "8a4d702504fc08036fb6d4bf7ea0f3ef67edd53ca028cc01cf25dd92ffd59c04",
+      "entry_count": 7
+    },
+    "nonruntime_same_byte_files": 59,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/document/render-audit.json",
+        "sha256": "a1c6c50eef705d2760d3325f23e3a67d2c826ef5b4a3b0f9f9aee18c4b14682a",
+        "size": 1852
+      },
+      {
+        "path": "worker/derived/document/rendered.pdf",
+        "sha256": "57002e3db39260c0ff9a0daf2a4fe095d2f716162fa82ec834269971fbc0d434",
+        "size": 182947
+      },
+      {
+        "path": "worker/derived/h055-analysis.json",
+        "sha256": "0d26d23080806d3317334db998a74c6fdc0e027dfc039d4b48f2aae6c18ef5e1",
+        "size": 43563
+      },
+      {
+        "path": "worker/derived/recalculated/office-audit.json",
+        "sha256": "bbf5ac5bfa681bc2d409af0f12649c697ecf5d594e54cbd362be7b6f6f71c40c",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/recalculated/recalculated.xlsx",
+        "sha256": "a08a4ac969b17d050dd26a8101b1bbb67b73fdbde1a1d82e2b463919e1c30e54",
+        "size": 25367
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/calculated/office-audit.json",
+        "sha256": "daa2a1c6dc6ceb74db5d2c2eb9c33d1a3bb9e49f08318a948cd1a5c8e7869c2f",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/calculated/recalculated.xlsx",
+        "sha256": "55753f1d64a99f2adc87eb0b20ad9aab74ee534f43cdf071f33450217ee238ef",
+        "size": 25382
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/prepared/numeric-intervention-audit.json",
+        "sha256": "db02ea07cfea046d4b812eb27e67a6fbf554a3152a0fb9eb462fd1c7ba66b4c1",
+        "size": 605
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/prepared/prepared.xlsx",
+        "sha256": "cb7615ae6be331ffc18e5b444e3b879abc358ebde417b6aeca5efcdcca892437",
+        "size": 20274
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/calculated/office-audit.json",
+        "sha256": "150a4ed9f6a1419b327546edf9ebe3446e622c37b4872d748f2b2c08d8f8b2ed",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/calculated/recalculated.xlsx",
+        "sha256": "0180482131cc0bbe1375b102e064de99c50bba9c0981dc48ba060c4a5fc26967",
+        "size": 25394
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/prepared/numeric-intervention-audit.json",
+        "sha256": "8ad20d7baac63fba98c99c18776c8507eea884c7a244e1fef87e50d64feb72e9",
+        "size": 605
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/prepared/prepared.xlsx",
+        "sha256": "31b1a622798c2ffe71d6be78771931407d02cf24496a3afc3e9879ab2b7adde5",
+        "size": 20275
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/calculated/office-audit.json",
+        "sha256": "bbfa5e3e08e49d8267013f82df2b0983767646e16f8bfda6937c945ca9d151b5",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/calculated/recalculated.xlsx",
+        "sha256": "93a54e388ff9aa713ecd85506593e4228feec60b9158339bcc475ffbde4b4d20",
+        "size": 25369
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/prepared/numeric-intervention-audit.json",
+        "sha256": "a7aef7dff53fd4ff5134ba7928ad5fecdf894527fe3b7b951a1c2b0b27a1a464",
+        "size": 613
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/prepared/prepared.xlsx",
+        "sha256": "1b7d1c4fb5db3f65db6dcb6d42f2cc5f525b300663675dcb15b82ca87a5aae55",
+        "size": 20014
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "07e6a87ee7d52466b3666b6bd83957eaeab7a0b27b71c86064993a749a38326c"
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/document/render-audit.json",
+        "sha256": "a1c6c50eef705d2760d3325f23e3a67d2c826ef5b4a3b0f9f9aee18c4b14682a",
+        "size": 1852
+      },
+      {
+        "path": "worker/derived/document/rendered.pdf",
+        "sha256": "57002e3db39260c0ff9a0daf2a4fe095d2f716162fa82ec834269971fbc0d434",
+        "size": 182947
+      },
+      {
+        "path": "worker/derived/h055-analysis.json",
+        "sha256": "0d26d23080806d3317334db998a74c6fdc0e027dfc039d4b48f2aae6c18ef5e1",
+        "size": 43563
+      },
+      {
+        "path": "worker/derived/recalculated/office-audit.json",
+        "sha256": "bbf5ac5bfa681bc2d409af0f12649c697ecf5d594e54cbd362be7b6f6f71c40c",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/recalculated/recalculated.xlsx",
+        "sha256": "a08a4ac969b17d050dd26a8101b1bbb67b73fdbde1a1d82e2b463919e1c30e54",
+        "size": 25367
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/calculated/office-audit.json",
+        "sha256": "daa2a1c6dc6ceb74db5d2c2eb9c33d1a3bb9e49f08318a948cd1a5c8e7869c2f",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/calculated/recalculated.xlsx",
+        "sha256": "55753f1d64a99f2adc87eb0b20ad9aab74ee534f43cdf071f33450217ee238ef",
+        "size": 25382
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/prepared/numeric-intervention-audit.json",
+        "sha256": "db02ea07cfea046d4b812eb27e67a6fbf554a3152a0fb9eb462fd1c7ba66b4c1",
+        "size": 605
+      },
+      {
+        "path": "worker/derived/variants/first_positive_endpoint/prepared/prepared.xlsx",
+        "sha256": "cb7615ae6be331ffc18e5b444e3b879abc358ebde417b6aeca5efcdcca892437",
+        "size": 20274
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/calculated/office-audit.json",
+        "sha256": "150a4ed9f6a1419b327546edf9ebe3446e622c37b4872d748f2b2c08d8f8b2ed",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/calculated/recalculated.xlsx",
+        "sha256": "0180482131cc0bbe1375b102e064de99c50bba9c0981dc48ba060c4a5fc26967",
+        "size": 25394
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/prepared/numeric-intervention-audit.json",
+        "sha256": "8ad20d7baac63fba98c99c18776c8507eea884c7a244e1fef87e50d64feb72e9",
+        "size": 605
+      },
+      {
+        "path": "worker/derived/variants/hours_peak/prepared/prepared.xlsx",
+        "sha256": "31b1a622798c2ffe71d6be78771931407d02cf24496a3afc3e9879ab2b7adde5",
+        "size": 20275
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/calculated/office-audit.json",
+        "sha256": "bbfa5e3e08e49d8267013f82df2b0983767646e16f8bfda6937c945ca9d151b5",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/calculated/recalculated.xlsx",
+        "sha256": "93a54e388ff9aa713ecd85506593e4228feec60b9158339bcc475ffbde4b4d20",
+        "size": 25369
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/prepared/numeric-intervention-audit.json",
+        "sha256": "a7aef7dff53fd4ff5134ba7928ad5fecdf894527fe3b7b951a1c2b0b27a1a464",
+        "size": 613
+      },
+      {
+        "path": "worker/derived/variants/one_time_fee/prepared/prepared.xlsx",
+        "sha256": "1b7d1c4fb5db3f65db6dcb6d42f2cc5f525b300663675dcb15b82ca87a5aae55",
+        "size": 20014
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "07e6a87ee7d52466b3666b6bd83957eaeab7a0b27b71c86064993a749a38326c"
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "def174e55faba1858f57afe9679aa1cd993d696da2249c57fe8380d4fefdd6f1",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "ef0c2eb895367d3c476ee3f1005d41984edcb12a11f0a7157fcdc4e07008b21d"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/document/render-audit.json",
+          "sha256": "a1c6c50eef705d2760d3325f23e3a67d2c826ef5b4a3b0f9f9aee18c4b14682a",
+          "size": 1852
+        },
+        {
+          "path": "worker/derived/document/rendered.pdf",
+          "sha256": "57002e3db39260c0ff9a0daf2a4fe095d2f716162fa82ec834269971fbc0d434",
+          "size": 182947
+        },
+        {
+          "path": "worker/derived/h055-analysis.json",
+          "sha256": "0d26d23080806d3317334db998a74c6fdc0e027dfc039d4b48f2aae6c18ef5e1",
+          "size": 43563
+        },
+        {
+          "path": "worker/derived/recalculated/office-audit.json",
+          "sha256": "bbf5ac5bfa681bc2d409af0f12649c697ecf5d594e54cbd362be7b6f6f71c40c",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/recalculated/recalculated.xlsx",
+          "sha256": "a08a4ac969b17d050dd26a8101b1bbb67b73fdbde1a1d82e2b463919e1c30e54",
+          "size": 25367
+        },
+        {
+          "path": "worker/derived/variants/first_positive_endpoint/calculated/office-audit.json",
+          "sha256": "daa2a1c6dc6ceb74db5d2c2eb9c33d1a3bb9e49f08318a948cd1a5c8e7869c2f",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/variants/first_positive_endpoint/calculated/recalculated.xlsx",
+          "sha256": "55753f1d64a99f2adc87eb0b20ad9aab74ee534f43cdf071f33450217ee238ef",
+          "size": 25382
+        },
+        {
+          "path": "worker/derived/variants/first_positive_endpoint/prepared/numeric-intervention-audit.json",
+          "sha256": "db02ea07cfea046d4b812eb27e67a6fbf554a3152a0fb9eb462fd1c7ba66b4c1",
+          "size": 605
+        },
+        {
+          "path": "worker/derived/variants/first_positive_endpoint/prepared/prepared.xlsx",
+          "sha256": "cb7615ae6be331ffc18e5b444e3b879abc358ebde417b6aeca5efcdcca892437",
+          "size": 20274
+        },
+        {
+          "path": "worker/derived/variants/hours_peak/calculated/office-audit.json",
+          "sha256": "150a4ed9f6a1419b327546edf9ebe3446e622c37b4872d748f2b2c08d8f8b2ed",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/variants/hours_peak/calculated/recalculated.xlsx",
+          "sha256": "0180482131cc0bbe1375b102e064de99c50bba9c0981dc48ba060c4a5fc26967",
+          "size": 25394
+        },
+        {
+          "path": "worker/derived/variants/hours_peak/prepared/numeric-intervention-audit.json",
+          "sha256": "8ad20d7baac63fba98c99c18776c8507eea884c7a244e1fef87e50d64feb72e9",
+          "size": 605
+        },
+        {
+          "path": "worker/derived/variants/hours_peak/prepared/prepared.xlsx",
+          "sha256": "31b1a622798c2ffe71d6be78771931407d02cf24496a3afc3e9879ab2b7adde5",
+          "size": 20275
+        },
+        {
+          "path": "worker/derived/variants/one_time_fee/calculated/office-audit.json",
+          "sha256": "bbfa5e3e08e49d8267013f82df2b0983767646e16f8bfda6937c945ca9d151b5",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/variants/one_time_fee/calculated/recalculated.xlsx",
+          "sha256": "93a54e388ff9aa713ecd85506593e4228feec60b9158339bcc475ffbde4b4d20",
+          "size": 25369
+        },
+        {
+          "path": "worker/derived/variants/one_time_fee/prepared/numeric-intervention-audit.json",
+          "sha256": "a7aef7dff53fd4ff5134ba7928ad5fecdf894527fe3b7b951a1c2b0b27a1a464",
+          "size": 613
+        },
+        {
+          "path": "worker/derived/variants/one_time_fee/prepared/prepared.xlsx",
+          "sha256": "1b7d1c4fb5db3f65db6dcb6d42f2cc5f525b300663675dcb15b82ca87a5aae55",
+          "size": 20014
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "477fe15b2f968772cd2386f5cb9fc00ccb4e90f58f0e81bc40b53e60cb97f098",
+        "file_count": 17,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T23:56:58.645041Z",
+      "identity": {
+        "batch_id": "author-only-h055-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_planning_coordination_task_003_learning_path",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "34a2a210b39fa7bab63dc6c7f0b078d9f390263e53a544bc2859b263e4e9d49c",
+        "root_result_count": 2,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "10a775282c5fad2475bd54deeca84b6a8fb6b721e0a375cd3311ad469b9310e9",
+        "initial_sha256": "10a775282c5fad2475bd54deeca84b6a8fb6b721e0a375cd3311ad469b9310e9"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T23:56:45.283045Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 13.165664,
+        "environment_keys": [
+          "GENERAL_E2E_OFFICE_LOCK",
+          "GENERAL_E2E_OFFICE_RENDER_LOCK",
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "office_render_runtime": {
+          "path": "worker/office-render-runtime.json",
+          "sha256": "07e6a87ee7d52466b3666b6bd83957eaeab7a0b27b71c86064993a749a38326c"
+        },
+        "office_runtime": {
+          "path": "worker/office-runtime.json",
+          "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+        },
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "4cd5cb0c8101ce8dbcf4c0606580202c51f628410d30869df90ee3333d7b9e6e",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "934f546db2f34a111ff36a3583d645f67d97e3b4aadec7cc85a7a3c7575851f9",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 75360
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": {
+      "prepared": true,
+      "preparation_result": {
+        "status": "PASS",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/attempts/author-only-h055-formal__detached-zip-worker/general_hard_planning_coordination_task_003_learning_path/author-only-formal-auto",
+        "grading_type": "hybrid",
+        "evidence_catalog": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/attempts/author-only-h055-formal__detached-zip-worker/general_hard_planning_coordination_task_003_learning_path/author-only-formal-auto/semantic/evidence-catalog.json",
+        "request": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/attempts/author-only-h055-formal__detached-zip-worker/general_hard_planning_coordination_task_003_learning_path/author-only-formal-auto/semantic/request.json",
+        "semantic_status": "awaiting_response",
+        "response_template": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/attempts/author-only-h055-formal__detached-zip-worker/general_hard_planning_coordination_task_003_learning_path/author-only-formal-auto/semantic/response-template.json"
+      },
+      "queries": [
+        {
+          "evidence_id": "evidence-0005",
+          "path": "candidate-original/workspace/availability.xlsx",
+          "receipt": "semantic-query-1.json",
+          "sha256": "a8f79975dc2f60f42bb3ea9463f62ece426e7b2ea5ed0f2e4a9f257e5831a743",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0010",
+          "path": "candidate-original/workspace/results/portfolio.docx",
+          "receipt": "semantic-query-2.json",
+          "sha256": "5b572987c43ed5c54489393b5c4eeecdb11ec99d98c47939448f48d2d3810b34",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0028",
+          "path": "worker/derived/recalculated/recalculated.xlsx",
+          "receipt": "semantic-query-3.json",
+          "sha256": "0e62fe67f62353116d314933e18edde6c65a94e26adf618d7708191e33972619",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        }
+      ],
+      "catalog_sha256": "f070498dc9b6ae6fa455fd5e7d6c3fa70039503c7829d76bbb2f813595a5a61f",
+      "frozen_configuration_only": true,
+      "Judge_called": false,
+      "semantic_response_submitted": false
+    },
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/formal-detached-1793231803580194000/validation.json",
+    "sha256": "e84b43f5110f08b66d0506468c6b1473767c6a73bcf50ec5d7ff50329c421490",
+    "size": 20570
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "e5e794b575592246dfda589a37b322c37a05e7e87f43f537620a6b2defc759fd",
+    "size": 19685
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/static-root-single/20261028T235758Z_ba185cac52/report.json",
+      "sha256": "c5259c19c5701d03a484ab54f8c8c3c92529b98c5f5e8a09197ad4c166336fd4",
+      "size": 1234
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h055/qa/static-root-full/20261028T235808Z_b200575b1a/report.json",
+      "sha256": "ebf2cc85005cb0b46feec6c6d703b4c3097dac74da2f0f56208b9543b45888f4",
+      "size": 24129
+    },
+    "only_remaining_missing": 7
+  },
+  "source_summary": "4公开输入、11GT，24月96周/17候选选15；时间、AND/OR先修、费用和未知实习驱动原生公式表与作品交接。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T23:58:08.764420+00:00"
+}

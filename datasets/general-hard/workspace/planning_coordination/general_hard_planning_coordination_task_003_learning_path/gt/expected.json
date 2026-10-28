@@ -1,0 +1,58 @@
+{
+  "schema": "h055.expected/v1",
+  "task_id": "general_hard_planning_coordination_task_003_learning_path",
+  "blueprint_order": 55,
+  "difficulty": "L3",
+  "difficulty_status": "design_estimate_unvalidated",
+  "months": 24,
+  "planning_weeks": 96,
+  "capacity_hours": 816,
+  "candidate_activities": 17,
+  "mandatory": [
+    "D0",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C07",
+    "C08",
+    "P1",
+    "P2",
+    "P3",
+    "J1",
+    "L1"
+  ],
+  "choice_groups": {
+    "MODEL_ONE": [
+      "C06A",
+      "C06B"
+    ],
+    "PRACTICE_ONE": [
+      "I1",
+      "F1"
+    ]
+  },
+  "reference_examples_only": {
+    "C06A": {
+      "minimum_selected_hours": 616,
+      "fee": 830
+    },
+    "C06B": {
+      "minimum_selected_hours": 616,
+      "fee": 530
+    }
+  },
+  "reference_allocations_are_not_an_oracle": true,
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "hybrid_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "no_reminders": "Declared offline/no-reminder intent plus actual formal tool evidence later; final files alone cannot prove absence of reminder operations"
+}

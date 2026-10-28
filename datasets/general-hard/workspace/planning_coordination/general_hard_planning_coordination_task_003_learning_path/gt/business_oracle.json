@@ -1,0 +1,1211 @@
+{
+  "items": {
+    "D0": {
+      "name": "起点诊断与计划校准",
+      "kind": "diagnostic",
+      "hours": 4,
+      "fee": 0,
+      "prerequisites": [],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-01",
+      "allowed_start_months": [],
+      "acceptance": "用4小时诊断已有基础，记录未知和后续调整，不把自述当实测能力"
+    },
+    "C01": {
+      "name": "Python基础",
+      "kind": "course",
+      "hours": 40,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "D0"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-06",
+      "allowed_start_months": [],
+      "acceptance": "基础练习与复盘，课程结束不等于能力已验证"
+    },
+    "C02": {
+      "name": "数据处理",
+      "kind": "course",
+      "hours": 48,
+      "fee": 120,
+      "prerequisites": [
+        [
+          "C01"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-12",
+      "allowed_start_months": [],
+      "acceptance": "理解数据口径、清洗和质量检查"
+    },
+    "C03": {
+      "name": "SQL基础",
+      "kind": "course",
+      "hours": 32,
+      "fee": 80,
+      "prerequisites": [
+        [
+          "C01"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-12",
+      "allowed_start_months": [],
+      "acceptance": "关系数据查询与连接，需在作品中验证"
+    },
+    "C04": {
+      "name": "统计与可视化",
+      "kind": "course",
+      "hours": 40,
+      "fee": 150,
+      "prerequisites": [
+        [
+          "C02"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-12",
+      "allowed_start_months": [],
+      "acceptance": "统计描述与图形解释，避免只展示图不说明口径"
+    },
+    "C05": {
+      "name": "工程协作与测试",
+      "kind": "course",
+      "hours": 32,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "C01"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-12",
+      "allowed_start_months": [],
+      "acceptance": "版本、测试和可复现记录"
+    },
+    "C06A": {
+      "name": "模型评估暑期课",
+      "kind": "course",
+      "hours": 48,
+      "fee": 300,
+      "prerequisites": [
+        [
+          "C04"
+        ]
+      ],
+      "selection_group": "MODEL_ONE",
+      "earliest_month": "2027-07",
+      "latest_month": "2027-12",
+      "allowed_start_months": [
+        "2027-07",
+        "2027-08"
+      ],
+      "acceptance": "冻结资料报价，班期只能7月或8月开始；与C06B二选一"
+    },
+    "C06B": {
+      "name": "模型评估校内材料",
+      "kind": "course",
+      "hours": 48,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "C04"
+        ]
+      ],
+      "selection_group": "MODEL_ONE",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-12",
+      "allowed_start_months": [],
+      "acceptance": "与C06A同等预估学习时长，需自主评审作品；二选一"
+    },
+    "C07": {
+      "name": "实验设计",
+      "kind": "course",
+      "hours": 32,
+      "fee": 180,
+      "prerequisites": [
+        [
+          "C04"
+        ],
+        [
+          "C05"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2028-03",
+      "allowed_start_months": [],
+      "acceptance": "设计对照、避免泄漏并报告不确定性"
+    },
+    "C08": {
+      "name": "作品演示与求职表达",
+      "kind": "course",
+      "hours": 24,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "C05"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2028-06",
+      "allowed_start_months": [],
+      "acceptance": "演示项目与解释取舍，不虚构经历"
+    },
+    "P1": {
+      "name": "数据清洗与SQL作品",
+      "kind": "project",
+      "hours": 36,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "C02"
+        ],
+        [
+          "C03"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2027-12",
+      "allowed_start_months": [],
+      "acceptance": "R01-R03：数据口径、可重现清洗查询、质量检查报告"
+    },
+    "P2": {
+      "name": "可复现模型基线作品",
+      "kind": "project",
+      "hours": 48,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "C04"
+        ],
+        [
+          "C05"
+        ],
+        [
+          "C06A",
+          "C06B"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2028-03",
+      "allowed_start_months": [],
+      "acceptance": "R04-R06：固定数据划分、至少2条基线、泄漏检查与局限"
+    },
+    "P3": {
+      "name": "完整实验与交付作品",
+      "kind": "project",
+      "hours": 64,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "P1"
+        ],
+        [
+          "P2"
+        ],
+        [
+          "C07"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2027-01",
+      "latest_month": "2028-06",
+      "allowed_start_months": [],
+      "acceptance": "R07-R09：实验对照、版本化复现、解释不确定性与失败恢复"
+    },
+    "J1": {
+      "name": "实习材料与模拟面试",
+      "kind": "preparation",
+      "hours": 24,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "P3"
+        ],
+        [
+          "C08"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2028-01",
+      "latest_month": "2028-06",
+      "allowed_start_months": [],
+      "acceptance": "R10-R11：作品索引和模拟反馈，不实际投递或发送消息"
+    },
+    "I1": {
+      "name": "条件性实习实践",
+      "kind": "placement",
+      "hours": 128,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "J1"
+        ]
+      ],
+      "selection_group": "PRACTICE_ONE",
+      "earliest_month": "2028-07",
+      "latest_month": "2028-08",
+      "allowed_start_months": [
+        "2028-07"
+      ],
+      "acceptance": "仅在Q1机会/Q2资格获确认后；7-8月每周16小时，共8周；未知不能写成已获得实习"
+    },
+    "F1": {
+      "name": "无实习机会时内部实践",
+      "kind": "fallback",
+      "hours": 128,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "J1"
+        ]
+      ],
+      "selection_group": "PRACTICE_ONE",
+      "earliest_month": "2028-07",
+      "latest_month": "2028-08",
+      "allowed_start_months": [
+        "2028-07"
+      ],
+      "acceptance": "与I1互斥，7-8月每周16小时；明确内部实践不等于实习经历"
+    },
+    "L1": {
+      "name": "作品复核与下一阶段调整",
+      "kind": "review",
+      "hours": 16,
+      "fee": 0,
+      "prerequisites": [
+        [
+          "I1",
+          "F1"
+        ]
+      ],
+      "selection_group": "mandatory",
+      "earliest_month": "2028-09",
+      "latest_month": "2028-11",
+      "allowed_start_months": [],
+      "acceptance": "R12：用作品与实践证据复核能力，未评审前维持not_assessed"
+    }
+  },
+  "weeks": [
+    {
+      "week_id": "2027-01-W1",
+      "month": "2027-01",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-01-W2",
+      "month": "2027-01",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-01-W3",
+      "month": "2027-01",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-01-W4",
+      "month": "2027-01",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-02-W1",
+      "month": "2027-02",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-02-W2",
+      "month": "2027-02",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-02-W3",
+      "month": "2027-02",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-02-W4",
+      "month": "2027-02",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-03-W1",
+      "month": "2027-03",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-03-W2",
+      "month": "2027-03",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-03-W3",
+      "month": "2027-03",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-03-W4",
+      "month": "2027-03",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-04-W1",
+      "month": "2027-04",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-04-W2",
+      "month": "2027-04",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-04-W3",
+      "month": "2027-04",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-04-W4",
+      "month": "2027-04",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-05-W1",
+      "month": "2027-05",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-05-W2",
+      "month": "2027-05",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-05-W3",
+      "month": "2027-05",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-05-W4",
+      "month": "2027-05",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-06-W1",
+      "month": "2027-06",
+      "week_in_month": 1,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-06-W2",
+      "month": "2027-06",
+      "week_in_month": 2,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-06-W3",
+      "month": "2027-06",
+      "week_in_month": 3,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-06-W4",
+      "month": "2027-06",
+      "week_in_month": 4,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-07-W1",
+      "month": "2027-07",
+      "week_in_month": 1,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-07-W2",
+      "month": "2027-07",
+      "week_in_month": 2,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-07-W3",
+      "month": "2027-07",
+      "week_in_month": 3,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-07-W4",
+      "month": "2027-07",
+      "week_in_month": 4,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-08-W1",
+      "month": "2027-08",
+      "week_in_month": 1,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-08-W2",
+      "month": "2027-08",
+      "week_in_month": 2,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-08-W3",
+      "month": "2027-08",
+      "week_in_month": 3,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-08-W4",
+      "month": "2027-08",
+      "week_in_month": 4,
+      "hours_cap": 12,
+      "context": "summer"
+    },
+    {
+      "week_id": "2027-09-W1",
+      "month": "2027-09",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-09-W2",
+      "month": "2027-09",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-09-W3",
+      "month": "2027-09",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-09-W4",
+      "month": "2027-09",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-10-W1",
+      "month": "2027-10",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-10-W2",
+      "month": "2027-10",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-10-W3",
+      "month": "2027-10",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-10-W4",
+      "month": "2027-10",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-11-W1",
+      "month": "2027-11",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-11-W2",
+      "month": "2027-11",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-11-W3",
+      "month": "2027-11",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-11-W4",
+      "month": "2027-11",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2027-12-W1",
+      "month": "2027-12",
+      "week_in_month": 1,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-12-W2",
+      "month": "2027-12",
+      "week_in_month": 2,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-12-W3",
+      "month": "2027-12",
+      "week_in_month": 3,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2027-12-W4",
+      "month": "2027-12",
+      "week_in_month": 4,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-01-W1",
+      "month": "2028-01",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-01-W2",
+      "month": "2028-01",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-01-W3",
+      "month": "2028-01",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-01-W4",
+      "month": "2028-01",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-02-W1",
+      "month": "2028-02",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-02-W2",
+      "month": "2028-02",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-02-W3",
+      "month": "2028-02",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-02-W4",
+      "month": "2028-02",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-03-W1",
+      "month": "2028-03",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-03-W2",
+      "month": "2028-03",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-03-W3",
+      "month": "2028-03",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-03-W4",
+      "month": "2028-03",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-04-W1",
+      "month": "2028-04",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-04-W2",
+      "month": "2028-04",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-04-W3",
+      "month": "2028-04",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-04-W4",
+      "month": "2028-04",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-05-W1",
+      "month": "2028-05",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-05-W2",
+      "month": "2028-05",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-05-W3",
+      "month": "2028-05",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-05-W4",
+      "month": "2028-05",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-06-W1",
+      "month": "2028-06",
+      "week_in_month": 1,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-06-W2",
+      "month": "2028-06",
+      "week_in_month": 2,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-06-W3",
+      "month": "2028-06",
+      "week_in_month": 3,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-06-W4",
+      "month": "2028-06",
+      "week_in_month": 4,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-07-W1",
+      "month": "2028-07",
+      "week_in_month": 1,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-07-W2",
+      "month": "2028-07",
+      "week_in_month": 2,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-07-W3",
+      "month": "2028-07",
+      "week_in_month": 3,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-07-W4",
+      "month": "2028-07",
+      "week_in_month": 4,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-08-W1",
+      "month": "2028-08",
+      "week_in_month": 1,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-08-W2",
+      "month": "2028-08",
+      "week_in_month": 2,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-08-W3",
+      "month": "2028-08",
+      "week_in_month": 3,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-08-W4",
+      "month": "2028-08",
+      "week_in_month": 4,
+      "hours_cap": 24,
+      "context": "practice_window"
+    },
+    {
+      "week_id": "2028-09-W1",
+      "month": "2028-09",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-09-W2",
+      "month": "2028-09",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-09-W3",
+      "month": "2028-09",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-09-W4",
+      "month": "2028-09",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-10-W1",
+      "month": "2028-10",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-10-W2",
+      "month": "2028-10",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-10-W3",
+      "month": "2028-10",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-10-W4",
+      "month": "2028-10",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-11-W1",
+      "month": "2028-11",
+      "week_in_month": 1,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-11-W2",
+      "month": "2028-11",
+      "week_in_month": 2,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-11-W3",
+      "month": "2028-11",
+      "week_in_month": 3,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-11-W4",
+      "month": "2028-11",
+      "week_in_month": 4,
+      "hours_cap": 8,
+      "context": "semester"
+    },
+    {
+      "week_id": "2028-12-W1",
+      "month": "2028-12",
+      "week_in_month": 1,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-12-W2",
+      "month": "2028-12",
+      "week_in_month": 2,
+      "hours_cap": 2,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-12-W3",
+      "month": "2028-12",
+      "week_in_month": 3,
+      "hours_cap": 0,
+      "context": "exam"
+    },
+    {
+      "week_id": "2028-12-W4",
+      "month": "2028-12",
+      "week_in_month": 4,
+      "hours_cap": 0,
+      "context": "exam"
+    }
+  ],
+  "months": [
+    {
+      "month": "2027-01",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-02",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-03",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-04",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-05",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-06",
+      "monthly_fee_cap": 0,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-07",
+      "monthly_fee_cap": 400,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-08",
+      "monthly_fee_cap": 400,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-09",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-10",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-11",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2027-12",
+      "monthly_fee_cap": 0,
+      "annual_fee_cap": 700,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-01",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-02",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-03",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-04",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-05",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-06",
+      "monthly_fee_cap": 0,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-07",
+      "monthly_fee_cap": 400,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-08",
+      "monthly_fee_cap": 400,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-09",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-10",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-11",
+      "monthly_fee_cap": 200,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    },
+    {
+      "month": "2028-12",
+      "monthly_fee_cap": 0,
+      "annual_fee_cap": 500,
+      "unit_note": "4 supplied planning weeks; not actual calendar weeks"
+    }
+  ],
+  "total_fee_cap": 900,
+  "annual_fee_caps": {
+    "2027": 700,
+    "2028": 500
+  },
+  "mandatory": [
+    "D0",
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C07",
+    "C08",
+    "P1",
+    "P2",
+    "P3",
+    "J1",
+    "L1"
+  ],
+  "choice_groups": {
+    "MODEL_ONE": [
+      "C06A",
+      "C06B"
+    ],
+    "PRACTICE_ONE": [
+      "I1",
+      "F1"
+    ]
+  },
+  "milestones": {
+    "P1": {
+      "criteria": [
+        "R01",
+        "R02",
+        "R03"
+      ],
+      "proof": "数据口径与样本边界；可重现清洗/SQL；缺失/重复/异常的检查记录"
+    },
+    "P2": {
+      "criteria": [
+        "R04",
+        "R05",
+        "R06"
+      ],
+      "proof": "固定划分与评估口径；至少两条基线；无泄漏检查、失败及局限"
+    },
+    "P3": {
+      "criteria": [
+        "R07",
+        "R08",
+        "R09"
+      ],
+      "proof": "有对照的实验；版本化复现及交付；不确定性解释与失败恢复"
+    },
+    "J1": {
+      "criteria": [
+        "R10",
+        "R11"
+      ],
+      "proof": "作品索引与个人贡献边界；模拟反馈及改进记录"
+    },
+    "L1": {
+      "criteria": [
+        "R12"
+      ],
+      "proof": "对作品与实践证据的复核记录、未达项与下一步"
+    }
+  },
+  "practice_weeks": [
+    "2028-07-W1",
+    "2028-07-W2",
+    "2028-07-W3",
+    "2028-07-W4",
+    "2028-08-W1",
+    "2028-08-W2",
+    "2028-08-W3",
+    "2028-08-W4"
+  ],
+  "practice_hours_per_week": 16,
+  "Q1_status": "unknown",
+  "Q2_status": "unknown",
+  "review_by": "2028-05",
+  "source_sha256": {
+    "availability.xlsx": "f374acf94c96f586016b724c82a01b7b09194567f9d3000f30f458749a7c25e7",
+    "courses.csv": "6540f67cf1ed112be9d4ddd2d0239a95b0ceef10acb7580165b5af47b0eab630",
+    "milestones.md": "06637f2901ee5bfb8312da5b6babcad3cb6d8aba2833331d748ea5a0c1ef3875",
+    "profile.md": "a34378b2fd1a4819dd554caf90f75fcd40c8ece06a4f43ecd0252a08496032d0"
+  }
+}

@@ -605,3 +605,16 @@ general_hard_software_engineering_task_009_package_migration:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_planning_coordination_task_003_learning_path:
+  automated.business_correctness:
+    - reasoning_planning
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - verification_delivery
+  llm_judge.decision_grounding:
+    - reasoning_planning
+  llm_judge.usable_handoff:
+    - verification_delivery
