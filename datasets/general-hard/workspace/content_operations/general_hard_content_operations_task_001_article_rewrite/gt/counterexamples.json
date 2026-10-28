@@ -1,0 +1,26 @@
+{
+  "qualifiers": {
+    "Q01": "非随机、脱敏的历史样本，不能泛化到全公司、所有行业或实时客户场景。",
+    "Q02": "84与62都是小范围描述性中位数；缺少随机对照，不能把差异写成AI造成或必然达到的提效。",
+    "Q03": "36/40是经人工复核后的可采用比例，不能写成模型自动准确率或不需要人工。",
+    "Q04": "下一步10份历史案例仅为待审批计划；本轮未全量上线、未接入实时客户会话。"
+  },
+  "prohibited_claims": [
+    "保证所有团队省时一半或普遍达到固定降本幅度",
+    "模型100%准确、可以免人工复核或自动发布",
+    "试点已经全量上线并接入真实客户会话"
+  ],
+  "structural_failures": [
+    "hidden/canvas/image body",
+    "nonexistent target",
+    "remote resources",
+    "changed input"
+  ],
+  "semantic_failures": [
+    "opposite/unsupported quote",
+    "removed qualifier",
+    "90pct called automatic accuracy",
+    "plan called executed",
+    "polish only without argument restructure"
+  ]
+}

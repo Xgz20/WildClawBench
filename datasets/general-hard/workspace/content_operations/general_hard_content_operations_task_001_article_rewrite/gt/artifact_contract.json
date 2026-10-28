@@ -1,0 +1,44 @@
+{
+  "results": [
+    "article.html",
+    "fact_map.csv",
+    "edit_notes.md"
+  ],
+  "source_ids": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12",
+    "Q01",
+    "Q02",
+    "Q03",
+    "Q04"
+  ],
+  "columns": [
+    "source_id",
+    "source_locator",
+    "source_quote",
+    "target_id",
+    "article_quote"
+  ],
+  "allowed_equivalence": [
+    "BOM",
+    "column/row order",
+    "Chinese aliases",
+    "arbitrary HTMLid/layout",
+    "multiple facts per paragraph",
+    "equivalent prose reserved to Judge"
+  ],
+  "semantic_judge_weights": {
+    "decision_grounding": 0.7,
+    "usable_handoff": 0.3
+  }
+}

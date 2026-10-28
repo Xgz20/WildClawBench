@@ -31,3 +31,5 @@ datasets/general-hard/workspace/planning_coordination/general_hard_planning_coor
 # H054原始日历和工作项CSV按冻结输入保留标准CRLF。
 datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_002_identity_cutover/exec/calendar.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_002_identity_cutover/exec/work_items.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# H057等价参考映射按已验收BOM/CRLF原字节保留。
+datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_001_article_rewrite/gt/reference/equivalent/results/fact_map.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

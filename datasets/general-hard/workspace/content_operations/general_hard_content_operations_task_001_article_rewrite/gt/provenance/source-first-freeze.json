@@ -1,0 +1,16 @@
+{
+  "at_utc": "2026-10-28T22:55:26.613890+00:00",
+  "no_reference_exists": true,
+  "files": {
+    "exec/editorial.md": "2c19939856d08fa436b18b31f0ad692a67fda46c7b265ee08e519c3f32d5f08c",
+    "exec/draft.md": "80bf919d7206f79d14c0e55416fb6eb6847550b83d3f8d176c7eae885c93acab",
+    "exec/facts.csv": "4164d4773ea6d5a1ffbc39c44746316dd13120d9f3b7165c26fe84220536ac00",
+    "gt/evidence_requirements.json": "07e3e7df3759b253a21c0e42d36c82180d35cc5f108b8dab7bc89380ee9a6144",
+    "gt/business_oracle.json": "14371e146f97711e3ecd1bcc3f635c30cdd592c09d69e26072141a5c7f6bfd2e",
+    "gt/protected_sha256.json": "21707bb5b9aa2bc79c59b6c7aaf4dd53bd16a9080c0a9d0287942bceeeed90ee",
+    "gt/expected.json": "4d1a89b96489475d09f58ef37c184dd5289c32ea7c26e40cbbd174e248c49c45",
+    "gt/counterexamples.json": "b5c9a4606f76d0b614453f7078c4bfa77bb9792b6367328f663025d128dd41aa",
+    "gt/artifact_contract.json": "6c8bb104b91b3f16b6d63a307ef7615c4f10059ffb623ac45718ce6bd017d3d2"
+  },
+  "author_kind": "model, not human expert"
+}
