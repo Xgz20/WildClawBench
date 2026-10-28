@@ -10988,7 +10988,7 @@
             "last_seen_local": "2026-09-26 02:49:49.284000",
             "intent_summary": "工资提成的参数化公式、阈值和工作簿易用性要求；新题不发送邮件。",
             "review": "accepted_intent_prototype",
-            "review_basis": "AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。",
+            "review_basis": "沿用已接受的去身份用途原型；作者核对用途及输入，全部员工、金额、日期合成；Decimal与独立整数分/Fraction双路核算，不是人工会计专家复核，不证明生产结果正确或人类原创。",
             "adaptation": "保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。"
           }
         ],
@@ -11043,9 +11043,9 @@
         "情景只改标签"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_AND_DUAL_TRUTH_VERIFIED_FULL_REFERENCE_PENDING",
         "synthetic_seed": 2026102624,
-        "construction": "独立Decimal分段函数核算三情景和阈值两侧，锁定引擎重算；改动一个后期参数后再次核对结果，避免只检查公式文本。",
+        "construction": "实际读取四Sheet的192条源记录，Decimal月度分段/累计退款与独立整数分/Fraction时间线四场景16848项一致；活动工资/回溯原生字段六场景7146项通过。完整三情景实时对比的实现方式待用户选择，指标选择器凑双变量表的原型已拒绝，不计完整参考通过。",
         "private_files": [
           "expected.json",
           "business_oracle.json",
@@ -11183,7 +11183,12 @@
         "task_md_materialized": false,
         "exec_materialized": false,
         "gt_materialized": false,
-        "runtime_verified": false
+        "runtime_verified": false,
+        "source_materials_verified": true,
+        "dual_truth_verified": true,
+        "full_reference_comparison_verified": false,
+        "comparison_design_pending_user": true,
+        "evidence": "evidence/h024-materials-20261028.json"
       },
       "dependencies": {
         "execution": [
