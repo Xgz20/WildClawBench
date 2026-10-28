@@ -15,8 +15,9 @@ from .office_runtime import prepare_xlsx_counterfactual, verify_xlsx_counterfact
 from .office_runtime import prepare_xlsx_marker_intervention, verify_xlsx_marker_intervention
 from .office_runtime import prepare_xlsx_numeric_intervention, verify_xlsx_numeric_intervention
 from .image_evidence import ImageEvidenceError, is_image_evidence_format, read_image_evidence
+from .html_runtime import HtmlRuntimeError, create_html_lock, validate_html_lock, html_lock_digest, observe_html, verify_html_observation
 
-CORE_VERSION = "0.14.0"
+CORE_VERSION = "0.15.0"
 
 __all__ = (
     "CORE_VERSION",
@@ -50,4 +51,10 @@ __all__ = (
     "ImageEvidenceError",
     "is_image_evidence_format",
     "read_image_evidence",
+    "HtmlRuntimeError",
+    "create_html_lock",
+    "validate_html_lock",
+    "html_lock_digest",
+    "observe_html",
+    "verify_html_observation",
 )

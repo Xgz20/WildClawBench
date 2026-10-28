@@ -1,5 +1,7 @@
 # General E2E 评分 core 接口
 
+score-general-e2e 0.23.0装配core 0.15.0，增加`HtmlRuntimeError`、`create_html_lock()`、`validate_html_lock()`、`html_lock_digest()`、`observe_html()`及`verify_html_observation()`。Python包装器与`html_observer.mjs`共同分发，实际运行使用显式冻结的外部Node/Playwright core/Chromium。返回浏览器观测和来源回执，不决定业务正确性。归档验证保留源文件、资源、脚本、请求、观测和截图的绑定，无需执行浏览器；不声称密码学证明渲染真实发生。见[HTML运行时观测](html-observation.md)。
+
 score-general-e2e 0.22.0装配core 0.14.0，新增普通标量公式/数值中间量干预API `prepare_xlsx_numeric_intervention()`、`verify_xlsx_numeric_intervention()`。有限数值范围沿用已有numeric literal约束，逐格保存完整`original_cell`并以新的审计schema/Profile重放；不扩大旧字面数值或二进制标记接口。它与原两种Profile共用扎根来源图，归档不依赖引擎仍在场。见[标量数值中间量干预](office-recalculation.md#标量数值中间量干预)。
 
 score-general-e2e 0.21.0装配core 0.13.0，新增`prepare_xlsx_marker_intervention()`与`verify_xlsx_marker_intervention()`。独立Profile记录原单元格完整XML，允许在副本对普通标量公式或二进制数值/布尔/文本标记做0/1干预；现有普通数值输入接口仍拒绝改公式。归档校验器按来源依赖重放连续普通变体和标记变体，未扎根、环和未声明变更均拒绝。详见[连续变体与标记干预](office-recalculation.md#连续变体与二进制标记干预)。

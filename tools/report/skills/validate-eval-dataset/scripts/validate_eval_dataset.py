@@ -74,10 +74,10 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
         return [_issue("FRONTMATTER_INVALID", doc.frontmatter_error, doc)]
     metadata = doc.metadata
     scoring_runtime = metadata.get("scoring_runtime", {})
-    if (not isinstance(scoring_runtime, dict) or set(scoring_runtime) - {"office", "office_render"}
+    if (not isinstance(scoring_runtime, dict) or set(scoring_runtime) - {"office", "office_render", "html_render"}
             or any(type(value) is not bool for value in scoring_runtime.values())
             or scoring_runtime.get("office_render") and not scoring_runtime.get("office")):
-        issues.append(_issue("SCORING_RUNTIME_INVALID", "scoring_runtime仅支持boolean office/office_render，渲染须同时声明office", doc))
+        issues.append(_issue("SCORING_RUNTIME_INVALID", "scoring_runtime仅支持boolean office/office_render/html_render，office_render须同时声明office", doc))
     required_types = {"id": str, "category": str, "difficulty": str, "modality": str, "timeout_seconds": int, "grading_type": str}
     for key, expected in required_types.items():
         if key not in metadata:

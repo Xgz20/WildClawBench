@@ -2122,6 +2122,7 @@ class _WorkerExecutor:
         playwright_browsers_path: Path | None,
         office_runtime: dict | None = None,
         office_render_runtime: dict | None = None,
+        html_runtime: dict | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
@@ -2130,6 +2131,7 @@ class _WorkerExecutor:
         self.playwright_browsers_path = playwright_browsers_path
         self.office_runtime = office_runtime
         self.office_render_runtime = office_render_runtime
+        self.html_runtime = html_runtime
         if office_render_runtime is not None and (office_runtime is None or office_render_runtime.get("office_runtime") != office_runtime):
             raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
         self.audit: dict[str, Any] = {}
@@ -2144,6 +2146,13 @@ class _WorkerExecutor:
             required_import_roots=dependency_roots,
             playwright_browsers_path=self.playwright_browsers_path,
         )
+        if self.html_runtime is not None:
+            _import_grading_core()
+            from wildclawbench_grading_core import HtmlRuntimeError, validate_html_lock
+            try:
+                validate_html_lock(self.html_runtime)
+            except HtmlRuntimeError as exc:
+                raise ScoringRuntimeError(exc.code, exc.message) from exc
         work_root = self.attempt_root / "worker"
         work_root.mkdir(parents=False, exist_ok=False)
         request_path = work_root / "request.json"
@@ -2164,6 +2173,7 @@ class _WorkerExecutor:
         )
         office_binding = None
         render_binding = None
+        html_binding = None
         if self.office_runtime is not None:
             lock_path = work_root / "office-runtime.json"
             _write_new_json(lock_path, self.office_runtime)
@@ -2177,6 +2187,14 @@ class _WorkerExecutor:
             _write_new_json(render_path, self.office_render_runtime)
             env["GENERAL_E2E_OFFICE_RENDER_LOCK"] = str(render_path)
             render_binding = {"path": "worker/office-render-runtime.json", "sha256": _sha256_file(render_path)}
+        if self.html_runtime is not None:
+            html_path = work_root / "html-runtime.json"
+            _write_new_json(html_path, self.html_runtime)
+            derived = work_root / "derived"
+            derived.mkdir(exist_ok=True)
+            env["GENERAL_E2E_HTML_LOCK"] = str(html_path)
+            env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
+            html_binding = {"path": "worker/html-runtime.json", "sha256": _sha256_file(html_path)}
         creationflags = 0
         popen_kwargs: dict[str, Any] = {"start_new_session": os.name != "nt"}
         if os.name == "nt":
@@ -2243,6 +2261,7 @@ class _WorkerExecutor:
             "stderr_sha256": _sha256_file(stderr_path),
             **({"office_runtime": office_binding} if office_binding else {}),
             **({"office_render_runtime": render_binding} if render_binding else {}),
+            **({"html_runtime": html_binding} if html_binding else {}),
         }
         if timed_out:
             raise ScoringRuntimeError("RULE_WORKER_TIMEOUT")
@@ -2328,6 +2347,83 @@ def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Pat
     return {"status": "PASS", "runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
             "font_count": len(render["fonts"]), "engine_version": office["engine_version"],
             "document_format": document_format, "document_formats": list(office_render_lock_formats(render)), "profile": render["profile"]}
+
+
+def bootstrap_html_runtime(node: Path, library: Path, browser: Path, output: Path,
+                           runtime_lock_path: Path | None = None, font_files: list[Path] | None = None) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import HtmlRuntimeError, create_html_lock
+    try:
+        html = create_html_lock(node, library, browser, font_files=font_files or ())
+    except HtmlRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    value = html
+    if runtime_lock_path is not None:
+        value, _ = _load_runtime_lock(runtime_lock_path)
+        value = {**value, "html_runtime": html}
+    _write_new_json(output, value)
+    return {"status": "PASS", "html_runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
+            "browser_version": html["browser"]["version"], "playwright_core_version": html["playwright_core"]["version"]}
+
+
+def _verify_html_rule_evidence(root: Path, *, required: bool = False, archived: bool = False) -> list[dict]:
+    audit_path = root / "rule-audit.json"
+    if not audit_path.is_file():
+        if required:raise ScoringRuntimeError("HTML_RULE_AUDIT_MISSING")
+        return []
+    audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+    binding = (audit.get("worker") or {}).get("html_runtime")
+    if not binding:
+        if required:raise ScoringRuntimeError("HTML_RUNTIME_BINDING_MISSING")
+        return []
+    path = _resolve_within(root, binding.get("path"), "HTML runtime")
+    if binding.get("path") != "worker/html-runtime.json" or path.is_symlink() or _sha256_file(path) != binding.get("sha256"):
+        raise ScoringRuntimeError("HTML_RUNTIME_LOCK_DRIFT")
+    _import_grading_core()
+    from wildclawbench_grading_core import HtmlRuntimeError, validate_html_lock, verify_html_observation
+    lock = _read_json(path, code="HTML_RUNTIME_LOCK_INVALID")
+    try:validate_html_lock(lock, require_assets=not archived)
+    except HtmlRuntimeError as exc:raise ScoringRuntimeError(exc.code, exc.message) from exc
+    artifacts = audit.get("derived_artifacts")
+    if not isinstance(artifacts, list):raise ScoringRuntimeError("HTML_DERIVED_INDEX_INVALID")
+    seen = set()
+    for row in artifacts:
+        relative = row.get("path", "")
+        if not relative.startswith("worker/derived/") or relative in seen:raise ScoringRuntimeError("HTML_DERIVED_INDEX_INVALID")
+        seen.add(relative);file = _resolve_within(root, relative, "HTML derived artifact")
+        if file.is_symlink() or not file.is_file() or file.stat().st_size != row.get("size") or _sha256_file(file) != row.get("sha256"):
+            raise ScoringRuntimeError("HTML_DERIVED_ARTIFACT_DRIFT", relative)
+    if seen != {p.relative_to(root).as_posix() for p in (root / "worker/derived").rglob("*") if p.is_file()}:
+        raise ScoringRuntimeError("HTML_DERIVED_INDEX_DRIFT")
+    sources = {}
+    for boundary in [root / "candidate-original/workspace", root / "private/gt"]:
+        for file in _regular_evidence_files(boundary):
+            if file.suffix.lower() in {".html", ".htm"}:sources.setdefault(_sha256_file(file), []).append((file, boundary))
+    for row in artifacts:
+        if not row["path"].endswith("/html-audit.json"):continue
+        receipt_path = root / row["path"];receipt = _read_json(receipt_path, code="HTML_AUDIT_INVALID")
+        request = _read_json(receipt_path.with_name("request.json"), code="HTML_AUDIT_INVALID")
+        relative = request.get("source_resource_path")
+        if not isinstance(relative, str) or not relative or any(p in {"", ".", ".."} for p in relative.replace("\\", "/").split("/")):
+            raise ScoringRuntimeError("HTML_AUDIT_INVALID", "resource-root relation")
+        accepted = False
+        for source, boundary in sources.get(receipt.get("source_sha256"), []):
+            resource_root = source
+            for _ in relative.split("/"):resource_root = resource_root.parent
+            if resource_root != boundary and boundary not in resource_root.parents:continue
+            try:
+                verify_html_observation(source, receipt_path.parent, receipt, lock, resource_root=resource_root, archived=archived)
+            except (HtmlRuntimeError, OSError, ValueError, KeyError, TypeError):continue
+            accepted = True;break
+        if not accepted:raise ScoringRuntimeError("HTML_AUDIT_INVALID", row["path"])
+    return [{"path": binding["path"], "sha256": binding["sha256"]}, *artifacts]
+
+
+def _verify_rule_derived_evidence(root: Path, requirements: dict, *, archived: bool = False) -> list[dict]:
+    office = _verify_office_rule_evidence(root, required=bool(requirements.get("office")),
+        render_required=bool(requirements.get("office_render")), archived=archived)
+    html = _verify_html_rule_evidence(root, required=bool(requirements.get("html_render")), archived=archived)
+    return list({row["path"]: row for row in [*office, *html]}.values())
 
 
 def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
@@ -2680,7 +2776,7 @@ def run_rules_attempt(
     contract_path = _resolve_within(attempt_root, manifest["paths"]["contract"], "contract")
     contract = _read_json(contract_path, code="SCORING_CONTRACT_INVALID")
     requirements = contract.get("scoring_runtime") or {}
-    if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render"}
+    if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render", "html_render"}
             or any(type(value) is not bool for value in requirements.values())
             or requirements.get("office_render") and not requirements.get("office")):
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "scoring_runtime")
@@ -2702,6 +2798,16 @@ def run_rules_attempt(
     if requirements.get("office") and office_runtime is None:
         raise ScoringRuntimeError("OFFICE_RUNTIME_REQUIRED", "freeze and provide --office-runtime-lock before evaluating this task")
     render_runtime = frozen_runtime_lock.get("office_render_runtime") if requirements.get("office_render") else None
+    html_runtime = frozen_runtime_lock.get("html_runtime") if requirements.get("html_render") else None
+    if requirements.get("html_render"):
+        if html_runtime is None:
+            raise ScoringRuntimeError("HTML_RUNTIME_REQUIRED", "freeze browser/Node/Playwright assets with bootstrap-html")
+        _import_grading_core()
+        from wildclawbench_grading_core import HtmlRuntimeError, validate_html_lock
+        try:
+            validate_html_lock(html_runtime)
+        except HtmlRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
     if requirements.get("office_render"):
         if render_runtime is None:
             raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_REQUIRED", "freeze engine and font files with bootstrap-office-render")
@@ -2747,6 +2853,7 @@ def run_rules_attempt(
         playwright_browsers_path=playwright_browsers_path,
         office_runtime=office_runtime,
         office_render_runtime=render_runtime,
+        html_runtime=html_runtime,
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -2814,7 +2921,7 @@ def run_rules_attempt(
         },
         "error": error,
     }
-    if office_runtime is not None:
+    if office_runtime is not None or html_runtime is not None:
         derived = attempt_root / "worker/derived"
         audit["derived_artifacts"] = [{"path": path.relative_to(attempt_root).as_posix(), "sha256": _sha256_file(path), "size": path.stat().st_size}
             for path in sorted(derived.rglob("*")) if path.is_file() and not path.is_symlink()] if derived.exists() else []
@@ -2995,8 +3102,7 @@ def _semantic_reference_inputs(
     if rule_audit.is_file() and not rule_audit.is_symlink():
         add_file("rule_audit", rule_audit)
         contract = _read_json(attempt_root / manifest["paths"]["contract"])
-        for artifact in _verify_office_rule_evidence(attempt_root, required=bool((contract.get("scoring_runtime") or {}).get("office")),
-                render_required=bool((contract.get("scoring_runtime") or {}).get("office_render"))):
+        for artifact in _verify_rule_derived_evidence(attempt_root, contract.get("scoring_runtime") or {}):
             add_file("rule_derived_artifact", attempt_root / artifact["path"])
     if manifest.get("trace_bundle"):
         bundle = _read_json(attempt_root / manifest["trace_bundle"]["path"])
@@ -5381,8 +5487,7 @@ def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
     _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
     try:
         contract = _read_json(root / manifest["paths"]["contract"])
-        _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")),
-            render_required=bool((contract.get("scoring_runtime") or {}).get("office_render")))
+        _verify_rule_derived_evidence(root, contract.get("scoring_runtime") or {})
         _verify_semantic_terminal(root, manifest)
         score = _build_standard_score(
             root, manifest, finalize_score=finalize_score
@@ -5447,8 +5552,7 @@ def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[
     )
     _verify_rule_source_correction(root, manifest)
     contract = _read_json(root / manifest["paths"]["contract"])
-    _verify_office_rule_evidence(root, required=bool((contract.get("scoring_runtime") or {}).get("office")),
-        render_required=bool((contract.get("scoring_runtime") or {}).get("office_render")), archived=archived)
+    _verify_rule_derived_evidence(root, contract.get("scoring_runtime") or {}, archived=archived)
     if (
         audit.get("schema_version") != SCORE_AUDIT_SCHEMA
         or audit.get("status") != "completed"
@@ -5978,6 +6082,14 @@ def main(argv: list[str] | None = None) -> int:
     render.add_argument("--output", required=True, type=Path)
     render.add_argument("--document-format", choices=("pptx", "docx", "both"), default="pptx")
 
+    html = subparsers.add_parser("bootstrap-html")
+    html.add_argument("--node", required=True, type=Path)
+    html.add_argument("--playwright-core", required=True, type=Path)
+    html.add_argument("--browser", required=True, type=Path)
+    html.add_argument("--font-file", action="append", type=Path, default=[])
+    html.add_argument("--runtime-lock", type=Path)
+    html.add_argument("--output", required=True, type=Path)
+
     prepare_semantics = subparsers.add_parser("prepare-semantics")
     prepare_semantics.add_argument("--attempt-root", required=True, type=Path)
 
@@ -6072,6 +6184,9 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "bootstrap-office":
             result = bootstrap_office_runtime(args.executable, args.output, args.runtime_lock)
+        elif args.command == "bootstrap-html":
+            result = bootstrap_html_runtime(args.node, args.playwright_core, args.browser, args.output,
+                args.runtime_lock, args.font_file)
         elif args.command == "bootstrap-office-render":
             result = bootstrap_office_render_runtime(args.office_runtime_lock, args.font_file, args.output, args.runtime_lock,
                                                     args.font_directory, args.document_format)
