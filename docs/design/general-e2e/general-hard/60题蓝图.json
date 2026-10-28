@@ -19218,7 +19218,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/gt"
       },
-      "prompt_draft": "请完成以下工作：完成包结构迁移，保留旧CLI入口、资源定位及配置兼容；在临时安装目录验证，不依赖当前仓库路径偶然成功。\n\n输入材料：\n- /tmp_workspace/project/：小型Python包含CLI、资源文件和旧入口\n- /tmp_workspace/acceptance.md：Python3.11/3.12兼容约定\n- /tmp_workspace/tests_public/：既有回归\n- /tmp_workspace/offline_wheels/：锁定且许可可分发的依赖\n\n交付：\n- /tmp_workspace/project/：允许清单内的源码和打包配置\n- /tmp_workspace/results/install_matrix.json：隔离安装/旧入口验证\n- /tmp_workspace/results/migration.md：兼容说明\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "完成Python包的src结构迁移，保留旧CLI入口、资源定位和配置兼容，并在临时安装目录实际验证，不能依赖当前仓库cwd偶然成功。\n\n先读 /tmp_workspace/acceptance.md 和 /tmp_workspace/mutable_paths.json。/tmp_workspace/project/ 是含旧flat包、未完成src骨架、legacy入口和资源的原始项目；只可修改mutable_paths.json列出的12个源码/pyproject路径，required_sources必须交付，旧可选源码可按许可保留兼容或移除，其它文件不可改。\n\n保护输入包括 /tmp_workspace/tests_public/ 旧接口回归、/tmp_workspace/offline_wheels/ 已锁SHA且保留许可证的本地pip/setuptools wheel、/tmp_workspace/fixtures/records.json 与 /tmp_workspace/fixtures/configs.json。/tmp_workspace/tools/verify_install.py、package_matrix.py、offline_driver.py、installed_probe.py 均是不可改的真实构建/临时安装/入口验证工具。只用预置Python3.11与3.12，缺解释器须如实报告，不允许联网或安装外部依赖；工具仅在本题临时目录解压锁定构建工具、将待测wheel安装到临时target，不改宿主环境。\n\n交付 /tmp_workspace/project/ 允许清单内的修复源码/打包配置、/tmp_workspace/results/install_matrix.json 和 /tmp_workspace/results/migration.md。实际运行 python -B tools/verify_install.py（必要时以--python311/--python312指定已有解释器）；矩阵须保留两版本真实构建/安装/新旧入口命令、cwd、returncode/完整输出、wheel SHA与保留的wheel、模块origin和最终源码/夹具SHA。源码改变后须重跑。compat说明需清楚交接新旧入口、资源方法、配置语义、实际版本与限制，不得声称未运行的版本通过。\n\n规范化配置、0/False/None、旧键与未知键、CLI返回码、包内资源、src来源与旧console/module/API约定均以acceptance.md为准。须从异cwd和非ASCII临时目录测试，wheel保留于results/install_artifacts；禁止editable安装、以PYTHONPATH指回checkout或修改测试来蒙混。既有源码cwd烟雾测试能跑不代表安装后可用。\n\n仅读取本题exec映射到/tmp_workspace的材料；GT不提供给候选。保护资源、LICENSE、锁定wheel、工具、测试和输入原字节不变，不增添未允许源码，所有额外报告只写results。离线、不访问真实账号、不发消息、不调用付费接口或真实数据库；事实、推断、未知分开，不虚构安装/兼容实测。",
       "inputs": [
         {
           "path": "project/",
@@ -19267,20 +19267,44 @@
         "修改测试代替兼容"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102649,
-        "construction": "私有测试从不同cwd和非ASCII路径构建安装，核对包资源、命令退出码和配置语义；两版解释器为预置依赖，不让候选联网安装。",
+        "construction": "输入/10真值先冻结后构造参考，旧源码cwd正常但真实wheel安装失败已复现；v2补API末态不变。root核原384冻结（改动前保存字节），实际复现只留core.py的wheel仍v2A1，v3仅E补完整规范模块/资源、源码元数据入口及RECORD绑定。两参考A1，截断/错RECORD/错模块路径仅E=.8，源码缺console仍仅boundary=.9375。21v1/11v2/6受影响v3分别保留不冒称不同题总数或全当前版本。当前正式7源码overlay/完整results、独立ZIP实际双解释器安装回放及84文件无runtime搬移再次通过。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "private_data.json",
+          "private_matrix.py",
+          "private_probe.py",
+          "protected_inputs/acceptance.md",
+          "protected_inputs/fixtures/configs.json",
+          "protected_inputs/fixtures/records.json",
+          "protected_inputs/mutable_paths.json",
+          "protected_inputs/offline_wheels/manifest.json",
+          "protected_inputs/offline_wheels/pip-24.0-py3-none-any.whl",
+          "protected_inputs/offline_wheels/setuptools-79.0.1-py3-none-any.whl",
+          "protected_inputs/project/LICENSE",
+          "protected_inputs/project/batchstamp/resources/banner.txt",
+          "protected_inputs/project/batchstamp/resources/defaults.json",
+          "protected_inputs/project/src/batchstamp/resources/banner.txt",
+          "protected_inputs/project/src/batchstamp/resources/defaults.json",
+          "protected_inputs/tests_public/test_compat.py",
+          "protected_inputs/tools/installed_probe.py",
+          "protected_inputs/tools/offline_driver.py",
+          "protected_inputs/tools/package_matrix.py",
+          "protected_inputs/tools/verify_install.py",
+          "protected_sha256.json",
+          "runtime_contract.json",
+          "trusted_manifest.json",
+          "wheel_evidence.py"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许不同包内资源API、代码组织及wheel时间戳；按当前src规范模块/资源字节与元数据RECORD绑定，不比重复构建wheel整包SHA或参考补丁。源码错误入口由原边界机会承担，独立产物篡改归E。API恢复末态仍合法。",
+        "authoring_evidence": "evidence/h049-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -19295,7 +19319,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "完成包结构迁移，保留旧CLI入口、资源定位及配置兼容；在临时安装目录验证，不依赖当前仓库路径偶然成功。",
+            "criterion": "两个预置解释器各10配置×新/旧API，共40项真实安装后业务机会；每次同时核返回结果与records/config末态结构和标量类型不变，不单独重复扣交付分。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -19304,7 +19328,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：当前cwd能跑但安装后失效；漏资源；修改测试代替兼容。以独立反例验证，不只检索关键词。",
+            "criterion": "每解释器16项固定边界，共32项：构建/安装、src字节、资源/zip资源、origin、四新旧入口、错误码、异cwd旧脚本、公开回归和版本metadata。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -19313,7 +19337,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "必交源码/pyproject可读取解析(.30)、保护输入与修改范围(.40)、matrix与非空兼容说明各(.15)。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -19322,7 +19346,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "最终mutable源码和夹具SHA(.40)、28项公开API/入口与独立当前安装重放一致(.40)、两版实际保留wheel的SHA/源码字节绑定(.20)。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -19405,10 +19429,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec29/GT30、7允许源码overlay，独立score0.27.1/core0.15.3 ZIP真实Python3.11.11/3.12.8构建临时安装/API/CLI；四键A1，84非runtime文件搬移相同。无网络依赖安装、Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h049-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

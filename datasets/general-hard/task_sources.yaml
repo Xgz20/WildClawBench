@@ -1,12 +1,12 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 51
+  active_task_count: 52
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
-    software_engineering: 9
+    software_engineering: 10
     planning_coordination: 2
     content_operations: 1
 tasks:
@@ -1497,3 +1497,17 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_software_engineering_task_009_package_migration
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - wb-code
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: true

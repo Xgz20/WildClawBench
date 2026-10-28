@@ -596,3 +596,12 @@ general_hard_software_engineering_task_010_multiview_state:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_software_engineering_task_009_package_migration:
+  business_correctness:
+    - code_generation
+  boundary_cases:
+    - code_generation
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools==79.0.1"]
+build-backend = "setuptools.build_meta"
+[project]
+name = "batchstamp-h049"
+version = "2.0.0"
+requires-python = ">=3.11"
+description = "Inert offline packaging exercise"
+[project.scripts]
+batchstamp = "batchstamp.cli:main"
+[tool.setuptools]
+py-modules = ["legacy_stamp"]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["batchstamp"]

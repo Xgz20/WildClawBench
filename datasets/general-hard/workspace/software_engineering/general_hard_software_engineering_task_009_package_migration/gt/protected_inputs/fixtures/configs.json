@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "id": "default",
+      "config": {}
+    },
+    {
+      "id": "legacy",
+      "config": {
+        "threshold": 5,
+        "prefix": "旧"
+      }
+    },
+    {
+      "id": "canonical_zero",
+      "config": {
+        "threshold": 100,
+        "min_amount": 0,
+        "prefix": "old",
+        "label": ""
+      }
+    }
+  ]
+}

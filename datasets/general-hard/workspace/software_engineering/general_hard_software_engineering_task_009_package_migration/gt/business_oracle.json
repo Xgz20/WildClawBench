@@ -1,0 +1,262 @@
+{
+  "schema": "h049-behavior-oracle/v1",
+  "seed": 2026102649,
+  "cases": [
+    {
+      "id": "default",
+      "config": {},
+      "expected": {
+        "ids": [
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 18.25,
+        "label": "default",
+        "config": {
+          "min_amount": 0,
+          "label": "default",
+          "include_null_region": false,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "legacy",
+      "config": {
+        "threshold": 5,
+        "prefix": "旧"
+      },
+      "expected": {
+        "ids": [
+          "d"
+        ],
+        "total": 11,
+        "label": "旧",
+        "config": {
+          "min_amount": 5,
+          "label": "旧",
+          "include_null_region": false,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "canonical_zero",
+      "config": {
+        "threshold": 100,
+        "min_amount": 0,
+        "prefix": "old",
+        "label": ""
+      },
+      "expected": {
+        "ids": [
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 18.25,
+        "label": "",
+        "config": {
+          "min_amount": 0,
+          "label": "",
+          "include_null_region": false,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "null_threshold",
+      "config": {
+        "min_amount": null,
+        "include_null_region": true
+      },
+      "expected": {
+        "ids": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e",
+          "z",
+          "私有甲"
+        ],
+        "total": 19.75,
+        "label": "default",
+        "config": {
+          "min_amount": null,
+          "label": "default",
+          "include_null_region": true,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "zero_scale",
+      "config": {
+        "scale": 0
+      },
+      "expected": {
+        "ids": [
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 0.0,
+        "label": "default",
+        "config": {
+          "min_amount": 0,
+          "label": "default",
+          "include_null_region": false,
+          "scale": 0
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "negative",
+      "config": {
+        "threshold": -5
+      },
+      "expected": {
+        "ids": [
+          "a",
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 14.25,
+        "label": "default",
+        "config": {
+          "min_amount": -5,
+          "label": "default",
+          "include_null_region": false,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "unicode_unknown",
+      "config": {
+        "label": "离线✓",
+        "scale": 2,
+        "custom": {
+          "保留": [
+            0,
+            false,
+            null
+          ]
+        }
+      },
+      "expected": {
+        "ids": [
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 36.5,
+        "label": "离线✓",
+        "config": {
+          "min_amount": 0,
+          "label": "离线✓",
+          "include_null_region": false,
+          "scale": 2,
+          "custom": {
+            "保留": [
+              0,
+              false,
+              null
+            ]
+          }
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "ignored_invalid_old",
+      "config": {
+        "threshold": "obsolete",
+        "min_amount": 0
+      },
+      "expected": {
+        "ids": [
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 18.25,
+        "label": "default",
+        "config": {
+          "min_amount": 0,
+          "label": "default",
+          "include_null_region": false,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "explicit_false",
+      "config": {
+        "include_null_region": false,
+        "allow_null": true
+      },
+      "expected": {
+        "ids": [
+          "b",
+          "d",
+          "e",
+          "私有甲"
+        ],
+        "total": 18.25,
+        "label": "default",
+        "config": {
+          "min_amount": 0,
+          "label": "default",
+          "include_null_region": false,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    },
+    {
+      "id": "legacy_null",
+      "config": {
+        "threshold": null,
+        "allow_null": true,
+        "prefix": "all"
+      },
+      "expected": {
+        "ids": [
+          "a",
+          "b",
+          "c",
+          "d",
+          "e",
+          "z",
+          "私有甲"
+        ],
+        "total": 19.75,
+        "label": "all",
+        "config": {
+          "min_amount": null,
+          "label": "all",
+          "include_null_region": true,
+          "scale": 1
+        },
+        "banner": "Batch Stamp – 离线样本"
+      }
+    }
+  ]
+}
