@@ -18919,7 +18919,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_008_sse_state/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_008_sse_state/gt"
       },
-      "prompt_draft": "请完成以下工作：修复流式解码与状态传播，正文、推理片段和完成状态不互相覆盖；中断后重放不重复输出，不把未完成任务标为成功。\n\n输入材料：\n- /tmp_workspace/project/stream.py：流式协议解码\n- /tmp_workspace/project/state.py：会话状态归并\n- /tmp_workspace/project/render.py：Markdown/完成态输出\n- /tmp_workspace/fixtures/events.jsonl：乱序、重放、分片和错误事件\n\n交付：\n- /tmp_workspace/project/stream.py：解码修复\n- /tmp_workspace/project/state.py：状态归并\n- /tmp_workspace/project/render.py：一致输出\n- /tmp_workspace/results/replay.json：重放验证\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "修复流式响应中断与重连状态一致性，只修改这三个文件：\n- /tmp_workspace/project/stream.py：SSE/增量UTF-8解码；\n- /tmp_workspace/project/state.py：当前请求的连续序号、重放去重、正文/推理与终态归并；\n- /tmp_workspace/project/render.py：Markdown/推理/完成态一致输出。\n\n先读 /tmp_workspace/protocol.md 的完整离线接口合同。/tmp_workspace/fixtures/events.jsonl 包含乱序、重放、分片、错误及断开/重连steps，所有字节以hex提供，无需网络。/tmp_workspace/project/test_public.py 为保护的基础旧接口测试；/tmp_workspace/tools/replay.py 是实际重放/测试工具；/tmp_workspace/requirements.lock 声明只需Python3.11+标准库，/tmp_workspace/project/__init__.py 同样不可改。\n\n正文和推理必须独立保留，Markdown原样输出。每个字节step和每次事件后的中间状态都须正确，不能只拼对最终文本；任意UTF-8/CRLF跨块、多行data及同块多事件均按合同解码。断开丢半帧却保留会话历史，重连重放不能重复拼接；future序号先缓冲，done有缺口不能提前成功。失败/取消/中断不能显示成功，终态不能被后续帧或重连覆盖。规范化同ID/同seq冲突、外请求隔离及快照独立性以protocol.md为准，内部状态布局不限。\n\n完成后实际运行 python -B tools/replay.py，交付 /tmp_workspace/results/replay.json：保留固定scenario_id的每步decoded、每个事件后的states、step末state/render、最终结果，以及最终三源码/输入SHA和真实公开测试命令、returncode、完整输出。更改最终源码后必须重跑。不得漏场景改变分母、写死观察结果或自述已测。公开基础测试可能在原工程已全绿，不能代替中间状态与重连边界验证。\n\n仅用本题exec映射到/tmp_workspace的材料，GT不提供给候选。只改上述三源码，不改保护测试、工具、夹具、合同和依赖锁，不新增源码；所有报告写results，自动__pycache__/*.pyc可忽略。离线，不安装依赖、不访问真实账号、不发送消息、不调用网络或真实付费接口。结论区分事实、推断、未知，不虚构缺失信息。",
       "inputs": [
         {
           "path": "project/stream.py",
@@ -18973,20 +18973,29 @@
         "错误终态显示成功"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102648,
-        "construction": "私有事件状态机给出每一前缀的期望状态；测试UTF-8跨块、重复event ID和断线恢复，既核最终文本也核中间状态序列。",
+        "construction": "32场景899前缀在参考前由writer派发偏移/关系连续前缀与增量UTF8/SSE/命令式pending状态机两路复核；初轮CRLF偏移错误保留并在参考前修正。26受管控制达到预期，关系式等价/参考全1；snapshot_alias的32最终全对仍被前缀观察捕获。独立-I归档禁止原输入open仍通过，改witness换行按派生漂移拒绝。当前正式MD/exec9/GT15独立ZIP重新真实重放及正常/搬移核验。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "hidden_tests/runner.py",
+          "protected_inputs/fixtures/events.jsonl",
+          "protected_inputs/project/__init__.py",
+          "protected_inputs/project/test_public.py",
+          "protected_inputs/protocol.md",
+          "protected_inputs/requirements.lock",
+          "protected_inputs/tools/replay.py",
+          "protected_sha256.json",
+          "trusted_manifest.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "内部decoder/state结构与额外观察元数据不固定；JSON字典/规范payload键序和格式无关；原样正文Markdown与推理、seq/ID冲突、独立历史快照及每个前缀语义必须保持，不按参考源码或最终文本单一比对。",
+        "authoring_evidence": "evidence/h048-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -19001,7 +19010,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "修复流式解码与状态传播，正文、推理片段和完成状态不互相覆盖；中断后重放不重复输出，不把未完成任务标为成功。",
+            "criterion": "固定12场景：正文/推理分离、Markdown、UTF-8/SSE帧、中断、错误、乱序和终态；每场景.5最终状态/渲染+.5固定步前缀准确率，不能只核最终文本。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -19010,7 +19019,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：最终文本对而中间状态错；重复拼接；错误终态显示成功。以独立反例验证，不只检索关键词。",
+            "criterion": "固定20场景：重放去重、待处理重复、future done、半帧/半UTF-8重连、SSE id、冲突/外请求、错误/成功/取消粘性、非法事件和快照回写；固定前缀分母。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -19019,7 +19028,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "三源码可读可解析平均(.40)、保护输入和修改范围(.40)、replay报告可解析(.20)；不把单一协议根因扩为全项清零。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -19028,7 +19037,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "最终三源码及events输入SHA(.40)、固定10公开场景与当前源码独立重放一致(.40)、真实公开测试命令/返回码/状态(.20)。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -19111,10 +19120,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec9/GT15，明确3源码reference overlay、独立score0.27.1/core0.15.3 ZIP真实Worker重放32/899，正常/删除runtime搬移通过；无Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h048-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

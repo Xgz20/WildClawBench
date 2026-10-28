@@ -1,0 +1,25 @@
+{
+  "mutable_sources": [
+    "project/stream.py",
+    "project/state.py",
+    "project/render.py"
+  ],
+  "report": "results/replay.json",
+  "schema": "h048-replay/v1",
+  "snapshot_keys": [
+    "request_id",
+    "status",
+    "body",
+    "reasoning",
+    "last_seq",
+    "done",
+    "error"
+  ],
+  "render_keys": [
+    "markdown",
+    "reasoning",
+    "status",
+    "completed",
+    "error"
+  ]
+}
