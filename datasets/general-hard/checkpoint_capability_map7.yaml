@@ -460,3 +460,18 @@ general_hard_file_operations_task_004_resumable_inventory:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_research_verification_task_007_directed_notice_timeline:
+  automated.record_contract:
+    - data_processing
+  automated.time_and_scope:
+    - reasoning_planning
+  automated.citation_resolution:
+    - retrieval_verification
+  automated.protected_delivery:
+    - verification_delivery
+  llm_judge.factual_support:
+    - retrieval_verification
+  llm_judge.coverage_and_independence:
+    - retrieval_verification
+  llm_judge.bounded_conclusions:
+    - reasoning_planning

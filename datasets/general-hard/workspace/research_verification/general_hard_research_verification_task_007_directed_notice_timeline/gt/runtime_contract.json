@@ -1,0 +1,103 @@
+{
+  "schema_version": "h033-rule-runtime/v1",
+  "status": "nonblind_model_authoring_no_Harness_or_Judge_validation",
+  "grading_type": "hybrid",
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "semantic_judge_required": true,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "public_scope": {
+    "schema_version": "h033.public-official-entries/v1",
+    "task_id": "general_hard_research_verification_task_007_directed_notice_timeline",
+    "task_name": "定向官网检索：跨部门通知与办理时间线",
+    "seed_entries": [
+      {
+        "entry_id": "graduate_school",
+        "department": "河北大学研究生院",
+        "url": "https://yjsy.hbu.edu.cn/",
+        "role": "business_discovery_entry"
+      },
+      {
+        "entry_id": "law_school",
+        "department": "河北大学法学院",
+        "url": "https://law.hbu.edu.cn/",
+        "role": "business_discovery_entry"
+      },
+      {
+        "entry_id": "academic_affairs",
+        "department": "河北大学教务处",
+        "url": "https://jwc.hbu.cn/",
+        "role": "business_discovery_entry"
+      }
+    ],
+    "identity_only_pages": [
+      {
+        "url": "https://www.hbu.edu.cn/xxgk/zzjg.htm",
+        "use": "核对学校与部门入口身份，不扩展到主站其他业务检索"
+      },
+      {
+        "url": "https://www.hbu.edu.cn/yxsz1.htm",
+        "use": "核对学校与院系入口身份，不扩展到主站其他业务检索"
+      }
+    ],
+    "allowed_discovery_domains": [
+      "yjsy.hbu.edu.cn",
+      "law.hbu.edu.cn",
+      "law.hbu.cn",
+      "jwc.hbu.cn",
+      "www.hbu.edu.cn"
+    ],
+    "official_alias_policy": "允许法学院官方别名law.hbu.cn，但须保存给定官方入口或学校身份页到别名的实际链接/导航依据，不因同名或相似域名自行扩大范围。保留实际URL及HTTP/HTTPS协议，不把HTTP访问描述成TLS握手。",
+    "business_source_scope": "业务通知只取三个部门的公开站内目录、详情和公开附件；学校主站只使用上述两个身份核验页。可用搜索引擎发现候选，但最终来源仍须符合本范围。",
+    "discovery_policy": "自行选择搜索、站内搜索或目录导航及其组合，不指定工具名、首条Query、site语法或语言。调查应覆盖三个入口及画像关注主题，再按有依据的相关性选择事项；不要求每个入口必须选入通知，不设通知/事项/Query的固定最少数。",
+    "source_pool_policy": "任何作者参考池都不是答案白名单。候选可以使用范围内其它合格通知；是否相关、正文是否支持、日期与版本是否合格按相同标准核验。",
+    "reading_policy": "域名正确、URL存在、搜索结果标题或摘要都不等于已读正文。摘要只支持其明确出现的内容，不能冒充完整通知或原生附件。记录发现候选、实际读取、最终引用的区别；不可读来源保留unknown。",
+    "process_evidence_policy": "账本中的检索和读取记录是候选提供的待核记录，不自行证明真实过程。实际工具返回和绑定执行轨迹另作核对；无法观测的过程字段保留unknown，不将候选自述升级为过程证明。",
+    "read_only_boundaries": [
+      "只读取本题映射到/tmp_workspace的公开输入和允许的公开网络来源；不访问私有评分或参考目录。",
+      "不进入登录/统一认证/私人群，不使用真实账号，不核对真实学生名单个人行。",
+      "不发送邮件或消息，不提交申请、注册或报名，不调用付费或真实办理接口。",
+      "不获取或识别验证码图、不提交验证码或绕过门禁；遇到验证码HTML应标记尚未取得标称附件。",
+      "不运行附件宏或外部链接；输入只读，不删除或覆盖保护文件。"
+    ],
+    "public_contract": "/tmp_workspace/delivery_contract.md",
+    "compatibility": "AstronStudio、WorkBuddy、QwenWork、DoubaoWork四端采用同一业务标准；真实公开检索/读取、原生Office和工作区映射仍须逐端预检，不要求工具名或界面一致。"
+  },
+  "publication_window": {
+    "timezone": "Asia/Shanghai",
+    "start_inclusive": "2026-09-01T00:00:00+08:00",
+    "end_exclusive": "2026-10-01T00:00:00+08:00",
+    "basis": "通知页面显示的网页发布日期；日期精度和原文同时保留"
+  },
+  "source_requirements": {
+    "policy": "wildclawbench.research-source-policy/v2",
+    "profile": "public-native-text-cells/v1",
+    "trusted_production_sealed_bundle": true,
+    "no_author_snapshot_runtime_dependency": true,
+    "missing_required_source_or_unsupported_legal_locator": "evaluator_error_or_pending_review_never_candidate_zero"
+  },
+  "limits": "No URL/fact/notice/matter/query/count answer whitelist. Static native outputs accepted. Literal resolution does not decide semantic support or actual investigation.",
+  "office": "Optional formulas require actual locked bundled Office recalculation on separate derivative; candidate cache is not truth.",
+  "office_executable": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+  "source_truth_sha256": "86f83b9da693a5041283c18f9dff36b48f18192f9f05ce26418ef2239ae43a0d",
+  "source_first_original_gt_sha256": {
+    "reference_source_manifest.json": "c8a6814f6bca748169cae3b183194e9168c3797d990a5982b7a7f71dfe08c45a",
+    "evidence_requirements.json": "274e161e7bd1c00df2b4cf40077b91ea8a8cea1837643f798aa7ded643c9af29",
+    "source_review_reconciliation.json": "e3c82cac172d65dc9b381efde78aa078e1ae6892845226700ec0becea45a450c",
+    "business_oracle.json": "28ba3c21a8aef64b3a7000d6033b2b8a90ec842bffa36d8a531548e93ba9900c",
+    "protected_sha256.json": "7db2387dc5e2386e9ca822ba9c1691da97e5fe38f66f52ee76b38f421e6133be",
+    "expected.json": "79d884053e2b7cad2fecb838e5a5f716e4b0e2f2789a042735617223a15e7bbf",
+    "research_source_policy.json": "557fdd2fc6de7006fbd1a28863493cb532669ead532133a456e836feaa54120b",
+    "artifact_contract.json": "cd5027a5509e02fa12844359199d56b8a88e21479f01062fd57246c4de669c1a"
+  }
+}

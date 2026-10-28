@@ -1,10 +1,10 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 38
+  active_task_count: 39
   category_task_counts:
     office_documents: 16
     data_analysis: 10
-    research_verification: 6
+    research_verification: 7
     file_operations: 4
     software_engineering: 2
     planning_coordination: 0
@@ -1151,3 +1151,54 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_research_verification_task_007_directed_notice_timeline
+    origin:
+      mode: internal_benchmark_inspired_with_open_benchmark_methods
+      production_refs: []
+      external_source_ids:
+        - assistantbench
+      direct_task_copy: false
+      internal_reference_ids:
+        - astudio-search108
+      reference_benchmark_refs:
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 100
+          row: 102
+          query_hash: 57e16a6951afbce953698e1ad8d13bffaf5e577652f56a33f54453e50614f159
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+    network:
+      mode: site_scoped_search
+      allowed_urls: []
+      allowed_discovery_domains:
+        - yjsy.hbu.edu.cn
+        - law.hbu.edu.cn
+        - law.hbu.cn
+        - jwc.hbu.cn
+        - www.hbu.edu.cn
+      follow_policy: 业务通知只取预置三部门及其公开附件；学校主站仅限两个身份核验页。允许法学院官方别名，不进入统一身份认证或真实办理。
+      freeze_requirement: 冻结研究时点、问题范围、可核验事实及独立参考池；不冻结搜索引擎排序，不将参考URL名单视为唯一合法答案。实际用到的公开页面须在评分侧独立取得并记录SHA/访问时间。
+      time_scope:
+        timezone: Asia/Shanghai
+        start_inclusive: '2026-09-01T00:00:00+08:00'
+        end_exclusive: '2026-10-01T00:00:00+08:00'
+      discovery_preflight: 搜索入口、正文读取、地区/账号约束与证据收集能力须分别核验；本题不依赖真实账号。
+      seed_urls:
+        - https://yjsy.hbu.edu.cn/
+        - https://law.hbu.edu.cn/
+        - https://jwc.hbu.cn/
+      identity_only_urls:
+        - https://www.hbu.edu.cn/xxgk/zzjg.htm
+        - https://www.hbu.edu.cn/yxsz1.htm
+      entry_identity_evidence:
+        checked_on: '2026-10-26'
+        urls:
+          - https://www.hbu.edu.cn/xxgk/zzjg.htm
+          - https://www.hbu.edu.cn/yxsz1.htm
+        observation: 学校页面链接确认部门身份；法学院与教务处主页可读，研究生院主页一次直接抓取超时。尚未核验完整通知/附件清单或四端可达性。
+        runtime_verified: false
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      retrieval_group: directed_web_retrieval

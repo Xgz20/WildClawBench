@@ -1,0 +1,31 @@
+{
+  "schema_version": "h033.public-research-window/v1",
+  "task_id": "general_hard_research_verification_task_007_directed_notice_timeline",
+  "publication_window": {
+    "timezone": "Asia/Shanghai",
+    "start_inclusive": "2026-09-01T00:00:00+08:00",
+    "end_exclusive": "2026-10-01T00:00:00+08:00",
+    "basis": "通知页面显示的网页发布日期；日期精度和原文同时保留"
+  },
+  "window_rules": [
+    "按通知页面发布日期判定是否属于九月发布窗，不按搜索收录时间、附件文件名、正文落款、附件修订日或办理截止判定。",
+    "窗内通知明确写出的窗外办理节点可以保留在时间线；不能因此把窗外发布的新通知计为九月通知。",
+    "必要的窗外前序或后续材料只有在用于解释明确关联的身份、版本或后续状态时作为context_only保留，仍限给定部门公开来源，标清其窗外角色。",
+    "网页发布日期无法从实际来源确认时标unknown，不从URL编号、搜索排序或文件时间猜测。",
+    "同日不同栏目载体不自动证明首发/转载先后；没有明确证据时保留unknown。"
+  ],
+  "date_roles_to_separate": [
+    "webpage_publication",
+    "body_signoff",
+    "attachment_version",
+    "action_opens",
+    "action_deadline",
+    "action_window",
+    "system_unavailable",
+    "source_access"
+  ],
+  "time_precision_policy": "未给时刻不补23:59，未给日期不填日期；保留日期、分钟、区间和每日重复等原精度。办理主体、动作与适用条件须绑定日期。Asia/Shanghai是本题日历上下文；来源未标时区时不称其已明确时区。",
+  "version_policy": "以有证据的同文书载体、修订、替代、转发、院校实施和后续阶段关系组织材料，不假定附件普遍优先，不把较晚公告自动当更正或延期。不要求一定发现冲突、更正或延期；也不能由未发现推断全站不存在。",
+  "research_time_policy": "每个实际读取来源记录真实访问时点；本次后取网页不是其发布日期当天的历史快照。可以报告截至所读材料的结论，不能无证据断言历史当天字节或全站最新有效版本。正式开跑时由运行方绑定研究时点、执行attempt与终态产物；候选不能伪造该绑定。",
+  "investigation_depth": "调查应足以支撑所选相关事项、关键条件和跨部门关系，并交代重要排除或未核范围；不要求全站穷尽，不按URL或事项数量机械计覆盖。"
+}

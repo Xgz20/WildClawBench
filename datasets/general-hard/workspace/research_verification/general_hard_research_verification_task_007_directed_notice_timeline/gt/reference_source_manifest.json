@@ -1,0 +1,1604 @@
+{
+  "schema_version": "h033-nonexhaustive-source-manifest/v1",
+  "carriers": [
+    {
+      "carrier_id": "notice-jwc-12352",
+      "document_id": "DOC-JWC-12352",
+      "title": "关于组织2026-2027学年秋学期本科生补（缓）考的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12352.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12352/body.bin",
+          "body_sha256": "1da039b1d1ee7deedbf848fe19d0c2da4a12c70aad22ca1b69d27a43991b64e0",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:02.139826Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.682914Z",
+          "quote": "2026-08-31",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12352/receipt.json",
+          "receipt_sha256": "a3276e0267f5b7331166a52e7b324ff82879eb7fb62a70bfd45ca384cf995974",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12352.htm",
+          "source_id": "notice-jwc-12352",
+          "source_url": "https://jwc.hbu.cn/info/1108/12352.htm"
+        },
+        "date": "2026-08-31",
+        "raw": "2026-08-31",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": false,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12352/body.bin",
+          "body_sha256": "1da039b1d1ee7deedbf848fe19d0c2da4a12c70aad22ca1b69d27a43991b64e0",
+          "original_GET_finished_at": "2026-10-28T16:42:02.139826Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.682914Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12352/receipt.json",
+          "receipt_sha256": "a3276e0267f5b7331166a52e7b324ff82879eb7fb62a70bfd45ca384cf995974",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12352.htm",
+          "source_id": "notice-jwc-12352",
+          "source_url": "https://jwc.hbu.cn/info/1108/12352.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "2026-2027学年秋学期本科生补（缓）考相关附件.rar",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204079"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12360",
+      "document_id": "DOC-JWC-12360",
+      "title": "关于2026—2027学年秋学期学生补退选选课及课程替代的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12360.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12360/body.bin",
+          "body_sha256": "12595f79f1dd8a3df6f7e5ad422e08c882fe61d343a60f236f0c63e01a90bb77",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:02.175009Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.715694Z",
+          "quote": "2026-09-02",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12360/receipt.json",
+          "receipt_sha256": "04aec583ac88fcbd734c20fcd479b740577d8ba21d95f80a257a44b808a87932",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12360.htm",
+          "source_id": "notice-jwc-12360",
+          "source_url": "https://jwc.hbu.cn/info/1108/12360.htm"
+        },
+        "date": "2026-09-02",
+        "raw": "2026-09-02",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12360/body.bin",
+          "body_sha256": "12595f79f1dd8a3df6f7e5ad422e08c882fe61d343a60f236f0c63e01a90bb77",
+          "original_GET_finished_at": "2026-10-28T16:42:02.175009Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.715694Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12360/receipt.json",
+          "receipt_sha256": "04aec583ac88fcbd734c20fcd479b740577d8ba21d95f80a257a44b808a87932",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12360.htm",
+          "source_id": "notice-jwc-12360",
+          "source_url": "https://jwc.hbu.cn/info/1108/12360.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N09",
+          "source_id": "notice-jwc-courses-12360",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-jwc-courses-12360/body.bin",
+          "body_sha256": "12595f79f1dd8a3df6f7e5ad422e08c882fe61d343a60f236f0c63e01a90bb77",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-jwc-courses-12360/receipt.json",
+          "receipt_sha256": "d9895df3aac34e0cb951aaaea3bfb0466d8e11cb36a547ca2490b451024bdb12",
+          "original_GET_started_at": "2026-10-28T16:15:29.828143Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.226961Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件1：使用WEBVPN登录教务系统网页端操作说明.pdf",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[1]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204137"
+        },
+        {
+          "actual_GET_source_ids": [
+            "attachment-jwc-course-handbook-xls"
+          ],
+          "display_name": "附件2：2026-2027学年秋学期学生选课手册（停开课后）.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[2]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204135"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件3：课程自修申请表.docx",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[3]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204136"
+        },
+        {
+          "actual_GET_source_ids": [
+            "attachment-jwc-course-substitution-pdf"
+          ],
+          "display_name": "附件4：本科教务系统课程替代操作说明（学生端）.pdf",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[4]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18204138"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12364",
+      "document_id": "DOC-JWC-12364",
+      "title": "关于公示2027年推荐优秀应届本科毕业生免试攻读研究生名单的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12364.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12364/body.bin",
+          "body_sha256": "b05aff588f5151301c8107af37751c9f1bb3f6a8d2e066f6d3429c6d1a7a9706",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:52:27.577712Z",
+          "original_GET_started_at": "2026-10-28T16:52:27.281045Z",
+          "quote": "2026-09-09",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12364/receipt.json",
+          "receipt_sha256": "c2fbb0a06d102ebad1c0c7e995cc8473c8be37f77a07238e45034f77c9290b59",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12364.htm",
+          "source_id": "notice-jwc-12364",
+          "source_url": "https://jwc.hbu.cn/info/1108/12364.htm"
+        },
+        "date": "2026-09-09",
+        "raw": "2026-09-09",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12364/body.bin",
+          "body_sha256": "b05aff588f5151301c8107af37751c9f1bb3f6a8d2e066f6d3429c6d1a7a9706",
+          "original_GET_finished_at": "2026-10-28T16:52:27.577712Z",
+          "original_GET_started_at": "2026-10-28T16:52:27.281045Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12364/receipt.json",
+          "receipt_sha256": "c2fbb0a06d102ebad1c0c7e995cc8473c8be37f77a07238e45034f77c9290b59",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12364.htm",
+          "source_id": "notice-jwc-12364",
+          "source_url": "https://jwc.hbu.cn/info/1108/12364.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12386",
+      "document_id": "DOC-JWC-12386",
+      "title": "关于2026-2027学年秋学期补退选后拟停开课程(课堂)的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12386.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12386/body.bin",
+          "body_sha256": "e36d430746c9e7b01940e1f6b38f9e11b5ab277a4fdc989102583096a5b0a9e6",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:47:24.325956Z",
+          "original_GET_started_at": "2026-10-28T16:47:24.035686Z",
+          "quote": "2026-09-14",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12386/receipt.json",
+          "receipt_sha256": "c797aab9e32192fd1362e65ea4361018028258df5482f5db5b770391fcfe32e1",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12386.htm",
+          "source_id": "notice-jwc-12386",
+          "source_url": "https://jwc.hbu.cn/info/1108/12386.htm"
+        },
+        "date": "2026-09-14",
+        "raw": "2026-09-14",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12386/body.bin",
+          "body_sha256": "e36d430746c9e7b01940e1f6b38f9e11b5ab277a4fdc989102583096a5b0a9e6",
+          "original_GET_finished_at": "2026-10-28T16:47:24.325956Z",
+          "original_GET_started_at": "2026-10-28T16:47:24.035686Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12386/receipt.json",
+          "receipt_sha256": "c797aab9e32192fd1362e65ea4361018028258df5482f5db5b770391fcfe32e1",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12386.htm",
+          "source_id": "notice-jwc-12386",
+          "source_url": "https://jwc.hbu.cn/info/1108/12386.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件1：2026-2027学年秋学期补退选后拟停开课程统计表.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205471"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12394",
+      "document_id": "DOC-JWC-12394",
+      "title": "关于公布2026-2027学年秋学期补退选后停开课程（课堂）的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12394.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12394/body.bin",
+          "body_sha256": "98c5d14aefeebda3f3dafde1567412d22abda04e74cb13457fc05b963d3bd7fc",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:47:24.492225Z",
+          "original_GET_started_at": "2026-10-28T16:47:24.036110Z",
+          "quote": "2026-09-16",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12394/receipt.json",
+          "receipt_sha256": "937dca39a6df1bf12c36044549cbadda389e163b692565a22868d689a10dd8d3",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12394.htm",
+          "source_id": "notice-jwc-12394",
+          "source_url": "https://jwc.hbu.cn/info/1108/12394.htm"
+        },
+        "date": "2026-09-16",
+        "raw": "2026-09-16",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12394/body.bin",
+          "body_sha256": "98c5d14aefeebda3f3dafde1567412d22abda04e74cb13457fc05b963d3bd7fc",
+          "original_GET_finished_at": "2026-10-28T16:47:24.492225Z",
+          "original_GET_started_at": "2026-10-28T16:47:24.036110Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12394/receipt.json",
+          "receipt_sha256": "937dca39a6df1bf12c36044549cbadda389e163b692565a22868d689a10dd8d3",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12394.htm",
+          "source_id": "notice-jwc-12394",
+          "source_url": "https://jwc.hbu.cn/info/1108/12394.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件1：2026-2027学年秋学期补退选后停开课程汇总表 .xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[1]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205528"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件2：2026-2027学年秋学期补退选后停开课程学生名单.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[2]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205529"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12398",
+      "document_id": "DOC-JWC-12398",
+      "title": "关于2026-2027学年秋学期本科生电子注册的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12398.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12398/body.bin",
+          "body_sha256": "93712301eed960f079eab3f123dd23e2d812d43cd118f90c75116bea6e9f6d1f",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:39:30.274619Z",
+          "original_GET_started_at": "2026-10-28T16:39:30.013000Z",
+          "quote": "2026-09-20",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12398/receipt.json",
+          "receipt_sha256": "4405439e28d2249fa8ae3985263eb502982e74cf4172b7a0ba06ddfaf431a91b",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12398.htm",
+          "source_id": "notice-jwc-12398",
+          "source_url": "https://jwc.hbu.cn/info/1108/12398.htm"
+        },
+        "date": "2026-09-20",
+        "raw": "2026-09-20",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12398/body.bin",
+          "body_sha256": "93712301eed960f079eab3f123dd23e2d812d43cd118f90c75116bea6e9f6d1f",
+          "original_GET_finished_at": "2026-10-28T16:39:30.274619Z",
+          "original_GET_started_at": "2026-10-28T16:39:30.013000Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12398/receipt.json",
+          "receipt_sha256": "4405439e28d2249fa8ae3985263eb502982e74cf4172b7a0ba06ddfaf431a91b",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12398.htm",
+          "source_id": "notice-jwc-12398",
+          "source_url": "https://jwc.hbu.cn/info/1108/12398.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N10",
+          "source_id": "notice-jwc-register-12398",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-jwc-register-12398/body.bin",
+          "body_sha256": "93712301eed960f079eab3f123dd23e2d812d43cd118f90c75116bea6e9f6d1f",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-jwc-register-12398/receipt.json",
+          "receipt_sha256": "9480fe05eff95faf315e80a2a71b732b77839170b0bc9047248b81f01610351d",
+          "original_GET_started_at": "2026-10-28T16:15:29.920429Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.226472Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-jwc-registration-vpn-pdf"
+          ],
+          "display_name": "附件1：使用WEBVPN登录教务系统网页端操作说明202609.pdf",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205693"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12405",
+      "document_id": "DOC-JWC-12405",
+      "title": "关于办理2026-2027学年秋学期缓考学生选课的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12405.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12405/body.bin",
+          "body_sha256": "2498243512a742433ec82ef4970783eb2e9be7784fa5c94dda01ead59d7045d9",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:39:30.397879Z",
+          "original_GET_started_at": "2026-10-28T16:39:30.118486Z",
+          "quote": "2026-09-21",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12405/receipt.json",
+          "receipt_sha256": "97aa6a0320074a7938cbd3509e4d542f1782db03c10bc05c288b8a6e9532e4b5",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12405.htm",
+          "source_id": "notice-jwc-12405",
+          "source_url": "https://jwc.hbu.cn/info/1108/12405.htm"
+        },
+        "date": "2026-09-21",
+        "raw": "2026-09-21",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12405/body.bin",
+          "body_sha256": "2498243512a742433ec82ef4970783eb2e9be7784fa5c94dda01ead59d7045d9",
+          "original_GET_finished_at": "2026-10-28T16:39:30.397879Z",
+          "original_GET_started_at": "2026-10-28T16:39:30.118486Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12405/receipt.json",
+          "receipt_sha256": "97aa6a0320074a7938cbd3509e4d542f1782db03c10bc05c288b8a6e9532e4b5",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12405.htm",
+          "source_id": "notice-jwc-12405",
+          "source_url": "https://jwc.hbu.cn/info/1108/12405.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-jwc-deferred-form-xls"
+          ],
+          "display_name": "附件1：缓考学生选课情况统计表.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[1]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205785"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件2：2026-2027学年秋学期学生选课手册（停开课后）.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li[2]/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205786"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12411",
+      "document_id": "DOC-JWC-12411",
+      "title": "关于公布2026-2027学年秋学期已注册学生名单的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12411.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12411/body.bin",
+          "body_sha256": "efb0e9c0b1d3ecac73a6aebdaa75ab013a3d394def000b535903995f90504e1c",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.833504Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.572134Z",
+          "quote": "2026-09-23",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12411/receipt.json",
+          "receipt_sha256": "635f50b2d7e6e099cb2625e94010a24a4cd986804b30c065b2a32a10ad9e864f",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12411.htm",
+          "source_id": "notice-jwc-12411",
+          "source_url": "https://jwc.hbu.cn/info/1108/12411.htm"
+        },
+        "date": "2026-09-23",
+        "raw": "2026-09-23",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12411/body.bin",
+          "body_sha256": "efb0e9c0b1d3ecac73a6aebdaa75ab013a3d394def000b535903995f90504e1c",
+          "original_GET_finished_at": "2026-10-28T16:42:01.833504Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.572134Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12411/receipt.json",
+          "receipt_sha256": "635f50b2d7e6e099cb2625e94010a24a4cd986804b30c065b2a32a10ad9e864f",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12411.htm",
+          "source_id": "notice-jwc-12411",
+          "source_url": "https://jwc.hbu.cn/info/1108/12411.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N11",
+          "source_id": "notice-jwc-registration-followup-12411",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-jwc-registration-followup-12411/body.bin",
+          "body_sha256": "efb0e9c0b1d3ecac73a6aebdaa75ab013a3d394def000b535903995f90504e1c",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-jwc-registration-followup-12411/receipt.json",
+          "receipt_sha256": "da6dddf0013cbcaeb823e35fb8c819de303b03a5a0403b9336e731ec9d71a93b",
+          "original_GET_started_at": "2026-10-28T16:18:55.321892Z",
+          "original_GET_finished_at": "2026-10-28T16:18:55.584470Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "2026-2027学年秋学期已注册学生名单.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18205966"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-jwc-12419",
+      "document_id": "DOC-JWC-12419",
+      "title": "关于2027届预计毕（结）业生未进行新华社图像信息采集的同学补照和图像信息核对的通知",
+      "url": "https://jwc.hbu.cn/info/1108/12419.htm",
+      "department": "jwc",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12419/body.bin",
+          "body_sha256": "18452736e579747c33b615d039f3dac6d7fef27fc2f62f39f75135aea66fd3fe",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[4]/div/div[2]/form/div[2]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:39:30.525390Z",
+          "original_GET_started_at": "2026-10-28T16:39:30.285502Z",
+          "quote": "2026-10-08",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12419/receipt.json",
+          "receipt_sha256": "186ec44314c97468c88002fd2a134485bc40d2b480ba7cac8d3ddb1d9aef4d35",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12419.htm",
+          "source_id": "notice-jwc-12419",
+          "source_url": "https://jwc.hbu.cn/info/1108/12419.htm"
+        },
+        "date": "2026-10-08",
+        "raw": "2026-10-08",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": false,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12419/body.bin",
+          "body_sha256": "18452736e579747c33b615d039f3dac6d7fef27fc2f62f39f75135aea66fd3fe",
+          "original_GET_finished_at": "2026-10-28T16:39:30.525390Z",
+          "original_GET_started_at": "2026-10-28T16:39:30.285502Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-jwc-12419/receipt.json",
+          "receipt_sha256": "186ec44314c97468c88002fd2a134485bc40d2b480ba7cac8d3ddb1d9aef4d35",
+          "source_final_url": "https://jwc.hbu.cn/info/1108/12419.htm",
+          "source_id": "notice-jwc-12419",
+          "source_url": "https://jwc.hbu.cn/info/1108/12419.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[4]/div/div[2]/form/div[3]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "2027届预计毕（结）业生未进行毕业信息图像采集的学生名单.xls",
+          "locator": {
+            "xpath": "/html/body/div[4]/div/div[2]/form/ul/li/a"
+          },
+          "url": "https://jwc.hbu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1779593327&wbfileid=18206238"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-law-19945",
+      "document_id": "DOC-LAW-19945",
+      "title": "河北大学法学院推免工作实施细则",
+      "url": "http://law.hbu.cn/jxgz/19945.jhtml",
+      "department": "law",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19945/body.bin",
+          "body_sha256": "e9a5474a63dab49f4e25a9ad170aa3fe2dc168964c422275841efa80ac3bc73b",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:00.875169Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.624297Z",
+          "quote": "2026-09-02 16:37:16",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19945/receipt.json",
+          "receipt_sha256": "8dcd8fa138a26b975c1900d390800e6536e8970bc63df2e5ed1096812f89e058",
+          "source_final_url": "http://law.hbu.cn/jxgz/19945.jhtml",
+          "source_id": "notice-law-19945",
+          "source_url": "http://law.hbu.cn/jxgz/19945.jhtml"
+        },
+        "date": "2026-09-02",
+        "raw": "2026-09-02 16:37:16",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19945/body.bin",
+          "body_sha256": "e9a5474a63dab49f4e25a9ad170aa3fe2dc168964c422275841efa80ac3bc73b",
+          "original_GET_finished_at": "2026-10-28T16:42:00.875169Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.624297Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19945/receipt.json",
+          "receipt_sha256": "8dcd8fa138a26b975c1900d390800e6536e8970bc63df2e5ed1096812f89e058",
+          "source_final_url": "http://law.hbu.cn/jxgz/19945.jhtml",
+          "source_id": "notice-law-19945",
+          "source_url": "http://law.hbu.cn/jxgz/19945.jhtml"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N01",
+          "source_id": "notice-law-rules-19945-http",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-rules-19945-http/body.bin",
+          "body_sha256": "e9a5474a63dab49f4e25a9ad170aa3fe2dc168964c422275841efa80ac3bc73b",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-rules-19945-http/receipt.json",
+          "receipt_sha256": "2b7409ab6bc8194a071c5e209886f60027cf83e0605d6207417594ac45e1aa87",
+          "original_GET_started_at": "2026-10-28T16:15:29.775716Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.028704Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[1]/div[2]/div/div[1]/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-competition-pdf"
+          ],
+          "display_name": "河北大学学生课外学术科技竞赛分级目录2024版.pdf",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/ol/li[1]/p/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/021635300d9s.pdf"
+        },
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-competition-c-docx"
+          ],
+          "display_name": "河北大学法学院学生课外学术科技竞赛分级目录C类.docx",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/ol/li[2]/p/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/02163638plcf.docx"
+        },
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-points-docx"
+          ],
+          "display_name": "河北大学法学院学生创新实践能力加分表.docx",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/ol/li[3]/p/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/0216371067x9.docx"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-law-19962",
+      "document_id": "DOC-LAW-19962",
+      "title": "关于法学院2027年推荐优秀应届本科毕业生免试攻读硕士学位研究生名单的公示",
+      "url": "http://law.hbu.cn/jxgz/19962.jhtml",
+      "department": "law",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19962/body.bin",
+          "body_sha256": "551e1ca889d8707fb91bf87a60a6cd9c8597ec89192a77b535b55e768d72d96b",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.084909Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.891649Z",
+          "quote": "2026-09-04 17:23:03",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19962/receipt.json",
+          "receipt_sha256": "0ffb81bd6bea1005faae6d37f2f3da5cc4eda84f4a9b5852bb150d50479ba610",
+          "source_final_url": "http://law.hbu.cn/jxgz/19962.jhtml",
+          "source_id": "notice-law-19962",
+          "source_url": "http://law.hbu.cn/jxgz/19962.jhtml"
+        },
+        "date": "2026-09-04",
+        "raw": "2026-09-04 17:23:03",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19962/body.bin",
+          "body_sha256": "551e1ca889d8707fb91bf87a60a6cd9c8597ec89192a77b535b55e768d72d96b",
+          "original_GET_finished_at": "2026-10-28T16:42:01.084909Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.891649Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-19962/receipt.json",
+          "receipt_sha256": "0ffb81bd6bea1005faae6d37f2f3da5cc4eda84f4a9b5852bb150d50479ba610",
+          "source_final_url": "http://law.hbu.cn/jxgz/19962.jhtml",
+          "source_id": "notice-law-19962",
+          "source_url": "http://law.hbu.cn/jxgz/19962.jhtml"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N02",
+          "source_id": "notice-law-recommend-19962-http",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-recommend-19962-http/body.bin",
+          "body_sha256": "551e1ca889d8707fb91bf87a60a6cd9c8597ec89192a77b535b55e768d72d96b",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-recommend-19962-http/receipt.json",
+          "receipt_sha256": "5ceba6b6553bb89785865fdaebc54cb15a45208ce67b4ca603971bb03d015fea",
+          "original_GET_started_at": "2026-10-28T16:15:29.710643Z",
+          "original_GET_finished_at": "2026-10-28T16:15:29.918526Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[1]/div[2]/div/div[1]/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-recommend-list-pdf"
+          ],
+          "display_name": "法学院2027年推免研究生综合排名及具有推免资格名单.pdf",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[4]/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/04172447bmi3.pdf"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-law-20003",
+      "document_id": "DOC-LAW-20003",
+      "title": "河北大学法学院（纪检监察学院）2027年优秀应届本科毕业生免试攻读硕士研究生招生录取工作实施细则",
+      "url": "http://law.hbu.cn/tzgg/20003.jhtml",
+      "department": "law",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20003/body.bin",
+          "body_sha256": "7710fde36ca40ae8cc730426c2927a58fe16cc3ce8382973844f3fb069add381",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.231303Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.918712Z",
+          "quote": "2026-09-11 18:06:50",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20003/receipt.json",
+          "receipt_sha256": "e0f791ce573aec40210fbf2eda1e32ec7fa02d2b89ab68afe4591164d3bb9c3a",
+          "source_final_url": "http://law.hbu.cn/tzgg/20003.jhtml",
+          "source_id": "notice-law-20003",
+          "source_url": "http://law.hbu.cn/tzgg/20003.jhtml"
+        },
+        "date": "2026-09-11",
+        "raw": "2026-09-11 18:06:50",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20003/body.bin",
+          "body_sha256": "7710fde36ca40ae8cc730426c2927a58fe16cc3ce8382973844f3fb069add381",
+          "original_GET_finished_at": "2026-10-28T16:42:01.231303Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.918712Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20003/receipt.json",
+          "receipt_sha256": "e0f791ce573aec40210fbf2eda1e32ec7fa02d2b89ab68afe4591164d3bb9c3a",
+          "source_final_url": "http://law.hbu.cn/tzgg/20003.jhtml",
+          "source_id": "notice-law-20003",
+          "source_url": "http://law.hbu.cn/tzgg/20003.jhtml"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N05",
+          "source_id": "notice-law-admission-20003-http",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-admission-20003-http/body.bin",
+          "body_sha256": "7710fde36ca40ae8cc730426c2927a58fe16cc3ce8382973844f3fb069add381",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-admission-20003-http/receipt.json",
+          "receipt_sha256": "8c1c3cc0a80d15925ed16bb76186f8424635229c5efb507636ab9f9f6ba7b68e",
+          "original_GET_started_at": "2026-10-28T16:15:29.776007Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.041480Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[1]/div[2]/div/div[1]/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-master-directory-xlsx"
+          ],
+          "display_name": "附件1：2027年河北大学河北大学法学院（纪检监察学院）接收硕士推免生专业目录.xlsx",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[82]/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/11180512gxg0.xlsx"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件2：河北大学2027年接收优秀应届本科毕业生免试攻读硕士生申请表.doc",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[83]/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/11180512yvgh.doc"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件3：诚信承诺书.doc",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[84]/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/11180556fvoq.doc"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-law-20037",
+      "document_id": "DOC-LAW-20037",
+      "title": "法学院2027年硕士研究生招生考试参考书目",
+      "url": "http://law.hbu.cn/tzgg/20037.jhtml",
+      "department": "law",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20037/body.bin",
+          "body_sha256": "4782422239c9d7b58ad82891be102cb4280cd4194fa80324fc5dd41add243736",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.355553Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.101176Z",
+          "quote": "2026-09-20 16:37:56",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20037/receipt.json",
+          "receipt_sha256": "32c17a068cd060aa0f811829cc844c16704942a65a6ff6b0caf4837e801b5588",
+          "source_final_url": "http://law.hbu.cn/tzgg/20037.jhtml",
+          "source_id": "notice-law-20037",
+          "source_url": "http://law.hbu.cn/tzgg/20037.jhtml"
+        },
+        "date": "2026-09-20",
+        "raw": "2026-09-20 16:37:56",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20037/body.bin",
+          "body_sha256": "4782422239c9d7b58ad82891be102cb4280cd4194fa80324fc5dd41add243736",
+          "original_GET_finished_at": "2026-10-28T16:42:01.355553Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.101176Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20037/receipt.json",
+          "receipt_sha256": "32c17a068cd060aa0f811829cc844c16704942a65a6ff6b0caf4837e801b5588",
+          "source_final_url": "http://law.hbu.cn/tzgg/20037.jhtml",
+          "source_id": "notice-law-20037",
+          "source_url": "http://law.hbu.cn/tzgg/20037.jhtml"
+        }
+      ],
+      "main_body_locator": "/html/body/div[1]/div[2]/div/div[1]/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-books-xls"
+          ],
+          "display_name": "法学院2027年硕士研究生招生考试参考书目.xls",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[2]/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/20163749lz33.xls"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-law-20046",
+      "document_id": "DOC-LAW-20046",
+      "title": "河北大学法学院2027年接收优秀应届本科毕业生免试攻读硕士研究生复试通知",
+      "url": "http://law.hbu.cn/tzgg/20046.jhtml",
+      "department": "law",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20046/body.bin",
+          "body_sha256": "d5cda2498a09495b4f2c5ad4a69ebb35ebe8ebf35fa1a2368354df8caefe2fc1",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.166754Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.956332Z",
+          "quote": "2026-09-22 18:13:06",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20046/receipt.json",
+          "receipt_sha256": "188780c80257f99b7f0f672463df262a9b44ac2d40b8d345e124e472f27d1210",
+          "source_final_url": "http://law.hbu.cn/tzgg/20046.jhtml",
+          "source_id": "notice-law-20046",
+          "source_url": "http://law.hbu.cn/tzgg/20046.jhtml"
+        },
+        "date": "2026-09-22",
+        "raw": "2026-09-22 18:13:06",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20046/body.bin",
+          "body_sha256": "d5cda2498a09495b4f2c5ad4a69ebb35ebe8ebf35fa1a2368354df8caefe2fc1",
+          "original_GET_finished_at": "2026-10-28T16:42:01.166754Z",
+          "original_GET_started_at": "2026-10-28T16:42:00.956332Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-law-20046/receipt.json",
+          "receipt_sha256": "188780c80257f99b7f0f672463df262a9b44ac2d40b8d345e124e472f27d1210",
+          "source_final_url": "http://law.hbu.cn/tzgg/20046.jhtml",
+          "source_id": "notice-law-20046",
+          "source_url": "http://law.hbu.cn/tzgg/20046.jhtml"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N06",
+          "source_id": "notice-law-retest-20046-http",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-retest-20046-http/body.bin",
+          "body_sha256": "d5cda2498a09495b4f2c5ad4a69ebb35ebe8ebf35fa1a2368354df8caefe2fc1",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-law-retest-20046-http/receipt.json",
+          "receipt_sha256": "71426b07f2d78ce5274e49282a27a80fb645524c1648e8b520d3836b53c27faf",
+          "original_GET_started_at": "2026-10-28T16:15:29.803250Z",
+          "original_GET_finished_at": "2026-10-28T16:15:30.022595Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[1]/div[2]/div/div[1]/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-law-interview-list-xlsx"
+          ],
+          "display_name": "复试名单（一）.xlsx",
+          "locator": {
+            "xpath": "/html/body/div[1]/div[2]/div/div[1]/div[2]/span/p[4]/a"
+          },
+          "url": "http://law.hbu.cn/u/cms/law/202609/221833095phw.xlsx"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-yjsy-4427",
+      "document_id": "DOC-YJSY-4427-4428",
+      "title": "河北大学2027年接收优秀应届本科毕业生免试攻读研究生（含直博生）工作办法",
+      "url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+      "department": "yjsy",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4427/body.bin",
+          "body_sha256": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.551697Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.186429Z",
+          "quote": "2026-09-10",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4427/receipt.json",
+          "receipt_sha256": "f4235ab0dc2f70d3f0fd750acbc4a75477fd36cf3a4f9428a22481a33a81bb11",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+          "source_id": "notice-yjsy-4427",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm"
+        },
+        "date": "2026-09-10",
+        "raw": "2026-09-10",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4427/body.bin",
+          "body_sha256": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+          "original_GET_finished_at": "2026-10-28T16:42:01.551697Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.186429Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4427/receipt.json",
+          "receipt_sha256": "f4235ab0dc2f70d3f0fd750acbc4a75477fd36cf3a4f9428a22481a33a81bb11",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm",
+          "source_id": "notice-yjsy-4427",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N03",
+          "source_id": "notice-yjsy-tm-4427",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-tm-4427/body.bin",
+          "body_sha256": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-tm-4427/receipt.json",
+          "receipt_sha256": "5814cd4caf6b96132a26e4305c92d1306431ad5e7e73b75eaa3f996b91da5e54",
+          "original_GET_started_at": "2026-10-28T16:15:29.463580Z",
+          "original_GET_finished_at": "2026-10-28T16:15:29.773066Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[5]/div[2]/form/div/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-yjsy-master-directory-xlsx"
+          ],
+          "display_name": "附件1：2027年河北大学接收硕士推免生专业目录.xlsx",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[1]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204521"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件2：2027年河北大学接收直博生专业目录.xlsx",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[2]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204527"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件3：河北大学2027年接收优秀应届本科毕业生免试攻读硕士生申请表.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[3]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204523"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件4：河北大学2027年接收优秀应届本科生直接攻读博士学位研究生申请表.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[4]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204524"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件6：诚信承诺书.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[5]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204525"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件5：专家推荐书.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[6]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204526"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-yjsy-4428",
+      "document_id": "DOC-YJSY-4427-4428",
+      "title": "河北大学2027年接收优秀应届本科毕业生免试攻读研究生（含直博生）工作办法",
+      "url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+      "department": "yjsy",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4428/body.bin",
+          "body_sha256": "4c35a3ce6773c5010e4dfe44a5d35ec9015df584fa42e6ef205738ecc3fa0fef",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:39:30.096318Z",
+          "original_GET_started_at": "2026-10-28T16:39:29.791809Z",
+          "quote": "2026-09-10",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4428/receipt.json",
+          "receipt_sha256": "17073f40be28eac74bd9f451cac0b3fff70cc5377c94a8e51234f25ac6f7a943",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+          "source_id": "notice-yjsy-4428",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm"
+        },
+        "date": "2026-09-10",
+        "raw": "2026-09-10",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4428/body.bin",
+          "body_sha256": "4c35a3ce6773c5010e4dfe44a5d35ec9015df584fa42e6ef205738ecc3fa0fef",
+          "original_GET_finished_at": "2026-10-28T16:39:30.096318Z",
+          "original_GET_started_at": "2026-10-28T16:39:29.791809Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4428/receipt.json",
+          "receipt_sha256": "17073f40be28eac74bd9f451cac0b3fff70cc5377c94a8e51234f25ac6f7a943",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm",
+          "source_id": "notice-yjsy-4428",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N04",
+          "source_id": "notice-yjsy-tm-4428",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-tm-4428/body.bin",
+          "body_sha256": "4c35a3ce6773c5010e4dfe44a5d35ec9015df584fa42e6ef205738ecc3fa0fef",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-tm-4428/receipt.json",
+          "receipt_sha256": "e6ca88d1cde5dfd61ef5fcfdd236f5a838ad029540f60127d76059d77a5e7356",
+          "original_GET_started_at": "2026-10-28T16:15:29.463706Z",
+          "original_GET_finished_at": "2026-10-28T16:15:29.826326Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[5]/div[2]/form/div/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-yjsy-master-directory-xlsx"
+          ],
+          "display_name": "附件1：2027年河北大学接收硕士推免生专业目录.xlsx",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[1]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204521"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件2：2027年河北大学接收直博生专业目录.xlsx",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[2]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204527"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件3：河北大学2027年接收优秀应届本科毕业生免试攻读硕士生申请表.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[3]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204523"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件4：河北大学2027年接收优秀应届本科生直接攻读博士学位研究生申请表.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[4]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204524"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件6：诚信承诺书.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[5]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204525"
+        },
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件5：专家推荐书.doc",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li[6]/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18204526"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-yjsy-4430",
+      "document_id": "DOC-YJSY-4430",
+      "title": "关于开展2027届毕业研究生生源信息录入的通知",
+      "url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm",
+      "department": "yjsy",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4430/body.bin",
+          "body_sha256": "ca518aee554a27827df07c222d683dac573fdf46825b9ba2a89d8604a77712ad",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.664147Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.370886Z",
+          "quote": "2026-09-11",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4430/receipt.json",
+          "receipt_sha256": "1db66c918b5537844d21e2e652b28487407363eb8b482887080e5316c934de25",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm",
+          "source_id": "notice-yjsy-4430",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm"
+        },
+        "date": "2026-09-11",
+        "raw": "2026-09-11",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4430/body.bin",
+          "body_sha256": "ca518aee554a27827df07c222d683dac573fdf46825b9ba2a89d8604a77712ad",
+          "original_GET_finished_at": "2026-10-28T16:42:01.664147Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.370886Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4430/receipt.json",
+          "receipt_sha256": "1db66c918b5537844d21e2e652b28487407363eb8b482887080e5316c934de25",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm",
+          "source_id": "notice-yjsy-4430",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N08",
+          "source_id": "notice-yjsy-grad-profile-4430",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-grad-profile-4430/body.bin",
+          "body_sha256": "ca518aee554a27827df07c222d683dac573fdf46825b9ba2a89d8604a77712ad",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-grad-profile-4430/receipt.json",
+          "receipt_sha256": "1ac26cef233fd64dff3fa3bbb934d284a6eccf519b9c26e68d9ce80b76af955c",
+          "original_GET_started_at": "2026-10-28T16:17:17.817003Z",
+          "original_GET_finished_at": "2026-10-28T16:17:18.213015Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[5]/div[2]/form/div/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [],
+          "display_name": "附件1：河北大学毕业研究生生源信息录入说明 .docx",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18205470"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-yjsy-4439",
+      "document_id": "DOC-YJSY-4439-4440",
+      "title": "河北大学2027年硕士研究生招生章程",
+      "url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+      "department": "yjsy",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4439/body.bin",
+          "body_sha256": "6c4a304d1caa1b30e2c1ceb03d474bb8d8e7c8b8c0ade15853d8c1bad654873b",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:42:01.677299Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.252704Z",
+          "quote": "2026-09-30",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4439/receipt.json",
+          "receipt_sha256": "78d84552299a217881311c900e3f191770da714fea32f40d8f7e38082fecf92f",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+          "source_id": "notice-yjsy-4439",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm"
+        },
+        "date": "2026-09-30",
+        "raw": "2026-09-30",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4439/body.bin",
+          "body_sha256": "6c4a304d1caa1b30e2c1ceb03d474bb8d8e7c8b8c0ade15853d8c1bad654873b",
+          "original_GET_finished_at": "2026-10-28T16:42:01.677299Z",
+          "original_GET_started_at": "2026-10-28T16:42:01.252704Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4439/receipt.json",
+          "receipt_sha256": "78d84552299a217881311c900e3f191770da714fea32f40d8f7e38082fecf92f",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm",
+          "source_id": "notice-yjsy-4439",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm"
+        }
+      ],
+      "main_body_locator": "/html/body/div[5]/div[2]/form/div/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-yjsy-general-directory-pdf"
+          ],
+          "display_name": "2027年河北大学硕士研究生招生专业目录.pdf",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18206089"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    },
+    {
+      "carrier_id": "notice-yjsy-4440",
+      "document_id": "DOC-YJSY-4439-4440",
+      "title": "河北大学2027年硕士研究生招生章程",
+      "url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+      "department": "yjsy",
+      "publication": {
+        "citation": {
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4440/body.bin",
+          "body_sha256": "d89377118b630f0bcf2a0f8f4b184b92972eac9a11613abf470e983122fc1ea0",
+          "locator": {
+            "type": "actual_HTML_node",
+            "xpath": "/html/body/div[5]/div[2]/form/div/div[1]"
+          },
+          "original_GET_finished_at": "2026-10-28T16:39:30.394773Z",
+          "original_GET_started_at": "2026-10-28T16:39:29.944424Z",
+          "quote": "2026-09-30",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4440/receipt.json",
+          "receipt_sha256": "f3ce86e11b1905cadf064d321899591ccf6df0195de09c35a47edc6b7f9d6460",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+          "source_id": "notice-yjsy-4440",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm"
+        },
+        "date": "2026-09-30",
+        "raw": "2026-09-30",
+        "source_role": "displayed webpage publication date",
+        "source_timezone_displayed": null,
+        "task_calendar_timezone": "Asia/Shanghai"
+      },
+      "in_September_publication_window": true,
+      "observations": [
+        {
+          "reviewer": "B",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4440/body.bin",
+          "body_sha256": "d89377118b630f0bcf2a0f8f4b184b92972eac9a11613abf470e983122fc1ea0",
+          "original_GET_finished_at": "2026-10-28T16:39:30.394773Z",
+          "original_GET_started_at": "2026-10-28T16:39:29.944424Z",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-b/sources/notice-yjsy-4440/receipt.json",
+          "receipt_sha256": "f3ce86e11b1905cadf064d321899591ccf6df0195de09c35a47edc6b7f9d6460",
+          "source_final_url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm",
+          "source_id": "notice-yjsy-4440",
+          "source_url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm"
+        },
+        {
+          "reviewer": "A",
+          "original_notice_id": "N07",
+          "source_id": "notice-yjsy-master-charter-4440",
+          "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-master-charter-4440/body.bin",
+          "body_sha256": "d89377118b630f0bcf2a0f8f4b184b92972eac9a11613abf470e983122fc1ea0",
+          "receipt_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-master-charter-4440/receipt.json",
+          "receipt_sha256": "d441e7669b0e71f3ff82421b1403960867528ac4d3e0a53bace9845e24dcba11",
+          "original_GET_started_at": "2026-10-28T16:17:17.824276Z",
+          "original_GET_finished_at": "2026-10-28T16:17:18.262111Z"
+        }
+      ],
+      "main_body_locator": "/html/body/div[5]/div[2]/form/div/div[2]",
+      "attachment_links": [
+        {
+          "actual_GET_source_ids": [
+            "attachment-yjsy-general-directory-pdf"
+          ],
+          "display_name": "2027年河北大学硕士研究生招生专业目录.pdf",
+          "locator": {
+            "xpath": "/html/body/div[5]/div[2]/form/div/ul/li/a"
+          },
+          "url": "https://yjsy.hbu.edu.cn/system/_content/download.jsp?urltype=news.DownloadAttachUrl&owner=1871155637&wbfileid=18206089"
+        }
+      ],
+      "latest_effective_version_established": false,
+      "first_original_or_repost_order": "unresolved except site self-labels",
+      "individual_outcome_from_this_notice": false
+    }
+  ],
+  "documents": [
+    {
+      "document_id": "DOC-JWC-12352",
+      "carrier_ids": [
+        "notice-jwc-12352"
+      ],
+      "title": "关于组织2026-2027学年秋学期本科生补（缓）考的通知",
+      "in_September_publication_window": false,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12360",
+      "carrier_ids": [
+        "notice-jwc-12360"
+      ],
+      "title": "关于2026—2027学年秋学期学生补退选选课及课程替代的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12364",
+      "carrier_ids": [
+        "notice-jwc-12364"
+      ],
+      "title": "关于公示2027年推荐优秀应届本科毕业生免试攻读研究生名单的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12386",
+      "carrier_ids": [
+        "notice-jwc-12386"
+      ],
+      "title": "关于2026-2027学年秋学期补退选后拟停开课程(课堂)的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12394",
+      "carrier_ids": [
+        "notice-jwc-12394"
+      ],
+      "title": "关于公布2026-2027学年秋学期补退选后停开课程（课堂）的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12398",
+      "carrier_ids": [
+        "notice-jwc-12398"
+      ],
+      "title": "关于2026-2027学年秋学期本科生电子注册的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12405",
+      "carrier_ids": [
+        "notice-jwc-12405"
+      ],
+      "title": "关于办理2026-2027学年秋学期缓考学生选课的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12411",
+      "carrier_ids": [
+        "notice-jwc-12411"
+      ],
+      "title": "关于公布2026-2027学年秋学期已注册学生名单的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-JWC-12419",
+      "carrier_ids": [
+        "notice-jwc-12419"
+      ],
+      "title": "关于2027届预计毕（结）业生未进行新华社图像信息采集的同学补照和图像信息核对的通知",
+      "in_September_publication_window": false,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-LAW-19945",
+      "carrier_ids": [
+        "notice-law-19945"
+      ],
+      "title": "河北大学法学院推免工作实施细则",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-LAW-19962",
+      "carrier_ids": [
+        "notice-law-19962"
+      ],
+      "title": "关于法学院2027年推荐优秀应届本科毕业生免试攻读硕士学位研究生名单的公示",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-LAW-20003",
+      "carrier_ids": [
+        "notice-law-20003"
+      ],
+      "title": "河北大学法学院（纪检监察学院）2027年优秀应届本科毕业生免试攻读硕士研究生招生录取工作实施细则",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-LAW-20037",
+      "carrier_ids": [
+        "notice-law-20037"
+      ],
+      "title": "法学院2027年硕士研究生招生考试参考书目",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-LAW-20046",
+      "carrier_ids": [
+        "notice-law-20046"
+      ],
+      "title": "河北大学法学院2027年接收优秀应届本科毕业生免试攻读硕士研究生复试通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-YJSY-4427-4428",
+      "carrier_ids": [
+        "notice-yjsy-4427",
+        "notice-yjsy-4428"
+      ],
+      "title": "河北大学2027年接收优秀应届本科毕业生免试攻读研究生（含直博生）工作办法",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-YJSY-4430",
+      "carrier_ids": [
+        "notice-yjsy-4430"
+      ],
+      "title": "关于开展2027届毕业研究生生源信息录入的通知",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    },
+    {
+      "document_id": "DOC-YJSY-4439-4440",
+      "carrier_ids": [
+        "notice-yjsy-4439",
+        "notice-yjsy-4440"
+      ],
+      "title": "河北大学2027年硕士研究生招生章程",
+      "in_September_publication_window": true,
+      "first_original_or_repost_order": "unresolved",
+      "version_status": "captured_Oct28_displaying_publication_date_not_historical_archive"
+    }
+  ],
+  "external_original_evidence": {
+    "local_validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/targeted-review/local-validation.json",
+    "carrier_concordance": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/targeted-review/carrier-concordance.json",
+    "public_structural_checks": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/targeted-review/public-structural-checks.json",
+    "supplemental_citations": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/targeted-review/supplemental-citations.json"
+  },
+  "source_truth_sha256": "86f83b9da693a5041283c18f9dff36b48f18192f9f05ce26418ef2239ae43a0d",
+  "full_source_documents_copied_to_GT": false,
+  "not_an_answer_URL_whitelist": true,
+  "absolute_paths_are_author_provenance_not_runtime_dependencies": true
+}

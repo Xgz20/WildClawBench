@@ -14361,6 +14361,13 @@
           ],
           "observation": "学校页面链接确认部门身份；法学院与教务处主页可读，研究生院主页一次直接抓取超时。尚未核验完整通知/附件清单或四端可达性。",
           "runtime_verified": false
+        },
+        "formal_author_acquisition": {
+          "production_original_GETs": 27,
+          "formal_fresh_GETs": 0,
+          "formal_verified_reused_sources": 27,
+          "not_historical_publication_snapshot": true,
+          "not_four_harness_preflight": true
         }
       },
       "origin": {
@@ -14391,47 +14398,50 @@
         "exec": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_007_directed_notice_timeline/exec",
         "gt": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_007_directed_notice_timeline/gt"
       },
-      "prompt_draft": "请完成以下工作：在给定河北大学研究生院、法学院、教务处官方站点内自行检索窗口内重要通知，按同一事宜合并转载，核对原发/转发时间、适用对象、附件和截止时间；形成跨部门时间线、办理依赖与冲突核查。更正/延期若存在则追溯有效版本，未发现冲突也应如实说明，不编造更正或截止日期，不进入登录系统或真实办理。\n\n输入材料：\n- /tmp_workspace/official_entries.json：给定https://yjsy.hbu.edu.cn/ 、https://law.hbu.edu.cn/ 、https://jwc.hbu.cn/ 三个官网入口及学校官网链接认证，不给通知详情URL\n- /tmp_workspace/research_window.json：2026-09-01至2026-10-01左闭右开，Asia/Shanghai\n- /tmp_workspace/user_profile.md：合成的2027届法学本科生，关注推免、研究生招生与本科教务，不能将研究生专属通知套用\n\n交付：\n- /tmp_workspace/results/notice_timeline.xlsx：通知身份、原发/转发、对象、期限、依赖和有效状态\n- /tmp_workspace/results/source_ledger.json：实际详情页、附件、版本关系与定位\n- /tmp_workspace/results/action_plan.docx：对合成学生适用的待办、优先级、冲突及未知\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 从给定三部门官网入口自行定位通知和附件，区分原发与转发，不以同名机构或相似域名代替学校确认的站点。\n- 引用须指向具体证据；域名正确或URL存在不等于正文支持结论。摘要只支持其中明确出现的事实，不能冒充已读全文。\n- 先保留搜索候选，再记录实际读取来源和最终引用；不可用来源、单源事实和冲突要明确标注，不补造事实。\n- 核心判据须有可提取文本/元数据证据，不要求额外视觉理解；本分类图像理解仅由H034考察。",
+      "prompt_draft": "请以给定的河北大学三部门官方入口为起点，自行检索2026年九月发布的重要通知，围绕合成学生的关注主题建立可追溯的跨部门时间线和有条件行动计划。先阅读 /tmp_workspace/delivery_contract.md，再结合 /tmp_workspace/official_entries.json、/tmp_workspace/research_window.json 和 /tmp_workspace/user_profile.md 完成工作。\n\n合成画像是河北大学法学院2023级、四年制在籍法学本科生，预期2027届。关注推免、研究生招生与本科教务，但申请意愿、资格、名单、缴费和办理状态均未知，不能替其决定报考或推断已完成。\n\n研究范围为研究生院、法学院、教务处公开站点、目录、详情页和公开附件。学校主站仅可使用 official_entries.json 列明的两个身份核验页；官方法学院别名须有实际链接或导航依据。可用公开搜索、站内搜索或目录导航及其组合自行发现，不预给具体通知URL。不得因同名或相似域名扩大范围。\n\n网页发布日期决定2026-09-01（含）至2026-10-01（不含）的九月发布窗；正文落款、附件版本、实际访问和动作期限各自保留角色与原精度。窗内通知的窗外办理节点可以纳入，必要窗外关联文书须标context_only，不混成九月通知。核验原发/转载、同文书载体、事项、附件和后续阶段，若有明确更正、延期或冲突则追溯证据与适用条件；未发现应说明调查边界，不构造事件或宣称全站不存在。\n\n交付到 /tmp_workspace/results/：\n- notice_timeline.xlsx：可提取原生单元格的通知身份、版本/载体、对象条件、日期角色、期限、依赖与状态，允许合理的自由Sheet/列/布局和静态值。\n- source_ledger.json：按 delivery_contract.md 的公开结构记录实际发现、读取、来源、文书、事项、主张、行动、关系和未知。carriers[].citations提供短引、实际格式定位和RFC6901 supports_fields；保留搜索候选、实际读取及最终引用的差别。\n- action_plan.docx：可提取原生文本的有条件待办、优先级、依赖/互斥路径、冲突或未发现边界与下一步核验，个人状态保留unknown。\n\n不设固定通知、事项、Query或引用数量；调查与证据须足以支撑所选相关事项及重要排除。摘要只支持其明确内容，URL或HTTP200不证明读到正文/原生附件。验证码HTML、登录响应、旧格式不可读等分别记录，不猜附件内容，不复制真实学生个人行。候选不需接入任何专用评分采集器。\n\n所有输入只读，所有新交付只写results；不进入登录/统一认证或私人群，不用真实账号、不发消息、不提交申请注册报名、不调用付费或真实办理接口，不获取/识别/提交验证码或绕过门禁，不运行附件宏或外部链接。不得读取私有GT。保留事实、推断、未知和真实访问时点，不将后取原件称作发布日期当天的历史快照，不补造23:59、时区或确认时长。核心判据来自可提取文本/元数据，不要求额外视觉理解。",
       "inputs": [
         {
+          "path": "delivery_contract.md",
+          "specification": "公开账本schema、实体/引用关系与原生交付、日期和保护边界；不给通知答案或固定数量。"
+        },
+        {
           "path": "official_entries.json",
-          "specification": "给定https://yjsy.hbu.edu.cn/ 、https://law.hbu.edu.cn/ 、https://jwc.hbu.cn/ 三个官网入口及学校官网链接认证，不给通知详情URL"
+          "specification": "三部门入口与学校两个身份页，允许有实际导航依据的法学院官方别名；不预给详情URL。"
         },
         {
           "path": "research_window.json",
-          "specification": "2026-09-01至2026-10-01左闭右开，Asia/Shanghai"
+          "specification": "网页发布窗2026-09-01含至2026-10-01不含，Asia/Shanghai；保留不同日期角色与精度。"
         },
         {
           "path": "user_profile.md",
-          "specification": "合成的2027届法学本科生，关注推免、研究生招生与本科教务，不能将研究生专属通知套用"
+          "specification": "合成本校法学院2023级四年制、预期2027届本科生；意愿、资格、名单、缴费和办理状态未知。"
         }
       ],
       "outputs": [
         {
           "path": "/tmp_workspace/results/notice_timeline.xlsx",
-          "requirement": "通知身份、原发/转发、对象、期限、依赖和有效状态",
+          "requirement": "原生单元格的通知/载体/事项、对象条件、日期角色与精度、期限和依赖；允许自由Sheet/列/布局与静态值。",
           "kind": "result_artifact"
         },
         {
           "path": "/tmp_workspace/results/source_ledger.json",
-          "requirement": "实际详情页、附件、版本关系与定位",
+          "requirement": "公开schema的实际发现/读取/引用、文书/事项/主张/行动/关系和未知；短引、实际格式定位及RFC6901 supports_fields。",
           "kind": "result_artifact"
         },
         {
           "path": "/tmp_workspace/results/action_plan.docx",
-          "requirement": "对合成学生适用的待办、优先级、冲突及未知",
+          "requirement": "原生文本的有条件待办、优先级、依赖/互斥、冲突或未发现边界及下一步核验；个人状态unknown。",
           "kind": "result_artifact"
         }
       ],
       "scope_boundaries": [
-        "仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。",
-        "不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。",
-        "结论区分事实、推断和未知；不得虚构缺失信息。",
-        "所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。",
-        "从给定三部门官网入口自行定位通知和附件，区分原发与转发，不以同名机构或相似域名代替学校确认的站点。",
-        "引用须指向具体证据；域名正确或URL存在不等于正文支持结论。摘要只支持其中明确出现的事实，不能冒充已读全文。",
-        "先保留搜索候选，再记录实际读取来源和最终引用；不可用来源、单源事实和冲突要明确标注，不补造事实。",
-        "核心判据须有可提取文本/元数据证据，不要求额外视觉理解；本分类图像理解仅由H034考察。"
+        "四份输入只读；仅results写新交付，不读取私有GT。",
+        "从三入口自主发现；学校主站仅限两个身份页，官方别名须实际链接/导航依据，域名相似不扩范围。",
+        "网页发布日、正文落款、附件版本、实际访问与动作期限分别保留原精度；必要窗外文书context_only。",
+        "不设通知、事项、Query或引用数量；不以65条非穷尽作者事实或参考URL池排除合法答案。",
+        "摘要、验证码HTML、登录响应或旧格式不可读不得冒充全文/附件已读，不猜未取得内容，不复制真实学生个人行。",
+        "不登录、不发消息、不真实办理、不调用付费接口，不获取/识别/提交验证码或绕过门禁，不执行宏/外链。",
+        "事实、推断、未知和访问时点分开；不捏造23:59、时区、确认时长、更正或全站不存在冲突。"
       ],
       "complexity_mechanisms": [
         "把转发日当原发日或生效日",
@@ -14439,23 +14449,37 @@
         "遗漏附件期限或捏造延期冲突"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_RECONCILED_REFERENCE_RULES_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102633,
-        "construction": "制作前独立核实三个官网入口、别名重定向与公开通知可达性，在固定窗口建立非穷尽通知/附件核验库和事项-版本图；正文提取对象、原发/转载和期限，双人复核对用户画像的适用性及办理偏序。允许池外合法通知，若未发现更正或冲突不强求制造；不按首页日期或搜索摘要自动推断截止日。",
+        "construction": "初始独立A/B真实检索与源核验后，非盲模型调和65条非穷尽源事实并先冻结来源/公开契约；再制作原生参考和规则。原GT8、exec4及冻结/对齐14路径不改。69机制检查、16选定真实Worker控制通过，1坏XLSX定位探针在纯复用预检阻断并保留。当前正式MD/21GT再经独立ZIP/真实Worker和自包含归档通过。",
         "private_files": [
-          "expected.json",
-          "business_oracle.json",
-          "counterexamples.json",
           "artifact_contract.json",
-          "protected_sha256.json",
+          "business_oracle.json",
           "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "helper_provenance.json",
+          "ledger_rules.py",
+          "native_text.py",
+          "office_runtime.py",
+          "protected_sha256.json",
+          "reference/v2/provenance.json",
+          "reference/v2/results/action_plan.docx",
+          "reference/v2/results/notice_timeline.xlsx",
+          "reference/v2/results/source_ledger.json",
           "reference_source_manifest.json",
-          "claim_evidence_oracle.json"
+          "research_source_policy.json",
+          "rule_evidence_contract.json",
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "source_review_reconciliation.json",
+          "verified_sources.py"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。",
-        "answer_policy": "参考库不是唯一合法答案；固定事实用独立oracle，池外合法来源/对象由Judge独立核验，不能因不在名单失分。",
-        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。"
+        "independent_verification": "初始独立模型来源读取与后续非盲调和分别保留谱系；作者参考和机核不是人工专家或正式语义Judge。",
+        "equivalence": "合法自由布局、静态Office值与等价定位均允许；公式若存在须在副本清缓存并由锁定引擎实际重算。",
+        "answer_policy": "65事实/参考源与参考三交付非穷尽且不是URL、通知、事项、Query或引用数白名单；语义支持与覆盖由独立Judge核验。",
+        "source_verification": "实际候选所用来源由评分侧独立生产采集或明确复用完整验证的原GET封存谱系。当前正式包0 fresh/27 reused，原件、HTTP/投影回执和自包含胶囊正常/归档核验一致；后取原件不证明历史发布日内容。",
+        "authoring_evidence": "evidence/h033-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -14468,19 +14492,19 @@
             "key": "record_contract",
             "weight": 0.2,
             "capabilities": [
-              "verification_delivery"
+              "data_processing"
             ],
-            "criterion": "交付和证据账本可解析，必要字段及工作/事件标识齐全；不以字数或表格漂亮代替事实。",
-            "oracle_reference": "gt/artifact_contract.json"
+            "criterion": "公开JSON schema、实体/CID唯一性、引用图及RFC6901目标；固定结构检查，增加正确padding不稀释错误。",
+            "oracle_reference": "gt/artifact_contract.json + gt/ledger_rules.py"
           },
           {
             "key": "time_and_scope",
             "weight": 0.25,
             "capabilities": [
-              "retrieval_verification"
+              "reasoning_planning"
             ],
-            "criterion": "依据独立取得的来源元数据核对时间窗、版本/事件/论文范围；不能仅信任候选填写的日期。",
-            "oracle_reference": "gt/reference_source_manifest.json + scoring-side independently acquired sources"
+            "criterion": "给定公开来源范围、日期角色与原精度、九月网页发布窗、个人状态unknown及日期CID绑定；不把机械通过称为源语义正确。",
+            "oracle_reference": "公开window/profile/entry contract + CID/date bindings; source semantics remain Judge duty"
           },
           {
             "key": "citation_resolution",
@@ -14488,8 +14512,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "引用ID、文件/URL、实际片段和定位可对应到独立冻结的源证据；片段对主张的语义支持由Judge另核，不只检查域名。",
-            "oracle_reference": "gt/evidence_requirements.json + scoring-side independently acquired sources"
+            "criterion": "在评分侧独立取得并生产封存的policy-v2实际源中，按实际HTML/PDF/DOCX/XLSX定位核短引与原生值角色；不使用参考URL白名单。",
+            "oracle_reference": "gt/evidence_requirements.json + gt/research_source_policy.json + independently sealed policy-v2 sources"
           },
           {
             "key": "protected_delivery",
@@ -14497,11 +14521,11 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "保护输入未改、交付可打开，数值或结构控制项符合契约；缺核心文件不能靠聊天自述补交。",
+            "criterion": "保护四份输入原字节，三件交付可解析且Office为原生文本/单元格；静态值等价，若有公式须锁定引擎实际重算并读回。",
             "oracle_reference": "gt/protected_sha256.json + gt/artifact_contract.json"
           }
         ],
-        "rule_aggregation": "按上列权重输出规则overall_score；语义正确性与开放答案覆盖由独立Judge核验，不用候选名单硬匹配。",
+        "rule_aggregation": "A=.20记录+.25时间范围+.40定位+.15保护交付；S=.50事实+.30覆盖独立+.20边界；Final=.40A+.60S。当前仅作者A=1，S/Final=null。",
         "llm_rubric": [
           {
             "key": "factual_support",
@@ -14509,25 +14533,24 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "对定向官网检索：跨部门通知与办理时间线的关键事实、数值、版本和判断，逐项独立核验正文/元数据是否真实支持；对池外来源按同一标准判断。",
+            "criterion": "独立核原件上下文与终态三交付，判断对象、主体、日期角色/精度、数值/单位、版本、主张和引用关系；同一句引用命中不等于支持所有目标。",
             "score_bands": {
-              "1.0": "关键事实均被可追溯原文支持，时空口径正确，无捏造来源或实验结果。",
-              "0.5": "主结论成立但存在非关键字段或支撑缺失，未将未知说成已证实。",
-              "0.0": "关键结论与原文冲突、捏造出处/事件/全文结果，或没有完成核心事实核验。"
+              "1.0": "关键事实、对象与日期角色均可回到实际原件，相关条件与未知准确，没有由摘要、文件名、状态或URL猜正文。",
+              "0.5": "主要范围和结论有可定位依据，但存在非关键条件、证据或交接遗漏；无核心虚构或明显错配。",
+              "0.0": "核心来源或事实错误、关键日期/对象错配、缺失内容被虚构，或主要结论与实际原件矛盾。"
             }
           },
           {
             "key": "coverage_and_independence",
             "weight": 0.3,
             "capabilities": [
-              "retrieval_verification",
-              "reasoning_planning"
+              "retrieval_verification"
             ],
-            "criterion": "满足本题实体、主题、时间、版本去重与资料筛选要求；分清一手、转载、独立支持及可比性，不机械按URL数量计覆盖。",
+            "criterion": "结合完整可观测轨迹判断从三入口自主调查及选取/排除是否足以支撑画像关注主题，区分原件、转载、附件、文书版本与业务阶段，不按URL或事项数计覆盖。",
             "score_bands": {
-              "1.0": "所有关键分支有合格覆盖，重复/版本/转载已合并，独立性或无法交叉验证的边界说明准确。",
-              "0.5": "满足主范围但漏一个非关键分支，未用不合格材料凑数。",
-              "0.0": "核心分支缺失、反复转载或同一工作版本冒充多项独立结果，无法支撑主要比较。"
+              "1.0": "调查覆盖题定入口和主题，所选相关事项与重要排除有依据，文书/载体/事项及版本、独立支持关系清楚；未读或未核范围明确。",
+              "0.5": "主要范围和结论有可定位依据，但存在非关键条件、证据或交接遗漏；无核心虚构或明显错配。",
+              "0.0": "核心主题或入口未实质调查，重复载体当多项独立支持，跨事项合并或将窗外发布材料充作九月通知，导致核心范围失真。"
             }
           },
           {
@@ -14536,11 +14559,11 @@
             "capabilities": [
               "reasoning_planning"
             ],
-            "criterion": "趋势、选型与建设建议限定在材料可证明范围，区分事实、官方宣称、静态实现、实验和推断；允许有依据的不同结论。",
+            "criterion": "核合成画像、未知个人状态、有条件行动与互斥路径，必要前置和后续核查，以及未发现更正/冲突/最新有效状态的调查边界。",
             "score_bands": {
-              "1.0": "取舍可追溯且限制清楚，不把缺证据当否定或运行保证。",
-              "0.5": "主要建议有依据，但漏一项非关键条件或后续验证。",
-              "0.0": "主要建议与证据矛盾、无条件外推，或用不可比排名作关键依据。"
+              "1.0": "行动主体、条件、日期角色与先后依赖明确，个人状态和意愿保留unknown，冲突或未发现的边界准确，不无条件推动所有路径。",
+              "0.5": "主要范围和结论有可定位依据，但存在非关键条件、证据或交接遗漏；无核心虚构或明显错配。",
+              "0.0": "把研究生专属或不满足条件的通知套给画像，擅自判资格/名单/缴费/完成或意愿，虚构延期冲突/确认时长，或把未发现当全站不存在。"
             }
           }
         ],
@@ -14642,10 +14665,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "作者正式MD/exec4/GT21，独立安装score0.27.1/core0.15.3 ZIP、真实Worker A1、来源0fresh27reuse及正常/无runtime搬移核验；语义目录和原生来源/候选查询，无Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h033-reviewed-authoring-20261029.json"
       },
       "retrieval_profile": {
         "primary_mode": "site_scoped_search",
@@ -14658,7 +14685,7 @@
         "navigation_seed_urls_provided": true
       },
       "draft_revision": {
-        "reason": "参考search测评集rev392，补齐检索类型与证据契约；未执行或冻结。",
+        "reason": "正式制作并登记；当前作者侧独立ZIP/Worker/来源复用与归档通过，真实Harness、独立Judge及难度校准待执行。",
         "previous_task_id": "general_hard_research_verification_task_007_policy_evidence_conflicts",
         "replaced_task_identity": true
       },
@@ -14670,18 +14697,16 @@
           "公共搜索/站内搜索或浏览器导航入口与正文访问，按题目检索类型预检；不依赖固定工具名。"
         ],
         "scoring": [
-          "锁定的General规则Worker和可解析v2 Rubric的语义Judge；独立只读评分材料。",
-          "openpyxl>=3.1或等价原生表格读写能力",
-          "python-docx或等价OOXML文档读写能力",
-          "固定版本LibreOffice或等价已验证引擎实际重算；对公式题运行参数扰动并读取重算结果。",
-          "固定版本办公渲染器，派生预览独立于候选冻结目录存放并记录来源SHA。",
-          "独立来源获取与快照冻结阶段，将实际正文/元数据提供给只读规则与Judge；开放来源需工具型Judge或已完整供证的等价裁判。"
+          "独立安装并验证的score0.27.1/core0.15.3、锁定Worker及私有GT；真实规则不联网不调用LLM。",
+          "policy-v2独立公开来源采集或显式验证封存复用，HTML/PDF/DOCX/XLSX原件、定位、值角色和谱系自包含；缺可信来源为评测异常。",
+          "原生DOCX/XLSX解析；如候选含公式，在一次性副本用锁定LibreOffice清缓存重算并读回。",
+          "完整真实轨迹和独立语义Judge核上下文/调查覆盖/适用条件；目录或片段命中不代表已完成Judge。"
         ],
         "skills": [],
         "env": [],
         "warmup": [],
-        "preflight_status": "not_executed",
-        "limit": "所有版本、素材许可和真实可用性在正式制作/发行前锁定；上述能力未做本题四端运行验证。"
+        "preflight_status": "author_only_formal_ZIP_Worker_source_reuse_and_archive_verified_no_Harness_Judge",
+        "limit": "L4、区分度与四端实际调查/交付能力均未实测；作者原生文件查询不证明目标应用可用性或语义正确。"
       },
       "proposed_frontmatter": {
         "id": "general_hard_research_verification_task_007_directed_notice_timeline",
@@ -14715,6 +14740,10 @@
               "role": "candidate_deliverable"
             }
           ]
+        },
+        "scoring_runtime": {
+          "research_sources": true,
+          "office": true
         }
       },
       "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"
