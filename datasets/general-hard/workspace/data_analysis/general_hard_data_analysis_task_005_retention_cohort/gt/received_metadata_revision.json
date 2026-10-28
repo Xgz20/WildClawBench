@@ -1,0 +1,97 @@
+{
+  "revision": "received-metadata-v2",
+  "exec_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/revisions/received-metadata-v2/exec",
+  "protected_file": "protected_received_v2.json",
+  "original_v1_unchanged": true,
+  "changed_only_field": "received_at",
+  "changed_rows": 12,
+  "business_expected_byte_identical": true,
+  "independent_validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/revisions/received-metadata-v2/gt/independent_validation.json",
+  "status": "PASS_RECEIVED_METADATA_REVISION",
+  "changes": [
+    {
+      "record_id": "R0469",
+      "source_row": 11,
+      "old_received_at": "2026-09-15T12:05:00+08:00",
+      "new_received_at": "2026-09-16T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0025",
+      "source_row": 14,
+      "old_received_at": "2026-09-01T12:05:00+08:00",
+      "new_received_at": "2026-09-02T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0438",
+      "source_row": 40,
+      "old_received_at": "2026-09-13T23:05:00-05:00",
+      "new_received_at": "2026-09-15T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0281",
+      "source_row": 167,
+      "old_received_at": "2026-09-09T00:10:00+08:00",
+      "new_received_at": "2026-09-10T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0026",
+      "source_row": 286,
+      "old_received_at": "2026-08-31T23:05:00-05:00",
+      "new_received_at": "2026-09-02T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0001",
+      "source_row": 386,
+      "old_received_at": "2026-08-20T12:05:00+08:00",
+      "new_received_at": "2026-08-21T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0282",
+      "source_row": 575,
+      "old_received_at": "2026-09-08T11:10:00-05:00",
+      "new_received_at": "2026-09-10T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0470",
+      "source_row": 706,
+      "old_received_at": "2026-09-14T23:05:00-05:00",
+      "new_received_at": "2026-09-16T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0250",
+      "source_row": 724,
+      "old_received_at": "2026-09-07T23:05:00-05:00",
+      "new_received_at": "2026-09-09T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0249",
+      "source_row": 859,
+      "old_received_at": "2026-09-08T12:05:00+08:00",
+      "new_received_at": "2026-09-09T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0006",
+      "source_row": 914,
+      "old_received_at": "2026-08-19T23:05:00-05:00",
+      "new_received_at": "2026-08-21T00:05:00+08:00"
+    },
+    {
+      "record_id": "R0437",
+      "source_row": 1038,
+      "old_received_at": "2026-09-14T12:05:00+08:00",
+      "new_received_at": "2026-09-15T00:05:00+08:00"
+    }
+  ],
+  "old_csv_sha256": "7cb61309750dbac6cec8996e49d37599fce24182a1d14e4ad9c45ad611775cab",
+  "new_csv_sha256": "f31c23e21592c77c7f0b3dadb89a7cf044da7810d303c6d0b26cab37ab164ab8",
+  "expected_sha256": "800c519ab8034ee477620c80d70bb195727b71f71e04f3fb8e93d9b371a6d99f",
+  "reference_sha256": {
+    "anomalies.json": "3e86642864e7f5856d67679008daeb4cb4e6492c602ab01fb77c4ddbd9c93053",
+    "cohorts.xlsx": "e102aa0860043bfb87276ecae68219f530b748d1a0148ec645c624bc0144d56a",
+    "report.html": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+  },
+  "raw_rows_preserved": 1200,
+  "physical_order_and_payload_preserved": true,
+  "independent_checks": 13758,
+  "limit": "A source metadata coverage correction, not a candidate/model score. V1 material evidence remains immutable."
+}

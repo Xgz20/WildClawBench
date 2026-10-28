@@ -1,9 +1,9 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 21
+  active_task_count: 22
   category_task_counts:
     office_documents: 15
-    data_analysis: 4
+    data_analysis: 5
     research_verification: 0
     file_operations: 0
     software_engineering: 2
@@ -668,6 +668,31 @@ tasks:
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+  - task_id: general_hard_data_analysis_task_005_retention_cohort
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-02bdaf5a9382caf0
+          query_hash: 02bdaf5a9382caf0b0ec665620a8ac8f19bff3be882712d6a74543aa4943950a
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-17 11:13:35.464000'
+          last_seen_local: '2026-09-17 11:13:35.464000'
+          intent_summary: 核对新老用户流失率定义及异常日期的原始数据。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - ssb2
       direct_task_copy: false
     network:
       mode: offline

@@ -1,0 +1,19 @@
+{
+  "schema_version": "h021-material-evidence/v1",
+  "stage": "materials_not_runtime_scoring_authority",
+  "source_hashes": "protected_sha256.json",
+  "source_identity": "record_id, physical source_row, canonical_record_id, normalized event/user and actual Shanghai user-day.",
+  "anomaly_identity": "Actual old workbook trace_id role, source record/event, member/cohort and the wrong-used-day or denominator. Same shape alone is not cause evidence.",
+  "required_distinctions": [
+    "transport duplicate versus distinct same-user-day events",
+    "whole conflicting payload group versus arbitrary first success",
+    "effective payment/login versus refund/zero/negative/failed",
+    "strict before first deactivation including same second",
+    "complete history first activity versus first visible metric day/first payment",
+    "empty observed cohort versus unobserved D1",
+    "genuine new-cohort spike versus old processing error"
+  ],
+  "HTML_runtime_work_remaining": "General controlled offline browser observations must inspect visible DOM and actual SVG/Canvas geometry, not merely a hidden JSON payload or hardcoded reference selectors. Current author renderer/probes only validate the known reference.",
+  "scoring_type_planned": "automated",
+  "open_prose_limit": "Core direct processing mechanisms and their evidence are deterministic; arbitrary operational causes cannot be inferred from the data."
+}

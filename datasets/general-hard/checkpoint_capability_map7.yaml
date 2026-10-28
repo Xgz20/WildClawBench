@@ -251,3 +251,12 @@ general_hard_data_analysis_task_004_financial_reconcile:
     - data_processing
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_data_analysis_task_005_retention_cohort:
+  business_correctness:
+    - data_processing
+  boundary_cases:
+    - reasoning_planning
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

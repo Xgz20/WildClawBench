@@ -1,0 +1,51 @@
+{
+  "schema_version": "h021-scoring/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "expected.json": "800c519ab8034ee477620c80d70bb195727b71f71e04f3fb8e93d9b371a6d99f",
+    "protected_sha256.json": "90be66e50968adcfcff5c49812577a4d0419cf516f7956beedf0894b8f4f67e0",
+    "protected_received_v2.json": "8662dca8fc84d9a0d7d4b647d40bbac3f864b869892352c5c44eb72c24f25755",
+    "runtime_contract.json": "6fe844ef8ae5db4f0bd3df212245ec6764043b242dccd0c7486b132bd89b8664",
+    "source_bindings.json": "1c222e823904716ce5b4642e6181622aaa822d5291ce7360edba282649e2c9ce",
+    "office_runtime.py": "7dcb510b0a3a234799c8b4bf44f8fa0c8b2d047b43eded3e6010d239fd1c66ac",
+    "html_runtime_v015.py": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310",
+    "html_observer.mjs": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "h021_tables.py": "0e2fc9d37b326772ddba5c7120e9ccd4eca2a7feb4e023e90c10077083cf1566",
+    "h021_ledger.py": "cc416f540b0102dcca6a7acfcf00da5f752f183b28af6261bcd8e3a413b624e0",
+    "h021_html.py": "cd41fe0825577595799a908d514334256bf4097158d0f55f1cb2cbf73d3ee155",
+    "grader.py": "b9a16f9bd339fc20ae8eac92a27450b4122e7ae8adb25ea50e1d2bfcd73113e1"
+  },
+  "subdivision": {
+    "business": {
+      "summary": 0.3,
+      "members": 0.25,
+      "user_days": 0.1,
+      "anomaly_numeric_mechanism": 0.15,
+      "actual_chart": 0.2
+    },
+    "boundary": {
+      "ledger_rules": 0.85,
+      "actual_chart_gaps": 0.15
+    },
+    "delivery": {
+      "parsed_usable": 0.2,
+      "visible_table": 0.2,
+      "actual_chart": 0.2,
+      "cross_surface_summary": 0.2,
+      "visible_evidence_and_limits": 0.2
+    },
+    "evidence": {
+      "native_ledger_witnesses": 0.6,
+      "direct_anomaly_witnesses": 0.25,
+      "visible_report_witnesses": 0.15
+    }
+  },
+  "equivalence": "Visible complete auditable static detail is legal; no formula-only or perturbation requirement. Sufficient actual canonical witnesses may replace exhaustive per-user-day ID lists.",
+  "failure_boundary": "Missing/drifted private or runtime assets and unsupported legal chart forms raise evaluation_error. Missing/wrong candidate files and declared offline-rule violations lose their points."
+}
