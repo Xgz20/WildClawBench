@@ -1,0 +1,344 @@
+{
+  "schema_version": "h029-private-artifact-contract/v1",
+  "public_contract_sha256": "58a78a45cbe820132888aedbf76b52123149f705dab52207765afbb062ed7202",
+  "public_contract": {
+    "schema_version": "h029-public-artifact-contract/v1",
+    "final_selected_events": 4,
+    "minimum_distinct_products": 3,
+    "window": "research_window.json",
+    "no_answer_list_provided": true,
+    "products_and_event_groups": {
+      "ai_search_product": "面向最终用户或开发者提供AI辅助检索、基于检索生成答案、搜索交互或搜索API的具体产品或明确产品模块；须由来源说明搜索/检索工作流。仅有AI字样、底层模型、论文、融资或公司新闻不自动满足。",
+      "qualifying_product_change": "可定位到具体AI搜索产品的功能、交互、检索范围/信息源、可用用户/地区、接入方式或使用条件的实质变化。应说明之前与之后或本次新增内容以及直接用户影响；宣传性重要程度由语义评审，不按标题声量。",
+      "model_or_generic_ai_release": "只有来源把模型等发布明确绑定到该搜索产品的实际功能或可用范围变化时才可能计入；模型日期、性能宣称或常识推断不能代替产品变更证据。",
+      "product_identity": "按可独立识别的产品或产品模块归并，品牌别名、语言站、平台客户端和同产品套餐通常不是不同产品；同公司不同产品可以分别计数，但须有不同产品身份及工作流证据。",
+      "region_policy": {
+        "definition_to_disclose": "本题国内指主要运营主体/总部在中国内地，海外指主要运营主体/总部在中国内地以外；仅作运营归属分类，不按网页语言、域名、受众或发布地区推断。",
+        "values": [
+          "mainland_china",
+          "outside_mainland_china",
+          "mixed_or_unknown"
+        ],
+        "evidence": "给出运营主体名称、归属说明及可核验来源引用；来源可为产品/公司公开介绍，不要求其发布日期落入研究窗。",
+        "unknown": "归属存在冲突或无法确认时保留mixed_or_unknown，不用于补足国内/海外两类覆盖。不得由私有产品名单硬填地域。",
+        "separate_availability": "release_availability记录本次变更面向的国家/地区、平台、套餐、账号/邀请限制，与provider_region分别判断。"
+      },
+      "stage_values": {
+        "announced": "已公开宣布具体变更或计划；宣布本身发生在窗口可作为宣布类计数项，但必须写明未证明已可用，计划日期不能当实际上线日期。",
+        "limited_rollout": "来源证实至少一部分目标用户已经获得变更；需记录覆盖范围和未知限制，不能由未来将推出的措辞推定。",
+        "general_availability": "来源证实在其声明的目标范围内正式可用；正式不等于所有地区/平台/套餐均可用。",
+        "interpretation_only": "只有媒体分析、预测或无新变化的回顾；可作背景或趋势材料，不能单独补足4项。",
+        "unknown_or_conflicting": "保留未知/冲突，不替来源选择更强的可用性结论。",
+        "experimental_available": "明确提供可用的实验性/预览功能；说明实验状态、目标用户和限制。仅公开研究演示或媒体预测不等于用户可用。",
+        "not_stated": "来源未明示GA/灰度等阶段标签，但明确记载本次变化及所属事件时间；可按真实变化计数，保留未知阶段，不将其提升为正式上线。只有媒体解读、事件时间不明或未证真实变化，不能靠not_stated补足四项。"
+      },
+      "deduplication": {
+        "count_unit": "4项按实质变更组change_group_id计数，产品身份+同一用户功能/条件变化构成一个组；不是按URL、报道、客户端或阶段计数。",
+        "stage_timeline": "同一变化的预告、灰度和正式发布分别保留为阶段时间线；选其中一个有窗口内发生证据的阶段作为计数事件，同组最多贡献1项。",
+        "separate_changes": "同一发布会或公告中的不同功能可以分别成组，前提是各有独立可识别的用户变化、事实与证据；不同措辞、宣传角度和日期不能拆组。",
+        "revision": "同一页面更新、同一通稿重发或翻译不产生新的事件。实质追加的不同功能仍须独立证明。",
+        "identity_resolution": "候选提供ID和合并理由；语义评审验证产品/组身份。规则只核对ID一致性，不把候选ID数量视为真实覆盖。"
+      }
+    },
+    "time_policy": {
+      "publication_time": "每个来源首次发表时间，另列modified_time。页面更新、爬取、搜索收录、HTTP Last-Modified及版权年份不能替代首发时间或事件时间。",
+      "event_time": "被计数阶段实际发生的时间。宣布类用公开宣布时间；灰度/正式用证据证明的开始可用时间。可用的精度可以是timestamp、day、month或有界interval。",
+      "planned_effective_time": "宣布的未来生效/上线时间单列，状态为计划；没有后续实际发生证据不得提升为已发生。",
+      "eligibility": "精确timestamp/有时区区间按Asia/Shanghai研究窗计算；来源明确的自然月标签2026-09可按该来源的月标签归属研究月份，不因未述时区扩成8/31至10/1后失去满分路径。月标签与所选事件发生/阶段的关系仍由Judge核。自然日未述时区保留source date；内部日期可按日精度报告，边界日若无法确定则unknown/补证，不编造瞬时。",
+      "normalization": "明确时区的timestamp换算Asia/Shanghai。仅month/date时保留原始source_calendar_label、precision和timezone=unknown，不发明UTC边界或00:00瞬时。可以给normalized_reporting_range便于在任务窗口内显示，但须标mode=calendar_reporting_only，说明不是实际发生的开始/结束瞬时。自动按该精度模式做标签/算术核对。",
+      "partial_dates": "明确事件属于2026-09的来源自然月标签可支持该研究月份，不要求补造日或时区。按月显示区间仅为报告范围。仅说近期、下月、今年或用发表日期猜发生日期不足；没有时区的边界自然日如归属仍不清，应补证/unknown。",
+      "conflicts": "保留正文可见日期、结构化datePublished、modified及事件日期等各自的值与角色。可见自然日与精确metadata换算后不同一天不自动构成矛盾，可能属于不同钟/字段语义；真实冲突与取舍由Judge核，不自动取最新/有利值。",
+      "as_of": "截至窗口结束的事件状态与证据获取时间分别记录；截止后正式上线不能反改为窗口内正式上线。",
+      "date_only_source_conflicts": "可见日期只有date精度而metadata为UTC timestamp时，两条观察各存原值、精度、时区和角色。换算跨日正常；规则核各自变换，不一律标冲突，也不把metadata覆盖可见日。"
+    },
+    "results": {
+      "event_matrix.xlsx": {
+        "kind": "visible_editable_native_xlsx",
+        "event_columns": [
+          "event_id",
+          "change_group_id",
+          "product_id",
+          "product_name",
+          "provider_name",
+          "provider_region",
+          "change_summary",
+          "stage",
+          "event_date_ids",
+          "planned_date_ids",
+          "publication_date_ids",
+          "availability",
+          "user_impact",
+          "claim_ids",
+          "citation_ids",
+          "uncertainties"
+        ],
+        "column_aliases": {
+          "event_id": [
+            "事件ID"
+          ],
+          "change_group_id": [
+            "实质变更组ID"
+          ],
+          "product_id": [
+            "产品ID"
+          ],
+          "product_name": [
+            "产品名称"
+          ],
+          "provider_name": [
+            "提供方"
+          ],
+          "provider_region": [
+            "提供方归属"
+          ],
+          "change_summary": [
+            "变化内容"
+          ],
+          "stage": [
+            "发布阶段"
+          ],
+          "event_date_ids": [
+            "事件日期观察ID"
+          ],
+          "planned_date_ids": [
+            "计划日期观察ID"
+          ],
+          "publication_date_ids": [
+            "来源发表日期观察ID"
+          ],
+          "availability": [
+            "可用范围"
+          ],
+          "user_impact": [
+            "用户影响"
+          ],
+          "claim_ids": [
+            "主张ID"
+          ],
+          "citation_ids": [
+            "引用ID"
+          ],
+          "uncertainties": [
+            "未知与限制"
+          ]
+        },
+        "record_policy": "4条最终计数事件，按event_id关联；其他候选放来源账本。Sheet名、坐标、行列次序、分表合表与辅助列不限，清楚中文别名可用。事件可以分表但应能无歧义归并；不能将全部核心结果塞入一格巨大JSON、隐藏区域或图片。列表列可以用分号/逗号/JSON数组，清楚且无歧义。",
+        "source_identity": "不同产品、同产品不同变更及提供方归属由真实证据确定，ID数量不证明覆盖。",
+        "unknown_policy": "真正null、空单元格加明确未知状态或清楚unknown标记；未知不等于零/不支持/不发生。",
+        "formulas": "静态正确原生值可接受，无公式数量要求。若使用公式须可实际重算，不含宏或外部数据连接。",
+        "relation_rules": "每事件的event_date_ids、publication_date_ids、planned_date_ids关联账本date_evidence；发表观察可通过实际来源复用。claim_ids关联覆盖change_summary/stage/event_time/availability/provider_region的主张。brief_sections关联的主张在DOCX显示其section_id及可回查claim/citation ID。单条主张/观察可覆盖多个对象，不要求重复写原文。"
+      },
+      "source_ledger.json": {
+        "sources": "必需数组，标准字段见下文sources；引用正文只保存在该source内的citations，其他表只引用citation_id。",
+        "date_evidence": "日期观察数组，字段见下文date_evidence；可以用独立数组或清楚的sources内嵌date_evidence等价表示，date_id全局唯一。",
+        "claims": "主张数组，字段见下文claims；可以sources内嵌claims等价表示。",
+        "brief_sections": "2条trend与1条action，section_id、kind、claim_ids、citation_ids；DOCX中的章节须显示其section_id以便回查，ID措辞不限定。",
+        "lineage": "记录实际引用的转载、通稿、翻译、同源和独立报道关系，含source_id/upstream_source_id/relation/basis_citation_ids或清楚unknown及原因。可用lineage_edges数组或sources内嵌关系；不以URL/域名数量证明独立。",
+        "discovery": "保留实际发现的候选、selected/rejected/unresolved及理由；可用discovery_candidates数组或sources内嵌decision/reason。只记实际遇到项，不补造拒绝项或搜索调用。",
+        "limitations": "必需，说明实际未读、不可用、单源、未知、历史取得及不能证明的效果。"
+      },
+      "brief.docx": {
+        "content": "两项跨事件观察与一项针对buyer_brief读者的行动建议，各显示section_id并关联event_id/claim_id/citation_id；说明事实前提、可比性、条件与下一步验证。",
+        "native": "原生可编辑DOCX，正文可见，不用图片代替核心文字，不含宏、外部数据连接或自动执行内容；不要求模板、页数、字数或特定字体。"
+      }
+    },
+    "sources": {
+      "required_fields": [
+        "source_id",
+        "url",
+        "access_status",
+        "accessed_at",
+        "title",
+        "citations"
+      ],
+      "access_status": [
+        "read_full",
+        "read_excerpt",
+        "search_only",
+        "unavailable"
+      ],
+      "citations_fields": [
+        "citation_id",
+        "quote",
+        "locator"
+      ],
+      "citation_rules": "citation_id全局唯一，quote为必要短原文，不用自己写的摘要冒原文；HTML定位实际标题/段落/逻辑表格行，PDF用1起物理页并可另列印刷页，结构化metadata可用metadata_key或更精确路径。译文另列，不替原文；片段存在不等于支持主张。",
+      "optional_fields": [
+        "publisher",
+        "source_role",
+        "publication_date_ids",
+        "modified_date_ids",
+        "upstream_source_ids",
+        "lineage_reason",
+        "independence_basis",
+        "discovery_decision",
+        "discovery_reason"
+      ],
+      "source_role": [
+        "first_party",
+        "independent_reporting",
+        "derivative",
+        "unknown"
+      ],
+      "access_time": "实际访问时间的ISO8601值，带时区；未取得来源可null并说明原因。HTTP时间和PDF创建时间不自动视为首次发表时间。",
+      "body_equivalence": "实际读到同一官方文档HTML或其从页面真实下载链接取得的PDF均可，保留真实URL与定位，不编造其它URL或把本地自写投影当独立网络来源。"
+    },
+    "date_evidence": {
+      "fields": [
+        "date_id",
+        "source_id",
+        "role",
+        "raw_value",
+        "precision",
+        "timezone",
+        "normalized_value",
+        "citation_ids",
+        "unknown_reason"
+      ],
+      "role": [
+        "publication",
+        "modified",
+        "event",
+        "planned"
+      ],
+      "precision": [
+        "timestamp",
+        "date",
+        "month",
+        "interval",
+        "unknown"
+      ],
+      "raw_value": "真实来源原日期值或自然月/日标签。unknown时null且解释；interval用有出处的起止原值并在normalized_value给start/end及边界。",
+      "normalization": "timestamp带实际时区并转Asia/Shanghai；date/month无源时区时timezone=unknown并保留YYYY-MM-DD或YYYY-MM自然标签，不造00:00瞬时。可选reporting_range仅显示报告范围且标calendar_reporting_only；不是实际发生起止。interval保留真实精度、边界及推断依据。",
+      "unknown": "来源确实未给该角色时间时明确unknown并给相应全文/元数据检查依据。来源可取得但没有日期，与评分侧取不到来源不同；后者不能伪装unknown已核实。",
+      "binding": "日期引用必须绑定独立可读来源正文日期或真实metadata字段，不只信候选填写。来源发表/修改日期与事件/计划的语义角色分别判断，不因同一数字或跨日就混用。",
+      "optional_fields": [
+        "window_relation",
+        "status",
+        "reporting_range",
+        "reporting_mode"
+      ],
+      "null_and_not_applicable": "已观察日期用对应精度及真实值，unknown_reason可空。未知用precision=unknown、raw_value=null、normalized_value=null并写unknown_reason；不适用与未知分开写status=not_applicable及理由。未声明计划时间可用planned_date_ids空列表并说明未声明，不需要为不适用对象补造日期。来源发表时间未知须保留相应日期观察及检查依据，不能直接漏掉所有发表日期槽。",
+      "id_reuse": "同一个真实日期观察可被同源的多个事件/主张复用，不强迫复制date_id。不同角色的判断要能追踪，可在日期观察中用清楚角色列表或分别ID引用同一原始值，不能把发表/修改/事件/计划混为同一含义。",
+      "window_relation": "可选in_window/outside/indeterminate，仅声明日期/日历标签的机械窗内关系。若给出需与真实原值/归一化相符；不替代语义事件资格。"
+    },
+    "claims": {
+      "fields": [
+        "claim_id",
+        "event_id_or_section_id",
+        "claim_text",
+        "claim_kind",
+        "citation_ids",
+        "uncertainties",
+        "supports_fields"
+      ],
+      "claim_kind": [
+        "fact",
+        "official_claim",
+        "inference",
+        "unknown"
+      ],
+      "scope": "至少覆盖每事件产品/变化、阶段、时间与可用范围、归属，以及两观察和一建议的事实前提；一个清楚主张可关联多个字段，不限定主张数量。解释/建议本身无需与来源逐字相同，其事实前提需有引用。",
+      "supports_fields": [
+        "change_summary",
+        "stage",
+        "event_time",
+        "availability",
+        "provider_region",
+        "trend_basis",
+        "action_basis"
+      ],
+      "mapping": "事件主张按supports_fields关联前五类业务字段；brief主张用trend_basis或action_basis。一条清楚主张可以覆盖多个字段并复用同一证据，不要求每个字段单独造一条句子或引用；event_id_or_section_id可以单个ID或明确ID列表。"
+    },
+    "boundaries": {
+      "source_evidence": "未读正文不冒称已读全文，搜索摘要只支持其实际内容。同一机构/工作不同URL不自动独立，转载关系无法确认保留unknown。参考池非穷尽、其它合法产品/事件/来源同标准，不以工具名或URL名单判业务。",
+      "time_scoring": "机械核独立日期证据绑定、精度/转换、窗内算术与主张定位；定位/算术通过不证明事件语义合格。是否真属AI搜索变化、时间与阶段的关系、去重与实际覆盖、趋势/行动支持由独立Judge核。",
+      "execution": "只读本地三输入与公开来源，不登录、不发消息、不调用真实业务或付费API、不购买；保护原输入，所有交付results内，每份≤5MiB。无需实际试用、代码交付或图像理解。"
+    }
+  },
+  "event_columns": [
+    "event_id",
+    "change_group_id",
+    "product_id",
+    "product_name",
+    "provider_name",
+    "provider_region",
+    "change_summary",
+    "stage",
+    "event_date_ids",
+    "planned_date_ids",
+    "publication_date_ids",
+    "availability",
+    "user_impact",
+    "claim_ids",
+    "citation_ids",
+    "uncertainties"
+  ],
+  "column_aliases": {
+    "event_id": [
+      "事件ID"
+    ],
+    "change_group_id": [
+      "实质变更组ID"
+    ],
+    "product_id": [
+      "产品ID"
+    ],
+    "product_name": [
+      "产品名称"
+    ],
+    "provider_name": [
+      "提供方"
+    ],
+    "provider_region": [
+      "提供方归属"
+    ],
+    "change_summary": [
+      "变化内容"
+    ],
+    "stage": [
+      "发布阶段"
+    ],
+    "event_date_ids": [
+      "事件日期观察ID"
+    ],
+    "planned_date_ids": [
+      "计划日期观察ID"
+    ],
+    "publication_date_ids": [
+      "来源发表日期观察ID"
+    ],
+    "availability": [
+      "可用范围"
+    ],
+    "user_impact": [
+      "用户影响"
+    ],
+    "claim_ids": [
+      "主张ID"
+    ],
+    "citation_ids": [
+      "引用ID"
+    ],
+    "uncertainties": [
+      "未知与限制"
+    ]
+  },
+  "expected_event_count": 4,
+  "reference_event_pool_is_non_exhaustive": true,
+  "fixed_claim_slots": {
+    "per_event": [
+      "change_summary",
+      "stage",
+      "event_time",
+      "availability",
+      "provider_region"
+    ],
+    "per_brief_section": [
+      "trend_basis",
+      "trend_basis",
+      "action_basis"
+    ]
+  },
+  "no_answer_names_or_URLs_for_automatic_matching": true
+}

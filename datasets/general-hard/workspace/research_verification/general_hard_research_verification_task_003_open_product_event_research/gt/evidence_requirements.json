@@ -1,0 +1,72 @@
+{
+  "schema_version": "h029-evidence-requirements/v1",
+  "required_candidate": [
+    "results/event_matrix.xlsx",
+    "results/source_ledger.json",
+    "results/brief.docx"
+  ],
+  "protected_inputs": [
+    "buyer_brief.md",
+    "event_contract.json",
+    "research_window.json"
+  ],
+  "managed_environment": [
+    "GENERAL_E2E_OFFICE_LOCK",
+    "GENERAL_E2E_RULE_EVIDENCE_DIR",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"
+  ],
+  "research_bundle": {
+    "manifest": "manifest.json",
+    "manifest_sha_from_environment": true,
+    "per_source_parts": [
+      "body",
+      "text",
+      "projection",
+      "receipt"
+    ],
+    "projection_key": "projection_path",
+    "projection_schema": "wildclawbench.research-source-text/v1",
+    "candidate_ledger_bindings": [
+      "source_id",
+      "url",
+      "citations"
+    ],
+    "trust_boundary": "Production attempt/source collector independently acquires the bytes; matching candidate-authored hashes alone do not authenticate source evidence"
+  },
+  "derived_source_projection": {
+    "helper": "source_projection.py",
+    "inputs": "Verified independent body bytes and actual projection JSON only",
+    "managed_destination": "GENERAL_E2E_RULE_EVIDENCE_DIR/sources",
+    "binding": [
+      "source_id",
+      "body SHA",
+      "bundle manifest SHA",
+      "bundle identity/candidate artifact binding",
+      "candidate ledger SHA",
+      "helper SHA",
+      "JSON path/raw literal SHA when applicable",
+      "derived text/projection SHA"
+    ],
+    "no_sourcebundle_or_GT_mutation": true
+  },
+  "source_reuse": {
+    "wrapper_schema": "wildclawbench.research-source-reuse-receipt/v1",
+    "original_network_receipt": "source.original_receipt_path preserving original GET collector/start/finish",
+    "origin_capsule": "Fully authenticated by outer source0.25 verifier; rule also checks declared identity/hash pointers and original-response SHA",
+    "judge_evidence": "Current selected source plus minimal origin identity/hash summary only; old candidate/GT capsule text excluded",
+    "fresh_reuse_counts_separate": true
+  },
+  "observations": "GENERAL_E2E_RULE_EVIDENCE_DIR/h029-observations.json",
+  "formula_evidence": "GENERAL_E2E_RULE_EVIDENCE_DIR/recalculated/office-audit.json when formulas exist",
+  "judge_reads": [
+    "All three actual candidate deliverables including complete visible DOCX prose",
+    "Source-first non-exhaustive expected/business oracle and reference-source provenance, without answer-list matching",
+    "Each independently acquired body/projection/receipt and managed derived source text/metadata",
+    "Rule observations: four mechanical date slots, 23 claim slots, and explicit semantic exclusions"
+  ],
+  "semantic_score_generated_by_rule": false,
+  "full_score_requires_actual_60_percent_Judge": true,
+  "pool_external_same_full_score_path": true,
+  "source_collection_outage_is_not_candidate_zero": true
+}
