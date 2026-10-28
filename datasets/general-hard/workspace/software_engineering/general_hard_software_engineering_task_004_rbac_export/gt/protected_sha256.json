@@ -1,0 +1,8 @@
+{
+  "contract.md": "1502346dd44c0cd972390bd054aabce4c6c30ac5473865a4e7943b6aacbf5c05",
+  "fixtures/users.json": "521eca03da2d800e8d207593b082e290f3160816997146013b466fdb699e5ee0",
+  "project/__init__.py": "c7604ab46b681fe844b94efbb804c31a940b0b4e564e2bce6bb02efe55be398d",
+  "requirements.lock": "17439f242d32c25f3e4e9da3c5b1e04224c544d0d2947957970748cb7080c5c0",
+  "tests/test_public.py": "3bc69fb81ede1096650d3041a817b5fd8909e6aab41583c8f58761c684b4e413",
+  "tools/run_security_tests.py": "5606265c7a10c9f4eeee1050a34f8aee333a8f97cab15a09e6d10e3a2b1ea93e"
+}

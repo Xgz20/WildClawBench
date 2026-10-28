@@ -1,0 +1,384 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 44,
+  "task_id": "general_hard_software_engineering_task_004_rbac_export",
+  "registered_task_index": 43,
+  "registered": 43,
+  "remaining": 17,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 4,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/software_engineering/general_hard_software_engineering_task_004_rbac_export.md",
+      "sha256": "ac3e794189d11476db63f20bc404733bf59de9ec964ed445d1ac7a70c3fe01c0",
+      "size": 6502
+    },
+    "exec": [
+      {
+        "path": "contract.md",
+        "sha256": "1502346dd44c0cd972390bd054aabce4c6c30ac5473865a4e7943b6aacbf5c05",
+        "size": 4890
+      },
+      {
+        "path": "fixtures/users.json",
+        "sha256": "521eca03da2d800e8d207593b082e290f3160816997146013b466fdb699e5ee0",
+        "size": 4498
+      },
+      {
+        "path": "project/__init__.py",
+        "sha256": "c7604ab46b681fe844b94efbb804c31a940b0b4e564e2bce6bb02efe55be398d",
+        "size": 52
+      },
+      {
+        "path": "project/auth.py",
+        "sha256": "14f7aa8cb5f7f24e6b8a18d481c7d7f9aef2ec53fd36e9365108691998198d03",
+        "size": 973
+      },
+      {
+        "path": "project/export.py",
+        "sha256": "af7b69d09c7487920725b0b6f5d86f9c2be3b6f5a6780a61c835f8cc1986433f",
+        "size": 952
+      },
+      {
+        "path": "project/routes.py",
+        "sha256": "ee145c83baf4a316489a0e98358739db67c4f979d52ce95c174ab6fdccc68aa0",
+        "size": 1434
+      },
+      {
+        "path": "requirements.lock",
+        "sha256": "17439f242d32c25f3e4e9da3c5b1e04224c544d0d2947957970748cb7080c5c0",
+        "size": 81
+      },
+      {
+        "path": "tests/test_public.py",
+        "sha256": "3bc69fb81ede1096650d3041a817b5fd8909e6aab41583c8f58761c684b4e413",
+        "size": 1317
+      },
+      {
+        "path": "tools/run_security_tests.py",
+        "sha256": "5606265c7a10c9f4eeee1050a34f8aee333a8f97cab15a09e6d10e3a2b1ea93e",
+        "size": 1288
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "efabdfbe32829e79624fe1b860d0530420a572e8dff1ea3d410a5bddf8d96a86",
+        "size": 348
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "4c23e5881518cca8570b4f0a125910554b916a9541fc16ac52d142b55ad68bd5",
+        "size": 371393
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "35dd9e69c2d4f809f347bfed87ce732217ee4097cb9042a7afe4ee844948d7a5",
+        "size": 321156
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "3fb496e3a21872c2884fdc0d54a18f23870628f6ffdeccb304a3a1f3357d2669",
+        "size": 300
+      },
+      {
+        "path": "expected.json",
+        "sha256": "af92da870a1976f5967eaa2b16786dbb27e36623ddadaf963184b308aeba33f0",
+        "size": 3322
+      },
+      {
+        "path": "grader.py",
+        "sha256": "48431bf24ef4c76d82abe94eb3bd918653a98e549ef695da0b8e6ae0f1bba219",
+        "size": 8924
+      },
+      {
+        "path": "hidden_tests/runner.py",
+        "sha256": "da7701ba26d975acb2d6761bc986d4e1fe0c26f78b7b1a3afbaed5256f8c7308",
+        "size": 4994
+      },
+      {
+        "path": "protected_inputs/contract.md",
+        "sha256": "1502346dd44c0cd972390bd054aabce4c6c30ac5473865a4e7943b6aacbf5c05",
+        "size": 4890
+      },
+      {
+        "path": "protected_inputs/fixtures/users.json",
+        "sha256": "521eca03da2d800e8d207593b082e290f3160816997146013b466fdb699e5ee0",
+        "size": 4498
+      },
+      {
+        "path": "protected_inputs/project/__init__.py",
+        "sha256": "c7604ab46b681fe844b94efbb804c31a940b0b4e564e2bce6bb02efe55be398d",
+        "size": 52
+      },
+      {
+        "path": "protected_inputs/requirements.lock",
+        "sha256": "17439f242d32c25f3e4e9da3c5b1e04224c544d0d2947957970748cb7080c5c0",
+        "size": 81
+      },
+      {
+        "path": "protected_inputs/tests/test_public.py",
+        "sha256": "3bc69fb81ede1096650d3041a817b5fd8909e6aab41583c8f58761c684b4e413",
+        "size": 1317
+      },
+      {
+        "path": "protected_inputs/tools/run_security_tests.py",
+        "sha256": "5606265c7a10c9f4eeee1050a34f8aee333a8f97cab15a09e6d10e3a2b1ea93e",
+        "size": 1288
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "3125c3099b2807a50e0f0f7659a01a376990153b04db69d85cb0f4fc3897131a",
+        "size": 560
+      },
+      {
+        "path": "trusted_manifest.json",
+        "sha256": "36dac591d9dbda1b4681b6975379d148876824b930055aad4df1908131d0b8c8",
+        "size": 1489
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/handoff.json",
+    "sha256": "5908b91f10f739c43b5888a9abe0e3d84a828b925890e943fcb0f671496f4382",
+    "size": 13358
+  },
+  "review": {
+    "root_review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/root-review-v1/review.json",
+    "review_kind": "model root review; not human expert",
+    "controls": 20,
+    "old_failures_retained": true,
+    "current_formal_baseline_is_new_run_not_all_control_rerun_claim": true
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_software_engineering_task_004_rbac_export",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/formal-detached-1793227316741777000/attempts/author-only-h044-formal__detached-zip-worker/general_hard_software_engineering_task_004_rbac_export/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/formal-detached-1793227316741777000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/formal-detached-1793227316741777000/attempts/author-only-h044-formal__detached-zip-worker/general_hard_software_engineering_task_004_rbac_export/author-only-formal-auto",
+      "candidate_sha256": "b63ea7151a9a94bbc073ef157eb3ba7190d4d77b3c268fe7258cf338c64b6f21",
+      "entry_count": 15
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/formal-detached-1793227316741777000/moved-without-runtime",
+      "candidate_sha256": "b63ea7151a9a94bbc073ef157eb3ba7190d4d77b3c268fe7258cf338c64b6f21",
+      "entry_count": 15
+    },
+    "nonruntime_same_byte_files": 44,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/h044-test-witness.json",
+        "sha256": "e2e91a5fa0cfba556eb624d2c851f28835c4a468747c8cb1d318d4eb8849a211",
+        "size": 52096
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/h044-test-witness.json",
+        "sha256": "e2e91a5fa0cfba556eb624d2c851f28835c4a468747c8cb1d318d4eb8849a211",
+        "size": 52096
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "d2374e0a10d31e23bd519fc5470ad4877afff972",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "d2374e0a10d31e23bd519fc5470ad4877afff972",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "d2374e0a10d31e23bd519fc5470ad4877afff972",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "1a00683d50b0ecaa88ac80917d55c0e2911187a446db8be90b4edb7bb0b52705",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "d2374e0a10d31e23bd519fc5470ad4877afff972",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "71a623861040edc12969a50f813a73de219e8a7263126e06c8cefc3519e70323"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/h044-test-witness.json",
+          "sha256": "e2e91a5fa0cfba556eb624d2c851f28835c4a468747c8cb1d318d4eb8849a211",
+          "size": 52096
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "05f6f3ba37eb7d31e61b10f356146803cea02d1f4299d03af23d6dc228df61d0",
+        "file_count": 1,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T22:41:58.326681Z",
+      "identity": {
+        "batch_id": "author-only-h044-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_software_engineering_task_004_rbac_export",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "ca1c15c5e323996706f157ea7b4386e9daa98202a1ec85a8d6bed7ff71c867ec",
+        "root_result_count": 1,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "4a44a3f1dabd2f3ab53da1d9334bdfdc9e09b300d287633ae632b1801ee6d95d",
+        "initial_sha256": "4a44a3f1dabd2f3ab53da1d9334bdfdc9e09b300d287633ae632b1801ee6d95d"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T22:41:57.867508Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 0.348942,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "3f616867979610ebff38a2f159677f6c735d821d075e0c29e9731d82899565ca",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "b8b2f40a6a05e1ce57334a9b4e331380ad42a52d01c69c206dec5c43d2a236c6",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 32393
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": null,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/formal-detached-1793227316741777000/validation.json",
+    "sha256": "9a64eff5f0bb9c1b188e42865738a28d97f09fd9d5cf957ce873057bc64fee67",
+    "size": 7303
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "a3927c32ca95623551c33546089991763008313652b09fabd5b2ab9f9525dedb",
+    "size": 20670
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/static-root-single/20261028T224252Z_89567e2bed/report.json",
+      "sha256": "396a973b31ed427fbd28d531e5b8ca4551475e92ecaf879f5b467f2f23b89ee4",
+      "size": 1223
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/static-root-full/20261028T224259Z_ae6944ac86/report.json",
+      "sha256": "7a03a0e6802726add0b46a5674cf6ba8d177e491c644bea4ee272617add37599",
+      "size": 27656
+    },
+    "only_remaining_missing": 17
+  },
+  "source_summary": "9公开输入，15GT，105源先行权限oracle，正确许可与拒绝分层，防全部拒绝凑分。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T22:42:59.173497+00:00",
+  "git_materialization": {
+    "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h044/qa/root-finalize-boundary-v1/receipt.json",
+    "sha256": "9203f4393604ab36d2b3f1758fd93be671cfb33e0cde46c6e5ddafe25431cd3f",
+    "original_failure_retained": true,
+    "private_GT_byte_unchanged": true
+  }
+}

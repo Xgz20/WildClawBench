@@ -21,3 +21,6 @@ datasets/general-hard/workspace/file_operations/general_hard_file_operations_tas
 datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_008_visual_paper_figures/gt/native_base.py whitespace=-blank-at-eof
 # H038中断索引保留标准CRLF，原字节哈希属于保护输入契约。
 datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_004_resumable_inventory/exec/manifest.tsv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# H044私有规则与测试按已验收SHA冻结，保留现有末尾空行。
+datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/gt/grader.py whitespace=-blank-at-eof
+datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/gt/hidden_tests/runner.py whitespace=-blank-at-eof

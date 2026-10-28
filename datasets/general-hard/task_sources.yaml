@@ -1,12 +1,12 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 42
+  active_task_count: 43
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
-    software_engineering: 3
+    software_engineering: 4
     planning_coordination: 0
     content_operations: 0
 tasks:
@@ -1254,6 +1254,31 @@ tasks:
           first_seen_local: '2026-10-10 01:14:06.902000'
           last_seen_local: '2026-10-10 01:14:06.902000'
           intent_summary: 分析匹配效率和多线程方案，提出并验证数据处理优化。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-code
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: true
+  - task_id: general_hard_software_engineering_task_004_rbac_export
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-016863ed6afa3b5d
+          query_hash: 016863ed6afa3b5dc4e9114d030888f42c398f43f8dbb2c2863e8e3703dcdbd0
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-28 10:00:54.984000'
+          last_seen_local: '2026-09-28 10:00:54.984000'
+          intent_summary: 修复现有项目的学生登录黑名单问题。
           review: accepted_intent_prototype
           review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。

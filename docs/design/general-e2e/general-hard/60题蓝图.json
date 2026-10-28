@@ -17754,7 +17754,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/gt"
       },
-      "prompt_draft": "请完成以下工作：修复登录与导出跨层授权，不允许已禁用会话继续导出，同时保留正常角色的合法功能；只修改列出的三个源码文件。\n\n输入材料：\n- /tmp_workspace/project/auth.py：登录和黑名单逻辑\n- /tmp_workspace/project/export.py：导出入口\n- /tmp_workspace/project/routes.py：路由层\n- /tmp_workspace/fixtures/users.json：合成角色和禁用状态\n- /tmp_workspace/contract.md：权限矩阵\n\n交付：\n- /tmp_workspace/project/auth.py：授权修复\n- /tmp_workspace/project/export.py：导出检查\n- /tmp_workspace/project/routes.py：调用链一致\n- /tmp_workspace/results/security_tests.txt：实际结果\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请修复这个本地合成校园服务的登录黑名单与导出跨层授权，不允许账户已禁用、入黑名单、撤销或过期的旧会话继续导出，同时保留正常角色的合法功能。主要交付是源码修复，只允许修改以下三个文件：\n- /tmp_workspace/project/auth.py：登录与当前身份/会话校验\n- /tmp_workspace/project/export.py：直接导出服务授权、资源/行/字段边界\n- /tmp_workspace/project/routes.py：请求入口与调用链一致\n\n先阅读 /tmp_workspace/contract.md 的公开API和完整权限矩阵。/tmp_workspace/fixtures/users.json 包含惰性合成用户、租户、角色、禁用/黑名单、资源与行数据；它是示例，不能写死ID、用户名或测试输出。/tmp_workspace/tests/test_public.py 是受保护的正常功能公开测试，/tmp_workspace/tools/run_security_tests.py 是实际测试记录工具；/tmp_workspace/requirements.lock 声明仅用Python标准库，无需安装任何依赖。/tmp_workspace/project/__init__.py 同样受保护。\n\n合同要求：所有入口使用当前服务端账户状态，不能信任缓存身份或请求自报的角色/租户；student只导出已参与资源的本人行，teacher只导出本人所属资源，tenant_admin也不能跨租户，auditor不能导出。默认和显式字段权限、拒绝错误、行过滤、状态不被意外修改及会话时效以contract.md为准。直接调用export_data也必须成立，不能只修路由或一律拒绝。\n\n完成后运行 python -B tools/run_security_tests.py，交付 /tmp_workspace/results/security_tests.txt：由实际运行产生、绑定最终三份源码SHA的JSON格式测试记录（扩展名为.txt）。公开测试只是兼容性烟雾样本，原工程通过也不能证明授权正确；请自行针对安全边界验证，额外说明可写results。修改最终源码后必须重新运行并更新记录。不可改公开测试、夹具、依赖锁、工具或其它输入来制造通过。\n\n离线完成，仅使用本题映射到/tmp_workspace的材料，不访问真实账号、不联网、不发消息、不调用付费接口。全部输入和保护文件保持原字节，仅上述三个源码可改，所有新增报告写results；不新增其它源码模块。自动__pycache__/*.pyc可忽略。GT和评分说明不提供给候选。结论区分事实、推断和未知，不虚构缺失信息。",
       "inputs": [
         {
           "path": "project/auth.py",
@@ -17812,20 +17812,29 @@
         "一律拒绝掩盖问题"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102644,
-        "construction": "从权限矩阵独立生成角色×状态×入口测试，包含旧会话和直接调用路径；拒绝所有用户不能通过正常功能控制样本。",
+        "construction": "公开9输入和105独立业务/边界用例先于参考，经两条计算路径一致复核；真实直接导出/路由/登录链执行。20实际Worker控制，正确/等价105/105，旧失败保留。正式MD/15GT/当前ZIP再次实际执行并正常/无runtime搬移核验。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "hidden_tests/runner.py",
+          "protected_inputs/contract.md",
+          "protected_inputs/fixtures/users.json",
+          "protected_inputs/project/__init__.py",
+          "protected_inputs/requirements.lock",
+          "protected_inputs/tests/test_public.py",
+          "protected_inputs/tools/run_security_tests.py",
+          "protected_sha256.json",
+          "trusted_manifest.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "公开函数签名/异常和权限矩阵不变，允许内部不同授权组织与不透明token；不匹配参考补丁或用户名/ID。",
+        "authoring_evidence": "evidence/h044-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -17840,7 +17849,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "修复登录与导出跨层授权，不允许已禁用会话继续导出，同时保留正常角色的合法功能；只修改列出的三个源码文件。",
+            "criterion": "当前登录/黑名单与角色×资源×字段授权的真实行为；合法和拒绝样本各占本项一半，保留正常功能。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -17849,7 +17858,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：仅修UI；会话缓存绕过；一律拒绝掩盖问题。以独立反例验证，不只检索关键词。",
+            "criterion": "独立旧会话、即时禁用/黑名单/角色或租户变更、撤销/过期、直接入口、身份伪造、混租户行与非法字段边界；含合法控制，不以全部拒绝取满分。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -17858,7 +17867,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "三份指定源码可读取和解析(.5)，保护输入与允许修改范围完整(.5)；输入变更不扩为其它项自动清零。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -17867,7 +17876,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "实际公开测试记录绑定最终源码SHA(.5)，其命令、returncode和逐测试状态与评分侧真实独立重跑一致(.5)；漏交/无效记录仅归本项。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -17950,10 +17959,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "当前正式MD/exec/GT、独立score0.27.1/core0.15.3 ZIP真实Worker、正常与删除runtime搬移核验；作者自动组件，无Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h044-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

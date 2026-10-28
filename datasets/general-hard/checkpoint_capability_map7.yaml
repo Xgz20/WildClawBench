@@ -503,3 +503,12 @@ general_hard_software_engineering_task_003_async_lifecycle:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_software_engineering_task_004_rbac_export:
+  business_correctness:
+    - code_generation
+  boundary_cases:
+    - code_generation
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery
