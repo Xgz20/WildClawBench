@@ -1,0 +1,3802 @@
+[
+  {
+    "case_id": "api_default",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {},
+    "version": 1
+  },
+  {
+    "case_id": "api_pending",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "status": "pending"
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_approved_page2",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "status": "approved",
+      "page": 2,
+      "pageSize": 2
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_term_owner",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "term": " LIN "
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_term_title",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "term": "ALPHA",
+      "status": "approved"
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_stable_ties",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "pageSize": 10
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_reject_counts",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "term": "denied"
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_chinese",
+    "kind": "api",
+    "group": "business",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "term": "青山"
+    },
+    "version": 1
+  },
+  {
+    "case_id": "api_clamp",
+    "kind": "api",
+    "group": "boundary",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "status": "approved",
+      "page": 999,
+      "pageSize": 2
+    },
+    "version": 3
+  },
+  {
+    "case_id": "api_empty",
+    "kind": "api",
+    "group": "boundary",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "term": "no-match",
+      "page": 6
+    },
+    "version": 3
+  },
+  {
+    "case_id": "api_negative",
+    "kind": "api",
+    "group": "boundary",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "status": "unknown",
+      "term": false,
+      "page": -5,
+      "pageSize": 0
+    },
+    "version": 3
+  },
+  {
+    "case_id": "api_types",
+    "kind": "api",
+    "group": "boundary",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "page": true,
+      "pageSize": "7"
+    },
+    "version": 3
+  },
+  {
+    "case_id": "api_unicode",
+    "kind": "api",
+    "group": "boundary",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "term": "écho"
+    },
+    "version": 3
+  },
+  {
+    "case_id": "api_no_records",
+    "kind": "api",
+    "group": "boundary",
+    "records": [],
+    "query": {
+      "page": 3,
+      "pageSize": 12
+    },
+    "version": 3
+  },
+  {
+    "case_id": "store_switch_restore",
+    "kind": "store",
+    "group": "business",
+    "actions": [
+      {
+        "type": "request",
+        "token": "start",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "start",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "pending",
+        "patch": {
+          "status": "pending"
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "pending",
+        "result": {
+          "query": {
+            "status": "pending",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r06",
+              "title": "beta floor",
+              "owner": "Lin",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 3
+            }
+          ],
+          "total": 6,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 2,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "again",
+        "patch": {
+          "status": "all"
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "again",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_page_only",
+    "kind": "store",
+    "group": "business",
+    "actions": [
+      {
+        "type": "request",
+        "token": "p1",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "p1",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "p2",
+        "patch": {
+          "page": 2
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "p2",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 2,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r04",
+              "title": "Alpha denied",
+              "owner": "Zhao",
+              "status": "rejected",
+              "revision": 1,
+              "createdSeq": 2
+            },
+            {
+              "id": "r05",
+              "title": "BETA renewal",
+              "owner": "Chen",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 3
+            },
+            {
+              "id": "r06",
+              "title": "beta floor",
+              "owner": "Lin",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 3
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 2,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_term_normalized",
+    "kind": "store",
+    "group": "business",
+    "actions": [
+      {
+        "type": "request",
+        "token": "search",
+        "patch": {
+          "term": " ALPHA "
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "search",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "alpha",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r04",
+              "title": "Alpha denied",
+              "owner": "Zhao",
+              "status": "rejected",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 3,
+          "counts": {
+            "all": 3,
+            "pending": 2,
+            "approved": 0
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 1,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "same",
+        "patch": {
+          "term": "alpha",
+          "page": 2
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "same",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "alpha",
+            "page": 2,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r04",
+              "title": "Alpha denied",
+              "owner": "Zhao",
+              "status": "rejected",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 3,
+          "counts": {
+            "all": 3,
+            "pending": 2,
+            "approved": 0
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 1,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_reject_retry",
+    "kind": "store",
+    "group": "business",
+    "actions": [
+      {
+        "type": "request",
+        "token": "bad",
+        "patch": {}
+      },
+      {
+        "type": "reject",
+        "token": "bad"
+      },
+      {
+        "type": "request",
+        "token": "retry",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "retry",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_race",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "old",
+        "patch": {}
+      },
+      {
+        "type": "request",
+        "token": "new",
+        "patch": {
+          "status": "approved"
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "new",
+        "result": {
+          "query": {
+            "status": "approved",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            },
+            {
+              "id": "r05",
+              "title": "BETA renewal",
+              "owner": "Chen",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 3
+            },
+            {
+              "id": "r09",
+              "title": "Budget 青山",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 4
+            }
+          ],
+          "total": 5,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 2,
+          "version": 1
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "old",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_same_query_race",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "refresh-old",
+        "patch": {}
+      },
+      {
+        "type": "request",
+        "token": "refresh-new",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "refresh-new",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 3
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "refresh-old",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_reset_status",
+    "kind": "store",
+    "group": "boundary",
+    "initial": {
+      "page": 4
+    },
+    "actions": [
+      {
+        "type": "request",
+        "token": "filter",
+        "patch": {
+          "status": "pending",
+          "page": 9
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "filter",
+        "result": {
+          "query": {
+            "status": "pending",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r06",
+              "title": "beta floor",
+              "owner": "Lin",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 3
+            }
+          ],
+          "total": 6,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 2,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_reset_term_size",
+    "kind": "store",
+    "group": "boundary",
+    "initial": {
+      "page": 4
+    },
+    "actions": [
+      {
+        "type": "request",
+        "token": "term",
+        "patch": {
+          "term": "BETA",
+          "page": 8
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "term",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "beta",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r05",
+              "title": "BETA renewal",
+              "owner": "Chen",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 3
+            },
+            {
+              "id": "r06",
+              "title": "beta floor",
+              "owner": "Lin",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 3
+            }
+          ],
+          "total": 2,
+          "counts": {
+            "all": 2,
+            "pending": 1,
+            "approved": 1
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 1,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "size",
+        "patch": {
+          "pageSize": 1,
+          "page": 9
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "size",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "beta",
+            "page": 1,
+            "pageSize": 1
+          },
+          "items": [
+            {
+              "id": "r05",
+              "title": "BETA renewal",
+              "owner": "Chen",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 3
+            }
+          ],
+          "total": 2,
+          "counts": {
+            "all": 2,
+            "pending": 1,
+            "approved": 1
+          },
+          "page": 1,
+          "pageSize": 1,
+          "lastPage": 2,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_query_echo",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "actual",
+        "patch": {
+          "status": "pending"
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "actual",
+        "result": {
+          "query": {
+            "status": "approved",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            },
+            {
+              "id": "r05",
+              "title": "BETA renewal",
+              "owner": "Chen",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 3
+            },
+            {
+              "id": "r09",
+              "title": "Budget 青山",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 4
+            }
+          ],
+          "total": 5,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 2,
+          "version": 1
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "actual",
+        "result": {
+          "query": {
+            "status": "pending",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r06",
+              "title": "beta floor",
+              "owner": "Lin",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 3
+            }
+          ],
+          "total": 6,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 2,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_version_fence",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "before",
+        "patch": {}
+      },
+      {
+        "type": "invalidate",
+        "event_id": "n2",
+        "revision": 2
+      },
+      {
+        "type": "resolve",
+        "token": "before",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "after",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "after",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "after",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 2
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_duplicate_old_event",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "v3",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "v3",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 3
+        }
+      },
+      {
+        "type": "invalidate",
+        "event_id": "n2",
+        "revision": 2
+      },
+      {
+        "type": "invalidate",
+        "event_id": "n2",
+        "revision": 99
+      },
+      {
+        "type": "invalidate",
+        "event_id": "old",
+        "revision": 1
+      },
+      {
+        "type": "request",
+        "token": "refresh",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "refresh",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 3
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_old_rejection",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "a",
+        "patch": {}
+      },
+      {
+        "type": "request",
+        "token": "b",
+        "patch": {}
+      },
+      {
+        "type": "reject",
+        "token": "a"
+      },
+      {
+        "type": "resolve",
+        "token": "b",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      },
+      {
+        "type": "reject",
+        "token": "a"
+      }
+    ]
+  },
+  {
+    "case_id": "store_server_clamp",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "far",
+        "patch": {
+          "page": 90,
+          "pageSize": 2
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "far",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 2
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 2,
+          "lastPage": 7,
+          "version": 1
+        }
+      },
+      {
+        "type": "request",
+        "token": "far2",
+        "patch": {
+          "page": 90
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "far2",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 90,
+            "pageSize": 2
+          },
+          "items": [
+            {
+              "id": "r13",
+              "title": "Last draft",
+              "owner": "Chen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 9
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 7,
+          "pageSize": 2,
+          "lastPage": 7,
+          "version": 1
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "store_instance_isolation",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "a",
+        "patch": {},
+        "instance": "left"
+      },
+      {
+        "type": "request",
+        "token": "b",
+        "patch": {
+          "status": "approved"
+        },
+        "instance": "right"
+      },
+      {
+        "type": "resolve",
+        "token": "a",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        },
+        "instance": "left"
+      },
+      {
+        "type": "resolve",
+        "token": "b",
+        "result": {
+          "query": {
+            "status": "approved",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            },
+            {
+              "id": "r05",
+              "title": "BETA renewal",
+              "owner": "Chen",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 3
+            },
+            {
+              "id": "r09",
+              "title": "Budget 青山",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 4
+            }
+          ],
+          "total": 5,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 2,
+          "version": 1
+        },
+        "instance": "right"
+      },
+      {
+        "type": "invalidate",
+        "event_id": "shared",
+        "revision": 2,
+        "instance": "left"
+      },
+      {
+        "type": "invalidate",
+        "event_id": "shared",
+        "revision": 2,
+        "instance": "right"
+      }
+    ]
+  },
+  {
+    "case_id": "view_all",
+    "kind": "view",
+    "group": "business",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r03",
+            "title": "Team plan",
+            "owner": "Lin",
+            "status": "approved",
+            "revision": 1,
+            "createdSeq": 2
+          }
+        ],
+        "total": 13,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 5,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_pending",
+    "kind": "view",
+    "group": "business",
+    "snapshot": {
+      "query": {
+        "status": "pending",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "pending",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r06",
+            "title": "beta floor",
+            "owner": "Lin",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 3
+          }
+        ],
+        "total": 6,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 2,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_empty",
+    "kind": "view",
+    "group": "business",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "never",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "never",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [],
+        "total": 0,
+        "counts": {
+          "all": 0,
+          "pending": 0,
+          "approved": 0
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 1,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_guard_pending",
+    "kind": "view",
+    "group": "boundary",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": "next",
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r03",
+            "title": "Team plan",
+            "owner": "Lin",
+            "status": "approved",
+            "revision": 1,
+            "createdSeq": 2
+          }
+        ],
+        "total": 13,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 5,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_guard_invalidated",
+    "kind": "view",
+    "group": "boundary",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 2,
+      "needsRefresh": true,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r03",
+            "title": "Team plan",
+            "owner": "Lin",
+            "status": "approved",
+            "revision": 1,
+            "createdSeq": 2
+          }
+        ],
+        "total": 13,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 5,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_guard_error",
+    "kind": "view",
+    "group": "boundary",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": "request_failed",
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r03",
+            "title": "Team plan",
+            "owner": "Lin",
+            "status": "approved",
+            "revision": 1,
+            "createdSeq": 2
+          }
+        ],
+        "total": 13,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 5,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_guard_wrong_query",
+    "kind": "view",
+    "group": "boundary",
+    "snapshot": {
+      "query": {
+        "status": "pending",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r03",
+            "title": "Team plan",
+            "owner": "Lin",
+            "status": "approved",
+            "revision": 1,
+            "createdSeq": 2
+          }
+        ],
+        "total": 13,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 5,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_guard_old_version",
+    "kind": "view",
+    "group": "boundary",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 4,
+      "needsRefresh": false,
+      "error": null,
+      "data": {
+        "query": {
+          "status": "all",
+          "term": "",
+          "page": 1,
+          "pageSize": 3
+        },
+        "items": [
+          {
+            "id": "r01",
+            "title": "Alpha laptop",
+            "owner": "Zhao",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r02",
+            "title": "Alpha travel",
+            "owner": "Wen",
+            "status": "pending",
+            "revision": 1,
+            "createdSeq": 1
+          },
+          {
+            "id": "r03",
+            "title": "Team plan",
+            "owner": "Lin",
+            "status": "approved",
+            "revision": 1,
+            "createdSeq": 2
+          }
+        ],
+        "total": 13,
+        "counts": {
+          "all": 13,
+          "pending": 6,
+          "approved": 5
+        },
+        "page": 1,
+        "pageSize": 3,
+        "lastPage": 5,
+        "version": 1
+      },
+      "seen": []
+    }
+  },
+  {
+    "case_id": "view_guard_unfetched",
+    "kind": "view",
+    "group": "boundary",
+    "snapshot": {
+      "query": {
+        "status": "all",
+        "term": "",
+        "page": 1,
+        "pageSize": 3
+      },
+      "pending": null,
+      "minVersion": 0,
+      "needsRefresh": false,
+      "error": null,
+      "data": null,
+      "seen": []
+    }
+  },
+  {
+    "case_id": "store_pending_token_fence",
+    "kind": "store",
+    "group": "boundary",
+    "actions": [
+      {
+        "type": "request",
+        "token": "opaque-old",
+        "patch": {}
+      },
+      {
+        "type": "request",
+        "token": "opaque-current",
+        "patch": {}
+      },
+      {
+        "type": "resolve",
+        "token": "opaque-old",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 1
+        }
+      },
+      {
+        "type": "resolve",
+        "token": "opaque-current",
+        "result": {
+          "query": {
+            "status": "all",
+            "term": "",
+            "page": 1,
+            "pageSize": 3
+          },
+          "items": [
+            {
+              "id": "r01",
+              "title": "Alpha laptop",
+              "owner": "Zhao",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r02",
+              "title": "Alpha travel",
+              "owner": "Wen",
+              "status": "pending",
+              "revision": 1,
+              "createdSeq": 1
+            },
+            {
+              "id": "r03",
+              "title": "Team plan",
+              "owner": "Lin",
+              "status": "approved",
+              "revision": 1,
+              "createdSeq": 2
+            }
+          ],
+          "total": 13,
+          "counts": {
+            "all": 13,
+            "pending": 6,
+            "approved": 5
+          },
+          "page": 1,
+          "pageSize": 3,
+          "lastPage": 5,
+          "version": 3
+        }
+      }
+    ]
+  },
+  {
+    "case_id": "api_committed_status_changes",
+    "kind": "api",
+    "group": "boundary",
+    "records": [
+      {
+        "id": "r09",
+        "title": "Budget 青山",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 4
+      },
+      {
+        "id": "r02",
+        "title": "Alpha travel",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 2,
+        "createdSeq": 1
+      },
+      {
+        "id": "r12",
+        "title": "Archived audit",
+        "owner": "Lin",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 7
+      },
+      {
+        "id": "r01",
+        "title": "Alpha laptop",
+        "owner": "Zhao",
+        "status": "approved",
+        "revision": 2,
+        "createdSeq": 1
+      },
+      {
+        "id": "r05",
+        "title": "BETA renewal",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 3
+      },
+      {
+        "id": "r03",
+        "title": "Team plan",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r08",
+        "title": "青山 review",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 2,
+        "createdSeq": 4
+      },
+      {
+        "id": "r04",
+        "title": "Alpha denied",
+        "owner": "Zhao",
+        "status": "rejected",
+        "revision": 1,
+        "createdSeq": 2
+      },
+      {
+        "id": "r13",
+        "title": "Last draft",
+        "owner": "Chen",
+        "status": "pending",
+        "revision": 1,
+        "createdSeq": 9
+      },
+      {
+        "id": "r06",
+        "title": "beta floor",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 2,
+        "createdSeq": 3
+      },
+      {
+        "id": "r11",
+        "title": "Écho brief",
+        "owner": "Wen",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 6
+      },
+      {
+        "id": "r07",
+        "title": "Budget open",
+        "owner": "Chen",
+        "status": "approved",
+        "revision": 2,
+        "createdSeq": 4
+      },
+      {
+        "id": "r10",
+        "title": "Budget closed",
+        "owner": "Lin",
+        "status": "approved",
+        "revision": 1,
+        "createdSeq": 5
+      }
+    ],
+    "query": {
+      "status": "pending",
+      "page": 9,
+      "pageSize": 2
+    },
+    "version": 2
+  }
+]

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "records": [
+    {
+      "id": "r01",
+      "title": "Alpha laptop",
+      "owner": "Zhao",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 1
+    },
+    {
+      "id": "r02",
+      "title": "Alpha travel",
+      "owner": "Wen",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 1
+    },
+    {
+      "id": "r03",
+      "title": "Team plan",
+      "owner": "Lin",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 2
+    }
+  ]
+}

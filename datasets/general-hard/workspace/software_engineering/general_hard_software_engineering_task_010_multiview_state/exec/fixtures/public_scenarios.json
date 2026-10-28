@@ -1,0 +1,156 @@
+[
+  {
+    "case_id": "switch_and_page",
+    "steps": [
+      {
+        "op": "request",
+        "token": "s1",
+        "patch": {}
+      },
+      {
+        "op": "capture",
+        "token": "s1"
+      },
+      {
+        "op": "deliver",
+        "token": "s1"
+      },
+      {
+        "op": "request",
+        "token": "s2",
+        "patch": {
+          "page": 3
+        }
+      },
+      {
+        "op": "capture",
+        "token": "s2"
+      },
+      {
+        "op": "deliver",
+        "token": "s2"
+      },
+      {
+        "op": "request",
+        "token": "s3",
+        "patch": {
+          "status": "pending"
+        }
+      },
+      {
+        "op": "capture",
+        "token": "s3"
+      },
+      {
+        "op": "deliver",
+        "token": "s3"
+      },
+      {
+        "op": "request",
+        "token": "s4",
+        "patch": {
+          "status": "all"
+        }
+      },
+      {
+        "op": "capture",
+        "token": "s4"
+      },
+      {
+        "op": "deliver",
+        "token": "s4"
+      }
+    ]
+  },
+  {
+    "case_id": "races_commits_and_clamp",
+    "steps": [
+      {
+        "op": "request",
+        "token": "r1",
+        "patch": {}
+      },
+      {
+        "op": "capture",
+        "token": "r1"
+      },
+      {
+        "op": "request",
+        "token": "r2",
+        "patch": {
+          "status": "pending",
+          "pageSize": 2
+        }
+      },
+      {
+        "op": "capture",
+        "token": "r2"
+      },
+      {
+        "op": "deliver",
+        "token": "r2"
+      },
+      {
+        "op": "deliver",
+        "token": "r1"
+      },
+      {
+        "op": "request",
+        "token": "r3",
+        "patch": {
+          "page": 3
+        }
+      },
+      {
+        "op": "capture",
+        "token": "r3"
+      },
+      {
+        "op": "deliver",
+        "token": "r3"
+      },
+      {
+        "op": "commit",
+        "revision": 2
+      },
+      {
+        "op": "notify",
+        "event_id": "approval-2",
+        "revision": 2
+      },
+      {
+        "op": "notify",
+        "event_id": "approval-2",
+        "revision": 2
+      },
+      {
+        "op": "request",
+        "token": "r4",
+        "patch": {}
+      },
+      {
+        "op": "capture",
+        "token": "r4"
+      },
+      {
+        "op": "deliver",
+        "token": "r4"
+      },
+      {
+        "op": "request",
+        "token": "r5",
+        "patch": {
+          "term": " NO-MATCH "
+        }
+      },
+      {
+        "op": "capture",
+        "token": "r5"
+      },
+      {
+        "op": "deliver",
+        "token": "r5"
+      }
+    ]
+  }
+]
