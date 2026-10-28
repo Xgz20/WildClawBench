@@ -1,0 +1,13 @@
+﻿sku_id,sku_name,priority,demand_units,minimum_service,destination
+S01,合成商品01,1,5,1,East
+S02,合成商品02,1,6,1,Central
+S03,合成商品03,1,4,1,West
+S04,合成商品04,1,7,1,East
+S05,合成商品05,2,5,0,Central
+S06,合成商品06,2,6,0,West
+S07,合成商品07,2,4,0,East
+S08,合成商品08,2,6,0,Central
+S09,合成商品09,3,5,0,West
+S10,合成商品10,3,7,0,East
+S11,合成商品11,3,4,0,Central
+S12,合成商品12,3,6,0,West

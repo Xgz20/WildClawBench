@@ -1,0 +1,31 @@
+{
+  "schema_version": "h025-counterexamples/v1",
+  "source_truth": "expected.json + feasibility.py",
+  "negative_mechanisms": [
+    "fractional quantity displayed as integer",
+    "positive allocation below route min_batch",
+    "min_batch incorrectly treated as multiple",
+    "unavailable route",
+    "route upper bound",
+    "minimum service violation",
+    "shared material duplicated per factory",
+    "labour capacity borrowed across factories",
+    "transport or setup/activation fees omitted/repeated",
+    "only total unmet or cost optimized before priority",
+    "false full-demand satisfiability",
+    "false material-unit to finished-unit conversion",
+    "forged raw inputs or declared costs"
+  ],
+  "known_priority_counterexample": {
+    "change": "C/S02 minus2, C/S12 plus2",
+    "all_hard_constraints": true,
+    "same_total_unmet": 29,
+    "objective": [
+      2,
+      7,
+      20,
+      475115
+    ],
+    "cheaper_but_lexicographically_worse": true
+  }
+}

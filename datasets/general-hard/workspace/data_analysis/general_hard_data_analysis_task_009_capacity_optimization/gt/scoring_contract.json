@@ -1,0 +1,25 @@
+{
+  "schema_version": "h025-scoring/v1",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "allocation_io.py": "c3f9ecaa525ae66017cc403c980a408d91b0b28352621e159c0612cc03fa2b39",
+    "xlsx_observations.py": "992dbe965ed3aad3f5ee4e15f2a0e2facd751ea80fb9c279e20f46d9d670a089",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "feasibility.py": "eed0131dc923d57c782e753e8d7738c2e874ff7594cba8d79e366f65a344908b",
+    "source_records.json": "40041d45a7fd8b4fa57cd4d28808a429528321d01d053301bdce63958fc35df6",
+    "expected.json": "58c85c6117cc073bf9d911d9db712693e1e8d5488aa4f9950cfa01da1e564a92",
+    "protected_sha256.json": "124514b68a6bbaad29fad54b9a6e39ea5a6cdb58e92519f32a65abca0c636dee",
+    "independent_validation.json": "a8b3e5c7272a7d1c1163a5b1e949207beb4a306a325eeca4b2377ddd68218ba0",
+    "business_oracle.json": "36bce4dd6185c8cc8afe712991a95030132be7a6b3679dfaece50dd6b1e35618",
+    "counterexamples.json": "d1571036758eaad096a14d7fc980e3e2a9a461584a4b1690085c25bf333faa36",
+    "artifact_contract.json": "c80e8a783263a54f9afc6429563ff7df238aeb0a15d96534a158414770d7be7a",
+    "evidence_requirements.json": "a823113bab5f16b28545e87df53debf6c322bd72779c59c58db2411eb89139af",
+    "runtime_contract.json": "fbf974c6268e7a198aad599164611401a4b7753be52c4b8203da77149a8f3748"
+  },
+  "grading_source_sha256": "c6be98f2c813a17ba224d730717bfaa2ed374f64f96c6cf9c4a333337fe4e6b8"
+}

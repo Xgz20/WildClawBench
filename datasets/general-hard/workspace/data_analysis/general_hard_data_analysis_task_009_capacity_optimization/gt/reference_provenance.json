@@ -1,0 +1,65 @@
+{
+  "schema_version": "h025-reference-provenance/v1",
+  "status": "AUTHOR_REFERENCE_V2_SOURCE_AND_NATIVE_VERIFIED",
+  "authoring": "Artifact Tool, eight worksheets; final reference-v2 only fixes line_total CNY format to cents, earlier version retained",
+  "reference_sha256": {
+    "allocation.xlsx": "3b8ffa9f97bda280f07ff04ddda8c2714441d9b203973779d7ce3136832a44b7",
+    "decision.md": "4863e28798f95ac4df206814f9115a8f898797ae92864795da4db0b4ecd1dead"
+  },
+  "source_revision": "v2",
+  "source_precedes_reference": true,
+  "source_records_verified": 113,
+  "dual_formulation_four_stages": true,
+  "feasibility_checks_each": 93,
+  "analytic_checks": 6,
+  "native_accounting_cases": 3,
+  "native_accounting_checks": 1125,
+  "candidate_dynamic_formula_model_required": false,
+  "candidate_automatic_reoptimization_required": false,
+  "reference_matrix_used_for_grading": false,
+  "nonmultiple_min_batch_witnesses": [
+    {
+      "plant_id": "B",
+      "sku_id": "S01",
+      "units": 5,
+      "min_batch": 3
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S04",
+      "units": 4,
+      "min_batch": 3
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S05",
+      "units": 5,
+      "min_batch": 3
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S04",
+      "units": 3,
+      "min_batch": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S06",
+      "units": 3,
+      "min_batch": 2
+    }
+  ],
+  "human_expert_review": false,
+  "visual_QA": {
+    "earlier_reference_sheets_opened": 8,
+    "revised_reference_views_opened": 2,
+    "unchanged_source_Sheet_XML": [
+      "需求底稿",
+      "工厂底稿",
+      "路线底稿",
+      "物料底稿",
+      "配方底稿",
+      "成本底稿"
+    ]
+  }
+}

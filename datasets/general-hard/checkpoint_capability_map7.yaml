@@ -310,3 +310,12 @@ general_hard_data_analysis_task_008_parameterized_model:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_data_analysis_task_009_capacity_optimization:
+  business_correctness:
+    - data_processing
+  boundary_cases:
+    - reasoning_planning
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

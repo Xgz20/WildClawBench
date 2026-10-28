@@ -11271,7 +11271,7 @@
         "exec": "datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_009_capacity_optimization/exec",
         "gt": "datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_009_capacity_optimization/gt"
       },
-      "prompt_draft": "请完成以下工作：输出可行分配、总成本及约束检查；若无法满足全部需求，按规定优先级给出最小缺口并解释。\n\n输入材料：\n- /tmp_workspace/demand.csv：12种商品需求\n- /tmp_workspace/capacity.xlsx：3地工厂产能与最小批量\n- /tmp_workspace/costs.csv：固定/变动/运输成本\n- /tmp_workspace/constraints.md：服务等级与预算\n\n交付：\n- /tmp_workspace/results/allocation.xlsx：整数分配、成本和约束\n- /tmp_workspace/results/decision.md：取舍与不可行性依据\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请为一个合成单周期供货需求制定确定可执行的整数分配方案，核对资源、费用和优先级取舍，交给同事复核。\n\n只读取/tmp_workspace/demand.csv、capacity.xlsx、costs.csv、constraints.md：12种商品、3工厂、全部36条工厂×商品路线、2种全厂共享物料、24条配方和36条路线费用。固定单周期、CNY，预算与口径以constraints.md为准，不补加班、外包、跨期库存、税费或真实经营动作。\n\n严格执行硬约束：每条路线交付量为非负整数；禁止路线为0；正生产达到该工厂×SKU最小批量且不超过路线最大量。min_batch是启用门槛，不是批量倍数。每个SKU总交付不超过需求，priority1还须达到minimum_service。每厂件数和工时分别约束，不能跨厂借用；两种物料跨所有工厂/商品共同扣减。真实0配方/费用不能当缺失。费用包括每件生产与运输、每条正路线一次开线费、每个正生产工厂一次启动费；成本表中重复列出的同厂启动费只能收一次，0路线不收开线费。全部费用到分，满足预算。\n\n目标顺序为：先最小priority1缺口，固定其最优值再最小priority2缺口，再固定前两项最小priority3缺口，最后在相同最小缺口向量下最小化总费用。不能以总缺口或更低费用换少交高优先级。可以使用保证等价的加权目标，但须说明为什么保证优先顺序。不同的可行最优分配矩阵均接受。\n\n全部新交付放/tmp_workspace/results，每份不超过5MiB，原四份输入只读：\n\n1. allocation.xlsx：自包含可编辑原生工作簿，无宏或外部链接。保留全部113条源记录和原字段，给出下列可见的一行表头明细，英文键或对应中文可用。Sheet名、行列顺序、空白间隔列和合理辅助列不限，各业务键唯一，0量及禁止路线也列出。可以使用有效公式或完整正确的静态核算表；本题不要求改约束后自动重新优化，不要求交付代码、指定求解器或达到公式数量。计算值与显示格式有别，分数解即使显示为整数也不是可执行整数方案。\n- 工厂×商品分配（36行）：plant_id, sku_id, units, production_cost, transport_cost, setup_cost, line_total, line_active\n- 商品需求/缺口（12行）：sku_id, priority, demand_units, minimum_service, served_units, unmet_units\n- 工厂件数/工时（3行）：plant_id, used_units, unit_capacity, unit_slack, used_labour, labour_capacity, labour_slack, active, activation_cost\n- 共享物料（2行）：material_id, used_units, available_units, slack\n\nunits为该工厂该SKU的整周期交付件数；production_cost/transport_cost为该路线总生产/运输费，setup_cost为正路线一次费，line_total是上述三项之和，line_active是该路线是否正生产（true/false或1/0）。商品served_units跨工厂汇总，unmet_units=需求减交付。工厂active和activation_cost只按是否有正生产及该厂单次费计算，不能把启动费重复进每条路线。各slack为上限减已用。数量、工时、物料保留各自单位，不将工厂件数上限等同工时。\n\n另有可见control/value两列表或对应中文：priority1_unmet、priority2_unmet、priority3_unmet、production_cost、transport_cost、setup_cost、activation_cost、total_cost、budget、budget_slack、all_demand_satisfied、all_hard_constraints_satisfied、total_delivered、full_demand_total、unit_capacity_total、full_service_unit_bound_gap。成本与余量CNY到分，真假项用true/false或1/0。full_service_unit_bound_gap=max(全需求件数减工厂总件数上限,0)，只是一个全需求不可行性下界，不能冒充精确优先级缺口。诊断不反向填平业务数值。\n\n底稿需保留原源字段，需求和费用分别来自demand.csv和costs.csv，能力与配方来自capacity.xlsx。具体字段如下（英文或明确对应中文），不要只留汇总或求解器状态：\n- demand：sku_id, sku_name, priority, demand_units, minimum_service, destination\n- plants：plant_id, plant_name, unit_capacity, labour_capacity\n- routes：plant_id, sku_id, eligible, max_units, min_batch, labour_per_unit\n- materials：material_id, available_units\n- recipes：sku_id, material_id, units_per_item\n- costs：plant_id, sku_id, variable_cost, transport_cost, line_setup_fee, plant_activation_fee\n\n2. decision.md：说明当前全需求是否可行、分配方案的缺口向量、条件费用和资源取舍，说明怎样按字典序确定方案，并给出至少一个能用源数字复算的全需求不可行性依据。求解器名称/status、LP分数界或“看起来最优”不能替代可执行方案；全需求不可行的一个简单下界，也不必独自证明所有优先级和成本最优，需区分各证明范围。\n\n请把保存方案的以下事实按“key: value”逐行各写一次，数值自行核算：priority1_unmet、priority2_unmet、priority3_unmet、production_cost、transport_cost、setup_cost、activation_cost、total_cost、budget、budget_slack、all_demand_satisfied。\n\n另用同样格式记录一个实际成立的源数字证明，certificate_kind选择下列一种；source_file填capacity.xlsx，source_locator定位相关原始Sheet及记录ID（可以用工厂A/B/C、共享物料M1/M2、单件耗料S01-S12等唯一稳定ID，不能伪造行）：\n- factory_units：full_demand_units、available_factory_units、minimum_total_unmet_bound。证明需求件数超过工厂件数上限之和；定位工厂A/B/C，避免只凭单厂证明总能力不足。\n- combined_material：full_demand_units、combined_supply_units、min_material_coefficient_per_item、finished_units_upper_bound、minimum_total_unmet_bound。用两种共享物料约束相加，逐SKU配方系数和的最小值给出成品件数上界floor(两物料总供应/该系数)。定位M1/M2及全部S01-S12配方。物料单位不能直接当成成品缺口。\n- material_requirement：full_demand_units、material_id、required_material_units、available_material_units、material_shortage_units。按每SKU全需求×对应物料配方核算总物料需求，与真实供应比较，只把差值称为该物料单位的不足；定位该物料和全部S01-S12配方，不把物料差值冒充成品缺口。\n\n说明明确引用demand.csv、capacity.xlsx、costs.csv、constraints.md。若使用求解工具，区分实际运行、得到的可行方案、阶段最优界和未验证推断，不虚构日志或专家审批。静态交付不代表改约束后已重新求解；只需当前给定源材料下的确定方案和完整核算。\n\n评分会在独立副本清除公式缓存并重算，从你实际给出的36条整数分配重新核对93项源约束、优先级缺口和条件成本，允许等价最优矩阵。更便宜或相同总缺口但少交高优先级会失分；分数解、不可行计划和缺源底稿会受限。说明自动核对结构化事实及源证明，普通解释文字不能代替数值证据。离线完成，不连接真实工厂、供应商或账号，不下单、不发消息、不付款。",
       "inputs": [
         {
           "path": "demand.csv",
@@ -11315,16 +11315,24 @@
         "只比较总成本"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_DUAL_FORMULATION_NATIVE_REFERENCE_AND_RULE_RUNTIME_VERIFIED",
         "synthetic_seed": 2026102625,
-        "construction": "制作有界小规模整数实例，用独立穷举或双求解器交叉核验可行域与最优界；允许等价最优解，按最优性间隙与约束满足评分。",
+        "construction": "113条v2源记录先行，HiGHS直接36整数+36路线开关+3工厂开关，与CBC完整121选项独立建模四阶段一致；各93项精确检查及6项解析界通过。最优缺口(0,7,22)，该向量下481355分。参考1125项原生核验、33项作者控制、正式MD独立ZIP Worker通过；不锁参考分配矩阵，不要求候选自动重优化。",
         "private_files": [
           "expected.json",
+          "source_records.json",
+          "feasibility.py",
+          "reference_allocation.json",
+          "independent_validation.json",
           "business_oracle.json",
           "counterexamples.json",
           "artifact_contract.json",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "evidence_requirements.json",
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "authoring_validation.json",
+          "reference_provenance.json"
         ],
         "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
         "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
@@ -11343,7 +11351,7 @@
               "data_processing"
             ],
             "criterion": "输出可行分配、总成本及约束检查；若无法满足全部需求，按规定优先级给出最小缺口并解释。",
-            "oracle_reference": "gt/expected.json + gt/business_oracle.json"
+            "oracle_reference": "gt/expected.json + gt/feasibility.py + gt/runtime_contract.json"
           },
           {
             "key": "boundary_cases",
@@ -11352,7 +11360,7 @@
               "reasoning_planning"
             ],
             "criterion": "逐项识别并正确处理：分数解冒充可执行方案；漏最小批量；只比较总成本。以独立反例验证，不只检索关键词。",
-            "oracle_reference": "gt/counterexamples.json"
+            "oracle_reference": "gt/expected.json + gt/feasibility.py + gt/runtime_contract.json"
           },
           {
             "key": "delivery_integrity",
@@ -11361,7 +11369,7 @@
               "verification_delivery"
             ],
             "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
-            "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
+            "oracle_reference": "gt/expected.json + gt/feasibility.py + gt/runtime_contract.json"
           },
           {
             "key": "evidence_binding",
@@ -11370,10 +11378,10 @@
               "verification_delivery"
             ],
             "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
-            "oracle_reference": "gt/evidence_requirements.json"
+            "oracle_reference": "gt/expected.json + gt/feasibility.py + gt/runtime_contract.json"
           }
         ],
-        "rule_aggregation": "返回各检查点及按上列权重计算的overall_score；overall_score不重复映射能力；正式落题前核对当前规则Worker消费契约。",
+        "rule_aggregation": "内部.55/.25/.15/.05。业务为顺序优先级.65/完整最优缺口下成本间隙.20/自身核算.15；优先级后级只在前级达到最优时计分。边界为完整可行整数硬约束.60/源全需求不可行性证明.40。不可行或缺计划时业务最高.25；源输入改动或原生底稿不全时最高.5且边界0。更优可行候选触发oracle矛盾评测异常，完整正确静态表可满分。",
         "llm_rubric": [],
         "infrastructure_boundary": "缺GT、规则崩溃、网络基础设施不可用与候选错误分开记录；不得将评测异常补为能力零分。"
       },
@@ -11452,10 +11460,15 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "author reference and formal-MD detached managed Worker",
+        "semantic_protocol": "not-required",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h025-reviewed-authoring-20261028.json"
       },
       "dependencies": {
         "execution": [
@@ -11463,9 +11476,8 @@
           "openpyxl>=3.1或等价原生表格读写能力"
         ],
         "scoring": [
-          "锁定的General规则Worker和可解析v2 Rubric的语义Judge；独立只读评分材料。",
-          "openpyxl>=3.1或等价原生表格读写能力",
-          "固定版本LibreOffice或等价已验证引擎实际重算；对公式题运行参数扰动并读取重算结果。"
+          "锁定General Python规则Worker、stdlib可见表/源约束核算及接受的最优界；本题automated不要求语义Judge。",
+          "core0.15.2 / score-general-e2e0.23.2或兼容入口；固定Office清缓存重算当前计划。Worker不安装求解器，不要求候选参数扰动/自动重优化。"
         ],
         "skills": [],
         "env": [],
@@ -11489,7 +11501,10 @@
         "tags": [
           "custom",
           "general-hard"
-        ]
+        ],
+        "scoring_runtime": {
+          "office": true
+        }
       },
       "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"
     },

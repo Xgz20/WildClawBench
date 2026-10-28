@@ -1,0 +1,20 @@
+{
+  "schema_version": "h025-artifacts/v1",
+  "outputs": [
+    "results/allocation.xlsx",
+    "results/decision.md"
+  ],
+  "source_tables": "allocation_io.py FIELDS demand/plants/routes/materials/recipes/costs",
+  "output_tables": "allocations36/products12/plant_results3/material_results2/controls",
+  "max_delivery_bytes": 5242880,
+  "input_immutable": true,
+  "equivalence": [
+    "formulas or complete correct static values",
+    "different sheets, shifted/reordered columns and rows, blank spacer columns",
+    "declared Chinese aliases and English headers",
+    "any feasible allocation reaching source optimal gap and conditional minimum cost"
+  ],
+  "reference_matrix_is_not_a_grading_target": true,
+  "formula_count_threshold": null,
+  "automatic_reoptimization_required": false
+}
