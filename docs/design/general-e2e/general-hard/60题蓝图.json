@@ -18347,7 +18347,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_006_config_migration/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_006_config_migration/gt"
       },
-      "prompt_draft": "请完成以下工作：实现确定的迁移和覆盖顺序，区分缺失、显式空值和零；保留未知键，重复迁移稳定，不能擅自重置用户配置。\n\n输入材料：\n- /tmp_workspace/project/config.py：默认/项目/用户三层配置合并器\n- /tmp_workspace/fixtures/configs/：新旧键、空值和未知键\n- /tmp_workspace/schema.md：优先级和迁移规则\n- /tmp_workspace/project/test_public.py：旧接口测试\n\n交付：\n- /tmp_workspace/project/config.py：兼容迁移\n- /tmp_workspace/results/migration_audit.json：逐键来源与变化\n- /tmp_workspace/results/tests.txt：测试记录\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "修复多层配置合并与兼容迁移，只修改 /tmp_workspace/project/config.py。实现确定的迁移和defaults < project < user覆盖顺序，区分缺失、显式null、0、False与空串，保留未知键，并保证重复迁移/重复合并稳定，不能擅自重置用户配置。\n\n先读 /tmp_workspace/schema.md 的类型、旧新键冲突、嵌套合并与逐键来源合同。/tmp_workspace/fixtures/configs/ 下10份JSON是新旧键、空值和未知键的本地合成样例；保留全部固定case_id。/tmp_workspace/project/test_public.py 是旧接口基础测试，/tmp_workspace/tools/run_migration_checks.py 是实际迁移和回归记录工具，/tmp_workspace/requirements.lock 声明仅用Python3.11+标准库。/tmp_workspace/project/__init__.py 同样受保护。\n\n保持migrate_config与merge_configs(...,with_audit=False)旧接口；with_audit=True须按schema.md返回config、逐终端键sources和全部旧键migrations事件。目标新键即使为零/空值仍优先；中间层null擦掉的子树不能被高层局部dict复活；输入和返回结果不能相互别名。未知值/列表顺序不能擅改，False与0不同。\n\n交付修复后的 /tmp_workspace/project/config.py，以及实际运行 python -B tools/run_migration_checks.py 生成的 /tmp_workspace/results/migration_audit.json 和 /tmp_workspace/results/tests.txt。后者也为JSON格式：记录真实命令、returncode、完整stdout/stderr、逐测试状态及最终源码/audit SHA。audit记录所有固定case_id的实际逐键来源、迁移变化或错误、最终源码及输入SHA。最终源码改变后须重跑，不能漏项改分母或以自述替代运行。公开基础测试可能在原工程已全绿，不能证明边界已正确；可在results补充自己的回归说明。\n\n仅读取本题exec映射到/tmp_workspace的材料，GT不提供给候选。只改上述一份源码，不改公开测试、schema、fixtures、锁、工具和其它输入，不增添源码模块；报告仅写results，自动__pycache__/*.pyc可忽略。离线完成，不安装依赖、不访问真实账号、真实用户配置、网络或付费接口，不发送消息。结论区分事实、推断和未知，不虚构缺失信息。",
       "inputs": [
         {
           "path": "project/config.py",
@@ -18396,20 +18396,38 @@
         "迁移第二次丢数据"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102646,
-        "construction": "独立字典归并oracle枚举三层冲突和三种空值语义，变形测试验证幂等和不相关键保持；只对规范化结果比较。",
+        "construction": "32项oracle在参考前由路径事件/祖先屏障与独立递归归并/有理数转换两路复核一致。原工程公开全绿但真实审计错误。23组实际prepare/run-rules控制与两等价修复32/32；独立归档已在-I且禁止打开repo/原素材的进程通过，witness改换行被拒绝，旧失败保留。当前正式MD及16exec/24GT独立ZIP再实际执行与正常/无runtime搬移核验。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "hidden_tests/runner.py",
+          "protected_inputs/fixtures/configs/B01_default.json",
+          "protected_inputs/fixtures/configs/B02_scalar_priority.json",
+          "protected_inputs/fixtures/configs/B03_legacy_all.json",
+          "protected_inputs/fixtures/configs/B04_user_legacy_beats_project_new.json",
+          "protected_inputs/fixtures/configs/B06_unknown_nested.json",
+          "protected_inputs/fixtures/configs/N01_zero_all.json",
+          "protected_inputs/fixtures/configs/N03_explicit_null_alias.json",
+          "protected_inputs/fixtures/configs/N06_barrier_no_resurrection.json",
+          "protected_inputs/fixtures/configs/N11_sources_legacy.json",
+          "protected_inputs/fixtures/configs/N12_sources_ignored.json",
+          "protected_inputs/project/__init__.py",
+          "protected_inputs/project/test_public.py",
+          "protected_inputs/requirements.lock",
+          "protected_inputs/schema.md",
+          "protected_inputs/tools/run_migration_checks.py",
+          "protected_sha256.json",
+          "trusted_manifest.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "保持公开API和输出语义，允许递归归并/事件归并等内部实现；dict/事件顺序可重排、额外无关元数据允许，列表及值类型有语义；不匹配参考补丁。",
+        "authoring_evidence": "evidence/h046-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -18424,7 +18442,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "实现确定的迁移和覆盖顺序，区分缺失、显式空值和零；保留未知键，重复迁移稳定，不能擅自重置用户配置。",
+            "criterion": "固定12项规范化结果：逐层迁移、深合并、正确优先级、已知/未知字段及旧接口；不匹配参考源码或固定字典排版。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -18433,7 +18451,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：把0当缺失；覆盖顺序颠倒；迁移第二次丢数据。以独立反例验证，不只检索关键词。",
+            "criterion": "固定20项：0/False/null/空串、祖先擦除与空dict、幂等/重复合并、输入所有权、来源事件与JSON Pointer、无效已知类型。严格区分bool和数字，浮点容差1e-12。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -18442,7 +18460,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "源码可读可解析(.30)、保护输入及修改范围(.40)、audit/tests两件结果可解析各(.15)；单个业务根因不清零无关项。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -18451,7 +18469,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "audit源码/固定输入SHA(.20)、tests源码SHA(.20)、固定10个case_id与当前源码实际重跑结果一致(.40)、真实测试命令/返回码/状态和audit SHA(.20)。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -18534,10 +18552,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec16/GT24，显式仅config.py参考overlay、独立score0.27.1/core0.15.3 ZIP和真实Worker，正常/删除runtime搬移通过；无Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h046-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

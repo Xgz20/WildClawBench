@@ -1,0 +1,1 @@
+"""Inert deterministic configuration exercise."""

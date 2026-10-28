@@ -1,0 +1,36 @@
+{
+  "case_id": "N06_barrier_no_resurrection",
+  "defaults": {
+    "network": {
+      "timeout_seconds": 30,
+      "retries": 2,
+      "headers": {
+        "x-mode": "default"
+      }
+    },
+    "cache": {
+      "enabled": true
+    },
+    "pipeline": {
+      "workers": 4
+    },
+    "output": {
+      "directory": "out"
+    },
+    "extensions": {
+      "labels": [
+        "a",
+        "b"
+      ],
+      "threshold": 1
+    }
+  },
+  "project": {
+    "network": null
+  },
+  "user": {
+    "network": {
+      "retries": 0
+    }
+  }
+}

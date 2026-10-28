@@ -1,12 +1,12 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 45
+  active_task_count: 46
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
-    software_engineering: 5
+    software_engineering: 6
     planning_coordination: 1
     content_operations: 0
 tasks:
@@ -1343,3 +1343,28 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_software_engineering_task_006_config_migration
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-031f8a6ea5ae355f
+          query_hash: 031f8a6ea5ae355fd6917f8407a7ef0ad8d412c355ea0f0af6aaaa730ab82afd
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-10-15 10:23:13.857000'
+          last_seen_local: '2026-10-15 10:23:13.857000'
+          intent_summary: 依据参数说明修改数据处理配置函数，减少不必要设置并保持效率。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-code
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: true
