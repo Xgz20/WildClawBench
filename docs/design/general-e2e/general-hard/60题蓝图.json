@@ -13170,7 +13170,7 @@
         "exec": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_004_site_search_literature_screening/exec",
         "gt": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_004_site_search_literature_screening/gt"
       },
-      "prompt_draft": "请完成以下工作：自行在arXiv和PubMed发现相关文献，形成至少6个候选工作，去重预印本/期刊版和不同版本，纳入至少4份可公开读取的全文；按明确标准给出排除理由、方法证据表与筛选流程计数。不强制搜索语言、site:语法或固定首条Query。\n\n输入材料：\n- /tmp_workspace/research_question.md：比较空间组学AI方法的研究任务、数据类型和证据边界\n- /tmp_workspace/inclusion_rules.md：2021-01-01至2026-09-30，至少6个候选工作、4个纳入全文及排除理由\n- /tmp_workspace/source_policy.md：在arXiv与PubMed发现记录，允许跟随公开DOI/期刊页，不提供论文标题、编号或URL\n\n交付：\n- /tmp_workspace/results/screening.xlsx：候选/工作身份、版本、纳入排除、题名和来源\n- /tmp_workspace/results/protocol.docx：实际检索与筛选过程、范围和限制\n- /tmp_workspace/results/evidence_matrix.json：任务、方法、数据、结果与原文定位\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 从arXiv/PubMed自行发现论文，不预给题名/编号；可跟随公开全文链接。\n- 引用须指向具体证据；域名正确或URL存在不等于正文支持结论。摘要只支持其中明确出现的事实，不能冒充已读全文。\n- 先保留搜索候选，再记录实际读取来源和最终引用；不可用来源、单源事实和冲突要明确标注，不补造事实。\n- 核心判据须有可提取文本/元数据证据，不要求额外视觉理解；本分类图像理解仅由H034考察。",
+      "prompt_draft": "请为研究团队自行在arXiv和PubMed发现空间组学AI/统计学习方法文献，形成至少6个经作品身份去重的候选工作，实际阅读并纳入至少4个符合范围的公开全文。研究窗口为2021-01-01至2026-09-30，Asia/Shanghai；不提供论文名单、编号、URL或首条query。不要求所有空间组学模态都有覆盖，也不要求两个平台各贡献固定纳入数，但应真实尝试两个平台。\n\n只读本地三输入：/tmp_workspace/research_question.md、/tmp_workspace/inclusion_rules.md、/tmp_workspace/source_policy.md。以它们的公开契约为准；可用站内搜索、搜索工具、浏览器或等效导航，从发现记录跟随公开DOI、出版者、官方全文库及只读元数据。记录实际query/导航、所得线索与不可用情况，不把计划或非空声明当完成过程。\n\n交付到/tmp_workspace/results，单份不超过5MiB：\n1. screening.xlsx：原生可见、可编辑的工作筛选与报告版本台账，至少表达work_id、record_id、题名/可识别描述、所读版本、decision及具体理由、报告日期/口径与来源，按ID对应JSON。允许合理中文字段、重排、分表/合表、转置或来源超链接；静态值可接受，公式须可实际重算，不用宏、外部数据连接、图片或单格巨大JSON代替核心表格。\n2. protocol.docx：原生可编辑的实际检索和筛选过程、标准、作品/版本去重依据、七项流程计数、范围和限制。只统计真实保留记录，不冒称穷尽搜索或系统综述；不为凑数制造排除项或失败。\n3. evidence_matrix.json：按source_policy.md公开结构保存searches、records、works、sources、flow。每个include工作说明研究任务、输入数据、方法、评估条件、实际结果、局限六类内容，分documented/unknown/inference；未知要说明已查范围和原因，推断交代理据。实验数字保留指标、值、单位/无量纲、方向和条件；影响比较的基线、数据划分、参考、先验、硬件等如实披露，不补造精度或误差类型。\n\n区分工作、报告与所读版本：同工作预印本/期刊版或不同修订不凑成多篇。arXiv报告按官方v1 Submitted平台提交口径判窗，不将其称为已证明的首次公众可见；所读vN时间另记，修订不能刷新v1资格。期刊优先first_online，确实不可核时才明示issue_only及online未知；其它预印本按官方原始posted/submitted，不能从DOI/URL日期、收稿、索引、仓储或检索时间猜首发。保留真实日期精度、原时区时间及上海换算；只有年月或年的完整区间在窗内才能确认，否则按规则pending。截止后新增内容不得用于截止前比较。\n\n至少6个真实独立工作、至少4个合格全文；允许实际全纳入、D/U/E/P为0以及超过最低数。保留报告归属，并核对R=D+U+W和W=I+E+P；HTML/PDF载体、搜索操作与来源URL都不当作新工作。三产物的身份、所选报告、结论和计数须一致。\n\n来源账本最多60条。每个实际引文保留唯一citation_id、单一真实来源短引、可提取定位和supports_fields JSON Pointer；块/叶及多目标关联可等价表达，无需重复CID全集或双向record_ids。HTTP200、搜索摘要、登录/验证码或部分下载不证明全文已读；摘要只支持其明确事实。实际不可读、单源、冲突与未知如实说明。公开HTML、文本PDF或身份明确的等价全文都可；元数据不能冒全文。参考池非穷尽，池外文献按同一标准判断，不以题名/域名白名单评分。\n\n比较任务、输入要求和证据条件，不将不同研究的最大分数、单片/汇总、版本、先验或硬件直接拼成排行榜；作者报告结果不称为你已复现。无需读图像像素、下载大型实验数据、执行作者代码或重现实验。\n\n三输入保持原字节，不删除或覆盖；所有新交付写入results，不以聊天代交。不读取GT/评分说明，不登录真实账号、不付费、不发送消息、不调用真实业务或付费API。评分侧独立来源包不由候选创建；来源获取缺失与候选错误分开。完成前核对三交付事实、关系、日期、计数和引用一致。",
       "inputs": [
         {
           "path": "research_question.md",
@@ -13218,23 +13218,36 @@
         "纳入排除与流程计数不一致"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "REVIEWED_OPEN_SOURCE_NATIVE_REFERENCE_RULES_AND_DETACHED_RUNTIME_VERIFIED",
         "synthetic_seed": 2026102630,
-        "construction": "提前审查纳入标准及一组公开可获取参考文献，但不把该列表当唯一答案；用arXiv ID/版本、DOI与题名作者解析作品身份，独立全文复核纳入资格和6候选/4纳入的计数守恒。对池外文献独立核实，付费或不可达全文不编造成已读。",
+        "construction": "A/B初始独立发现、后续给定URL交叉核验与非盲源事实调和分阶段留痕。源先行非穷尽6工作/7报告事实池先于参考，独立解析与模型核验保留日期/版本/实验条件边界。原生三件、30机制/34受管作者控制及完整正式MD/GT的独立ZIP自动验收通过；正常与搬移去runtime归档证据一致。模型复核非人工专家，无真实Harness、正式语义分或L3/组合区分度实证。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "office_runtime.py",
+          "protected_sha256.json",
+          "reference/results/evidence_matrix.json",
+          "reference/results/protocol.docx",
+          "reference/results/screening.xlsx",
+          "reference_provenance.json",
           "reference_source_manifest.json",
-          "claim_evidence_oracle.json"
+          "research_source_policy.json",
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "scoring_design.json",
+          "source_projection.py",
+          "source_review_reconciliation.json"
         ],
         "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
         "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。",
-        "answer_policy": "参考库不是唯一合法答案；固定事实用独立oracle，池外合法来源/对象由Judge独立核验，不能因不在名单失分。",
-        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。"
+        "answer_policy": "参考池非穷尽，池外文献依同一身份/资格/正文证据标准核验；GraphST完整池外原生正例验证通用解析机制，不按题名或URL白名单评分。",
+        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。",
+        "commercial_source_policy": "完整商业来源只留外部取证与实际评分来源包；Git GT只保留必要事实、短引、哈希与定位。"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -13249,8 +13262,8 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "交付和证据账本可解析，必要字段及工作/事件标识齐全；不以字数或表格漂亮代替事实。",
-            "oracle_reference": "gt/artifact_contract.json"
+            "criterion": "公开JSON形态、报告/工作ID图与六类内容、原生筛选台账和协议结构/对应关系；按声明槽且保留最小机会数，不按模板、字数或Sheet坐标评分。",
+            "oracle_reference": "gt/artifact_contract.json + native artifacts and report/work ID graph"
           },
           {
             "key": "time_and_scope",
@@ -13258,8 +13271,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "依据独立取得的来源元数据核对时间窗、版本/事件/论文范围；不能仅信任候选填写的日期。",
-            "oracle_reference": "gt/reference_source_manifest.json + scoring-side independently acquired sources"
+            "criterion": "独立原件元数据的身份/日期/版本字面绑定，真实精度、时区、日历与窗口算术，报告归属及七数计数/6候选4纳入最低声明；两平台只核声明记录及跨文件关联，实际搜索/阅读交Judge。内部.30/.25/.30/.15。",
+            "oracle_reference": "independent source metadata + public date/version/window and flow contract"
           },
           {
             "key": "citation_resolution",
@@ -13267,8 +13280,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "引用ID、文件/URL、实际片段和定位可对应到独立冻结的源证据；片段对主张的语义支持由Judge另核，不只检查域名。",
-            "oracle_reference": "gt/evidence_requirements.json + scoring-side independently acquired sources"
+            "criterion": "RFC6901块/叶/多目标指针、独立原件与GET/复用回执、真实quote/locator及六类状态/数字形态；最少24类机会且加真引用不稀释假引用。机械通过不等于语义支持或全文已读。内部.20/.20/.40/.20。",
+            "oracle_reference": "independent source bytes/GET or reuse lineage + managed source projection"
           },
           {
             "key": "protected_delivery",
@@ -13276,11 +13289,11 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "保护输入未改、交付可打开，数值或结构控制项符合契约；缺核心文件不能靠聊天自述补交。",
-            "oracle_reference": "gt/protected_sha256.json + gt/artifact_contract.json"
+            "criterion": "三输入SHA、三交付存在且原生可解析/可编辑；正确静态表接受，公式须实际可信重算。改输入限对应保护机会失分，无总分清零。",
+            "oracle_reference": "gt/protected_sha256.json + actual native package/editable structure"
           }
         ],
-        "rule_aggregation": "按上列权重输出规则overall_score；语义正确性与开放答案覆盖由独立Judge核验，不用候选名单硬匹配。",
+        "rule_aggregation": "外层自动.40/语义.60，自动内部.20/.25/.40/.15；time内部.30/.25/.30/.15，citation内部.20/.20/.40/.20。最小6工作/4全文机会与全部额外记录均审，不以真引文稀释假引文。机械通过不证明真实资格/全文实读/科学支持，须独立Judge。",
         "llm_rubric": [
           {
             "key": "factual_support",
@@ -13288,7 +13301,7 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "对站点限定搜索：空间组学AI文献发现与筛选的关键事实、数值、版本和判断，逐项独立核验正文/元数据是否真实支持；对池外来源按同一标准判断。",
+            "criterion": "对站点限定搜索：空间组学AI文献发现与筛选的关键事实、数值、版本和判断，逐项独立核验正文/元数据是否真实支持；对池外来源按同一标准判断。 核对真实报告身份、原始日期口径、实际所读版本及六类全文内容；每条实验数字保留影响比较的基线、数据、样本、先验等条件。 必须读取实际三交付和评分侧独立原件/元数据；缺必要供证为评测异常或unresolved，不补候选零分。",
             "score_bands": {
               "1.0": "关键事实均被可追溯原文支持，时空口径正确，无捏造来源或实验结果。",
               "0.5": "主结论成立但存在非关键字段或支撑缺失，未将未知说成已证实。",
@@ -13302,7 +13315,7 @@
               "retrieval_verification",
               "reasoning_planning"
             ],
-            "criterion": "满足本题实体、主题、时间、版本去重与资料筛选要求；分清一手、转载、独立支持及可比性，不机械按URL数量计覆盖。",
+            "criterion": "满足本题实体、主题、时间、版本去重与资料筛选要求；分清一手、转载、独立支持及可比性，不机械按URL数量计覆盖。 真实至少6个独立候选工作、至少4个合格公开全文，按实际绑定轨迹核两平台尝试和相关正文阅读；记录的非空声明及评分侧获取不能自证执行。 必须读取实际三交付和评分侧独立原件/元数据；缺必要供证为评测异常或unresolved，不补候选零分。",
             "score_bands": {
               "1.0": "所有关键分支有合格覆盖，重复/版本/转载已合并，独立性或无法交叉验证的边界说明准确。",
               "0.5": "满足主范围但漏一个非关键分支，未用不合格材料凑数。",
@@ -13315,7 +13328,7 @@
             "capabilities": [
               "reasoning_planning"
             ],
-            "criterion": "趋势、选型与建设建议限定在材料可证明范围，区分事实、官方宣称、静态实现、实验和推断；允许有依据的不同结论。",
+            "criterion": "趋势、选型与建设建议限定在材料可证明范围，区分事实、官方宣称、静态实现、实验和推断；允许有依据的不同结论。 区分作者实验与复现、unknown与否定、作者局限与自己的推断；不把不同任务、切片、版本、参考数据或硬件的绝对数字直接排名。 必须读取实际三交付和评分侧独立原件/元数据；缺必要供证为评测异常或unresolved，不补候选零分。",
             "score_bands": {
               "1.0": "取舍可追溯且限制清楚，不把缺证据当否定或运行保证。",
               "0.5": "主要建议有依据，但漏一项非关键条件或后续验证。",
@@ -13421,10 +13434,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "author-only complete formal MD/GT in detached score0.25 ZIP, actual fresh1/reuse11 independent sources, managed automatic Worker, semantic catalog/query and normal/moved archived replay; no real Harness or semantic judgment",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h030-reviewed-authoring-20261029.json"
       },
       "retrieval_profile": {
         "primary_mode": "site_scoped_search",
@@ -13449,17 +13466,15 @@
           "公共搜索/站内搜索或浏览器导航入口与正文访问，按题目检索类型预检；不依赖固定工具名。"
         ],
         "scoring": [
-          "锁定的General规则Worker和可解析v2 Rubric的语义Judge；独立只读评分材料。",
-          "openpyxl>=3.1或等价原生表格读写能力",
-          "python-docx或等价OOXML文档读写能力",
-          "固定版本LibreOffice或等价已验证引擎实际重算；对公式题运行参数扰动并读取重算结果。",
-          "固定版本办公渲染器，派生预览独立于候选冻结目录存放并记录来源SHA。",
-          "独立来源获取与快照冻结阶段，将实际正文/元数据提供给只读规则与Judge；开放来源需工具型Judge或已完整供证的等价裁判。"
+          "score-general-e2e0.25.0/core0.15.2或兼容冻结入口；prepare后collect独立来源，复用须保留可信原GET与完整自包含谱系。",
+          "实际HTML、PDF、XML/JATS及元数据原件；stdlib DOM受限CSS/XPath与安全XML节点定位和原始字节谱系。unsupported定位或供证缺失为评测异常。",
+          "锁定Office供公式实际清缓存重算；原生静态表、中文表头、合理重排/转置和同字段多来源接受。",
+          "真实独立语义Judge核报告/作品身份、日期角色、资格、六类正文事实与实验比较条件，结合完整轨迹判断真实检索与全文阅读。"
         ],
         "skills": [],
         "env": [],
         "warmup": [],
-        "preflight_status": "not_executed",
+        "preflight_status": "author_sources_native_rules_and_detached_scoring_verified_actual_harness_pending",
         "limit": "所有版本、素材许可和真实可用性在正式制作/发行前锁定；上述能力未做本题四端运行验证。"
       },
       "proposed_frontmatter": {
@@ -13494,6 +13509,10 @@
               "role": "candidate_deliverable"
             }
           ]
+        },
+        "scoring_runtime": {
+          "office": true,
+          "research_sources": true
         }
       },
       "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"

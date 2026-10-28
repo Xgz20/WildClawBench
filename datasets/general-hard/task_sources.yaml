@@ -1,10 +1,10 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 31
+  active_task_count: 32
   category_task_counts:
     office_documents: 16
     data_analysis: 10
-    research_verification: 3
+    research_verification: 4
     file_operations: 0
     software_engineering: 2
     planning_coordination: 0
@@ -944,4 +944,53 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       retrieval_group: open_search
+      difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_research_verification_task_004_site_search_literature_screening
+    origin:
+      mode: internal_benchmark_inspired_with_open_benchmark_methods
+      production_refs: []
+      external_source_ids:
+        - assistantbench
+      direct_task_copy: false
+      internal_reference_ids:
+        - astudio-search108
+      reference_benchmark_refs:
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 2
+          row: 4
+          query_hash: 104e42b5fb36a4d33e0fda248ad22852434556374a66b93a7a3c011f0f6dc672
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 40
+          row: 42
+          query_hash: cd817f321246f2ee58eb54d22b1bd7d7a2cea258beb5bc13eef360888604541a
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 77
+          row: 79
+          query_hash: b8b6234e61d8be3849cde55aad5d4d321394ace62e57bcc7d5db5ec31cc66457
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+    network:
+      mode: site_scoped_search
+      allowed_urls: []
+      allowed_discovery_domains:
+        - arxiv.org
+        - pubmed.ncbi.nlm.nih.gov
+      follow_policy: 允许从指定平台跟随公开DOI与出版者全文，不要求登录或付费访问。
+      freeze_requirement: 冻结研究时点、问题范围、可核验事实及独立参考池；不冻结搜索引擎排序，不将参考URL名单视为唯一合法答案。实际用到的公开页面须在评分侧独立取得并记录SHA/访问时间。
+      time_scope:
+        start_inclusive: '2021-01-01'
+        end_inclusive: '2026-09-30'
+        timezone: Asia/Shanghai
+      discovery_preflight: 搜索入口、正文读取、地区/账号约束与证据收集能力须分别核验；本题不依赖真实账号。
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      retrieval_group: directed_web_retrieval
       difficulty_status: design_estimate_unvalidated

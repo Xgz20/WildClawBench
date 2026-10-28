@@ -1,0 +1,201 @@
+{
+  "schema_version": "h030-source-review-reconciliation/v1",
+  "stages": [
+    "A initial independent discovery/read",
+    "B initial independent discovery/read",
+    "B explicitly given-URL review of three further works and official dates",
+    "Explicitly nonblind source-first author reconciliation; root independent XML parsing"
+  ],
+  "source_truth_proposal": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/source-truth-proposal/source_truth.json",
+    "sha256": "86f76c8c00c631d00bb36932588d34f1887e5c4b013ebccd0d4dad5a0e3ab730"
+  },
+  "narrative": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/source-truth-proposal/reconciliation.md",
+    "sha256": "4872813c7e9d287b556e66f2f165f2e2d724922e9893d5e2d39816cf7bf58958"
+  },
+  "root_actual_XML_verification": {
+    "schema_version": "h030-root-actual-XML-date-verification/v1",
+    "status": "PASS",
+    "human_expert": false,
+    "network_requests_performed": 0,
+    "source_before_reference": true,
+    "candidate_answer_used_for_truth": false,
+    "electronic_online_and_issue_collection_roles_not_merged": true,
+    "files": [
+      {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/targeted-review-b/raw/past-pubmed-efetch.raw",
+        "sha256": "03c884a9639acdf8824adc08f3a57328685d0fae20533dcba7ff5bc717cb4aa6",
+        "scope": "Root independent XML parser readback, not another HTTP retrieval",
+        "dates": [
+          {
+            "pmid": "37903634",
+            "article_index": 1,
+            "field": "ArticleDate",
+            "attributes": {
+              "DateType": "Electronic"
+            },
+            "year": "2023",
+            "month": "10",
+            "day": "30"
+          },
+          {
+            "pmid": "37903634",
+            "article_index": 1,
+            "field": "JournalIssue/PubDate",
+            "attributes": {},
+            "year": "2023",
+            "month": "Oct",
+            "day": null,
+            "medline_date": null
+          }
+        ]
+      },
+      {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/targeted-review-b/raw/target-three-pubmed-dates-efetch.raw",
+        "sha256": "3d34efd0c07b17b7f2dbc75ecf97f063b1c66368c027063001dc50da9f55d7f3",
+        "scope": "Root independent XML parser readback, not another HTTP retrieval",
+        "dates": [
+          {
+            "pmid": "37990022",
+            "article_index": 1,
+            "field": "ArticleDate",
+            "attributes": {
+              "DateType": "Electronic"
+            },
+            "year": "2023",
+            "month": "11",
+            "day": "22"
+          },
+          {
+            "pmid": "37990022",
+            "article_index": 1,
+            "field": "JournalIssue/PubDate",
+            "attributes": {},
+            "year": "2023",
+            "month": "Nov",
+            "day": "22",
+            "medline_date": null
+          },
+          {
+            "pmid": "36250636",
+            "article_index": 2,
+            "field": "JournalIssue/PubDate",
+            "attributes": {},
+            "year": "2022",
+            "month": "Dec",
+            "day": "09",
+            "medline_date": null
+          },
+          {
+            "pmid": "33833776",
+            "article_index": 3,
+            "field": "ArticleDate",
+            "attributes": {
+              "DateType": "Electronic"
+            },
+            "year": "2021",
+            "month": "03",
+            "day": "23"
+          },
+          {
+            "pmid": "33833776",
+            "article_index": 3,
+            "field": "JournalIssue/PubDate",
+            "attributes": {},
+            "year": "2021",
+            "month": null,
+            "day": null,
+            "medline_date": null
+          }
+        ]
+      },
+      {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/targeted-review-b/raw/deepst-jats-date-efetch.raw",
+        "sha256": "81a2a4d07dd4fe2db39a482db978639ebfbf6420457e1f11eac7369891598f07",
+        "scope": "Root independent XML parser readback, not another HTTP retrieval",
+        "dates": [
+          {
+            "article_index": 1,
+            "field": "front/article-meta/pub-date",
+            "attributes": {
+              "pub-type": "collection"
+            },
+            "year": "2022",
+            "month": "12",
+            "day": "09"
+          },
+          {
+            "article_index": 1,
+            "field": "front/article-meta/pub-date",
+            "attributes": {
+              "pub-type": "epub",
+              "iso-8601-date": "2022-10-17"
+            },
+            "year": "2022",
+            "month": "10",
+            "day": "17"
+          }
+        ]
+      },
+      {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/targeted-review-b/raw/past-jats-efetch.raw",
+        "sha256": "67bbebfd7b15125ad6ef795ae8f2dbda0e3138d407e01c5d77ac95b5fa2b014a",
+        "scope": "Root independent XML parser readback, not another HTTP retrieval",
+        "dates": [
+          {
+            "article_index": 1,
+            "field": "front/article-meta/pub-date",
+            "attributes": {
+              "pub-type": "ppub"
+            },
+            "year": "2023",
+            "month": "10",
+            "day": null
+          }
+        ]
+      }
+    ]
+  },
+  "selected_work_examples": 6,
+  "record_examples": 7,
+  "facts": 43,
+  "citation_observations": 223,
+  "citation_count_is_not_independent_tasks_or_experiments": true,
+  "support_levels": {
+    "A_and_B_prior_support": "Core proposition explicitly supported by both frozen model reviews; B forSPACEL/DeepST/DEEPsc is the explicitly given-URL second stage, not independent initial discovery.",
+    "single_route_or_mixed_detail": "Labels name A-only, B-initial-only, B-targeted-only or author crosscheck; adjacent shared claims do not make every detail independently double-supported.",
+    "common_boundary": "Multiple readings of the same paper are not independent experiments or human expert adjudication. Raw source/receipt SHAs prove retained observations, not scientific truth or reproduction."
+  },
+  "retained_boundaries": [
+    {
+      "item": "STdGCN preprint exactv1 date and suffix",
+      "resolution": "unknown retained; not selected and not used for qualification/results; no extra networking required",
+      "blocking_selected_pool": false
+    },
+    {
+      "item": "SPACEL SD50 versus53 micrometers",
+      "resolution": "Keep both with Par17/Par18 conditions; source text differs internally. Root should retain discrepancy if using SD numerically.",
+      "blocking_selected_pool": false
+    },
+    {
+      "item": "DeepST dispersion notation",
+      "resolution": "HTML literally prints+/; do not label it SD/SE/CI without further actual evidence.",
+      "blocking_selected_pool": false
+    },
+    {
+      "item": "Current HTML vs historical publication-day content",
+      "resolution": "All selected sources fetched2026-10-28. Report identity/date verified, no separate revision date proven. Do not claim byte identity with historical webpages. If root observes post-cutoff substantive changes, qualify the affected content.",
+      "blocking_selected_pool": false
+    },
+    {
+      "item": "Final protocol adoption and semantic adequacy",
+      "resolution": "This is an author proposal grounded in sources; root must integrate it with the public contract. No candidate implementation exists, and no marker/rule/Office/GT/reference was created or run.",
+      "blocking_selected_pool": false
+    }
+  ],
+  "preprint_v1_date_and_revision_suffix_unknown_retained": true,
+  "human_expert": false,
+  "semantic_score": null,
+  "actual_Harness_execution": false
+}

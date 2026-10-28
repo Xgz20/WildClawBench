@@ -1,0 +1,419 @@
+{
+  "schema_version": "h030-approved-scoring-design/v1",
+  "task_id": "general_hard_research_verification_task_004_site_search_literature_screening",
+  "status": "ROOT_APPROVED_OPPORTUNITY_LEDGER_NOT_IMPLEMENTATION_VALIDATION",
+  "updated_at": "2026-10-28T13:46:38.813866+00:00",
+  "facts_free": true,
+  "public_freeze_assessment": {
+    "ready_for_public_input_freeze": true,
+    "blocking_public_ambiguities": [],
+    "statement": "当前三份MD无阻断冻结的公开歧义；下列解析等价性和运行时事项在评分实现阶段处理，不新增候选义务。",
+    "freeze_authority": "root；本文件不宣告输入已冻结。"
+  },
+  "scope": {
+    "candidate_inputs": [
+      "research_question.md",
+      "inclusion_rules.md",
+      "source_policy.md"
+    ],
+    "other_authorized_reads": [
+      "blueprint-snapshot.json",
+      "artifact_contract_proposal.json（无事实私有映射，不是第四份候选输入）"
+    ],
+    "not_read": [
+      "A/B调研",
+      "实际论文或答案题名/URL",
+      "future references",
+      "expected/GT"
+    ],
+    "not_done": [
+      "GT/参考解",
+      "规则或采集器实现",
+      "Office/marker/control生成或执行",
+      "测试",
+      "Judge",
+      "仓库修改或提交"
+    ]
+  },
+  "input_snapshot": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/blueprint-snapshot.json",
+      "reviewed_sha256": "dcf47e5a71dc28f532dbfe5868363b45dd729deafb90d8ed9947c638a18d5596",
+      "sha256_at_design_write": "dcf47e5a71dc28f532dbfe5868363b45dd729deafb90d8ed9947c638a18d5596",
+      "changed_since_review": false,
+      "candidate_input": false
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/protocol-proposal/research_question.md",
+      "reviewed_sha256": "c064a61bc5412f7e344c1a25553fe1e6276c50a321972b6acb55ee97590bb4ac",
+      "sha256_at_design_write": "c064a61bc5412f7e344c1a25553fe1e6276c50a321972b6acb55ee97590bb4ac",
+      "changed_since_review": false,
+      "candidate_input": true
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/protocol-proposal/inclusion_rules.md",
+      "reviewed_sha256": "9ad07f89bbf9acb9fc2032f7078ae1f6cefa0e52a8759531492ee2b2327384e1",
+      "sha256_at_design_write": "9ad07f89bbf9acb9fc2032f7078ae1f6cefa0e52a8759531492ee2b2327384e1",
+      "changed_since_review": false,
+      "candidate_input": true
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/protocol-proposal/source_policy.md",
+      "reviewed_sha256": "fd1bbfe80f290dc3edeccbf939062da76e3bd2f52b9737bae11511dca58fb262",
+      "sha256_at_design_write": "fd1bbfe80f290dc3edeccbf939062da76e3bd2f52b9737bae11511dca58fb262",
+      "changed_since_review": false,
+      "candidate_input": true
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/authoring/protocol-proposal/artifact_contract_proposal.json",
+      "reviewed_sha256": "824d34d0d6845ecb5a26ba3c736bd3cd08a3323e3fe010a5170efbf558c5b16e",
+      "sha256_at_design_write": "824d34d0d6845ecb5a26ba3c736bd3cd08a3323e3fe010a5170efbf558c5b16e",
+      "changed_since_review": false,
+      "candidate_input": false
+    }
+  ],
+  "weights": {
+    "outer": {
+      "automated": 0.4,
+      "llm_judge": 0.6
+    },
+    "automated": {
+      "record_contract": 0.2,
+      "time_and_scope": 0.25,
+      "citation_resolution": 0.4,
+      "protected_delivery": 0.15
+    },
+    "semantic": {
+      "factual_support": 0.5,
+      "coverage_and_independence": 0.3,
+      "bounded_conclusions": 0.2
+    },
+    "automated_formula": "A = .20*record_contract + .25*time_and_scope + .40*citation_resolution + .15*protected_delivery",
+    "semantic_formula": "S = .50*factual_support + .30*coverage_and_independence + .20*bounded_conclusions",
+    "final_formula": "final = .40*A + .60*S，只有实际独立Judge完成且规则可评分时才发布。",
+    "overall_score_meaning": "规则输出overall_score仅为A；不得把A当最终分，不得估造或复制语义分。",
+    "scale": "各项为[0,1]；若展示百分制，只在展示层乘100，并保留原归一化值。",
+    "internal_weights_status": "以下四检查点内部权重是本次明确提出的冻结候选，须由root决定后固定；外层和检查点权重来自blueprint，不改变。"
+  },
+  "denominators": {
+    "R": "records全部声明行数，畸形/重复行不先过滤；真实报告身份另由Judge核。",
+    "W": "works全部声明行数，真实独立身份另由Judge核。",
+    "I": "decision=include全部声明行数，真实合格纳入另由Judge核。",
+    "NR": "max(6,R)",
+    "NW": "max(6,W)",
+    "NI": "max(4,I)",
+    "D6": "6*NI，最低24",
+    "empty_slots": "不足最低数量的机会保留为0；unknown不删机会。完整缺交不是评测故障。",
+    "extras": "审全部行、来源、引用，不截前6/4/60；超过60为契约问题，不静默截断。",
+    "row_fraction": "每槽下列k条形态/一致性条件等权，通过项/k；有未决评测故障则该槽unknown，不能填0或按其余项重归一化。",
+    "evidence_field_view": "E(f)=.60*sum(f(content_slot))/D6 + .25*sum(f(metadata_slot))/(3*NR) + .15*sum(f(decision_slot))/NW。metadata每record为身份书目/报告日期/所读版本及版本日期三槽。",
+    "citation_padding": "每逻辑字段只有一个机会；同一真实片段可支持多字段。该槽全部实际引文均审计，全部合格才通过相应引用检查；附加真引文不稀释假引文，未绑定额外引文进固定账本完整性槽。",
+    "zero_vs_unknown": "候选错误fail=0；合格pass=1；采集/解析/观测故障unknown=null。不得以unknown当科学事实成立。"
+  },
+  "automatic_checkpoints": {
+    "record_contract": {
+      "weight": 0.2,
+      "formula": ".20*root_shape + .30*id_graph + .20*decision_six_shape + .20*xlsx_agreement + .10*docx_structure",
+      "subitems": [
+        {
+          "key": "root_shape",
+          "weight": 0.2,
+          "denominator": 7,
+          "slots": "JSON根对象、schema_version、searches/records/works/sources数组、flow对象。仅按公开契约检查。"
+        },
+        {
+          "key": "id_graph",
+          "weight": 0.3,
+          "formula": ".50*record_graph + .50*work_graph",
+          "record_graph": {
+            "denominator": "NR",
+            "per_row": "record_id唯一；work_id为null或有效引用；公开record最小形态；discovery最小关系，共4条。"
+          },
+          "work_graph": {
+            "denominator": "NW",
+            "per_row": "work_id唯一；有归属record；selected_record存在且属于本work；include须选record而exclude/pending允许null，共4条。"
+          }
+        },
+        {
+          "key": "decision_six_shape",
+          "weight": 0.2,
+          "formula": ".25*decision_shape + .75*six_shape",
+          "decision_shape": {
+            "denominator": "NW",
+            "per_row": "decision合法、具体decision_reason，共2条；理由真假另核。"
+          },
+          "six_shape": {
+            "denominator": "D6",
+            "per_slot": "对象存在、公开status/text形态、unknown理由/已查范围或inference理据，共3条；范围/理据可在现有说明表达，不新增必填字段。"
+          }
+        },
+        {
+          "key": "xlsx_agreement",
+          "weight": 0.2,
+          "formula": ".50*work_view + .50*report_view",
+          "work_view": {
+            "denominator": "NW",
+            "per_row": "work_id、decision、理由、所选报告/版本，共4条与JSON逻辑对应。"
+          },
+          "report_view": {
+            "denominator": "NR",
+            "per_row": "record_id、work归属/未决、题名/报告描述、所读版本、日期/口径、来源，共6条逻辑对应。"
+          }
+        },
+        {
+          "key": "docx_structure",
+          "weight": 0.1,
+          "denominator": 5,
+          "slots": "实际发现过程、筛选标准与过程、去重/版本说明、七项流程计数及口径、范围/证据限制。结构和跨文件对应在此；真实性交轨迹/Judge。"
+        }
+      ]
+    },
+    "time_and_scope": {
+      "weight": 0.25,
+      "formula": ".30*metadata_trace + .25*calendar_consistency + .30*flow_minima + .15*discovery_body_trace",
+      "subitems": [
+        {
+          "key": "metadata_trace",
+          "weight": 0.3,
+          "denominator": "3*NR",
+          "slots": "每报告身份书目、report_date、report_version/version_date。已知主张连接独立原件实际字段且字面一致；unknown有实际核查路径/不足说明。不得用候选日期自证；日期角色和版本关系交Judge。"
+        },
+        {
+          "key": "calendar_consistency",
+          "weight": 0.25,
+          "formula": ".50*report_date_view + .50*selected_version_view",
+          "report_date_view": {
+            "denominator": "NR",
+            "per_row": "日期形态/精度协调、来源日历有效且时区处理正确、区间算术与所选资格/decision协调，共3条。非所选日期unknown不否决独立核实的所选报告。"
+          },
+          "selected_version_view": {
+            "denominator": "NI",
+            "per_slot": "所读版本时间分开记录或有解释unknown、不用修订刷新报告资格且明确截止后内容不支持截止前纳入，共2条；独立身份/时间未定不机械猜测。"
+          }
+        },
+        {
+          "key": "flow_minima",
+          "weight": 0.3,
+          "denominator": 12,
+          "slots": [
+            "R等于实际records数",
+            "U等于work_id=null数",
+            "W等于works数",
+            "D等于有效归属组sum(max(0,n_w-1))",
+            "I等于include数",
+            "E等于exclude数",
+            "P等于pending数",
+            "归属图无孤儿且每work有record",
+            "R=D+U+W",
+            "W=I+E+P",
+            "声明W>=6且U不充W",
+            "声明I>=4"
+          ],
+          "notes": "七数须非负整数且拒绝bool。不能只从R-U-W倒推D；不强制D/U/E/P为正。真实身份去重属于Judge。"
+        },
+        {
+          "key": "discovery_body_trace",
+          "weight": 0.15,
+          "formula": ".50*declared_platform_record_trace + .50*body_trace",
+          "body_trace": {
+            "denominator": "NI",
+            "slots": "每include通过现有work→selected_record、source citations与原件身份关联到read_full正文；不加fulltext_source_ids或镜像数组。评分侧取得不证明候选已读，真实全文/阅读行为交Judge。"
+          },
+          "declared_platform_record_trace": {
+            "denominator": 2,
+            "slots": "One declared arxiv record and one declared pubmed record with query/navigation, outcome, aware observed time or explicit unknown reason, and consistent DOCX/JSON relation.",
+            "mechanical_boundary": "Only the declared record structure and artifact relations are checked. Nonempty strings, a tool name or author-only handoff are never proof of execution. Actual discovery/reading and complete trace remain with the independent semantic Judge."
+          }
+        }
+      ]
+    },
+    "citation_resolution": {
+      "weight": 0.4,
+      "formula": ".20*pointer_graph + .20*independent_provenance + .40*quote_locator + .20*epistemic_numeric_trace",
+      "subitems": [
+        {
+          "key": "pointer_graph",
+          "weight": 0.2,
+          "formula": ".75*E(pointer_resolution) + .25*ledger_integrity",
+          "ledger_integrity_denominator": 4,
+          "ledger_integrity_slots": "来源上限/唯一ID与形态；引文全局唯一且无遗漏；全部supports_fields解析到现存节点；access_status/时间/unknown_reason与引用形态。额外来源/引用均入审计。",
+          "pointer_rules": "RFC6901 ~0/~1逐token解析，按实际数组索引而非硬编码位置；块和叶等价，多目标一条引文合法，无逐字段CID闭包。宽祖先先按真实路径解析，支持粒度交Judge，不隐设路径深度。"
+        },
+        {
+          "key": "independent_provenance",
+          "weight": 0.2,
+          "formula": "E(independent_source_trace)",
+          "pass": "原件bytes SHA、实际URL/获取或明确复用时间、投影与定位lineage齐备；候选缓存不作独立真值。read_full/read_excerpt或任何有引文来源都独立获取；无引文search_only/unavailable只保留过程，不冒充正文。"
+        },
+        {
+          "key": "quote_locator",
+          "weight": 0.4,
+          "formula": "E(literal_quote_locator)",
+          "pass": "单一实际来源逐字片段与定位可核；保守文本规范化保留反向映射，不用主题相似/模型改写替代。unknown不造正面quote，核其实际检查范围路径；充分性留Judge。",
+          "locators": "HTML章节/段落/锚点；PDF从1起物理页/文本表；XML/JATS/官方NCBI字段及节点；其它支持格式的实际可提取定位。"
+        },
+        {
+          "key": "epistemic_numeric_trace",
+          "weight": 0.2,
+          "denominator": "D6",
+          "per_slot": "status/理由或理据形态；已知主张来源连接或unknown实际检查路径；results实际声明实验数字时公开numbers最小信息（其它类别不制造数字要求），共3条。",
+          "numbers": "value可实数或范围/不等式/±/CI字符串；condition可文本/对象；无量纲、定性、unknown合法，无最低数字数，不把年份/3D当实验数字。全部实际数字审计，科学条件对应及可比性交Judge。"
+        }
+      ]
+    },
+    "protected_delivery": {
+      "weight": 0.15,
+      "formula": ".50*input_sha + .25*artifact_presence + .25*native_readability",
+      "subitems": [
+        {
+          "key": "input_sha",
+          "weight": 0.5,
+          "denominator": 3,
+          "slots": "冻结后三份输入与可信执行前SHA逐份比较；缺可信基线为评测故障。"
+        },
+        {
+          "key": "artifact_presence",
+          "weight": 0.25,
+          "denominator": 3,
+          "slots": "screening.xlsx/protocol.docx/evidence_matrix.json实际文件，聊天自述不补交。"
+        },
+        {
+          "key": "native_readability",
+          "weight": 0.25,
+          "denominator": 3,
+          "slots": "三文件原生可解析并有实际逻辑内容；静态正确值可全分，公式须可信重算；工具链不支持正常文件为评测故障。"
+        }
+      ],
+      "no_global_zero": "输入变更只在本检查点对应SHA机会失分；缺文件影响其真实依赖槽，不引入私有总分归零。"
+    }
+  },
+  "interpretation_boundaries": {
+    "science": "原创学习/空间组学资格、真实工作身份、日期出版角色、版本关系、全文/阅读真实性、引文支持、unknown充分性、数值条件和可比性均需Judge，不由关键词、URL/论文白名单或非空文本判真。",
+    "dates": "按已公开窗口和arXiv v1 Submitted/期刊first_online或issue_only/其它原始posted-submitted规则。真实时区时间点保留后换算上海；无时区日历按原日，不补UTC/午夜。年月用完整区间，不补精度。vN不刷新v1，Electronic/epub/ppub与DateRevised/entrez角色分开。",
+    "equivalent_types": "PMID正整数/同值字符串等价且拒绝bool；authors字符串/数组等价。version_date清楚string/object/null及已有说明兼容；日期无歧义日历表达内部规范化，不能用私有ISO正则收窄公开要求。",
+    "epistemic": "unknown保留机会但不等于事实错误或正确；作者报告的结果是语义归属，不增设reported枚举。未知原因与已查范围可在现有字段说明，不新增并行证据ID数组。",
+    "office": "中文/同义表头/明确映射、重排/分表/转置均可；source_id/URL/普通外部超链接等价。普通hyperlink relationship不是外部工作簿数据连接，离线不跟随。实际1900/1904 epoch和t=d按元数据归一化，年月保留标签，unknown不当0。",
+    "xml": "XML/JATS和官方NCBI XML合法，不限HTML/PDF。离线安全节点解析，DOCTYPE本身不拒绝；不联网DTD/任意实体扩展/执行代码。保存实际bytes SHA、XPath/节点/命名空间/属性与偏移lineage；Year/Month/Day必须来自同一父日期节点并保留精度/角色。安全提取不支持正常格式为评测故障。"
+  },
+  "interfaces_to_implement": [
+    {
+      "interface": "independent_collector",
+      "input": "candidate sources，按公开采集条件选择；无论文白名单",
+      "output": "每URL原件bytes/SHA/状态/重定向/实际采集时间，或可信旧快照原获取时间+明确复用；投影及抽取回执；失败归因。候选缓存不能自行进入真值。"
+    },
+    {
+      "interface": "source_projection_and_metadata",
+      "input": "独立HTML/PDF/XML/JATS/官方元数据原件",
+      "output": "真实文本/表格/节点定位与反向lineage；日期原字段/同父节点parts/真实精度/原timestamp及上海日历区间；科学日期角色不自动猜测。"
+    },
+    {
+      "interface": "office_normalizer",
+      "input": "冻结候选XLSX/DOCX与公开逻辑字段",
+      "output": "逻辑行/字段→原sheet/cell/paragraph/table映射；原值/日期系统/精度；公式清旧cache后在候选外可信Office实际重算的副本和回执。静态值无须重算，正常公式工具故障不作候选0；无缓存后备。"
+    },
+    {
+      "interface": "citation_graph_resolver",
+      "input": "候选JSON及独立源投影",
+      "output": "RFC6901节点、字段机会与引用多目标关系、字面quote/locator证据、未分配额外引用清单；不生成隐藏CID镜像义务。"
+    },
+    {
+      "interface": "rule_evaluator",
+      "input": "冻结机会ledger、上述归一化/源回执、保护SHA和绑定轨迹",
+      "output": "每opportunity_id的pass/fail/unknown、分母、原始定位、候选/评测错误归因；各检查点和A。未决必需评测故障时overall_score=null，不重归一化。"
+    },
+    {
+      "interface": "independent_semantic_judge",
+      "input": "冻结三MD、全部交付、实际轨迹、独立原件/回执及blueprint rubric",
+      "output": "真实Judge运行/版本/哈希绑定、逐work关键事实/六类/数值/版本定位、三个实际rubric分与理由、S。未运行不得生成语义分或最终分。"
+    }
+  ],
+  "error_policy": {
+    "candidate_fail": "确证缺交/损坏、公开字段/关系错误、真实原件quote/定位不符、图计数不守恒、错误公式/禁止外部数据依赖等，限对应机会。",
+    "evaluation_unknown": "基线/GT缺失、独立采集或worker/解析故障、合法XML/Office不支持、无可信重算、过程不可观察等，不填候选0。",
+    "aggregation": "unknown不给0/1、不从分母移除、不重归一化。必需机会未决则A=null且status=evaluation_error或partial_evidence；保留已观察子项，补证后按原ledger重算。",
+    "access": "公平可达条件下确证候选错误与评分网络临时不可达分开。独立旧快照复用不证明当前可达或新GET。",
+    "process": "完整轨迹证实未做必需动作可fail；仅缺观测unknown。评分侧取得全文不证明候选已读。"
+  },
+  "semantic_rubric": {
+    "factual_support": {
+      "weight": 0.5,
+      "focus": "真实身份/日期版本/六类内容/数字条件/作者归属及原文支持。"
+    },
+    "coverage_and_independence": {
+      "weight": 0.3,
+      "focus": "真实>=6独立候选、>=4合格全文、两平台实际尝试、版本去重及来源/覆盖独立性。"
+    },
+    "bounded_conclusions": {
+      "weight": 0.2,
+      "focus": "证据范围、unknown/推断、数据/任务/样本/先验/硬件条件及可比性；无条件排名/外推是否越界。"
+    },
+    "bands": "沿用blueprint 1/.5/0锚点；池外来源同标准，不硬匹配答案名单。实际Judge独立执行后才给S；当前S=null、final=null。"
+  },
+  "planned_controls_not_run": {
+    "positive": [
+      "中文/重排/分表/转置与普通超链接",
+      "静态值与真实重算同值，1900/1904/t=d，年月精度",
+      "PMID正整数/字符串、authors两形态",
+      "一个quote多字段、块/叶及~0/~1、数组重排",
+      "同版本HTML/PDF不增R，D=0/E=0等合法，unknown无编引文/定性无数字",
+      "带DOCTYPE的合法JATS、NCBI同父日期节点及lineage"
+    ],
+    "negative_candidate": [
+      "少交或unknown仍保留24类机会",
+      "版本凑独立工作/摘要冒全文/错日期角色/不可比数字交Judge",
+      "错quote/locator、孤儿ID/指针、错误计数、bool伪整数",
+      "加真引文不稀释假引文，超过60不截断",
+      "缓存正确但实际公式错误失败；改输入不触发总分清零"
+    ],
+    "infrastructure": [
+      "无独立源/基线/投影、网络/worker故障保持evaluation_error",
+      "合法XML安全解析失败或无可信Office不记候选0",
+      "缺过程观测unknown，对照完整轨迹确证未执行fail",
+      "旧快照复用保留原时间，不冒称当前GET"
+    ],
+    "status": "仅拟定控制，未创建文件/marker、未运行Office/规则/测试或Judge。"
+  },
+  "implementation_decisions_nonblocking": [
+    {
+      "item": "version_date/date表达兼容",
+      "resolution": "按上文等价性解析，不由私有schema创造额外格式义务；不阻断公开冻结。"
+    },
+    {
+      "item": "内部子权重/分母",
+      "resolution": "本设计显式给出；root定稿后固定实施，外层/检查点权重不变。"
+    },
+    {
+      "item": "Office/XML运行时",
+      "resolution": "后续实现接口与验收，不要求本轮证明运行时；尚不声称可运行。"
+    },
+    {
+      "item": "宽祖先指针",
+      "resolution": "解析存在性与语义覆盖分开，块/叶/多目标合法，不加CID闭包。"
+    }
+  ],
+  "readiness": {
+    "public_contract_review_written": true,
+    "ready_for_public_input_freeze": true,
+    "public_inputs_frozen_by_this_reviewer": false,
+    "internal_subweights_frozen": false,
+    "gt_written": false,
+    "rules_implemented": false,
+    "controls_or_tests_run": false,
+    "judge_run": false,
+    "ready_for_scoring": false
+  },
+  "source_design_sha256": "c30117a74f0be4d25733591e0cecd678311e3b530965128e141798061430e699",
+  "public_input_sha256": {
+    "research_question.md": "c064a61bc5412f7e344c1a25553fe1e6276c50a321972b6acb55ee97590bb4ac",
+    "inclusion_rules.md": "9ad07f89bbf9acb9fc2032f7078ae1f6cefa0e52a8759531492ee2b2327384e1",
+    "source_policy.md": "fd1bbfe80f290dc3edeccbf939062da76e3bd2f52b9737bae11511dca58fb262"
+  },
+  "rule_required_unknown_handling": "If required independent source/Office/GT evidence is missing or unsupported, raise a typed evaluator error; do not return null/zero component or renormalize. This rule does not require discovery-action traces; actual process is semantic-only.",
+  "root_mapping_resolutions": {
+    "D1": "Clear version_date string/object/explained null accepted by actual private mapping.",
+    "D2": "Unambiguous calendar spelling normalized internally; ISO patterns do not narrow the public contract.",
+    "D3": "Adopt four checkpoint subweights and all declared-slot minimum denominators as proposed, with declared platform records only in this automatic portion.",
+    "D4": "Office/XML evidence interfaces still require implementation and real validation; no runtime success claimed here.",
+    "D5": "Resolve actual block/leaf pointers and retain all reference chains without redundant CID closure; semantic support and broad ancestor claims require Judge."
+  }
+}

@@ -1,0 +1,243 @@
+{
+  "schema_version": "h030-runtime-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "source_runtime_minimum": "score-general-e2e 0.25.0; core 0.15.2",
+  "source_collector_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+  "formal_entry_sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684",
+  "denominators": {
+    "R": "records全部声明行数，畸形/重复行不先过滤；真实报告身份另由Judge核。",
+    "W": "works全部声明行数，真实独立身份另由Judge核。",
+    "I": "decision=include全部声明行数，真实合格纳入另由Judge核。",
+    "NR": "max(6,R)",
+    "NW": "max(6,W)",
+    "NI": "max(4,I)",
+    "D6": "6*NI，最低24",
+    "empty_slots": "不足最低数量的机会保留为0；unknown不删机会。完整缺交不是评测故障。",
+    "extras": "审全部行、来源、引用，不截前6/4/60；超过60为契约问题，不静默截断。",
+    "row_fraction": "每槽下列k条形态/一致性条件等权，通过项/k；有未决评测故障则该槽unknown，不能填0或按其余项重归一化。",
+    "evidence_field_view": "E(f)=.60*sum(f(content_slot))/D6 + .25*sum(f(metadata_slot))/(3*NR) + .15*sum(f(decision_slot))/NW。metadata每record为身份书目/报告日期/所读版本及版本日期三槽。",
+    "citation_padding": "每逻辑字段只有一个机会；同一真实片段可支持多字段。该槽全部实际引文均审计，全部合格才通过相应引用检查；附加真引文不稀释假引文，未绑定额外引文进固定账本完整性槽。",
+    "zero_vs_unknown": "候选错误fail=0；合格pass=1；采集/解析/观测故障unknown=null。不得以unknown当科学事实成立。"
+  },
+  "checkpoint_design": {
+    "record_contract": {
+      "weight": 0.2,
+      "formula": ".20*root_shape + .30*id_graph + .20*decision_six_shape + .20*xlsx_agreement + .10*docx_structure",
+      "subitems": [
+        {
+          "key": "root_shape",
+          "weight": 0.2,
+          "denominator": 7,
+          "slots": "JSON根对象、schema_version、searches/records/works/sources数组、flow对象。仅按公开契约检查。"
+        },
+        {
+          "key": "id_graph",
+          "weight": 0.3,
+          "formula": ".50*record_graph + .50*work_graph",
+          "record_graph": {
+            "denominator": "NR",
+            "per_row": "record_id唯一；work_id为null或有效引用；公开record最小形态；discovery最小关系，共4条。"
+          },
+          "work_graph": {
+            "denominator": "NW",
+            "per_row": "work_id唯一；有归属record；selected_record存在且属于本work；include须选record而exclude/pending允许null，共4条。"
+          }
+        },
+        {
+          "key": "decision_six_shape",
+          "weight": 0.2,
+          "formula": ".25*decision_shape + .75*six_shape",
+          "decision_shape": {
+            "denominator": "NW",
+            "per_row": "decision合法、具体decision_reason，共2条；理由真假另核。"
+          },
+          "six_shape": {
+            "denominator": "D6",
+            "per_slot": "对象存在、公开status/text形态、unknown理由/已查范围或inference理据，共3条；范围/理据可在现有说明表达，不新增必填字段。"
+          }
+        },
+        {
+          "key": "xlsx_agreement",
+          "weight": 0.2,
+          "formula": ".50*work_view + .50*report_view",
+          "work_view": {
+            "denominator": "NW",
+            "per_row": "work_id、decision、理由、所选报告/版本，共4条与JSON逻辑对应。"
+          },
+          "report_view": {
+            "denominator": "NR",
+            "per_row": "record_id、work归属/未决、题名/报告描述、所读版本、日期/口径、来源，共6条逻辑对应。"
+          }
+        },
+        {
+          "key": "docx_structure",
+          "weight": 0.1,
+          "denominator": 5,
+          "slots": "实际发现过程、筛选标准与过程、去重/版本说明、七项流程计数及口径、范围/证据限制。结构和跨文件对应在此；真实性交轨迹/Judge。"
+        }
+      ]
+    },
+    "time_and_scope": {
+      "weight": 0.25,
+      "formula": ".30*metadata_trace + .25*calendar_consistency + .30*flow_minima + .15*discovery_body_trace",
+      "subitems": [
+        {
+          "key": "metadata_trace",
+          "weight": 0.3,
+          "denominator": "3*NR",
+          "slots": "每报告身份书目、report_date、report_version/version_date。已知主张连接独立原件实际字段且字面一致；unknown有实际核查路径/不足说明。不得用候选日期自证；日期角色和版本关系交Judge。"
+        },
+        {
+          "key": "calendar_consistency",
+          "weight": 0.25,
+          "formula": ".50*report_date_view + .50*selected_version_view",
+          "report_date_view": {
+            "denominator": "NR",
+            "per_row": "日期形态/精度协调、来源日历有效且时区处理正确、区间算术与所选资格/decision协调，共3条。非所选日期unknown不否决独立核实的所选报告。"
+          },
+          "selected_version_view": {
+            "denominator": "NI",
+            "per_slot": "所读版本时间分开记录或有解释unknown、不用修订刷新报告资格且明确截止后内容不支持截止前纳入，共2条；独立身份/时间未定不机械猜测。"
+          }
+        },
+        {
+          "key": "flow_minima",
+          "weight": 0.3,
+          "denominator": 12,
+          "slots": [
+            "R等于实际records数",
+            "U等于work_id=null数",
+            "W等于works数",
+            "D等于有效归属组sum(max(0,n_w-1))",
+            "I等于include数",
+            "E等于exclude数",
+            "P等于pending数",
+            "归属图无孤儿且每work有record",
+            "R=D+U+W",
+            "W=I+E+P",
+            "声明W>=6且U不充W",
+            "声明I>=4"
+          ],
+          "notes": "七数须非负整数且拒绝bool。不能只从R-U-W倒推D；不强制D/U/E/P为正。真实身份去重属于Judge。"
+        },
+        {
+          "key": "discovery_body_trace",
+          "weight": 0.15,
+          "formula": ".50*declared_platform_record_trace + .50*body_trace",
+          "body_trace": {
+            "denominator": "NI",
+            "slots": "每include通过现有work→selected_record、source citations与原件身份关联到read_full正文；不加fulltext_source_ids或镜像数组。评分侧取得不证明候选已读，真实全文/阅读行为交Judge。"
+          },
+          "declared_platform_record_trace": {
+            "denominator": 2,
+            "slots": "arxiv/pubmed各自声明search记录、query/导航、outcome、可观察时间或unknown理由及DOCX/JSON关联；只检查声明，不证明执行。实际尝试/实读统一由60%Judge结合完整轨迹判断，未观察到执行不影响此规则组件。"
+          }
+        }
+      ]
+    },
+    "citation_resolution": {
+      "weight": 0.4,
+      "formula": ".20*pointer_graph + .20*independent_provenance + .40*quote_locator + .20*epistemic_numeric_trace",
+      "subitems": [
+        {
+          "key": "pointer_graph",
+          "weight": 0.2,
+          "formula": ".75*E(pointer_resolution) + .25*ledger_integrity",
+          "ledger_integrity_denominator": 4,
+          "ledger_integrity_slots": "来源上限/唯一ID与形态；引文全局唯一且无遗漏；全部supports_fields解析到现存节点；access_status/时间/unknown_reason与引用形态。额外来源/引用均入审计。",
+          "pointer_rules": "RFC6901 ~0/~1逐token解析，按实际数组索引而非硬编码位置；块和叶等价，多目标一条引文合法，无逐字段CID闭包。宽祖先先按真实路径解析，支持粒度交Judge，不隐设路径深度。"
+        },
+        {
+          "key": "independent_provenance",
+          "weight": 0.2,
+          "formula": "E(independent_source_trace)",
+          "pass": "原件bytes SHA、实际URL/获取或明确复用时间、投影与定位lineage齐备；候选缓存不作独立真值。read_full/read_excerpt或任何有引文来源都独立获取；无引文search_only/unavailable只保留过程，不冒充正文。"
+        },
+        {
+          "key": "quote_locator",
+          "weight": 0.4,
+          "formula": "E(literal_quote_locator)",
+          "pass": "单一实际来源逐字片段与定位可核；保守文本规范化保留反向映射，不用主题相似/模型改写替代。unknown不造正面quote，核其实际检查范围路径；充分性留Judge。",
+          "locators": "HTML章节/段落/锚点；PDF从1起物理页/文本表；XML/JATS/官方NCBI字段及节点；其它支持格式的实际可提取定位。"
+        },
+        {
+          "key": "epistemic_numeric_trace",
+          "weight": 0.2,
+          "denominator": "D6",
+          "per_slot": "status/理由或理据形态；已知主张来源连接或unknown实际检查路径；results实际声明实验数字时公开numbers最小信息（其它类别不制造数字要求），共3条。",
+          "numbers": "value可实数或范围/不等式/±/CI字符串；condition可文本/对象；无量纲、定性、unknown合法，无最低数字数，不把年份/3D当实验数字。全部实际数字审计，科学条件对应及可比性交Judge。"
+        }
+      ]
+    },
+    "protected_delivery": {
+      "weight": 0.15,
+      "formula": ".50*input_sha + .25*artifact_presence + .25*native_readability",
+      "subitems": [
+        {
+          "key": "input_sha",
+          "weight": 0.5,
+          "denominator": 3,
+          "slots": "冻结后三份输入与可信执行前SHA逐份比较；缺可信基线为评测故障。"
+        },
+        {
+          "key": "artifact_presence",
+          "weight": 0.25,
+          "denominator": 3,
+          "slots": "screening.xlsx/protocol.docx/evidence_matrix.json实际文件，聊天自述不补交。"
+        },
+        {
+          "key": "native_readability",
+          "weight": 0.25,
+          "denominator": 3,
+          "slots": "三文件原生可解析并有实际逻辑内容；静态正确值可全分，公式须可信重算；工具链不支持正常文件为评测故障。"
+        }
+      ],
+      "no_global_zero": "输入变更只在本检查点对应SHA机会失分；缺文件影响其真实依赖槽，不引入私有总分归零。"
+    }
+  },
+  "automatic_overall_score": "A only; final=.4A+.6S only after actual independent Judge",
+  "declared_platform_record_trace": "Declaration/query-navigation/outcome/time-or-unknown/DOCX linkage only; no tool-name execution detector or fabricated Harness trace. Actual attempts and reading are Judge-only.",
+  "trusted_evidence_failure": "Every required missing/drifted source/Office dependency raises TrustedEvidenceError; never returns None/0 or silently reweights.",
+  "source_reuse": "Outer source0.25 verifies whole origin capsule. Rule checks current row/wrapper, original GET identity/time/SHA and fresh/reuse counters; historical capture remains historical.",
+  "office": "Static values valid; any formula needs actual locked Office after clearing caches outside candidate. No cached fallback; ordinary hyperlinks are not external data connections.",
+  "source_locator_support": "stdlib HTMLParser actual DOM/metadata attributes/ID/section hierarchy and ET node lineage; bounded CSS type/ID/class/attribute presence/equality, descendant/child combinators and integer nth-of-type/first-of-type/last-of-type, always actual same-node selection; XPath root/relative/descendant, names/namespaces/wildcards, attributes, numeric/last positions, local child predicates and normalize-space(.) equality. Unsupported CSS/XPath/serialization raises TrustedEvidenceError, never a global quote search or silent candidate zero. Literal normalization only NFKC/whitespace/Han layout/inside-parenthesis whitespace; words, values and selected original nodes preserved.",
+  "source_projection": "Safe offline HTML/PDF/XML/JATS/official NCBI/text; raw byte SHA, node/page/offset lineage. No DTD retrieval/arbitrary entity expansion or executable processing.",
+  "semantic_boundary": {
+    "factual_support": {
+      "weight": 0.5,
+      "focus": "真实身份/日期版本/六类内容/数字条件/作者归属及原文支持。"
+    },
+    "coverage_and_independence": {
+      "weight": 0.3,
+      "focus": "真实>=6独立候选、>=4合格全文、两平台实际尝试、版本去重及来源/覆盖独立性。"
+    },
+    "bounded_conclusions": {
+      "weight": 0.2,
+      "focus": "证据范围、unknown/推断、数据/任务/样本/先验/硬件条件及可比性；无条件排名/外推是否越界。"
+    },
+    "bands": "沿用blueprint 1/.5/0锚点；池外来源同标准，不硬匹配答案名单。实际Judge独立执行后才给S；当前S=null、final=null。"
+  },
+  "no_answer_whitelist": true,
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "offline_rule": true,
+  "network_or_model_calls": false,
+  "mutates_candidate_or_GT_or_sourcebundle": false,
+  "derived_outputs": "Only GENERAL_E2E_RULE_EVIDENCE_DIR; transient trusted Office copies follow unchanged office_runtime helper.",
+  "readiness": "Nonblind author validation candidate; actual Harness and independent semantic Judge remain separate acceptance evidence."
+}

@@ -1,0 +1,84 @@
+{
+  "schema_version": "h030-reference-provenance/v1",
+  "reference_version": "v5",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "reference_pool_is_non_exhaustive": true,
+  "author_only_reference_not_Harness": true,
+  "human_expert": false,
+  "source_truth": "expected.json + business_oracle.json + source_review_reconciliation.json",
+  "native_validation": {
+    "initial_v2": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/native-reference-v2/model-review.json",
+      "sha256": "cbf3477dfd453d526af6532676ef4a25c272a185563781fed3e7dedfe4b18814",
+      "structural_checks_passed": 820,
+      "manual_review_items": 9,
+      "structural_issues": 0,
+      "scientific_gap": "DeepST comparator identity omitted; subsequently fixed in v3"
+    },
+    "v3_scientific_delta": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/native-reference-v3/readonly-receipt.json",
+      "sha256": "563c053859fc988ccf52dd34e04331d2cb29272a146c28561d55449c8e211a9b",
+      "status": "closed",
+      "scope": "Only three changed strings and unchanged native/GT bindings; not additional benchmark task samples"
+    },
+    "v4_alternate_date_equivalence": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/alternate-date-source-v2/equivalence-review.json",
+      "sha256": "3290f7641a373c079fb8bff4a1d4fe7ecfb06afc39009891bce9bdf180ca8451",
+      "native_bytes_unchanged": true,
+      "record_work_and_scientific_values_unchanged": true
+    },
+    "v5_JATS_fulltext_equivalence": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/past-jats-equivalence/root-v5-review.json",
+      "sha256": "092f3ff46afbbc54537c5edfb135781519c3c284489f9985278b82607359721e",
+      "source_id_and_all_CID_targets_unchanged": true,
+      "actual_locations": 18,
+      "scientific_context_corrections_preserved": true,
+      "17_quotes_unchanged_one_author_node_representation": true,
+      "records_works_dates_flow_and_native_bytes_unchanged": true
+    }
+  },
+  "visual_validation": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/reference-v2/visual-review.json",
+    "sha256": "000936678cd6b69ece0b15badb3864a2e74cd25aab467bab58ec99c75e960ce6",
+    "status": "PASSED_V2_NATIVE_BYTES_REUSED_UNCHANGED_IN_V3_V4_V5",
+    "xlsx_views": 8,
+    "docx_pages": 2
+  },
+  "artifact_sha256": {
+    "screening.xlsx": "943f3bb3b3c939abe5fdf41c742a12bc1ac46b93addc6926ac9ed82b9b595278",
+    "evidence_matrix.json": "52139f99ba59cd97baa75f56554a4bcc581d2fbd78382c3ac0858043fd264878",
+    "protocol.docx": "20ff024c3f9726464d0a593255f3412d05c79d261e2bae3b11485c492a22de48"
+  },
+  "source_ledger": {
+    "sources": 19,
+    "selected_sources": 12,
+    "citations": 110,
+    "works": 6,
+    "records": 7,
+    "flow": {
+      "records": 7,
+      "unresolved_records": 0,
+      "duplicate_version_records": 1,
+      "works": 6,
+      "included": 6,
+      "excluded": 0,
+      "pending": 0
+    }
+  },
+  "source_first_vs_review_stages": "A/B initial independent discovery; B later targeted URLs and source-truth authoring are disclosed nonblind; v2 native scientific review by B is nonblind, not a new expert Judge. Root v4 equivalent date verification independent XML parse, not new discovery. v5 root/grader exact-node/context JATS equivalence is a disclosed nonblind targeted review; failed DOM mapping proposals retained.",
+  "full_source_documents_copied_to_GT": false,
+  "formal_semantic_score": null,
+  "hybrid_total_score": null,
+  "actual_Harness_run": false,
+  "parser_regression": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/grader/parser-compatibility-v1/regression-1793201658107441000/receipt.json",
+    "sha256": "7f109d62ba75ee8cfbec49ecd029185615106ed1be977784ee4649661c4974e0",
+    "initial_A_only": 0.7794285714285714,
+    "all110_reference_citations_after_generic_parser_fix": true,
+    "new_GETs_for_regression": 0,
+    "not_semantic_or_task_difficulty_proof": true
+  },
+  "reading_scope_note": "The original reference author read public main HTML; source-only v4 later received a PAST challenge. v5 official PMC JATS version1 supplies independently verified equivalent relevant text, not a claim of historical webpage byte identity. Original HTML and later challenge remain distinct observations."
+}

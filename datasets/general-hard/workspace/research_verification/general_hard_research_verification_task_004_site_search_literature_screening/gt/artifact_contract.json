@@ -1,0 +1,1169 @@
+{
+  "schema_version": "h030-artifact-contract/v1",
+  "status": "root_approved_public_contract_no_reference_answers",
+  "facts_free": true,
+  "scope": "公共约束、可实现结构及关系提案；不含论文答案、参考白名单、GT或运行验证结论。",
+  "json_schema_dialect": "draft2020-12",
+  "candidate_json_schema": {
+    "type": "object",
+    "required": [
+      "schema_version",
+      "searches",
+      "records",
+      "works",
+      "sources",
+      "flow"
+    ],
+    "properties": {
+      "schema_version": {
+        "const": "h030-evidence-matrix/v1"
+      },
+      "searches": {
+        "type": "array",
+        "minItems": 2,
+        "items": {
+          "$ref": "#/$defs/search"
+        },
+        "allOf": [
+          {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "site": {
+                  "const": "arxiv"
+                }
+              },
+              "required": [
+                "site"
+              ]
+            },
+            "minContains": 1
+          },
+          {
+            "contains": {
+              "type": "object",
+              "properties": {
+                "site": {
+                  "const": "pubmed"
+                }
+              },
+              "required": [
+                "site"
+              ]
+            },
+            "minContains": 1
+          }
+        ]
+      },
+      "records": {
+        "type": "array",
+        "minItems": 6,
+        "items": {
+          "$ref": "#/$defs/record"
+        }
+      },
+      "works": {
+        "type": "array",
+        "minItems": 6,
+        "items": {
+          "$ref": "#/$defs/work"
+        },
+        "contains": {
+          "type": "object",
+          "properties": {
+            "decision": {
+              "const": "include"
+            }
+          },
+          "required": [
+            "decision"
+          ]
+        },
+        "minContains": 4
+      },
+      "sources": {
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 60,
+        "items": {
+          "$ref": "#/$defs/source"
+        }
+      },
+      "flow": {
+        "$ref": "#/$defs/flow"
+      }
+    },
+    "$defs": {
+      "identity": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      },
+      "public_url": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^https?://\\S+$",
+        "description": "此pattern仅结构预检；实际public HTTP目标、TLS、无代理和DNS限制由生产collector执行，不在此正则中证明。"
+      },
+      "claim": {
+        "type": "object",
+        "required": [
+          "status",
+          "text"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "documented",
+              "unknown",
+              "inference"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        ],
+        "additionalProperties": true,
+        "description": "inference须在text或补充说明中交代理据；无单独必需的重复证据ID数组。"
+      },
+      "result_number": {
+        "type": "object",
+        "required": [
+          "metric",
+          "value",
+          "unit",
+          "direction",
+          "condition"
+        ],
+        "properties": {
+          "metric": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "direction": {
+            "enum": [
+              "higher_better",
+              "lower_better",
+              "not_applicable",
+              "unknown"
+            ]
+          },
+          "condition": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": true
+              }
+            ]
+          }
+        },
+        "additionalProperties": true,
+        "description": "value字符串可保留区间、上下界、误差或未明示含义的误差项；不得强制转成单个float。单位可写无量纲；condition文本与对象均是合法表达。"
+      },
+      "results": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/claim"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "numbers": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/result_number"
+                }
+              }
+            }
+          }
+        ],
+        "description": "numbers不是强制最低数量字段。实际陈述实验数字时须完整列metric/value/unit/direction/condition；无可核数字可为空数组并在text解释qualitative或unknown。"
+      },
+      "report_date": {
+        "type": "object",
+        "required": [
+          "value",
+          "precision",
+          "basis",
+          "status"
+        ],
+        "properties": {
+          "value": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "precision": {
+            "enum": [
+              "year",
+              "month",
+              "day",
+              "unknown"
+            ]
+          },
+          "basis": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "status": {
+            "enum": [
+              "documented",
+              "unknown"
+            ]
+          },
+          "timestamp": {
+            "type": "string",
+            "minLength": 1,
+            "description": "来源有具体带时区时间点时保留；校验ISO8601及timezone，不用无时区字符串伪装UTC。"
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "note": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "unknown"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "required": [
+                "reason"
+              ],
+              "properties": {
+                "value": {
+                  "type": "null"
+                },
+                "precision": {
+                  "const": "unknown"
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "status": {
+                  "const": "documented"
+                }
+              },
+              "required": [
+                "status"
+              ]
+            },
+            "then": {
+              "properties": {
+                "value": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                "precision": {
+                  "enum": [
+                    "year",
+                    "month",
+                    "day"
+                  ]
+                }
+              }
+            }
+          }
+        ],
+        "additionalProperties": true,
+        "description": "已公开常用basis为arxiv_v1_submitted、first_online、issue_only或unknown。basis为来源口径字符串而不是答案平台白名单；资格判定仍必须执行已接受日期规则。"
+      },
+      "search": {
+        "type": "object",
+        "required": [
+          "site",
+          "query_or_navigation",
+          "performed_at",
+          "outcome"
+        ],
+        "properties": {
+          "site": {
+            "enum": [
+              "arxiv",
+              "pubmed"
+            ]
+          },
+          "query_or_navigation": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "performed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "outcome": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "unknown_reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "performed_at": {
+                  "type": "null"
+                }
+              },
+              "required": [
+                "performed_at"
+              ]
+            },
+            "then": {
+              "required": [
+                "unknown_reason"
+              ]
+            }
+          }
+        ],
+        "additionalProperties": true
+      },
+      "record": {
+        "type": "object",
+        "required": [
+          "record_id",
+          "work_id",
+          "title",
+          "authors",
+          "identifiers",
+          "discovery",
+          "report_version",
+          "report_date",
+          "version_date"
+        ],
+        "properties": {
+          "record_id": {
+            "$ref": "#/$defs/identity"
+          },
+          "work_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/identity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "authors": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              },
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            ]
+          },
+          "identifiers": {
+            "type": "object",
+            "properties": {
+              "doi": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "arxiv_id": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "pmid": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "\\S"
+                  },
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                ]
+              }
+            },
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "discovery": {
+            "type": "object",
+            "required": [
+              "site",
+              "record_url",
+              "context"
+            ],
+            "properties": {
+              "site": {
+                "enum": [
+                  "arxiv",
+                  "pubmed"
+                ]
+              },
+              "record_url": {
+                "$ref": "#/$defs/public_url"
+              },
+              "context": {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              }
+            },
+            "additionalProperties": true
+          },
+          "report_version": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "report_date": {
+            "$ref": "#/$defs/report_date"
+          },
+          "version_date": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": true
+              }
+            ]
+          },
+          "unknown_reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          }
+        },
+        "additionalProperties": true,
+        "description": "authors的字符串数组或清楚字符串为等价表达；未知部分在已有说明中标明。discovery.context是实际query/导航关系说明，不需额外search_id或双向记录列表。"
+      },
+      "work": {
+        "type": "object",
+        "required": [
+          "work_id",
+          "selected_record_id",
+          "decision",
+          "decision_reason"
+        ],
+        "properties": {
+          "work_id": {
+            "$ref": "#/$defs/identity"
+          },
+          "selected_record_id": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/identity"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "decision": {
+            "enum": [
+              "include",
+              "exclude",
+              "pending"
+            ]
+          },
+          "decision_reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "research_task": {
+            "$ref": "#/$defs/claim"
+          },
+          "input_data": {
+            "$ref": "#/$defs/claim"
+          },
+          "method": {
+            "$ref": "#/$defs/claim"
+          },
+          "evaluation": {
+            "$ref": "#/$defs/claim"
+          },
+          "results": {
+            "$ref": "#/$defs/results"
+          },
+          "limitations": {
+            "$ref": "#/$defs/claim"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "decision": {
+                  "const": "include"
+                }
+              },
+              "required": [
+                "decision"
+              ]
+            },
+            "then": {
+              "required": [
+                "research_task",
+                "input_data",
+                "method",
+                "evaluation",
+                "results",
+                "limitations"
+              ],
+              "properties": {
+                "selected_record_id": {
+                  "$ref": "#/$defs/identity"
+                }
+              }
+            }
+          }
+        ],
+        "additionalProperties": true,
+        "description": "exclude/pending无需伪造六类全文主张。归属由records[].work_id单向表达，禁止将record_ids镜像列表变成必需字段。"
+      },
+      "citation": {
+        "type": "object",
+        "required": [
+          "citation_id",
+          "quote",
+          "locator",
+          "supports_fields"
+        ],
+        "properties": {
+          "citation_id": {
+            "$ref": "#/$defs/identity"
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "locator": {
+            "type": "object",
+            "minProperties": 1,
+            "additionalProperties": true,
+            "description": "HTML section/段落/锚点，PDF物理页码及文本段/表行列，或元数据字段/节点。字段名可合理表达，不强制locator.kind。"
+          },
+          "supports_fields": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^/",
+              "format": "json-pointer"
+            }
+          }
+        },
+        "additionalProperties": true
+      },
+      "source": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "url",
+          "title",
+          "access_status",
+          "accessed_at",
+          "citations"
+        ],
+        "properties": {
+          "source_id": {
+            "$ref": "#/$defs/identity"
+          },
+          "url": {
+            "$ref": "#/$defs/public_url"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "access_status": {
+            "enum": [
+              "read_full",
+              "read_excerpt",
+              "search_only",
+              "unavailable"
+            ]
+          },
+          "accessed_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "minLength": 1,
+                "pattern": "\\S"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "unknown_reason": {
+            "type": "string",
+            "minLength": 1,
+            "pattern": "\\S"
+          },
+          "citations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/citation"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "accessed_at": {
+                  "type": "null"
+                }
+              },
+              "required": [
+                "accessed_at"
+              ]
+            },
+            "then": {
+              "required": [
+                "unknown_reason"
+              ]
+            }
+          }
+        ],
+        "additionalProperties": true
+      },
+      "flow": {
+        "type": "object",
+        "required": [
+          "records",
+          "unresolved_records",
+          "duplicate_version_records",
+          "works",
+          "included",
+          "excluded",
+          "pending"
+        ],
+        "properties": {
+          "records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "unresolved_records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "duplicate_version_records": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "works": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "included": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "excluded": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "pending": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "additionalProperties": true
+  },
+  "artifacts": {
+    "results/evidence_matrix.json": {
+      "kind": "json",
+      "schema_ref": "candidate_json_schema",
+      "role": "检索、报告、工作、主张、来源和计数的规范记录"
+    },
+    "results/screening.xlsx": {
+      "kind": "xlsx",
+      "logical_fields": [
+        {
+          "field": "work_id",
+          "required_for": "all work rows and resolved report memberships",
+          "nullable_for": "unresolved report membership",
+          "chinese_alias_examples": [
+            "工作ID",
+            "作品标识"
+          ]
+        },
+        {
+          "field": "record_id",
+          "required_for": "each retained report/version record",
+          "chinese_alias_examples": [
+            "报告ID",
+            "记录标识"
+          ]
+        },
+        {
+          "field": "report_description",
+          "required_for": "each retained report/version record",
+          "meaning": "题名或足以识别报告的描述",
+          "chinese_alias_examples": [
+            "题名",
+            "报告描述",
+            "文献"
+          ]
+        },
+        {
+          "field": "selected_version",
+          "required_for": "included work; report/version rows retain actual version or explicit unknown",
+          "chinese_alias_examples": [
+            "所选版本",
+            "报告版本"
+          ]
+        },
+        {
+          "field": "decision",
+          "required_for": "each work; linked work-decision table allowed",
+          "values": [
+            "include",
+            "exclude",
+            "pending"
+          ],
+          "display_equivalents": {
+            "include": [
+              "纳入"
+            ],
+            "exclude": [
+              "排除"
+            ],
+            "pending": [
+              "待决",
+              "待确认"
+            ]
+          }
+        },
+        {
+          "field": "decision_reason",
+          "required_for": "each work",
+          "chinese_alias_examples": [
+            "理由",
+            "纳入排除依据"
+          ]
+        },
+        {
+          "field": "report_date",
+          "required_for": "each retained report/version record",
+          "meaning": "日期或未知、真实精度与所用basis；可在同一格、不同列或表注表达",
+          "chinese_alias_examples": [
+            "报告日期",
+            "日期口径",
+            "发表时间依据"
+          ]
+        },
+        {
+          "field": "source",
+          "required_for": "each retained report/version record or its linked work/source table",
+          "allowed_forms": [
+            "source_id resolved in JSON",
+            "actual public URL",
+            "readable hyperlink target"
+          ],
+          "chinese_alias_examples": [
+            "来源",
+            "来源链接",
+            "来源ID"
+          ]
+        }
+      ],
+      "layout_equivalence": {
+        "chinese_headers": true,
+        "fixed_sheet_names": false,
+        "fixed_row_column_coordinates": false,
+        "multi_sheet_tables_joined_by_ids": true,
+        "transposed_key_value_layout": true,
+        "repeated_six_claim_text_required": false,
+        "all_citation_id_list_required": false
+      },
+      "identity_mapping": "单表或工作/报告/来源分表均可，按逻辑字段及稳定ID关联；不要求为每个版本重复一份work决策，更不要求双向ID列表。",
+      "header_aliases_are_examples_not_closed_whitelist": true,
+      "formula_policy": "Static values accepted. Any formulas require actual locked Office recalculation after clearing caches. No macros or external data connections; ordinary source hyperlinks are allowed and are not followed offline."
+    },
+    "results/protocol.docx": {
+      "kind": "docx",
+      "required_logical_content": [
+        "实际检索/导航与两平台outcome",
+        "实际采用标准及日期口径",
+        "真实去重与所选版本理由",
+        "R/D/U/W/I/E/P流程计数",
+        "范围、未知、访问/证据及可比性限制"
+      ],
+      "fixed_heading_names": false,
+      "paragraph_or_table_equivalence": true,
+      "plan_cannot_substitute_for_executed_process": true
+    }
+  },
+  "flow_constraints": {
+    "bindings": {
+      "R": "len(records)",
+      "U": "count(records where work_id is null)",
+      "W": "len(works)",
+      "D": "R - U - W",
+      "I": "count(works where decision == include)",
+      "E": "count(works where decision == exclude)",
+      "P": "count(works where decision == pending)"
+    },
+    "equations": [
+      "R = D + U + W",
+      "W = I + E + P"
+    ],
+    "flow_field_bindings": {
+      "records": "R",
+      "unresolved_records": "U",
+      "duplicate_version_records": "D",
+      "works": "W",
+      "included": "I",
+      "excluded": "E",
+      "pending": "P"
+    },
+    "minimums": {
+      "distinct_resolved_candidate_works": 6,
+      "included_actual_fulltext_works": 4
+    },
+    "no_required_minimum_for": [
+      "duplicates",
+      "unresolved",
+      "excluded",
+      "pending"
+    ],
+    "semantic_boundary": "JSON长度和declared include不是已证明独立性/全文资格；同一报告版本的多个物理载体或重复搜索命中不得重复增加R，作品同一性由真实身份/全文证据判断。"
+  },
+  "relationships": [
+    {
+      "rule": "unique_identity",
+      "check": "record_id、work_id、source_id各自在所属数组唯一；citation_id跨所有sources全局唯一。字符串非空且不限定前缀。",
+      "scope": "all declared entries"
+    },
+    {
+      "rule": "one_way_work_membership",
+      "check": "records[].work_id为null或指向实际works[].work_id；每个work至少有一条归属记录。works不需要record_ids反向列表。",
+      "scope": "all declared records and works"
+    },
+    {
+      "rule": "selected_record_membership",
+      "check": "include工作的selected_record_id解析到唯一record，该record.work_id等于当前work_id。exclude/pending可为null。",
+      "scope": "all declared works"
+    },
+    {
+      "rule": "pointer_resolution",
+      "check": "supports_fields按RFC6901解析：~0/~1解码，数组索引合法且不越界，字段真实存在；对指向同一字段的重复支持只计一个覆盖机会。不得要求每类再维护CID列表。",
+      "scope": "every declared citation"
+    },
+    {
+      "rule": "fulltext_per_included_work",
+      "check": "每个include工作至少有实际read_full来源，身份对应selected_record_id，提供该工作相关正文引文与定位；多资源/多版本不能增加独立工作数。不能仅用URL/read_full自报判定真实全文或科学资格。",
+      "scope": "included works; authoritative source snapshot plus independent Judge"
+    },
+    {
+      "rule": "six_claim_slots",
+      "check": "每个include保留六类内容。documented须有实际可解析且支持该字段的引文；inference说明证据和推理；unknown有理由和核查范围，不强迫假造quote，也不从完成度分母删掉该机会。",
+      "scope": "6 * max(included_work_count, 4)"
+    },
+    {
+      "rule": "numeric_conditions",
+      "check": "实际实验数字保留metric/value/unit/direction/condition并受结果引文支撑；允许range/error字符串与condition文本，不强制所有结果为标量或给unknown凑数。",
+      "scope": "each reported experimental numeric assertion; no minimum numeric assertion count"
+    },
+    {
+      "rule": "collector_source_selection",
+      "check": "sources必须是JSON根数组。read_full/read_excerpt或citations非空的来源进入独立获取；无引用的search_only/unavailable保留记录但不冒充已读全文。URL精确匹配实际请求，不能以候选本地缓存替代。",
+      "scope": "at most 60 source entries"
+    },
+    {
+      "rule": "office_json_consistency",
+      "check": "XLSX与DOCX中的作品身份、所选报告/版本、decision、日期口径、来源和计数，与JSON逻辑一致；不要求逐字相同、相同sheet名或固定坐标。",
+      "scope": "all three deliverables"
+    },
+    {
+      "rule": "actual_discovery",
+      "check": "应实际尝试arxiv与pubmed；searches至少分别有一项真实query/导航及outcome。无法观察动作时保留unknown，以绑定轨迹核实，不从工具名或非空字段反推已执行。",
+      "scope": "two discovery platforms; no per-platform inclusion quota"
+    },
+    {
+      "rule": "discovery_record_platform_scope",
+      "check": "discovery.record_url应是site所声明的arXiv或PubMed真实报告记录；核实际主机/平台记录身份，不能只信site标签或把任意全文域名填成发现记录。允许从该记录跟随公开全文，不将全文载体限制为这两个域名。",
+      "scope": "every retained report record; no fixed article URL list"
+    }
+  ],
+  "date_policy": {
+    "start_inclusive": "2021-01-01",
+    "end_inclusive": "2026-09-30",
+    "timezone": "Asia/Shanghai",
+    "arxiv_basis": "arxiv_v1_submitted",
+    "arxiv_rule": "base ID官方v1 Submitted为平台提交口径，不等于实际first-public/announcement。vN Submitted另记version_date且不得晚于截止，不刷新v1资格；其它实际公开时间若有证据在已有说明中另记差异。",
+    "journal_priority": [
+      "first_online",
+      "issue_only with explicit online-unknown explanation"
+    ],
+    "precision_validation": {
+      "year": "YYYY",
+      "month": "YYYY-MM",
+      "day": "YYYY-MM-DD",
+      "unknown": "value=null; precision=unknown; reason required"
+    },
+    "partial_date_rule": "以真实年月/日精度形成区间，仅完整落在窗口内才能确认；跨边界未解则pending。ISO日历合法性需语义日期解析，不能仅正则。",
+    "timezone_rule": "真实时间点有TZ则保留timestamp并转Asia/Shanghai；仅日历日期无TZ时保留来源日期并说明，不编造UTC。",
+    "non_refreshing_dates": [
+      "indexing",
+      "webpage modification",
+      "retrieval",
+      "ordinary revision"
+    ],
+    "basis_extensibility": "basis为可解释的来源口径字符串，已公开常用值如上；若出现公开文字未覆盖的新报告日期口径，应交root明确公开处理，不由私有规则创造答案例外。",
+    "other_preprint_rule": "Other identified public preprints indexed by a discovery platform use the original report official posted/submitted clock with its actual field and role recorded; ordinary revision/index/DOI URL date fragments cannot refresh it. Unverified original date stays unknown, and an unqualified selected report stays pending. A nonselected earlier report may remain unknown while the selected journal report is independently qualified.",
+    "input_calendar_spelling": "Accept unambiguous equivalent calendar strings and clear version-date objects; YYYY/YYYY-MM/YYYY-MM-DD describe internal normalization and preserve original input, precision, timezone and source binding, not a hidden exclusive spelling rule."
+  },
+  "research_source_policy_proposal": {
+    "schema_version": "wildclawbench.research-source-policy/v1",
+    "ledger_path": "results/evidence_matrix.json",
+    "deliverable_paths": [
+      "results/screening.xlsx",
+      "results/protocol.docx",
+      "results/evidence_matrix.json"
+    ],
+    "as_of_inclusive": "2026-09-30",
+    "timezone": "Asia/Shanghai",
+    "sources_key": "sources",
+    "source_id_key": "source_id",
+    "url_key": "url",
+    "access_status_key": "access_status",
+    "collect_statuses": [
+      "read_full",
+      "read_excerpt"
+    ],
+    "citations_key": "citations",
+    "citation_id_key": "citation_id",
+    "quote_key": "quote",
+    "locator_key": "locator",
+    "max_sources": 60,
+    "max_bytes_per_source": 20971520,
+    "timeout_seconds": 60
+  },
+  "collector_integration_notes": {
+    "required_scoring_runtime_declaration": {
+      "research_sources": true
+    },
+    "candidate_does_not_create_private_bundle": true,
+    "max_sources_matches_public_sources_cap": true,
+    "selection_count_not_answer_pool": true,
+    "transport_success_not_fulltext_identity": true,
+    "source_fetch_failure_is_missing_evaluation_input_not_capability_zero": true,
+    "trusted_snapshot_reuse_if_explicit": "保留原HTTP时间、body/receipt/projection及明确reuse谱系，不宣称新GET或当前URL仍可达。",
+    "official_read_only_XML_metadata_allowed": true
+  },
+  "checkpoint_plan_proposal": {
+    "automated_weight": 0.4,
+    "semantic_weight": 0.6,
+    "automated_checkpoints": [
+      {
+        "key": "record_contract",
+        "weight": 0.2,
+        "suggested_public_objects": [
+          "3交付",
+          "6根字段",
+          "身份及单向关联",
+          "合理Office布局与跨文件一致性"
+        ],
+        "denominator_note": "少报工作或unknown不删除已公开机会；固定子项由root最后冻结。"
+      },
+      {
+        "key": "time_and_scope",
+        "weight": 0.25,
+        "suggested_public_objects": [
+          "6/4门槛",
+          "日期/版本口径",
+          "两守恒式",
+          "真实资格状态"
+        ],
+        "denominator_note": "纳入报告日期机会至少max(I,4)；身份/实质版本及科学资格需独立Judge。"
+      },
+      {
+        "key": "citation_resolution",
+        "weight": 0.4,
+        "suggested_public_objects": [
+          "实际URL/source/citation引用图",
+          "精确定位",
+          "六类内容覆盖",
+          "数字条件"
+        ],
+        "denominator_note": "六类机会6*max(I,4)，引文复用不按条数加分，unknown保留机会且不得强迫伪造引用。"
+      },
+      {
+        "key": "protected_delivery",
+        "weight": 0.15,
+        "suggested_public_objects": [
+          "3输入原样保留",
+          "3交付可解析且结果路径正确"
+        ],
+        "denominator_note": "固定输入/交付项目，不能凭隐藏sheet名或聊天补交。"
+      }
+    ],
+    "final_subitems_and_denominators_owner": "root; this JSON is a proposal only",
+    "no_reference_list_truth_construction": true
+  },
+  "explicit_non_requirements": [
+    "不要求任何特定论文、题名、DOI/PMID/arXiv答案名单",
+    "不要求特定方法/产品/模态配额或跨任务统一排名",
+    "不要求每个字段独立CID、CID全集或work.record_ids镜像列表",
+    "不要求有排除或重复控制项",
+    "不要求重现实验、Office计算实验、读图像猜数或安装依赖",
+    "不以source个数/HTTP200/非空字段替代实际论文资格与正文支持"
+  ],
+  "public_input_sha256": {
+    "research_question.md": "c064a61bc5412f7e344c1a25553fe1e6276c50a321972b6acb55ee97590bb4ac",
+    "inclusion_rules.md": "9ad07f89bbf9acb9fc2032f7078ae1f6cefa0e52a8759531492ee2b2327384e1",
+    "source_policy.md": "fd1bbfe80f290dc3edeccbf939062da76e3bd2f52b9737bae11511dca58fb262"
+  },
+  "public_inputs": {
+    "research_question.md": "# 研究问题：空间组学AI方法的发现与证据比较\n\n请自行在arXiv和PubMed发现相关文献，整理至少6个经作品身份去重的候选工作，实际读取并纳入至少4个可公开读取全文、符合时间与主题范围的工作。研究窗口为2021-01-01至2026-09-30，按Asia/Shanghai解释日期。本题arXiv日期采用官方v1 Submitted的平台提交口径，不声称它已经证明实际首次公众可见时刻；期刊采用first_online或明示的issue_only后备口径。具体日期处理、筛选条件和公开记录契约见同目录另外两份输入。\n\n研究对象是提出原创AI或统计学习方法、用于空间组学分析的研究工作。空间域识别、细胞组成解卷积、空间映射、切片整合或配准等不同任务均可进入候选集合。比较应解释各工作解决什么问题、需要什么输入，以及证据能支持到什么程度，不要求统一优劣排名。不要求覆盖所有空间组学模态，也不要求两个发现平台分别贡献固定数量的纳入论文，但应实际使用两个平台开展发现并如实记录其结果或不可用情况。\n\n每个纳入工作都要说明以下六类内容：\n\n1. 研究任务和输出对象。\n2. 输入数据、空间信息、模态及参考数据需求。\n3. 方法机制，区分学习模型、前后处理和非学习模块。\n4. 评估数据与比较条件，包括真值、代理真值、已知先验或基线设置。\n5. 实际结果；引用数值时保留指标、方向及对应实验条件。\n6. 局限和结论边界，区分作者承认的限制与自己的推断。\n\n以真实可提取正文、文本表格或元数据为依据。摘要仅支持其中明确出现的事实，不能冒充已经读过方法、实验或讨论。作者报告的实验结果应明确归属于作者，不称为你已复现。数值无法从可提取文本确认时可写unknown或定性结果，不从图像猜数。\n\n不同任务的输出、指标、数据、样本、预处理、先验和硬件可能不同。不要把不同研究中最大的分数、不同切片的结果、不同版本的基准或不同硬件的耗时直接拼成统一排行榜。没有共同可比条件时，比较适用条件和证据强弱即可。\n\n## 交付\n\n仅向`/tmp_workspace/results`写入：\n\n- `screening.xlsx`：候选工作、报告版本、纳入/排除/待决、判断理由、日期和来源的可读筛选台账。\n- `protocol.docx`：实际检索与筛选过程、采用的标准、流程计数、去重依据、范围及限制。写实际执行的过程，不能把计划写成已完成。\n- `evidence_matrix.json`：按`source_policy.md`中的公开契约，保存检索记录、报告记录、工作、六类内容、来源、引文及流程计数。\n\nXLSX至少公开以下逻辑字段：`work_id`、`record_id`、题名或可识别报告描述、所选版本、`decision`及具体理由、报告日期及其口径、来源。可以在一张表中表达，也可将工作决策与报告版本分表，用ID关联；尚未解决工作归属的记录允许work_id为空并明确标为待决。来源可用source_id、实际URL或可打开的超链接表达。\n\nXLSX可以用中文字段、不同工作表或行列布局表达同等信息，不锁定工作表名或表头词面。通过稳定的`work_id`、`record_id`与JSON对应即可；不要求把全部引文或六类正文再复制一遍。静态值同样可接受；如果使用公式，须可实际重算，不使用宏或外部数据连接。普通来源超链接可以保留，离线核验不要求访问它。DOCX允许合理的章节、段落和表格表达。三份交付的作品身份、所选报告、筛选结论和流程数字须一致。\n\n原输入只读，不修改、覆盖或删除；不读取GT或未提供的私有材料。不登录真实账号、不付费、不发送消息；无需下载大型实验数据、执行作者代码、重现实验或识别图表像素。\n",
+    "inclusion_rules.md": "# 纳入、日期与筛选计数\n\n## 候选与纳入\n\n至少保留6个身份可区分的候选工作，其中至少4个最终纳入。一个工作可以有预印本、期刊版及修订版，也可以有HTML/PDF等多个来源；这些都不能凑成多个独立工作。\n\n纳入工作应同时满足：\n\n- 是提出或实质评估原创AI/统计学习方法的研究，方法确实用于空间组学问题。仅主题提到AI、仅一般非空间单细胞分析，不能据此认定合格。利用空间参考图谱进行映射属于可考虑的空间任务，不要求每个模型都直接消费组织学图像。\n- 所选报告按下面公开日期口径处于2021-01-01至2026-09-30；所采用的明确修订内容也不得来自截止后版本。\n- 有完整且公开可读的全文来源，已实际阅读其中与任务、数据、方法、评估、结果和局限有关的正文。可以使用HTML、可提取文本的PDF或身份明确的公开全文稿；不强制PDF或某个出版商版本。\n- 能依据真实来源确认工作身份、所选报告、任务与空间组学/学习方法资格。关键资格尚不能确认时，保留pending，不能以一个unknown条目冒充已确认纳入。\n\n综述或观点稿可作背景，通常不作为本次原创方法纳入工作；只有摘要、全文不可得、主题或方法不符、窗口外等情况，可以按实际事实排除或待决。写明具体依据。**不要求有任何固定数量或类型的排除项**；真实候选全符合、纳入超过4篇均可。不要为展示流程而虚构候选、重复项、排除或失败。\n\n## 工作、报告与版本的日期\n\n分别保存工作身份、报告身份和实际阅读版本：\n\n- 工作是研究方法或研究贡献的身份单位，以题名、作者、持久标识、版本说明和互链等证据判断。不能仅因题名相近就合并，也不能仅因DOI不同就断言是独立工作。\n- 报告是预印本或期刊发表等可识别的文献报告。期刊版与相关预印本可有不同报告日期，但若属同一工作仍只计一次。\n- 版本是实际阅读的修订版、正式发表版或公开全文稿。记录你读的是哪一版，以及能确认的版本时间；不能混用不同版本的实验数字。\n\n按以下**本题报告日期口径**判研究窗口：\n\n1. arXiv报告以base ID对应v1的官方**Submitted时间**判窗，`basis`用`arxiv_v1_submitted`；这是平台提交口径，不等同于已证明的announcement或实际首次公众可见时刻。所读vN的官方Submitted时间另记为`version_date`，按同一平台提交口径不得晚于截止；vN不能刷新v1所确定的报告资格。若另有actual announcement或公开可见时刻的证据，可在已有说明中另记并解释与Submitted的差异，但不替换本题判窗口径，不用搜索索引或修订日刷新。\n2. 期刊报告优先取同一DOI报告的首次online发表日期；若官方来源没有可核online日期，可显式用官方卷期发表日期作为`issue_only`后备口径，并说明online日期未知。发现可核的更早online日期时应优先使用它，不能继续挑选较晚卷期日期。\n3. 其它由发现平台索引、身份已确认的公开预印本报告，采用原始版本的官方posted或submitted口径，明确字段原名、所用口径和版本；用提交时间时不能声称它证明实际公开可见时刻。普通修订不刷新初始报告日期，不能从DOI或URL里的日期片段、仓储上传或索引日猜首发。无法核原始报告日期时保留unknown；若是所选报告且资格因此未确认，工作应pending。非所选报告可以保留未知日期，不影响同工作另一份已独立确认的所选报告。\n4. 除上述明确采用的平台初始posted/submitted口径外，不把其他收稿、接受、仓储上传、数据库索引、网页修改和此次检索时间当作期刊发表或实际公开可见时间，也不以它们替换本题报告日期口径。不要用这些日期刷新窗口。若报告有实质修订、勘误或撤回等相关信息，分别记录事实与所用内容，不能假定它们自动产生一个新的独立工作。\n\n来源给出带时区的具体时间点时（包括arXiv官方Submitted时间），保留原时间点，换算为Asia/Shanghai后判窗口；不要丢弃时区。来源只有年月日而没有时区时，按其明示的日历日期判断并说明时区未提供，不自行把它假设为UTC后跨日换算。\n\n日期保留来源真实精度，可用年、月、日，不补造缺失的月日。日期只精确到月或年时，将其理解为该月或年的完整日期区间；只有区间完全位于研究窗口内才能据此确认合格。区间跨越边界而无法进一步核实，或日期证据矛盾尚未消解时，应标pending，而不是挑一个有利日期。明确的日期落在窗口外时可据此排除。\n\n对于未显式标记修订日期的公开期刊全文，按已识别报告及可核元数据记录当前所读载体；不要无依据声称逐字等同于历史某日网页。若发现截止后新增实验或修订内容，不把它用于截止前的比较，必要时另寻对应版本或保留待决。\n\n## 六类内容与unknown\n\n每个纳入工作的六类内容都应有条目。已核实内容用`documented`并提供引文；未报告、只有图形、文本不可提取或尚不能确认时用`unknown`，说明已经检查的范围及未知原因。自己的推断用`inference`并交代推理依据。unknown不是已证实，也不是要求编造引文的理由。\n\n六类内容的核验机会不因unknown或少交纳入工作而消失；不会只对已写得完整的字段计算完成度。诚实unknown是否充分、结果是否有支持、推断是否越界，需要结合实际全文判断，不能以机械的“非空”代替正确性。\n\n每条被用于结论的实验数字应有指标名称、值、单位或无量纲说明、方向和实验条件。条件至少足以识别对应数据/样本/切片、任务和评价方案；若比较基线、数据划分、参考数据、已知簇数或硬件影响该数字，也要披露。适用条件无法确认的部分写unknown，不借邻近句子补造。没有可核文本数字时允许定性结果，不强制凑数字。\n\n## 真实流程计数\n\n流程只统计你真实保留并进入筛选台账的报告记录，不冒称覆盖所有搜索命中或完成系统综述。\n\n- `R`：`records`中的不同报告/明确版本记录数。同一个报告版本的HTML与PDF、同一搜索命中的重复出现不算新报告记录。\n- `U`：尚不能确定工作归属、`work_id=null`的记录数。这些未解决记录不用于凑6个独立工作。\n- `W`：已经建立工作身份的不同`works`数；每个工作至少有一条记录归属它。\n- `D=R-U-W`：合并到已有工作的额外报告/版本记录数。\n- `I/E/P`：`works`中include、exclude、pending的数量。\n\n应满足`R=D+U+W`和`W=I+E+P`，并达到`W≥6`、`I≥4`。这不要求你人为制造D、U、E或P。检索query/导航操作保存在`searches`，不当作论文记录数；物理网页/PDF保存在`sources`，不当作独立工作数。报告的版本链、作品归并及无法观察的过程如实说明。\n",
+    "source_policy.md": "# 发现、来源与证据记录\n\n## 发现与公开访问\n\n从arXiv（arxiv.org）和PubMed（pubmed.ncbi.nlm.nih.gov）自行发现报告。可使用站内搜索、搜索工具、浏览器或等效导航；不规定第一条query、搜索语言或`site:`语法，不提供答案题名、编号或URL。应实际尝试两个平台，记录真实query/导航、时间、返回线索及不可用情况；不要求某个平台最终贡献固定篇数。\n\n可从发现记录跟随公开DOI、出版者、官方全文库、相关官方公开只读元数据接口或身份明确的公开全文稿。不能把某个域名、标题或URL名单当合格论文白名单。不要登录、付费或改变安全网络规则；不可达时可寻找可核的公开等价全文，并记录路径及其版本身份，不能把其他论文或摘要替代原全文。\n\n区分搜索结果、报告书目记录、完整正文和实际引文。HTTP200、搜索摘要、空壳、登录页、验证码页或部分下载不证明全文可读。仅摘要或局部摘录只支持实际看到的事实；无法继续访问应说明，不写成已读全文。一次有明确理由的切换或重试可以记录，但不要求机械完成固定重试次数。\n\n评分侧会独立获取实际引用的公开来源并核对原件、元数据、投影和回执。你保存的快照或自写文本不能自行成为独立供证；你无需创建私有来源包或运行评分程序。评分侧取证缺失与候选交付错误应分开处理。既有可信快照如被独立采集流程明确复用，其原获取时间及复用事实应保留，不能写成此次新GET或当前网页仍可达的证明。\n\n## evidence_matrix.json公开结构\n\nJSON根为对象，包含`schema_version`（`h030-evidence-matrix/v1`）、`searches`、`records`、`works`、`sources`、`flow`。除下列最小字段外，可增加确实有用的信息；不要为凑字段制造事实。\n\n### searches：实际检索/导航记录\n\n每项包含：\n\n- `site`：arxiv或pubmed。\n- `query_or_navigation`：实际query、筛选条件或导航过程，不能用事后计划替代。\n- `performed_at`：可观察到的ISO8601时间并带时区；确实不可观察时为null并说明`unknown_reason`。\n- `outcome`：实际得到的线索、没有命中或不可用情况的简述。\n\n不强制给每次搜索额外分配ID，也不要求重复一份全部命中ID清单。与某条报告的发现关系在该报告的`discovery`中说明即可。结构化记录本身不能证明检索动作已经发生，过程证据以实际绑定轨迹为准。\n\n### records：报告/所读版本记录\n\n每项包含：\n\n- `record_id`：本文件内唯一、非空、稳定的字符串，不限定前缀。\n- `work_id`：归属的工作ID；身份关系未解决时为null。\n- `title`、`authors`：实际书目事实；作者可用字符串数组或清楚字符串，未知部分明确说明。\n- `identifiers`：对象，按实际可核内容填写doi、arxiv_id、pmid等，不要求所有平台标识同时存在。doi、arxiv_id使用字符串或null；pmid可以是字符串或正整数，两者按同一标识核验，JSON布尔值不充当整数；未知使用null。arXiv版本另写`report_version`，不要把base ID与版本混淆。\n- `discovery`：包含`site`、`record_url`和`context`（实际query/导航关系简述）。`record_url`是发现平台的真实报告记录地址，不是任意全文站点地址。\n- `report_version`：所读报告/版本的明确描述；未确认则说明unknown。\n- `report_date`：对象，包含`value`、`precision`、`basis`、`status`。`value`为真实精度的年/月/日字符串或null，`precision`为year/month/day/unknown，`basis`说明arxiv_v1_submitted、first_online或issue_only等来源口径，`status`为documented/unknown；未知日期使用value=null、precision=unknown并写`reason`；后备日期在已有说明中解释原因。若来源给出带时区的具体时间点，还应在该对象中保留`timestamp`，按Asia/Shanghai换算得到用于判窗的日历值。\n- `version_date`：按平台口径记录明确修订版本的时间；arXiv记录所读vN的官方Submitted时间，不把它改称announcement或实际公开可见时间。未知或无单独版本日期时为null并说明。它不能替代`report_date`刷新资格。\n\narXiv的`report_date`取官方v1 Submitted，属于本题采用的平台提交口径。实际announcement/首次公开可见若另有证据，可在已有说明中保留并解释差异，不另建一份重复日期字段清单，也不以索引或修订刷新判窗。期刊仍取first_online或明示的issue_only后备口径。\n\n书目、日期与版本关系的已知主张应有来源引文；引用通过下面`citations.supports_fields`指向相应字段。不要再复制`date_citation_ids`之类的并行清单。\n\n### works：去重工作及六类内容\n\n每项包含：\n\n- `work_id`：唯一、非空、稳定字符串。\n- `selected_record_id`：include工作所用的报告记录，必须归属本工作；exclude/pending没有选定报告时可为null。归属关系只需由`records[].work_id`表示，不要求镜像的`record_ids`列表。\n- `decision`：include、exclude或pending；`decision_reason`写资格或具体问题，不能只写“相关/不相关”。\n- `research_task`、`input_data`、`method`、`evaluation`、`results`、`limitations`：include工作的六个内容对象，分别对应研究任务、输入、机制、评估条件、结果、局限。每个对象至少有`status`和`text`；`status`为documented、unknown或inference，unknown要给`reason`，inference要交代理据。已知主张的引文用下文`supports_fields`关联，不要求六处再各复制一遍CID数组。\n\n`results`若陈述实验数字，还应有`numbers`数组；每项包含`metric`、`value`、`unit`、`direction`、`condition`。`value`可为数值或保留范围/误差项的字符串，`condition`可为清楚的文本或对象；不要求补造无量纲指标的物理单位。方向可写higher_better、lower_better、not_applicable或unknown；条件按`inclusion_rules.md`披露，未知部分明确标明。没有可核数字时可用空数组并说明定性/未知状态，不强制最低数字数量。\n\nexclude/pending工作不强制填写六类全文主张，但应保留足以理解身份、判断及未决问题的事实和引文。不能用空泛pending逃避已能确认的排除，也不能因未读到正文而编造方法/结果。\n\n### sources：兼容独立来源采集器的实际来源账本\n\n根`sources`为数组，本题最多60条；不默默截断实际引用来源，也不靠重复同一资源凑数。检索过程可在searches或DOCX中如实概括，但实际引用仍须完整列入账本。每个来源包含以下字段；URL对应一份实际访问或引用的公开资源：\n\n- `source_id`：全账本唯一、非空字符串，不限定格式。\n- `url`：实际请求的公开HTTP/HTTPS URL，保留必要query、版本及fragment，不用无关入口页代替正文。\n- `title`：该资源实际标题或可识别描述，不伪装为另一个报告。\n- `access_status`：read_full、read_excerpt、search_only或unavailable。read_full表示完整原件可读且已实际阅读相关正文；read_excerpt只看到摘录/摘要或部分内容；search_only只作为检索线索；unavailable说明不可达。全文纳入不能只靠read_excerpt/search_only/unavailable。\n- `accessed_at`：实际访问的可观察ISO8601时间并带时区；未知为null并写`unknown_reason`，不能照搬论文发表日。\n- `citations`：对象数组，没有实际引文时为空数组。每个对象包含全账本唯一`citation_id`、原文短片段`quote`、可定位`locator`和`supports_fields`。\n\n`locator`用对象表达可提取定位：HTML提供section及段落/锚点等识别信息；PDF用物理页码（从1开始）及段落/文本表行列等；元数据用字段名及所在节点/记录。无需读图像或从图形估数。`quote`须在该单一来源的实际正文/元数据中可核，不能一条引文拼接不同来源；重用同一真实片段可在一条引文的`supports_fields`中说明多个支持对象。\n\n`supports_fields`是JSON Pointer字符串数组，指向本JSON中的具体字段，例如`/works/0/research_task`、`/works/0/results`、`/records/0/report_date`或`/works/0/decision_reason`。这些仅是字段路径示例，不是论文或答案ID。一个片段确实支持多个字段时可复用；不要求每个字段有不同引文，也不以引文条数越多越好。不要再维护额外的全部CID列表、重复CID计数或逐类镜像数组。\n\n采集器使用`sources[].source_id/url/access_status/citations`，引文使用`citation_id/quote/locator`；read_full、read_excerpt或含任何实际引用的来源会进入独立获取。没有引用的search_only/unavailable仍保留检索或失败事实，但不冒充已经取得正文。不要给根`sources`改名、把它嵌进各工作，或用一个不存在的本地文件路径替换独立URL。\n\n### flow：守恒计数\n\n包含`records`、`unresolved_records`、`duplicate_version_records`、`works`、`included`、`excluded`、`pending`七个非负整数，依次对应`inclusion_rules.md`中的R、U、D、W、I、E、P。由实际数组和归属/decision关系计算，满足两条守恒式及6/4最低要求；与DOCX叙述及XLSX台账一致。未知检索总命中数不填一个猜测数字，也不混入这七项。\n\n## 来源与阅读边界\n\n每个include工作至少关联一个实际read_full的正文来源，其身份对应`selected_record_id`。同一正文中的多个引文可支持六类内容；不能仅引数据库摘要或只给URL而没有方法/结果定位。PDF与HTML若属于同一报告版本，不产生额外工作或报告计数。\n\n发现平台的记录、全文载体和引用片段可以是不同资源：如书目页面不可读但有真实搜索记录，可如实保留该发现路径，并以实际可读的公开等价全文支撑书目和正文事实。不要把不可观察的点击、读取或时间编造成已执行，也不要把评分侧随后取得全文当作你当时已读的行为证明。\n"
+  }
+}

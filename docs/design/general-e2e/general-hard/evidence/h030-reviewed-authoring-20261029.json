@@ -1,0 +1,388 @@
+{
+  "schema_version": "general-hard-h030-reviewed-authoring/v1",
+  "date_local": "2026-10-29",
+  "status": "REGISTERED_AUTHOR_SOURCES_NATIVE_REFERENCE_AUTOMATIC_RUNTIME_PASS_SEMANTIC_AND_HARNESS_PENDING",
+  "task_id": "general_hard_research_verification_task_004_site_search_literature_screening",
+  "name": "站点限定搜索：空间组学AI文献发现与筛选",
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "parent_commit": "ba34b7068ce302383346685bcc5c889a12c14963",
+  "formal_tasks": 32,
+  "remaining_tasks": 28,
+  "release_status": "building",
+  "manifest_created": false,
+  "modality": "pure-text",
+  "requires_visual_input": false,
+  "coding_primary": false,
+  "retrieval_group": "directed_web_retrieval",
+  "research_quota_unchanged": {
+    "open_search": 3,
+    "directed_web_retrieval": 3,
+    "local_evidence": 2
+  },
+  "planned_visual_quota_unchanged": {
+    "exact_count": 6,
+    "total_tasks": 60,
+    "ratio": 0.1
+  },
+  "source_truth": {
+    "initial_independent_discoveries": 2,
+    "later_given_URL_review_is_not_autonomous_discovery": true,
+    "source_precedes_reference": true,
+    "candidate_answer_used_for_truth": false,
+    "reference_pool_is_non_exhaustive": true,
+    "reference_works": 6,
+    "reference_reports": 7,
+    "flow": {
+      "R": 7,
+      "U": 0,
+      "D": 1,
+      "W": 6,
+      "I": 6,
+      "E": 0,
+      "P": 0
+    },
+    "human_expert": false,
+    "full_source_documents_copied_to_git": false
+  },
+  "reference": {
+    "schema_version": "h030-reference-provenance/v1",
+    "reference_version": "v5",
+    "source_precedes_reference": true,
+    "candidate_answer_used_for_truth": false,
+    "reference_answer_is_oracle": false,
+    "reference_pool_is_non_exhaustive": true,
+    "author_only_reference_not_Harness": true,
+    "human_expert": false,
+    "source_truth": "expected.json + business_oracle.json + source_review_reconciliation.json",
+    "native_validation": {
+      "initial_v2": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/native-reference-v2/model-review.json",
+        "sha256": "cbf3477dfd453d526af6532676ef4a25c272a185563781fed3e7dedfe4b18814",
+        "structural_checks_passed": 820,
+        "manual_review_items": 9,
+        "structural_issues": 0,
+        "scientific_gap": "DeepST comparator identity omitted; subsequently fixed in v3"
+      },
+      "v3_scientific_delta": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/native-reference-v3/readonly-receipt.json",
+        "sha256": "563c053859fc988ccf52dd34e04331d2cb29272a146c28561d55449c8e211a9b",
+        "status": "closed",
+        "scope": "Only three changed strings and unchanged native/GT bindings; not additional benchmark task samples"
+      },
+      "v4_alternate_date_equivalence": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/alternate-date-source-v2/equivalence-review.json",
+        "sha256": "3290f7641a373c079fb8bff4a1d4fe7ecfb06afc39009891bce9bdf180ca8451",
+        "native_bytes_unchanged": true,
+        "record_work_and_scientific_values_unchanged": true
+      },
+      "v5_JATS_fulltext_equivalence": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/past-jats-equivalence/root-v5-review.json",
+        "sha256": "092f3ff46afbbc54537c5edfb135781519c3c284489f9985278b82607359721e",
+        "source_id_and_all_CID_targets_unchanged": true,
+        "actual_locations": 18,
+        "scientific_context_corrections_preserved": true,
+        "17_quotes_unchanged_one_author_node_representation": true,
+        "records_works_dates_flow_and_native_bytes_unchanged": true
+      }
+    },
+    "visual_validation": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/reference-v2/visual-review.json",
+      "sha256": "000936678cd6b69ece0b15badb3864a2e74cd25aab467bab58ec99c75e960ce6",
+      "status": "PASSED_V2_NATIVE_BYTES_REUSED_UNCHANGED_IN_V3_V4_V5",
+      "xlsx_views": 8,
+      "docx_pages": 2
+    },
+    "artifact_sha256": {
+      "screening.xlsx": "943f3bb3b3c939abe5fdf41c742a12bc1ac46b93addc6926ac9ed82b9b595278",
+      "evidence_matrix.json": "52139f99ba59cd97baa75f56554a4bcc581d2fbd78382c3ac0858043fd264878",
+      "protocol.docx": "20ff024c3f9726464d0a593255f3412d05c79d261e2bae3b11485c492a22de48"
+    },
+    "source_ledger": {
+      "sources": 19,
+      "selected_sources": 12,
+      "citations": 110,
+      "works": 6,
+      "records": 7,
+      "flow": {
+        "records": 7,
+        "unresolved_records": 0,
+        "duplicate_version_records": 1,
+        "works": 6,
+        "included": 6,
+        "excluded": 0,
+        "pending": 0
+      }
+    },
+    "source_first_vs_review_stages": "A/B initial independent discovery; B later targeted URLs and source-truth authoring are disclosed nonblind; v2 native scientific review by B is nonblind, not a new expert Judge. Root v4 equivalent date verification independent XML parse, not new discovery. v5 root/grader exact-node/context JATS equivalence is a disclosed nonblind targeted review; failed DOM mapping proposals retained.",
+    "full_source_documents_copied_to_GT": false,
+    "formal_semantic_score": null,
+    "hybrid_total_score": null,
+    "actual_Harness_run": false,
+    "parser_regression": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/grader/parser-compatibility-v1/regression-1793201658107441000/receipt.json",
+      "sha256": "7f109d62ba75ee8cfbec49ecd029185615106ed1be977784ee4649661c4974e0",
+      "initial_A_only": 0.7794285714285714,
+      "all110_reference_citations_after_generic_parser_fix": true,
+      "new_GETs_for_regression": 0,
+      "not_semantic_or_task_difficulty_proof": true
+    },
+    "reading_scope_note": "The original reference author read public main HTML; source-only v4 later received a PAST challenge. v5 official PMC JATS version1 supplies independently verified equivalent relevant text, not a claim of historical webpage byte identity. Original HTML and later challenge remain distinct observations."
+  },
+  "scoring": {
+    "type": "hybrid",
+    "outer_weights": {
+      "automated": 0.4,
+      "llm_judge": 0.6
+    },
+    "automatic_weights": {
+      "record_contract": 0.2,
+      "time_and_scope": 0.25,
+      "citation_resolution": 0.4,
+      "protected_delivery": 0.15
+    },
+    "mechanism_passed": 30,
+    "mechanism_failed": 0,
+    "managed_completed": 34,
+    "managed_passed": 34,
+    "QA_manifest": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/grader/final-author-qa-manifest.json",
+      "size": 242610,
+      "sha256": "df2dc1f78cfefad0da0e117e8f9995bd87bb1d9a47e5f384df99a6ce137badfe"
+    },
+    "QA_report": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/grader/final-author-qa.md",
+      "size": 9873,
+      "sha256": "03d70ae367f855e761d0f9a426d8aa9edb66a73f97d741a389e4e1d1f33e620d"
+    },
+    "formal_semantic_score": null,
+    "formal_hybrid_total": null
+  },
+  "runtime": {
+    "actual_harness_execution": false,
+    "actual_semantic_score": null,
+    "all_formal_bytes_preserved": true,
+    "archive_file_and_directory_modes_restored": true,
+    "attempt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/formal-detached-1793207628240411000/attempts/author-only-h030-formal__detached-zip-worker/general_hard_research_verification_task_004_site_search_literature_screening/author-only-formal-auto",
+    "bound_independent_source_count": 12,
+    "current_candidate_native_artifacts_queried": [
+      "candidate-original/workspace/results/evidence_matrix.json",
+      "candidate-original/workspace/results/protocol.docx",
+      "candidate-original/workspace/results/screening.xlsx"
+    ],
+    "difficulty_estimate": "L3 design estimate only; no empirical calibration",
+    "evidence_archive_sha256": "9a6c39fae4d0dd0edc4e4f5cb6bb4044ce45c61ce0283d345c52f9c5f2855bf1",
+    "exec_file_count": 3,
+    "expected_json_is_canonical_h030": true,
+    "expected_selected_source_ids": [
+      "src-a-F06-stdgcn-pmc",
+      "src-a-F01-spacel-pmc",
+      "src-a-F02-stagate-pmc",
+      "src-a-F03-deepst-pmc",
+      "src-a-F04-deepsc-pmc",
+      "src-a-F07-past-pmc",
+      "src-b1-doi-stdgcn",
+      "src-b2-target-three-pubmed-dates-efetch",
+      "src-b1-doi-stagate",
+      "src-b2-deepst-jats-date-efetch",
+      "src-b2-past-pubmed-efetch",
+      "src-a-M12-stdgcn-preprint-pmc"
+    ],
+    "explicit_origin_copy_paths_absent_at_archive_verify": true,
+    "finalize_or_fake_judge_used": false,
+    "formal_md_sha256": "894b002222a999a46254899a115f4a20f845d56ddb8e42477cffb74897c3f407",
+    "framework_revision": "ba34b7068ce302383346685bcc5c889a12c14963",
+    "fresh_GET_count": 1,
+    "frozen_private_interfaces": {
+      "attempt_binding_keys": [
+        "source_id",
+        "source_bundle_manifest_sha256",
+        "bundle_acquisition_identity",
+        "bundle_bindings",
+        "candidate_ledger_sha256",
+        "rule_source_sha256",
+        "source_acquisition",
+        "boundary"
+      ],
+      "attempt_binding_literals": {
+        "boundary": "Independent original bytes only; no candidate snapshot as truth; no historical GET recast as fresh"
+      },
+      "caller_provenance_source_fields": {},
+      "derived_sources_directory": "sources",
+      "files_sha256": {
+        "evidence_requirements.json": "62fa8a957808bd6e239dba36357fa2436f36b4409d5376c0f1931bfd08b12e8c",
+        "grader.py": "d6bf06ddeadb9fbacfbcbf4f3f3066e073405c2a3da85a128dd9339c5a05e4ca",
+        "native_io.py": "ec85b3803b72fcd049fa3b02a64889cf514cc991842b337ba1e1144760a0efdc",
+        "runtime_contract.json": "452fbd5318860198c4fc56fa86c12630476b893b4684efb523f56ad2095c04a8",
+        "scoring_contract.json": "e5e0a7d4a688235037f5dcf7fb37ae59f2fb22c73c208105761041f89560cb53",
+        "source_projection.py": "cd94b4614ac105f33fc46bc0ec46613c6cf0345ae6f1b1268972d55f872b856e"
+      },
+      "helper_signatures": {
+        "load_bundle": {
+          "has_kwargs": false,
+          "has_varargs": false,
+          "keyword_only": [
+            "ledger_path"
+          ],
+          "positional": [
+            "ledger"
+          ]
+        },
+        "project_source": {
+          "has_kwargs": false,
+          "has_varargs": false,
+          "keyword_only": [],
+          "positional": [
+            "body_bytes",
+            "media_type",
+            "existing_projection"
+          ]
+        },
+        "source_acquisition": {
+          "has_kwargs": false,
+          "has_varargs": false,
+          "keyword_only": [],
+          "positional": [
+            "root",
+            "manifest",
+            "source",
+            "receipt"
+          ]
+        },
+        "write_derived_projection": {
+          "has_kwargs": false,
+          "has_varargs": false,
+          "keyword_only": [],
+          "positional": [
+            "projection",
+            "rule_evidence_dir",
+            "stem"
+          ]
+        }
+      },
+      "interface_policy": "Current frozen GT AST plus exact runtime API/shape checks; no private initial source hash is hardcoded.",
+      "observation_contract_digest_key": "scoring_contract_sha256",
+      "observations_name": "rule-observations.json",
+      "observations_schema": "h030-rule-observations/v1",
+      "project_source_media_field": "media_type",
+      "source_projection_schema": "h030.offline-source-projection/v1"
+    },
+    "full_score_float_abs_tolerance": 1e-12,
+    "gt_file_count": 20,
+    "human_expert": false,
+    "hybrid_total_score": null,
+    "imported_office_helper_sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "input_scoring_zip_sha256": "5e599016ce06379cfad210ed7531fff6029fb7d6a6bcd5ca5ff0b44685856c9e",
+    "office_recalculation": null,
+    "office_runtime_contract_verified": true,
+    "original_manifest_candidate_gt_unchanged": true,
+    "prior_candidate_GT_excluded_from_catalog": true,
+    "private_source_projection_sha256": "cd94b4614ac105f33fc46bc0ec46613c6cf0345ae6f1b1268972d55f872b856e",
+    "raw_auto_scores": {
+      "citation_resolution": 1.0,
+      "overall_score": 1.0,
+      "protected_delivery": 1.0,
+      "record_contract": 0.9999999999999999,
+      "time_and_scope": 1.0
+    },
+    "raw_scores_not_rounded_or_overwritten": true,
+    "reference_result_count": 3,
+    "repository_sys_path_absent": true,
+    "research_source_code_sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a",
+    "review_kind": "model author verification",
+    "runtime_omitted_in_moved_archive": true,
+    "schema_version": "h030-formal-detached-author-validation-result/v1",
+    "scope": "Canonical reference author handoff verifies package/runtime/evidence mechanics only. No Harness execution, semantic correctness, human-expert review, empirical L3 difficulty, or model/Harness discrimination is claimed.",
+    "score_entry_sha256": "1ef1afc90cd259be8970e855d4418f516dc0e83a5fff146c785cba78d1594684",
+    "semantic_status": "awaiting_response",
+    "skill_zip_sha256": "0c8eb7fa0fd9ff6c989a02f275e5a1048b6033cc64267f80abc1995d28e6b017",
+    "source_acquisition_summary": {
+      "fresh_get_count": 1,
+      "reused_snapshot_count": 11
+    },
+    "source_and_derived_normal_archive_identical": true,
+    "status": "passed",
+    "task_id": "general_hard_research_verification_task_004_site_search_literature_screening",
+    "trusted_original_QA_not_renamed_or_chmodded": true,
+    "verified_reused_snapshot_count": 11,
+    "worker_python_isolated_mode": true
+  },
+  "complete_runtime_validation": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/formal-detached-1793207628240411000/validation.json",
+    "size": 392653,
+    "sha256": "7053131d3185cf165ae8ef8ba571254ed8a3b6fd4b8a0ed4c1e1165e5cdef803"
+  },
+  "source_acquisition_summary": {
+    "fresh_get_count": 1,
+    "reused_snapshot_count": 11
+  },
+  "original_GET_preserved_reuse_not_a_new_GET": true,
+  "registered_file_counts": {
+    "exec": 3,
+    "gt": 20
+  },
+  "registered_sha256": {
+    "exec": {
+      "inclusion_rules.md": "9ad07f89bbf9acb9fc2032f7078ae1f6cefa0e52a8759531492ee2b2327384e1",
+      "research_question.md": "c064a61bc5412f7e344c1a25553fe1e6276c50a321972b6acb55ee97590bb4ac",
+      "source_policy.md": "fd1bbfe80f290dc3edeccbf939062da76e3bd2f52b9737bae11511dca58fb262"
+    },
+    "gt": {
+      "artifact_contract.json": "9fafbbc854880e226e3833807269cb82a71fbff3002d4060c7df6e875bf43828",
+      "business_oracle.json": "375f4fed3f9d5cf9163302bdec3fe26ca70a196c697416256789ad87ceefec9b",
+      "counterexamples.json": "30db515f4a8e7b5a7878426ee467b2184073ec367bcf97376e9f76c1bb50417f",
+      "evidence_requirements.json": "62fa8a957808bd6e239dba36357fa2436f36b4409d5376c0f1931bfd08b12e8c",
+      "expected.json": "669e2dea2136974d011fda59bb8ef1c2b877ee65f24e7a33239107c523e3f94d",
+      "grader.py": "d6bf06ddeadb9fbacfbcbf4f3f3066e073405c2a3da85a128dd9339c5a05e4ca",
+      "native_io.py": "ec85b3803b72fcd049fa3b02a64889cf514cc991842b337ba1e1144760a0efdc",
+      "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+      "protected_sha256.json": "44f2987823e12e717c353cb1487fde37170c7281846bce5359c62344737d341f",
+      "reference/results/evidence_matrix.json": "52139f99ba59cd97baa75f56554a4bcc581d2fbd78382c3ac0858043fd264878",
+      "reference/results/protocol.docx": "20ff024c3f9726464d0a593255f3412d05c79d261e2bae3b11485c492a22de48",
+      "reference/results/screening.xlsx": "943f3bb3b3c939abe5fdf41c742a12bc1ac46b93addc6926ac9ed82b9b595278",
+      "reference_provenance.json": "e194441ac8e397aac3273d912fc5082be093c5461f0313ebe0faff02cc93f5df",
+      "reference_source_manifest.json": "a460932d5f1c1c076002d59ce178cd4887f9ac2a9a227d8c4e1110160bcc63fd",
+      "research_source_policy.json": "5ba59bdaacda4d5f97dd92b28c8e007ae7942fbab5587bc9bd3d147c6ae7e25a",
+      "runtime_contract.json": "452fbd5318860198c4fc56fa86c12630476b893b4684efb523f56ad2095c04a8",
+      "scoring_contract.json": "e5e0a7d4a688235037f5dcf7fb37ae59f2fb22c73c208105761041f89560cb53",
+      "scoring_design.json": "9f9c8f9bdf59db4bf2a69a0dd50e999418847f8dcecf26aa10578efb8ca9c359",
+      "source_projection.py": "cd94b4614ac105f33fc46bc0ec46613c6cf0345ae6f1b1268972d55f872b856e",
+      "source_review_reconciliation.json": "234eb06dd2b875e8b8c57dc8e1f2cf6712fbea6a24d0c5b4124ae92a4f224af6"
+    }
+  },
+  "registered_paths": {
+    "task": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/research_verification/general_hard_research_verification_task_004_site_search_literature_screening.md",
+    "workspace": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_004_site_search_literature_screening"
+  },
+  "checks": {
+    "single_task_static": "PASS",
+    "whole_release_status": "incomplete",
+    "remaining_issues": {
+      "TASK_ID_NOT_FOUND": 28
+    },
+    "single_report": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/static-single-final/20261028T173011Z_90295f338d/report.json",
+      "size": 1291,
+      "sha256": "c9d8580efbc6771762e195c22edc5fed6ae9d89730400f1fb4c0a2b3d24175c4"
+    },
+    "release_report": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/static-release-final/20261028T173016Z_bc70a38c6a/report.json",
+      "size": 31551,
+      "sha256": "3de20d3f0521b1dffc3fc06e2b63d530cce03928bbdadc4daee347a747da5df5"
+    }
+  },
+  "authorization": "User authorized subsequent recommended sub-agent operations in this session; all reviews are model reviews, not human expertise.",
+  "immutable_snapshot": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/registered-snapshot-v1",
+  "immutable_QA_manifest": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa/registered-snapshot-v1/qa-sha256.json",
+    "size": 12710927,
+    "sha256": "00d2263a2944943ebc43362f30e6d2635f0bb0bf42b5715ebbb38c080d298f9f"
+  },
+  "QA_files_bound": 27453,
+  "limits": [
+    "L3 and discrimination remain design estimates.",
+    "Automatic full score does not establish scientific correctness, true retrieval/reading, eligibility or a hybrid score.",
+    "1 fresh GET and11 verified reused snapshots preserve actual observed lineage; zero fresh GET is not claimed.",
+    "28 tasks, full60 freezing, four-Harness execution and12-task calibration remain."
+  ]
+}
