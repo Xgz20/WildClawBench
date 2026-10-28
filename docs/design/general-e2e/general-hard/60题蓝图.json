@@ -11543,7 +11543,7 @@
         "exec": "datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_010_visual_voucher_match/exec",
         "gt": "datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_010_visual_voucher_match/gt"
       },
-      "prompt_draft": "请完成以下工作：依据凭据视觉状态与账目逐笔核对，区分作废、重复、金额更正和未匹配，交付调账建议，不修改原账。\n\n输入材料：\n- /tmp_workspace/vouchers/：12张扫描凭据，含作废章、手写更正与相似编号\n- /tmp_workspace/ledger.csv：18条账目\n- /tmp_workspace/policy.md：确认、作废和更正优先规则\n\n交付：\n- /tmp_workspace/results/voucher_match.xlsx：逐笔匹配与状态\n- /tmp_workspace/results/adjustment_proposal.json：待审批调账\n- /tmp_workspace/results/visual_evidence.json：图片区域与依据\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。\n- 必须读取所给原始图片并说明图像区域与判断关系；输入不提供答案型OCR文本或隐藏答案。",
+      "prompt_draft": "请依据扫描凭据的实际视觉状态与账目逐笔核对，交付可复核的原生核对底稿和待审批调账建议，保留未知，不修改原账。\n\n只读取/tmp_workspace/policy.md、/tmp_workspace/ledger.csv和/tmp_workspace/vouchers/voucher_01.png至voucher_12.png。共12张原始PNG、18条账目，全部组织、编号、日期、金额和印记为合成练习，无真实报销、付款或审批效力。必须实际查看原图；OCR文本、文件名、相近金额或页上预印词语不能代替图像判断。voucher_03.png与voucher_04.png确为字节相同副本：取得两文件并核实同SHA后，可复用同一次实际像素观察，不强制12次重复图像工具调用；12个源文件仍必须全部可取得、可定位并逐图记录，不得只按文件名推测内容或状态。按policy.md的P1–P6执行，不增加汇率、税费、科目或真实业务操作。\n\n本轮只核对业务日期2026-09-01至2026-09-30（含首尾）、CNY、expense且posted的行。其它行仍保留并标排除，不参与首笔或重复处理。唯一经济键为(voucher_no,counterparty_id,business_date,currency,direction)，名称不能替代编码，O/0、I/1和其它相似字符保留原串，不猜配。以状态确认三格中核验章的中心落格判断有效/作废/待核；一般复核不是状态章。同键有明确作废即作废优先，各适用posted行按自身原额冲回，不再叠加重复冲销。\n\n只有未被划销且位于“更正复核”格内的独立复核章才批准手写更正；划线、一般复核格章或交叉划销章不授权新值。按P4判断副本的获批更正、冲突和金额未决；不能把无批准的手写改动退回打印原值冒充确认。已确认组只支持一个经济事项，适用posted行按posted_at实际时点、再entry_id升序选首笔，不按CSV行序或最接近凭据金额选。首笔keep或correct_amount，其余reverse_duplicate；待核或无完整键凭据用hold。未入账已确认组才可create；未入账待核组单列，不能凭打印额补账。\n\n全部新交付写/tmp_workspace/results，每份不超过5MiB，提交以下三份实际文件：\n\n1. voucher_match.xlsx：自包含、可编辑原生工作簿，无宏或外部数据链接。提供可见的一行语义表头，表头可用下列英文键或清楚对应的中文别名；Sheet名称、坐标、行列顺序、辅助列以及分表/合表均不限。各对象唯一，不能用隐藏结果代替可读表。完整正确的静态核算表或能实际重算的公式均接受，不要求动态参数模型或指定公式数量。\n- 逐图images表，12图各一行：file, voucher_no, counterparty_id, counterparty_name, business_date, currency, direction, printed_amount, has_handwritten_correction, handwritten_amount, status_selection, approval_location, approval_crossed_out, correction_status。\n- 逐笔ledger核对表，原18条entry_id各一行：entry_id, voucher_no, counterparty_id, business_date, currency, direction, ledger_amount, scope_status, match_status, canonical_entry_id, action, target_amount, proposed_delta, source_files, reason。\n- 经济组group表，完整五字段键各一行：voucher_no, counterparty_id, business_date, currency, direction, state, effective_amount, canonical_entry_id, source_files, reason。\n- 汇总summary表，key/value两列或明确中文；至少包含：eligible_book_amount, proposed_delta_sum, book_amount_after_proposals, unresolved_book_amount, unresolved_entry_count, proposal_count, unbooked_pending_group_count。\n- 完整保留原ledger全部18行及原字段，可单独源表或与核对表合并：entry_id, voucher_no, counterparty_id, counterparty_name, business_date, currency, direction, amount, book_status, posted_at。保留原amount；ledger_amount是核对表中的原账金额，不能用目标值覆盖。\n\nstatus_selection用valid/void/pending/unknown；approval_location用correction/general/unknown；correction_status用none/approved/unapproved/unknown；direction用expense表示费用，允许清楚等价中文。group.state用confirmed/void/pending。scope_status用eligible/excluded_period/excluded_currency/excluded_status或明确等价；match_status应区分已确认匹配、作废匹配、待核匹配、无完整键凭据和范围排除，命名可等价。action用keep/correct_amount/reverse_duplicate/reverse_void/hold/excluded；新增动作在建议JSON中用create。\n\n金额用实际数值或清楚的数字串，到分表达，真实0不能当空。无手写金额和未知值为null；Excel可用空单元格或明确null/未知标记，但须与0区分。hold/excluded的target_amount与proposed_delta必须未知/不适用，不填0。pending组effective_amount为null；void组effective_amount可为null或0，均表示不确认费用，但每笔reverse_void的目标必须0、差额为负原额。confirmed组实际0仍为有效金额。source_files列可用JSON数组或清楚分隔的真实相对路径。被排除行可附同键图作审计引用，不能因此称为本轮财务匹配或列金额动作。\n\n2. adjustment_proposal.json：UTF-8 JSON对象，顶层包含approval_required: true、approval_status: \"pending\"、applied: false，以及proposals、pending_items、summary。\n- proposals只列correct_amount、reverse_duplicate、reverse_void及create。每项含action、entry_id（create为null）、key（上述完整五字段对象）、delta_amount、target_amount、source_files（数组）、reason，以及每项approval_required: true、approval_status: \"pending\"、applied: false。原账动作唯一绑定entry_id；create的目标和差额均为有效新增金额。keep、hold、excluded不制造金额建议。\n- pending_items分别列每笔ledger_hold和每个unbooked_pending组；每项用kind区分ledger_hold/unbooked_pending（type为同义字段可接受），含entry_id（未入账为null）、完整五字段key、source_files和reason。无匹配凭据时source_files可为空数组；不能虚构来源或将相似键认作匹配。\n- summary至少包含上述七项汇总，数值与XLSX一致。金额可用JSON数字或数字串，未知用真正null；记录顺序不限。明确说明book_amount_after_proposals只是全部已列建议假设获批后的账面测算，包含未建议变动的待核账面保留额，不等于最终确认费用或已核清净额。尚未入账的待核凭据另计，不以0宣称已清。\n\n3. visual_evidence.json：UTF-8 JSON对象，顶层images数组完整覆盖12图。每项含file、sha256（原PNG字节的SHA-256）、width、height和observations数组。每条observation含feature、bbox:[x0,y0,x1,y1]、coordinate_system（pixel或normalized）、observation（实际看到什么及如何支持判断）。左上为原点；pixel用原图像素，normalized用0至1。\n每图必须覆盖identity、date_currency_direction、amount、status_context四类feature；有手写更正的图还必须有local_review。可按同一feature给多个局部框。identity须支持编号和往来方绑定；amount覆盖原额、手写值及划线；status_context须连同相应有效/作废/待核标签与格边界，足以判断章中心落格；local_review须连同更正复核/一般复核标签及边界，支持章的位置和是否划销。接受真实支持结论的不同合理区域，不能只框一个无法判断绑定栏位的章、给整页无信息矩形或无关位置。观察文字须与原图和XLSX实际读数一致，不从账面金额补猜图上值。\n\n保存前核对三文件的经济键、原始字段、逐笔排序、动作、金额、来源及待核项一致。输入保持原字节且只读，不覆盖、删除或实改ledger.csv；所有建议等待审批且未应用。离线完成，不发消息、不连接真实账号或付费接口，不付款、不执行真实调账。不虚构已查看图片、已验证、专家意见或审批结果。",
       "inputs": [
         {
           "path": "vouchers/",
@@ -11589,17 +11589,28 @@
         "自动实改原账"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "REVIEWED_VISUAL_SOURCE_DUAL_MATH_NATIVE_REFERENCE_AND_RULE_RUNTIME_VERIFIED",
         "synthetic_seed": 2026102626,
-        "construction": "双人标注编号、视觉作废/更正状态和对应账目，以独立事件账核算建议；GT故意让OCR正文相同但印章状态不同，检验视觉状态而非文本背诵。",
+        "construction": "12张原始PNG与18账目先行，用户授权两模型各先图后账独立标注；12图原始字段与18逐笔建议一致，保留作废组0/null等表示差异。以审核观察作源，Decimal事件账与SQLite整数分/窗口函数721项一致，并核两标注422项。9经济组、7待审批建议、4待核账目及1未入账待核组；原生参考702项、最终47控制、12图SDK原字节及正式MD独立ZIP自动Worker通过。非人工专家、无正式候选语义分或Harness成绩。",
         "private_files": [
           "expected.json",
+          "annotation_status.json",
+          "annotation_reconciliation.json",
+          "model_annotations",
+          "visual_regions.json",
+          "business_model.py",
+          "independent_sql_model.py",
+          "independent_validation.json",
           "business_oracle.json",
           "counterexamples.json",
           "artifact_contract.json",
           "protected_sha256.json",
           "evidence_requirements.json",
-          "visual_regions.json"
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "authoring_validation.json",
+          "reference_provenance.json",
+          "author_reference_model_review.json"
         ],
         "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
         "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
@@ -11618,7 +11629,7 @@
               "data_processing"
             ],
             "criterion": "依据凭据视觉状态与账目逐笔核对，区分作废、重复、金额更正和未匹配，交付调账建议，不修改原账。",
-            "oracle_reference": "gt/expected.json + gt/business_oracle.json"
+            "oracle_reference": "gt/expected.json + gt/annotation_reconciliation.json + gt/runtime_contract.json"
           },
           {
             "key": "boundary_cases",
@@ -11627,7 +11638,7 @@
               "reasoning_planning"
             ],
             "criterion": "逐项识别并正确处理：忽视作废印章；相似编号错配；自动实改原账。以独立反例验证，不只检索关键词。",
-            "oracle_reference": "gt/counterexamples.json"
+            "oracle_reference": "gt/expected.json + gt/annotation_reconciliation.json + gt/runtime_contract.json"
           },
           {
             "key": "delivery_integrity",
@@ -11636,7 +11647,7 @@
               "verification_delivery"
             ],
             "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
-            "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
+            "oracle_reference": "gt/expected.json + gt/annotation_reconciliation.json + gt/runtime_contract.json"
           },
           {
             "key": "evidence_binding",
@@ -11645,10 +11656,10 @@
               "verification_delivery"
             ],
             "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
-            "oracle_reference": "gt/evidence_requirements.json"
+            "oracle_reference": "gt/expected.json + gt/annotation_reconciliation.json + gt/runtime_contract.json"
           }
         ],
-        "rule_aggregation": "返回各检查点及按上列权重计算的overall_score；overall_score不重复映射能力；正式落题前核对当前规则Worker消费契约。",
+        "rule_aggregation": "外层自动.75/语义.25，自动内部.55/.25/.15/.05。业务为12图.25/18账.35/组状态.10/核心汇总.05/建议与未决清单.25，关键边界8组宏平均。几何仅核SHA/尺寸/对应窗口与非整页区域，不当作实际章关系理解。正式语义分/混合总分尚无；独立模型作者参考审查PASS不冒称Judge成绩。",
         "llm_rubric": [
           {
             "key": "decision_grounding",
@@ -11763,10 +11774,16 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "two image-first source model annotations, author native reference, detached image SDK data and formal-MD automatic Worker",
+        "semantic_protocol": "rubric requires same-SHA original images and native candidate artifacts",
+        "independent_candidate_semantic_score": null,
+        "author_reference_model_review": "PASS, human_expert=false, not formal semantic score",
+        "four_harness_calibration": false,
+        "evidence": "evidence/h026-reviewed-authoring-20261028.json"
       },
       "dependencies": {
         "execution": [
@@ -11775,10 +11792,9 @@
           "可读取实际PNG/JPEG的图片理解链路，允许Harness辅助模型，不要求主模型原生支持图像。"
         ],
         "scoring": [
-          "锁定的General规则Worker和可解析v2 Rubric的语义Judge；独立只读评分材料。",
-          "openpyxl>=3.1或等价原生表格读写能力",
-          "固定版本LibreOffice或等价已验证引擎实际重算；对公式题运行参数扰动并读取重算结果。",
-          "取得原始图像、区域标注和允许误差，语义Judge能够查看相同图像。"
+          "锁定General Python自动Worker与独立语义Judge；自动与语义组件分开留证，不以自动1.0补语义成绩。",
+          "core0.15.2 / score-general-e2e0.23.2或兼容入口，固定Office清缓存重算原生XLSX；候选可交完整静态表，不要求参数模型。",
+          "取得同SHA12原图（03/04同字节可复用像素观察）、Pillow或等价已验证解码器及足够图片预算；实际布局/章关系由语义Judge看原图。"
         ],
         "skills": [],
         "env": [],
@@ -11818,6 +11834,9 @@
               "role": "candidate_deliverable"
             }
           ]
+        },
+        "scoring_runtime": {
+          "office": true
         }
       },
       "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"

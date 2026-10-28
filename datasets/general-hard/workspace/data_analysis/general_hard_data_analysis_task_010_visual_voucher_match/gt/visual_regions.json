@@ -1,0 +1,813 @@
+{
+  "schema_version": "h026-reviewed-visual-regions/v1",
+  "status": "approved",
+  "human_expert_review": false,
+  "images": {
+    "vouchers/voucher_01.png": {
+      "sha256": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_02.png": {
+      "sha256": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_03.png": {
+      "sha256": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_04.png": {
+      "sha256": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_05.png": {
+      "sha256": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_06.png": {
+      "sha256": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_07.png": {
+      "sha256": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_08.png": {
+      "sha256": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_09.png": {
+      "sha256": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_10.png": {
+      "sha256": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_11.png": {
+      "sha256": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+      "width": 1400,
+      "height": 1000
+    },
+    "vouchers/voucher_12.png": {
+      "sha256": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf",
+      "width": 1400,
+      "height": 1000
+    }
+  },
+  "regions": [
+    {
+      "file": "vouchers/voucher_01.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260910-018；往来方编码CP-001，名称青禾示例服务。",
+          "observation_b": "凭据编号NF-260910-018；往来方编码CP-001，名称青禾示例服务。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-10；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-10；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额1280.00；手写更正栏为空。",
+          "observation_b": "原始金额1280.00；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_02.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260910-018；往来方编码CP-001，名称青禾示例服务。",
+          "observation_b": "凭据编号NF-260910-018；往来方编码CP-001，名称青禾示例服务。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-10；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-10；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额1280.00；手写更正栏为空。",
+          "observation_b": "原始金额1280.00；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在作废格（横向约990至1160）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(1075, 235)，唯一落在作废格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_03.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260912-004；往来方编码CP-002，名称澄星示例供应。",
+          "observation_b": "凭据编号NF-260912-004；往来方编码CP-002，名称澄星示例供应。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-12；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-12；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额860.50；手写更正栏为空。",
+          "observation_b": "原始金额860.50；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_04.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260912-004；往来方编码CP-002，名称澄星示例供应。",
+          "observation_b": "凭据编号NF-260912-004；往来方编码CP-002，名称澄星示例供应。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-12；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-12；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额860.50；手写更正栏为空。",
+          "observation_b": "原始金额860.50；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_05.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260914-027；往来方编码CP-003，名称溪桥示例设备。",
+          "observation_b": "凭据编号NF-260914-027；往来方编码CP-003，名称溪桥示例设备。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-14；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-14；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额2400.00有两道蓝色划线（约x284至749，y514至530）；其下方手写2140.00，均可读。",
+          "observation_b": "原始金额2400.00；原值有双蓝线划过；下方手写金额2140.00。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于更正复核格（约x805至1055，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(930,795)，在更正复核格内且无交叉划销，批准本图手写更正。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_06.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260914-027；往来方编码CP-003，名称溪桥示例设备。",
+          "observation_b": "凭据编号NF-260914-027；往来方编码CP-003，名称溪桥示例设备。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-14；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-14；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额2400.00有两道蓝色划线（约x284至749，y514至530）；其下方手写2140.00，均可读。",
+          "observation_b": "原始金额2400.00；原值有双蓝线划过；下方手写金额2140.00。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_07.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260916-108；往来方编码CP-004，名称远杉示例用品。",
+          "observation_b": "凭据编号NF-260916-108；往来方编码CP-004，名称远杉示例用品。后缀数字0带斜线。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-16；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-16；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额510.20；手写更正栏为空。",
+          "observation_b": "原始金额510.20；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_08.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260916-1O8；往来方编码CP-004，名称远杉示例用品。",
+          "observation_b": "凭据编号NF-260916-1O8；往来方编码CP-004，名称远杉示例用品。后缀中间大写O无内斜线，与数字0区别保留。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-16；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-16；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额510.20；手写更正栏为空。",
+          "observation_b": "原始金额510.20；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_09.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260918-036；往来方编码CP-005，名称明川示例支持。",
+          "observation_b": "凭据编号NF-260918-036；往来方编码CP-005，名称明川示例支持。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-18；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-18；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额780.00；手写更正栏为空。",
+          "observation_b": "原始金额780.00；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在待核格（横向约1160至1330）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(1245, 235)，唯一落在待核格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_10.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260920-052；往来方编码CP-006，名称安桐示例耗材。",
+          "observation_b": "凭据编号NF-260920-052；往来方编码CP-006，名称安桐示例耗材。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-20；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-20；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额0.00；手写更正栏为空。",
+          "observation_b": "原始金额0.00；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_11.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260922-062；往来方编码CP-007，名称泉屿示例租赁。",
+          "observation_b": "凭据编号NF-260922-062；往来方编码CP-007，名称泉屿示例租赁。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-22；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-22；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额460.00；手写更正栏为空。",
+          "observation_b": "原始金额460.00；手写更正一行空白，无划线。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于一般复核格（约x1075至1325，y705至860）；章未见划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    },
+    {
+      "file": "vouchers/voucher_12.png",
+      "coordinate_system": "pixel",
+      "features": [
+        {
+          "feature": "identity",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation_a": "凭据编号NF-260924-080；往来方编码CP-013，名称启明示例物流。",
+          "observation_b": "凭据编号NF-260924-080；往来方编码CP-013，名称启明示例物流。"
+        },
+        {
+          "feature": "date_currency_direction",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation_a": "业务日期2026-09-24；币种CNY；方向费用（expense）。",
+          "observation_b": "业务日期2026-09-24；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "feature": "amount",
+          "bbox": [
+            65,
+            465,
+            810,
+            640
+          ],
+          "observation_a": "原始金额1020.00有两道蓝色划线（约x284至749，y514至530）；其下方手写1200.00，均可读。",
+          "observation_b": "原始金额1020.00；原值有双蓝线划过；下方手写金额1200.00。"
+        },
+        {
+          "feature": "status_context",
+          "bbox": [
+            812,
+            111,
+            1335,
+            315
+          ],
+          "observation_a": "覆盖状态确认标签、有效/作废/待核三格及完整边界。唯一核验双圈章中心在有效格（横向约820至990）；不是根据预印文字选状态。",
+          "observation_b": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "feature": "local_review",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation_a": "覆盖更正复核及一般复核标签和两格边界。复核章位于更正复核格（约x805至1055，y705至860）；章被两条交叉线明显划销。另一复核格为空。",
+          "observation_b": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(930,795)，在更正复核格内；两条粗交叉线穿过并划销该章，不能批准手写更正。"
+        }
+      ],
+      "basis": "Overlapping original-pixel regions independently marked by two readers, checked by author; not construction geometry."
+    }
+  ]
+}

@@ -319,3 +319,17 @@ general_hard_data_analysis_task_009_capacity_optimization:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_data_analysis_task_010_visual_voucher_match:
+  automated.business_correctness:
+    - data_processing
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - retrieval_verification
+  llm_judge.decision_grounding:
+    - data_processing
+    - reasoning_planning
+  llm_judge.usable_handoff:
+    - verification_delivery

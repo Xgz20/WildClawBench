@@ -1,9 +1,9 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 27
+  active_task_count: 28
   category_task_counts:
     office_documents: 16
-    data_analysis: 9
+    data_analysis: 10
     research_verification: 0
     file_operations: 0
     software_engineering: 2
@@ -806,3 +806,18 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
+  - task_id: general_hard_data_analysis_task_010_visual_voucher_match
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: true
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

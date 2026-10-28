@@ -1,0 +1,78 @@
+{
+  "schema_version": "h026-review-gate/v1",
+  "status": "APPROVED_AFTER_TWO_INDEPENDENT_MODEL_READS",
+  "required_reviewers": 2,
+  "received_reviewers": 2,
+  "reviewers_dispatched": 2,
+  "delegation_authorized": true,
+  "human_expert_review": false,
+  "packets": [
+    {
+      "reviewer": "a",
+      "packet": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/independent-review/a",
+      "readme_sha256": "9e293e0f82531d720d32f29ae1ff5b9d537bfdc2da4300e32065ac45015fb233",
+      "manifest_sha256": "434f36248784972fbba953955420efded025a58539d2272808eaef1a1819f394",
+      "input_files": 14
+    },
+    {
+      "reviewer": "b",
+      "packet": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/independent-review/b",
+      "readme_sha256": "86151e4f318412d018f1835150511c6d77fed714413ca5e893c06e7569f1d139",
+      "manifest_sha256": "434f36248784972fbba953955420efded025a58539d2272808eaef1a1819f394",
+      "input_files": 14
+    }
+  ],
+  "limit": "H007/H012/H014/H022 authorizations are not reused. Author construction/geometry are not approved independent visual GT.",
+  "authorization_source": "direct_user_reply_in_current_thread",
+  "authorization_quote": "选择1，后面此会话中再涉及子代理操作，都按照推荐授权",
+  "authorization_scope": "H026 two independent model annotators including necessary revision checks; subsequent subagent operations in this conversation follow recommended authorization",
+  "agents": [
+    "/root/h026_annotator_a",
+    "/root/h026_annotator_b"
+  ],
+  "reviewers": [
+    {
+      "reviewer": "a",
+      "agent": "/root/h026_annotator_a",
+      "fork_turns": "none",
+      "review_type": "independent_model_annotation",
+      "human_expert": false,
+      "image_first_then_ledger": true,
+      "actual_images_read": 12,
+      "ledger_rows_read": 18,
+      "records": [
+        {
+          "path": "model_annotations/image_annotations_a.json",
+          "sha256": "eb0abe3a00b7a885506d2d6171ad7d41c416ace600d5279a57339258afcd038f"
+        },
+        {
+          "path": "model_annotations/ledger_annotations_a.json",
+          "sha256": "05ed5b89800eaf630eb41ab180fdb9390a94244a5a9d3b50af9b075dbf882831"
+        }
+      ]
+    },
+    {
+      "reviewer": "b",
+      "agent": "/root/h026_annotator_b",
+      "fork_turns": "none",
+      "review_type": "independent_model_annotation",
+      "human_expert": false,
+      "image_first_then_ledger": true,
+      "actual_images_read": 12,
+      "ledger_rows_read": 18,
+      "records": [
+        {
+          "path": "model_annotations/image_annotations_b.json",
+          "sha256": "432be41f2245b201dd40fce41c634894ff8f7f7a901a62230e41cd42b9d643a0"
+        },
+        {
+          "path": "model_annotations/ledger_annotations_b.json",
+          "sha256": "5a97386addea2cd14c54cb438ae6267743a356c812fae15450f174b9eb681d5c"
+        }
+      ]
+    }
+  ],
+  "open_annotation_issues": [],
+  "reconciliation_sha256": "eab0f94c285533c9123954cfaf979c0c686dffb1f0b443ef801c52bf900fcf15",
+  "visual_regions_sha256": "9e9080becc5c646638614f54686db103d4bf13873d08daf828c32627f732079c"
+}

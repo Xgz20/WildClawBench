@@ -1,0 +1,50 @@
+{
+  "status": "PASS_SOURCE_DUAL_PATH_AND_TWO_BLIND_ANNOTATIONS",
+  "source_sha256": {
+    "ledger.csv": "260b03a3dfa49ce38d596c4b28313bb0e48cd61359e2323583d65938329c68c0",
+    "policy.md": "0d0151d5f228d9d3462a44381cfb0d97328583421f90d62879a0dea66409f070",
+    "vouchers/voucher_01.png": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+    "vouchers/voucher_02.png": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+    "vouchers/voucher_03.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "vouchers/voucher_04.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "vouchers/voucher_05.png": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+    "vouchers/voucher_06.png": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+    "vouchers/voucher_07.png": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+    "vouchers/voucher_08.png": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+    "vouchers/voucher_09.png": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+    "vouchers/voucher_10.png": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+    "vouchers/voucher_11.png": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+    "vouchers/voucher_12.png": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf"
+  },
+  "methods": [
+    "Decimal grouped state precedence and ordered ledger events",
+    "SQLite integer-cent aggregation/joins/window-first-entry"
+  ],
+  "source_math_checks": 721,
+  "review_financial_checks": 422,
+  "reviewers": 2,
+  "images_each": 12,
+  "ledger_rows_each": 18,
+  "human_expert_review": false,
+  "candidate_used_to_construct_GT": false,
+  "source_ledger_first_not_used": true,
+  "summary": {
+    "image_count": 12,
+    "voucher_group_count": 9,
+    "ledger_row_count": 18,
+    "eligible_entry_count": 14,
+    "excluded_entry_count": 4,
+    "eligible_book_amount": "12946.59",
+    "proposed_delta_sum": "-5370.49",
+    "book_amount_after_proposals": "7576.10",
+    "unresolved_book_amount": "3095.20",
+    "unresolved_entry_count": 4,
+    "proposal_count": 7,
+    "unbooked_pending_group_count": 1,
+    "confirmed_voucher_target_sum": "4480.90",
+    "fully_reconciled": false,
+    "applied": false,
+    "approval_required": true
+  },
+  "limits": "Model observations may share correlated errors; no human expert or real Harness/model score."
+}

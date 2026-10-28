@@ -1,0 +1,27 @@
+{
+  "schema_version": "h026-counterexamples/v1",
+  "negative_mechanisms": [
+    "void overrides effective copy and separately reverses every eligible original line",
+    "duplicate scans support one economic event; unbooked confirmed event creates one proposal",
+    "local correction stamp location matters; general review does not approve correction",
+    "crossed-out correction stamp leaves amount pending",
+    "0 and O and B in identifiers remain distinct; no fuzzy matching",
+    "same display name never substitutes CP-013 for CP-031",
+    "pending groups keep both current entries with null targets and deltas",
+    "real zero stays numeric and earliest posted time selects L014 rather than lower entry_id L013",
+    "draft/reversed/USD/out-of-period rows are excluded before canonical selection",
+    "L006 remains first despite L007 matching the valid amount",
+    "pending items include4 ledger holds plus1 unbooked pending group",
+    "approval remains required/pending and applied=false"
+  ],
+  "positive_equivalences": [
+    "static workbook",
+    "Chinese headers",
+    "renamed/reordered/shifted sheets and columns",
+    "numeric JSON amounts",
+    "normalized equivalent boxes",
+    "void amount null",
+    "audit citations on same-key excluded rows"
+  ],
+  "semantic_only_counterexample": "Correct source hashes and mechanically valid boxes with meaningless or contradictory observations may pass geometry; the .25 semantic Judge must assess actual image relationships."
+}
