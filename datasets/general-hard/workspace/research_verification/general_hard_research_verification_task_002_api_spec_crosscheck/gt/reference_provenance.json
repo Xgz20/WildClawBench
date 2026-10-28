@@ -1,0 +1,66 @@
+{
+  "schema_version": "h028-reference-provenance/v1",
+  "origin": "Author-only reference assembled after independent official source-first truth; not a Harness result.",
+  "version": "v2",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "human_expert": false,
+  "source_reviews": [
+    {
+      "model": "source-review-a",
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-a/review.json",
+      "sha256": "73cc007a9a41e207cab8e146285fb3788d3a644a80fc80e3e21a206dec918ee6"
+    },
+    {
+      "model": "source-review-b",
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-b/review.json",
+      "sha256": "e7c71f5b8b69ae61d8fa9cf6f31eced8e6322568910c89ff299dd6bc36d349d9"
+    }
+  ],
+  "dual_local_math": {
+    "path": "signature_math_verification.json",
+    "sha256": "316ea6e959444dad7cc0e2d1eb9c0cd7278ea66c2c831255cb43a026f5eb57ef",
+    "vectors": 3,
+    "checks": 15
+  },
+  "native_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/native-review-v2/report.json",
+    "sha256": "fe45917a3620717c0ec7e7b7bc3c780bb28d6d154f0a389e8498f39b75cacd97",
+    "status": "PASS",
+    "summary": {
+      "fields_checked": 38,
+      "typed_leaves_checked": 101,
+      "leaf_mismatches": 0,
+      "unknown_null_leaves": 12,
+      "boolean_leaves": 10,
+      "signature_vectors": 3,
+      "short_quotes": 15,
+      "quote_characters": 136,
+      "legacy_revisions": 12,
+      "issues": 0
+    },
+    "mechanical_checks_passed": 169,
+    "read_only_openpyxl_and_zip_XML": true,
+    "grader_scores_used": false,
+    "independence_boundary": "Source-B official acquisition and source review were completed before reading GT. This same model subsequently assembled sources/MD with authorized frozen-GT access. Current verification reads XLSX through an independent bundled openpyxl/ZIP/XML engine; it is not a new blind review of the authored prose or human expert certification. This agent did not author/edit the XLSX."
+  },
+  "visual_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/reference-visual-review.json",
+    "sha256": "6c04e924e0d13f544aaecd532c71ca36e6339c8d890de03d8ce586de5a30bc75",
+    "all_three_sheets_reviewed": true,
+    "v1_defect_preserved": true,
+    "v2_corrected_views": 2,
+    "unchanged_views_reused": 3
+  },
+  "artifacts": {
+    "api_contract.xlsx": "2b2a7693e20add18674a34818b64f712497be9387b5400e4d1b62f796fca42a6",
+    "sources.json": "669dda9f0e5ddc0f5ab8e99c4bd90eafc5281f471c287de57c1d28ffc88f7df1",
+    "integration_revised.md": "72284a04774138792d730e52224d69fb08c6c918b255a4c18f279320e48c3544"
+  },
+  "formal_semantic_score": null,
+  "hybrid_total_score": null,
+  "actual_Harness_run": false,
+  "commercial_source_policy": "No full official HTML or long quoted review copied here; necessary short quotations total136 characters. Original captures retained and SHA-bound in external evidence.",
+  "date_display_precision": "XLSX UTC milliseconds; sources ledger retains original microseconds (difference0.000426seconds)."
+}

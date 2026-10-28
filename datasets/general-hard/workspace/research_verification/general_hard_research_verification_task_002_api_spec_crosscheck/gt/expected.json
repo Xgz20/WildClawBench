@@ -1,0 +1,465 @@
+{
+  "schema_version": "h028-source-first-protocol-oracle/v1",
+  "status": "AUTHOR_RECONCILED_TWO_INDEPENDENT_SOURCE_REVIEWS_AND_DUAL_LOCAL_MATH",
+  "source_snapshot": {
+    "schema_version": "h028-main-article-text/v1",
+    "selector": "main.page > .content__default",
+    "normalization": "HTMLParser convert_charrefs; block/BR boundaries; ignore script/style/noscript; NFKC; collapse whitespace; preserve case",
+    "source_raw_sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+    "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5",
+    "main_text_characters": 8951,
+    "matches": 1,
+    "complete": true
+  },
+  "facts": {
+    "service.product": {
+      "topic_id": "T01",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "rtasr_standard_websocket",
+      "qualification": "正文标题为标准版；页首大模型推荐链接不替换目标产品。"
+    },
+    "connection.endpoint": {
+      "topic_id": "T01",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "recommended": "wss://rtasr.xfyun.cn/v1/ws",
+        "also_documented": "ws://rtasr.xfyun.cn/v1/ws"
+      },
+      "qualification": "wss强烈推荐；ws也被文档支持。接受明确相同host/path的ws[s]模板和wss推荐。"
+    },
+    "connection.host_policy": {
+      "topic_id": "T01",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "use_domain_not_fixed_server_ip",
+      "qualification": ""
+    },
+    "document.version_state": {
+      "topic_id": "T01",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "version": null,
+        "publication_date": null,
+        "revision_date": null
+      },
+      "qualification": "正文未声明。抓取时间、HTTP日期、静态资源日期、/v1/与采集器版本均不是正式文档版本/日期。"
+    },
+    "handshake.required_query": {
+      "topic_id": "T02",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record_set",
+      "value": [
+        {
+          "name": "appid",
+          "type": "string"
+        },
+        {
+          "name": "ts",
+          "type": "string"
+        },
+        {
+          "name": "signa",
+          "type": "string"
+        }
+      ],
+      "qualification": "集合无序，name大小写有协议意义；appid不能变为appId。"
+    },
+    "auth.api_key_placement": {
+      "topic_id": "T02",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "enum",
+      "value": "signing_secret_not_documented_query_parameter",
+      "qualification": "文档示例key不得作为真实配置；仅使用本题合成输入。"
+    },
+    "query.encoding": {
+      "topic_id": "T02",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "urlencode_each_key_and_value",
+      "qualification": "显式格式要求优先于URL示例裸等号。一次编码由向量另验；没有排序query的官方要求。"
+    },
+    "signature.base_string": {
+      "topic_id": "T03",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "ordered_terms": [
+          "appid",
+          "ts"
+        ],
+        "separator": ""
+      },
+      "qualification": ""
+    },
+    "signature.md5_representation": {
+      "topic_id": "T03",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "32_lowercase_hex_text",
+      "qualification": "官方示例为小写32hex；UTF-8文本用作后续核算。不能扩展为已证明服务端拒绝其它大小写。"
+    },
+    "signature.hmac_inputs": {
+      "topic_id": "T03",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "algorithm": "HMAC-SHA1",
+        "key_role": "apiKey",
+        "message_role": "MD5_hex_text"
+      },
+      "qualification": "不可反置key/message，不对完整路径或排序query做该签名。"
+    },
+    "signature.final_encoding": {
+      "topic_id": "T03",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "standard_base64_of_raw_hmac_sha1_digest",
+      "qualification": "原始摘要再标准Base64是与官方示例一致的字节解释；无服务端接收验证。"
+    },
+    "timestamp.semantic": {
+      "topic_id": "T04",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "type": "string",
+        "unit": "s",
+        "origin": "unix_epoch",
+        "current": true
+      },
+      "qualification": ""
+    },
+    "timestamp.documented_window": {
+      "topic_id": "T04",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "clock_skew_seconds": null,
+        "signature_validity_seconds": null
+      },
+      "qualification": "冻结direct-WebSocket正文未给数字窗；不证明服务器不校验时间。5min白名单传播、SDK18006的30min、15s音频空闲均不可套用。"
+    },
+    "audio.format": {
+      "topic_id": "T05",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "pcm_s16le",
+      "qualification": ""
+    },
+    "audio.sample_rate": {
+      "topic_id": "T05",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "number",
+      "value": 16000,
+      "qualification": "基准Hz；16kHz等单位清楚的换算可接受。"
+    },
+    "audio.bit_depth": {
+      "topic_id": "T05",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "integer",
+      "value": 16,
+      "qualification": "bit/sample。"
+    },
+    "audio.channels": {
+      "topic_id": "T05",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "integer",
+      "value": 1,
+      "qualification": ""
+    },
+    "audio.message_type": {
+      "topic_id": "T05",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "binary",
+      "qualification": ""
+    },
+    "cadence.recommended_interval": {
+      "topic_id": "T06",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "number",
+      "value": 40,
+      "qualification": "基准ms。"
+    },
+    "cadence.recommended_chunk": {
+      "topic_id": "T06",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "integer",
+      "value": 1280,
+      "qualification": "bytes；16000*2*1*0.04=1280仅是数学一致性，不是实测。"
+    },
+    "cadence.requirement_strength": {
+      "topic_id": "T06",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "enum",
+      "value": "recommendation_not_exact_size_or_maximum",
+      "qualification": "不把40ms/1280B写成必须恰好或最大值，不虚构容差。"
+    },
+    "audio.idle_timeout": {
+      "topic_id": "T06",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "threshold_seconds": 15,
+        "consequences": [
+          "error",
+          "disconnect"
+        ]
+      },
+      "qualification": "Check only documented 15-second audio-idle threshold and error/disconnect consequences. The text says over 15 seconds, but > versus >= at the exact boundary is not a scored leaf or a measured server claim."
+    },
+    "session.duration_boundary": {
+      "topic_id": "T06",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "source_claim": "theoretically_unlimited",
+        "finite_total_seconds": null
+      },
+      "qualification": "理论不限不等于实测SLA、永不超时或保证不限。"
+    },
+    "end.message_type": {
+      "topic_id": "T07",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "binary",
+      "qualification": ""
+    },
+    "end.payload": {
+      "topic_id": "T07",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "json_object",
+      "value": {
+        "end": true
+      },
+      "qualification": "按JSON语义比较，不要求空白完全一致；true是bool。"
+    },
+    "response.message_type": {
+      "topic_id": "T07",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "text",
+      "qualification": ""
+    },
+    "response.envelope_types": {
+      "topic_id": "T07",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "action": "string",
+        "code": "string",
+        "data": "string",
+        "desc": "string",
+        "sid": "string"
+      },
+      "qualification": "这是文档类型声明；code类型不可写成integer。"
+    },
+    "response.data_parse": {
+      "topic_id": "T07",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "enum",
+      "value": "parse_outer_json_then_result_data_json_string",
+      "qualification": "针对有结果载荷的data；started/error可为空串，不要求无条件解析空串。"
+    },
+    "response.result_type": {
+      "topic_id": "T07",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "final": 0,
+        "intermediate": 1
+      },
+      "qualification": "接受字符串0/1含义映射；不推定完整增量合并算法。"
+    },
+    "optional.lang": {
+      "topic_id": "T08",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "required": false,
+        "default": "cn",
+        "additional_languages_require_authorization": true,
+        "unauthorized_code": "10110"
+      },
+      "qualification": "接受中文/cn与原文相同口径；不可套用大模型的免切能力。"
+    },
+    "optional.trans_strategy": {
+      "topic_id": "T08",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "required": false,
+        "recommended": 2,
+        "documented_default": null,
+        "translation_requires_console_enable": true
+      },
+      "qualification": "建议2不是默认2；transType默认normal不可错置。"
+    },
+    "optional.punc": {
+      "topic_id": "T08",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "default_behavior": "return_punctuation",
+        "filter_value": "0",
+        "documented_numeric_default": null
+      },
+      "qualification": "0是过滤值；未知数值默认不能填0。"
+    },
+    "optional.role_type": {
+      "topic_id": "T08",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "default_behavior": "disabled",
+        "enable_value": 2,
+        "documented_numeric_default": null
+      },
+      "qualification": "默认不开启不是文档明示数字0；不考察rl全部增量角色规则。"
+    },
+    "errors.selected_map": {
+      "topic_id": "T09",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record_set",
+      "value": [
+        {
+          "code": "10105",
+          "meaning": "no_permission",
+          "action": "check_authorization_apiKey_ip_ts"
+        },
+        {
+          "code": "10106",
+          "meaning": "invalid_parameter",
+          "action": "check_required_parameters_format_encoding"
+        },
+        {
+          "code": "10110",
+          "meaning": "no_license",
+          "action": "check_parameter_range_or_requirements"
+        },
+        {
+          "code": "10800",
+          "meaning": "over_authorized_connections",
+          "action": "check_authorized_connection_count"
+        },
+        {
+          "code": "16003",
+          "meaning": "basic_component_error",
+          "action": "retry_or_contact_provider"
+        },
+        {
+          "code": "37005",
+          "meaning": "audio_idle_over_15s",
+          "action": "check_audio_send_gap_15s"
+        }
+      ],
+      "qualification": "仅6个指定码纳入分母；中文明确含义接受。10110保留表中泛化处理，不改成独占签名诊断。"
+    },
+    "errors.10110_diagnostic": {
+      "topic_id": "T09",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "unique_signature_cause": false,
+        "table_meaning": "no_license",
+        "handshake_example": "illegal_signa",
+        "faq_meaning": "no_license_or_authorization_count_full"
+      },
+      "qualification": "typed对照与自然语言排查解释分开；保留code/desc/sid和授权上下文。"
+    },
+    "retry.documented_policy": {
+      "topic_id": "T09",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "explicit_retry_codes": [
+          "16003"
+        ],
+        "max_attempts": null,
+        "backoff_seconds": null,
+        "resume_or_replay_guarantee": null
+      },
+      "qualification": "仅指冻结表明文写重试；不推定其它故障绝对禁止重试。客户退避策略须另标client_policy。"
+    },
+    "ip_whitelist.rules": {
+      "topic_id": "T10",
+      "primary_checkpoint": "business_correctness",
+      "value_type": "record",
+      "value": {
+        "disabled": "no_ip_check",
+        "enabled": "reject_unlisted_client_ip",
+        "ip_kind": "public_egress_ip",
+        "settings_scope": "per_appid_per_service",
+        "propagation_minutes_approx": 5
+      },
+      "qualification": "约5min是保存后的传播，不是时钟窗或精确SLA；公网IP、按应用/服务独立设置见该节完整规则。"
+    },
+    "handshake.checksum_boundary": {
+      "topic_id": "T10",
+      "primary_checkpoint": "boundary_cases",
+      "value_type": "record",
+      "value": {
+        "in_formal_table": false,
+        "mandatory": false,
+        "faq_mentions": true
+      },
+      "qualification": "仅断言正式表未列/不能据FAQ增为必填；不声称服务端必拒绝所有额外参数。"
+    }
+  },
+  "signature_inputs": [
+    {
+      "vector_id": "SIG-01",
+      "appid": "h028-demo-app",
+      "ts": "1700000000",
+      "api_key": "SYNTHETIC_NOT_A_REAL_API_KEY_H028_B"
+    },
+    {
+      "vector_id": "SIG-02",
+      "appid": "H028-SYNTHETIC-app-02",
+      "ts": "1700000001",
+      "api_key": "SYNTHETIC_NOT_A_REAL_API_KEY_H028_02"
+    },
+    {
+      "vector_id": "SIG-03",
+      "appid": "h028-synthetic-app-03",
+      "ts": "1700000010",
+      "api_key": "SYNTHETIC_NOT_A_REAL_API_KEY_H028_03"
+    }
+  ],
+  "signature_vectors": [
+    {
+      "vector_id": "SIG-01",
+      "base_string": "h028-demo-app1700000000",
+      "md5_hex": "e63c269b4a755ae1fa7a0f34529a3dce",
+      "hmac_sha1_hex": "823b4b2626737515b927b3bcdb2c2e04fceeda76",
+      "signa_base64": "gjtLJiZzdRW5J7O82ywuBPzu2nY=",
+      "signa_urlencoded": "gjtLJiZzdRW5J7O82ywuBPzu2nY%3D"
+    },
+    {
+      "vector_id": "SIG-02",
+      "base_string": "H028-SYNTHETIC-app-021700000001",
+      "md5_hex": "7bc3eb9e1c3092f8b4196f5bf8c9ca82",
+      "hmac_sha1_hex": "b689b710fbe4b1cb1c692022e49893243b31f82f",
+      "signa_base64": "tom3EPvkscscaSAi5JiTJDsx+C8=",
+      "signa_urlencoded": "tom3EPvkscscaSAi5JiTJDsx%2BC8%3D"
+    },
+    {
+      "vector_id": "SIG-03",
+      "base_string": "h028-synthetic-app-031700000010",
+      "md5_hex": "221e4e5ae5d654a64f0ff1c91295173e",
+      "hmac_sha1_hex": "98ab568ffbf28b267ed820cd0ae13fd2b48bd4a5",
+      "signa_base64": "mKtWj/vyiyZ+2CDNCuE/0rSL1KU=",
+      "signa_urlencoded": "mKtWj%2FvyiyZ%2B2CDNCuE%2F0rSL1KU%3D"
+    }
+  ],
+  "signature_method": "UTF-8(appid+ts) without separator; lowercase MD5 hexadecimal text; HMAC-SHA1 with synthetic api_key as UTF-8 key; standard Base64 of raw digest; percent-encode once.",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "human_expert": false,
+  "formal_semantic_score": null,
+  "service_acceptance_tested": false,
+  "source_scope": "Captured standard-RTASR main article; not other products/SDK licences",
+  "actual_leaf_count": 101
+}

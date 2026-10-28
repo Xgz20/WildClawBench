@@ -1,0 +1,80 @@
+{
+  "schema_version": "h028-dual-local-signature-verification/v1",
+  "status": "PASS",
+  "vectors": 3,
+  "exact_intermediate_and_output_checks": 15,
+  "checks": [
+    [
+      "SIG-01",
+      "base_string"
+    ],
+    [
+      "SIG-01",
+      "md5_hex"
+    ],
+    [
+      "SIG-01",
+      "hmac_sha1_hex"
+    ],
+    [
+      "SIG-01",
+      "signa_base64"
+    ],
+    [
+      "SIG-01",
+      "signa_urlencoded"
+    ],
+    [
+      "SIG-02",
+      "base_string"
+    ],
+    [
+      "SIG-02",
+      "md5_hex"
+    ],
+    [
+      "SIG-02",
+      "hmac_sha1_hex"
+    ],
+    [
+      "SIG-02",
+      "signa_base64"
+    ],
+    [
+      "SIG-02",
+      "signa_urlencoded"
+    ],
+    [
+      "SIG-03",
+      "base_string"
+    ],
+    [
+      "SIG-03",
+      "md5_hex"
+    ],
+    [
+      "SIG-03",
+      "hmac_sha1_hex"
+    ],
+    [
+      "SIG-03",
+      "signa_base64"
+    ],
+    [
+      "SIG-03",
+      "signa_urlencoded"
+    ]
+  ],
+  "coverage": {
+    "+": true,
+    "/": true,
+    "=": true
+  },
+  "python_results_sha256": "452b49bfbecf2614e4cfaceafe383c8e8f0b5a9ff9ecf17642e5afe639b144c4",
+  "node_results_sha256": "2445f4fa1043b3c27cb04e1595c0e63ce5b88235f9e743bc51a0ea5a89bb0032",
+  "input_file_sha256": "6872443efcbfbb2719ffecf241954cc4ab3a365734f6e6cc2c4186d075599034",
+  "source_before_reference": true,
+  "all_credentials_synthetic": true,
+  "no_network": true,
+  "server_acceptance_tested": false
+}

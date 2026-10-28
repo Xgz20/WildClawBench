@@ -1,0 +1,14 @@
+{
+  "schema_version": "h028-business-oracle/v1",
+  "source_truth": "expected.json",
+  "main_snapshot": "document_snapshot.json",
+  "two_source_reviews": "source_review_reconciliation.json",
+  "dual_signature_math": "signature_math_verification.json",
+  "known_and_unknown_records": 38,
+  "canonical_leaf_count": 101,
+  "vectors": 3,
+  "human_expert": false,
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "formal_semantic_score": null
+}

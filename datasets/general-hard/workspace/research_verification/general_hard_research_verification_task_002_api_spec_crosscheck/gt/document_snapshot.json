@@ -1,0 +1,21 @@
+{
+  "schema_version": "h028-official-document-snapshot/v1",
+  "capture_id": "xfyun-rtasr-standard-20261028",
+  "official_url": "https://www.xfyun.cn/doc/asr/rtasr/API.html",
+  "capture_date": "2026-10-28",
+  "identity": {
+    "schema_version": "h028-main-article-text/v1",
+    "selector": "main.page > .content__default",
+    "normalization": "HTMLParser convert_charrefs; block/BR boundaries; ignore script/style/noscript; NFKC; collapse whitespace; preserve case",
+    "source_raw_sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+    "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5",
+    "main_text_characters": 8951,
+    "matches": 1,
+    "complete": true
+  },
+  "page_version_label": "unknown",
+  "publication_date": "unknown",
+  "raw_and_full_review_records": "retained in immutable author evidence outside the published GT; original SHA and acquisition receipts are bound at author acceptance",
+  "fixed_scope": "The explicitly provided standard-edition API article; not the new large-model product, SDK licence timeout or other ASR APIs.",
+  "runtime_drift_policy": "Controller preflight and rule-side independent main-article identity must match this snapshot. Changed relevant document content is evaluation input drift, not candidate zero. Cosmetic shell changes are allowed when this normalized main digest remains unchanged."
+}
