@@ -1,10 +1,10 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 33
+  active_task_count: 34
   category_task_counts:
     office_documents: 16
     data_analysis: 10
-    research_verification: 4
+    research_verification: 5
     file_operations: 1
     software_engineering: 2
     planning_coordination: 0
@@ -1020,3 +1020,37 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_research_verification_task_006_paper_comparison
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-e734ef04b11c4b65
+          query_hash: e734ef04b11c4b659802c7c729bf60c9ceceaa9f631c8eaf3258526c3bb69383
+          observed_astudio_turns: 4
+          distinct_users: 1
+          distinct_sessions: 4
+          first_seen_local: '2026-10-14 21:36:25.044000'
+          last_seen_local: '2026-10-14 23:10:44.566000'
+          intent_summary: 真实文献支撑的技术综述，比较方法适用性、效果、成本和局限。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gaia
+      direct_task_copy: false
+      internal_reference_ids:
+        - astudio-search108
+      reference_benchmark_refs:
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 104
+          row: 106
+          query_hash: 3a94b7a778521315eb8a181f4a8d1f0fe1d862a72ab2cb6a7f8bd50d02c11499
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+    network:
+      mode: offline
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      retrieval_group: local_evidence

@@ -1,0 +1,9 @@
+report_id,work_id,title,version,release_date,authors,file_name,task_suite,split,language,license,origin
+BL_v1,BL,BranchLedger: State Records for Local Workflows,v1,2026-05-12,Mira Vale; Oren Pike,BL_v1.pdf,Workflow100,W1,en,CC0-1.0,original_controlled_fiction
+BL_v2,BL,BranchLedger: State Records for Local Workflows,v2,2026-09-14,Mira Vale; Oren Pike,BL_v2.pdf,Workflow100,W1,en,CC0-1.0,original_controlled_fiction
+ST_v1,ST,StateTrace: Complete-Task Accounting on a Fixed Workflow Split,v1,2026-09-18,Nela Reed; Ivo Crest,ST_v1.pdf,Workflow100,W1,en,CC0-1.0,original_controlled_fiction
+WL_v1,WL,WebLane: Action-Frame Validity and Browser Goal States,v1,2026-08-27,Sera Flint; Elan Brook,WL_v1.pdf,BrowserActions120,B2,en,CC0-1.0,original_controlled_fiction
+RP_v1,RP,ResumeProbe: Reload Events and Final Task Targets,v1,2026-09-21,Ari Lark; Niko Field,RP_v1.pdf,Workflow100,W1,en,CC0-1.0,original_controlled_fiction
+LB_v1,LB,LatencyBridge: A Registered Unit for Complete-Task Timing,v1,2026-09-22,Ena Frost; Pavo Green,LB_v1.pdf,Workflow100,W1,en,CC0-1.0,original_controlled_fiction
+SL_v1,SL,SpendLens: A Model-I/O Accounting Slice,v1,2026-09-24,Rin Alder; Uma Cove,SL_v1.pdf,Workflow100,W1,en,CC0-1.0,original_controlled_fiction
+AF_v1,AF,ArtifactFence: Package Structure and Target Predicates,v1,2026-09-25,Lio Fern; Tavi Snow,AF_v1.pdf,Doc100,D1,en,CC0-1.0,original_controlled_fiction

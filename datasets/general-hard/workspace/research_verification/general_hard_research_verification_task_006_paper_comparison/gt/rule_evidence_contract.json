@@ -1,0 +1,13 @@
+{
+  "schema_version": "h032-rule-evidence-context/v1",
+  "required_context": [
+    "GENERAL_E2E_RULE_EVIDENCE_DIR"
+  ],
+  "conditional_context": {
+    "GENERAL_E2E_OFFICE_LOCK": "Only if candidate native workbook contains formulas; engine must be frozen bundled absolute path"
+  },
+  "source_root": "private GT/source_originals, exact protected SHA; no network or candidate path fallback",
+  "output": "Only managed derived directory: original physical page projections, raw declared quote contexts, optional Office derivative and rule observations",
+  "scientific_state": "Typed machine observables plus pending semantic items; never fabricated scientific completeness or semantic/final score",
+  "unknown_and_absence": "Actual reviewed original pages may bind an absence declaration; no fabricated quote and no vacuous all([]) binding credit"
+}

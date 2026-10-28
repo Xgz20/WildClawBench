@@ -1,0 +1,1019 @@
+{
+  "schema_version": "h032-source-derived-machine-anchor-spec/v1",
+  "scope": "Frozen source-first oracle -> typed observable subanchors; no candidate/reference answer or free-text keyword truth",
+  "reviewer_kind": "model",
+  "human_expert": false,
+  "source_bindings": {
+    "expected.json": "2c92282f35d010ce78f979341060338b3d43e9ce528bd1d0ecb9514fdfdd8acf",
+    "business_oracle.json": "871b7c27b7f8ba7dd33f39de657ae3ee0cb9ec4137b0ba385c82f58d09043720",
+    "reference_source_manifest.json": "7889e97bd1ab373a2273b70832cfe053b9452f11856db87efa3769416b28987c",
+    "artifact_contract.json": "008046b9b56289cf8ba4375cdf99bc10d98d1c6a036e1adfffefbdb34b96b902",
+    "scoring_design.json": "11b32164ebbaddbc85c0db6b8f7e3e415108ac48acb686f7c092c5491ad61a6c"
+  },
+  "per_claim_subweights": {
+    "verdict_route": 0.25,
+    "observable_atoms": 0.35,
+    "conditions_and_roles": 0.2,
+    "independent_source_context": 0.2
+  },
+  "semantic_boundary": "A matching structured observable and registered source context is not proof of scientific rationale; semantic support, causal qualification and arbitrary clear prose remain independent Judge/review. Unsupported legal prose never silently scores0.",
+  "claims": [
+    {
+      "input_ref": "C01",
+      "owner": "business_correctness",
+      "routes": [
+        {
+          "verdict": "supported",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "注册W1/L1/64累计调用/最多2启动下85/100对80/100高5个百分点",
+          "semantic_boundary": "保留条件和版本；不改成5%相对提升，不追加显著性或因果。"
+        }
+      ],
+      "source_evidence_ids": [
+        "BL2-goal",
+        "BL2-budget",
+        "ST-goal",
+        "ST-config",
+        "ST-comparability"
+      ],
+      "fact_ids": [
+        "F-BL2",
+        "F-ST"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "BL_v2",
+            "quantity": "goal_pass",
+            "expected": 85,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-BL2",
+              "value_path": "goal_pass",
+              "denominator_path": "N_tasks"
+            },
+            "denominator": 100
+          },
+          {
+            "op": "number",
+            "report_id": "ST_v1",
+            "quantity": "goal_pass",
+            "expected": 80,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-ST",
+              "value_path": "goal_pass",
+              "denominator_path": "N_tasks"
+            },
+            "denominator": 100
+          },
+          {
+            "op": "number",
+            "quantity": "point_difference",
+            "expected": "5",
+            "unit": "percentage_points",
+            "source_ref": {
+              "calculation_id": "D01"
+            },
+            "rounding_digits": 2
+          }
+        ],
+        "conditions": [
+          {
+            "op": "setting",
+            "report_id": "BL_v2",
+            "quantity": "policy",
+            "expected": "L1",
+            "source_ref": {
+              "report_id": "BL_v2",
+              "configuration_key": "policy"
+            }
+          },
+          {
+            "op": "setting",
+            "report_id": "BL_v2",
+            "quantity": "tool_total_ceiling_per_task",
+            "expected": 64,
+            "source_ref": {
+              "report_id": "BL_v2",
+              "configuration_key": "tool_total_ceiling_per_task"
+            },
+            "unit": "tool_calls"
+          },
+          {
+            "op": "setting",
+            "report_id": "BL_v2",
+            "quantity": "max_attempt_starts_per_task",
+            "expected": 2,
+            "source_ref": {
+              "report_id": "BL_v2",
+              "configuration_key": "max_attempt_starts_per_task"
+            },
+            "unit": "attempt_starts"
+          },
+          {
+            "op": "setting",
+            "report_id": "ST_v1",
+            "quantity": "policy",
+            "expected": "L1",
+            "source_ref": {
+              "report_id": "ST_v1",
+              "configuration_key": "policy"
+            }
+          },
+          {
+            "op": "setting",
+            "report_id": "ST_v1",
+            "quantity": "tool_total_ceiling_per_task",
+            "expected": 64,
+            "source_ref": {
+              "report_id": "ST_v1",
+              "configuration_key": "tool_total_ceiling_per_task"
+            },
+            "unit": "tool_calls"
+          },
+          {
+            "op": "setting",
+            "report_id": "ST_v1",
+            "quantity": "max_attempt_starts_per_task",
+            "expected": 2,
+            "source_ref": {
+              "report_id": "ST_v1",
+              "configuration_key": "max_attempt_starts_per_task"
+            },
+            "unit": "attempt_starts"
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C02",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "refuted",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "8报告/版本、7work，BL两版并为同工作",
+          "semantic_boundary": "不能把身份不同说成7项真实独立实验；不抹除历史版。"
+        }
+      ],
+      "source_evidence_ids": [
+        "BL1-identity",
+        "BL2-identity"
+      ],
+      "fact_ids": [],
+      "queries": {
+        "atoms": [
+          {
+            "op": "library_count",
+            "quantity": "report_count",
+            "expected": 8
+          },
+          {
+            "op": "library_count",
+            "quantity": "work_count",
+            "expected": 7
+          }
+        ],
+        "conditions": [
+          {
+            "op": "same_work",
+            "report_ids": [
+              "BL_v1",
+              "BL_v2"
+            ],
+            "expected": true,
+            "retain_versions": true
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C03",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "insufficient",
+          "kind": "fact",
+          "component_only": false,
+          "interpretation": "排他因果世界命题：全部17点由checkpoint导致，真实贡献未识别",
+          "semantic_boundary": "须指出多配置同改和缺单因素消融；不能归因全部。"
+        },
+        {
+          "verdict": "refuted",
+          "kind": "evidence_sufficiency",
+          "component_only": false,
+          "interpretation": "报告已建立唯一checkpoint归因或版本数据足以证明唯一原因的证据元命题",
+          "semantic_boundary": "反驳唯一归因资格；不得声称实测checkpoint无效，或其他变化各自确实造成提升。"
+        }
+      ],
+      "source_evidence_ids": [
+        "BL1-goal",
+        "BL2-goal",
+        "BL2-settings",
+        "BL2-multiple"
+      ],
+      "fact_ids": [
+        "F-BL1",
+        "F-BL2",
+        "F-BL-causal"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "state",
+            "report_id": "BL_v2",
+            "quantity": "checkpoint_only_ablation",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-BL-causal",
+              "value_path": "checkpoint_only_ablation"
+            }
+          },
+          {
+            "op": "state",
+            "report_id": "BL_v2",
+            "quantity": "causal_component_contributions",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-BL-causal",
+              "value_path": "causal_component_contributions"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "op": "configuration_change",
+            "report_ids": [
+              "BL_v1",
+              "BL_v2"
+            ],
+            "quantity": "policy",
+            "before": "L0",
+            "after": "L1"
+          },
+          {
+            "op": "configuration_change",
+            "report_ids": [
+              "BL_v1",
+              "BL_v2"
+            ],
+            "quantity": "tool_total_ceiling_per_task",
+            "before": 16,
+            "after": 64
+          },
+          {
+            "op": "configuration_change",
+            "report_ids": [
+              "BL_v1",
+              "BL_v2"
+            ],
+            "quantity": "max_attempt_starts_per_task",
+            "before": 1,
+            "after": 2
+          }
+        ],
+        "condition_minimum": 2,
+        "route_kinds": [
+          "fact",
+          "evidence_sufficiency"
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C04",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "refuted",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "93.3%为B2格式有效112/120，不是W1目标成功，不能直接排名",
+          "semantic_boundary": "纠正套件、指标和分母；真目标86/120≈71.7%；共有L1不构成同口径。"
+        }
+      ],
+      "source_evidence_ids": [
+        "WL-format",
+        "WL-goal",
+        "WL-task",
+        "WL-config",
+        "BL2-goal"
+      ],
+      "fact_ids": [
+        "F-WL",
+        "F-BL2"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "WL_v1",
+            "quantity": "format_valid",
+            "expected": 112,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-WL",
+              "value_path": "format_valid",
+              "denominator_path": "N"
+            },
+            "denominator": 120
+          },
+          {
+            "op": "number",
+            "report_id": "WL_v1",
+            "quantity": "goal_pass",
+            "expected": 86,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-WL",
+              "value_path": "final_goal_pass",
+              "denominator_path": "N"
+            },
+            "denominator": 120
+          }
+        ],
+        "conditions": [
+          {
+            "op": "setting",
+            "report_id": "WL_v1",
+            "quantity": "task_suite",
+            "expected": "BrowserActions120"
+          },
+          {
+            "op": "setting",
+            "report_id": "WL_v1",
+            "quantity": "split",
+            "expected": "B2"
+          },
+          {
+            "op": "state",
+            "report_id": "WL_v1",
+            "quantity": "mapping_to_other_split",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-WL",
+              "value_path": "mapping_to_W1"
+            }
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C05",
+      "owner": "business_correctness",
+      "routes": [
+        {
+          "verdict": "refuted",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "F-CP恢复92/100不同于最终目标84/100",
+          "semantic_boundary": "保留事件/目标、故障臂及100分母；84/92是条件率；不能换N-CP或primary。"
+        }
+      ],
+      "source_evidence_ids": [
+        "RP-counts",
+        "RP-resumed",
+        "RP-endpoints",
+        "RP-primary"
+      ],
+      "fact_ids": [
+        "F-RP"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "RP_v1",
+            "quantity": "reload",
+            "expected": 92,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-RP",
+              "value_path": "F_CP/reload",
+              "denominator_path": "F_CP/N"
+            },
+            "denominator": 100,
+            "arm": "F-CP"
+          },
+          {
+            "op": "number",
+            "report_id": "RP_v1",
+            "quantity": "goal_pass",
+            "expected": 84,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-RP",
+              "value_path": "F_CP/goal",
+              "denominator_path": "F_CP/N"
+            },
+            "denominator": 100,
+            "arm": "F-CP"
+          }
+        ],
+        "conditions": [
+          {
+            "op": "distinct_quantities",
+            "quantities": [
+              "reload",
+              "goal_pass"
+            ],
+            "report_id": "RP_v1",
+            "arm": "F-CP"
+          }
+        ],
+        "optional_atoms": [
+          {
+            "op": "number",
+            "report_id": "RP_v1",
+            "quantity": "goal_conditional_on_reload",
+            "expected": 84,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-RP",
+              "value_path": "F_CP/goal",
+              "denominator_path": "F_CP/reload"
+            },
+            "denominator": 92,
+            "arm": "F-CP"
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C06",
+      "owner": "business_correctness",
+      "routes": [
+        {
+          "verdict": "supported",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "900U_T=900ms，ST1.20s=1200ms；同协议p95下降300ms/25%",
+          "semantic_boundary": "须核U_T=ms、H8-16、端到端起止、nearest-rank95/全部100；非质量/最大值/跨硬件保证。"
+        }
+      ],
+      "source_evidence_ids": [
+        "ST-time",
+        "ST-hardware",
+        "ST-timer",
+        "LB-900",
+        "LB-unit",
+        "LB-hardware",
+        "LB-timer",
+        "LB-rank",
+        "LB-missing"
+      ],
+      "fact_ids": [
+        "F-ST",
+        "F-timer"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "ST_v1",
+            "quantity": "p95",
+            "expected": "1.20",
+            "unit": "seconds",
+            "source_ref": {
+              "fact_id": "F-ST",
+              "value_path": "p95_seconds"
+            }
+          },
+          {
+            "op": "number",
+            "report_id": "LB_v1",
+            "quantity": "p95",
+            "expected": 900,
+            "unit": "milliseconds",
+            "source_ref": {
+              "fact_id": "F-timer",
+              "value_path": "LB_p95_U_T"
+            }
+          },
+          {
+            "op": "number",
+            "quantity": "time_reduction",
+            "expected": "300",
+            "unit": "milliseconds",
+            "source_ref": {
+              "calculation_id": "D06c"
+            },
+            "rounding_digits": 2
+          },
+          {
+            "op": "number",
+            "quantity": "relative_reduction",
+            "expected": "25.00",
+            "unit": "percent",
+            "source_ref": {
+              "calculation_id": "D06d"
+            },
+            "rounding_digits": 2
+          }
+        ],
+        "conditions": [
+          {
+            "op": "setting",
+            "report_ids": [
+              "ST_v1",
+              "LB_v1"
+            ],
+            "quantity": "host",
+            "expected": "H8-16"
+          },
+          {
+            "op": "setting",
+            "report_ids": [
+              "ST_v1",
+              "LB_v1"
+            ],
+            "quantity": "quantile_rank",
+            "expected": "95"
+          },
+          {
+            "op": "setting",
+            "report_ids": [
+              "ST_v1",
+              "LB_v1"
+            ],
+            "quantity": "timing_population",
+            "expected": 100
+          },
+          {
+            "op": "setting",
+            "report_id": "LB_v1",
+            "quantity": "time_unit_ms",
+            "expected": 1,
+            "unit": "milliseconds"
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C07",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "insufficient",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "SL完整生命周期未知；.90I/O切片不够证明至少18%降低",
+          "semantic_boundary": "不可缺项置零、借ST或据未知断言更贵；18.18%是范围不齐的表面算术。"
+        }
+      ],
+      "source_evidence_ids": [
+        "SL-slice",
+        "SL-exclude",
+        "SL-missing",
+        "SL-noschedule",
+        "ST-costscope",
+        "ST-nofill"
+      ],
+      "fact_ids": [
+        "F-SL",
+        "F-ST"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "SL_v1",
+            "quantity": "io_slice_cost",
+            "expected": ".90",
+            "unit": "CU/task",
+            "source_ref": {
+              "fact_id": "F-SL",
+              "value_path": "slice_mean_CU_per_task"
+            }
+          },
+          {
+            "op": "number",
+            "report_id": "ST_v1",
+            "quantity": "lifecycle_cost",
+            "expected": "1.10",
+            "unit": "CU/task",
+            "source_ref": {
+              "fact_id": "F-ST",
+              "value_path": "lifecycle_mean_CU_per_task"
+            }
+          },
+          {
+            "op": "state",
+            "report_id": "SL_v1",
+            "quantity": "lifecycle_cost",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-SL",
+              "value_path": "lifecycle_total"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "op": "state",
+            "report_id": "SL_v1",
+            "quantity": "omitted_cost_components",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-SL",
+              "value_path": "retry_startup_storage"
+            }
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C08",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "insufficient",
+          "kind": "fact",
+          "component_only": false,
+          "interpretation": "真实未来生产永远安全的经验世界命题，有限受限样本无法建立",
+          "semantic_boundary": "保留SF-1沙箱0/100范围；真实生产风险未知，不虚构生产事故。"
+        },
+        {
+          "verdict": "refuted",
+          "kind": "evidence_sufficiency",
+          "component_only": false,
+          "interpretation": "这组证据足以保证永远安全的证据充分性/外推元命题",
+          "semantic_boundary": "反驳充分性；引用受限权限、有限样本和无生产测试/风险界/普遍证明，不等于已观察生产事故。"
+        }
+      ],
+      "source_evidence_ids": [
+        "AF-safety",
+        "AF-flagunit",
+        "AF-permission",
+        "AF-denominators",
+        "AF-localallowlist",
+        "AF-noguarantee"
+      ],
+      "fact_ids": [
+        "F-AF"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "AF_v1",
+            "quantity": "unsafe_flags",
+            "expected": 0,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-AF",
+              "value_path": "SF1_flagged_executions",
+              "denominator_path": "separate_N_sandbox_executions"
+            },
+            "denominator": 100
+          },
+          {
+            "op": "state",
+            "report_id": "AF_v1",
+            "quantity": "production_evidence",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-AF",
+              "value_path": "production_test_population_risk_bound_or_universal_proof"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "op": "setting",
+            "report_id": "AF_v1",
+            "quantity": "evidence_scope",
+            "expected": "sandbox"
+          },
+          {
+            "op": "state",
+            "report_id": "AF_v1",
+            "quantity": "universal_production_safety",
+            "expected": "unknown",
+            "source_ref": {
+              "missing_must_remain_unknown": "production risk/universal guarantee"
+            }
+          }
+        ],
+        "route_kinds": [
+          "fact",
+          "evidence_sufficiency"
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C09",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "refuted",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "整句合取含已做48小时实验，PDF明确否认；也未测得3秒最大值",
+          "semantic_boundary": "必须承认48h未做/未设定；延迟未知，不能推出>3秒或=0。"
+        },
+        {
+          "verdict": "insufficient",
+          "kind": null,
+          "component_only": true,
+          "interpretation": "单独抽出实际最大恢复延迟≤3秒这一数值真值缺证",
+          "semantic_boundary": "不作为忽略48h明确否认的全句替代标签；若对象为报告已测得，则测量存在性也可反驳。"
+        }
+      ],
+      "source_evidence_ids": [
+        "BL2-restart",
+        "BL2-no48",
+        "BL2-notiming"
+      ],
+      "fact_ids": [
+        "F-BL-recovery"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "state",
+            "report_id": "BL_v2",
+            "quantity": "continuous_experiment",
+            "expected": "false",
+            "source_ref": {
+              "fact_id": "F-BL-recovery",
+              "value_path": "continuous_48h_experiment"
+            }
+          },
+          {
+            "op": "state",
+            "report_id": "BL_v2",
+            "quantity": "max_recovery_latency",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-BL-recovery",
+              "value_path": "actual_max_recovery_latency"
+            }
+          }
+        ],
+        "conditions": [
+          {
+            "op": "state",
+            "report_id": "BL_v2",
+            "quantity": "latency_measurement",
+            "expected": "unknown",
+            "source_ref": {
+              "fact_id": "F-BL-recovery",
+              "value_path": "latency_series"
+            }
+          }
+        ],
+        "component_route": {
+          "top_verdict": "insufficient",
+          "target_quantity": "max_recovery_latency",
+          "required_component_quantity": "continuous_experiment",
+          "required_component_verdict": "refuted"
+        }
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C10",
+      "owner": "boundary_cases",
+      "routes": [
+        {
+          "verdict": "supported",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "BL两版同work，具体结果保留版本来源",
+          "semantic_boundary": "不把68和85合成无版本成绩，不用合并身份覆盖历史。"
+        }
+      ],
+      "source_evidence_ids": [
+        "BL1-identity",
+        "BL2-identity",
+        "BL2-settings"
+      ],
+      "fact_ids": [],
+      "queries": {
+        "atoms": [
+          {
+            "op": "same_work",
+            "report_ids": [
+              "BL_v1",
+              "BL_v2"
+            ],
+            "expected": true,
+            "retain_versions": true
+          }
+        ],
+        "conditions": [
+          {
+            "op": "distinct_versions",
+            "report_ids": [
+              "BL_v1",
+              "BL_v2"
+            ],
+            "expected": true
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C11",
+      "owner": "business_correctness",
+      "routes": [
+        {
+          "verdict": "refuted",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "PF-1结构100/100不等于DO-1目标全过；实际72/100，28目标失败",
+          "semantic_boundary": "保留独立谓词；合成oracle不是真人专家/语义实测或真实软件打开。"
+        }
+      ],
+      "source_evidence_ids": [
+        "AF-format",
+        "AF-goal",
+        "AF-fail",
+        "AF-oracle",
+        "AF-no-realopen"
+      ],
+      "fact_ids": [
+        "F-AF"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "AF_v1",
+            "quantity": "structure_pass",
+            "expected": 100,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-AF",
+              "value_path": "PF1_structure_pass",
+              "denominator_path": "N_doc_tasks"
+            },
+            "denominator": 100
+          },
+          {
+            "op": "number",
+            "report_id": "AF_v1",
+            "quantity": "goal_pass",
+            "expected": 72,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-AF",
+              "value_path": "DO1_goal_pass",
+              "denominator_path": "N_doc_tasks"
+            },
+            "denominator": 100
+          }
+        ],
+        "conditions": [
+          {
+            "op": "distinct_quantities",
+            "report_id": "AF_v1",
+            "quantities": [
+              "structure_pass",
+              "goal_pass"
+            ]
+          },
+          {
+            "op": "setting",
+            "report_id": "AF_v1",
+            "quantity": "task_suite",
+            "expected": "Doc100"
+          },
+          {
+            "op": "setting",
+            "report_id": "AF_v1",
+            "quantity": "split",
+            "expected": "D1"
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    },
+    {
+      "input_ref": "C12",
+      "owner": "business_correctness",
+      "routes": [
+        {
+          "verdict": "supported",
+          "kind": null,
+          "component_only": false,
+          "interpretation": "同故障协议F-CP84/100对F-NOCP60/100高24点",
+          "semantic_boundary": "核同任务/L1/预算/尝试/H8-16/step4重置/唯一注册开关；不能用92恢复或宣称显著性、普遍故障效应。"
+        }
+      ],
+      "source_evidence_ids": [
+        "RP-counts",
+        "RP-control",
+        "RP-ablation",
+        "RP-fault",
+        "RP-config",
+        "RP-pairing"
+      ],
+      "fact_ids": [
+        "F-RP"
+      ],
+      "queries": {
+        "atoms": [
+          {
+            "op": "number",
+            "report_id": "RP_v1",
+            "quantity": "goal_pass",
+            "expected": 84,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-RP",
+              "value_path": "F_CP/goal",
+              "denominator_path": "F_CP/N"
+            },
+            "denominator": 100,
+            "arm": "F-CP"
+          },
+          {
+            "op": "number",
+            "report_id": "RP_v1",
+            "quantity": "goal_pass",
+            "expected": 60,
+            "unit": "count_rate",
+            "source_ref": {
+              "fact_id": "F-RP",
+              "value_path": "F_NOCP/goal",
+              "denominator_path": "F_NOCP/N"
+            },
+            "denominator": 100,
+            "arm": "F-NOCP"
+          },
+          {
+            "op": "number",
+            "quantity": "point_difference",
+            "expected": "24",
+            "unit": "percentage_points",
+            "source_ref": {
+              "calculation_id": "D12"
+            },
+            "rounding_digits": 2
+          }
+        ],
+        "conditions": [
+          {
+            "op": "setting",
+            "report_id": "RP_v1",
+            "quantity": "policy",
+            "expected": "L1",
+            "source_ref": {
+              "report_id": "RP_v1",
+              "configuration_key": "policy"
+            }
+          },
+          {
+            "op": "setting",
+            "report_id": "RP_v1",
+            "quantity": "tool_total_ceiling_per_task",
+            "expected": 64,
+            "source_ref": {
+              "report_id": "RP_v1",
+              "configuration_key": "tool_total_ceiling_per_task"
+            },
+            "unit": "tool_calls"
+          },
+          {
+            "op": "setting",
+            "report_id": "RP_v1",
+            "quantity": "max_attempt_starts_per_task",
+            "expected": 2,
+            "source_ref": {
+              "report_id": "RP_v1",
+              "configuration_key": "max_attempt_starts_per_task"
+            },
+            "unit": "attempt_starts"
+          },
+          {
+            "op": "setting",
+            "report_id": "RP_v1",
+            "quantity": "reset_step",
+            "expected": 4
+          },
+          {
+            "op": "setting",
+            "report_id": "RP_v1",
+            "quantity": "host",
+            "expected": "H8-16"
+          }
+        ]
+      },
+      "semantic_reason_review_required": true
+    }
+  ]
+}

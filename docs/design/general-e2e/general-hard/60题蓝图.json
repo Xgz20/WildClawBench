@@ -13977,7 +13977,7 @@
         "exec": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/exec",
         "gt": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/gt"
       },
-      "prompt_draft": "请完成以下工作：仅在本地论文库中检索全文和附录，逐项核对12个结论的任务、划分、预算、指标方向和证据；合并同一工作版本身份，明确无效横比与缺证据项，产出证据矩阵。不得把参考文献链接自动当作联网授权。\n\n输入材料：\n- /tmp_workspace/papers/：8份可合法分发的论文文件，含同一工作的两个版本及比较口径不兼容的干扰项\n- /tmp_workspace/metadata.csv：文件身份、版本、任务和划分，不给可比性答案\n- /tmp_workspace/claims.md：12项看似可比的结论，含跨页/附录证据\n\n交付：\n- /tmp_workspace/results/evidence_matrix.xlsx：12断言的支持与限制\n- /tmp_workspace/results/review.docx：可比结论与研究空白\n- /tmp_workspace/results/bibliography.json：完整引用\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成；仅检索本题本地材料，不跟随其中链接访问网络。\n- 引用须指向具体证据；域名正确或URL存在不等于正文支持结论。摘要只支持其中明确出现的事实，不能冒充已读全文。\n- 核心判据须有可提取文本/元数据证据，不要求额外视觉理解；本分类图像理解仅由H034考察。",
+      "prompt_draft": "仅使用本题本地材料，对 claims.md 的12项原断言逐项检索、核验并形成可复核交接。本题的8份PDF均为原创CC0受控虚构技术报告；名字、条件与数字是构造记录，不是真实模型、产品、人类专家或业务实验。\n\n先阅读 /tmp_workspace/delivery_contract.md，并遵守其中公开的交付、命题判断、引用和原生文件契约。来源为 /tmp_workspace/papers/、/tmp_workspace/metadata.csv 和 /tmp_workspace/claims.md。PDF正文、表格、协议与附录是实验记录的依据，metadata用于身份/版本和任务划分辅助；冲突须保留并说明。\n\n每项说明实际评估的事实、证据充分性或复合命题，给出支持/反驳/证据不足及理由。核对任务、数据划分、目标谓词、指标方向、数值与分母、单位、预算、尝试、实验臂和版本；区分直接观察与推算。已确认同一工作的版本合并工作身份，但具体结果保留版本来源。不能把格式通过、恢复事件与最终目标互换，也不能把缺失实验或未报告数值改写成反面实测。\n\n交付到 /tmp_workspace/results/：\n- evidence_matrix.xlsx：原生可见、可编辑、自包含的12项证据矩阵，清楚保留命题、判断、关键口径、证据定位和限制。静态值可用，不强制公式或固定表头/Sheet/布局。\n- review.docx：原生可编辑报告，说明有条件可比与无效横比、版本关系、反例、证据局限、研究空白和可继续核查事项；可按主题组织。\n- bibliography.json：按 delivery_contract.md 的公开语义结构记录实际文件/版本、12项命题判断和引用；短引绑定实际PDF物理页与必要上下文，supports_fields使用可解析的RFC6901指针。允许清楚等价字段和有理的命题解释。\n\n离线完成，不跟随材料内URL/DOI/参考文献链接访问网络；不访问真实账号、不发送消息或调用付费服务。所有输入保持原字节，所有新交付只写results。未知明确保留未知，不猜读图形数值；核心证据可从文本/元数据提取，不要求额外视觉理解。",
       "inputs": [
         {
           "path": "papers/",
@@ -14024,18 +14024,45 @@
         "缺失实验被编造"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "REVIEWED_LOCAL_SOURCE_NATIVE_REFERENCE_RULES_AND_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102632,
-        "construction": "两名审阅者独立从正文、表格、附录标注12项结论及支持/反驳位置；GT包含版本关系、预算差异、数据划分与指标方向反例。定位必须对应真实文件版本，不能仅凭题名、作者或引用域名判断事实。",
+        "construction": "8份32页原创CC0受控虚构报告、7工作和12断言的源先行oracle；命题/指标/条件/版本保留。冻结三件原生v3参考经独立模型复核零问题。12逻辑作者控制、完整正式MD/35GT独立ZIP自动验收及正常/搬移证据通过；未知或合法复杂表示保留typed复核，不补能力0。模型复核非人工专家，无Harness或语义/hybrid成绩。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
           "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "machine_anchor_spec.json",
+          "native_base.py",
+          "native_headers.py",
+          "native_io.py",
+          "office_runtime.py",
+          "pdf_evidence.py",
+          "protected_sha256.json",
+          "reference/v3/provenance.json",
+          "reference/v3/results/bibliography.json",
+          "reference/v3/results/evidence_matrix.xlsx",
+          "reference/v3/results/review.docx",
           "reference_source_manifest.json",
-          "claim_evidence_oracle.json"
+          "rule_evidence_contract.json",
+          "runtime_contract.json",
+          "scientific_engine.py",
+          "scoring_contract.json",
+          "scoring_design.json",
+          "source_originals/claims.md",
+          "source_originals/delivery_contract.md",
+          "source_originals/metadata.csv",
+          "source_originals/papers/AF_v1.pdf",
+          "source_originals/papers/BL_v1.pdf",
+          "source_originals/papers/BL_v2.pdf",
+          "source_originals/papers/LB_v1.pdf",
+          "source_originals/papers/RP_v1.pdf",
+          "source_originals/papers/SL_v1.pdf",
+          "source_originals/papers/ST_v1.pdf",
+          "source_originals/papers/WL_v1.pdf",
+          "source_review_reconciliation.json"
         ],
         "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
         "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。",
@@ -14055,8 +14082,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "仅在本地论文库中检索全文和附录，逐项核对12个结论的任务、划分、预算、指标方向和证据；合并同一工作版本身份，明确无效横比与缺证据项，产出证据矩阵。不得把参考文献链接自动当作联网授权。",
-            "oracle_reference": "gt/expected.json + gt/business_oracle.json"
+            "criterion": "固定5项核心业务机会，核实际命题上的事实、数值、分母、单位及任务/预算条件；同一根因不跨分区重复扣。机械观察不能替代全部科学语义。",
+            "oracle_reference": "gt/machine_anchor_spec.json + actual independent source_originals + source-first oracle"
           },
           {
             "key": "boundary_cases",
@@ -14064,8 +14091,8 @@
             "capabilities": [
               "reasoning_planning"
             ],
-            "criterion": "验证本题反例：只读摘要；不同评估集硬排名；缺失实验被编造；正文/图形/版本关联必须成立，不能只命中关键词。",
-            "oracle_reference": "gt/counterexamples.json"
+            "criterion": "固定7项边界机会，核版本/工作身份、比较口径、因果资格、事实与充分性命题、未知与外推边界；允许有证据的等价解释。",
+            "oracle_reference": "gt/machine_anchor_spec.json + actual independent source_originals + source-first oracle"
           },
           {
             "key": "delivery_integrity",
@@ -14073,8 +14100,8 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
-            "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
+            "criterion": "核保护输入原字节、三件原生可编辑且自包含的交付，以及同一命题/范围上的真实转写冲突；不同子命题不误记矛盾。",
+            "oracle_reference": "gt/machine_anchor_spec.json + actual independent source_originals + source-first oracle"
           },
           {
             "key": "evidence_binding",
@@ -14082,8 +14109,8 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
-            "oracle_reference": "gt/evidence_requirements.json"
+            "criterion": "固定12个绑定机会，逐条核实际本地文件/版本、物理页、短引及RFC6901引用图；坏引用不因正确padding稀释，缺测量无需编造短引。",
+            "oracle_reference": "gt/machine_anchor_spec.json + actual independent source_originals + source-first oracle"
           }
         ],
         "rule_aggregation": "返回各检查点及按上列权重计算的overall_score；overall_score不重复映射能力；正式落题前核对当前规则Worker消费契约。",
@@ -14094,11 +14121,11 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "针对“跨论文结果的可比性与反例审查”的结论、取舍和未决项是否由本题材料/独立oracle支持。",
+            "criterion": "独立核实际命题、原件上下文、比较条件、证据关系、推理和未知；不得仅凭标签、关键词、规则高分或引用命中判科学正确。事实真值与证据充分性可不同，复合句须保留子命题边界。",
             "score_bands": {
-              "1.0": "所有关键结论可定位到支持证据，正确处理本题冲突与限制，无禁止主张。",
-              "0.5": "主结论成立且无关键矛盾，但遗漏一项非关键解释或定位。",
-              "0.0": "关键结论被材料反驳、虚构证据，或未完成核心业务判定。"
+              "1.0": "12项可追溯判断的关键事实、条件及事实/充分性/复合逻辑均获实际正文和附录支持；无虚构实验、无跨口径硬排或无条件外推。",
+              "0.5": "关键结论有可定位支持且无关键虚构，但缺少非关键条件解释、反例说明或定位；不将合理的标签/结构变体当错误。",
+              "0.0": "关键事实或主结论被原件反驳，虚构缺失实验/成本/时延或普遍保证，或主要原断言未获实质核验。"
             }
           },
           {
@@ -14107,11 +14134,11 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "下游能否据交付物复核和继续办理本题业务，而非依赖聊天中的未落盘解释。",
+            "criterion": "下游能从三件规定产物恢复原断言、具体判断对象、条件、证据、限制和未决事项；允许主题汇总及引用JSON，不要求重复镜像字段。",
             "score_bands": {
-              "1.0": "对象、状态/动作、依据和限制均可在规定产物中对应查得，下一步清楚。",
-              "0.5": "产物可使用但缺一项非关键定位/交接说明，不影响主要办理。",
-              "0.0": "主要对象/动作无法对应，跨产物矛盾或核心交付不可用。"
+              "1.0": "三件产物原生可用，12项原断言均能对应到命题、依据、条件/版本和限制，未决项及继续核查方向清楚，同范围内容一致。",
+              "0.5": "核心交付可用且各原断言仍可对应，但存在非关键交接或定位说明缺漏，不影响主要复核。",
+              "0.0": "核心产物不可用、主要原断言无法对应，或同一命题/范围的跨产物矛盾使下游无法复核。"
             }
           }
         ],
@@ -14201,10 +14228,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "Author-only formal MD/35GT in isolated installed score0.26 ZIP, actual automatic Worker and normal/moved evidence verification; no Harness/Judge",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h032-reviewed-authoring-20261029.json"
       },
       "retrieval_profile": {
         "primary_mode": "local_corpus_search",
@@ -14237,7 +14268,7 @@
         "skills": [],
         "env": [],
         "warmup": [],
-        "preflight_status": "not_executed",
+        "preflight_status": "author_native_source_rules_and_detached_formal_ZIP_verified_real_harness_pending",
         "limit": "所有版本、素材许可和真实可用性在正式制作/发行前锁定；上述能力未做本题四端运行验证。"
       },
       "proposed_frontmatter": {
@@ -14272,6 +14303,9 @@
               "role": "candidate_deliverable"
             }
           ]
+        },
+        "scoring_runtime": {
+          "office": true
         }
       },
       "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。"

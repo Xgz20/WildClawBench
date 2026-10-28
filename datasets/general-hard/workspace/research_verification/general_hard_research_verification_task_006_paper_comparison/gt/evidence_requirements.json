@@ -1,0 +1,24 @@
+{
+  "schema_version": "h032-local-evidence/v1",
+  "physical_pages_from": 1,
+  "trusted_inputs": {
+    "claims.md": "517e03969ac6574c5d93a4c72643e3916470b21562082e76c19ff213a9de033b",
+    "delivery_contract.md": "f36892d117a767dd81d08e5ebb0263671ac96e39a9b69309888b642f2d55f534",
+    "metadata.csv": "2f28efd4a9d18dc7edd6405f1eede9f74364425364e77a6ae27113f09901866c",
+    "papers/AF_v1.pdf": "b5365f30279e3b3d33aa591ad270780d6dc2c90098e1c4508bf358b91c83be5e",
+    "papers/BL_v1.pdf": "5c3946338bbac68df927ae6e6fd8e477ef88378aa06e3d4e777c4eae086c4413",
+    "papers/BL_v2.pdf": "4ef773da0ef055b949434c09c323093993d7f298f814e45432167d627858bbe1",
+    "papers/LB_v1.pdf": "990960307a80a42f6cef0b5c9b929494ee925ead943671463516d2c2af2a7abe",
+    "papers/RP_v1.pdf": "20a608062a39927cc3622fcda35c48f9d4e8b282bacf7982f82edd97aba71956",
+    "papers/SL_v1.pdf": "706f640d4304c7ae872721abc652ab83331a123d72051d176f165d1bf8703a73",
+    "papers/ST_v1.pdf": "0ff55b3a203a33ed1ef318288d5401f3a2565045cf9f784aabf27373a10b613c",
+    "papers/WL_v1.pdf": "8802cd311bfff3abd4ae4ab7fbfd43d9c2127c3ab86ca4d648810a771234b17f"
+  },
+  "network": false,
+  "trusted_text": "independent extraction from original frozen PDFs by physical page; no candidate source snapshot trust",
+  "source_truth_precedes_reference": true,
+  "unknown_is_not_zero": true,
+  "unsupported_legal_representation": "explicit evaluator review, not candidate0",
+  "missing_GT_extractor_or_original": "evaluation_error",
+  "formal_Judge_or_Harness_run": false
+}

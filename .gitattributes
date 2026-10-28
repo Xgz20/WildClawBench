@@ -12,3 +12,6 @@ datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_00
 datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_003_formula_repair/exec/cases.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # H022独立模型标注是原始证据，保留其结尾空行与已冻结SHA。
 datasets/general-hard/workspace/data_analysis/general_hard_data_analysis_task_006_visual_chart_audit/gt/model_annotations/**/*.json whitespace=-blank-at-eof
+# H032的PDF含合法ASCII交叉引用空格，作为二进制原件保留；CSV保留标准CRLF。
+datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/**/*.pdf binary
+datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/**/metadata.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
