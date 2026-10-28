@@ -89,7 +89,7 @@ class NativeSourceTests(unittest.TestCase):
     def original(self,kind="docx",payload=None):
         p=self.root/("original."+kind);p.write_bytes(payload or package(kind));return p
 
-    def fixture(self,name="task",kind="docx",*,v1=False,hybrid=False,quote="independent publication"):
+    def fixture(self,name="task",kind="docx",*,v1=False,hybrid=False,quote="independent publication",locator=None):
         policy={**POLICY}
         if v1:
             policy.pop("projection_profile");policy["schema_version"]=V1.POLICY_SCHEMA
@@ -99,7 +99,7 @@ class NativeSourceTests(unittest.TestCase):
                   grading_weights={"automated":.5,"llm_judge":.5} if hybrid else {},llm_judge_rubric=RUBRIC if hybrid else "")
         (f.candidate/"results").mkdir()
         ledger={"sources":[{"source_id":"source","url":"https://publication.example/original."+("html" if v1 else kind),
-                             "access_status":"read_full","citations":[{"citation_id":"q","quote":quote,"locator":{"node":"paragraph:1"}}]}]}
+                             "access_status":"read_full","citations":[{"citation_id":"q","quote":quote,"locator":locator or {"node":"paragraph:1"}}]}]}
         (f.candidate/"results/sources.json").write_text(json.dumps(ledger))
         entries,digest=RUNTIME._inventory_tree(f.candidate)
         ap=f.candidate.parent/"candidate-artifact.json"; artifact=json.loads(ap.read_text());artifact.update(entries=entries,expected_sha256=digest);ap.write_text(json.dumps(artifact))
@@ -265,6 +265,7 @@ class NativeSourceTests(unittest.TestCase):
         with zipfile.ZipFile(dist/built['archive']) as z:z.extractall(self.root/'installed')
         script=self.root/'installed/score-general-e2e/scripts/score_general_e2e.py'
         self.assertTrue(script.with_name('native_source_projection.py').is_file())
+        self.assertEqual(V1.sha(script.with_name('research_sources_native_v026.py')),'a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240')
         moved=self.root/'moved';shutil.copytree(attempt,moved,ignore=shutil.ignore_patterns('runtime'))
         env={k:v for k,v in os.environ.items() if k not in {'PYTHONPATH','PYTHONHOME'}}
         out=subprocess.run([sys.executable,'-I',str(script),'verify-score','--attempt-root',str(moved),'--archived'],cwd=self.root,env=env,capture_output=True,text=True,timeout=30)
@@ -272,7 +273,7 @@ class NativeSourceTests(unittest.TestCase):
         target=os.environ.get('GENERAL_E2E_NATIVE_QA_ROOT')
         if target:
             qa=Path(target);qa.mkdir(parents=True,exist_ok=True)
-            shutil.copyfile(dist/built['archive'],qa/'score-general-e2e-v0.26.0-mechanism.zip')
+            shutil.copyfile(dist/built['archive'],qa/'score-general-e2e-v0.27.0-mechanism.zip')
             (qa/'mechanism-lifecycle.json').write_bytes(V1.encoded({'synthetic_author_control_only':True,'real_Harness_or_model_experiment':False,'fixture_score_valid':True,'installed_archive_verified':True,'collector_v1_sha256':V1_SHA,'collector_v2_sha256':V1.sha(Path(V2.__file__)),'bundle':V1.read(attempt/V1.BUNDLE_PATH/'manifest.json'),'skill_build':built}))
 
     def test_native_reuse_is_frozen_self_contained_and_cross_profile_rejected(self):
@@ -287,6 +288,62 @@ class NativeSourceTests(unittest.TestCase):
         incompatible=self.fixture('cross')
         with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'RESEARCH_SOURCE_REUSE_INVALID'):
             RUNTIME.collect_research_sources_attempt(attempt_root=incompatible,reuse_sources_from=(old,))
+
+    def test_reuse_matches_bounded_docx_rows_and_paragraph_ranges(self):
+        body=f'<w:document xmlns:w="{N.W[1:-1]}"><w:body><w:p><w:r><w:t>paragraph alpha</w:t></w:r></w:p><w:p><w:r><w:t>paragraph beta</w:t></w:r></w:p><w:tbl>'
+        for values in [('code1','event','levelC'),('other','unrelated','value')]:
+            body+='<w:tr>'+''.join(f'<w:tc><w:p><w:r><w:t>{v}</w:t></w:r></w:p></w:tc>' for v in values)+'</w:tr>'
+        body+='</w:tbl></w:body></w:document>'
+        locator={'part':'word/document.xml','table_1based':1,'row_1based':1}
+        prior=self.fixture('row-origin',quote='code1eventlevelC',locator=locator)
+        with patch.object(V2,'fetch',side_effect=public_fetch(package(body=body),MIME['docx'])):RUNTIME.collect_research_sources_attempt(attempt_root=prior)
+        document=V1.read(prior/V1.BUNDLE_PATH/'manifest.json');old=document['sources'][0]
+        def covers(quote,loc):
+            row={**old,'citations':[{'citation_id':'check','quote':quote,'locator':loc}]}
+            return V2._snapshot_covers(prior,old,row,document['policy'])
+        self.assertTrue(covers('code1eventlevelC',locator))
+        self.assertTrue(covers('code1eventlevelC',{'part':'word/document.xml','xpath':'/w:document/w:body/w:tbl[1]/w:tr[1]'}))
+        self.assertTrue(covers('paragraph alphaparagraph beta',{'paragraph_start_1based':1,'paragraph_end_1based':2}))
+        self.assertFalse(covers('code1eventlevelC',{**locator,'row_1based':2}))
+        self.assertFalse(covers('code1levelC',locator))
+        self.assertFalse(covers('invented',locator))
+        self.assertFalse(covers('code1',{'node':'unknown:1'}))
+        self.assertFalse(covers('paragraph alpha',{'paragraph_1based':2}))
+        self.assertFalse(covers('paragraph alphaparagraph beta',{'paragraph_start_1based':1,'paragraph_end_1based':999999}))
+        self.assertFalse(covers('code1eventlevelC',{**locator,'cell_range':[1,1]}))
+        self.assertFalse(covers('code1eventlevelC',{**locator,'xpath':'/w:document/w:body/w:tbl[1]/w:tr[2]'}))
+        self.assertFalse(covers('code1eventlevelC',{'xpath':'/w:document/w:body/w:tbl[1]/w:tr[1]','table_1based':2}))
+        self.assertTrue(covers('code1eventlevelC',{'xpath':'/w:document/w:body/w:tbl[1]/w:tr[1]','table_1based':1}))
+        current=self.fixture('row-reuse',quote='code1eventlevelC',locator=locator)
+        with patch.object(V2,'fetch',side_effect=AssertionError('covered original must not GET')),patch('socket.getaddrinfo',side_effect=AssertionError('no DNS')):
+            result=RUNTIME.collect_research_sources_attempt(attempt_root=current,reuse_sources_from=(prior,))
+        self.assertEqual((result['fresh_get_count'],result['reused_snapshot_count']),(0,1))
+
+    def test_reuse_matches_only_declared_xlsx_ranges(self):
+        prior=self.fixture('range-origin',kind='xlsx',quote='independent publication2',locator={'sheet':'原表','range':'A1:B1'})
+        self.collect(prior,kind='xlsx');document=V1.read(prior/V1.BUNDLE_PATH/'manifest.json');old=document['sources'][0]
+        def covers(quote,loc):return V2._snapshot_covers(prior,old,{**old,'citations':[{'quote':quote,'locator':loc}]},document['policy'])
+        self.assertTrue(covers('independent publication2',{'sheet':'原表','range':'A1:B1'}))
+        self.assertFalse(covers('independent publication2',{'sheet':'原表','range':'B1:F1'}))
+        self.assertFalse(covers('independent publication0',{'sheet':'原表','range':'A1:F1'}))
+        self.assertFalse(covers('independent publication',{'sheet':'missing','cell':'A1'}))
+        self.assertFalse(covers('independent publication',{'sheet':'原表','range':'A1:F999999'}))
+
+    def test_v026_collector_bytes_verify_and_reuse_through_current_backend(self):
+        old_path=Path(V2.__file__).with_name('research_sources_native_v026.py')
+        self.assertEqual(V1.sha(old_path),'a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240')
+        frozen=load_module('frozen_native026_fixture',old_path)
+        prior=self.fixture('frozen026')
+        with patch.object(frozen,'fetch',side_effect=public_fetch(package(),MIME['docx'])):
+            frozen.collect(prior,attempt_verifier=RUNTIME.verify_attempt)
+        before=V1.inventory(prior)
+        self.assertIsNotNone(V2.verify(prior,required=True,attempt_verifier=RUNTIME.verify_attempt))
+        self.assertIsNotNone(V2.verify(prior,required=True,archived=True,attempt_verifier=RUNTIME.verify_attempt))
+        current=self.fixture('reuse026')
+        with patch.object(V2,'fetch',side_effect=AssertionError('sealed 0.26 capture must not GET')),patch('socket.getaddrinfo',side_effect=AssertionError('no DNS')):
+            result=RUNTIME.collect_research_sources_attempt(attempt_root=current,reuse_sources_from=(prior,))
+        self.assertEqual((result['fresh_get_count'],result['reused_snapshot_count']),(0,1))
+        self.assertEqual(V1.inventory(prior),before)
 
     def test_v1_and_v2_invalid_origin_paths_preserve_admission_order_and_no_GET(self):
         evidence=[]

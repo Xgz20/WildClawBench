@@ -6,6 +6,14 @@
 
 专用虚拟环境、独立进程和环境白名单用于依赖复现、故障收口和凭据隔离，不是针对恶意 grader 的安全沙箱。只允许执行版本化数据集中的冻结规则；不要把任意第三方 Python 代码传给 Worker。
 
+## 通用规则派生证据
+
+从score 0.27开始，每次实际启动的Worker都获得`GENERAL_E2E_RULE_EVIDENCE_DIR`，指向候选目录以外的`worker/derived`。普通原生规则可在这里保存观察JSON或其它派生文件，无需声明Office或HTML能力。候选、GT和既有封存材料仍为输入，不在此阶段改写。
+
+`rule-audit.json`中的`derived_artifacts`逐文件记录相对路径、SHA256和大小；`derived_evidence`绑定整个索引及文件数，schema为`wildclawbench.rule-derived-evidence/v1`，purpose为`custody_only_not_business_validation`。普通verify、去runtime搬移后的verify、语义证据目录和查询均检查成员及字节。新文件、漏索引、改字节、重复/越界路径、文件或目录符号链接会明确失败，失败Worker的原始资料保留，不悄悄删除或忽略。
+
+该通用回执不解释业务JSON，不代替规则/Judge判成功。Office/HTML专用锁和观察回执仍由各自验证器检查。旧普通审计可以没有这两个派生字段，但不能带未索引文件；旧Office/HTML完整索引无需补写通用回执或重签历史审计。
+
 ## 固定运行时
 
 - Python `3.11`

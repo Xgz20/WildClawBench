@@ -48,6 +48,17 @@ class HtmlLockTests(unittest.TestCase):
         with self.assertRaises(H.HtmlRuntimeError):
             H.validate_html_lock(changed, require_assets=False)
 
+    def test_indexed_html_artifact_retains_legacy_tamper_error_without_browser(self):
+        # Custody-only fixture: no HTML render/business success is asserted.
+        worker=self.root/'worker';derived=worker/'derived';derived.mkdir(parents=True)
+        lock=worker/'html-runtime.json';lock.write_text(json.dumps(self.lock))
+        artifact=derived/'observation.json';artifact.write_text('{}')
+        rows=[{'path':'worker/derived/observation.json','sha256':RUNTIME._sha256_file(artifact),'size':artifact.stat().st_size}]
+        audit={'worker':{'html_runtime':{'path':'worker/html-runtime.json','sha256':RUNTIME._sha256_file(lock)}},'derived_artifacts':rows}
+        (self.root/'rule-audit.json').write_text(json.dumps(audit));artifact.write_text('changed')
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'HTML_DERIVED_ARTIFACT_DRIFT'):
+            RUNTIME._verify_rule_derived_evidence(self.root,{'html_render':True},archived=True)
+
     def test_assets_drift_and_archival_validation_has_no_runtime_dependency(self):
         self.font.unlink()
         with self.assertRaisesRegex(H.HtmlRuntimeError, "HTML_FONT_UNAVAILABLE"):

@@ -1840,6 +1840,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
             or not (rule_workspace / "gt").is_dir()):
             raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
     _research_source_binding(root, archived=not require_runtime)
+    _verify_generic_rule_evidence(root)
     return {
         "status": "PASS",
         "attempt_root": str(root),
@@ -2221,6 +2222,9 @@ class _WorkerExecutor:
             self.runtime_python,
             playwright_browsers_path=self.playwright_browsers_path,
         )
+        derived = work_root / "derived"
+        derived.mkdir()
+        env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
         if self.research_source_binding is not None:
             env["GENERAL_E2E_RESEARCH_SOURCE_BUNDLE"] = str(self.attempt_root / self.research_source_binding["path"])
             env["GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"] = self.research_source_binding["manifest_sha256"]
@@ -2230,10 +2234,7 @@ class _WorkerExecutor:
         if self.office_runtime is not None:
             lock_path = work_root / "office-runtime.json"
             _write_new_json(lock_path, self.office_runtime)
-            derived = work_root / "derived"
-            derived.mkdir()
             env["GENERAL_E2E_OFFICE_LOCK"] = str(lock_path)
-            env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
             office_binding = {"path": "worker/office-runtime.json", "sha256": _sha256_file(lock_path)}
         if self.office_render_runtime is not None:
             render_path = work_root / "office-render-runtime.json"
@@ -2243,10 +2244,7 @@ class _WorkerExecutor:
         if self.html_runtime is not None:
             html_path = work_root / "html-runtime.json"
             _write_new_json(html_path, self.html_runtime)
-            derived = work_root / "derived"
-            derived.mkdir(exist_ok=True)
             env["GENERAL_E2E_HTML_LOCK"] = str(html_path)
-            env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
             html_binding = {"path": "worker/html-runtime.json", "sha256": _sha256_file(html_path)}
         creationflags = 0
         popen_kwargs: dict[str, Any] = {"start_new_session": os.name != "nt"}
@@ -2475,11 +2473,91 @@ def _verify_html_rule_evidence(root: Path, *, required: bool = False, archived: 
     return [{"path": binding["path"], "sha256": binding["sha256"]}, *artifacts]
 
 
+def _rule_derived_inventory(root: Path) -> list[dict]:
+    """Inventory only custody facts; no interpretation of rule JSON or success."""
+    derived = root / "worker/derived"
+    if (root / "worker").is_symlink() or derived.is_symlink():
+        raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", "linked directory")
+    if not derived.exists():
+        return []
+    if not derived.is_dir():
+        raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", "not a directory")
+    rows = []
+    try:
+        for path in sorted(derived.rglob("*")):
+            if path.is_symlink() or not (path.is_file() or path.is_dir()):
+                raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", path.relative_to(root).as_posix())
+            if path.is_file():
+                rows.append({"path": path.relative_to(root).as_posix(),
+                             "sha256": _sha256_file(path), "size": path.stat().st_size})
+    except OSError as exc:
+        raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", str(exc)) from exc
+    return rows
+
+
+def _rule_derived_receipt(artifacts: list[dict]) -> dict:
+    return {"schema_version": "wildclawbench.rule-derived-evidence/v1",
+            "directory": "worker/derived", "file_count": len(artifacts),
+            "entries_sha256": _sha256_bytes(json.dumps(artifacts, ensure_ascii=False,
+                sort_keys=True, separators=(",", ":")).encode("utf-8")),
+            "purpose": "custody_only_not_business_validation"}
+
+
+def _verify_generic_rule_evidence(root: Path) -> list[dict]:
+    actual = _rule_derived_inventory(root)
+    audit_path = root / "rule-audit.json"
+    if not audit_path.exists():
+        if actual:
+            raise ScoringRuntimeError("RULE_DERIVED_INDEX_MISSING")
+        return []
+    if audit_path.is_symlink() or not audit_path.is_file():
+        raise ScoringRuntimeError("RULE_DERIVED_INDEX_INVALID", "audit path")
+    audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+    artifacts = audit.get("derived_artifacts")
+    receipt = audit.get("derived_evidence")
+    worker = audit.get("worker")
+    worker = worker if isinstance(worker, dict) else {}
+    # Preserve the already-published engine-specific index error families.
+    # Ordinary rules remain independent of either capability/binding.
+    family = "OFFICE" if worker.get("office_runtime") else "HTML" if worker.get("html_runtime") else "RULE"
+    if artifacts is None and receipt is None:
+        # Pre-0.27 ordinary audits did not create/index this directory.
+        if actual:
+            raise ScoringRuntimeError("RULE_DERIVED_INDEX_MISSING")
+        return []
+    if not isinstance(artifacts, list):
+        raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_INVALID")
+    seen = set()
+    for row in artifacts:
+        if not isinstance(row, dict) or set(row) != {"path", "size", "sha256"}:
+            raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_INVALID", "member shape")
+        relative = row["path"]
+        if (not isinstance(relative, str) or not relative.startswith("worker/derived/")
+                or PurePosixPath(relative).as_posix() != relative
+                or any(part in {".", ".."} for part in PurePosixPath(relative).parts)
+                or relative in seen or type(row["size"]) is not int or row["size"] < 0
+                or not SHA256_RE.fullmatch(str(row["sha256"]))):
+            raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_INVALID", str(relative))
+        seen.add(relative)
+    actual_by_path = {row["path"]: row for row in actual}
+    for row in artifacts:
+        if actual_by_path.get(row["path"]) != row:
+            raise ScoringRuntimeError(f"{family}_DERIVED_ARTIFACT_DRIFT", row["path"])
+    if seen != set(actual_by_path):
+        raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_DRIFT")
+    if receipt is not None and receipt != _rule_derived_receipt(artifacts):
+        raise ScoringRuntimeError("RULE_DERIVED_RECEIPT_DRIFT")
+    # Legacy Office/HTML audits already have a complete file index but no
+    # generic receipt. Their existing engine-specific validation still runs.
+    return artifacts
+
+
 def _verify_rule_derived_evidence(root: Path, requirements: dict, *, archived: bool = False) -> list[dict]:
+    generic = _verify_generic_rule_evidence(root)
     office = _verify_office_rule_evidence(root, required=bool(requirements.get("office")),
         render_required=bool(requirements.get("office_render")), archived=archived)
     html = _verify_html_rule_evidence(root, required=bool(requirements.get("html_render")), archived=archived)
-    return list({row["path"]: row for row in [*office, *html]}.values())
+    return list({row["path"]: row for row in [*generic, *office, *html]}.values())
 
 
 def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
@@ -2984,10 +3062,17 @@ def run_rules_attempt(
     }
     if research_binding is not None:
         audit["research_sources"] = {key: research_binding[key] for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}
-    if office_runtime is not None or html_runtime is not None:
-        derived = attempt_root / "worker/derived"
-        audit["derived_artifacts"] = [{"path": path.relative_to(attempt_root).as_posix(), "sha256": _sha256_file(path), "size": path.stat().st_size}
-            for path in sorted(derived.rglob("*")) if path.is_file() and not path.is_symlink()] if derived.exists() else []
+    if (attempt_root / "worker/derived").exists() or (attempt_root / "worker/derived").is_symlink():
+        try:
+            artifacts = _rule_derived_inventory(attempt_root)
+            audit["derived_artifacts"] = artifacts
+            audit["derived_evidence"] = _rule_derived_receipt(artifacts)
+        except ScoringRuntimeError as exc:
+            # Keep the failed Worker's raw files, including offending links;
+            # never silently omit them from an otherwise successful index.
+            error = {"code": exc.code, "detail": exc.detail}
+            audit.update(status="failed", error=error)
+            component = None
     if component is not None:
         _write_new_json(attempt_root / "rule-component.json", component)
     if correction is not None:

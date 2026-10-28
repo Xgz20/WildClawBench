@@ -414,7 +414,7 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         self.assertFalse(result["audit"]["docker_used"])
         self.assertEqual(
             result["audit"]["worker"]["environment_keys"],
-            sorted(RUNTIME._sanitized_environment(self.runtime_python)),
+            sorted([*RUNTIME._sanitized_environment(self.runtime_python), "GENERAL_E2E_RULE_EVIDENCE_DIR"]),
         )
         self.assertFalse(result["audit"]["runtime_workspace"]["drifted"])
         self.assertTrue(result["audit"]["criterion_evidence"]["complete"])

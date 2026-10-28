@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import date, datetime, timezone
 from html import unescape
 import hashlib
+import importlib.util
 import json
 from pathlib import Path, PurePosixPath
 import re
@@ -147,6 +148,112 @@ def _seal_lock(root: Path, manifest: dict, specification: dict, parent: dict | N
     return lock
 
 
+def _native_scope_text(projection: dict, locator: object) -> str | None:
+    """Join only original frozen records inside one explicit native scope.
+
+    No whole-document fallback, quote rewriting, new extraction or candidate
+    parser is used. Logical OOXML locations are not rendered page positions.
+    """
+    if isinstance(locator, str):
+        locator = {"node": locator}
+    if not isinstance(locator, dict) or locator.get("type", projection["format"]) != projection["format"]:
+        return None
+    records = projection["records"]
+    if projection["format"] == "docx":
+        allowed = {"type", "part", "part_sha256", "node", "xpath", "table_1based"}
+        allowed.update(stem+suffix for stem in ("paragraph", "row", "cell") for suffix in ("_1based", "_start_1based", "_end_1based"))
+        if set(locator) - allowed:return None
+        part = locator.get("part", "word/document.xml")
+        selectors = []
+        node = locator.get("node")
+        xpath = locator.get("xpath")
+        if xpath is not None:
+            if not isinstance(xpath, str):return None
+            paragraph = re.fullmatch(r"/w:document/w:body/w:p\[([1-9][0-9]*)\]", xpath)
+            cell = re.fullmatch(r"/w:document/w:body/w:tbl\[([1-9][0-9]*)\]/w:tr\[([1-9][0-9]*)\](?:/w:tc\[([1-9][0-9]*)\])?", xpath)
+            if paragraph:selectors.append(("p", int(paragraph[1]), int(paragraph[1])))
+            elif cell:selectors.append(("t", int(cell[1]), int(cell[2]), int(cell[2]), int(cell[3]) if cell[3] else None, int(cell[3]) if cell[3] else None))
+            else:return None
+        if node is not None:
+            if not isinstance(node, str):return None
+            if node.startswith(str(part)+"/"):node = node[len(str(part))+1:]
+            paragraph = re.fullmatch(r"paragraph:([1-9][0-9]*)(?:-([1-9][0-9]*))?", node)
+            cell = re.fullmatch(r"table:([1-9][0-9]*)/row:([1-9][0-9]*)(?:-([1-9][0-9]*))?(?:/cell:([1-9][0-9]*)(?:-([1-9][0-9]*))?)?", node)
+            if paragraph:selectors.append(("p", int(paragraph[1]), int(paragraph[2] or paragraph[1])))
+            elif cell:selectors.append(("t", int(cell[1]), int(cell[2]), int(cell[3] or cell[2]), int(cell[4]) if cell[4] else None, int(cell[5] or cell[4]) if cell[4] else None))
+            else:return None
+        for stem in ("paragraph", "row", "cell"):
+            value = locator.get(stem+"_1based")
+            start = locator.get(stem+"_start_1based", value)
+            end = locator.get(stem+"_end_1based", value)
+            if start is None and end is None:continue
+            if type(start) is not int or type(end) is not int or not 1 <= start <= end:return None
+            if stem == "paragraph":selectors.append(("p", start, end))
+            elif stem == "row":
+                table = locator.get("table_1based")
+                if type(table) is not int or table < 1:return None
+                cstart = locator.get("cell_start_1based", locator.get("cell_1based"))
+                cend = locator.get("cell_end_1based", locator.get("cell_1based"))
+                if (cstart is not None or cend is not None) and (type(cstart) is not int or type(cend) is not int or not 1 <= cstart <= cend):return None
+                selectors.append(("t", table, start, end, cstart, cend))
+            elif not any(key in locator for key in ("row_1based", "row_start_1based")):return None
+        if not selectors or any(s != selectors[0] for s in selectors):return None
+        selector = selectors[0];selected = []
+        if "table_1based" in locator:
+            table = locator["table_1based"]
+            if type(table) is not int or selector[0] != "t" or table != selector[1]:return None
+        for row in records:
+            loc = row["locator"]
+            if loc.get("part") != part or locator.get("part_sha256", loc.get("part_sha256")) != loc.get("part_sha256"):continue
+            raw = loc.get("node", "")
+            if raw.startswith(str(part)+"/"):raw = raw[len(str(part))+1:]
+            paragraph = re.fullmatch(r"paragraph:([1-9][0-9]*)", raw)
+            cell = re.fullmatch(r"table:([1-9][0-9]*)/row:([1-9][0-9]*)/cell:([1-9][0-9]*)", raw)
+            if selector[0] == "p" and paragraph and selector[1] <= int(paragraph[1]) <= selector[2]:selected.append(row)
+            elif selector[0] == "t" and cell and int(cell[1]) == selector[1] and selector[2] <= int(cell[2]) <= selector[3] and (selector[4] is None or selector[4] <= int(cell[3]) <= selector[5]):selected.append(row)
+        if selector[0] == "p":
+            positions = {int(m[1]) for row in selected if (m := re.fullmatch(r"paragraph:([1-9][0-9]*)", row["locator"]["node"].removeprefix(str(part)+"/")))}
+            if not {selector[1], selector[2]} <= positions:return None
+        else:
+            positions = {int(m[1]) for row in selected if (m := re.search(r"/row:([1-9][0-9]*)/cell:", row["locator"]["node"]))}
+            if not {selector[2], selector[3]} <= positions:return None
+            if selector[4] is not None:
+                for rr in positions:
+                    columns = {int(m[1]) for row in selected if (m := re.search(r"/row:"+str(rr)+r"/cell:([1-9][0-9]*)$", row["locator"]["node"]))}
+                    if not {selector[4], selector[5]} <= columns:return None
+        return "".join(r["text"] for r in selected) if selected else None
+    if projection["format"] == "xlsx":
+        if set(locator) - {"type", "part", "part_sha256", "sheet", "cell", "range", "cell_range", "cell_or_range", "value_role"}:return None
+        sheet = locator.get("sheet");ranges = []
+        def address(value):
+            if not isinstance(value, str):return None
+            match = re.fullmatch(r"\$?([A-Za-z]{1,3})\$?([1-9][0-9]{0,6})", value)
+            if not match:return None
+            col = 0
+            for char in match[1].upper():col = col*26+ord(char)-64
+            return (int(match[2]), col) if col <= 16384 and int(match[2]) <= 1048576 else None
+        for key in ("cell", "range", "cell_range", "cell_or_range"):
+            if key not in locator:continue
+            value = locator[key]
+            if not isinstance(value, str):return None
+            parts = value.split(":")
+            if len(parts) not in {1,2}:return None
+            start,end = address(parts[0]),address(parts[-1])
+            if not start or not end or start[0] > end[0] or start[1] > end[1]:return None
+            ranges.append((start,end))
+        if not isinstance(sheet, str) or not ranges or any(r != ranges[0] for r in ranges):return None
+        start,end = ranges[0];selected = []
+        for row in records:
+            loc = row["locator"];at = address(loc.get("cell"))
+            if (at and loc.get("sheet") == sheet and start[0] <= at[0] <= end[0] and start[1] <= at[1] <= end[1]
+                    and locator.get("part",loc.get("part")) == loc.get("part")
+                    and locator.get("part_sha256",loc.get("part_sha256")) == loc.get("part_sha256")):
+                selected.append(row)
+        positions = {address(r["locator"].get("cell")) for r in selected}
+        return "".join(r["text"] for r in selected) if {start,end} <= positions else None
+    return None
+
+
 def _snapshot_covers(origin: Path, old: dict, row: dict, specification: dict) -> bool:
     """Mechanical snapshot suitability, never a semantic-support verdict."""
     bundle = within(origin, BUNDLE_PATH)
@@ -191,7 +298,12 @@ def _snapshot_covers(origin: Path, old: dict, row: dict, specification: dict) ->
         quote = citation.get(specification["quote_key"])
         if isinstance(quote, str) and quote.strip():
             needle = re.sub(r"\s+", "", unescape(quote))
-            if not any(needle in value for value in normalized):
+            if projection.get("format") in {"docx", "xlsx"}:
+                scoped = _native_scope_text(projection, citation.get(specification["locator_key"]))
+                covered = scoped is not None and needle in re.sub(r"\s+", "", unescape(scoped))
+            else:
+                covered = any(needle in value for value in normalized)
+            if not covered:
                 return False
     return True
 
@@ -484,6 +596,21 @@ def _verify(root: Path, *, required: bool = False, archived: bool = False,
 def verify(root: Path, *, required: bool = False, archived: bool = False,
            attempt_verifier: Callable | None = None) -> dict | None:
     try:
+        # 0.26 captures bind the exact collector bytes. Only this known trusted
+        # packaged implementation may verify them; never execute origin code or
+        # rewrite a historical lock/receipt to masquerade as new acquisition.
+        old_sha = "a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240"
+        bundle_manifest = root / BUNDLE_PATH / "manifest.json"
+        if bundle_manifest.is_file() and read(bundle_manifest).get("collector_sha256") == old_sha:
+            trusted_path = Path(__file__).with_name("research_sources_native_v026.py")
+            if trusted_path.is_symlink() or not trusted_path.is_file() or sha(trusted_path) != old_sha:
+                raise ResearchSourceError("RESEARCH_SOURCE_COLLECTOR_DRIFT", "frozen 0.26 verifier")
+            spec = importlib.util.spec_from_file_location("_trusted_native_sources_v026", trusted_path)
+            if spec is None or spec.loader is None:
+                raise ResearchSourceError("RESEARCH_SOURCE_COLLECTOR_DRIFT", "frozen 0.26 verifier unavailable")
+            frozen = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(frozen)
+            return frozen.verify(root, required=required, archived=archived, attempt_verifier=attempt_verifier)
         return _verify(root, required=required, archived=archived, attempt_verifier=attempt_verifier)
     except ResearchSourceError:
         raise

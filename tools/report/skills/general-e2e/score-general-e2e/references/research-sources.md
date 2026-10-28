@@ -1,8 +1,12 @@
 # 独立公开来源取证
 
-## policy v2：原生公开来源（score 0.26.0）
+## policy v2：原生公开来源（score 0.27.0）
 
 `research_source_policy.json`位于冻结private GT，外层仍使用`scoring_runtime: {research_sources: true}`。入口按这个可信文件的schema静态派发；不按候选自报版本或内容加载代码。v1仍调用原`research_sources.py`，collector SHA和既有bundle/lock/text schema不变；不修改旧题GT或既有冻结回执。
+
+0.27的复用资格按原生定位限制短引范围：DOCX可用`node`的`paragraph:N`、`table:N/row:N[/cell:N]`及有明确起止的范围，或`paragraph_1based`、`table_1based`与`row_1based`/`cell_1based`等结构化索引；简单的`/w:document/w:body/w:tbl[N]/w:tr[N][/w:tc[N]]`及正文段落XPath也可定位。XLSX使用`sheet`与`cell`、`range`、`cell_range`或`cell_or_range`，重复给出的定位必须一致。范围端点必须有冻结原生记录，段落/表行/单元格文本按原记录顺序组合，只做原有空白和HTML实体归一化。错行、跳过非空中间cell的拼引、伪造短引、冲突或未知定位不会被整文搜索兜底。这里只判断快照是否覆盖短引，不判语义支持或业务结论。
+
+0.26 v2来源绑定collector SHA `a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240`。包内`research_sources_native_v026.py`保留该精确字节；仅校验这份可信文件的SHA后按固定本地路径加载，用于旧来源的普通/归档验证。当前采集与复用资格始终走新代码，不改旧origin、lock、GET时间或hash，也不执行来源目录中的代码。v1的`4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a`文件保持不变。
 
 v2最小示例：
 
