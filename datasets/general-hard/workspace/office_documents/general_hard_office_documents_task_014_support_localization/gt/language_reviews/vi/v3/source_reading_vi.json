@@ -1,0 +1,434 @@
+{
+  "reviewer_identity": "h014-independent-model-reviewer-vi",
+  "locale": "vi",
+  "review_type": "independent_model_review",
+  "human_expert": false,
+  "assessment_as_of": "2026-10-04T08:00:00+08:00",
+  "source_input_sha256": {
+    "input/release_notes.md": "f1d6ce2d76230c3af6f6f41ea26dc495908b6d2f749a9dada190d6511a29482c",
+    "input/terms.csv": "701ca9d20e35d376326a88185bacc93f79ec3ce33c27725f263befc5d6885d21",
+    "input/support_cases.csv": "49bb3e68f7c8423b68e2e1dd16903efcd815dca7919e976e41bc176e5aaccf2c",
+    "input/faq_old/vi.md": "87b6af91eaf91232801f17ae494f2972b9b6ecfcff47947a76c6b370643f3937"
+  },
+  "facts": [
+    {
+      "fact_id": "F01",
+      "normalized_claims": [
+        "判断时点为2026-10-04 08:00 UTC+08:00。",
+        "稳定版3.2.0已于2026-09-24发布。",
+        "3.2.1于2026-10-02仅面向已经获准加入预览的macOS账号提供。"
+      ],
+      "critical_negations": [
+        "3.2.0不能说成仍为预览或没有稳定版。",
+        "3.2.1不是全平台稳定版；预览渠道身份本身不证明账号获准。"
+      ],
+      "unknown_fields": [
+        "未发布功能承诺日期",
+        "其他平台补丁承诺日期"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F01，行11",
+          "quote": "截至2026-10-04 08:00 UTC+08:00，已发布稳定版为3.2.0，发布日期2026-09-24。3.2.1于2026-10-02仅向已获准加入预览的macOS账号提供，不是全平台稳定版。未给任何未发布功能或其他平台补丁的承诺日期。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F02",
+      "normalized_claims": [
+        "3.2.0所有套餐每文件≤25 MiB、每批≤8文件、每批总量≤100 MiB，须同时满足且含等值边界。",
+        "MiB=2^20字节。"
+      ],
+      "critical_negations": [
+        "不能说总量无限。",
+        "当前限制不能改为MB；不能把单文件限制当作批次总量。",
+        "3.1的10 MB不作为3.2.0当前限制。"
+      ],
+      "unknown_fields": [],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F02，行15",
+          "quote": "3.2.0对所有套餐统一按每个文件不超过25 MiB、每批不超过8个文件、每批总量不超过100 MiB校验，三项须同时满足，边界值可取。MiB为2^20字节，不能改写为MB或把每文件上限当总量。3.1中的10 MB旧口径不再作为3.2.0的当前限制。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F03",
+      "normalized_claims": [
+        "3.2.0每次CSV行数上限：Starter 500、Team 10000、Enterprise 50000，含边界。",
+        "CSV仅含文本字段和元数据。",
+        "导出还需满足F07的Owner或Editor角色权限。"
+      ],
+      "critical_negations": [
+        "CSV不打包附件、二进制内容或完整工作空间。",
+        "不支持无限行数；套餐额度充足不等于具有导出权限。"
+      ],
+      "unknown_fields": [],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F03，行19",
+          "quote": "3.2.0已向Starter/Team/Enterprise分别提供每次500/10000/50000行的CSV导出，上限含边界。CSV只包含文本字段与元数据，不打包附件、二进制内容或完整工作空间。导出还受F07角色权限约束，不能把套餐行数足够当成已有导出权限，也不是无限行数。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F04",
+      "normalized_claims": [
+        "3.2.0支持可提取文本的PDF。",
+        "扫描页及纯图片PDF需要尚未发布的OCR。",
+        "可建议提供可提取文本版本或文字内容。"
+      ],
+      "critical_negations": [
+        "稳定版和3.2.1预览均未发布OCR。",
+        "不能宣称OCR已完成或未发布功能已启用。"
+      ],
+      "unknown_fields": [
+        "OCR上线日期"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F04，行23",
+          "quote": "3.2.0支持可提取文本的PDF。扫描页、纯图片PDF需要OCR，该功能在稳定版及3.2.1预览中均未发布，也无承诺上线日期。可请用户提供可提取文本的版本或文字内容，但不能声称已为其完成OCR或启用了未发布功能。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F05",
+      "normalized_claims": [
+        "Windows 3.2.0有重复同步记录已知问题。",
+        "临时绕过必须依次：将未同步草稿另存副本、关闭并重开受影响文档、重试同步一次。"
+      ],
+      "critical_negations": [
+        "临时绕过不是已发布修复，不能保证永久修复。",
+        "不能让用户删除缓存、删除工作空间或覆盖未同步内容。",
+        "macOS 3.2.1预览不证明Windows已修复。"
+      ],
+      "unknown_fields": [
+        "Windows补丁发布日期"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F05，行27",
+          "quote": "Windows 3.2.0存在重复同步记录的已知问题。临时绕过步骤为先把未同步草稿另存副本，再关闭并重新打开受影响文档，最后重试同步一次；这不是已发布修复。不要让用户删除缓存、删除工作空间或覆盖未同步内容。3.2.1仅为macOS预览，不证明Windows已修复，也无Windows补丁承诺日期。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F06",
+      "normalized_claims": [
+        "离线仅能访问此前打开并缓存的内容，距最近在线身份验证≤24小时，含24小时。",
+        "超过窗口须联网重新验证。"
+      ],
+      "critical_negations": [
+        "窗口到期不表示内容被删除。",
+        "离线不能新建工作空间、导出CSV、处理账单、更改SSO设置。",
+        "不保证永久离线。"
+      ],
+      "unknown_fields": [],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F06，行31",
+          "quote": "离线访问只适用于之前打开且已缓存的内容，须在最近一次在线身份验证后24小时以内（含24小时）。超过窗口应先联网重新验证，不表示内容在24小时后已删除。离线时不能新建工作空间、导出CSV、处理账单或更改SSO设置；不能保证永久离线使用。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F07",
+      "normalized_claims": [
+        "产品角色保留Owner、Editor、Viewer标签。",
+        "Owner和Editor能在套餐额度内导出CSV。",
+        "SSO配置和跨区域迁移评估申请均需Owner办理。",
+        "角色与套餐、地区、渠道条件须同时满足。"
+      ],
+      "critical_negations": [
+        "Viewer不能导出。",
+        "客服不能替用户改角色、授权或声称操作已完成。",
+        "Owner身份不自动满足所有套餐、地区和预览资格条件。"
+      ],
+      "unknown_fields": [],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F07，行35",
+          "quote": "角色标签为Owner、Editor、Viewer。Owner和Editor可在套餐上限内导出CSV，Viewer不能导出。SSO配置和跨区域迁移评估请求均须Owner办理；客服回复不能替用户改角色、授权或声称操作已经完成。角色条件与套餐、区域、渠道条件同时适用。"
+        },
+        {
+          "file": "input/terms.csv",
+          "locator": "T11，CSV行12",
+          "quote": "terminology,T11,roles,,Owner / Editor / Viewer,Owner / Editor / Viewer,Owner / Editor / Viewer,角色标签保留；说明可本地化，不能升级权限。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F08",
+      "normalized_claims": [
+        "SSO仅Enterprise且由Owner配置。",
+        "3.2.0稳定版仅cn-sh、ap-sg开放。",
+        "eu-fr试用必须同时满足Enterprise、Owner、eu-fr、macOS、3.2.1预览渠道、账号已获准加入预览。",
+        "未获准加入者可申请评估。"
+      ],
+      "critical_negations": [
+        "eu-fr尚未GA。",
+        "未获准加入不能说成已启用；仅Owner或仅处于已开放地区不足以抵销非Enterprise条件。"
+      ],
+      "unknown_fields": [
+        "EU正式发布日期",
+        "其他平台预览日期",
+        "未给账号的实际审批结果"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F08，行39",
+          "quote": "SSO仅适用于Enterprise套餐并由Owner配置。稳定版3.2.0目前仅在cn-sh、ap-sg开放；eu-fr尚未GA。eu-fr只能在Enterprise、Owner、macOS、3.2.1预览渠道、账号已获准加入预览这六项同时满足时试用。未获准加入可申请评估，不能回复成已启用；未给EU正式发布或其他平台预览的日期。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F09",
+      "normalized_claims": [
+        "Starter、Team、Enterprise审计保留期分别7、30、90个自然日，从记录产生时间计算，保留期边界当天可查询。"
+      ],
+      "critical_negations": [
+        "超过保留期无自助恢复能力。",
+        "不承诺备份恢复，升级不保证恢复已过期记录。",
+        "审计保留期不同于24小时离线访问窗口。"
+      ],
+      "unknown_fields": [
+        "已过期记录是否存在可用备份或可被实际恢复"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F09，行43",
+          "quote": "Starter/Team/Enterprise的审计记录分别保留7/30/90个自然日，按记录产生时间计算，边界当天可查询。超过保留期无自助恢复能力，不承诺备份找回；升级套餐不能保证恢复已过期记录。此保留期与F06离线访问窗口不同。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F10",
+      "normalized_claims": [
+        "标准退款申请仅直接购买月付订单，付款后≤7自然日且消耗≤10 credits，两项含边界，可提交审核。",
+        "不满足标准条件联系账单团队核实；年付及转售商等其他渠道按相应合同或渠道审核。"
+      ],
+      "critical_negations": [
+        "符合申请条件不等于批准退款。",
+        "不保证即时、全额、金额或完成时间。",
+        "不能把其他渠道断言为一律可退或一律不可退。",
+        "具体退款金额未知，不能写0或按credits自行计算。"
+      ],
+      "unknown_fields": [
+        "税费",
+        "渠道费",
+        "实际批准结果",
+        "具体退款金额",
+        "退款完成时间"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F10，行47",
+          "quote": "标准申请路径只适用于直接购买的月付订单：付款后不超过7个自然日且已消耗不超过10 credits时，可提交退款审核，两项含边界。符合申请条件不等于已获退款，不保证即时、全额、金额或完成时间。未满足标准条件需联系账单团队核实；年付、转售商等其他渠道按相应合同或渠道审核，不据此断言一律可退或一律不退。税费、渠道费和实际批准结果未给，任何具体退款金额均未知，不能填0或擅自计算。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F11",
+      "normalized_claims": [
+        "稳定版无自助跨区域迁移。",
+        "Owner可提交人工评估申请，实际实施需另行审核。",
+        "CSV导入导出只含F03允许范围。"
+      ],
+      "critical_negations": [
+        "提出申请不表示已批准。",
+        "不承诺保留工作空间ID或自动转移附件。",
+        "CSV导出导入不等于完整迁移。",
+        "EU SSO预览资格不自动赋予迁移权限。"
+      ],
+      "unknown_fields": [
+        "迁移上线时间",
+        "个案评估及实施审批结果",
+        "工作空间ID及附件是否能实际保留"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F11，行51",
+          "quote": "稳定版未提供自助跨区域迁移。Owner可提交人工评估请求，实际实施另需审核，不代表请求已经批准；没有承诺可保留工作空间ID或自动转移附件，也没有上线时间。CSV导出/导入只在F03范围内，不等于完整迁移。EU的SSO预览资格不会自动赋予迁移权限。"
+        }
+      ]
+    },
+    {
+      "fact_id": "F12",
+      "normalized_claims": [
+        "支持服务时间周一至周五09:00–18:00 UTC+08:00。",
+        "首次响应目标为2个工作日。"
+      ],
+      "critical_negations": [
+        "这是目标，不是保证、SLA、问题解决时限或退款到账时限。",
+        "不能从未知节假日安排推断个案具体截止日。",
+        "自然日退款窗口不能与工作日响应目标混淆。"
+      ],
+      "unknown_fields": [
+        "节假日安排",
+        "个案具体回复截止日",
+        "解决或退款到账日期"
+      ],
+      "source_evidence": [
+        {
+          "file": "input/release_notes.md",
+          "locator": "F12，行55",
+          "quote": "支持服务时间为周一至周五09:00-18:00，时区UTC+08:00；首次响应目标为2个工作日。这是目标，不是保证、SLA、问题解决时限或退款到账时限。未给节假日安排，不推断具体回复截止日；不要把自然日退款窗口与工作日响应目标混用。"
+        }
+      ]
+    }
+  ],
+  "case_decisions": [
+    {
+      "case_id": "C13",
+      "decision": "reject_single_file_over_limit",
+      "allowed_claims": [
+        "25.1 MiB超过每文件25 MiB上限，当前不能上传这一文件。",
+        "单批还须同时满足≤8文件、总量≤100 MiB；可将文件缩小至≤25 MiB并同时满足其余限制。"
+      ],
+      "prohibited_claims": [
+        "只有1个文件或总量低于100 MiB就可绕过每文件限制。",
+        "将25.1 MiB向下取整当作25 MiB。",
+        "改写MiB为MB。"
+      ],
+      "unknown_fields": [],
+      "source_fact_ids": [
+        "F02"
+      ],
+      "reason": "C13的files_mib=[25.1]，在3.2.0为每文件上限的严格超限；数量和总量通过不抵消单文件失败。"
+    },
+    {
+      "case_id": "C14",
+      "decision": "ocr_unreleased_offer_text_alternative",
+      "allowed_claims": [
+        "扫描PDF需要OCR；稳定版与3.2.1预览都未发布OCR。",
+        "可提供可提取文本版本或文字内容。"
+      ],
+      "prohibited_claims": [
+        "可立即开启OCR。",
+        "预览已支持OCR。",
+        "已完成用户PDF的OCR。",
+        "许诺OCR上线日期。"
+      ],
+      "unknown_fields": [
+        "OCR上线日期"
+      ],
+      "source_fact_ids": [
+        "F04",
+        "F01"
+      ],
+      "reason": "C14为扫描PDF，不能把支持可提取文本PDF扩张为支持扫描页。"
+    },
+    {
+      "case_id": "C15",
+      "decision": "sso_ineligible_plan",
+      "allowed_claims": [
+        "Team不在SSO支持套餐范围，SSO仅Enterprise由Owner配置。",
+        "3.2.0稳定版cn-sh与ap-sg有SSO地区开放，但仍需满足Enterprise套餐。"
+      ],
+      "prohibited_claims": [
+        "Owner加cn-sh即可覆盖Team套餐限制。",
+        "已为其启用SSO或更改套餐、权限。"
+      ],
+      "unknown_fields": [
+        "用户未来套餐变更情况"
+      ],
+      "source_fact_ids": [
+        "F08",
+        "F07"
+      ],
+      "reason": "C15虽为Owner、macOS、cn-sh、稳定版3.2.0，但套餐Team不满足必需Enterprise条件。"
+    },
+    {
+      "case_id": "C16",
+      "decision": "expired_audit_no_recovery_guarantee",
+      "allowed_claims": [
+        "Enterprise保留90个自然日，从记录产生时间算。",
+        "以2026-10-04当前判断时点，2026-07-05记录已超过90自然日；无自助恢复能力，不能保证备份恢复。",
+        "升级套餐不保证恢复已过期记录。"
+      ],
+      "prohibited_claims": [
+        "保证恢复2026-07-05记录。",
+        "宣称已找到备份或已恢复。",
+        "将90自然日说成90工作日。",
+        "因审计过期推导所有工作空间数据已删除。"
+      ],
+      "unknown_fields": [
+        "该记录实际生成时刻",
+        "是否有可用备份",
+        "任何实际人工恢复结果"
+      ],
+      "source_fact_ids": [
+        "F09"
+      ],
+      "reason": "2026-07-05到2026-10-04按日期相差91天，已超过90自然日；缺少具体生成时刻不改变其已超窗口的结论。F09只否定自助恢复和保证，不支持断言一切渠道永远无法恢复。"
+    },
+    {
+      "case_id": "C17",
+      "decision": "manual_migration_assessment_only",
+      "allowed_claims": [
+        "稳定版不支持自助跨区域迁移。",
+        "Owner可提交人工评估申请，实际迁移还需独立审核。",
+        "不承诺保留ID或自动转移全部附件；CSV不是完整迁移。"
+      ],
+      "prohibited_claims": [
+        "已自动迁移或已获批准。",
+        "保证ID及全部附件保留。",
+        "EU SSO预览资格自动授权迁移。",
+        "承诺迁移上线日期。"
+      ],
+      "unknown_fields": [
+        "迁移评估结果",
+        "实施审批结果",
+        "能否保留本案ID及附件",
+        "上线日期"
+      ],
+      "source_fact_ids": [
+        "F11",
+        "F03",
+        "F07"
+      ],
+      "reason": "C17有Owner身份，足以申请人工评估；Enterprise和目标eu-fr均不构成自动迁移或保留ID/附件的依据。"
+    },
+    {
+      "case_id": "C18",
+      "decision": "reseller_annual_contract_review_no_guarantee",
+      "allowed_claims": [
+        "年付转售商订单按合同或相应渠道审核，可联系账单团队或购买渠道核实。",
+        "昨日购买且0 credits不使年付转售商订单自动适用直接月付标准路径。",
+        "不能承诺即时全额退款，金额仍未知。"
+      ],
+      "prohibited_claims": [
+        "按直接月付≤7自然日且≤10 credits立即批准。",
+        "一律可退或一律不可退。",
+        "擅自给出退款金额0或具体金额。",
+        "因0 credits承诺全额。"
+      ],
+      "unknown_fields": [
+        "合同条款",
+        "渠道政策",
+        "税费",
+        "渠道费",
+        "实际审批结果",
+        "具体退款金额",
+        "完成时间"
+      ],
+      "source_fact_ids": [
+        "F10"
+      ],
+      "reason": "C18 billing_channel=reseller_annual，而标准申请路径仅direct_monthly；低用量与购买时间不能覆盖渠道和周期条件。"
+    }
+  ],
+  "source_hierarchy": "release_notes.md为最高事实依据；terms.csv仅统一术语，旧FAQ仅作待纠正对照。"
+}

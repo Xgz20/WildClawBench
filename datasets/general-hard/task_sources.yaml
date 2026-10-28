@@ -1,8 +1,8 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 22
+  active_task_count: 23
   category_task_counts:
-    office_documents: 15
+    office_documents: 16
     data_analysis: 5
     research_verification: 0
     file_operations: 0
@@ -701,3 +701,18 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
+  - task_id: general_hard_office_documents_task_014_support_localization
+    origin:
+      mode: open_benchmark_method_inspired_new_task
+      production_refs: []
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

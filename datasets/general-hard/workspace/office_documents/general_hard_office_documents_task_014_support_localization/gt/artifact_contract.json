@@ -1,0 +1,21 @@
+{
+  "documents": {
+    "zh": "results/faq_zh.docx",
+    "en": "results/faq_en.docx",
+    "vi": "results/faq_vi.docx"
+  },
+  "replies": "results/case_replies.csv",
+  "csv_columns": [
+    "case_id",
+    "locale",
+    "topic_id",
+    "decision",
+    "reply",
+    "source_refs"
+  ],
+  "equivalence": "Topic order, paragraph/table layout, styles, pagination and localized wording may vary. Topics must begin with a visible Kxx identifier. CSV row/column order, optional columns, UTF-8 BOM and CRLF accepted. Labels use the public finite decision vocabulary; no author-specific paragraph or style match.",
+  "private_helper_sha256": {
+    "artifact_io.py": "e799a1b0b5510d1bb4f3ea9c160d1f5e7c101f323baffc65dbe0fb9fd8a762a7",
+    "office_runtime.py": "7dcb510b0a3a234799c8b4bf44f8fa0c8b2d047b43eded3e6010d239fd1c66ac"
+  }
+}

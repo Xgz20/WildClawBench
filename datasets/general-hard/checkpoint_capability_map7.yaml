@@ -260,3 +260,21 @@ general_hard_data_analysis_task_005_retention_cohort:
     - verification_delivery
   evidence_binding:
     - verification_delivery
+general_hard_office_documents_task_014_support_localization:
+  automated.case_routing:
+    - reasoning_planning
+  automated.faq_coverage:
+    - verification_delivery
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - retrieval_verification
+  llm_judge.decision_grounding:
+    - data_processing
+    - reasoning_planning
+  llm_judge.scope_and_promises:
+    - reasoning_planning
+  llm_judge.localization_consistency:
+    - content_generation
+  llm_judge.usable_handoff:
+    - verification_delivery
