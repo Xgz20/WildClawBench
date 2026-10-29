@@ -1,0 +1,655 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 56,
+  "task_id": "general_hard_planning_coordination_task_004_release_go_no_go",
+  "registered_task_index": 56,
+  "registered": 56,
+  "remaining": 4,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 11,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6,
+    "content_operations": 2,
+    "planning_coordination": 4
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/planning_coordination/general_hard_planning_coordination_task_004_release_go_no_go.md",
+      "sha256": "a8610cd386d67d948f1042c13bb9871ebb66950fdb5b7e02a4a50c448bd21c54",
+      "size": 9358
+    },
+    "exec": [
+      {
+        "path": "changes.jsonl",
+        "sha256": "356d96578f14deb12ef416e62265f3d4563d540a4ff84e609aae927cf7607c5f",
+        "size": 886
+      },
+      {
+        "path": "gates.md",
+        "sha256": "8b7d77340e1c2755bd428d404bfa62d87c93bec191d9b9039172c1d2b1684e5f",
+        "size": 7341
+      },
+      {
+        "path": "resources.xlsx",
+        "sha256": "407e02cfaebd07316a89e43c9b289bd7abd4da92b7a9c41254dd62a99e955c68",
+        "size": 6618
+      },
+      {
+        "path": "work_breakdown.csv",
+        "sha256": "b773fd4965175a7b33254a08729873533c6141094bcc3071dff579589e4b43ea",
+        "size": 2223
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "c8bf2ce95caff532a5ab5d7eea4122a965b867dd884fa2773bfe3412d0c04e3a",
+        "size": 2431
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "5afcc2bb0821f5cdea3e3c861fe0648ea0714a1fd3a067e158a07cad40a82bea",
+        "size": 21646
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "5d0c07d8c4d2877abf15cdcde3fd237d2631004345d45a6ac76fbd18ba7d075d",
+        "size": 1374
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "de763fcedfe5c807e555be3c622bc2efb599a8695783c7860ab589935689d219",
+        "size": 793
+      },
+      {
+        "path": "expected.json",
+        "sha256": "3a2b39049e8253f2a50ad710436bfee9a6bf034f3a2666b7a700c2681ffbf237",
+        "size": 2699
+      },
+      {
+        "path": "grader.py",
+        "sha256": "a185665d397349cb6177cd6de8cb14b4356f211c69e6141278f7eb008227189a",
+        "size": 19023
+      },
+      {
+        "path": "native_io.py",
+        "sha256": "398f09b79107733a56eea688e25dbfd13553604ecd93e78b733ee7dda7fa630b",
+        "size": 9240
+      },
+      {
+        "path": "office_runtime.py",
+        "sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+        "size": 65333
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "54113a7e89ed7fefab1d3dd257a7ecb3c11ada03e373034ceaff89374a7f3134",
+        "size": 352
+      },
+      {
+        "path": "schedule_model.py",
+        "sha256": "533ec62090106985a0a24bf9442788c4ce41cd7a6f49e4dc9bfa381a24794298",
+        "size": 1093
+      },
+      {
+        "path": "trusted_files.json",
+        "sha256": "e69d3fee6bbf519cc526e28c3f8d7293b2190662332839a8fa0ea8f30ca26f66",
+        "size": 920
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/handoff.json",
+    "sha256": "92585e624e4a4357ff11f7566aeb62b09f163779b427b0abfc836358ce6ee2fc",
+    "size": 4253
+  },
+  "review": {
+    "kind": "source-first independent Python/Node and root nonblind model not human expert",
+    "frozen_files_verified": 3076,
+    "source_tasks": 18,
+    "events": 4,
+    "valid_events": [
+      "E01",
+      "E02",
+      "E03"
+    ],
+    "rejected_event": "E04",
+    "source_roles": 7,
+    "days": 18,
+    "root_actual_native_readback_both": true,
+    "root_actual_DOCX_pages_seen": 4,
+    "root_workbook_views_seen": 2,
+    "author_all_images_seen": 25,
+    "current_Worker_controls": 38,
+    "static_checks": 47,
+    "native_intervention_fields_independent": 840,
+    "root_duplicate_header_readback_script_error_preserved": true,
+    "minimum_blocker_definition": "minimum cardinality unsatisfied published gates, not MUS"
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_planning_coordination_task_004_release_go_no_go",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/attempts/author-only-h056-formal__detached-zip-worker/general_hard_planning_coordination_task_004_release_go_no_go/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/attempts/author-only-h056-formal__detached-zip-worker/general_hard_planning_coordination_task_004_release_go_no_go/author-only-formal-auto",
+      "candidate_sha256": "e9f2fe3240f9365e3699ce4726b269ea4dcaa995a52e6f9251d7db2f1f48a411",
+      "entry_count": 8
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/moved-without-runtime",
+      "candidate_sha256": "e9f2fe3240f9365e3699ce4726b269ea4dcaa995a52e6f9251d7db2f1f48a411",
+      "entry_count": 8
+    },
+    "nonruntime_same_byte_files": 60,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/document/render-audit.json",
+        "sha256": "5465f0a3c1c1e32e86c79f7838ecaa8b295d1512a97118cf7ea7c643ff590b10",
+        "size": 1852
+      },
+      {
+        "path": "worker/derived/document/rendered.pdf",
+        "sha256": "bd9e6c6c83e939e9ac791df1ac4725a91d2d0aeeb10aed35964a97f6a24d4cd4",
+        "size": 183674
+      },
+      {
+        "path": "worker/derived/h056-analysis.json",
+        "sha256": "e50a48eb06bca7a407e59b38544964e42e9db2048ffba771cda314fa9909d7f8",
+        "size": 17180
+      },
+      {
+        "path": "worker/derived/recalculated/office-audit.json",
+        "sha256": "7c785139c22d8260ce4cb98a88533b18b57ca15b4d2b0649b87e4cd666322ef5",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/recalculated/recalculated.xlsx",
+        "sha256": "89be135c5b42329ca83c1f1a56d4da152120c18e7768539156d5a7ac62c2f930",
+        "size": 17782
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/calculated/office-audit.json",
+        "sha256": "86a94fc7728f38265abc27fd2d9e4689fd9fdec7ba2cb20a01b0b5ac2ac47a61",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/calculated/recalculated.xlsx",
+        "sha256": "48b41fccd30c56bcccc580e30bcc9734dc8e13113e3773feb55d2e6bab63e365",
+        "size": 17797
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/prepared/numeric-intervention-audit.json",
+        "sha256": "235400a0e322f727d37688532cc4d148cd10f60cd2af48677cf2491357b52444",
+        "size": 608
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/prepared/prepared.xlsx",
+        "sha256": "53f570ddc1cbe06bb13e7f0ff4e3e066ae781a14e575f232cef2383507dfef17",
+        "size": 13084
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/calculated/office-audit.json",
+        "sha256": "92e5cd8283fcfc3cd5d94c90bf0eb824595b42337d974d5bdedd12db319e08df",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/calculated/recalculated.xlsx",
+        "sha256": "df15994e9a9fe2198f9abf81d8fd14f4bc71a4e9da40515072a9d0aef132cff7",
+        "size": 17784
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/prepared/numeric-intervention-audit.json",
+        "sha256": "1d9ac1d8e9c6b2e5101422c94aa68fc1bbc8d94495de88c4e0bcf519a6acef8d",
+        "size": 612
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/prepared/prepared.xlsx",
+        "sha256": "78d31bc9ec2b81c4c25bd7303afe49a436d1d1e5c7d8ad8aad8cf41d5e7aa61d",
+        "size": 13055
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/calculated/office-audit.json",
+        "sha256": "e2f22050bde34622caaf5b20b1af6ea0ae06b58999e6f01020d85112dadbafb9",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/calculated/recalculated.xlsx",
+        "sha256": "2ac17add0b56b6ce318d2511b11b25801a30d4ef7dd9b686a6f07006a62e2422",
+        "size": 17788
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/prepared/numeric-intervention-audit.json",
+        "sha256": "1d5faca01ddbe9ad9038f48d568d049c695f880c1c6a59fe4061d2836ffd466c",
+        "size": 608
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/prepared/prepared.xlsx",
+        "sha256": "ac475f6189b95327e86d91ba5a90717799600794d94820288c5819a846192ebd",
+        "size": 13083
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "af769f437cc5ff438ab94191f2ed95d1ba9350092b3f5ece1738ecdbbfd60a4d"
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/document/render-audit.json",
+        "sha256": "5465f0a3c1c1e32e86c79f7838ecaa8b295d1512a97118cf7ea7c643ff590b10",
+        "size": 1852
+      },
+      {
+        "path": "worker/derived/document/rendered.pdf",
+        "sha256": "bd9e6c6c83e939e9ac791df1ac4725a91d2d0aeeb10aed35964a97f6a24d4cd4",
+        "size": 183674
+      },
+      {
+        "path": "worker/derived/h056-analysis.json",
+        "sha256": "e50a48eb06bca7a407e59b38544964e42e9db2048ffba771cda314fa9909d7f8",
+        "size": 17180
+      },
+      {
+        "path": "worker/derived/recalculated/office-audit.json",
+        "sha256": "7c785139c22d8260ce4cb98a88533b18b57ca15b4d2b0649b87e4cd666322ef5",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/recalculated/recalculated.xlsx",
+        "sha256": "89be135c5b42329ca83c1f1a56d4da152120c18e7768539156d5a7ac62c2f930",
+        "size": 17782
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/calculated/office-audit.json",
+        "sha256": "86a94fc7728f38265abc27fd2d9e4689fd9fdec7ba2cb20a01b0b5ac2ac47a61",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/calculated/recalculated.xlsx",
+        "sha256": "48b41fccd30c56bcccc580e30bcc9734dc8e13113e3773feb55d2e6bab63e365",
+        "size": 17797
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/prepared/numeric-intervention-audit.json",
+        "sha256": "235400a0e322f727d37688532cc4d148cd10f60cd2af48677cf2491357b52444",
+        "size": 608
+      },
+      {
+        "path": "worker/derived/variants/T08_duration/prepared/prepared.xlsx",
+        "sha256": "53f570ddc1cbe06bb13e7f0ff4e3e066ae781a14e575f232cef2383507dfef17",
+        "size": 13084
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/calculated/office-audit.json",
+        "sha256": "92e5cd8283fcfc3cd5d94c90bf0eb824595b42337d974d5bdedd12db319e08df",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/calculated/recalculated.xlsx",
+        "sha256": "df15994e9a9fe2198f9abf81d8fd14f4bc71a4e9da40515072a9d0aef132cff7",
+        "size": 17784
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/prepared/numeric-intervention-audit.json",
+        "sha256": "1d9ac1d8e9c6b2e5101422c94aa68fc1bbc8d94495de88c4e0bcf519a6acef8d",
+        "size": 612
+      },
+      {
+        "path": "worker/derived/variants/T09B_cost/prepared/prepared.xlsx",
+        "sha256": "78d31bc9ec2b81c4c25bd7303afe49a436d1d1e5c7d8ad8aad8cf41d5e7aa61d",
+        "size": 13055
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/calculated/office-audit.json",
+        "sha256": "e2f22050bde34622caaf5b20b1af6ea0ae06b58999e6f01020d85112dadbafb9",
+        "size": 1119
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/calculated/recalculated.xlsx",
+        "sha256": "2ac17add0b56b6ce318d2511b11b25801a30d4ef7dd9b686a6f07006a62e2422",
+        "size": 17788
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/prepared/numeric-intervention-audit.json",
+        "sha256": "1d5faca01ddbe9ad9038f48d568d049c695f880c1c6a59fe4061d2836ffd466c",
+        "size": 608
+      },
+      {
+        "path": "worker/derived/variants/T12_duration/prepared/prepared.xlsx",
+        "sha256": "ac475f6189b95327e86d91ba5a90717799600794d94820288c5819a846192ebd",
+        "size": 13083
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+      },
+      {
+        "path": "worker/office-render-runtime.json",
+        "sha256": "af769f437cc5ff438ab94191f2ed95d1ba9350092b3f5ece1738ecdbbfd60a4d"
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "def174e55faba1858f57afe9679aa1cd993d696da2249c57fe8380d4fefdd6f1",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "ef0c2eb895367d3c476ee3f1005d41984edcb12a11f0a7157fcdc4e07008b21d"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/document/render-audit.json",
+          "sha256": "5465f0a3c1c1e32e86c79f7838ecaa8b295d1512a97118cf7ea7c643ff590b10",
+          "size": 1852
+        },
+        {
+          "path": "worker/derived/document/rendered.pdf",
+          "sha256": "bd9e6c6c83e939e9ac791df1ac4725a91d2d0aeeb10aed35964a97f6a24d4cd4",
+          "size": 183674
+        },
+        {
+          "path": "worker/derived/h056-analysis.json",
+          "sha256": "e50a48eb06bca7a407e59b38544964e42e9db2048ffba771cda314fa9909d7f8",
+          "size": 17180
+        },
+        {
+          "path": "worker/derived/recalculated/office-audit.json",
+          "sha256": "7c785139c22d8260ce4cb98a88533b18b57ca15b4d2b0649b87e4cd666322ef5",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/recalculated/recalculated.xlsx",
+          "sha256": "89be135c5b42329ca83c1f1a56d4da152120c18e7768539156d5a7ac62c2f930",
+          "size": 17782
+        },
+        {
+          "path": "worker/derived/variants/T08_duration/calculated/office-audit.json",
+          "sha256": "86a94fc7728f38265abc27fd2d9e4689fd9fdec7ba2cb20a01b0b5ac2ac47a61",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/variants/T08_duration/calculated/recalculated.xlsx",
+          "sha256": "48b41fccd30c56bcccc580e30bcc9734dc8e13113e3773feb55d2e6bab63e365",
+          "size": 17797
+        },
+        {
+          "path": "worker/derived/variants/T08_duration/prepared/numeric-intervention-audit.json",
+          "sha256": "235400a0e322f727d37688532cc4d148cd10f60cd2af48677cf2491357b52444",
+          "size": 608
+        },
+        {
+          "path": "worker/derived/variants/T08_duration/prepared/prepared.xlsx",
+          "sha256": "53f570ddc1cbe06bb13e7f0ff4e3e066ae781a14e575f232cef2383507dfef17",
+          "size": 13084
+        },
+        {
+          "path": "worker/derived/variants/T09B_cost/calculated/office-audit.json",
+          "sha256": "92e5cd8283fcfc3cd5d94c90bf0eb824595b42337d974d5bdedd12db319e08df",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/variants/T09B_cost/calculated/recalculated.xlsx",
+          "sha256": "df15994e9a9fe2198f9abf81d8fd14f4bc71a4e9da40515072a9d0aef132cff7",
+          "size": 17784
+        },
+        {
+          "path": "worker/derived/variants/T09B_cost/prepared/numeric-intervention-audit.json",
+          "sha256": "1d9ac1d8e9c6b2e5101422c94aa68fc1bbc8d94495de88c4e0bcf519a6acef8d",
+          "size": 612
+        },
+        {
+          "path": "worker/derived/variants/T09B_cost/prepared/prepared.xlsx",
+          "sha256": "78d31bc9ec2b81c4c25bd7303afe49a436d1d1e5c7d8ad8aad8cf41d5e7aa61d",
+          "size": 13055
+        },
+        {
+          "path": "worker/derived/variants/T12_duration/calculated/office-audit.json",
+          "sha256": "e2f22050bde34622caaf5b20b1af6ea0ae06b58999e6f01020d85112dadbafb9",
+          "size": 1119
+        },
+        {
+          "path": "worker/derived/variants/T12_duration/calculated/recalculated.xlsx",
+          "sha256": "2ac17add0b56b6ce318d2511b11b25801a30d4ef7dd9b686a6f07006a62e2422",
+          "size": 17788
+        },
+        {
+          "path": "worker/derived/variants/T12_duration/prepared/numeric-intervention-audit.json",
+          "sha256": "1d5faca01ddbe9ad9038f48d568d049c695f880c1c6a59fe4061d2836ffd466c",
+          "size": 608
+        },
+        {
+          "path": "worker/derived/variants/T12_duration/prepared/prepared.xlsx",
+          "sha256": "ac475f6189b95327e86d91ba5a90717799600794d94820288c5819a846192ebd",
+          "size": 13083
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "6a6d8f8e6c3bfe1ef766e2d23d384321cbe27aab861cf33d0e4b36d2d8d33a11",
+        "file_count": 17,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-29T00:35:41.301226Z",
+      "identity": {
+        "batch_id": "author-only-h056-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_planning_coordination_task_004_release_go_no_go",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "ff7ad592803884d976db38ddc66d27fcd9cda6335b734d7a7481b4a9cf853d76",
+        "root_result_count": 3,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "b9cf99b1405dc404e58920aeeb97b23750b7312a0a7b0928da6d4453fe3e1c50",
+        "initial_sha256": "b9cf99b1405dc404e58920aeeb97b23750b7312a0a7b0928da6d4453fe3e1c50"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-29T00:35:29.098036Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 12.093248,
+        "environment_keys": [
+          "GENERAL_E2E_OFFICE_LOCK",
+          "GENERAL_E2E_OFFICE_RENDER_LOCK",
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "office_render_runtime": {
+          "path": "worker/office-render-runtime.json",
+          "sha256": "af769f437cc5ff438ab94191f2ed95d1ba9350092b3f5ece1738ecdbbfd60a4d"
+        },
+        "office_runtime": {
+          "path": "worker/office-runtime.json",
+          "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+        },
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "e5cc8ebfc8c8a1cff66856a2a68eb9d2de9e14db9b5a40e64db1571c156363a0",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "02f535ae56f5180f5e88a4a68a845b61a164ee052106c7441615e4ae2f933c34",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 52616
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": {
+      "prepared": true,
+      "preparation_result": {
+        "status": "PASS",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/attempts/author-only-h056-formal__detached-zip-worker/general_hard_planning_coordination_task_004_release_go_no_go/author-only-formal-auto",
+        "grading_type": "hybrid",
+        "evidence_catalog": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/attempts/author-only-h056-formal__detached-zip-worker/general_hard_planning_coordination_task_004_release_go_no_go/author-only-formal-auto/semantic/evidence-catalog.json",
+        "request": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/attempts/author-only-h056-formal__detached-zip-worker/general_hard_planning_coordination_task_004_release_go_no_go/author-only-formal-auto/semantic/request.json",
+        "semantic_status": "awaiting_response",
+        "response_template": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/attempts/author-only-h056-formal__detached-zip-worker/general_hard_planning_coordination_task_004_release_go_no_go/author-only-formal-auto/semantic/response-template.json"
+      },
+      "queries": [
+        {
+          "evidence_id": "evidence-0007",
+          "path": "candidate-original/workspace/resources.xlsx",
+          "receipt": "semantic-query-1.json",
+          "sha256": "1f65b91fa8739fa5a8f0e47ad06bb74005bd8da839d7c6af17d7f4e32704f022",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0009",
+          "path": "candidate-original/workspace/results/decision.docx",
+          "receipt": "semantic-query-2.json",
+          "sha256": "96410606bdc52dec7e741312aff5f1ff094077eb05f447f39b1a992081bf55a0",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0029",
+          "path": "worker/derived/recalculated/recalculated.xlsx",
+          "receipt": "semantic-query-3.json",
+          "sha256": "cdfcb7ddb7bef41983a826b0b25cdbc8574410892b45685319dfdc44b18b7137",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        }
+      ],
+      "catalog_sha256": "dc6548013ed0b78dd5e882b262ba6236e141d3f415f681313d9000ae08b5c0dd",
+      "frozen_configuration_only": true,
+      "Judge_called": false,
+      "semantic_response_submitted": false
+    },
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/formal-detached-1793234127713277000/validation.json",
+    "sha256": "4aa043dc422a3ec4f594d09d113a8bd29fe4e23a15b195bd21a04b57af7d2727",
+    "size": 20446
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "e28d9597494dc98c3bae8dc33ec6872dece7a3282e469d70dd3e33b35a41567d",
+    "size": 20092
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/static-root-single/20261029T003703Z_f1acdd23cf/report.json",
+      "sha256": "3b8a04d7b881abb0939ce1e714a8e3357b913fbda2dc29a2723fdccfac1f3404",
+      "size": 1243
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h056/qa/static-root-full/20261029T003712Z_1070761af9/report.json",
+      "sha256": "5223928fdd1cf8756c104cda21cca024714ac44505ea2519d4ecb0b5aaec2c3b",
+      "size": 23064
+    },
+    "only_remaining_missing": 4
+  },
+  "source_summary": "4输入、11GT，18任务4事件、7角色18给定工作日，原目标与两备选窗口、现场/远程两路径。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-29T00:37:12.453413+00:00"
+}

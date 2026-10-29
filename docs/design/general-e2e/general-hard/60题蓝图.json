@@ -21413,7 +21413,7 @@
         "exec": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_004_release_go_no_go/exec",
         "gt": "datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_004_release_go_no_go/gt"
       },
-      "prompt_draft": "请完成以下工作：基于最新有效变更给出可执行的发布计划和go/no-go判断，展示关键路径、预算、风险和备选方案；不可行时明确最小阻塞集。\n\n输入材料：\n- /tmp_workspace/work_breakdown.csv：18项准备任务与可替代路径\n- /tmp_workspace/resources.xlsx：人力、场地和预算\n- /tmp_workspace/changes.jsonl：4次需求变更\n- /tmp_workspace/gates.md：发布硬门槛和裁决顺序\n\n交付：\n- /tmp_workspace/results/release_plan.xlsx：依赖/资源/预算\n- /tmp_workspace/results/decision.docx：发布判断及依据\n- /tmp_workspace/results/alternatives.json：备选路径与触发条件\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请完成以下工作：基于最新有效变更给出可执行的发布计划和go/no-go判断，展示关键路径、预算、风险和备选方案；不可行时明确最小阻塞集。\n\n输入材料：\n- /tmp_workspace/work_breakdown.csv：18项准备任务与可替代路径\n- /tmp_workspace/resources.xlsx：人力、场地和预算\n- /tmp_workspace/changes.jsonl：4次需求变更\n- /tmp_workspace/gates.md：发布硬门槛和裁决顺序\n\n交付：\n- /tmp_workspace/results/release_plan.xlsx：依赖/资源/预算\n- /tmp_workspace/results/decision.docx：发布判断及依据\n- /tmp_workspace/results/alternatives.json：备选路径与触发条件\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。\n\n完整遵循gates.md的G01-G07交付契约。18项源任务、4条事件都要裁决；按seq与状态/签署权限折叠，不能把最后一行、最大seq的未批准提案或旧预算当最新有效状态。范围批准和发布执行批准不同。先给原目标W0的当前go/no-go及材料定义的跨路径最小未满足硬门槛集，再给至少一个可排且预算内的后移方案完整排程。六个窗口/路径组合分别判断时间可排性、费用与条件性可行，不能只比较某份参考。T12是否必须及有效工期由变更裁决，不按基础CSV单独判断。\n\n工作簿schedule保留全部18项，所选17项以给定工作日、源先修、逐日最低小时和角色/场地容量排程；未选路径日期留空、工时和费用不纳入，T15-T17保持conditional。同时交loads、cpm、costs、budget表。页名与列序自由，同排表用空白列区分；对应中文表头为：task_id=任务编号，summary=任务说明，owner=责任角色，venue=场地，start_date=开始日期，end_date=结束日期，status=状态，dependencies=前置依赖，acceptance=验收，source_ref=依据，date=日期，role=角色，hours=小时，duration=工期，es=最早开始偏移，ef=最早完成偏移，ls=最晚开始偏移，lf=最晚完成偏移，total_float=总时差，critical=关键标记，selected=选中，fixed_cost=固定费用，extended_cost=计入费用，key=键，value=值。CPM是有效所选源DAG的无资源下界，不能直接当实际日期。工期和固定费用为可计算驱动，相关前后推、时差、关键标记、总费和余额改变时须真实联动。\n\nalternatives.json按G06列有效事件/范围、selected_path/window、current_go、六行window_paths、minimum_blocker_sets、至少一条关键路径、未知批准、两路径触发条件、风险与未决责任。最小集评原目标W0，明确不是最小不可满足子公式；不可用风险清单替代门槛裁决。decision.docx说明no-go依据、方案/预算/关键路径和资源取舍、停止条件与下一步，附G07十项fact_id/value事实表，三产物一致。事实、推断、未知与未来条件性动作区分，不把计划排出当作验收/批准完成。允许不同合法排期、后移窗口及说明，不硬匹配参考措辞。来源定位按G05。不实际发布、支付、创建提醒或发消息，不联网或安装依赖。\n",
       "inputs": [
         {
           "path": "work_breakdown.csv",
@@ -21462,19 +21462,25 @@
         "方案与预算矛盾"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102656,
-        "construction": "独立约束模型核算可行窗口与预算，事件折叠得到最终范围；GT接受多种可行方案，必须识别预埋的硬门槛冲突。",
+        "construction": "原生资源/CSV/JSONL先于参考，Python/Node独立有效事件/资源排程见证，贪心初失败透明保留。root核3076冻结，不导入GT模型从原生源和实际loads独立核两参考W1/W2逐日容量/场地/时长/依赖、17选中费用6700及A7850、CPM13与W0下界不可达；最小阻塞为B/W0时间与批准。840干预字段独立新引擎读回、38最终控制/47静态通过，blank-row截表/mean(generator)/owner和root重复表头脚本错误保留。当前正式独立ZIP再次实际Office清缓存重算/3干预/Word渲染。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "office_runtime.py",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "schedule_model.py",
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许W1/W2合理备选、中文/倒序/BOM/空行和有据的真实附加前置，按给定日历/逐日角色槽及源必要依赖核验，不比参考日期。最小集按公开硬门槛基数定义不冒MUS；未知批准保持no-go，规划可排不等于执行授权，25%Judge审判断及风险语义。",
+        "authoring_evidence": "evidence/h056-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -21626,10 +21632,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/4exec/11GT，完整作者Office/render锁，独立score0.27.1/core0.15.3 ZIP实际清缓存重算、CPM/费用三干预及Word渲染四键自动A1，正常/无runtime搬移同字节；无真实发布/Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h056-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

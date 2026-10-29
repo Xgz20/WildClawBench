@@ -35,3 +35,5 @@ datasets/general-hard/workspace/planning_coordination/general_hard_planning_coor
 datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_001_article_rewrite/gt/reference/equivalent/results/fact_map.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 # H055课程CSV按保护契约保留BOM和标准CRLF。
 datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_003_learning_path/exec/courses.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
+# H056源工作分解CSV按冻结契约保留BOM和标准CRLF。
+datasets/general-hard/workspace/planning_coordination/general_hard_planning_coordination_task_004_release_go_no_go/exec/work_breakdown.csv whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol

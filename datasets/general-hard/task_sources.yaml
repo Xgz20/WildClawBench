@@ -1,13 +1,13 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 55
+  active_task_count: 56
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
     software_engineering: 11
-    planning_coordination: 3
+    planning_coordination: 4
     content_operations: 2
 tasks:
   - task_id: general_hard_software_engineering_task_001_delimiter_validation
@@ -1587,4 +1587,30 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: true
+      difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_planning_coordination_task_004_release_go_no_go
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-04719bea587bbb68
+          query_hash: 04719bea587bbb680e8f41821bcb0b014fb4e54888a5573a86ffa9febca58ed9
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-26 01:02:30.877000'
+          last_seen_local: '2026-09-26 01:02:30.877000'
+          intent_summary: 将提案演示拆为含角色、依赖、交付物、期限和验收的任务清单。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型复核主目标和输入依赖；不等同生产结果正确或人类原创证明。 当前仅为模型复核，没有人类专家审阅凭据。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-office
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
       difficulty_status: design_estimate_unvalidated
