@@ -1,0 +1,14 @@
+{
+  "artifact_contract.json": "94448fb92ffd15e02923af39bc214f1c3d7f1c71950d8a28f3ce4cdbc9181a90",
+  "business_oracle.json": "58267d4dc22c88dae9d2f139f918b758274f6dcd051d65a6fd4970051f11c527",
+  "claim_checks.py": "75ad5438a114da1827381c2af1312bc3cfc2a15f73900cb90b5ffeb38d5d7ce7",
+  "content_io.py": "76050e9d14a58dc13651d8fcb196d23d777194d720eb26b9a9ec3bf40bcbd89a",
+  "counterexamples.json": "d218ea86863e3f5119c5d3c7a4fb2ad90e446a1a71825aa20c3c81e3f81f73ab",
+  "evidence_requirements.json": "562fad048fb7ee3a91fef2b86121ebffcceb1807f49224781a0e30d094fd5c6e",
+  "expected.json": "fa070c832752350cae71b2f18e4842b2537ab20b61871e4ce314b554ef7b8e8e",
+  "grader.py": "8c7f9b48da8413853848c7b07f68919c24bcf8d8e3be6c6371b6292c4a11226c",
+  "html_observer.mjs": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961",
+  "html_runtime.py": "f4696a2973ec37077537323e4ef11e05df945884071f52b17d47b0dd180f503a",
+  "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+  "protected_sha256.json": "0a1ddb329c78d9ee446e4ab3c5ab8c01a561029291d0d7e83b0f1ea1b36ccc5e"
+}

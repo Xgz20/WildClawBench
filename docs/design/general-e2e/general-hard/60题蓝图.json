@@ -22780,7 +22780,7 @@
         "exec": "datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_004_multichannel_update/exec",
         "gt": "datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_004_multichannel_update/gt"
       },
-      "prompt_draft": "请完成以下工作：更新三个渠道内容，处理事实更正和表述冲突，保留各渠道受众与结构，交付中英一致的事实和变更索引，不增加未批准功能承诺。\n\n输入材料：\n- /tmp_workspace/source_article.md：产品介绍原稿\n- /tmp_workspace/approved_facts.json：版本、价格、限制与日期\n- /tmp_workspace/channel_drafts/：官网、小红书和英文邮件旧稿\n- /tmp_workspace/changes.jsonl：3次已批准事实更正\n\n交付：\n- /tmp_workspace/results/website.html：离线官网内容\n- /tmp_workspace/results/social.docx：中文渠道稿\n- /tmp_workspace/results/email_en.md：英文邮件草稿\n- /tmp_workspace/results/change_map.json：事实到各稿位置\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请完成以下工作：更新三个渠道内容，处理事实更正和表述冲突，保留各渠道受众与结构，交付中英一致的事实和变更索引，不增加未批准功能承诺。\n\n输入材料：\n- /tmp_workspace/source_article.md：产品介绍原稿\n- /tmp_workspace/approved_facts.json：版本、价格、限制与日期\n- /tmp_workspace/channel_drafts/：官网、小红书和英文邮件旧稿\n- /tmp_workspace/changes.jsonl：3次已批准事实更正\n\n交付：\n- /tmp_workspace/results/website.html：离线官网内容\n- /tmp_workspace/results/social.docx：中文渠道稿\n- /tmp_workspace/results/email_en.md：英文邮件草稿\n- /tmp_workspace/results/change_map.json：事实到各稿位置\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。\n\n同时阅读/tmp_workspace/update_brief.md。保留7份原输入字节：source_article.md、approved_facts.json、changes.jsonl、update_brief.md及channel_drafts下website.html/social.md/email_en.md。以批准基线和三次approved更正按整数seq折叠，每次完整替换被更正事实对象；未涉及事实延续。旧稿和较晚草稿时间不覆盖批准链。以2026-10-23为本次事实截点，scheduled不能写成已经上线。按12个F编号，在三渠道各提供可见、可读、可复制的对应事实/限制说明；可合并段落、表格或改写，不强制参考结构或逐句翻译。每个渠道都是完整事实交接机会，一项必要事实缺失只阻断实际受影响渠道，不把无关索引声明扩成全局失败。\n\n官网用离线语义HTML与内联样式，ID若使用须唯一；无远程资源、脚本、外部访问、表单提交，不用截图、隐藏字、极小字体或大JSON替代正文。Word是原生中文社交稿，保留场景、两个具体使用步骤、限制和交流问题，不编造按钮或未批准功能。英文邮件有Subject、面向运营受众的开头、事实与限制、review建议，保持草稿，不发送。正文自然表达、限定和否定意义及渠道质量由35%独立Judge审阅，正确结构JSON不证明正文正确。\n\nchange_map.json为object，推荐schema=h060.change-map/v1；mode=draft_only；as_of=2026-10-23；facts为12条fact_id/value/source_ref/locations。value保存该F最终语言无关整对象的全部原字段；有限数字字符串和6%/0.06税率可等价，false必须是false，不得用0或unknown代替。推算如可选含税价可另列derived或在正文明确为测算，不加入批准事实对象。不能补未经批准的功能、地区、认证或收益。\n\n每条locations恰含三条path=website.html/social.docx/email_en.md，相应quote为实际可见正文的精确短引（Unicode及空白归一化，可多事实共用一段）。locator可用kind=quote,occurrence=1起的出现次序（默认1），或kind=paragraph,index=1起的非空原生段落序号（含标题，Word表格可用quote）。允许不同合法结构；复杂合法未实现定位/原生表示由评测端作为异常待复核，不补能力零分。不能让短引只出现在隐藏文字、注释、脚本、代码事实表或JSON中。source_ref：基线用path=approved_facts.json,approval_id,pointer=/facts/Fxx；更正用path=changes.jsonl,change_id,seq,pointer=/changes/Fxx，必须指该F最后有效批准对象，不能仅按物理行号。\n\nchanges另列三条change_id/seq/status=applied/fact_ids，JSON排列顺序自由，后续覆盖不等于该次更正没处理。publication给website=not_deployed、social=draft_only、email=not_sent；这些只是状态声明，不能冒充实际执行证据。其余未决项可列unresolved。三渠道事实、时区、价税口径、否定和权限范围应一致；149是每工作区每月未税价，6%税率不应改成每人或年价。历史99/129、1.0/2.0、旧日期和30天试用可以在明确已撤销的审计说明中出现，不能当当前主张；不因旧数字单独出现就断定错误。\n\n自动端只核来源/索引/实际可见关系、显式数字与标识及已覆盖的高风险明确矛盾，不声称解决所有自由语义。完整35%Judge仍需审三稿全部自然含义、跨语言否定范围、未批准承诺及渠道适配。仅读本题材料，不读GT或真实用户目录，不删除/覆盖输入。仅交付规定四文件，无账号、发送、部署、支付、提醒、网络或依赖安装。\n",
       "inputs": [
         {
           "path": "source_article.md",
@@ -22834,19 +22834,27 @@
         "旧价格残留"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102660,
-        "construction": "以语言无关事实账本折叠更正，GT核版本、价税、限制和日期在所有渠道一致；双语审阅判断限定语义，允许不同措辞但不容忍事实漂移。",
+        "construction": "Root先冻结7输入并由Python有序fold/Node逐事实maxseq独立定12最终值与owner，再由模型作者及独立模型先读源后比GT；两v2参考分别自然改写，保留原v1。Root核4975冻结、原生24值/24owner/72定位和2页Word；57静态与47作者控制汇总留原失败，正式独立ZIP真实HTML/Word派生再验收。",
         "private_files": [
-          "expected.json",
-          "business_oracle.json",
-          "counterexamples.json",
           "artifact_contract.json",
+          "business_oracle.json",
+          "claim_checks.py",
+          "content_io.py",
+          "counterexamples.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "html_observer.mjs",
+          "html_runtime.py",
+          "office_runtime.py",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "接受自然渠道改写、顺序/JSON BOM、有限数字文本和6%/0.06税率、Word段落或quote定位、明确撤销历史数字；false须布尔且批准事实全对象不增字段。数字/高风险明确矛盾和实际可见定位自动核，任意新承诺与完整跨语言语义留35%Judge。",
+        "authoring_evidence": "evidence/h060-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -22998,10 +23006,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/7exec/13GT，score0.27.1/core0.15.3独立ZIP与真实锁定Office/HTML渲染，四键自动A1、语义目录查询及正常/无runtime搬移；非Harness/Judge/hybrid成绩。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h060-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

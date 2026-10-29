@@ -1,0 +1,29 @@
+{
+  "schema": "h060.evidence/v1",
+  "candidate": [
+    "Last approved owner sourceobject pointer for each12 facts",
+    "36 actual visible quote/paragraph locations in three channels",
+    "Three approved changes retained even if later superseded",
+    "Draftpublication declarations are not proof of no transient actions"
+  ],
+  "trusted": [
+    "Original nativebytes/SHA and HTML browserDOM/pixel screenshot audit",
+    "Actual WordPDF/font/source audit and independent textreadback",
+    "Separate source-first Python/Node/root and author-blind observations before reference",
+    "Source/GT/reference/framework hashes beforeafter managed controls"
+  ],
+  "semantic_Judge_required": true,
+  "semantic_weight": 0.35,
+  "formal_later": [
+    "冻结输入和产物SHA",
+    "绑定的执行attempt和终态",
+    "实际工具结果及错误恢复",
+    "规则/Judge逐项证据"
+  ],
+  "limits": [
+    "No actual publishing/sending/network/install/Harness/model/Judge/finalize",
+    "L4/discrimination estimates, all four clients requirepreflight",
+    "Peer and author model QA not human expert review",
+    "HTMLasset lock and actualpixels do not claim complete hostfontcatalog or arbitrary visual-composition proof"
+  ]
+}

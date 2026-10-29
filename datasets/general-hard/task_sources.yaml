@@ -1,6 +1,6 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 58
+  active_task_count: 59
   category_task_counts:
     office_documents: 16
     data_analysis: 10
@@ -8,7 +8,7 @@ registry_contract:
     file_operations: 6
     software_engineering: 12
     planning_coordination: 4
-    content_operations: 3
+    content_operations: 4
 tasks:
   - task_id: general_hard_software_engineering_task_001_delimiter_validation
     origin:
@@ -1665,3 +1665,29 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
+  - task_id: general_hard_content_operations_task_004_multichannel_update
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-43abc947da3b9abc
+          query_hash: 43abc947da3b9abc461c42e4d14c1d47a4891fc19d3f58468417496b786a20d9
+          observed_astudio_turns: 15
+          distinct_users: 10
+          distinct_sessions: 15
+          first_seen_local: '2026-09-14 14:45:16.562000'
+          last_seen_local: '2026-10-15 16:17:32.967000'
+          intent_summary: 基于指定文章生成有观点的公众号文章及便于复制的HTML。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型复核主目标和输入依赖；不等同生产结果正确或人类原创证明。 当前仅有模型复核，没有人类专家审阅凭据。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
+      difficulty_status: design_estimate_unvalidated

@@ -675,3 +675,16 @@ general_hard_content_operations_task_003_marketing_evidence:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_content_operations_task_004_multichannel_update:
+  automated.business_correctness:
+    - content_generation
+  automated.boundary_cases:
+    - reasoning_planning
+  automated.delivery_integrity:
+    - verification_delivery
+  automated.evidence_binding:
+    - verification_delivery
+  llm_judge.decision_grounding:
+    - content_generation
+  llm_judge.usable_handoff:
+    - verification_delivery
