@@ -367,6 +367,14 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         self.assertFalse(original.stat().st_mode & 0o222)
         self.assertTrue(runtime_file.stat().st_mode & stat.S_IWUSR)
         self.assertTrue((attempt / "runtime/workspace/gt/expected.json").is_file())
+        private_gt = attempt / "private/gt/expected.json"
+        runtime_gt = attempt / "runtime/workspace/gt/expected.json"
+        self.assertFalse(private_gt.stat().st_mode & 0o222)
+        self.assertFalse(private_gt.parent.stat().st_mode & 0o222)
+        self.assertEqual(private_gt.read_bytes(), runtime_gt.read_bytes())
+        self.assertTrue(runtime_gt.stat().st_mode & stat.S_IWUSR)
+        frozen_manifest = json.loads((attempt / "attempt-manifest.json").read_text())
+        self.assertEqual(frozen_manifest["private_scoring"]["workspace_entries"][0]["mode"], "0444")
 
         result = RUNTIME.run_rules_attempt(
             attempt_root=attempt,

@@ -1438,6 +1438,10 @@ def prepare_attempt(
         shutil.copytree(gt_private, runtime_workspace / "gt", symlinks=True)
         if path_resolution["mode"] == "mapped-nested":
             shutil.copytree(gt_private, mapped_runtime / "gt", symlinks=True)
+        # Private references are immutable inputs, just like candidate-original.
+        # Freeze before inventory so host Office attribution cannot rewrite a
+        # loose GT file between preparation and the independent judge.
+        _make_read_only(gt_private)
         private_gt_entries, private_gt_sha = _inventory_tree(gt_private)
         _, runtime_initial_sha = _inventory_tree(runtime_workspace)
         (private_root / "contract.json").write_bytes(contract_bytes)
@@ -5200,6 +5204,7 @@ def prepare_rescore_attempt(
         target_gt = private_root / "gt"
         _copy_inventory(source_gt, target_gt, source_gt_entries)
         shutil.copytree(target_gt, runtime_workspace / "gt", symlinks=True)
+        _make_read_only(target_gt)
         private_gt_entries, private_gt_sha = _inventory_tree(target_gt)
         _, runtime_initial_sha = _inventory_tree(runtime_workspace)
 

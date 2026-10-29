@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.12` 在记录摘要前将私有 GT 副本设为只读，防止宿主给 Office 文件追加属性后造成评分输入漂移。规则运行时仍先从原始 GT 建立独立副本；原候选、原评分 ZIP 与旧 attempt 不改写。已经漂移的历史副本保留为变体，使用新 attempt 从冻结输入准备，不删除宿主属性、不修改旧摘要。
+
 `0.10.11` 按冻结契约的 `judge_evidence.required` 收集评分端取证材料。受管 Worker 成功后校验 runtime 的完整 SHA，再把声明目录复制为不可变 `grader-evidence/` 快照，记录原路径、文件 SHA、contract 和 rule audit SHA，并以 `grader_generated_evidence` 类型加入可查询证据索引。它们属于评分端材料，不能计作候选产物或候选自检。缺失、路径越界、链接、候选预占目录和生成后漂移均阻断准入；回传排除一次性 runtime 后仍可 `verify-score --archived`。旧无此声明的契约保持原行为。
 
 
