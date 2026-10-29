@@ -631,3 +631,12 @@ general_hard_content_operations_task_002_source_bound_campaign:
     - content_generation
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_software_engineering_task_012_prd_full_delivery:
+  business_correctness:
+    - code_generation
+  boundary_cases:
+    - code_generation
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

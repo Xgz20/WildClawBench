@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "members": [
+    {
+      "id": "m-viewer",
+      "email": "reader@example.test",
+      "name": "Reader",
+      "role": "viewer",
+      "status": "active",
+      "version": 1
+    },
+    {
+      "id": "m-admin",
+      "email": "admin@example.test",
+      "name": "Admin",
+      "role": "admin",
+      "status": "active",
+      "version": 1
+    },
+    {
+      "id": "m-manager",
+      "email": "manager@example.test",
+      "name": "Manager",
+      "role": "manager",
+      "status": "active",
+      "version": 1
+    },
+    {
+      "id": "m-idle",
+      "email": "idle@example.test",
+      "name": "Old member",
+      "role": "viewer",
+      "status": "inactive",
+      "version": 2
+    }
+  ]
+}

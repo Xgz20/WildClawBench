@@ -1,0 +1,16 @@
+{
+  "editable": [
+    "project/api.py",
+    "project/service.py",
+    "project/repository.py",
+    "project/client.mjs"
+  ],
+  "required": [
+    "results/acceptance.xlsx",
+    "results/tests.txt",
+    "results/handoff.md"
+  ],
+  "new_files_only": "results",
+  "XLSX": "visible native table; fixed12 requirements; no formula requirement or layout-quality score",
+  "trace_fields": "metadata/source hashes plus real fixed public observations; honest FAIL accepted as evidence"
+}

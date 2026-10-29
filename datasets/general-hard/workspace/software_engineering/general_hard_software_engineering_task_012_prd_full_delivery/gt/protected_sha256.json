@@ -1,0 +1,17 @@
+{
+  "requirements.json": "0a0b28e69fc4275945887524787a6cce57bd66f78d6d2b5054691b329fcdc731",
+  "runtime.json": "a4d6c9dc19fd10358208504447bed2b0cedac58d93151debec743d8a114b0081",
+  "runner.py": "78d48a7e4b85b98aa13d7653ab8b4c881ae5aa3286348045ec5372934fde6ea9",
+  "PRD.md": "4d74e0fd9fa690500c7177783533d4aabc5ef9689c6cd3ebb48ecdd8a6a44b44",
+  "index.html": "54563cd77caa2626a7446127bcc824bafa07ea524cbf7b8bcdfa076f55051b5d",
+  "acceptance.py": "5849e88fa3b43c445e0965d659d8d9db0fc2817dce417f999cfb3cebd0dc2fc2",
+  "contract.md": "b3b2366702d44a8a5c10a25e22888630e33ed5206201189a2fcd711d93ac1409",
+  "app.py": "d197646651969a8761d5bf8cdb62cad2934d17c8c7508b41c2b968cfa65fad3e",
+  "client_runner.mjs": "35525d0d51c07da1f82054e651ac293b86cb0235fa8d773ed75365ebac770f6a",
+  "tests_public/test_legacy.py": "17da86790431f8fe25ab276927f92b1169b2d597adcfcebdcccec17f5a79b48e",
+  "project/legacy.py": "887ddea53aa557a6c6288bf59759eb256929c71d4e36f7d32b0512434f0355bf",
+  "project/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "fixtures/acceptance_expected.json": "3654e1f310f67812c2993a450e6a0d7a1d110c50dde7557ffaf185d701c22e49",
+  "fixtures/acceptance_cases.json": "555fc1f729798919f6a723f54def9bddcec733c11b3b37fcb7b0a839851b9694",
+  "fixtures/seed.json": "8fa38264afce1797454325a98671d1672d214e06c55587f6361a9885a13567ca"
+}

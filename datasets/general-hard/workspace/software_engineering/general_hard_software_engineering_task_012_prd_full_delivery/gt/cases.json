@@ -1,0 +1,1859 @@
+[
+  {
+    "case_id": "PUB-R01",
+    "requirement": "R01",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "restart"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?status=all",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "restart"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R02",
+    "requirement": "R02",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/session",
+        "body": {},
+        "actor": "m-manager"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?q=READ&status=all&role=viewer",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R03",
+    "requirement": "R03",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": " NEW-MEMBER@EXAMPLE.TEST ",
+          "name": " New member ",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R04",
+    "requirement": "R04",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "name": "Renamed"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 2,
+          "request_key": "manager-rename",
+          "name": "By manager"
+        },
+        "actor": "m-manager"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R05",
+    "requirement": "R05",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-viewer"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "role": "admin"
+        },
+        "actor": "m-manager"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-manager"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R06",
+    "requirement": "R06",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/m-viewer/deactivate",
+        "body": {
+          "version": 1,
+          "request_key": "stop-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/m-admin/deactivate",
+        "body": {
+          "version": 1,
+          "request_key": "stop-1"
+        },
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R07",
+    "requirement": "R07",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "name": "First"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "stale",
+          "name": "Stale"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R08",
+    "requirement": "R08",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": " NEW-MEMBER@EXAMPLE.TEST ",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R09",
+    "requirement": "R09",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/new-member",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "name": "Version2"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "PUB-R10",
+    "requirement": "R10",
+    "group": "business",
+    "kind": "client",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "load"
+      }
+    ],
+    "actor": "m-manager"
+  },
+  {
+    "case_id": "PUB-R11",
+    "requirement": "R11",
+    "group": "business",
+    "kind": "client",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "load"
+      },
+      {
+        "op": "submit",
+        "operation": "update",
+        "payload": {
+          "id": "m-viewer",
+          "name": "Denied edit",
+          "version": 1
+        },
+        "key": "viewer-edit"
+      }
+    ],
+    "actor": "m-viewer"
+  },
+  {
+    "case_id": "PUB-R12",
+    "requirement": "R12",
+    "group": "business",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/health",
+        "body": {},
+        "actor": ""
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/legacy-export",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "restart"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/legacy-export",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R01",
+    "requirement": "R01",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "restart"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?status=all",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "restart"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R02",
+    "requirement": "R02",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?status=removed",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?status=inactive",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?role=all&q=MANAGER",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R03",
+    "requirement": "R03",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": " IDLE@example.test ",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": " ",
+          "role": "viewer",
+          "request_key": "retry"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "retry"
+        },
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R04",
+    "requirement": "R04",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-admin",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "name": "Attack"
+        },
+        "actor": "m-manager"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "email": "other@example.test"
+        },
+        "actor": "m-manager"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "role": "admin"
+        },
+        "actor": "m-viewer"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "name": "Safe"
+        },
+        "actor": "m-manager"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R05",
+    "requirement": "R05",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/session",
+        "body": {},
+        "actor": "unknown"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "create-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/new-member/deactivate",
+        "body": {
+          "version": 1,
+          "request_key": "stop-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "another",
+          "email": "another@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "new-key"
+        },
+        "actor": "new-member"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members",
+        "body": {},
+        "actor": "m-idle"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R06",
+    "requirement": "R06",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-admin",
+        "body": {
+          "version": 1,
+          "request_key": "edit-1",
+          "role": "viewer"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/m-admin/deactivate",
+        "body": {
+          "version": 1,
+          "request_key": "stop-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R07",
+    "requirement": "R07",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "parallel",
+        "requests": [
+          {
+            "op": "request",
+            "method": "PATCH",
+            "path": "/members/m-viewer",
+            "body": {
+              "version": 1,
+              "request_key": "race-a",
+              "name": "Winner A"
+            },
+            "actor": "m-admin"
+          },
+          {
+            "op": "request",
+            "method": "PATCH",
+            "path": "/members/m-viewer",
+            "body": {
+              "version": 1,
+              "request_key": "race-b",
+              "name": "Winner B"
+            },
+            "actor": "m-admin"
+          }
+        ]
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/members?status=all",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R08",
+    "requirement": "R08",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "parallel",
+        "requests": [
+          {
+            "op": "request",
+            "method": "POST",
+            "path": "/members",
+            "body": {
+              "id": "new-member",
+              "email": "new-member@example.test",
+              "name": "New member",
+              "role": "viewer",
+              "request_key": "duplicate"
+            },
+            "actor": "m-admin"
+          },
+          {
+            "op": "request",
+            "method": "POST",
+            "path": "/members",
+            "body": {
+              "id": "new-member",
+              "email": "new-member@example.test",
+              "name": "New member",
+              "role": "viewer",
+              "request_key": "duplicate"
+            },
+            "actor": "m-admin"
+          }
+        ]
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "Changed",
+          "role": "viewer",
+          "request_key": "duplicate"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "restart"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "duplicate"
+        },
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R09",
+    "requirement": "R09",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "audit_failure",
+        "enabled": true
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "atomic"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "audit_failure",
+        "enabled": false
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "new-member",
+          "email": "new-member@example.test",
+          "name": "New member",
+          "role": "viewer",
+          "request_key": "atomic"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/audit",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R10",
+    "requirement": "R10",
+    "group": "boundary",
+    "kind": "client",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "load"
+      },
+      {
+        "op": "submit",
+        "operation": "create",
+        "payload": {
+          "id": "client-made",
+          "name": "From UI",
+          "email": "UI@EXAMPLE.TEST",
+          "role": "viewer"
+        },
+        "key": "ui-create"
+      }
+    ],
+    "actor": "m-admin"
+  },
+  {
+    "case_id": "BOUND-R11",
+    "requirement": "R11",
+    "group": "boundary",
+    "kind": "client",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "load"
+      },
+      {
+        "op": "submit",
+        "operation": "create",
+        "payload": {
+          "id": "html-member",
+          "name": "<script>x</script>&",
+          "email": "html@example.test",
+          "role": "viewer"
+        },
+        "key": "html"
+      }
+    ],
+    "actor": "m-admin"
+  },
+  {
+    "case_id": "BOUND-R12",
+    "requirement": "R12",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/health",
+        "body": {},
+        "actor": "m-idle"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/no-such-route",
+        "body": {},
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/m-viewer/deactivate",
+        "body": {
+          "version": 1,
+          "request_key": "stop-1"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "restart"
+      },
+      {
+        "op": "request",
+        "method": "GET",
+        "path": "/legacy-export",
+        "body": {},
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R05-receipt-actor",
+    "requirement": "R05",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      },
+      {
+        "id": "second-admin",
+        "email": "second@example.test",
+        "name": "Second",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "key-created",
+          "email": "key-created@example.test",
+          "name": "Key target",
+          "role": "viewer",
+          "request_key": "earlier-key"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/m-admin/deactivate",
+        "body": {
+          "version": 1,
+          "request_key": "deactivate-old-admin"
+        },
+        "actor": "second-admin"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members",
+        "body": {
+          "id": "key-created",
+          "email": "key-created@example.test",
+          "name": "Key target",
+          "role": "viewer",
+          "request_key": "earlier-key"
+        },
+        "actor": "m-admin"
+      }
+    ]
+  },
+  {
+    "case_id": "BOUND-R04-inactive-target-replay",
+    "requirement": "R04",
+    "group": "boundary",
+    "kind": "backend",
+    "seed": [
+      {
+        "id": "m-viewer",
+        "email": "reader@example.test",
+        "name": "Reader",
+        "role": "viewer",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-admin",
+        "email": "admin@example.test",
+        "name": "Admin",
+        "role": "admin",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-manager",
+        "email": "manager@example.test",
+        "name": "Manager",
+        "role": "manager",
+        "status": "active",
+        "version": 1
+      },
+      {
+        "id": "m-idle",
+        "email": "idle@example.test",
+        "name": "Old member",
+        "role": "viewer",
+        "status": "inactive",
+        "version": 2
+      }
+    ],
+    "steps": [
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "name": "Managed name",
+          "version": 1,
+          "request_key": "manager-original"
+        },
+        "actor": "m-manager"
+      },
+      {
+        "op": "request",
+        "method": "POST",
+        "path": "/members/m-viewer/deactivate",
+        "body": {
+          "version": 2,
+          "request_key": "admin-stop"
+        },
+        "actor": "m-admin"
+      },
+      {
+        "op": "request",
+        "method": "PATCH",
+        "path": "/members/m-viewer",
+        "body": {
+          "name": "Managed name",
+          "version": 1,
+          "request_key": "manager-original"
+        },
+        "actor": "m-manager"
+      }
+    ]
+  }
+]

@@ -20127,7 +20127,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_012_prd_full_delivery/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_012_prd_full_delivery/gt"
       },
-      "prompt_draft": "请完成以下工作：按依赖顺序完成需求和缺陷修复，前后端及持久化一致，保留无关功能；逐项提供可运行的验收证据。\n\n输入材料：\n- /tmp_workspace/project/：离线可运行的小型成员管理前后端\n- /tmp_workspace/PRD.md：12项带优先级验收标准\n- /tmp_workspace/fixtures/：角色、重复提交和并发版本样本\n- /tmp_workspace/tests_public/：基础回归\n\n交付：\n- /tmp_workspace/project/：授权模块内实现\n- /tmp_workspace/results/acceptance.xlsx：12项追踪\n- /tmp_workspace/results/tests.txt：实际回归\n- /tmp_workspace/results/handoff.md：运行交接\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请按 /tmp_workspace/PRD.md 的依赖顺序完成12项成员管理需求和缺陷修复。必须有真实后端权限、持久化和前端控制器行为，不接受只写计划、假数据或完成声明。先读 /tmp_workspace/contract.md、requirements.json、runtime.json 及 project 源码。所有记录为原创合成内容，离线完成，无真实账号。L4仅设计估计，900秒仅元数据，不作能力分墙钟阈值。\n\n仅允许修改 /tmp_workspace/project/repository.py、service.py、api.py、client.mjs。其他全部输入原路径原字节保护，含 legacy.py、__init__.py、app.py、index.html、夹具、公开测试、回放器、PRD和runtime。新文件只写results。不得联网/安装/访问私有GT/登录/发消息/调用真实业务接口。可在本机127.0.0.1随机端口启动、调用并关闭本题HTTP子进程以实际验证，不连接其他服务。\n\nrepository使用实际SQLite连接；v1指旧表结构，原型未写PRAGMA（初始user_version=0），需幂等迁移后user_version=2且不丢旧成员。API与service执行服务器当前actor角色检查；管理员写入、manager仅改active非admin成员的name、viewer只读。create规范化邮箱并对全库唯一，更新/停用用原子版本比较；保护最后active admin。actor+request_key的相同规范命令仅写一次，改payload拒绝，失败可重试；当前actor仍须有权才可重放receipt。成员、审计、receipt同一事务，审计失败要完整回滚。保留GET /health、/legacy-export和无关功能，停用为软删除。\n\nclient.mjs提供createController(transport)、render(snapshot)，通过注入的真实HTTP适配层加载/session和/members，提交真实命令并刷新。snapshot不能假数据；失败保留form显示code，成功清空；按角色/行状态控制按钮并转义用户HTML文本。公开支持无外部import的async JS控制器及约定的Python标准库/项目模块；合法但超出profile或基础设施不可用时typed未评估，不伪造零分。这里实际评估HTTP、SQLite和JS/HTML语义，不把函数或HTML检查说成浏览器DOM或Harness证据。\n\npython -B -m unittest discover -s tests_public检查原型窄基础回归；python -B acceptance.py --output results/tests.txt实际在独立目录/非项目cwd启动服务，执行12个固定公开验收和前端控制器，并读回SQLite、关闭服务器。详细协议、错误顺序及公开接口以contract.md为准。不要关闭合法导出/写功能逃避权限或并发检查。\n\n交付四份实际实现源码和：\n- /tmp_workspace/results/acceptance.xlsx：原生可编辑12项追踪；B2最终四源码source_digest，B3 tests.txt原字节SHA256；第6行A:E为id/priority/implementation_paths/test_ids/status，第7行起R01..R12唯一记录，含priority、对应owner模块与PUB-Rxx实际PASS/FAIL。可重排行、改表名、加自由说明；固定义务不能用padding稀释，不要求公式。\n- /tmp_workspace/results/tests.txt：实际公开回归，含h052-acceptance-run/v1 fenced JSON及最终源码、保护回放器/夹具SHA与每个固定情境实际响应/持久化/JS观察；可如实FAIL，业务与真实性分开。\n- /tmp_workspace/results/handoff.md：入口、预置依赖与验证边界，含contract指定source_digest/tests_sha256/entrypoint/real_browser=false/external_services=false的fenced JSON。不要声称未执行的真实Harness/浏览器/Judge/专家验证。\n\n需在干净目录可以启动、跨进程重启保留写入，版本冲突/重复提交/权限拒绝不留下部分状态。自动检查按12项需求固定单位核验，迁移schema版本归R01、正向完整审计归R09；原始全量观察仍用于交付真实性核对。",
       "inputs": [
         {
           "path": "project/",
@@ -20181,20 +20181,43 @@
         "测试结果不绑定最终源码"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102652,
-        "construction": "从PRD独立设计API、状态和界面语义测试，包含并发更新冲突和权限拒绝；检验交付能在干净目录启动，不接受只写完成声明。",
+        "construction": "24原记录期望在参考前由Python/Node独立内存规格和并发线性化枚举冻结，后两边界独立补算，旧24/25真值不变。Root读PRD发现manager目标停用后旧key重放漏当前权限，两模型原先共享歧义，先按已写PRD冻结403期望再修两service并全量38当前Worker控制；旧33及owner断言失败保留。Root核92冻结和两原生PNG，独立核四源码SHA、tests.txt内JSON实际报告和原生12行追踪绑定；正式四源码overlay后独立ZIP真实HTTP/SQLite/JS回放。",
         "private_files": [
-          "expected.json",
-          "business_oracle.json",
-          "counterexamples.json",
           "artifact_contract.json",
-          "protected_sha256.json",
+          "business_oracle.json",
+          "cases.json",
+          "counterexamples.json",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "protected_sha256.json",
+          "source_originals/PRD.md",
+          "source_originals/acceptance.py",
+          "source_originals/app.py",
+          "source_originals/client_runner.mjs",
+          "source_originals/contract.md",
+          "source_originals/fixtures/acceptance_cases.json",
+          "source_originals/fixtures/acceptance_expected.json",
+          "source_originals/fixtures/seed.json",
+          "source_originals/index.html",
+          "source_originals/project/__init__.py",
+          "source_originals/project/api.py",
+          "source_originals/project/client.mjs",
+          "source_originals/project/legacy.py",
+          "source_originals/project/repository.py",
+          "source_originals/project/service.py",
+          "source_originals/requirements.json",
+          "source_originals/runner.py",
+          "source_originals/runtime.json",
+          "source_originals/tests_public/test_legacy.py",
+          "trusted_files.json",
+          "xlsx_reader.py"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "接受事务服务或SQL CAS、原receipt或哈希receipt、class控制器等支持profile；两实际并发胜者按源模型允许的线性化接受，不绑定一个调度次序。原生追踪可重排行及额外解释列，BOM/大写SHA合法；超支持profile/可信依赖失败typed无能力0，VM不是OS安全沙箱。",
+        "authoring_evidence": "evidence/h052-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -20209,7 +20232,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "按依赖顺序完成需求和缺陷修复，前后端及持久化一致，保留无关功能；逐项提供可运行的验收证据。",
+            "criterion": "逐项实际HTTP/SQLite/JS实现12项PRD；源码/持久化/会话角色/前端展示与合法操作一致，按独立需求观察范围评分。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -20218,7 +20241,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：只做前端假数据；遗漏后端权限；测试结果不绑定最终源码。以独立反例验证，不只检索关键词。",
+            "criterion": "独立反例验证权限、最后admin、并发版本/幂等双请求、规范重复、失败重试、原子审计回滚、UI文本/反馈和兼容入口；12个固定需求等权。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -20227,7 +20250,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "保护允许四源码外所有输入，三产物原生可解析且有可使用的12项表格。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -20236,7 +20259,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "固定12个实际公开响应/SQLite/JS观察与最终四源码/夹具/回放器摘要绑定；xlsx状态、测试文本、交接一致，不以自述或padding获得真实性信用。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -20323,10 +20346,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/exec19/GT29、4源码overlay，独立score0.27.1/core0.15.3 ZIP真实localhost随机端口HTTP、SQLite跨连接/重启、JS控制器及HTML语义；自动四键A1，正常/无runtime搬移同字节；无浏览器DOM/Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h052-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

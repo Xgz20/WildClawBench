@@ -1,12 +1,12 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 54
+  active_task_count: 55
   category_task_counts:
     office_documents: 16
     data_analysis: 10
     research_verification: 7
     file_operations: 6
-    software_engineering: 10
+    software_engineering: 11
     planning_coordination: 3
     content_operations: 2
 tasks:
@@ -1562,3 +1562,29 @@ tasks:
     attributes:
       requires_visual_input: false
       coding_primary: false
+  - task_id: general_hard_software_engineering_task_012_prd_full_delivery
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-04305ec19b5afc29
+          query_hash: 04305ec19b5afc29b8bb86bae0ee4961ebd5c68386b2a25101f90ef7e4604139
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-17 11:11:15.314000'
+          last_seen_local: '2026-09-17 11:11:15.314000'
+          intent_summary: 按顺序分析和修复多个缺陷，只修改相关文件并逐项验证。
+          review: accepted_intent_prototype
+          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - wb-code
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: true
+      difficulty_status: design_estimate_unvalidated
