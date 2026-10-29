@@ -35,7 +35,7 @@ categories:
 default_release: general-hard-v1
 releases:
   general-hard-v1:
-    status: building
+    status: ready
     created_at: '2026-10-26T00:00:00+08:00'
     manifest: datasets/general-hard/manifests/general-hard-v1.json
     task_ids:

@@ -1,0 +1,105 @@
+{
+  "schema_version": "general-hard-v1-material-acceptance/v1",
+  "status": "READY_FOR_FIRST_IMMUTABLE_MANIFEST",
+  "checks_at_committed_material_revision": "45b734be1a9ec55fe2d4bc21f6e174f79e02ad70",
+  "task_count": 60,
+  "actual_MD_exec_GT_and_registry_audit": {
+    "status": "PASS",
+    "kind": "Independent actual60 MD/frontmatter/roots/blueprint/source/capability/legacy audit, not model calibration",
+    "task_count": 60,
+    "category_counts": {
+      "office_documents": 16,
+      "data_analysis": 10,
+      "research_verification": 8,
+      "file_operations": 6,
+      "software_engineering": 12,
+      "planning_coordination": 4,
+      "content_operations": 4
+    },
+    "difficulty_counts": {
+      "L2": 12,
+      "L3": 24,
+      "L4": 24
+    },
+    "multimodal": 6,
+    "pure_text": 54,
+    "production_backed_tasks": 42,
+    "distinct_production_queries": 39,
+    "coding_primary": 12,
+    "network": 6,
+    "retrieval_counts": {
+      "open_search": 3,
+      "directed_web_retrieval": 3,
+      "local_evidence": 2
+    },
+    "required_tags": [
+      "custom",
+      "general-hard"
+    ],
+    "pilot_count": 12,
+    "pilot_difficulty": {
+      "L2": 4,
+      "L3": 4,
+      "L4": 4
+    },
+    "legacy_manifest_sha256": "1911c10e5d571a24e798f66e80dbbb608533052e24eebcf50447e61690f596ea",
+    "old_extension_material_diff": 0,
+    "cross_dataset_ID_collisions": 0,
+    "runtime_metadata_flags": {
+      "False": 22,
+      "True": 38
+    },
+    "runtime_flag_limit": "Legacy false flags retained conservatively; actual author evidence links are separate and not upgraded by this audit",
+    "four_harness_calibration": false
+  },
+  "static": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/final-acceptance-v1/static-after-provenance/20261029T032849Z_56073bfaaa/report.json",
+    "sha256": "cc0e0feabaebe920ae77f1f945ff21205d7facf8b810dc7b1a22c03829f136ba",
+    "status": "PASS",
+    "issues": 0
+  },
+  "regressions": {
+    "dataset_catalog_bundle_capability": {
+      "command": "python -m unittest tests.general_e2e.test_dataset_catalog tests.general_e2e.test_dataset_bundle tests.general_e2e.test_capability_audit",
+      "tests_run": 40,
+      "returncode": 0,
+      "reported_elapsed_seconds": 3.607
+    },
+    "proxy_direct_native_legacy_registry": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/root-proxy-transport-acceptance-v1/qa/regressions-result.json",
+      "sha256": "36f60a4f123d9f74e325a0b2cd075df99ff27c271ab010862793cf59e379fe33",
+      "tests_run": 61,
+      "status": "PASS"
+    }
+  },
+  "material_tracking": {
+    "tracked_actual_MD_exec_GT_files": 1923,
+    "untracked_materials": 0,
+    "metadata_excluded": [
+      ".DS_Store",
+      "__pycache__",
+      "*.pyc"
+    ]
+  },
+  "provenance_apply": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/provenance-clarification-v2-preparation/apply-after-all60/receipt.json",
+    "sha256": "2f4baac9412c1a8a53765cbb65c15d1c216694a885b6887f14c62a3450627eec",
+    "protected_files": 40072,
+    "protected_before_after_equal": true
+  },
+  "H031": {
+    "evidence": "h031-reviewed-authoring-20261029.json",
+    "formal_automatic_component": 1,
+    "author_FS_guard_not_bare_CLI": true,
+    "extra_N03_collection_failed_without_Worker_or_A": true,
+    "all_original_business_expectations_passed": false
+  },
+  "boundary": {
+    "candidate_Harness_execution": false,
+    "formal_Judge_or_semantic_score": null,
+    "four_harness_calibration": false,
+    "difficulty": "design_estimate_unvalidated",
+    "legacy_22_runtime_flags_not_upgraded": true
+  },
+  "manifest_created": false
+}
