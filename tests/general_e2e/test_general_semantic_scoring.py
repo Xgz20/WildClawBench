@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 import tempfile
 import unittest
@@ -124,6 +125,33 @@ class GeneralSemanticScoringTests(unittest.TestCase):
                     )
                 parsed_count += 1
         self.assertEqual(parsed_count, 41)
+
+    def test_generated_evidence_is_frozen_and_verifiable_without_runtime(self) -> None:
+        fixture = Fixture(self.root / 'generated-archive', grading_type='llm_judge',
+            grading_weights={'automated': 0, 'llm_judge': 1}, llm_judge_rubric=RUBRIC,
+            rule="from pathlib import Path\ndef grade(transcript, workspace_path):\n p=Path(workspace_path)/'evaluator_evidence'\n p.mkdir()\n (p/'manifest.json').write_text('{}',encoding='utf-8')\n return {'overall_score':0.0}",
+            contract_overrides={
+                'judge_evidence': {'required': [{'path':'evaluator_evidence/','role':'grader_generated_evidence'}]},
+                'rule_result_adapter': {'schema_version':'wildclawbench.general-e2e-numeric-diagnostics/v1',
+                    'diagnostic_keys':['diagnostics'], 'evidence_only':True, 'default_overall':None}})
+        attempt = fixture.prepare()
+        RUNTIME.run_rules_attempt(attempt_root=attempt, runtime_python=Path(sys.executable), timeout_seconds=10)
+        response, candidate_id, transcript_id = self._prepare_and_query(attempt)
+        catalog = json.loads((attempt/'semantic/evidence-catalog.json').read_text())
+        generated_id = next(e['id'] for e in catalog['evidence_index']['entries'] if e['reference']['type']=='grader_generated_evidence' and '/files/' in e['reference']['path'])
+        RUNTIME.query_evidence_attempt(attempt_root=attempt, mode='file', evidence_id=generated_id)
+        for row, score, ids, queries in zip(response['criteria'], [1.0, .5],
+                [[candidate_id, generated_id], [transcript_id]], [['query-0001','query-0003'], ['query-0002']]):
+            row.update(status='judged', score=score, reason='合成证据与测试档位一致，仅用于验证证据归档和计分接口。',
+                evidence_ids=ids, review={'query_ids':queries,'supporting_evidence_checked':True,
+                    'contradicting_evidence_checked':True,'absence_claim':False,'complete_event_range_checked':False})
+        source = attempt/'synthetic-response.json'
+        source.write_text(json.dumps(response,ensure_ascii=False),encoding='utf-8')
+        RUNTIME.record_semantics_attempt(attempt_root=attempt,response_path=source)
+        result = RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        self.assertAlmostEqual(result['score']['result']['total_score'], .8)
+        RUNTIME._remove_tree(attempt/'runtime')
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt,archived=True)['score_valid'])
 
     def test_automated_task_generates_not_required_semantics_and_standard_score(self) -> None:
         fixture = Fixture(self.root / "automated")

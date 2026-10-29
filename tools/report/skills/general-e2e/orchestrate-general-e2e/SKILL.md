@@ -3,6 +3,9 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.11` 支持 `llm_judge` 题的零权重取证 Worker。只有冻结契约同时声明非空 Automated Checks 和必需 `grader_generated_evidence` 时，才先进入 RULES_READY；取证和校验完成后再登记独立语义评分项目。该步骤不占语义评分槽、不产生规则能力分、不改评分类型、Rubric 或权重。新评分 Prompt 冻结此路径，恢复时从原 contract 重新核对；旧纯语义题继续直接进入项目登记。生成证据和归档快照由 score >=0.10.11 校验，失败不创建 Judge、不补零。
+
+
 # 编排 General E2E 评分
 
 `0.11.10` 的v7 Prompt及preflight将HTML离线验证环境前置；hybrid沿用冻结规则runtime，纯语义HTML可通过preflight的browser-runtime-python/playwright-browsers-path显式配置。预检只读合成fixture，失败不创建Judge；具体协议见冻结score Skill的references/offline-browser-validation.md。旧v3–v6 Prompt与已完成attempt保持原契约。

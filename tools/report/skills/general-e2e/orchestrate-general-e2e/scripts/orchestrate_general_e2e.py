@@ -611,6 +611,17 @@ def _load_identity(
     return identity, frozen_judge, selected
 
 
+def _requires_rule_evidence(attempt: Path) -> bool:
+    manifest = _read_json(attempt / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID")
+    if manifest.get("grading", {}).get("type") != "llm_judge":
+        return False
+    contract = _read_json(attempt / manifest["paths"]["contract"], "SCORING_CONTRACT_INVALID")
+    return bool(str(contract.get("automated_checks") or "").strip()) and any(
+        isinstance(entry, dict) and entry.get("role") == "grader_generated_evidence"
+        for entry in (contract.get("judge_evidence") or {}).get("required", [])
+    )
+
+
 def _prompt_text(
     task_id: str,
     attempt_id: str,
@@ -620,6 +631,7 @@ def _prompt_text(
     score_skill: Mapping[str, Any] | None = None,
     *,
     prompt_protocol: str = PROMPT_PROTOCOL,
+    rule_evidence_required: bool = False,
 ) -> str:
     runtime_usage = ""
     rule_instruction = (
@@ -628,6 +640,12 @@ def _prompt_text(
         if grading_type == "hybrid"
         else "本题是 llm_judge；不运行自动规则，只完成语义证据、判定、合分与校验。"
     )
+    if rule_evidence_required:
+        rule_instruction = (
+            "本题是 llm_judge；控制端已用受管 Worker 生成并冻结契约要求的取证材料，自动计分权重为零。"
+            "先核对 rule-component.json 的 evidence_preparation_only 标记与取证来源，勿重复运行取证代码；"
+            "只按语义 Rubric 计分，并通过 query-evidence 查询 grader_generated_evidence，不能把评分端生成的材料当作候选产物。"
+        )
     if validation is None:
         readiness_instruction = (
             "若当前 Skill 尚不能形成正式评分，保留输入并明确报告未就绪，"
@@ -996,6 +1014,7 @@ def initialize(
                 raise OrchestrationError("GRADING_TYPE_INVALID", str(grading_type))
             if not isinstance(attempt_judge, dict):
                 raise OrchestrationError("JUDGE_CONFIG_INVALID", "attempt manifest")
+            rule_evidence_required = _requires_rule_evidence(attempt_root)
             current_api_runtime = attempt_judge.get("api_runtime")
             if judge["protocol"] == "api-judge-v1":
                 if not isinstance(current_api_runtime, dict):
@@ -1022,18 +1041,20 @@ def initialize(
                         grading_type,
                         validation,
                         score_skill,
+                        rule_evidence_required=rule_evidence_required,
                     ),
                     encoding="utf-8",
                     newline="\n",
                 )
                 prompt_sha256 = _sha256_file(prompt_path)
                 initial_phase = (
-                    "RULES_READY" if grading_type == "hybrid" else "AWAITING_PROJECT"
+                    "RULES_READY" if grading_type == "hybrid" or rule_evidence_required else "AWAITING_PROJECT"
                 )
             tasks.append(
                 {
                     **common_task,
                     "grading_type": grading_type,
+                    "rule_evidence_required": rule_evidence_required,
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -1238,6 +1259,7 @@ def initialize_rescore(
                 raise OrchestrationError("GRADING_TYPE_INVALID", str(grading_type))
             if not isinstance(attempt_judge, dict):
                 raise OrchestrationError("JUDGE_CONFIG_INVALID", "attempt manifest")
+            rule_evidence_required = _requires_rule_evidence(attempt_root)
             current_api_runtime = attempt_judge.get("api_runtime")
             if judge["protocol"] == "api-judge-v1":
                 if not isinstance(current_api_runtime, dict):
@@ -1264,19 +1286,21 @@ def initialize_rescore(
                         grading_type,
                         validation,
                         score_skill,
+                        rule_evidence_required=rule_evidence_required,
                     ),
                     encoding="utf-8",
                     newline="\n",
                 )
                 prompt_sha256 = _sha256_file(prompt_path)
                 initial_phase = (
-                    "RULES_READY" if grading_type == "hybrid" else "AWAITING_PROJECT"
+                    "RULES_READY" if grading_type == "hybrid" or rule_evidence_required else "AWAITING_PROJECT"
                 )
             tasks.append(
                 {
                     "task_id": task_id,
                     "order": index,
                     "grading_type": grading_type,
+                    "rule_evidence_required": rule_evidence_required,
                     "execution": dict(source_task["execution"]),
                     "execution_record_path": frozen_record.relative_to(staging).as_posix(),
                     "execution_record_sha256": source_task["execution_record_sha256"],
@@ -1826,6 +1850,7 @@ def _verify_state(
                 validation,
                 state["score_skill"],
                 prompt_protocol=str(state.get("prompt_protocol")),
+                rule_evidence_required=task.get("rule_evidence_required", False),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
@@ -1853,6 +1878,8 @@ def _verify_state(
         manifest_identity = manifest_document.get("identity")
         manifest_judge = manifest_document.get("judge")
         manifest_grading_type = (manifest_document.get("grading") or {}).get("type")
+        if task.get("rule_evidence_required", False) != _requires_rule_evidence(attempt):
+            raise OrchestrationError("SCORING_EVIDENCE_ROUTE_DRIFT", str(task.get("task_id")))
         expected_judge = state.get("judge", {})
         if (
             not isinstance(manifest_identity, dict)
@@ -2671,7 +2698,7 @@ def run_rule_score_task(
     state = _verify_state(root)
     task = _task_by_id(state, _identifier(task_id, "task_id"))
     grading_type = task.get("grading_type")
-    if grading_type not in {"automated", "hybrid"}:
+    if grading_type not in {"automated", "hybrid"} and not task.get("rule_evidence_required"):
         raise OrchestrationError("RULE_COMPONENT_NOT_REQUIRED", task_id)
     if task.get("phase") not in RULE_PHASES:
         raise OrchestrationError("RULE_COMPONENT_NOT_EXPECTED", task_id)
@@ -2746,11 +2773,17 @@ def run_rule_score_task(
             )
             _save(root, state, event_time)
             raise
-    _run_score_command(state["score_skill"], ["verify", "--attempt-root", str(attempt)])
+    try:
+        _run_score_command(state["score_skill"], ["verify", "--attempt-root", str(attempt)])
+    except BaseException as exc:
+        task["phase"] = "RULES_NEEDS_ATTENTION"
+        task["history"].append({"at": _timestamp(event_time), "event": "RULE_COMPONENT_VERIFICATION_FAILED", "error": str(exc)})
+        _save(root, state, event_time)
+        raise
     task["history"].append(
         {"at": _timestamp(event_time), "event": "RULE_COMPONENT_RECORDED"}
     )
-    if grading_type == "hybrid":
+    if grading_type == "hybrid" or task.get("rule_evidence_required"):
         if state.get("prompt_protocol") == PROMPT_PROTOCOL:
             task["rule_runtime"] = {"python": _score_python_lock(runtime_python),
                 "playwright_browsers_path": str(playwright_browsers_path.expanduser().absolute()) if playwright_browsers_path else None}

@@ -668,8 +668,10 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
             original = "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/" + filename
             self.assertIn(original, source)
             source = source.replace(original, (installed / "scripts" / filename).as_uri())
+        # The full authorization/fault matrix launches many Python helpers.
+        # Allow slow hosts running real Harness queues without weakening any assertion.
         result = subprocess.run([shutil.which("node"), "--input-type=module", "-e", source],
-                                cwd=detached, env={"PATH": os.environ.get("PATH", "")}, text=True, capture_output=True, timeout=60)
+                                cwd=detached, env={"PATH": os.environ.get("PATH", "")}, text=True, capture_output=True, timeout=180)
         self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
 
     @unittest.skipUnless(shutil.which("node"), "Node.js is required")

@@ -80,6 +80,7 @@ class Fixture:
         reasoning_effort: str | None = "high",
         grading_type: str = "llm_judge",
         grading_types: tuple[str, ...] | None = None,
+        contract_overrides: dict | None = None,
     ) -> None:
         self.root = root
         self.batch_id = "batch-orchestration"
@@ -182,6 +183,7 @@ class Fixture:
                     "Score 1.0: correct\n"
                 ),
             }
+            contract.update(contract_overrides or {})
             contract_bytes = json.dumps(contract).encode("utf-8")
             task_bytes = f"# {task_id}\n".encode("utf-8")
             gt_bytes = json.dumps({"answer": f"answer-{index + 1}"}).encode("utf-8")
@@ -367,6 +369,30 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp.cleanup()
+
+    def test_pure_semantic_evidence_producer_runs_before_project_and_uses_no_semantic_slot(self) -> None:
+        overrides = {
+            "automated_checks": "from pathlib import Path\ndef grade(transcript, workspace_path):\n p=Path(workspace_path)/'evaluator_evidence'\n p.mkdir()\n (p/'manifest.json').write_text('{}',encoding='utf-8')\n return {'overall_score':0.0}",
+            "judge_evidence": {"required": [{"path": "evaluator_evidence/", "role": "grader_generated_evidence"}]},
+            "rule_result_adapter": {"schema_version": "wildclawbench.general-e2e-numeric-diagnostics/v1",
+                                    "diagnostic_keys": ["diagnostics", "诊断"], "evidence_only": True, "default_overall": None},
+        }
+        fixture = Fixture(self.root / "evidence-only", task_ids=("task-evidence",), grading_type="llm_judge", contract_overrides=overrides)
+        view = fixture.initialize(now=self.t0)
+        self.assertEqual(view['tasks'][0]['phase'], 'RULES_READY')
+        self.assertEqual(view['recommended_actions'][0]['action'], 'RUN_RULE_COMPONENT')
+        root = Path(view['orchestration_root'])
+        state = ORCHESTRATOR._verify_state(root)
+        self.assertEqual(ORCHESTRATOR._semantic_active_tasks(state), [])
+        with patch.object(ORCHESTRATOR, '_run_score_command', side_effect=self._direct_local_score_command):
+            ready = ORCHESTRATOR.run_rule_score_task(root, task_id='task-evidence', runtime_python=Path(sys.executable), now=self.t0)
+        self.assertEqual(ready['tasks'][0]['phase'], 'AWAITING_PROJECT')
+        self.assertEqual(ready['recommended_actions'][0]['action'], 'REGISTER_PROJECT')
+        attempt = Path(ready['tasks'][0]['attempt_path'])
+        self.assertTrue((attempt/'runtime/workspace/evaluator_evidence/manifest.json').is_file())
+        state = ORCHESTRATOR._verify_state(root)
+        prompt = (root/state['tasks'][0]['prompt_path']).read_text(encoding='utf-8')
+        self.assertIn('自动计分权重为零', prompt)
 
     def _record_first_project(self, fixture: Fixture, view: dict, *, now=None) -> dict:
         task = view["tasks"][0]

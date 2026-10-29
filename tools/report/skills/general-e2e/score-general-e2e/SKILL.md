@@ -3,6 +3,9 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.11` 按冻结契约的 `judge_evidence.required` 收集评分端取证材料。受管 Worker 成功后校验 runtime 的完整 SHA，再把声明目录复制为不可变 `grader-evidence/` 快照，记录原路径、文件 SHA、contract 和 rule audit SHA，并以 `grader_generated_evidence` 类型加入可查询证据索引。它们属于评分端材料，不能计作候选产物或候选自检。缺失、路径越界、链接、候选预占目录和生成后漂移均阻断准入；回传排除一次性 runtime 后仍可 `verify-score --archived`。旧无此声明的契约保持原行为。
+
+
 `0.10.10` 兼容新旧数据集。旧 Rubric 继续要求组内权重和为 1；新冻结契约以 `semantic_weight_scale` 显式声明分值预算，转换后仍乘原组权重，原 Rubric 不改写。新规则的 `rule_result_adapter` 仅分离声明的诊断对象，Worker 同时保存原始 `raw_result` 和适配后的 `result`。零规则权重的证据准备不产生候选能力分，缺证和运行环境失败继续返回评测异常。Office 第 1 题仅按其已声明的公共数字接口计算规则等权均值。依赖按更新后的 runtime lock 和带哈希 requirements 安装；旧已冻结轮次的运行时不自动替换。
 
 

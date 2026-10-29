@@ -104,6 +104,52 @@ class DatasetCompatibilityTests(unittest.TestCase):
 
 
 class ScoringTransportCompatibilityTests(unittest.TestCase):
+    def test_generated_evidence_paths_reject_escape_and_candidate_output_aliases(self):
+        for path in ('../escape', '/absolute', '.', 'gt/reference.txt', 'results/answer.txt'):
+            with self.subTest(path=path), self.assertRaises(RUNTIME.ScoringRuntimeError):
+                RUNTIME._required_generated_evidence({'judge_evidence': {'required': [{'path':path,'role':'grader_generated_evidence'}]}})
+
+    def test_generated_evidence_does_not_promote_an_existing_candidate_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ScoringFixture(Path(tmp), rule="def grade(transcript,workspace_path):\n raise AssertionError('must not execute')",
+                grading_type='llm_judge', grading_weights={'automated':0,'llm_judge':1},
+                llm_judge_rubric="### A (key: a, weight: 1)\n**Score 0.0**: wrong\n**Score 1.0**: right",
+                contract_overrides={'judge_evidence':{'required':[{'path':'answer.txt','role':'grader_generated_evidence'}]}})
+            attempt = fixture.prepare()
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, 'JUDGE_EVIDENCE_TARGET_COLLISION'):
+                RUNTIME.run_rules_attempt(attempt_root=attempt,runtime_python=Path(sys.executable),timeout_seconds=10)
+            self.assertFalse((attempt/'worker').exists())
+
+    def test_pure_semantic_generated_evidence_is_required_bound_and_not_candidate_output(self):
+        policy = {"schema_version": "wildclawbench.general-e2e-numeric-diagnostics/v1",
+                  "diagnostic_keys": ["diagnostics", "诊断"], "evidence_only": True, "default_overall": None}
+        rule = "from pathlib import Path\ndef grade(transcript, workspace_path):\n p=Path(workspace_path)/'evaluator_evidence'\n p.mkdir()\n (p/'manifest.json').write_text('{\\\"role\\\":\\\"evaluator\\\"}',encoding='utf-8')\n return {'diagnostics': {'exported': True}}"
+        required = {"required": [{"path": "evaluator_evidence/", "role": "grader_generated_evidence"}]}
+        rubric = "### A (key: a, weight: 1)\n**Score 0.0**: wrong\n**Score 1.0**: right"
+        with tempfile.TemporaryDirectory() as tmp:
+            fixture = ScoringFixture(Path(tmp), grading_type="llm_judge", grading_weights={"automated": 0, "llm_judge": 1},
+                llm_judge_rubric=rubric, rule=rule, contract_overrides={"rule_result_adapter": policy, "judge_evidence": required})
+            attempt = fixture.prepare()
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "JUDGE_EVIDENCE_NOT_PREPARED"):
+                RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+            self.assertFalse((attempt / 'semantic').exists())
+            RUNTIME.run_rules_attempt(attempt_root=attempt, runtime_python=Path(sys.executable), timeout_seconds=10)
+            RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+            catalog = json.loads((attempt/'semantic/evidence-catalog.json').read_text())
+            generated = [e for e in catalog['evidence_index']['entries'] if e['reference']['type']=='grader_generated_evidence']
+            payload = [e for e in generated if '/files/' in e['reference']['path']]
+            self.assertEqual(len(payload), 1)
+            self.assertTrue(payload[0]['reference']['path'].startswith('grader-evidence/files/evaluator_evidence/'))
+            self.assertEqual(payload[0]['reference']['sha256'], hashlib.sha256((attempt/payload[0]['reference']['path']).read_bytes()).hexdigest())
+            self.assertFalse(any(e['reference'].get('path','').startswith('runtime/') for e in catalog['evidence_index']['entries']))
+            snapshot = json.loads((attempt/'grader-evidence/manifest.json').read_text())
+            self.assertIs(snapshot['candidate_output'], False)
+            manifest = json.loads((attempt/'attempt-manifest.json').read_text())
+            contract = json.loads((attempt/manifest['paths']['contract']).read_text())
+            (attempt/snapshot['files'][0]['source_path']).write_text('tampered', encoding='utf-8')
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "JUDGE_EVIDENCE_DRIFT"):
+                RUNTIME._generated_evidence_files(attempt, manifest, contract)
+
     def test_evidence_only_rule_flows_through_managed_attempt_and_semantic_preparation(self):
         policy = {"schema_version": "wildclawbench.general-e2e-numeric-diagnostics/v1",
                   "diagnostic_keys": ["diagnostics", "诊断"], "evidence_only": True, "default_overall": None}
