@@ -1,0 +1,18 @@
+{
+  "schema": "h058-evidence-requirements/v1",
+  "csv_fields": [
+    "citation_id",
+    "content_id",
+    "source_id",
+    "quote",
+    "author",
+    "version_id",
+    "line_start",
+    "line_end",
+    "source_sha256",
+    "campaign_locator"
+  ],
+  "source_sha_binding": "actual frozen Sxx.md hash",
+  "campaign_locator": "Pxx:正文 resolves to actual visible native content record, no fixed page coordinate",
+  "derived": "Actual locked Office Word PDF/XLSX reopened file plus source SHA audits and final rule witness; custody only hashes are not semantic correctness"
+}

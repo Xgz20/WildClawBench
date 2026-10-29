@@ -1,0 +1,15 @@
+{
+  "schema": "h058-runtime-contract/v1",
+  "libraries": {
+    "python-docx": "1.2.0",
+    "openpyxl": "3.1.5",
+    "pypdf": "6.10.0"
+  },
+  "dependencies_preinstalled": true,
+  "formula_policy": "no formulas required; any present formula cleared and really recalculated by locked Office, no cached fallback",
+  "office_runtime_lock": "office-runtime-lock.json",
+  "office_render_lock": "office-render-lock.json",
+  "candidate_error": "missing/corrupt/incompatible candidate file or active content reduces relevant opportunities",
+  "infrastructure_error": "missing/drifted GT or dependency/locked Office/font/Worker or trusted operation timeout is evaluation_error, no ability zero component",
+  "hybrid_semantic_boundary": "Rule only checks observable native facts; Judge decides whether themes, interpretations and channel adaptation are source-supported and useful."
+}

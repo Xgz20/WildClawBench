@@ -1,0 +1,28 @@
+{
+  "schema": "h058-trusted-manifest/v1",
+  "files": {
+    "artifact_contract.json": "369419e9dd17b9e4a3dbbf154783d56258bcac92b8f2589f6a9aa28d61c72aa3",
+    "business_oracle.json": "fd66cb510d7b8db443ea53aee2e2f9c7e69f6acd979da06f4221745d512dc4ef",
+    "counterexamples.json": "74d97cc121f692c33d6b3ccb17a769849cfaa5769681ab972f9b9feb28ed55a6",
+    "evidence_requirements.json": "e705f8e62099a1fe14acb7ee7618d437f6bf761f4d6a0ef6ad7950af2a207ed3",
+    "expected.json": "77a25f084e7a4efcb471aed22a5c88ce4405136e64efa863829b15656e7f7fbb",
+    "grader.py": "ec130ba5e396c8e4fd191fbfaee6aa8dfe1e7b8827845891c20e53524fe68307",
+    "office-render-lock.json": "6b6636d1c9315d3565779813fddb1f611a434c0eed650eff5ff1c016d5630c4b",
+    "office-runtime-lock.json": "6b5b216b9f30c081018ddfb758b87a24bf4b1c839e502d1e817e82851327e0be",
+    "office_runtime.py": "f56b3efe064fc862a0b352012010e9fc149da3c1d5cd10f6f1b0d5968ae90859",
+    "protected_inputs/acceptance.md": "d7ee6cde7031401fdd7704c0b7ff2ad7913dff77434f1cc1b2caa3acd9e25c04",
+    "protected_inputs/brand_brief.md": "dec0542d505cfbff9c0cbbbc1abdc0b53e9fbe810d7bf154812a5b2f1df45cc5",
+    "protected_inputs/channel_rules.json": "a2eee7a3d2b312f63e71db00e7b8c1763198495417d4064d89955b59c566a6ac",
+    "protected_inputs/source_texts/S01.md": "b1c3e4927217410f7b2709c67c5780d3f478b96f68848c0791c0a6295c0dbe85",
+    "protected_inputs/source_texts/S02.md": "ad3fe74523019bc46e16bb40fd0139c74eb8168f6bf429bf1e35caa0aeec8897",
+    "protected_inputs/source_texts/S03.md": "810f6869e3d35b8a65b58c0841538c4f82c7cbc793857a9757967c646ef41297",
+    "protected_inputs/source_texts/S04.md": "8438c330fa0598304bb7b3caa4912b85c42b05ff5778372c19db56293db3d073",
+    "protected_inputs/source_texts/S05.md": "5889f541b61741c1dc2d077924f9164898ea122e28d5473b8f85e407abaeb343",
+    "protected_inputs/source_texts/S06.md": "7cd6e7e9b8bc596bb444647f2b61bb964b2e625758b262428b4b7ab155732004",
+    "protected_inputs/source_texts/S07.md": "42f24ad9d259612b42001062133c583aa59647cd3c5b975ad9cfcbc0164c621f",
+    "protected_inputs/source_texts/S08.md": "ef7b1f5c352acbfbf5078642d33bf785fb55a9caf4fceff307e73fe507974a10",
+    "protected_inputs/source_texts/catalog.json": "131b914ac5c98effb9d83aa067f9d43029e1c84cd4331bf6c188cd88ef0dc006",
+    "protected_sha256.json": "dc4fb7d31a2a3d09b1667066c95be648f649a3096fde0de8ca846f4705b4872d",
+    "runtime_contract.json": "4028c559a9e861d1b8c61316c62209c15442cfccf1e95b1188b904726eeaed0d"
+  }
+}

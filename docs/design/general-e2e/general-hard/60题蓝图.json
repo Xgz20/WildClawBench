@@ -22036,7 +22036,7 @@
         "exec": "datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_002_source_bound_campaign/exec",
         "gt": "datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_002_source_bound_campaign/gt"
       },
-      "prompt_draft": "请完成以下工作：研读素材后形成三个选题与对应渠道文案，解释引文与选题的关联；引文、作者和释义不能张冠李戴，不以热词拼贴代替内容。\n\n输入材料：\n- /tmp_workspace/source_texts/：8段公版诗文及作者版本信息\n- /tmp_workspace/brand_brief.md：账号定位、受众和禁用表达\n- /tmp_workspace/channel_rules.json：3种渠道字数和结构要求\n\n交付：\n- /tmp_workspace/results/campaign.docx：选题、文案和渠道适配\n- /tmp_workspace/results/citations.csv：引文、作者、版本与位置\n- /tmp_workspace/results/calendar.xlsx：一次性发布建议表\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 离线完成，不访问网络。",
+      "prompt_draft": "研读八段古诗素材，为「把古诗读进日常」形成三个主题与三渠道内容方案。解释引文与选题的关联，不能编造古语、错配作者，或把同一正文机械截断。\n\n先读/tmp_workspace/brand_brief.md、channel_rules.json和acceptance.md，再读source_texts/catalog.json与S01至S08.md。素材已在作者端核对固定网页转录版本、作者及异文，离线使用；未核纸本校勘版本的缺口也已标明，不能宣称你核过纸本。原作公版与现代网页译注版权分开，文案自行释义。\n\n交付/tmp_workspace/results/campaign.docx、citations.csv、calendar.xlsx。Word含三个不同主题，每主题论点、至少两处素材依据、自己的释义、选题关联和延伸边界；全案至少六个source_id。每主题分别写公众号C1、小红书C2、短视频C3，共P11至P33九条。按acceptance的稳定编号与字段写可编辑原生段落/表格；其它措辞、选题、版式可不同。各条有标题、完整正文、标签、引文编号和适配说明，长度与结构以channel_rules为准。原句用“”括起，与个人读法、现代建议分开。\n\nCSV记录实际原句、source_id、作者、版本、相邻行号、素材文件SHA和Word内容编号定位。所有引文必须来自给定行，不能引用记忆中未提供的版本；引用匹配忽略标点与空白，不替换简繁或异文。版本和作者不能用来源编号存在来蒙混。\n\nExcel一条对应一篇，共九条一次性发布建议，原生日期或完整ISO日期均可，遵守2026年11月2日至8日、每日最多两条和同日同渠道最多一条。时段、虚构编辑角色、待人工确认状态和引用编号一并交接。不固定参考排期；无公式也有效，有公式须能被预置Office实际重算，不能依赖旧缓存。\n\n只读取本题exec映射到/tmp_workspace的材料，GT不提供；全部新产物写results，保护输入不改。不联网、登录真实账号、发消息、实际发布或设置定时/循环任务。一次性日历只是建议，没有执行授权。使用已有原生办公读写/渲染能力，不安装外部依赖；若能力缺失须如实报告。区分事实、编辑读法、建议和未知，不虚构已核版本、效果或已完成操作。\n\n评分端支持单表不超过3000行、100列的原生日历布局；合法但超出此读取profile的工作簿保留为未评估，不能据此补能力零分。\n禁用表达不得用于各渠道标题和正文；主题边界说明中的明确否认须与肯定营销承诺区分，不能只按词语出现断言语义违规。",
       "inputs": [
         {
           "path": "source_texts/",
@@ -22081,19 +22081,38 @@
         "不同渠道机械截断"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102658,
-        "construction": "GT采用经过核验的公版原文与作者表，标注可接受释义和容易混淆的对照；规则核引文及渠道约束，Judge判断论点能否由素材支持。",
+        "construction": "原文/作者/固定转录版本先于参考，另一出版路径核异文并保留未核纸本边界。root核353冻结，独立从原生MD/CSV/Word/XLSX重核18引文作者/版本/相邻行/SHA/实际正文和18日历行日期容量，实际看8页Word。原26受管控制与失败保留，root实测合法日历远行布局在原GT被扣分；初XML夹具编码错误保留纠正后，规范XML对旧GT确证同一损分，新v2只将合法超读取profile转typed，2正例A1/大坐标无规则组件。正式当前ZIP再次真实Office重算/渲染A1及归档。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
+          "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "office-render-lock.json",
+          "office-runtime-lock.json",
+          "office_runtime.py",
+          "protected_inputs/acceptance.md",
+          "protected_inputs/brand_brief.md",
+          "protected_inputs/channel_rules.json",
+          "protected_inputs/source_texts/S01.md",
+          "protected_inputs/source_texts/S02.md",
+          "protected_inputs/source_texts/S03.md",
+          "protected_inputs/source_texts/S04.md",
+          "protected_inputs/source_texts/S05.md",
+          "protected_inputs/source_texts/S06.md",
+          "protected_inputs/source_texts/S07.md",
+          "protected_inputs/source_texts/S08.md",
+          "protected_inputs/source_texts/catalog.json",
           "protected_sha256.json",
-          "evidence_requirements.json"
+          "runtime_contract.json",
+          "trusted_manifest.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "接受不同主题/释义/现代提案/排期和原生坐标行列；引用采用已给转录字形，不擅自把异文改同；词表禁用于渠道标题正文，主题边界明确否认须与肯定承诺区分。引文语义/释义/渠道适配留35%Judge，合法超3000行100列profile typed无能力0。",
+        "authoring_evidence": "evidence/h058-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -22108,7 +22127,7 @@
             "capabilities": [
               "content_generation"
             ],
-            "criterion": "研读素材后形成三个选题与对应渠道文案，解释引文与选题的关联；引文、作者和释义不能张冠李戴，不以热词拼贴代替内容。",
+            "criterion": "43个固定规则机会：9条的结构/引用事实/实际原句/引用关系各4项，3主题的字段与多素材依据各2项，以及全案至少6段素材；语义不由关键词替代。",
             "oracle_reference": "gt/expected.json + gt/business_oracle.json"
           },
           {
@@ -22117,7 +22136,7 @@
             "capabilities": [
               "reasoning_planning"
             ],
-            "criterion": "逐项识别并正确处理：伪造古语；作者错配；不同渠道机械截断。以独立反例验证，不只检索关键词。",
+            "criterion": "48个固定机会：9条各4项渠道字数/标题/结构/标签禁用表达，3组非同文前缀，9条一次性日期容量与待人工确认状态。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -22126,7 +22145,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "三份原生文件可解析和实际Office可打开、输入SHA、9条日历跨产物图、可见Word记录与CSV字段；.35/.25/.25/.15。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -22135,7 +22154,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "9条各有实际素材SHA与Word正文定位，共18个固定绑定机会。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -22245,10 +22264,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/12exec/24GT，独立score0.27.1/core0.15.3 ZIP、既有锁定Office/字体/Worker实际Word渲染与Excel清缓存重算，四键自动A1；正常/无runtime搬移68文件同字节，无发布/自动化/Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h058-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [

@@ -1,6 +1,6 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 53
+  active_task_count: 54
   category_task_counts:
     office_documents: 16
     data_analysis: 10
@@ -8,7 +8,7 @@ registry_contract:
     file_operations: 6
     software_engineering: 10
     planning_coordination: 3
-    content_operations: 1
+    content_operations: 2
 tasks:
   - task_id: general_hard_software_engineering_task_001_delimiter_validation
     origin:
@@ -1537,3 +1537,28 @@ tasks:
       requires_visual_input: false
       coding_primary: false
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_content_operations_task_002_source_bound_campaign
+    origin:
+      mode: production_adapted_with_open_benchmark_methods
+      production_refs:
+        - candidate_id: ACQ-0bbf976e3bbd54d8
+          query_hash: 0bbf976e3bbd54d8fd10020c93983da18ddadd1fae1923fe28a3a672b3a2ec16
+          observed_astudio_turns: 1
+          distinct_users: 1
+          distinct_sessions: 1
+          first_seen_local: '2026-09-15 17:31:57.809000'
+          last_seen_local: '2026-09-15 17:31:57.809000'
+          intent_summary: 研读古籍素材，为内容账号生成选题、标题、文案与标签。
+          review: accepted_intent_prototype
+          review_basis: 模型复核AStudio来源与意图原型；未有人类专家复核记录。原蓝图中人工复核字样作为历史元数据保留在blueprint-snapshot与旧QA，不据此宣称人类审核。
+          adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
+      external_source_ids:
+        - gdpval
+      direct_task_copy: false
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false
