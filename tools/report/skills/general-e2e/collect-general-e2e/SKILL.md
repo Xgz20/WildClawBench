@@ -7,6 +7,8 @@ description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹�
 
 # 采集 General E2E 证据
 
+`0.11.4` 区分 unified exec 的单次输出等待耗时和进程退出观察器记录的进程耗时。二者不强制数值相等；仅当精确绑定的原生 `commandExecution` 完成项逐项证明 call ID、命令、cwd、输出、退出码、状态和原始 durationMs 时，接受这两种已知计时口径。差异写为带 SHA 的 `bindings/unified-exec-tool-timing.json`，保留双方原值及原始行引用，不合并、不补造计时。缺少原生证明、内容冲突和未知形状仍拒绝，bash 原有校验不变；既有回执和冻结发行不覆盖。
+
 `0.11.3` 新增显式 `bound-terminal-final-recapture/v1`。只有本轮已授权该 profile、旧冻结回复精确匹配同 turn 唯一较早助手消息、原生 completed 消息/provider/SDK 终稿逐字一致且候选树未变时，才创建新的补采 state/回复。原 state、旧 execution record、旧回复、授权与三源证明全部进入 `binding_evidence`，不重发、不修改候选、不放宽原终稿一致性门禁。finalize 与 verify-only 重新计算补采证明和引用闭包；原 run-config、attempt、评分规则不改。已获得覆盖该严格 profile 的授权后，无需逐题重复询问；超出已授权范围仍暂停。详见 [终态回复补采](references/terminal-final-recapture.md)。
 
 `0.11.2` 补齐资源采集回执的绑定来源闭包：独立校验全部 `binding_evidence` 的路径、字节 SHA 和大小，并将其纳入 `collection.sources`。新增原生日志→资源采集→真实 finalize→verify-only 的完整合成回归；缺失或篡改来源仍拒绝。旧制品和旧发行不改写。

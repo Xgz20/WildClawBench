@@ -324,6 +324,51 @@ FROM provider_runtime_events WHERE thread_id=? AND turn_id=? ORDER BY sequence
   }
 });
 
+test('archive preserves distinct unified exec timing as hashed binding evidence', async () => {
+  const f = await createFixture();
+  try {
+    f.state.execution = { started_at: '2026-09-17T10:00:01.000Z', finished_at: '2026-09-17T10:00:03.000Z' };
+    await writeFile(f.stateFile, JSON.stringify(f.state));
+    const db = new DatabaseSync(f.stateDatabase);
+    db.prepare("DELETE FROM provider_runtime_events WHERE event_id IN ('event-user','event-turn-start')").run();
+    for (const eventId of ['event-call', 'event-result']) {
+      const original = JSON.parse(db.prepare('SELECT event_json FROM provider_runtime_events WHERE event_id=?').get(eventId).event_json);
+      const item = original.payload.data.item;
+      item.command = "/bin/zsh -lc 'printf ready'";
+      item.commandActions = [{ type: 'unknown', command: 'printf ready' }];
+      if (eventId === 'event-result') Object.assign(item, { aggregatedOutput: 'ready', durationMs: 3002 });
+      db.prepare('UPDATE provider_runtime_events SET event_json=? WHERE event_id=?').run(JSON.stringify(original), eventId);
+    }
+    db.close();
+    const r = (type, payload) => ({ type, timestamp: '2026-09-17T10:00:02.000Z', payload });
+    const rows = [r('session_meta', { id: SESSION_ID, cwd: f.workspace }),
+      r('event_msg', { type: 'task_started', turn_id: TURN_ID }),
+      r('turn_context', { turn_id: TURN_ID, cwd: f.workspace }),
+      r('event_msg', { type: 'user_message', message: '请修复温度换算程序。' }),
+      r('response_item', { type: 'function_call', name: 'exec_command', call_id: 'call-command-1', arguments: '{"cmd":"printf ready"}' }),
+      r('response_item', { type: 'function_call_output', call_id: 'call-command-1', output: 'Chunk ID: abc\nWall time: 2.9001 seconds\nProcess exited with code 0\nOriginal token count: 2\nOutput:\nready' }),
+      r('response_item', { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: '已完成修复，测试 OK。' }] }),
+      r('event_msg', { type: 'task_complete', turn_id: TURN_ID, duration_ms: 2000, last_agent_message: '已完成修复，测试 OK。' })];
+    const rolloutFile = join(f.root, 'unified-exec.jsonl');
+    await writeFile(rolloutFile, rows.map(JSON.stringify).join('\n') + '\n');
+    const result = await archiveAstronStudioTrace({ stateFile: f.stateFile, stateDb: f.stateDatabase, outputDir: f.outputDir, rolloutFile });
+    assert.equal(result.trace_index.completeness.status, 'complete');
+    const ref = result.trace_index.binding_evidence.find(a => a.path === 'bindings/unified-exec-tool-timing.json');
+    const auditBytes = await readFile(join(f.outputDir, ref.path));
+    assert.equal(digest(auditBytes), ref.sha256);
+    const audit = JSON.parse(auditBytes);
+    assert.equal(audit.timing_values_merged, false);
+    assert.equal(audit.observations[0].provider_process_duration_ms, 3002);
+    assert.equal(audit.observations[0].sdk_wait_duration_seconds, 2.9001);
+    const metrics = await collectAstronStudioResourceMetrics({ stateFile: f.stateFile, traceIndex: join(f.outputDir, 'trace-index.json') });
+    const document = JSON.parse(await readFile(metrics.output, 'utf8'));
+    assert.ok(JSON.stringify(document.collection.sources).includes('bindings/unified-exec-tool-timing.json'));
+    await writeFile(join(f.outputDir, ref.path), '{}');
+    await assert.rejects(collectAstronStudioResourceMetrics({ stateFile: f.stateFile,
+      traceIndex: join(f.outputDir, 'trace-index.json'), output: join(f.root, 'tampered-metrics.json') }), /BINDING|SHA|HASH/);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
 test("new archive uses bound SDK transcript when desktop projection omits prompt and items", async () => {
   const fixture = await createFixture();
   try {

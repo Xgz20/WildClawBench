@@ -21,6 +21,49 @@ const fixture = () => [r('session_meta', { id: 's', cwd: state.session.cwd }),
 const bytes = rows => Buffer.from(rows.map(v => JSON.stringify(v)).join('\n') + '\n');
 const projection = { events: [], calls: [] };
 
+for (const [label, normalize] of [['canonical', normalizeRolloutTranscript], ['vendored', vendoredNormalizer]]) {
+  test(`${label}: bound unified exec process duration is distinct from response wait duration`, () => {
+    const rows = fixture();
+    rows[5].payload.output = 'Chunk ID: abc\nWall time: 2.9001 seconds\nProcess exited with code 0\nOriginal token count: 2\nOutput:\nunchanged\n';
+    const item = { type: 'commandExecution', id: 'c', command: "/bin/zsh -lc 'cat installer.sh'",
+      cwd: state.session.cwd, status: 'completed', aggregatedOutput: 'unchanged\n', exitCode: 0, durationMs: 3002 };
+    const provider = { calls: [{ call_id: 'c' }], events: [
+      { type: 'tool_call', source: { raw_ref: 'raw/astronstudio-provider-events.jsonl#L6' }, tool: {
+        call_id: 'c', name: 'command', arguments: { command: item.command, cwd: item.cwd,
+          command_actions: [{ command: 'cat installer.sh' }] } } },
+      { type: 'tool_result', source: { raw_ref: 'raw/astronstudio-provider-events.jsonl#L7' }, tool: {
+        call_id: 'c', name: 'command', result: { output: item.aggregatedOutput, exit_code: 0,
+          duration_ms: 3002, status: 'completed' } } },
+    ], projection_rows: [{ raw_line: 7, event_type: 'item.completed', event: { payload: { data: { item } } } }] };
+    const result = normalize(bytes(rows), state, provider);
+    assert.equal(result.completeness.status, 'complete');
+    assert.deepEqual(result.tool_timing_observations, [{
+      profile: 'unified-exec-process-and-wait-duration/v1', provider_process_duration_ms: 3002,
+      sdk_wait_duration_seconds: 2.9001, duration_values_are_equivalent: false,
+      command_output_exit_identity_verified: true, call_id: 'c',
+      provider_raw_ref: 'raw/astronstudio-provider-events.jsonl#L7', sdk_raw_ref: 'raw/astronstudio-rollout.jsonl#L6',
+    }]);
+    const rawItem = p => p.projection_rows[0].event.payload.data.item;
+    for (const mutate of [
+      p => { delete p.projection_rows; },
+      p => { rawItem(p).type = 'unknown'; },
+      p => { rawItem(p).id = 'other'; },
+      p => { rawItem(p).durationMs = 4000; },
+      p => { rawItem(p).exitCode = 1; },
+      p => { rawItem(p).status = 'unknown'; },
+      p => { rawItem(p).command = "/bin/zsh -lc 'unbound'"; },
+      p => { rawItem(p).aggregatedOutput = 'changed'; },
+      p => { rawItem(p).cwd = '/tmp/other'; },
+      p => { p.events[1].tool.result.output = 'changed'; },
+      p => { p.events[1].tool.result.exit_code = 1; },
+      p => { p.events[1].tool.result.duration_ms = -1; },
+    ]) {
+      const changed = structuredClone(provider); mutate(changed);
+      assert.throws(() => normalize(bytes(rows), state, changed), /PROVIDER_ROLLOUT_TOOL_(?:CWD_)?CONFLICT/);
+    }
+  });
+}
+
 function toolSearchFixture() {
   const rows=fixture();
   rows[4].payload={type:'tool_search_call',call_id:'search',id:'search',status:'completed',execution:'client',arguments:{query:'read browser text'}};

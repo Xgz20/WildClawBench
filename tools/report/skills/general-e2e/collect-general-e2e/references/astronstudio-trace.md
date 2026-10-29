@@ -36,6 +36,10 @@ trace/
 
 ## 完整性
 
+### Unified exec 计时
+
+`exec_command` 响应中的 `Wall time` 来自本次输出等待区间，原生 `commandExecution.durationMs` 来自等待进程退出且输出排空的观察器。此二者不是同一个计时区间，不使用容差或数值覆盖来使其相等。仅对可按原始完成项验证的已知投影，保存 `unified-exec-process-and-wait-duration/v1` 审计；原始命令、cwd、输出、退出码和状态必须同时一致。审计作为 `binding_evidence` 参与哈希与来源闭包校验，SDK 响应正文及 provider 原件均保留。此适配不修改任务耗时、规则、候选或分数。
+
 ### 明确选择规范来源
 
 默认 `--source-policy provider-reconciled` 保持原严格对账行为。新评测若在准备阶段明确选定原生 SDK 规范来源，归档命令增加 `--source-policy bound-native-sdk`；该选择必须在本轮配置/来源审计中提前冻结，不能按结果、采集成功率或得分在运行中切换。

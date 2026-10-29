@@ -99,7 +99,7 @@ function verifyProjectedCwd(projected, call, workspace) {
     && projected.tool.arguments?.cwd === expected, 'PROVIDER_ROLLOUT_TOOL_CWD_CONFLICT');
 }
 
-function verifyProjectedTool(projected, native, call, projectionRow) {
+function verifyProjectedTool(projected, native, call, projectionRow, workspace) {
   const p = projected.tool, n = native?.tool, args = call?.tool.arguments;
   ensure(n && call, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
   if (['astron_publish_artifact', 'astron_bind_artifact', 'astron_allocate_artifact'].includes(p.name)
@@ -134,9 +134,29 @@ function verifyProjectedTool(projected, native, call, projectionRow) {
     } else {
       const match = typeof n.result === 'string'
         && /^Chunk ID: [a-zA-Z0-9_-]+\nWall time: (\d+(?:\.\d+)?) seconds\nProcess exited with code (-?\d+)\nOriginal token count: \d+\nOutput:\n([\s\S]*)$/.exec(n.result);
-      ensure(match && p.result?.exit_code === Number(match[2]) && (p.result.output ?? '') === match[3]
-        && (p.result.duration_ms == null || (Number.isFinite(p.result.duration_ms) && p.result.duration_ms >= 0
-          && Math.round(p.result.duration_ms * 10) / 10000 === Number(match[1]))), 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+      ensure(match && Number.isFinite(Number(match[1])) && p.result?.exit_code === Number(match[2])
+        && (p.result.output ?? '') === match[3]
+        && (p.result.duration_ms == null || (Number.isFinite(p.result.duration_ms) && p.result.duration_ms >= 0)),
+      'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+      if (p.result.duration_ms != null && Math.round(p.result.duration_ms * 10) / 10000 !== Number(match[1])) {
+        // unified_exec's response measures its output-wait interval; its exit
+        // watcher separately measures the drained process lifetime. Accept
+        // distinct values only with the bound native commandExecution item.
+        const item = projectionRow?.event?.payload?.data?.item;
+        const shells = args.shell == null ? desktopShells : desktopShells.filter(shell => shell === args.shell);
+        const flag = args.login === false ? '-c' : '-lc';
+        ensure(projectionRow?.event_type === 'item.completed' && item?.type === 'commandExecution'
+          && item.id === p.call_id && item.id === call.tool.call_id
+          && item.durationMs === p.result.duration_ms && item.exitCode === p.result.exit_code
+          && (item.aggregatedOutput ?? '') === (p.result.output ?? '')
+          && ['completed', 'failed'].includes(item.status) && item.status === p.result.status
+          && shells.some(shell => [shellQuote(command), shellDoubleQuote(command)]
+            .some(quoted => item.command === `${shell} ${flag} ${quoted}`)), 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
+        verifyProjectedCwd({ tool: { name: 'command', arguments: { cwd: item.cwd } } }, call, workspace);
+        return { profile: 'unified-exec-process-and-wait-duration/v1',
+          provider_process_duration_ms: p.result.duration_ms, sdk_wait_duration_seconds: Number(match[1]),
+          duration_values_are_equivalent: false, command_output_exit_identity_verified: true };
+      }
     }
     return;
   }
@@ -164,7 +184,7 @@ const text = content => {
 export function normalizeRolloutTranscript(bytes, state, provider, { sourcePolicy = 'provider-reconciled' } = {}) {
   ensure(TRANSCRIPT_SOURCE_POLICIES.includes(sourcePolicy), 'ROLLOUT_SOURCE_POLICY_UNSUPPORTED');
   const analysis = analyzeRollout(bytes, state);
-  const events = [], calls = new Map(), missing = [], assistants = [], mirrors = [], projectionConflicts = [];
+  const events = [], calls = new Map(), missing = [], assistants = [], mirrors = [], projectionConflicts = [], timingObservations = [];
   let current = null, terminal = null;
   const append = (row, line, event) => {
     const value = {
@@ -282,7 +302,9 @@ export function normalizeRolloutTranscript(bytes, state, provider, { sourcePolic
         (row.raw_ref ?? `raw/astronstudio-provider-events.jsonl#L${row.raw_line}`) === e.source?.raw_ref) ?? [];
       ensure(rows.length <= 1, 'PROVIDER_ROLLOUT_TOOL_CONFLICT');
       try {
-        verifyProjectedTool(e, native, call, rows[0]);
+        const timing = verifyProjectedTool(e, native, call, rows[0], state.session.cwd);
+        if (timing) timingObservations.push({ ...timing, call_id: e.tool.call_id,
+          provider_raw_ref: e.source.raw_ref, sdk_raw_ref: native.source.raw_ref });
         if (e.type === 'tool_call') verifyProjectedCwd(e, call, state.session.cwd);
       } catch (error) {
         if (sourcePolicy !== 'bound-native-sdk'
@@ -295,6 +317,7 @@ export function normalizeRolloutTranscript(bytes, state, provider, { sourcePolic
   }
   return { events, calls: [...calls].map(([call_id, c]) => ({ call_id, call_sequence: c.call_sequence, result_sequence: c.result_sequence })),
     ...(mirrorGaps.length ? { compaction_mirror_gaps: mirrorGaps } : {}),
+    ...(timingObservations.length ? { tool_timing_observations: timingObservations } : {}),
     ...(sourcePolicy === 'bound-native-sdk' ? { projection_conflicts: projectionConflicts,
       source_reconciliation: { status: provider && provider.completeness?.status === 'complete' && !projectionConflicts.length ? 'verified' : 'partial',
         source_content_identity_verified: Boolean(provider && provider.completeness?.status === 'complete' && !projectionConflicts.length),

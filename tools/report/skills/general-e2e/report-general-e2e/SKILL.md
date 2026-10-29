@@ -10,6 +10,8 @@ description: 校验并汇总 General E2E submission 和回传包，生成同源 
 
 # 汇总 General E2E 报告
 
+`0.8.12` 同步 general-resource-supplements 1.3.4 的 unified exec 计时审计分发。进程耗时与单次输出等待耗时分别保留，不合并为一个工具计时；报告原有任务耗时、资源、分数与分母口径不变。
+
 `0.8.10` 的研发索引引用 submission 实际采用且与 score SHA 绑定的 `scoring/execution-records`；初始正式采集记录单独保留路径与 SHA，不再把合法补采误报为原件漂移，也不声称新旧轨迹等价。原包成员、身份、评分绑定校验保持不变。
 
 生成报告时建议显式传入 `--seal-output-dir /absolute/new-archive-directory`：在同一生成进程返回前验证回执并封存规范 ZIP，避免宿主随后修改独立 XLSX 的元数据。`selected_report.py` 也支持此参数。单独封存已有、仍满足原回执的报告可用 `scripts/seal_report.py --report-dir ABS --output-dir ABS --batch-root ABS`；跨来源 composite 报告不需 batch-root。已发生的字节漂移必须保留并用新生成流程处理，不删除属性或修改旧 SHA。研发导出使用 run Skill 的 `--canonical-report-archive` 读取封存成员，独立变体另存。

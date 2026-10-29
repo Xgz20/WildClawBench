@@ -812,6 +812,15 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   const useRolloutTranscript = Boolean(rollout && (sourcePolicy === 'bound-native-sdk' || providerNormalized.completeness.status !== "complete"));
   const normalized = useRolloutTranscript
     ? normalizeRolloutTranscript(rollout.bytes, state, { ...providerNormalized, projection_rows: native.rows }, { sourcePolicy }) : providerNormalized;
+  if (normalized.tool_timing_observations?.length) {
+    const path = 'bindings/unified-exec-tool-timing.json';
+    await assertWritableTargets([join(outputDir, path)], Boolean(options.replace));
+    bindingArtifacts.push({ path, bytes: prettyJsonBytes({
+      schema_version: 'wildclawbench.general-e2e-unified-exec-tool-timing/v1', identity: state.identity,
+      content_exit_identity_verified: true, timing_values_merged: false,
+      observations: normalized.tool_timing_observations,
+    }) });
+  }
   if (recapture) assertRecaptureArchiveSources(recapture, rollout?.bytes, native.rows);
   await assertPromptAndFinalResponse(state, normalized.events);
 
