@@ -1,0 +1,26 @@
+{
+  "schema_version": "general-hard-v1-immutable-freeze/v1",
+  "status": "FROZEN_FIRST_MANIFEST_CREATED",
+  "dataset_id": "general-hard-v1",
+  "task_count": 60,
+  "dataset_digest": "a781532a1d8e9bc80d1fb4fd8b2d85a738f7d8e9386bc15a6a8fd14e9cfca8e5",
+  "manifest": {
+    "path": "datasets/general-hard/manifests/general-hard-v1.json",
+    "sha256": "66fd8732edf4756775d7a284482a6a5c4d7b1564b66562605e1bd0abb0773ea1",
+    "size": 677229
+  },
+  "source_revision": "541cfae0007fd0b2e25ba0424c334f3d3a7ece1d",
+  "source_revision_scope": [
+    "datasets/general-hard/tasks",
+    "datasets/general-hard/workspace",
+    "datasets/general-hard/task_sources.yaml",
+    "datasets/general-hard/checkpoint_capability_map7.yaml",
+    "datasets/general-hard/dataset.yaml"
+  ],
+  "created_by": "python -m eval_general_e2e.datasets.bundle update-lock --dataset-id general-hard --release-id general-hard-v1",
+  "state_transition": "building material acceptance -> committed ready541cfae0 -> exclusive first manifest creation -> frozen",
+  "historical_manifest_overwritten": false,
+  "difficulty_and_four_harness_calibration": "not_executed_design_estimate",
+  "semantic_Judge_score": null,
+  "bundle_build": "next step; no output hash invented"
+}

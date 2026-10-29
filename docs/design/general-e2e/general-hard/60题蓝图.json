@@ -1,6 +1,6 @@
 {
   "schema_version": "wildclawbench.general-hard-blueprint/v1",
-  "document_status": "research_and_blueprint_only",
+  "document_status": "materialized_frozen_v1_calibration_not_executed",
   "created_at": "2026-10-26",
   "timezone": "Asia/Shanghai",
   "planning_source_commit": "e7a70c8cc77462f046cd8676bd87df1e3aa8b9ad",
@@ -18,8 +18,8 @@
     "capability_map_path": "datasets/general-hard/checkpoint_capability_map7.yaml",
     "manifest_path": "datasets/general-hard/manifests/general-hard-v1.json",
     "workspace_layout": "datasets/general-hard/workspace/<category>/<task_id>/{exec,gt}",
-    "release_status": "planned_not_frozen",
-    "frozen_digest": null,
+    "release_status": "frozen",
+    "frozen_digest": "a781532a1d8e9bc80d1fb4fd8b2d85a738f7d8e9386bc15a6a8fd14e9cfca8e5",
     "legacy": {
       "dataset_id": "general-custom60-v1",
       "manifest": "eval_general_e2e/datasets/manifests/general-custom60-v1.json",
@@ -30,7 +30,9 @@
     "incremental_policy": "源池继续使用custom/general-hard；新任务或契约变更发布新manifest，历史版本清单、哈希、源码版本与已发包不回写。",
     "internal_reference_source_ids": [
       "astudio-search108"
-    ]
+    ],
+    "manifest_sha256": "66fd8732edf4756775d7a284482a6a5c4d7b1564b66562605e1bd0abb0773ea1",
+    "frozen_source_commit": "541cfae0007fd0b2e25ba0424c334f3d3a7ece1d"
   },
   "constraints": {
     "task_count": 60,
@@ -23520,5 +23522,11 @@
       "source_gt_status": "E:R主要为结果与过程Rubric，不能视作108份已核实事实GT或可直接移植的独立判分器。",
       "write_status": "read_only_no_remote_changes"
     }
-  ]
+  ],
+  "delivery_evidence": {
+    "material_acceptance": "evidence/general-hard-v1-material-acceptance-20261029.json",
+    "freeze_receipt": "evidence/general-hard-v1-freeze-20261029.json",
+    "calibration_status": "planned_not_executed",
+    "legacy_runtime_flags": "22 early false flags retained; linked author evidence is not relabeled as new execution"
+  }
 }
