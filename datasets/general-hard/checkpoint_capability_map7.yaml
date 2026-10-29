@@ -653,3 +653,12 @@ general_hard_planning_coordination_task_004_release_go_no_go:
     - reasoning_planning
   llm_judge.usable_handoff:
     - verification_delivery
+general_hard_software_engineering_task_011_security_regression:
+  business_correctness:
+    - code_generation
+  boundary_cases:
+    - code_generation
+  delivery_integrity:
+    - verification_delivery
+  evidence_binding:
+    - verification_delivery

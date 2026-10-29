@@ -1,0 +1,34 @@
+{
+  "columns": [
+    "id",
+    "owner_id",
+    "display_name",
+    "note",
+    "amount",
+    "account_ref"
+  ],
+  "text_columns": [
+    "id",
+    "owner_id",
+    "display_name",
+    "note",
+    "account_ref"
+  ],
+  "numeric_columns": [
+    "amount"
+  ],
+  "dangerous_after_leading_ASCII_whitespace": [
+    "=",
+    "+",
+    "-",
+    "@"
+  ],
+  "dangerous_initial_controls": [
+    "\t",
+    "\r",
+    "\n"
+  ],
+  "encoding": "prefix one apostrophe to original dangerous text; do not alter other text; CSV quoting is separate",
+  "amount": "finite decimal text with optional sign and <=2 decimal places; emit numeric-equivalent fixed2 decimal, never apostrophe",
+  "preview_rows": 2
+}

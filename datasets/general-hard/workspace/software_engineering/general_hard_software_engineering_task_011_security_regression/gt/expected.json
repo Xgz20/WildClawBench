@@ -1,0 +1,7781 @@
+{
+  "PUB-admin-download": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "普通客户",
+            "comma, quote \" and\nline",
+            "-12.50",
+            "00123"
+          ],
+          [
+            "a2",
+            "other-a",
+            "'=SUM(1,2)",
+            "'  +CMD",
+            "7.20",
+            "'-005"
+          ],
+          [
+            "a3",
+            "member-a",
+            "'\t@formula",
+            "'\r\nordinary",
+            "0.00",
+            "'+008"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "PUB-member-legacy": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "display_name",
+          "note",
+          "amount"
+        ],
+        "rows": [
+          [
+            "a1",
+            "普通客户",
+            "comma, quote \" and\nline",
+            "-12.50"
+          ],
+          [
+            "a3",
+            "'\t@formula",
+            "'\r\nordinary",
+            "0.00"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "PUB-auditor-preview": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "display_name",
+          "note",
+          "amount"
+        ],
+        "rows": [
+          [
+            "a1",
+            "普通客户",
+            "comma, quote \" and\nline",
+            "-12.50"
+          ],
+          [
+            "a2",
+            "'=SUM(1,2)",
+            "'  +CMD",
+            "7.20"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "PUB-job": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 3
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "普通客户",
+            "comma, quote \" and\nline",
+            "-12.50",
+            "00123"
+          ],
+          [
+            "a2",
+            "other-a",
+            "'=SUM(1,2)",
+            "'  +CMD",
+            "7.20",
+            "'-005"
+          ],
+          [
+            "a3",
+            "member-a",
+            "'\t@formula",
+            "'\r\nordinary",
+            "0.00",
+            "'+008"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "PUB-cross-tenant": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "PUB-csv-text": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a2",
+            "other-a",
+            "'=SUM(1,2)",
+            "'  +CMD",
+            "7.20",
+            "'-005"
+          ],
+          [
+            "a3",
+            "member-a",
+            "'\t@formula",
+            "'\r\nordinary",
+            "0.00",
+            "'+008"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "normal-header-only": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": []
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "normal-selected-order": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "note",
+          "amount",
+          "id"
+        ],
+        "rows": [
+          [
+            "'\r\nordinary",
+            "0.00",
+            "a3"
+          ],
+          [
+            "comma, quote \" and\nline",
+            "-12.50",
+            "a1"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "normal-health": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "json",
+        "body": {
+          "service": "export-demo",
+          "api": 1,
+          "status": "ok"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "normal-job-snapshot": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 1
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": null,
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "Changed later",
+            "note": "comma, quote \" and\nline",
+            "amount": "3.00",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "普通客户",
+            "comma, quote \" and\nline",
+            "-12.50",
+            "00123"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "Changed later",
+            "note": "comma, quote \" and\nline",
+            "amount": "3.00",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "member-other-owner": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "auditor-private-column": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "unknown-actor": [
+    {
+      "normalized_response": {
+        "status": 401,
+        "kind": "error",
+        "body": {
+          "code": "UNAUTHENTICATED"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "disabled-actor": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "guest-deny": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "overposted-role-tenant": [
+    {
+      "normalized_response": {
+        "status": 400,
+        "kind": "error",
+        "body": {
+          "code": "INVALID_INPUT"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "legacy-tenant-bypass": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "preview-owner-bypass": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-create-owner-bypass": [
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-creator-only": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 1
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-current-role": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 1
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": null,
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-current-owner": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 1
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": null,
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-disabled": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 3
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": null,
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-action-revoked": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 3
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": null,
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": false
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 403,
+        "kind": "error",
+        "body": {
+          "code": "FORBIDDEN"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": false
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "job-collision": [
+    {
+      "normalized_response": {
+        "status": 202,
+        "kind": "json",
+        "body": {
+          "job_id": "job-one",
+          "row_count": 3
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    },
+    {
+      "normalized_response": {
+        "status": 409,
+        "kind": "error",
+        "body": {
+          "code": "JOB_EXISTS"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": [
+          "job-one"
+        ]
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "typed-csv-0": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "' =1",
+            "'@x",
+            "-0.50",
+            "'-0001"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": " =1",
+            "note": "@x",
+            "amount": "-0.50",
+            "account_ref": "-0001"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "typed-csv-1": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "'+x",
+            "safe\n=not-initial",
+            "1.00",
+            "001"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "+x",
+            "note": "safe\n=not-initial",
+            "amount": "+1",
+            "account_ref": "001"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "typed-csv-2": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "'-x",
+            "'\u000b\f\t=1",
+            "0.00",
+            "'@ref"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "-x",
+            "note": "\u000b\f\t=1",
+            "amount": "0.00",
+            "account_ref": "@ref"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "typed-csv-3": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "normal",
+            "'\tordinary",
+            "1.25",
+            "plain"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "normal",
+            "note": "\tordinary",
+            "amount": "001.25",
+            "account_ref": "plain"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "typed-csv-4": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "owner_id",
+          "display_name",
+          "note",
+          "amount",
+          "account_ref"
+        ],
+        "rows": [
+          [
+            "a1",
+            "member-a",
+            "embedded \" quote,comma",
+            "line1\r\nline2",
+            "0.00",
+            "123"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "embedded \" quote,comma",
+            "note": "line1\r\nline2",
+            "amount": "-0.00",
+            "account_ref": "123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "invalid-visible-amount": [
+    {
+      "normalized_response": {
+        "status": 400,
+        "kind": "error",
+        "body": {
+          "code": "INVALID_DATA"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "=FORMULA",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "invalid-unselected-column": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "note"
+        ],
+        "rows": [
+          [
+            "a1",
+            "comma, quote \" and\nline"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "=FORMULA",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "invalid-invisible-data": [
+    {
+      "normalized_response": {
+        "status": 200,
+        "kind": "csv",
+        "columns": [
+          "id",
+          "display_name",
+          "note",
+          "amount"
+        ],
+        "rows": [
+          [
+            "a1",
+            "普通客户",
+            "comma, quote \" and\nline",
+            "-12.50"
+          ],
+          [
+            "a3",
+            "'\t@formula",
+            "'\r\nordinary",
+            "0.00"
+          ]
+        ]
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "bad",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "invalid-columns-empty": [
+    {
+      "normalized_response": {
+        "status": 400,
+        "kind": "error",
+        "body": {
+          "code": "INVALID_INPUT"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "invalid-id-type": [
+    {
+      "normalized_response": {
+        "status": 400,
+        "kind": "error",
+        "body": {
+          "code": "INVALID_INPUT"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "unknown-job": [
+    {
+      "normalized_response": {
+        "status": 404,
+        "kind": "error",
+        "body": {
+          "code": "NOT_FOUND"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ],
+  "unknown-route": [
+    {
+      "normalized_response": {
+        "status": 404,
+        "kind": "error",
+        "body": {
+          "code": "NOT_FOUND"
+        },
+        "headers": {}
+      },
+      "public_state": {
+        "actors": {
+          "admin-a": {
+            "id": "admin-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": true
+          },
+          "audit-a": {
+            "id": "audit-a",
+            "tenant_id": "ta",
+            "role": "auditor",
+            "active": true
+          },
+          "member-a": {
+            "id": "member-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "other-a": {
+            "id": "other-a",
+            "tenant_id": "ta",
+            "role": "member",
+            "active": true
+          },
+          "admin-b": {
+            "id": "admin-b",
+            "tenant_id": "tb",
+            "role": "admin",
+            "active": true
+          },
+          "guest-a": {
+            "id": "guest-a",
+            "tenant_id": "ta",
+            "role": "guest",
+            "active": true
+          },
+          "off-a": {
+            "id": "off-a",
+            "tenant_id": "ta",
+            "role": "admin",
+            "active": false
+          }
+        },
+        "records": [
+          {
+            "id": "a1",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "普通客户",
+            "note": "comma, quote \" and\nline",
+            "amount": "-12.50",
+            "account_ref": "00123"
+          },
+          {
+            "id": "a2",
+            "tenant_id": "ta",
+            "owner_id": "other-a",
+            "display_name": "=SUM(1,2)",
+            "note": "  +CMD",
+            "amount": "+7.2",
+            "account_ref": "-005"
+          },
+          {
+            "id": "a3",
+            "tenant_id": "ta",
+            "owner_id": "member-a",
+            "display_name": "\t@formula",
+            "note": "\r\nordinary",
+            "amount": "0",
+            "account_ref": "+008"
+          },
+          {
+            "id": "b1",
+            "tenant_id": "tb",
+            "owner_id": "admin-b",
+            "display_name": "Outside tenant",
+            "note": "private",
+            "amount": "99.00",
+            "account_ref": "9001"
+          }
+        ],
+        "permissions": {
+          "admin": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "owner_id",
+              "display_name",
+              "note",
+              "amount",
+              "account_ref"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "auditor": {
+            "scope": "tenant",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "member": {
+            "scope": "own",
+            "columns": [
+              "id",
+              "display_name",
+              "note",
+              "amount"
+            ],
+            "download": true,
+            "preview": true,
+            "job_create": true,
+            "job_get": true
+          },
+          "guest": {
+            "scope": "none",
+            "columns": [
+              "id"
+            ],
+            "download": false,
+            "preview": false,
+            "job_create": false,
+            "job_get": false
+          }
+        },
+        "job_ids": []
+      },
+      "inputs_unchanged": true
+    }
+  ]
+}

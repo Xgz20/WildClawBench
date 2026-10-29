@@ -1,0 +1,15 @@
+{
+  "editable": [
+    "project/authorization.py",
+    "project/exporter.py",
+    "project/routes.py"
+  ],
+  "new_files_only": "results",
+  "required": [
+    "results/review.docx",
+    "results/regression.json"
+  ],
+  "native_docx": "objective plan table+source/report metadata; free explanation quality and visual layout explicitly unassessed",
+  "DOCX_profile": "native unhidden tables/plain paragraphs; textbox/white decision fields or>1000 ZIP entries/>10MiB typed unsupported",
+  "CSV": "independent parse; fixed typed numeric/text cell constraints, LF/CRLF/quote-all/BOM equivalents allowed"
+}

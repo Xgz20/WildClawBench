@@ -1,0 +1,21 @@
+{
+  "fixed_public_ids": [
+    "PUB-admin-download",
+    "PUB-member-legacy",
+    "PUB-auditor-preview",
+    "PUB-job",
+    "PUB-cross-tenant",
+    "PUB-csv-text"
+  ],
+  "source_digest": "canonical sorted source SHA map, compact JSON SHA",
+  "fixed_plan_ids": [
+    "P1",
+    "P2",
+    "P3",
+    "P4",
+    "P5",
+    "P6"
+  ],
+  "padding_dilution": false,
+  "no_spreadsheet_or_Harness_claim": true
+}

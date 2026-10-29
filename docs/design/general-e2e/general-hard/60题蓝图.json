@@ -19845,7 +19845,7 @@
         "exec": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_011_security_regression/exec",
         "gt": "datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_011_security_regression/gt"
       },
-      "prompt_draft": "请完成以下工作：审查计划并修复真实缺陷，保留合法导出和原接口，新增针对性验证；交付修复范围、遗漏项和回归证据。\n\n输入材料：\n- /tmp_workspace/project/：有越权导出和CSV公式注入的小型服务\n- /tmp_workspace/repair_plan.md：含漏项和过度修改建议的计划\n- /tmp_workspace/permission_matrix.csv：权限定义\n- /tmp_workspace/tests_public/：正常业务控制样本\n\n交付：\n- /tmp_workspace/project/：白名单内补丁\n- /tmp_workspace/results/review.docx：计划审计与范围\n- /tmp_workspace/results/regression.json：安全及正常功能验证\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 只修改Prompt列明的project源码或配置，公开测试、夹具与依赖锁不可修改；额外报告写入results。\n- 离线完成，不访问网络。",
+      "prompt_draft": "请审查 /tmp_workspace/repair_plan.md 并修复小型导出服务的真实越权与CSV公式注入缺陷。保留合法导出和原接口，新增实际安全及正常回归，不能只隐藏按钮、改计划文字或关闭全部导出。先读 /tmp_workspace/contract.md、permission_matrix.csv、export_contract.json、plan_items.json 和 project 源码。数据原创合成、离线完成；L4仅设计估计，900秒为元数据而非能力分墙钟截止。\n\n只允许修改 /tmp_workspace/project/authorization.py、project/exporter.py、project/routes.py。其他所有输入原路径原字节保护，包括health.py、__init__.py、矩阵、夹具、测试与回放器；新文件只写results。不得联网、安装、登录、发消息、调用真实账号/业务接口或读私有GT。三模块接口与完整状态协议见contract.md。\n\n服务器当前actor角色、tenant、owner范围和columns决定权限。GET /download、/legacy/export、/preview、POST /jobs与GET /jobs/{id}都要有对应的当前授权，混合可见/不可见ID整批拒绝。[]只导表头，省略IDs才是全可见；保留请求去重顺序与列序。job必须属于当前创建人和tenant，取回时重新检查当前角色/action、记录归属和列权限；授权仍在才返回创建时快照。不能靠难猜ID或客户端role/tenant替代服务器判断。\n\n按CSV列类型修复。文本在声明的危险前缀条件下，仅在原始完整值前加apostrophe，并正确使用CSV引用；普通文本、逗号、双引号和嵌入换行必须保留。amount按数值保持值并固定2位，负数、正号和零不加apostrophe。允许等价LF/CRLF、QUOTE_ALL/最小引用和文件首BOM；不会运行真实表格软件或声称覆盖全部产品公式解释。\n\n支持Python3.11/3.12标准库及公开的纯服务profile，合法但超出profile/原生文档读取范围、缺可信上下文或基础设施超时保留typed未评估，不伪造零分。调用实际Python函数/状态与CSV解析，不是HTTP、浏览器或Harness证据；profile不是OS安全沙箱。\n\npython -B -m unittest discover -s tests_public检查原型窄正常控制。python -B regression.py --output results/regression.json实际导入最终三源码，回放6个固定公开安全/正常控制，记录最终SHA/source_digest、矩阵/契约/夹具/回放器SHA、真实response、CSV解析、公共状态和PASS/FAIL。可以诚实FAIL；真实性与功能分开，padding不稀释固定义务。\n\n交付三份实际补丁和：\n- /tmp_workspace/results/review.docx：原生可编辑计划审计与范围，含结论、P1..P6接受/调整/否决及理由、旁路入口、最小修改与实际验证边界。必须有原生表格plan_id/decision/reason_code/modules的6个唯一ID行，枚举词汇见plan_items.json（不提供各项答案）；modules用分号列实际允许源码，不强制参考组织。另用普通原生段落记录source_digest=<最终SHA>、regression_sha256=<报告原字节SHA>、real_Harness=false、real_spreadsheet_app=false。原生读取profile不支持隐藏字段、文本框/透明等复杂可视性布局；合法超限/未支持文档typed未评估。\n- /tmp_workspace/results/regression.json：h051-regression/v1实际回归与最终源码绑定，不编造未执行结果。\n\n自动规则评估实际授权/CSV行为、六个明确的客观审计决策和原生产物/证据绑定；自由说明的自然语义、文风和视觉布局质量不在自动分内，也没有已执行Judge。机器代码字段不能被说成完整自然语言审校。作者参考会渲染检查，但这不等于所有候选视觉布局已验证。\n\n计划审计中，不满足本题授权、类型或合法功能约束的主张，可用reject（否决原方案）或revise（需改正后采用），风险原因必须准确；不因这两个处理标签的选择单独扣分。accept只用于可以原样采用的方案。自由解释不由机器字段代替。",
       "inputs": [
         {
           "path": "project/",
@@ -19894,20 +19894,41 @@
         "过度封禁"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102651,
-        "construction": "独立权限与CSV输出oracle生成恶意/正常双控制；检查输入和测试完整性、导出可用性，禁止用关闭全部功能作为修复。",
+        "construction": "37权限/CSV源真值（10正常27边界）及6风险原因在参考前由Python Decimal与Node集合/BigInt双算冻结。两不同选权/CSV编码参考均真实37/37及WorkerA1，38 v3全量控制7typed保留；v3对合法set私有状态改深拷贝结构相等，真值/两参考不变。root核旧80冻结及两原生图/源码报告SHA，真实复现P2/P6合理reject被预设revise扣A=.963333；v4仅接受不安全方案reject/revise等价并保留正确reason_code，安全P5仍accept。7受影响控制两参考/两等价A1，危险accept/安全reject/错reason只业务失分。正式三源码overlay独立ZIP再次实际模块/状态/CSV回放。",
         "private_files": [
-          "expected.json",
-          "business_oracle.json",
-          "counterexamples.json",
           "artifact_contract.json",
-          "protected_sha256.json",
+          "audit_expected.json",
+          "business_oracle.json",
+          "cases.json",
+          "counterexamples.json",
+          "docx_reader.py",
           "evidence_requirements.json",
-          "hidden_tests/"
+          "expected.json",
+          "grader.py",
+          "protected_sha256.json",
+          "source_originals/contract.md",
+          "source_originals/export_contract.json",
+          "source_originals/fixtures/public_cases.json",
+          "source_originals/fixtures/public_expected.json",
+          "source_originals/fixtures/records.json",
+          "source_originals/permission_matrix.csv",
+          "source_originals/plan_items.json",
+          "source_originals/project/__init__.py",
+          "source_originals/project/authorization.py",
+          "source_originals/project/exporter.py",
+          "source_originals/project/health.py",
+          "source_originals/project/routes.py",
+          "source_originals/regression.py",
+          "source_originals/repair_plan.md",
+          "source_originals/runner.py",
+          "source_originals/tests_public/test_happy.py",
+          "trusted_files.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "允许不同函数结构/循环选权/标准或手写CSV引用、QUOTE_ALL/CRLF/BOM、私有job内部set、报告外序及大写SHA。不安全计划否决或要求修订均可，风险原因仍须正确；自然DOCX解释/文风/视觉质量不是自动分或Judge结论。超原生可见性/profile/依赖范围typed无能力0。",
+        "authoring_evidence": "evidence/h051-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "automated",
@@ -19922,7 +19943,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "审查计划并修复真实缺陷，保留合法导出和原接口，新增针对性验证；交付修复范围、遗漏项和回归证据。",
+            "criterion": "实际保留授权导出/预览/job/旧接口、数值与顺序；业务内部.8实际正常用例+.2六项显式计划decision/reason_code，非自由DOCX语义评分。",
             "oracle_reference": "gt/expected.json + gt/hidden_tests/"
           },
           {
@@ -19931,7 +19952,7 @@
             "capabilities": [
               "code_generation"
             ],
-            "criterion": "逐项识别并正确处理：盲从修复计划；遗漏旁路入口；过度封禁。以独立反例验证，不只检索关键词。",
+            "criterion": "实际拒绝越tenant/owner/column/当前job权限旁路并按列类型处理危险文本、控制字符与合法负数；关闭全部功能不能通过正常双控制。",
             "oracle_reference": "gt/counterexamples.json"
           },
           {
@@ -19940,7 +19961,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "全部要求的产物可解析/可使用，跨产物关键事实一致；保护文件与输入未改变。",
+            "criterion": "保护三个允许源码外输入；原生DOCX及regression.json可解析，实际补丁在白名单。",
             "oracle_reference": "gt/artifact_contract.json + gt/protected_sha256.json"
           },
           {
@@ -19949,7 +19970,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "来源/验证记录定位到实际材料、产物或最终候选源码；自述已运行不能代替独立验证。",
+            "criterion": "固定6公开真实输出/CSV解析/状态与最终三源码、矩阵和回放器SHA绑定，DOCX摘要一致；不以填充/自述得分。",
             "oracle_reference": "gt/evidence_requirements.json"
           }
         ],
@@ -20036,10 +20057,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "正式MD/16exec/27GT、3源码overlay，独立score0.27.1/core0.15.3 ZIP真实Python模块/状态/CSV解析、四键自动A1和正常/去runtime归档；无HTTP/真实表格软件/Harness/Judge。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h051-reviewed-authoring-20261029.json"
       },
       "dependencies": {
         "execution": [
