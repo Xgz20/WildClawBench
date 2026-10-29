@@ -124,6 +124,7 @@ class Fixture:
         llm_judge_rubric: str = "",
         mapped_nested_results: bool = False,
         dual_results: bool = False,
+        contract_overrides: dict | None = None,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -222,6 +223,7 @@ class Fixture:
             "grading_weights": grading_weights or {},
             "llm_judge_rubric": llm_judge_rubric,
         }
+        contract.update(contract_overrides or {})
         contract_bytes = json.dumps(contract).encode("utf-8")
         task_bytes = b"# Fixture task\n"
         gt_bytes = b'{"answer":"ready\\n"}\n'

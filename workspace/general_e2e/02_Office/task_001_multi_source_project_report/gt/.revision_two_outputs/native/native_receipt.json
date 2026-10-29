@@ -1,0 +1,26 @@
+{
+  "pages": 9,
+  "engine": "WPS",
+  "edited": true,
+  "version": "12.0",
+  "input": "D:\\astroncode-eval\\workspace\\general-e2e\\02_Office\\task_001_multi_source_project_report\\gt\\reference\\results\\project_report.docx",
+  "body_persisted": true,
+  "copy": "D:\\astroncode-eval\\workspace\\general-e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.revision_two_outputs\\native\\edit_probe.docx",
+  "phase": "complete",
+  "table_checks": [
+    {
+      "table": 1,
+      "persisted": true
+    },
+    {
+      "table": 2,
+      "persisted": true
+    }
+  ],
+  "control_opened": true,
+  "status": "pass",
+  "opened": true,
+  "tables": 2,
+  "input_sha256": "8cf617232e08cd16a2472a3e0feafe22c4b669a92ef0843664cd58a7a62c278f",
+  "pdf": "D:\\astroncode-eval\\workspace\\general-e2e\\02_Office\\task_001_multi_source_project_report\\gt\\.revision_two_outputs\\native\\project_report.pdf"
+}

@@ -16,7 +16,14 @@ CAPABILITIES = {
     "retrieval_verification": "检索验证", "reasoning_planning": "推理规划",
     "content_generation": "内容生成", "verification_delivery": "验证交付",
 }
+CAPABILITIES5 = {
+    "intent_understanding": "意图理解", "state_awareness": "状态感知",
+    "reasoning_and_decision_making": "推理与决策", "tool_invocation": "工具调用",
+    "result_evaluation": "结果评估",
+}
 CATEGORIES = {
+    "01_Information_Search_Organization": "信息检索与整理", "02_Office": "办公",
+    "data-analysis": "数据分析",
     "01_Productivity_Flow": "生产力工作流", "02_Code_Intelligence": "代码智能",
     "03_Social_Interaction": "社交互动", "04_Creative_Synthesis": "创意合成",
     "05_Search_Retrieval": "搜索检索", "06_Safety_Alignment": "安全对齐",
@@ -30,8 +37,8 @@ def reference_payload(root):
     # YAML is needed only in the source checkout/build environment. Distributed
     # Skills consume a deterministic JSON snapshot with canonical-source hashes.
     import yaml
-    paths = [root / "entities.yaml", root / "checkpoint_capability_map7.yaml"]
-    entities, capabilities = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in paths]
+    paths = [root / "entities.yaml", root / "checkpoint_capability_map7.yaml", root / "checkpoint_capability_map5.yaml"]
+    entities, capabilities, capabilities5 = [yaml.safe_load(p.read_text(encoding="utf-8")) for p in paths]
     names = {}
     for kind in ("models", "harnesses"):
         names[kind] = {}
@@ -40,6 +47,7 @@ def reference_payload(root):
                 names[kind][alias] = value.get("display_name") or key
     return {"schema_version": "wildclawbench.general-report-reference/v1", **names,
             "capabilities": capabilities,
+            "capabilities5": capabilities5,
             "sources": {p.name: hashlib.sha256(p.read_bytes()).hexdigest() for p in paths}}
 
 
@@ -162,9 +170,9 @@ def normalized(key, value, values):
     return value if 0 <= value <= 1 else None
 
 
-def capability_scores(rows, mapping):
+def capability_scores(rows, mapping, dimensions=CAPABILITIES):
     result = {}
-    for dimension in CAPABILITIES:
+    for dimension in dimensions:
         scores, eligible = [], 0
         for row in rows:
             keys = [key for key, dims in mapping.get(row["task_id"], {}).items() if dimension in dims]
@@ -337,6 +345,11 @@ def paired_token_measure(rows, fields, *, ratio=False):
 
 def build_views(data, references):
     import report_case_views
+    mapping5 = references.get("capabilities5", {})
+    has5 = any(row["task_id"] in mapping5 for row in data["tasks"])
+    has7 = any(row["task_id"] in references["capabilities"] for row in data["tasks"])
+    dimensions = CAPABILITIES5 if has5 and not has7 else CAPABILITIES
+    capability_mapping = mapping5 if dimensions is CAPABILITIES5 else references["capabilities"]
     units = sorted(data["units"], key=lambda u: (u["score"]["mean_score"] is None, -(u["score"]["mean_score"] or 0), u["unit_id"]))
     prepared, labels = [], Counter()
     overrides = data.get("display_overrides", {})
@@ -405,7 +418,7 @@ def build_views(data, references):
         efficiency_coverage.append([label, *[coverage_label(item) for item in efficiency_items]])
         resource_display_by_unit[unit["unit_id"]] = {"metrics": display_metrics, "average_tokens": average,
                                                     "ordinary_input_tokens": ordinary, "cache_hit_rate": hit_rate}
-        caps[unit["unit_id"]] = capability_scores(rows, references["capabilities"])
+        caps[unit["unit_id"]] = capability_scores(rows, capability_mapping, dimensions)
         grouped, known = Counter(), 0
         for row in rows:
             detail = row.get("tool_calls", {})
@@ -469,12 +482,24 @@ def build_views(data, references):
         label = labels_by_id[unit["unit_id"]]
         values = caps[unit["unit_id"]]
         cap_rows.append([label, unit["score"]["mean_score"]*100 if unit["score"]["mean_score"] is not None else None,
-                         *[values[key]["score"]*100 if values[key]["score"] is not None else None for key in CAPABILITIES]])
-        dimension_coverage.extend([label, "Agent能力对比", CAPABILITIES[key], value["known"], value["total"]] for key, value in values.items())
-    views["Agent能力对比"] = table(["模型@Harness", "总平均分", *CAPABILITIES.values()], cap_rows,
-                                      {str(i): "0.00" for i in range(1, 9)},
-                                      ["复用常规报告七维检查点映射：任务内映射检查点取均值，再对任务均值取平均。缺失映射检查点不补分，不使用整题总分代替。",
+                         *[values[key]["score"]*100 if values[key]["score"] is not None else None for key in dimensions]])
+        dimension_coverage.extend([label, "Agent能力对比", dimensions[key], value["known"], value["total"]] for key, value in values.items())
+    views["Agent能力对比"] = table(["模型@Harness", "总平均分", *dimensions.values()], cap_rows,
+                                      {str(i): "0.00" for i in range(1, len(dimensions)+2)},
+                                      ["按独立的五维映射统计。" if dimensions is CAPABILITIES5 else "复用常规报告七维检查点映射。",
+                                       "任务内映射检查点取均值，再对任务均值取平均。缺失映射检查点不补分，不使用整题总分代替。",
                                        "无涉及任务的维度显示—；本表不依据少量样本自动判定强项或短板。"])
+    caps5 = {}
+    if has5 and has7:
+        rows5 = []
+        for unit, rows, _ in prepared:
+            values = capability_scores(rows, mapping5, CAPABILITIES5)
+            caps5[unit["unit_id"]] = values
+            label = labels_by_id[unit["unit_id"]]
+            rows5.append([label, *[values[key]["score"] * 100 if values[key]["score"] is not None else None for key in CAPABILITIES5]])
+            dimension_coverage.extend([label, "Agent五维能力对比", CAPABILITIES5[key], v["known"], v["total"]] for key, v in values.items())
+        views["Agent五维能力对比"] = table(["模型@Harness", *CAPABILITIES5.values()], rows5,
+            {str(i): "0.00" for i in range(1, 6)}, ["新五维与旧七维分别统计，不跨体系折算或合并。"])
     views["工具调用对比"] = table(["模型@Harness", "工具", "调用数", "计数覆盖"], tools, notes=["按原生调用 ID 或远程工具块 ID 去重计数。计数完整不代表每次调用的参数、结果内容与顺序均完整；调用次数不等于执行成功次数。"])
     views["工具调用对比"]["cell_annotations"] = tool_cells
     if any(v["status"] == "partial" for v in tool_cells.values()):
@@ -493,11 +518,15 @@ def build_views(data, references):
     views["工具调用对比"].update(layout="grouped_tools", groups=tool_groups,
                                  render_row_count=min(cursor + len(views["工具调用对比"]["notes"]), 160))
     order = ["总览", "效率对比", "分类对比", "难度对比", "Agent能力对比", "模态对比", "工具调用对比"]
+    if has5 and has7:
+        order.insert(5, "Agent五维能力对比")
     return {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
             **report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES),
             "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
             "reference_sources": references["sources"],
             "capability_coverage": caps, "resource_display": resource_display_by_unit,
+            "capability_profile": "general5" if dimensions is CAPABILITIES5 else "legacy7",
+            **({"capability_coverage5": caps5} if caps5 else {}),
             "display_overrides": applied_overrides,
             "display_overrides_sha256": hashlib.sha256(json.dumps(overrides, ensure_ascii=False, sort_keys=True).encode()).hexdigest() if overrides else None}

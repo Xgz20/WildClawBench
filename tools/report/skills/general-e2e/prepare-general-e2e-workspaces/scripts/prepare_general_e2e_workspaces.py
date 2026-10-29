@@ -1020,15 +1020,21 @@ def _verify_scoring_archive(path: Path, batch_manifest: Mapping[str, Any]) -> di
     expected = {manifest_path}
     for task in manifest.get("tasks", []):
         task_id = task["task_id"]
+        canonical_private = f"score/tasks/{task_id}/private-scoring"
         for key in ("contract", "task"):
             item = task[key]
             relative = _safe_relative(item["path"], label=f"scoring {key}").as_posix()
+            filename = "contract.json" if key == "contract" else "task.md"
+            if relative != f"{canonical_private}/{filename}":
+                raise PrepareError(f"SCORING_MATERIAL_PATH_INVALID: {task_id}: {key}")
             expected.add(relative)
             actual = members.get(relative)
             if actual is None or actual.kind != "file" or item.get("sha256") != sha256_bytes(actual.data):
                 raise PrepareError(f"SCORING_MATERIAL_DIGEST_MISMATCH: {task_id}: {key}")
         private = task["private_scoring"]
         private_root = _safe_relative(private["path"], label="private scoring path").as_posix()
+        if private_root != f"{canonical_private}/gt":
+            raise PrepareError(f"SCORING_GT_PATH_INVALID: {task_id}")
         tree_entries = []
         for entry in private["entries"]:
             suffix = "/" if entry["kind"] == "directory" else ""
@@ -1045,9 +1051,10 @@ def _verify_scoring_archive(path: Path, batch_manifest: Mapping[str, Any]) -> di
         digest_input = {"algorithm": "wildclawbench.dataset-tree-sha256/v1", "entries": tree_entries}
         if private.get("tree_sha256") != sha256_bytes(canonical_json_bytes(digest_input)):
             raise PrepareError(f"SCORING_GT_TREE_MISMATCH: {task_id}")
-    forbidden = [
-        name for name in members if "/workspace/" in f"/{name}/" or name.endswith("/PROMPT.md")
-    ]
+    # A reference tree may itself contain input/workspace or PROMPT.md.
+    # Canonical private roots and the exact member set distinguish it from an
+    # execution workspace; matching any path component rejects legitimate GT.
+    forbidden = [name for name in members if name.startswith(("execution/", "workspace/"))]
     if forbidden:
         raise PrepareError(f"SCORING_EXECUTION_MATERIAL_LEAK: {forbidden}")
     unexpected = sorted(set(members) - expected)

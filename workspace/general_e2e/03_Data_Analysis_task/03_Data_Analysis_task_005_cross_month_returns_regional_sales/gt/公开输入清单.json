@@ -1,0 +1,26 @@
+[
+  {
+    "path": "客户管理_区域客户名册.xlsx",
+    "sha256": "d79d3719d8b3d64053b475af896b047614f1a032eaf5250df4df6d289da69629"
+  },
+  {
+    "path": "财务售后_退款流水.xlsx",
+    "sha256": "c8a1defb1a0a6a1076f2a3e11caab84d7b40a02422a40486edde18373da7e28b"
+  },
+  {
+    "path": "销售复盘口径与交付说明.docx",
+    "sha256": "8f872be4c7096c6a3fb943cd2db8225da3c2cd088e7a5120642aa16abe05e229"
+  },
+  {
+    "path": "销售部_华东订单.xlsx",
+    "sha256": "a2d53eddcde2fbb3f7a67aa56c5cd4afbcc9de44c0bde6cef353ce54f776ad2e"
+  },
+  {
+    "path": "销售部_华北订单.xlsx",
+    "sha256": "5dd99b533d154042fab17be20a3d88e4bc95b977b2e1c38d019348ae600a5178"
+  },
+  {
+    "path": "销售部_华南订单.xlsx",
+    "sha256": "076d1ab140c22296250c9b7df3f68abc0ec1429738f130ef23e246af5337fac9"
+  }
+]

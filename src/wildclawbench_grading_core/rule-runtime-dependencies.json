@@ -3,14 +3,77 @@
   "dependencies": [
     {
       "distribution": "PyYAML",
-      "import_roots": ["yaml"],
+      "import_roots": [
+        "yaml"
+      ],
       "runtime_assets": [],
       "version_policy": "freeze-in-managed-rule-runtime"
     },
     {
       "distribution": "playwright",
-      "import_roots": ["playwright"],
-      "runtime_assets": ["chromium"],
+      "import_roots": [
+        "playwright"
+      ],
+      "runtime_assets": [
+        "chromium"
+      ],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "openpyxl",
+      "import_roots": [
+        "openpyxl"
+      ],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "pypdf",
+      "import_roots": [
+        "pypdf"
+      ],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "pymupdf",
+      "import_roots": [
+        "fitz",
+        "pymupdf"
+      ],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "python-docx",
+      "import_roots": [
+        "docx"
+      ],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "lxml",
+      "import_roots": [
+        "lxml"
+      ],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "numpy",
+      "import_roots": [
+        "numpy"
+      ],
+      "runtime_assets": [],
+      "version_policy": "freeze-in-managed-rule-runtime"
+    },
+    {
+      "distribution": "pillow",
+      "import_roots": [
+        "PIL"
+      ],
+      "runtime_assets": [],
       "version_policy": "freeze-in-managed-rule-runtime"
     }
   ]

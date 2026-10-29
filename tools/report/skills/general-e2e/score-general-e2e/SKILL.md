@@ -3,6 +3,9 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.10` 兼容新旧数据集。旧 Rubric 继续要求组内权重和为 1；新冻结契约以 `semantic_weight_scale` 显式声明分值预算，转换后仍乘原组权重，原 Rubric 不改写。新规则的 `rule_result_adapter` 仅分离声明的诊断对象，Worker 同时保存原始 `raw_result` 和适配后的 `result`。零规则权重的证据准备不产生候选能力分，缺证和运行环境失败继续返回评测异常。Office 第 1 题仅按其已声明的公共数字接口计算规则等权均值。依赖按更新后的 runtime lock 和带哈希 requirements 安装；旧已冻结轮次的运行时不自动替换。
+
+
 # 评分 General E2E 单题
 
 `0.10.9` 随Skill分发[离线页面观察脚本与协议](references/offline-browser-validation.md)。新版编排在HTML候选评分前验证公共浏览器runtime并冻结judge-environment.json；独立裁判使用禁网字节观察及真实截图验证原Rubric，不依赖被URL策略拒绝的file导航，不绕过安全策略，不把环境故障变成候选能力分。评分core、Worker、原规则及证据政策未改变。

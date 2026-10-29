@@ -1,0 +1,40 @@
+{
+  "schema_id": "urn:wildclawbench:schema:general-e2e:prepare-config:v1",
+  "schema_version": 1,
+  "contract_version": "general-e2e-contract-v1",
+  "bundle_protocol": "general-e2e-package-v1",
+  "batch_id": "general116-smoke",
+  "task_ids": [
+    "01_Information_Search_Organization_task_001_acl2024_long_context_qa",
+    "02_Office_task_001_multi_source_project_report",
+    "03_Data_Analysis_task_001_hr_worktime_reconciliation"
+  ],
+  "units": [
+    {
+      "unit_id": "astronstudio-macos",
+      "task_ids": [
+        "01_Information_Search_Organization_task_001_acl2024_long_context_qa",
+        "02_Office_task_001_multi_source_project_report",
+        "03_Data_Analysis_task_001_hr_worktime_reconciliation"
+      ],
+      "harness": {
+        "id": "astronstudio",
+        "platform": "macos-arm64",
+        "version": null
+      },
+      "model": {
+        "requested_id": "replace-with-model-id",
+        "reasoning_effort": "high"
+      },
+      "execution_mode": "automatic"
+    }
+  ],
+  "judge": {
+    "protocol": "codex-agent-judge-v1",
+    "model": "gpt-6.1-sol",
+    "reasoning_effort": "high"
+  },
+  "report": {
+    "title": "General E2E 116 dataset smoke"
+  }
+}

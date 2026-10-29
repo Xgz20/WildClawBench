@@ -1,0 +1,144 @@
+{
+  "workspace_meta": {
+    "case_label": "release_phase_gate_progression",
+    "project_label": "quillship-cli",
+    "release_id": "qs-local-2026-08-rc3",
+    "state_version": "public-initial-state-v2",
+    "run_time_utc": "2026-08-05T10:40:00Z",
+    "network_policy": "local_only_no_network",
+    "public_synthetic_state": true
+  },
+  "phase_order": [
+    {
+      "order": 1,
+      "phase_key": "draft_intake",
+      "next_phase": "scope_freeze"
+    },
+    {
+      "order": 2,
+      "phase_key": "scope_freeze",
+      "next_phase": "local_validation"
+    },
+    {
+      "order": 3,
+      "phase_key": "local_validation",
+      "next_phase": "repair_alignment"
+    },
+    {
+      "order": 4,
+      "phase_key": "repair_alignment",
+      "next_phase": "handoff_ready"
+    },
+    {
+      "order": 5,
+      "phase_key": "handoff_ready",
+      "next_phase": "release_wrap"
+    },
+    {
+      "order": 6,
+      "phase_key": "release_wrap",
+      "next_phase": null
+    }
+  ],
+  "phase_status": {
+    "current_phase": "local_validation",
+    "current_phase_order": 3,
+    "state_phase_status": "in_progress",
+    "visible_board_phase_label": "handoff_almost_ready",
+    "candidate_next_phase": "repair_alignment",
+    "skip_ahead_allowed": false,
+    "completion_claimed": false,
+    "last_state_change_at_utc": "2026-08-05T10:29:20Z",
+    "last_state_change_reason": "release_manifest regenerated after docs patch"
+  },
+  "gate_admission": {
+    "local_validation": {
+      "gate_state": "blocked_pending_local_repair",
+      "requires_categories_clear": [
+        "failed",
+        "stale",
+        "missing_lookup"
+      ],
+      "blocking_category_summary": [
+        "board/state/audit drift not yet reconciled",
+        "validation snapshot predates docs bundle change",
+        "active cache missing current docs bundle lookup"
+      ],
+      "passed_items_do_not_override_blockers": true,
+      "blocking_check_keys": [
+        "docs_bundle_lookup_bound",
+        "board_state_alignment",
+        "validation_snapshot_freshness",
+        "audit_after_validation",
+        "manifest_dependency_alignment"
+      ]
+    },
+    "repair_alignment": {
+      "gate_state": "not_admitted_yet",
+      "requires_previous_phase_validated": true,
+      "max_allowed_transition_if_admitted": "from_local_validation_to_repair_alignment"
+    },
+    "handoff_ready": {
+      "gate_state": "not_admitted_yet",
+      "admission_blocked_by": "repair_alignment_not_yet_completed"
+    }
+  },
+  "components": [
+    {
+      "component_key": "cli_core",
+      "state": "frozen",
+      "scope_version": "scope-bundle-2026.08",
+      "last_changed_at_utc": "2026-08-05T09:02:00Z",
+      "local_lookup_key": "cli_core:linux_x64"
+    },
+    {
+      "component_key": "shell_completion",
+      "state": "frozen",
+      "scope_version": "scope-bundle-2026.08",
+      "last_changed_at_utc": "2026-08-05T09:03:20Z",
+      "local_lookup_key": "completion:bash_zsh"
+    },
+    {
+      "component_key": "docs_bundle",
+      "state": "changed_after_last_validation",
+      "scope_version": "scope-bundle-2026.08",
+      "last_changed_at_utc": "2026-08-05T10:18:00Z",
+      "local_lookup_key": "doc_bundle:guide_set"
+    },
+    {
+      "component_key": "release_manifest",
+      "state": "needs_sync_note",
+      "scope_version": "scope-bundle-2026.08",
+      "last_changed_at_utc": "2026-08-05T10:29:20Z",
+      "local_lookup_key": "manifest:rc3_bundle"
+    }
+  ],
+  "audit_requirements": {
+    "append_only": true,
+    "last_existing_audit_ref": "AUD-QS-041",
+    "new_entry_required_after_repair_or_blocked_decision": true,
+    "forbid_backdated_completion": true
+  },
+  "mutation_policy": {
+    "mutable_paths": [
+      "input/workspace/release_board.md",
+      "input/workspace/state/workflow_state.json",
+      "input/workspace/state/validation_results.json",
+      "input/workspace/state/lookup_cache.json",
+      "input/workspace/audit/audit_history.md",
+      "input/workspace/outputs/release_progress_report.md",
+      "input/workspace/outputs/state_update_record.json",
+      "environment/mock_release_board/final_state_capture.json"
+    ],
+    "read_only_reference_paths": [
+      "input/workspace/runbooks/phase_gate_policy.md",
+      "input/workspace/runbooks/local_validation_policy.md",
+      "input/workspace/runbooks/audit_and_status_sync.md",
+      "input/workspace/state/local_lookup_records.json",
+      "input/workspace/logs/local_validation_runs.jsonl",
+      "input/workspace/config/release_scope.json",
+      "input/workspace/config/no_network_policy.txt",
+      "environment/mock_release_board/initial_state.json"
+    ]
+  }
+}

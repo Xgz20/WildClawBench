@@ -61,7 +61,7 @@ DATASET_TREE_HASH_ALGORITHM = "wildclawbench.dataset-tree-sha256/v1"
 ID_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 SHA256_RE = re.compile(r"^[a-f0-9]{64}$")
 MAX_PACKAGE_MEMBER_BYTES = 64 * 1024 * 1024
-MAX_PACKAGE_TOTAL_BYTES = 512 * 1024 * 1024
+MAX_PACKAGE_TOTAL_BYTES = 1024 * 1024 * 1024
 MAX_PACKAGE_MEMBERS = 20_000
 MAX_WORKER_LOG_BYTES = 4 * 1024 * 1024
 MAX_WORKER_RESULT_BYTES = 16 * 1024 * 1024
@@ -2102,6 +2102,7 @@ class _WorkerExecutor:
         runtime_lock_path: Path,
         timeout_seconds: float,
         playwright_browsers_path: Path | None,
+        rule_result_adapter: Mapping[str, Any] | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
@@ -2109,6 +2110,7 @@ class _WorkerExecutor:
         self.timeout_seconds = timeout_seconds
         self.playwright_browsers_path = playwright_browsers_path
         self.audit: dict[str, Any] = {}
+        self.rule_result_adapter = rule_result_adapter
 
     def __call__(self, source: str, context: Mapping[str, Any]) -> Mapping[str, Any]:
         dependency_roots = [
@@ -2131,6 +2133,7 @@ class _WorkerExecutor:
             "automated_checks": source,
             "workspace_path": context["workspace_path"],
             "transcript": context["transcript"],
+            "rule_result_adapter": self.rule_result_adapter,
         }
         request_path.write_bytes(_pretty_json_bytes(request))
         worker_path = Path(__file__).with_name("rule_worker.py").resolve(strict=True)
@@ -2313,6 +2316,13 @@ def _materialize_rule_component_evidence(
             _rule_file_evidence(attempt_root, transcript_path, "transcript")
         )
     criteria = component.get("criteria")
+    contract_document = _read_json(contract_path, code="SCORING_CONTRACT_INVALID")
+    adapter = contract_document.get("rule_result_adapter") or {}
+    if criteria == [] and adapter.get("evidence_only") is True and contract_document.get("grading_weights", {}).get("automated") == 0:
+        component["purpose"] = "evidence_preparation_only"
+        component["evidence"] = [*shared_evidence, _rule_file_evidence(
+            attempt_root, worker_result_path, "rule_worker_result", json_pointer="/raw_result")]
+        return component
     if not isinstance(criteria, list) or not criteria:
         raise ScoringRuntimeError("RULE_COMPONENT_INVALID", "criteria")
     for row in criteria:
@@ -2439,6 +2449,7 @@ def run_rules_attempt(
         runtime_lock_path=runtime_lock_path,
         timeout_seconds=timeout_seconds,
         playwright_browsers_path=playwright_browsers_path,
+        rule_result_adapter=contract.get("rule_result_adapter"),
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -2543,9 +2554,11 @@ def _import_semantic_grading_core() -> tuple[Any, Any, Any, Any]:
     return build_evidence_index, evaluate_semantics, finalize_score, GradingCoreError
 
 
-def _parse_semantic_criteria(rubric_text: object) -> list[dict[str, Any]]:
+def _parse_semantic_criteria(rubric_text: object, *, weight_scale: float = 1.0) -> list[dict[str, Any]]:
     if not isinstance(rubric_text, str) or not rubric_text.strip():
         return []
+    if isinstance(weight_scale, bool) or not isinstance(weight_scale, (int, float)) or not math.isfinite(weight_scale) or weight_scale <= 0:
+        raise ScoringRuntimeError("SEMANTIC_RUBRIC_INVALID", "invalid weight scale")
     criteria: list[dict[str, Any]] = []
     current: dict[str, Any] | None = None
     body: list[str] = []
@@ -2561,7 +2574,7 @@ def _parse_semantic_criteria(rubric_text: object) -> list[dict[str, Any]]:
         )
         key = metadata.get("key", "")
         try:
-            weight = float(metadata.get("weight", ""))
+            weight = float(metadata.get("weight", "")) / weight_scale
         except ValueError:
             weight = None
         if heading and ID_RE.fullmatch(key) and weight is not None:
@@ -2972,7 +2985,7 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
     rich_criteria = (
         []
         if grading_type == "automated"
-        else _parse_semantic_criteria(contract.get("llm_judge_rubric"))
+        else _parse_semantic_criteria(contract.get("llm_judge_rubric"), weight_scale=contract.get("semantic_weight_scale", 1.0))
     )
     if grading_type != "automated" and not rich_criteria:
         raise ScoringRuntimeError("SEMANTIC_RUBRIC_INVALID", "no criteria parsed")

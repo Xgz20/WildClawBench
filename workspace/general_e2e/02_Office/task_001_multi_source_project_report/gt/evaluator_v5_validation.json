@@ -1,0 +1,4598 @@
+{
+  "revision": "evaluator-v5-20261012",
+  "utc": "2026-10-12T03:03:42.092157+00:00",
+  "status": "pass",
+  "tests_run": 30,
+  "failures": [],
+  "log": "test_absent_artifacts_and_editability_failure (__main__.Tests.test_absent_artifacts_and_editability_failure) ... ok\ntest_actual_parser_and_workspace (__main__.Tests.test_actual_parser_and_workspace) ... ok\ntest_all_unresolved_and_uncovered_dimensions (__main__.Tests.test_all_unresolved_and_uncovered_dimensions) ... ok\ntest_apply_review_c4_and_evidence_gate (__main__.Tests.test_apply_review_c4_and_evidence_gate) ... ok\ntest_c2_wrong_binding_foreign_and_sources (__main__.Tests.test_c2_wrong_binding_foreign_and_sources) ... ok\ntest_c3_all_groups_and_no_omission_double_penalty (__main__.Tests.test_c3_all_groups_and_no_omission_double_penalty) ... ok\ntest_c3_each_group_boundary (__main__.Tests.test_c3_each_group_boundary) ... ok\ntest_c3_thresholds_and_monotonicity (__main__.Tests.test_c3_thresholds_and_monotonicity) ... ok\ntest_c3_unresolved_is_not_omission (__main__.Tests.test_c3_unresolved_is_not_omission) ... ok\ntest_c4_caps_do_not_scale_capability (__main__.Tests.test_c4_caps_do_not_scale_capability) ... ok\ntest_c4_null_and_invalid_inventory (__main__.Tests.test_c4_null_and_invalid_inventory) ... ok\ntest_c4_semantic_only_and_bands (__main__.Tests.test_c4_semantic_only_and_bands) ... ok\ntest_c4_shared_gap_count_and_fabrication (__main__.Tests.test_c4_shared_gap_count_and_fabrication) ... ok\ntest_c6_caps_and_deduplication (__main__.Tests.test_c6_caps_and_deduplication) ... ok\ntest_c6_deductions (__main__.Tests.test_c6_deductions) ... ok\ntest_c7_missing_trace_and_actual_evidence (__main__.Tests.test_c7_missing_trace_and_actual_evidence) ... ok\ntest_c7_partial_credit_and_caps (__main__.Tests.test_c7_partial_credit_and_caps) ... ok\ntest_calibration_gate_not_bypassed (__main__.Tests.test_calibration_gate_not_bypassed) ... ok\ntest_contradiction_and_fabrication_cap (__main__.Tests.test_contradiction_and_fabrication_cap) ... ok\ntest_full_score_and_fixed_weights (__main__.Tests.test_full_score_and_fixed_weights) ... ok\ntest_latest_natural_headers (__main__.Tests.test_latest_natural_headers) ... ok\ntest_mapping_manifest_and_prompt_unchanged (__main__.Tests.test_mapping_manifest_and_prompt_unchanged) ... ok\ntest_minimum_cap_not_additive (__main__.Tests.test_minimum_cap_not_additive) ... ok\ntest_missing_reports_rule_entrypoint (__main__.Tests.test_missing_reports_rule_entrypoint) ... ok\ntest_native_probe_unchanged_for_receipt_reuse (__main__.Tests.test_native_probe_unchanged_for_receipt_reuse) ... ok\ntest_numeric_wrong_value_caps (__main__.Tests.test_numeric_wrong_value_caps) ... ok\ntest_reference_rule_content (__main__.Tests.test_reference_rule_content) ... ok\ntest_reordered_equivalent_tables (__main__.Tests.test_reordered_equivalent_tables) ... ok\ntest_six_state_run_applies_caps (__main__.Tests.test_six_state_run_applies_caps) ... ok\ntest_unknown_header_does_not_erase_confirmed_error (__main__.Tests.test_unknown_header_does_not_erase_confirmed_error) ... ok\n\n----------------------------------------------------------------------\nRan 30 tests in 6.648s\n\nOK\n",
+  "historical_evidence_unchanged": true,
+  "historical_hashes": {
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\task_snapshot.md": "3653a8df82d59fd56a2cd6428d4b84d1c82213f088bc4ce3de3a1ea7c6b0e0cb",
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\raw_trace.jsonl": "02b37a12063f1d1e5979fb7547d51fb983d0cd3190d7b72fa5c58d757077b8a9",
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\judge_review.json": "e38781cb3303dfd3afa0c19d2d09cef610eef9ea49c9d581c3d1d370f538c640",
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\evaluation\\single_run_result.json": "edaa1f40c1cb9cc3a472f7aee08f6b8344a00fa2840f7b960ec939f9d334f00e",
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\report.md": "a0ea3b95ff9b3eab3c026cacab37a3b8f5e2f1714bb641bee53ca15c3d53ec00",
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\deliverables\\project_report.docx": "ab81ae9784e644b0c280cef247bd476a73efdc9ed9d926bceba6da40e6896e78",
+    "D:\\tmp\\_evaluation\\20261012T021913Z\\deliverables\\project_report.pdf": "d453e96625b7b16b5c7055493cbeed59a770040ef53d0eec427a5175ef55ac3f"
+  },
+  "task_sha256": "2f8c245aa94e749f6389e39855a595c0e87e4b24145bde39dc813775f1dd34f9",
+  "scope": "Author scoring, extraction, protocol and parser validation only",
+  "new_agent_trial": "not_run",
+  "new_semantic_judge": "not_run",
+  "independent_semantic_calibration": "not_performed",
+  "frozen_trial_projection": {
+    "scope": "Arithmetic projection from frozen v4 independent judgments and unchanged native receipt. Not a new v5 Agent or semantic Judge run.",
+    "source_run": "D:\\tmp\\_evaluation\\20261012T021913Z",
+    "source_judge_sha256": "e38781cb3303dfd3afa0c19d2d09cef610eef9ea49c9d581c3d1d370f538c640",
+    "historical_task_score": 0.9047272727272727,
+    "checkpoints": {
+      "automated.c1_files": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Readable required DOCX and PDF; report content is assessed separately",
+        "evidence": [
+          {
+            "project_report.docx": true,
+            "project_report.pdf": true
+          },
+          {}
+        ]
+      },
+      "automated.c2_task_links": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Check asserted ID/name/department/priority-issue links across tables; omissions belong to C3",
+        "evidence": [
+          {
+            "associations": [
+              {
+                "task_id": "XQ-001",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "统一身份接入",
+                    "column": 2,
+                    "locator": "table 1 row 2"
+                  },
+                  {
+                    "value": "统一身份接入",
+                    "column": 2,
+                    "locator": "table 3 row 2"
+                  },
+                  {
+                    "value": "统一身份接入",
+                    "column": 3,
+                    "locator": "table 5 row 2"
+                  },
+                  {
+                    "value": "统一身份接入",
+                    "column": 3,
+                    "locator": "table 6 row 2"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-001",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 2"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 2"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 2"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-001",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-001-01",
+                    "column": 1,
+                    "locator": "table 5 row 2"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-002",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "权限矩阵",
+                    "column": 2,
+                    "locator": "table 1 row 3"
+                  },
+                  {
+                    "value": "权限矩阵",
+                    "column": 2,
+                    "locator": "table 3 row 3"
+                  },
+                  {
+                    "value": "权限矩阵",
+                    "column": 3,
+                    "locator": "table 5 row 3"
+                  },
+                  {
+                    "value": "权限矩阵",
+                    "column": 3,
+                    "locator": "table 6 row 6"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-002",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 3"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 3"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 6"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-002",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-002-01",
+                    "column": 1,
+                    "locator": "table 5 row 3"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-003",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "知识库检索",
+                    "column": 2,
+                    "locator": "table 1 row 4"
+                  },
+                  {
+                    "value": "知识库检索",
+                    "column": 2,
+                    "locator": "table 3 row 4"
+                  },
+                  {
+                    "value": "知识库检索",
+                    "column": 3,
+                    "locator": "table 5 row 4"
+                  },
+                  {
+                    "value": "知识库检索",
+                    "column": 3,
+                    "locator": "table 6 row 10"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-003",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 4"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 4"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 10"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-003",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-003-01",
+                    "column": 1,
+                    "locator": "table 5 row 4"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-004",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "工单路由",
+                    "column": 2,
+                    "locator": "table 1 row 5"
+                  },
+                  {
+                    "value": "工单路由",
+                    "column": 2,
+                    "locator": "table 3 row 5"
+                  },
+                  {
+                    "value": "工单路由",
+                    "column": 3,
+                    "locator": "table 5 row 5"
+                  },
+                  {
+                    "value": "工单路由",
+                    "column": 3,
+                    "locator": "table 6 row 14"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-004",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 5"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 5"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 14"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-004",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-004-01",
+                    "column": 1,
+                    "locator": "table 5 row 5"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-005",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "会话留痕",
+                    "column": 2,
+                    "locator": "table 1 row 6"
+                  },
+                  {
+                    "value": "会话留痕",
+                    "column": 2,
+                    "locator": "table 3 row 6"
+                  },
+                  {
+                    "value": "会话留痕",
+                    "column": 3,
+                    "locator": "table 5 row 6"
+                  },
+                  {
+                    "value": "会话留痕",
+                    "column": 3,
+                    "locator": "table 6 row 17"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-005",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 6"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 6"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 17"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-005",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-005-01",
+                    "column": 1,
+                    "locator": "table 5 row 6"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-006",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "质检规则",
+                    "column": 2,
+                    "locator": "table 1 row 7"
+                  },
+                  {
+                    "value": "质检规则",
+                    "column": 2,
+                    "locator": "table 3 row 7"
+                  },
+                  {
+                    "value": "质检规则",
+                    "column": 3,
+                    "locator": "table 5 row 7"
+                  },
+                  {
+                    "value": "质检规则",
+                    "column": 3,
+                    "locator": "table 6 row 20"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-006",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 7"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 7"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 20"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-006",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-006-01",
+                    "column": 1,
+                    "locator": "table 5 row 7"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-007",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "接口重试",
+                    "column": 2,
+                    "locator": "table 1 row 8"
+                  },
+                  {
+                    "value": "接口重试",
+                    "column": 2,
+                    "locator": "table 3 row 8"
+                  },
+                  {
+                    "value": "接口重试",
+                    "column": 3,
+                    "locator": "table 5 row 8"
+                  },
+                  {
+                    "value": "接口重试",
+                    "column": 3,
+                    "locator": "table 6 row 23"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-007",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 8"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 8"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 23"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-007",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-007-01",
+                    "column": 1,
+                    "locator": "table 5 row 8"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-008",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "监控告警",
+                    "column": 2,
+                    "locator": "table 1 row 9"
+                  },
+                  {
+                    "value": "监控告警",
+                    "column": 2,
+                    "locator": "table 3 row 9"
+                  },
+                  {
+                    "value": "监控告警",
+                    "column": 3,
+                    "locator": "table 5 row 9"
+                  },
+                  {
+                    "value": "监控告警",
+                    "column": 3,
+                    "locator": "table 6 row 3"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-008",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 1 row 9"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 3,
+                    "locator": "table 3 row 9"
+                  },
+                  {
+                    "value": "研发",
+                    "column": 4,
+                    "locator": "table 6 row 3"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-008",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-008-01",
+                    "column": 1,
+                    "locator": "table 5 row 9"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-009",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "数据迁移",
+                    "column": 2,
+                    "locator": "table 1 row 10"
+                  },
+                  {
+                    "value": "数据迁移",
+                    "column": 2,
+                    "locator": "table 3 row 10"
+                  },
+                  {
+                    "value": "数据迁移",
+                    "column": 3,
+                    "locator": "table 5 row 10"
+                  },
+                  {
+                    "value": "数据迁移",
+                    "column": 3,
+                    "locator": "table 6 row 7"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-009",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 10"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 10"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 7"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-009",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-009-01",
+                    "column": 1,
+                    "locator": "table 5 row 10"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-010",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "网点接入",
+                    "column": 2,
+                    "locator": "table 1 row 11"
+                  },
+                  {
+                    "value": "网点接入",
+                    "column": 2,
+                    "locator": "table 3 row 11"
+                  },
+                  {
+                    "value": "网点接入",
+                    "column": 3,
+                    "locator": "table 5 row 11"
+                  },
+                  {
+                    "value": "网点接入",
+                    "column": 3,
+                    "locator": "table 6 row 11"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-010",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 11"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 11"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 11"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-010",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-010-01",
+                    "column": 1,
+                    "locator": "table 5 row 11"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-011",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "坐席部署",
+                    "column": 2,
+                    "locator": "table 1 row 12"
+                  },
+                  {
+                    "value": "坐席部署",
+                    "column": 2,
+                    "locator": "table 3 row 12"
+                  },
+                  {
+                    "value": "坐席部署",
+                    "column": 3,
+                    "locator": "table 5 row 12"
+                  },
+                  {
+                    "value": "坐席部署",
+                    "column": 3,
+                    "locator": "table 6 row 15"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-011",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 12"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 12"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 15"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-011",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-011-01",
+                    "column": 1,
+                    "locator": "table 5 row 12"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-012",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "网络联调",
+                    "column": 2,
+                    "locator": "table 1 row 13"
+                  },
+                  {
+                    "value": "网络联调",
+                    "column": 2,
+                    "locator": "table 3 row 13"
+                  },
+                  {
+                    "value": "网络联调",
+                    "column": 3,
+                    "locator": "table 5 row 13"
+                  },
+                  {
+                    "value": "网络联调",
+                    "column": 3,
+                    "locator": "table 6 row 18"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-012",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 13"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 13"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 18"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-012",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-012-01",
+                    "column": 1,
+                    "locator": "table 5 row 13"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-013",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "回滚演练",
+                    "column": 2,
+                    "locator": "table 1 row 14"
+                  },
+                  {
+                    "value": "回滚演练",
+                    "column": 2,
+                    "locator": "table 3 row 14"
+                  },
+                  {
+                    "value": "回滚演练",
+                    "column": 3,
+                    "locator": "table 5 row 14"
+                  },
+                  {
+                    "value": "回滚演练",
+                    "column": 3,
+                    "locator": "table 6 row 21"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-013",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 14"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 14"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 21"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-013",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-013-01",
+                    "column": 1,
+                    "locator": "table 5 row 14"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-014",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "终端适配",
+                    "column": 2,
+                    "locator": "table 1 row 15"
+                  },
+                  {
+                    "value": "终端适配",
+                    "column": 2,
+                    "locator": "table 3 row 15"
+                  },
+                  {
+                    "value": "终端适配",
+                    "column": 3,
+                    "locator": "table 5 row 15"
+                  },
+                  {
+                    "value": "终端适配",
+                    "column": 3,
+                    "locator": "table 6 row 24"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-014",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 15"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 15"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 24"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-014",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-014-01",
+                    "column": 1,
+                    "locator": "table 5 row 15"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-015",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "权限复核",
+                    "column": 2,
+                    "locator": "table 1 row 16"
+                  },
+                  {
+                    "value": "权限复核",
+                    "column": 2,
+                    "locator": "table 3 row 16"
+                  },
+                  {
+                    "value": "权限复核",
+                    "column": 3,
+                    "locator": "table 5 row 16"
+                  },
+                  {
+                    "value": "权限复核",
+                    "column": 3,
+                    "locator": "table 6 row 4"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-015",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 16"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 16"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 4"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-015",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-015-01",
+                    "column": 1,
+                    "locator": "table 5 row 16"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-016",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "试点切换",
+                    "column": 2,
+                    "locator": "table 1 row 17"
+                  },
+                  {
+                    "value": "试点切换",
+                    "column": 2,
+                    "locator": "table 3 row 17"
+                  },
+                  {
+                    "value": "试点切换",
+                    "column": 3,
+                    "locator": "table 5 row 17"
+                  },
+                  {
+                    "value": "试点切换",
+                    "column": 3,
+                    "locator": "table 6 row 8"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-016",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 1 row 17"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 3,
+                    "locator": "table 3 row 17"
+                  },
+                  {
+                    "value": "实施",
+                    "column": 4,
+                    "locator": "table 6 row 8"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-016",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-016-01",
+                    "column": 1,
+                    "locator": "table 5 row 17"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-017",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "坐席培训",
+                    "column": 2,
+                    "locator": "table 1 row 18"
+                  },
+                  {
+                    "value": "坐席培训",
+                    "column": 2,
+                    "locator": "table 3 row 18"
+                  },
+                  {
+                    "value": "坐席培训",
+                    "column": 3,
+                    "locator": "table 5 row 18"
+                  },
+                  {
+                    "value": "坐席培训",
+                    "column": 3,
+                    "locator": "table 6 row 12"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-017",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 18"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 18"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 12"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-017",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-017-01",
+                    "column": 1,
+                    "locator": "table 5 row 18"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-018",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "话术维护",
+                    "column": 2,
+                    "locator": "table 1 row 19"
+                  },
+                  {
+                    "value": "话术维护",
+                    "column": 2,
+                    "locator": "table 3 row 19"
+                  },
+                  {
+                    "value": "话术维护",
+                    "column": 3,
+                    "locator": "table 5 row 19"
+                  },
+                  {
+                    "value": "话术维护",
+                    "column": 3,
+                    "locator": "table 6 row 16"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-018",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 19"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 19"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 16"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-018",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-018-01",
+                    "column": 1,
+                    "locator": "table 5 row 19"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-019",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "知识审核",
+                    "column": 2,
+                    "locator": "table 1 row 20"
+                  },
+                  {
+                    "value": "知识审核",
+                    "column": 2,
+                    "locator": "table 3 row 20"
+                  },
+                  {
+                    "value": "知识审核",
+                    "column": 3,
+                    "locator": "table 5 row 20"
+                  },
+                  {
+                    "value": "知识审核",
+                    "column": 3,
+                    "locator": "table 6 row 19"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-019",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 20"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 20"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 19"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-019",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-019-01",
+                    "column": 1,
+                    "locator": "table 5 row 20"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-020",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "服务巡检",
+                    "column": 2,
+                    "locator": "table 1 row 21"
+                  },
+                  {
+                    "value": "服务巡检",
+                    "column": 2,
+                    "locator": "table 3 row 21"
+                  },
+                  {
+                    "value": "服务巡检",
+                    "column": 3,
+                    "locator": "table 5 row 21"
+                  },
+                  {
+                    "value": "服务巡检",
+                    "column": 3,
+                    "locator": "table 6 row 22"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-020",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 21"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 21"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 22"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-020",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-020-01",
+                    "column": 1,
+                    "locator": "table 5 row 21"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-021",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "反馈归因",
+                    "column": 2,
+                    "locator": "table 1 row 22"
+                  },
+                  {
+                    "value": "反馈归因",
+                    "column": 2,
+                    "locator": "table 3 row 22"
+                  },
+                  {
+                    "value": "反馈归因",
+                    "column": 3,
+                    "locator": "table 5 row 22"
+                  },
+                  {
+                    "value": "反馈归因",
+                    "column": 3,
+                    "locator": "table 6 row 25"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-021",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 22"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 22"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 25"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-021",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-021-01",
+                    "column": 1,
+                    "locator": "table 5 row 22"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-022",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "排班协同",
+                    "column": 2,
+                    "locator": "table 1 row 23"
+                  },
+                  {
+                    "value": "排班协同",
+                    "column": 2,
+                    "locator": "table 3 row 23"
+                  },
+                  {
+                    "value": "排班协同",
+                    "column": 3,
+                    "locator": "table 5 row 23"
+                  },
+                  {
+                    "value": "排班协同",
+                    "column": 3,
+                    "locator": "table 6 row 5"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-022",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 23"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 23"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 5"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-022",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-022-01",
+                    "column": 1,
+                    "locator": "table 5 row 23"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-023",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "应急值守",
+                    "column": 2,
+                    "locator": "table 1 row 24"
+                  },
+                  {
+                    "value": "应急值守",
+                    "column": 2,
+                    "locator": "table 3 row 24"
+                  },
+                  {
+                    "value": "应急值守",
+                    "column": 3,
+                    "locator": "table 5 row 24"
+                  },
+                  {
+                    "value": "应急值守",
+                    "column": 3,
+                    "locator": "table 6 row 9"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-023",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 24"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 24"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 9"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-023",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-023-01",
+                    "column": 1,
+                    "locator": "table 5 row 24"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-024",
+                "field": "name",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营交接",
+                    "column": 2,
+                    "locator": "table 1 row 25"
+                  },
+                  {
+                    "value": "运营交接",
+                    "column": 2,
+                    "locator": "table 3 row 25"
+                  },
+                  {
+                    "value": "运营交接",
+                    "column": 3,
+                    "locator": "table 5 row 25"
+                  },
+                  {
+                    "value": "运营交接",
+                    "column": 3,
+                    "locator": "table 6 row 13"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-024",
+                "field": "dept",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 1 row 25"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 3,
+                    "locator": "table 3 row 25"
+                  },
+                  {
+                    "value": "运营",
+                    "column": 4,
+                    "locator": "table 6 row 13"
+                  }
+                ]
+              },
+              {
+                "task_id": "XQ-024",
+                "field": "issue",
+                "correct": true,
+                "observations": [
+                  {
+                    "value": "IS-024-01",
+                    "column": 1,
+                    "locator": "table 5 row 25"
+                  }
+                ]
+              }
+            ],
+            "foreign_task_ids": []
+          }
+        ]
+      },
+      "automated.c3_numeric_facts": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Exact task totals, with explicit pass/fail counts summed; repeated statements must agree",
+        "evidence": [
+          {
+            "unparsed": [],
+            "differences": [],
+            "confirmed_numeric_errors": [],
+            "numeric_denominator": 120
+          }
+        ]
+      },
+      "automated.c5_editability": {
+        "status": "pass",
+        "score": 1,
+        "reason": "Opened, edited body and tables in disposable copy, saved and reopened",
+        "evidence": [
+          {
+            "table_checks": [
+              {
+                "table": 1,
+                "persisted": true
+              },
+              {
+                "table": 3,
+                "persisted": true
+              },
+              {
+                "table": 5,
+                "persisted": true
+              },
+              {
+                "table": 6,
+                "persisted": true
+              },
+              {
+                "table": 7,
+                "persisted": true
+              }
+            ],
+            "opened": true,
+            "control_opened": true,
+            "phase": "complete",
+            "input_sha256": "dfb3c84fef95fbdc291e16e4442236f4a4e4a7f9200e1b74886b443c6b0b03e5",
+            "copy": "D:\\tmp\\_evaluation\\20261012T021913Z\\evaluation\\native\\edit_probe.docx",
+            "status": "pass",
+            "edited": true,
+            "input": "D:\\tmp\\_evaluation\\20261012T021913Z\\evaluation_candidate\\results\\project_report.docx",
+            "pdf": "D:\\tmp\\_evaluation\\20261012T021913Z\\evaluation\\native\\project_report.pdf",
+            "tables": 8,
+            "engine": "WPS",
+            "body_persisted": true,
+            "version": "12.0",
+            "pages": 11
+          }
+        ]
+      },
+      "llm_judge.c1_substance": {
+        "status": "pass",
+        "score": 1,
+        "reason": "五类内容均有具体事实：24 项任务目标、逐任务量与验收、24 条优先问题、已确定安排及日期责任人，以及状态/原因缺口等待确认事项。任务级条件遗漏另计 C3。",
+        "evidence": [
+          {
+            "evidence_id": "candidate_text",
+            "locator": "Table 1 Rows 2-25; Table 3 Rows 2-25; Table 5 Rows 2-25; Table 6 Rows 2-25; Table 7 Rows 2-8"
+          }
+        ]
+      },
+      "llm_judge.c2_source_links": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Equal association and source-locatability credit for present fact families; absent facts scored in C3",
+        "evidence": [
+          {
+            "evidence_id": "candidate_text",
+            "locator": "Paragraphs 11,21,25,34,43,46; Tables 1,3,5,6,8"
+          },
+          {
+            "evidence_id": "source_locations.json",
+            "locator": "all XQ-001 through XQ-024 source location entries"
+          },
+          {
+            "association_units": [
+              {
+                "unit_id": "XQ-001.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 2, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.1 (XQ-001); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-001.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 2; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-001; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-001.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 2; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-001; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-001.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 2; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.1 (XQ-001); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-001.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-001; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 1; XQ-001"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-001.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-001; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 1 页演讲者备注; note text identified by XQ-001"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-002.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 3, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.2 (XQ-002); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-002.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 3; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-002; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-002.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 3; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-002; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-002.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 6; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.2 (XQ-002); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-002.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-002; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 2; XQ-002"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-002.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-002; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 3 页演讲者备注; note text identified by XQ-002"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-003.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 4, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.3 (XQ-003); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-003.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 4; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-003; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-003.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 4; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-003; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-003.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 10; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.3 (XQ-003); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-003.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-003; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 3; XQ-003"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-003.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-003; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 5 页演讲者备注; note text identified by XQ-003"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-004.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 5, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.4 (XQ-004); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-004.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 5; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-004; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-004.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 5; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-004; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-004.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 14; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.4 (XQ-004); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-004.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-004; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 4; XQ-004"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-004.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-004; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 7 页演讲者备注; note text identified by XQ-004"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-005.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 6, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.5 (XQ-005); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-005.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 6; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-005; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-005.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 6; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-005; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-005.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 17; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.5 (XQ-005); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-005.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-005; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 5; XQ-005"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-005.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-005; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 9 页演讲者备注; note text identified by XQ-005"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-006.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 7, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.6 (XQ-006); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-006.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 7; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-006; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-006.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 7; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-006; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-006.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 20; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.6 (XQ-006); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-006.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-006; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 6; XQ-006"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-006.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-006; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 11 页演讲者备注; note text identified by XQ-006"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-007.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 8, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.7 (XQ-007); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-007.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 8; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-007; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-007.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 8; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-007; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-007.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 23; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.7 (XQ-007); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-007.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-007; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 7; XQ-007"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-008.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 9, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.8 (XQ-008); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-008.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 9; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-008; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-008.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 9; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-008; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-008.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 3; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; section 2.8 (XQ-008); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-008.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-008; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "01_研发阶段材料_v1.0.docx; word/footnotes.xml; footnote 8; XQ-008"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-009.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 10, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.1 (XQ-009); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-009.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 10; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-009; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-009.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 10; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-009; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-009.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 7; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.1 (XQ-009); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-009.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-009; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 1; XQ-009"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-009.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-009; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 13 页演讲者备注; note text identified by XQ-009"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-010.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 11, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.2 (XQ-010); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-010.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 11; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-010; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-010.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 11; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-010; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-010.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 11; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.2 (XQ-010); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-010.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-010; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 2; XQ-010"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-010.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-010; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 15 页演讲者备注; note text identified by XQ-010"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-011.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 12, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.3 (XQ-011); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-011.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 12; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-011; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-011.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 12; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-011; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-011.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 15; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.3 (XQ-011); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-011.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-011; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 3; XQ-011"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-011.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-011; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 17 页演讲者备注; note text identified by XQ-011"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-012.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 13, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.4 (XQ-012); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-012.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 13; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-012; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-012.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 13; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-012; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-012.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 18; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.4 (XQ-012); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-012.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-012; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 4; XQ-012"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-012.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-012; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 19 页演讲者备注; note text identified by XQ-012"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-013.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 14, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.5 (XQ-013); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-013.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 14; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-013; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-013.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 14; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-013; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-013.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 21; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.5 (XQ-013); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-013.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-013; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 5; XQ-013"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-014.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 15, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.6 (XQ-014); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-014.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 15; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-014; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-014.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 15; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-014; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-014.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 24; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.6 (XQ-014); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-014.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-014; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 6; XQ-014"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-015.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 16, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.7 (XQ-015); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-015.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 16; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-015; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-015.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 16; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-015; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-015.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 4; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.7 (XQ-015); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-015.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-015; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 7; XQ-015"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-016.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 17, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.8 (XQ-016); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-016.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 17; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-016; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-016.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 17; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-016; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-016.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 8; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; section 2.8 (XQ-016); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-016.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-016; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "02_实施阶段材料_v1.0.docx; word/footnotes.xml; footnote 8; XQ-016"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-017.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 18, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.1 (XQ-017); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-017.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 18; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-017; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-017.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 18; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-017; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-017.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 12; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.1 (XQ-017); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-017.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-017; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 1; XQ-017"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-017.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-017; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 21 页演讲者备注; note text identified by XQ-017"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-018.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 19, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.2 (XQ-018); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-018.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 19; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-018; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-018.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 19; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-018; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-018.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 16; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.2 (XQ-018); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-018.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-018; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 2; XQ-018"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-018.qualifier",
+                "family": "qualifier",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-018; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific qualifier"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "05_阶段汇报_v1.0.pptx; 第 23 页演讲者备注; note text identified by XQ-018"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-019.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 20, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.3 (XQ-019); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-019.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 20; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-019; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-019.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 20; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-019; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-019.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 19; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.3 (XQ-019); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-019.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-019; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 3; XQ-019"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-020.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 21, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.4 (XQ-020); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-020.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 21; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-020; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-020.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 21; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-020; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-020.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 22; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.4 (XQ-020); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-020.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-020; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 4; XQ-020"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-021.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 22, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.5 (XQ-021); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-021.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 22; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-021; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-021.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 22; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-021; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-021.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 25; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.5 (XQ-021); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-021.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-021; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 5; XQ-021"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-022.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 23, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.6 (XQ-022); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-022.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 23; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-022; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-022.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 23; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-022; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-022.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 5; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.6 (XQ-022); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-022.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-022; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 6; XQ-022"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-023.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 24, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.7 (XQ-023); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-023.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 24; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-023; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-023.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 24; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-023; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-023.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 9; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.7 (XQ-023); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-023.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-023; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 7; XQ-023"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-024.goal",
+                "family": "goal",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 1 Row 25, 阶段目标; Paragraph 11; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.8 (XQ-024); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-024.metrics",
+                "family": "metrics",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 25; Paragraphs 25,46; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-024; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-024.issue",
+                "family": "issue",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 25; Paragraphs 21,29-32; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "source_locations.json",
+                    "locator": "task_id=XQ-024; workbook records under 指标明细/补录明细/验收记录/问题记录 and 任务台账"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-024.plan",
+                "family": "plan",
+                "present": true,
+                "associated": true,
+                "locatable": true,
+                "reason": "任务 ID 跨表关联明确；共用来源表给出文件和 v1.0，目标指向各任务节、安排指向附录 A，指标/问题可按工作表及任务/问题 ID 定位。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 6 Row 13; Paragraphs 34-35; Table 8 Rows 2-4"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; section 2.8 (XQ-024); appendix A"
+                  }
+                ]
+              },
+              {
+                "unit_id": "XQ-024.footnote",
+                "family": "footnote",
+                "present": false,
+                "associated": null,
+                "locatable": null,
+                "reason": "任务特有条件完全遗漏；一般试点范围声明不构成该条件的陈述。缺失不进入 C2 分母。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Paragraphs 42-49 (entire scope/conditions section), Tables 1/3/6 rows for XQ-024; full paragraphs 1-55 and Tables 1-8 contain no equivalent task-specific footnote"
+                  },
+                  {
+                    "evidence_id": "source_text",
+                    "locator": "03_运营阶段材料_v1.0.docx; word/footnotes.xml; footnote 8; XQ-024"
+                  }
+                ]
+              }
+            ],
+            "foreign_units": []
+          }
+        ]
+      },
+      "llm_judge.c3_fidelity": {
+        "status": "fail",
+        "score": 0.0,
+        "reason": "Minimum coverage across goals, arrangements and task-specific conditions; core omissions cannot be offset",
+        "evidence": [
+          {
+            "evidence_id": "candidate_text",
+            "locator": "Tables 1 and 6, all task rows; Paragraphs 42-49; Table 3 all task numeric rows"
+          },
+          {
+            "evidence_id": "source_text",
+            "locator": "all three Word files: word/footnotes.xml; PPT odd-numbered notesSlide1.xml through notesSlide23.xml"
+          },
+          {
+            "evidence_id": "independent_facts.json",
+            "locator": "all 24 task objects, goal/plan/owner/deadline/footnote/qualifier"
+          },
+          {
+            "fact_coverage": {
+              "correct": 96,
+              "total": 132,
+              "omitted": 36,
+              "incorrect": 0,
+              "goal_correct": 24,
+              "goal_total": 24,
+              "goal_coverage": 1.0,
+              "groups": {
+                "goals": {
+                  "correct": 24,
+                  "total": 24,
+                  "coverage": 1.0
+                },
+                "arrangements": {
+                  "correct": 72,
+                  "total": 72,
+                  "coverage": 1.0
+                },
+                "conditions": {
+                  "correct": 0,
+                  "total": 36,
+                  "coverage": 0.0
+                }
+              }
+            },
+            "unsupported_assertions": []
+          }
+        ]
+      },
+      "llm_judge.c4_no_fabrication": {
+        "status": "partial",
+        "score": 0.25,
+        "reason": "Unknown-information completeness; each gap counted once",
+        "evidence": [
+          {
+            "evidence_id": "candidate_text",
+            "locator": "Table 3 Rows 5,12,19,24; Table 5 Rows 4,11,18,25; Table 7 Rows 2-3"
+          },
+          {
+            "evidence_id": "agent_final",
+            "locator": "必须说明的边界与未确认项，第2条"
+          },
+          {
+            "unknown_items": [
+              {
+                "item_id": "IS-003-01.reason",
+                "field": "问题确认原因",
+                "task_id": "XQ-003",
+                "issue_id": "IS-003-01",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": true,
+                "fabricated": false,
+                "complete": true,
+                "reason": "问题表保留“未提供”，待确认章节列明问题 ID、成因字段、问题台账来源并指定“任务责任人”，按同一问题行可明确对应到研发负责人03。问题状态“未关闭”没有被误当成原因。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 4; Table 7 Row 3; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-003; field=reason"
+                  }
+                ]
+              },
+              {
+                "item_id": "XQ-004.status",
+                "field": "正式状态",
+                "task_id": "XQ-004",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": false,
+                "fabricated": false,
+                "complete": false,
+                "reason": "任务表和待确认章节均明确未提供，ID及任务台账 v1.0 来源充分；待确认表只指定“对应任务部门”，没有把确认动作明确分配给任务表中已列出的具体责任人，故该项责任分工信息不完整。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 5; Table 7 Row 2"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-004; field=status"
+                  }
+                ]
+              },
+              {
+                "item_id": "IS-010-01.reason",
+                "field": "问题确认原因",
+                "task_id": "XQ-010",
+                "issue_id": "IS-010-01",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": true,
+                "fabricated": false,
+                "complete": true,
+                "reason": "问题表保留“未提供”，待确认章节列明问题 ID、成因字段、问题台账来源并指定“任务责任人”，按同一问题行可明确对应到实施负责人02。问题状态“未关闭”没有被误当成原因。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 11; Table 7 Row 3; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-010; field=reason"
+                  }
+                ]
+              },
+              {
+                "item_id": "XQ-011.status",
+                "field": "正式状态",
+                "task_id": "XQ-011",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": false,
+                "fabricated": false,
+                "complete": false,
+                "reason": "任务表和待确认章节均明确未提供，ID及任务台账 v1.0 来源充分；待确认表只指定“对应任务部门”，没有把确认动作明确分配给任务表中已列出的具体责任人，故该项责任分工信息不完整。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 12; Table 7 Row 2"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-011; field=status"
+                  }
+                ]
+              },
+              {
+                "item_id": "IS-017-01.reason",
+                "field": "问题确认原因",
+                "task_id": "XQ-017",
+                "issue_id": "IS-017-01",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": true,
+                "fabricated": false,
+                "complete": true,
+                "reason": "问题表保留“未提供”，待确认章节列明问题 ID、成因字段、问题台账来源并指定“任务责任人”，按同一问题行可明确对应到运营负责人01。问题状态“未关闭”没有被误当成原因。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 18; Table 7 Row 3; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-017; field=reason"
+                  }
+                ]
+              },
+              {
+                "item_id": "XQ-018.status",
+                "field": "正式状态",
+                "task_id": "XQ-018",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": false,
+                "fabricated": false,
+                "complete": false,
+                "reason": "任务表和待确认章节均明确未提供，ID及任务台账 v1.0 来源充分；待确认表只指定“对应任务部门”，没有把确认动作明确分配给任务表中已列出的具体责任人，故该项责任分工信息不完整。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 19; Table 7 Row 2"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-018; field=status"
+                  }
+                ]
+              },
+              {
+                "item_id": "XQ-023.status",
+                "field": "正式状态",
+                "task_id": "XQ-023",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": false,
+                "fabricated": false,
+                "complete": false,
+                "reason": "任务表和待确认章节均明确未提供，ID及任务台账 v1.0 来源充分；待确认表只指定“对应任务部门”，没有把确认动作明确分配给任务表中已列出的具体责任人，故该项责任分工信息不完整。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 3 Row 24; Table 7 Row 2"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-023; field=status"
+                  }
+                ]
+              },
+              {
+                "item_id": "IS-024-01.reason",
+                "field": "问题确认原因",
+                "task_id": "XQ-024",
+                "issue_id": "IS-024-01",
+                "unknown_preserved_in_related_table": true,
+                "unknown_preserved_in_confirmation_section": true,
+                "source_identified": true,
+                "confirmation_owner_complete": true,
+                "fabricated": false,
+                "complete": true,
+                "reason": "问题表保留“未提供”，待确认章节列明问题 ID、成因字段、问题台账来源并指定“任务责任人”，按同一问题行可明确对应到运营负责人08。问题状态“未关闭”没有被误当成原因。",
+                "citations": [
+                  {
+                    "evidence_id": "candidate_text",
+                    "locator": "Table 5 Row 25; Table 7 Row 3; Table 8 Row 5"
+                  },
+                  {
+                    "evidence_id": "independent_facts.json",
+                    "locator": "id=XQ-024; field=reason"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "incomplete_unknown_items": 4,
+            "fabricated": false
+          }
+        ]
+      },
+      "llm_judge.c6_readability": {
+        "status": "partial",
+        "score": 0.2,
+        "reason": "Deduct once per demonstrated defect according to impact",
+        "evidence": [
+          {
+            "evidence_id": "docx/page/1",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/2",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/3",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/4",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/5",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/6",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/7",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/8",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/9",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/10",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "docx/page/11",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/1",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/2",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/3",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/4",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/5",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/6",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/7",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/8",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/9",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/10",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "evidence_id": "pdf/page/11",
+            "locator": "entire page, visually inspected"
+          },
+          {
+            "defects": [
+              {
+                "id": "source_table_horizontal_clipping",
+                "severity": "major",
+                "impact": "第八章来源说明表超出纸张左右边界：序号列及文件名前缀被裁切，三份阶段材料文件无法直接完整读取，工作簿用途右端也被裁切。是局部实质来源内容截断，尚非整份核心内容不可用；两版同一缺陷只扣一次。",
+                "citations": [
+                  {
+                    "evidence_id": "docx/page/10",
+                    "locator": "第八章来源说明表；page 10 bottom / page 11 top, left and right page edges"
+                  },
+                  {
+                    "evidence_id": "docx/page/11",
+                    "locator": "第八章来源说明表；page 10 bottom / page 11 top, left and right page edges"
+                  },
+                  {
+                    "evidence_id": "pdf/page/10",
+                    "locator": "第八章来源说明表；page 10 bottom / page 11 top, left and right page edges"
+                  },
+                  {
+                    "evidence_id": "pdf/page/11",
+                    "locator": "第八章来源说明表；page 10 bottom / page 11 top, left and right page edges"
+                  }
+                ]
+              },
+              {
+                "id": "continued_tables_missing_headers",
+                "severity": "minor",
+                "impact": "任务明细、优先问题和已确定安排等跨页表续页没有重复表头，需要回看前页辨认数值列或字段。内容可恢复；按同一类续页表头缺陷去重为一项，不逐页、逐版本重复扣分。",
+                "citations": [
+                  {
+                    "evidence_id": "docx/page/5",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "docx/page/7",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "docx/page/8",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "docx/page/11",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "pdf/page/5",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "pdf/page/7",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "pdf/page/8",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  },
+                  {
+                    "evidence_id": "pdf/page/11",
+                    "locator": "continued table starts at top of page without repeated column headings"
+                  }
+                ]
+              },
+              {
+                "id": "split_owner_in_arrangements",
+                "severity": "minor",
+                "impact": "XQ-022 安排在第7页末行，责任人“运营负责人06”的“06”被分到第8页首行，其余单元格为空；须把两页相接才能读完整责任人。内容未丢失，与缺少表头是不同的拆行问题。",
+                "citations": [
+                  {
+                    "evidence_id": "docx/page/7",
+                    "locator": "Table 6, sequence 4 / XQ-022: last row page 7 and first partial row page 8"
+                  },
+                  {
+                    "evidence_id": "docx/page/8",
+                    "locator": "Table 6, sequence 4 / XQ-022: last row page 7 and first partial row page 8"
+                  },
+                  {
+                    "evidence_id": "pdf/page/7",
+                    "locator": "Table 6, sequence 4 / XQ-022: last row page 7 and first partial row page 8"
+                  },
+                  {
+                    "evidence_id": "pdf/page/8",
+                    "locator": "Table 6, sequence 4 / XQ-022: last row page 7 and first partial row page 8"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "llm_judge.c7_self_verification": {
+        "status": "partial",
+        "score": 0.7,
+        "reason": "Mean scope credit: none=0, partial=0.25, complete=1",
+        "evidence": [
+          {
+            "evidence_id": "raw_trace",
+            "locator": "lines 1-412 (complete same-run trajectory); actual checks principally 291-318 and 368-381"
+          },
+          {
+            "coverage": {
+              "sources": 0.5,
+              "facts": 1,
+              "tables_figures": 0.5,
+              "editability": 1,
+              "docx_pdf_equivalence": 1
+            },
+            "credited_coverage": {
+              "sources": 0.25,
+              "facts": 1,
+              "tables_figures": 0.25,
+              "editability": 1,
+              "docx_pdf_equivalence": 1
+            },
+            "coverage_evidence": {
+              "sources": {
+                "reason": "实际从工作簿按项目/任务ID聚合数据并与最终DOCX任务、问题表核对，另用已读取材料中的安排/日期核对安排表，构成有效部分检查。未见对报告来源表的文件/版本/定位逐项检查，也未核对Word脚注或PPT备注；不能由读取材料及最终“逐项对照”自述提升至完整。",
+                "citations": [
+                  {
+                    "evidence_id": "raw_trace",
+                    "locator": "lines 176-177: workbook filtering and saved per_task/per_dept; lines 368-369: DOCX-to-source-derived task/issue comparisons; lines 373-374: arrangement comparisons; lines 121-122: PPT visible-slide extraction only"
+                  }
+                ]
+              },
+              "facts": {
+                "reason": "真实核对24条任务的计划/完成量、比例、验收、问题量和未知状态，24条优先问题的原因/状态，以及安排责任人与日期，返回0错误；同时实际读出部门汇总、成因分布和缺失原因行。达到事实/统计/未知信息检查范围，不要求逐一复述所有来源。",
+                "citations": [
+                  {
+                    "evidence_id": "raw_trace",
+                    "locator": "lines 298-299: department/cause tables and unknowns read back; lines 368-369: 24 task and 24 priority issue comparisons, zero errors; lines 373-374: arrangements/owners/deadlines checked"
+                  }
+                ]
+              },
+              "tables_figures": {
+                "reason": "实际检查8张原生表的结构并核对任务表、问题表和安排表数据。两幅图仅生成并检查嵌入媒体数量，没有实际检查图的标签/绘制数据/导出显示；源图看图调用失败也不计入。故表范围有效、图范围未完成，记0.5。",
+                "citations": [
+                  {
+                    "evidence_id": "raw_trace",
+                    "locator": "lines 291-292: table dimensions/headings and media names; lines 298-299,368-369,373-374: table verification; lines 233-234: chart generation only; lines 138-139: view_image failed; complete trace lines 1-412 contains no successful chart inspection"
+                  }
+                ]
+              },
+              "editability": {
+                "reason": "用python-docx重新打开实际报告，读取原生段落、标题、8张表的行列和单元格文本，并在最终版本逐格访问任务、问题与安排表；这是实际检查可编辑段落/单元格结构，满足此范围。没有以评测端副本编辑或单纯导出成功替代。",
+                "citations": [
+                  {
+                    "evidence_id": "raw_trace",
+                    "locator": "lines 291-292: parsed paragraphs/headings and eight native table structures; lines 298-299: actual cell text; lines 368-369 and 373-374: final DOCX cells accessed and verified"
+                  }
+                ]
+              },
+              "docx_pdf_equivalence": {
+                "reason": "接受有意义的两版抽查：先实际回读DOCX部门汇总、问题和安排单元格，再在导出PDF核对同组74,372/66,785/89.8%、960/762/79.4%、342/138、未知标记和安排文本日期。此检查复用了已读DOCX结果，并非只有单方面PDF关键词。后续修改的是封面/项目范围文字，重建重导出后再次检查修改后PDF措辞；未逐页视觉比较不扣除此范围分。",
+                "citations": [
+                  {
+                    "evidence_id": "raw_trace",
+                    "locator": "lines 298-299 and 305-306: DOCX actual values; lines 317-318: corresponding PDF key figures/text results; lines 324-352: wording fixes; lines 356-362: rebuild/re-export; lines 380-381: affected PDF content rechecked"
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "task_score": 0.59,
+    "uncapped_task_score": 0.788,
+    "task_score_cap": 0.59,
+    "cap_reasons": [
+      {
+        "checkpoint": "llm_judge.c3_fidelity",
+        "cap": 0.59,
+        "reason": "Core goal/arrangement/condition coverage below required level"
+      },
+      {
+        "checkpoint": "llm_judge.c4_no_fabrication",
+        "cap": 0.79,
+        "reason": "Unknown information fabricated or incomplete"
+      },
+      {
+        "checkpoint": "llm_judge.c6_readability",
+        "cap": 0.69,
+        "reason": "Substantive clipping, unreadability or two-version mismatch"
+      },
+      {
+        "checkpoint": "llm_judge.c7_self_verification",
+        "cap": 0.89,
+        "reason": "Actual verification incomplete"
+      }
+    ],
+    "task_score_status": "decidable",
+    "group_scores": {
+      "automated": 1.0,
+      "llm_judge": 0.47
+    },
+    "group_coverage": {
+      "automated": {
+        "applicable": 4,
+        "decidable": 4,
+        "coverage": 1.0
+      },
+      "llm_judge": {
+        "applicable": 6,
+        "decidable": 6,
+        "coverage": 1.0
+      }
+    },
+    "collapsed_checkpoints": {
+      "C1": 1.0,
+      "C2": 1.0,
+      "C3": 0.6792452830188679,
+      "C4": 0.25,
+      "C5": 1.0,
+      "C6": 0.2,
+      "C7": 0.7
+    },
+    "capabilities": {
+      "intent_understanding": {
+        "score": 1.0,
+        "applicable_count": 2,
+        "decidable_count": 2,
+        "decidable_coverage": 1.0,
+        "subcheck_coverage": 1.0,
+        "checkpoints": [
+          "C1",
+          "C5"
+        ]
+      },
+      "state_awareness": {
+        "score": 0.625,
+        "applicable_count": 2,
+        "decidable_count": 2,
+        "decidable_coverage": 1.0,
+        "subcheck_coverage": 1.0,
+        "checkpoints": [
+          "C2",
+          "C4"
+        ]
+      },
+      "reasoning_and_decision_making": {
+        "score": null,
+        "applicable_count": 0,
+        "decidable_count": 0,
+        "decidable_coverage": null,
+        "subcheck_coverage": null,
+        "checkpoints": []
+      },
+      "tool_invocation": {
+        "score": null,
+        "applicable_count": 0,
+        "decidable_count": 0,
+        "decidable_coverage": null,
+        "subcheck_coverage": null,
+        "checkpoints": []
+      },
+      "result_evaluation": {
+        "score": 0.7,
+        "applicable_count": 1,
+        "decidable_count": 1,
+        "decidable_coverage": 1.0,
+        "subcheck_coverage": 1.0,
+        "checkpoints": [
+          "C7"
+        ]
+      }
+    },
+    "applicable_count": 10,
+    "decidable_count": 10,
+    "decidable_coverage": 1.0,
+    "provisional": false
+  }
+}

@@ -3,6 +3,9 @@ name: prepare-general-e2e-workspaces
 description: 从版本化数据集构建 General E2E 批次、执行包和私有评分包；用于准备隔离工作空间，不负责启动 Harness、收集证据、评分或报告。
 ---
 
+`0.3.3` 同时消费旧 `general-custom60-v1` 和新 `general-custom116-v1` bundle，按输入 manifest 冻结数据集身份和题目顺序。旧配置和旧包保持可读。新题配置示例见 [prepare-config.general116.example.json](references/prepare-config.general116.example.json)；同一批次使用一个数据集，不把新旧 ID 拼成混合 bundle。
+
+
 # 准备 General E2E 工作空间
 
 分发目录与执行工作区分开。控制端用 run-general-e2e 的 install-unit/init-round 安装到稳定的 Harness/execution/tasks 和 Harness/score/tasks。评测根默认是当前控制会话项目目录，用户指定时覆盖；框架修复不应默认重新 prepare 整批。

@@ -1,0 +1,155 @@
+{
+  "validation_meta": {
+    "latest_run_key": "local-run-20260805-1012b",
+    "validation_kind": "local_mock_validation_results",
+    "validated_phase": "local_validation",
+    "run_started_at_utc": "2026-08-05T10:12:30Z",
+    "run_completed_at_utc": "2026-08-05T10:14:08Z",
+    "state_snapshot_at_utc": "2026-08-05T10:09:00Z",
+    "latest_state_change_seen_at_utc": "2026-08-05T10:09:00Z",
+    "current_for_state_at_utc": false,
+    "must_be_refreshed_after_utc": "2026-08-05T10:29:20Z",
+    "network_used": false
+  },
+  "checks": [
+    {
+      "local_check_key": "scope_manifest_readable",
+      "category": "passed",
+      "severity": "required",
+      "artifact_refs": [
+        "config/release_scope.json",
+        "state/workflow_state.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:12:38Z",
+      "reason": "release_id and current scope are readable and internally named",
+      "blocks_current_gate": false
+    },
+    {
+      "local_check_key": "cli_component_lock",
+      "category": "passed",
+      "severity": "required",
+      "artifact_refs": [
+        "state/local_lookup_records.json#cli_core:linux_x64",
+        "state/local_lookup_records.json#completion:bash_zsh"
+      ],
+      "observed_at_utc": "2026-08-05T10:12:51Z",
+      "reason": "CLI and completion component local records match current scope",
+      "blocks_current_gate": false,
+      "receipt_ref": "logs/local_validation_runs.jsonl#line.cli-lock-1012",
+      "tested_bindings": {
+        "cli_core:linux_x64": "cli-linux-x64-rc3-local-4b72",
+        "completion:bash_zsh": "completion-bash-zsh-rc3-local-91af"
+      },
+      "required_bindings": {
+        "cli_core:linux_x64": "cli-linux-x64-rc3-local-4b72",
+        "completion:bash_zsh": "completion-bash-zsh-rc3-local-91af"
+      }
+    },
+    {
+      "local_check_key": "docs_bundle_lookup_bound",
+      "category": "missing_lookup",
+      "severity": "required",
+      "artifact_refs": [
+        "state/lookup_cache.json#active_cache.doc_bundle:guide_set",
+        "state/local_lookup_records.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:13:11Z",
+      "reason": "active cache lacks a current-scope docs bundle digest",
+      "blocks_current_gate": true,
+      "repair_constraint": "local_lookup_records_only"
+    },
+    {
+      "local_check_key": "board_state_alignment",
+      "category": "failed",
+      "severity": "required",
+      "artifact_refs": [
+        "release_board.md",
+        "state/workflow_state.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:13:26Z",
+      "reason": "Markdown banner implies handoff while workflow_state current_phase is still local_validation",
+      "blocks_current_gate": true
+    },
+    {
+      "local_check_key": "validation_snapshot_freshness",
+      "category": "stale",
+      "severity": "required",
+      "artifact_refs": [
+        "state/workflow_state.json#phase_status.last_state_change_at_utc",
+        "logs/local_validation_runs.jsonl"
+      ],
+      "observed_at_utc": "2026-08-05T10:13:52Z",
+      "reason": "validation snapshot predates docs bundle state change at 10:18Z",
+      "blocks_current_gate": true
+    },
+    {
+      "local_check_key": "audit_after_validation",
+      "category": "failed",
+      "severity": "required",
+      "artifact_refs": [
+        "audit/audit_history.md#AUD-QS-041",
+        "state/validation_results.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:14:02Z",
+      "reason": "audit contains premature handoff wording before lookup/cache and freshness were reconciled",
+      "blocks_current_gate": true
+    },
+    {
+      "local_check_key": "archived_board_scope_guard",
+      "category": "passed",
+      "severity": "advisory",
+      "artifact_refs": [
+        "notes/old_release_board_copy.md",
+        "config/release_scope.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:14:06Z",
+      "reason": "old board copy has prior scope_version and should remain a distractor",
+      "blocks_current_gate": false
+    },
+    {
+      "local_check_key": "manifest_dependency_alignment",
+      "category": "failed",
+      "severity": "required",
+      "artifact_refs": [
+        "state/lookup_cache.json",
+        "state/local_lookup_records.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:30:15Z",
+      "reason": "Active manifest cache carried forward from the 10:19 scan.",
+      "blocks_current_gate": true
+    },
+    {
+      "local_check_key": "bundle_integrity",
+      "category": "passed",
+      "severity": "required",
+      "receipt_ref": "logs/local_validation_runs.jsonl#line.bundle-integrity-1037",
+      "tested_bindings": {
+        "cli_core:linux_x64": "cli-linux-x64-rc3-local-4b72",
+        "completion:bash_zsh": "completion-bash-zsh-rc3-local-91af",
+        "doc_bundle:guide_set": "docs-guide-rc3-local-7a10",
+        "manifest:rc3_bundle": "manifest-rc3-local-f19d"
+      },
+      "required_bindings": {
+        "cli_core:linux_x64": "cli-linux-x64-rc3-local-4b72",
+        "completion:bash_zsh": "completion-bash-zsh-rc3-local-91af",
+        "doc_bundle:guide_set": "docs-guide-rc3-local-7a10",
+        "manifest:rc3_bundle": "manifest-rc3-local-c0a5"
+      },
+      "artifact_refs": [
+        "logs/local_validation_runs.jsonl#line.bundle-integrity-1037",
+        "state/lookup_cache.json"
+      ],
+      "observed_at_utc": "2026-08-05T10:37:00Z",
+      "reason": "Imported latest packaging receipt marked passed.",
+      "blocks_current_gate": false
+    }
+  ],
+  "refresh_history": [
+    {
+      "refresh_key": "refresh-note-1014-partial",
+      "recorded_at_utc": "2026-08-05T10:14:30Z",
+      "summary": "partial local validation; blockers remained",
+      "network_used": false
+    }
+  ]
+}

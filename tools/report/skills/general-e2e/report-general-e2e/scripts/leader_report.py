@@ -450,7 +450,7 @@ def summaries(data):
             continue
         out[name] = prefix + f"{label}：" + "；".join(descriptions) + "。"
         if name == "分类对比": out[name] += "表中为模型与客户端的组合对照，不能单独归因于某一因素。"
-        elif name == "Agent能力对比": out[name] += "七维得分来自检查点评分，工具次数不替代能力得分。"
+        elif name == "Agent能力对比": out[name] += "能力维度按对应数据集的检查点映射独立统计，工具次数不替代能力得分。"
         elif name == "难度对比": out[name] += "各分层的冻结用例数见表头，缺失评分不补零。"
         else: out[name] += "结果范围限于表中列出的输入模态。"
     out["效率对比"] = render_efficiency_summary(data, average_token_comparisons(data, primary))
@@ -547,7 +547,7 @@ def render(data):
                 c = t["coverage_table"]
                 lines += ["任务与模型耗时覆盖：", "", *md_table(c["headers"],c["rows"]), ""]
     lines += ["## 总结","",
-              f"本轮以 {label} 为目标单元，与参照组合在分类、七维能力和难度分层上的差异已在各章节列明。失败任务的真实产物得分计入均值，完成率单独呈现，不以剔除失败的方式抬高效果指标。",
+              f"本轮以 {label} 为目标单元，与参照组合在分类、能力维度和难度分层上的差异已在各章节列明。失败任务的真实产物得分计入均值，完成率单独呈现，不以剔除失败的方式抬高效果指标。",
               "资源缺口保留覆盖说明；组合对照应结合模型与 Harness 的实际配置解释。所有表格数值均从本版 Excel 提取并与同源 JSON 逐项核对。","",
               "数据追溯：同目录 `general_e2e_leader_data.json`、`general_e2e_report_data.json` 与审计报告。",""]
     return "\n".join(lines)

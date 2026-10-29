@@ -326,6 +326,32 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             )
             self.assertEqual(manifest["task_ids"], self.selected_task_ids)
 
+    def test_scoring_canonical_roots_reject_execution_workspace_and_manifest_relabeling(self) -> None:
+        source = self.batch_root / "packages/batch-fixture__astronstudio-macos__scoring.zip"
+        batch = json.loads((self.batch_root / "manifest.json").read_text())
+        with zipfile.ZipFile(source) as archive:
+            rows = [(info, archive.read(info)) for info in archive.infolist()]
+        root = rows[0][0].filename.split("/", 1)[0]
+        leaked = self.temp_root / "execution-in-scoring.zip"
+        with zipfile.ZipFile(leaked, "w") as archive:
+            for info, data in rows:
+                archive.writestr(info, data)
+            info = zipfile.ZipInfo(f"{root}/execution/tasks/leak/workspace/candidate.txt")
+            info.external_attr = (stat.S_IFREG | 0o644) << 16
+            archive.writestr(info, b"candidate")
+        with self.assertRaisesRegex(PREPARE.PrepareError, "SCORING_EXECUTION_MATERIAL_LEAK"):
+            PREPARE._verify_scoring_archive(leaked, batch)
+        relabeled = self.temp_root / "relabeled-private-root.zip"
+        with zipfile.ZipFile(relabeled, "w") as archive:
+            for info, data in rows:
+                if info.filename.endswith("/.general-e2e/scoring-package-manifest.json"):
+                    document = json.loads(data)
+                    document["tasks"][0]["private_scoring"]["path"] = "execution/tasks/leak/workspace"
+                    data = json.dumps(document).encode()
+                archive.writestr(info, data)
+        with self.assertRaisesRegex(PREPARE.PrepareError, "SCORING_GT_PATH_INVALID"):
+            PREPARE._verify_scoring_archive(relabeled, batch)
+
     def test_execution_package_preserves_dataset_symlink_metadata(self) -> None:
         execution = (
             self.batch_root

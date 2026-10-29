@@ -67,7 +67,12 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
             issues.append(_issue("FRONTMATTER_FIELD_MISSING", f"frontmatter 缺少字段: {key}", doc))
         elif not isinstance(metadata[key], expected) or isinstance(metadata[key], bool):
             issues.append(_issue("FRONTMATTER_FIELD_TYPE", f"frontmatter 字段类型错误: {key}", doc, evidence={"expected": expected.__name__}))
-    if doc.category != doc.path.parent.name:
+    nested_data_analysis = (
+        doc.category == "data-analysis"
+        and doc.path.parent.name == doc.task_id
+        and doc.path.parent.parent == repo_root / "tasks/general_e2e/03_Data_Analysis_task"
+    )
+    if doc.category != doc.path.parent.name and not nested_data_analysis:
         issues.append(_issue("CATEGORY_MISMATCH", f"category 与父目录不一致: {doc.category} != {doc.path.parent.name}", doc))
     if doc.task_id not in doc.path.stem:
         issues.append(_issue("TASK_ID_FILENAME_MISMATCH", "task ID 未出现在文件名中", doc))

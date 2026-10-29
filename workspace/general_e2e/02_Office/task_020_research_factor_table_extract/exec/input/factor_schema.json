@@ -1,0 +1,154 @@
+{
+  "citation_map_shape": {
+    "key": "<sheet>:<row_id>:<field_name>",
+    "required_fields": [
+      "source_document",
+      "section_or_table",
+      "snippet_anchor"
+    ],
+    "description": "行 ID 自定且在表内唯一。非空关键字段均需引用；空 superseded_source 不需引用。value 为一个来源对象，也可为多个来源对象组成的数组。锚点摘录原文，章节、表号、页码或证据编号能定位即可。"
+  },
+  "direction_enum": [
+    "positive",
+    "negative",
+    "neutral"
+  ],
+  "factor_codebook": [
+    {
+      "aliases": [
+        "订单可见度",
+        "订单能见度"
+      ],
+      "allowed_horizons": [
+        "1Q",
+        "2Q",
+        "1-2Q"
+      ],
+      "factor_id": "F_ORDER_VIS",
+      "factor_name": "订单能见度"
+    },
+    {
+      "aliases": [
+        "海外库存压力",
+        "库存去化压力"
+      ],
+      "allowed_horizons": [
+        "1Q",
+        "2Q"
+      ],
+      "factor_id": "F_INVENTORY",
+      "factor_name": "库存压力"
+    },
+    {
+      "aliases": [
+        "盈利质量"
+      ],
+      "allowed_horizons": [
+        "FY2026",
+        "FY2026H2"
+      ],
+      "factor_id": "F_PROFIT_QUALITY",
+      "factor_name": "盈利质量"
+    },
+    {
+      "aliases": [
+        "费用率改善",
+        "费用率"
+      ],
+      "allowed_horizons": [
+        "FY2026H2"
+      ],
+      "factor_id": "F_EXPENSE_RATIO",
+      "factor_name": "费用率改善"
+    },
+    {
+      "aliases": [
+        "原料成本",
+        "原料成本压力",
+        "采购价格波动"
+      ],
+      "allowed_horizons": [
+        "2Q"
+      ],
+      "factor_id": "F_RAW_MATERIAL",
+      "factor_name": "原料成本"
+    }
+  ],
+  "output_files": {
+    "json": "research_factor_extract.json",
+    "workbook": "research_factor_extract.xlsx"
+  },
+  "risk_type_enum": [
+    "demand",
+    "capex",
+    "raw_material",
+    "inventory",
+    "execution"
+  ],
+  "sheets": {
+    "factor_mentions": {
+      "columns": [
+        "factor_row_id",
+        "canonical_company_id",
+        "factor_id",
+        "factor_name",
+        "direction",
+        "horizon",
+        "evidence_text",
+        "effective_source_time",
+        "source_document",
+        "section_or_table",
+        "superseded_source"
+      ],
+      "description": "每个主体与因子组合保留一条有效记录。"
+    },
+    "research_points": {
+      "columns": [
+        "point_id",
+        "canonical_company_id",
+        "canonical_company_name",
+        "canonical_sector_name",
+        "point_type",
+        "effective_source_time",
+        "summary_text",
+        "source_document",
+        "section_or_table",
+        "superseded_source"
+      ],
+      "description": "每个研究主体一条截至归档时点的有效摘要；point_type 使用 effective_view。"
+    },
+    "risk_disclosures": {
+      "columns": [
+        "risk_id",
+        "canonical_company_id",
+        "risk_type",
+        "risk_text",
+        "source_document",
+        "section_or_table"
+      ],
+      "description": "按主体与风险类别整理有效风险条目。"
+    }
+  },
+  "material_type": "模拟研究资料；名称和代码均不对应真实证券",
+  "citation_fields": {
+    "research_points": [
+      "summary_text",
+      "superseded_source"
+    ],
+    "factor_mentions": [
+      "direction",
+      "horizon",
+      "evidence_text",
+      "superseded_source"
+    ],
+    "risk_disclosures": [
+      "risk_text"
+    ]
+  },
+  "field_semantics": {
+    "effective_source_time": "所采用业务记录最后新增或明确修订的发布时间，重复摘录不更新时间。",
+    "superseded_source": "发生替代时记录原文件及原记录定位；没有被替代记录时留空。",
+    "evidence_text": "概括原文对该因子的依据，保留判断和观察期限。",
+    "risk_type": "demand=终端需求；inventory=库存；capex=资本开支；raw_material=采购成本；execution=执行。"
+  }
+}

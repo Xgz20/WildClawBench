@@ -50,10 +50,75 @@
         "typing_extensions"
       ],
       "runtime_assets": []
+    },
+    {
+      "distribution": "openpyxl",
+      "version": "3.1.5",
+      "import_roots": [
+        "openpyxl"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pypdf",
+      "version": "6.2.0",
+      "import_roots": [
+        "pypdf"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pymupdf",
+      "version": "1.26.7",
+      "import_roots": [
+        "fitz",
+        "pymupdf"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "python-docx",
+      "version": "1.2.0",
+      "import_roots": [
+        "docx"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "lxml",
+      "version": "6.0.2",
+      "import_roots": [
+        "lxml"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "numpy",
+      "version": "2.3.5",
+      "import_roots": [
+        "numpy"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "pillow",
+      "version": "12.0.0",
+      "import_roots": [
+        "PIL"
+      ],
+      "runtime_assets": []
+    },
+    {
+      "distribution": "et-xmlfile",
+      "version": "2.0.0",
+      "import_roots": [
+        "et_xmlfile"
+      ],
+      "runtime_assets": []
     }
   ],
   "requirements": {
     "path": "scoring-runtime-requirements.txt",
-    "sha256": "f0225b6cf5baa31d232c4b12f838b48d43387c908458c16cccb14e19e03c31c9"
+    "sha256": "1077b9d4b9fe0a268c7060bd158806c7bbc8e158419985e1b81774b331f869d4"
   }
 }

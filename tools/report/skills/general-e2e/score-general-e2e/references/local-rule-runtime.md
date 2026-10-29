@@ -10,6 +10,7 @@
 
 - Python `3.11`
 - PyYAML `6.0.3`
+- 新题解析依赖：openpyxl、pypdf、PyMuPDF、python-docx、lxml、NumPy、Pillow（具体版本和哈希见锁文件）
 - Playwright `1.55.0`
 - Chromium revision `1187`，browser version `140.0.7339.16`
 

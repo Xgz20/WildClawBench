@@ -43,7 +43,7 @@ Excel 顺序固定为总览、效率对比、分类对比、难度对比、Agent
 
 效率表平均 Token 使用全部冻结任务运行作为分母；完整统计采用总量，部分统计展示带覆盖标记的已知小计/冻结任务数，不能把该下限冒充全量均值。Token 明细依次为普通输入、缓存命中输入（Cache Read）、缓存写入输入（Cache Write）、输出。普通输入由归一化输入总量减去缓存读取、缓存写入得到，仅使用三个字段来源覆盖一致的可观测用例；任一依赖未知时不默认 0，而是空值。两项缓存分别映射 `cache_read_input_tokens`、`cache_creation_input_tokens`。缓存命中率在输入与命中成对可观测的同一用例集合中按命中小计/输入小计计算，逐项披露完整/部分用例及样本覆盖；分母 0 或没有成对样本时为空，不平均逐题比例。
 
-七维能力映射随报告 Skill 冻结。自动规则读取被 score.evidence 的 SHA 绑定的 `rule-component.json/raw_scores`，语义读取 `evaluation.criteria`，按检查点命名空间对齐；同题维度内均值再取任务均值。缺失映射检查点的任务不参与该维度，同时保留涉及数和有效数。标准轨迹的工具调用按 task/call ID 去重、按工具名统计，明细与资源总数一致且轨迹完整才标为完整覆盖。均不需要新评分或 Harness 运行。
+七维和五维能力映射分别随报告 Skill 冻结；旧七维 YAML 保持原内容，新五维使用独立 YAML 和表列，两套维度不折算。自动规则读取被 score.evidence 的 SHA 绑定的 `rule-component.json/raw_scores`，语义读取 `evaluation.criteria`，按检查点命名空间对齐；同题维度内均值再取任务均值。缺失映射检查点的任务不参与该维度，同时保留涉及数和有效数。标准轨迹的工具调用按 task/call ID 去重、按工具名统计，明细与资源总数一致且轨迹完整才标为完整覆盖。均不需要新评分或 Harness 运行。
 
 构建时从公共 `entities.yaml` 和 `checkpoint_capability_map7.yaml` 编译 JSON，独立包无需 YAML 依赖。原始字典、来源 SHA、单元身份与裁判协议保留在分发包、报告 JSON 和审计信息中；不能修改显示名后合并不同 unit。
 

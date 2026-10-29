@@ -1,4 +1,4 @@
-"""Build and verify the frozen ``general-custom60-v1`` dataset bundle.
+"""Build and verify independently frozen General E2E dataset bundles.
 
 The build side reads WildClawBench task sources.  The verification side only
 reads the produced ZIP, so consumers do not need a repository checkout.
@@ -50,6 +50,11 @@ class DatasetDefinition:
     expected_grading_type_counts: Mapping[str, int]
     expected_difficulty_counts: Mapping[str, int]
     expected_timeout_counts: Mapping[str, int]
+    task_root: str = "tasks/extension"
+    workspace_root: str = "workspace/extension"
+    task_glob: str = "*/*_task_*.md"
+    category_directories: tuple[tuple[str, str], ...] = ()
+    source_revision: Optional[str] = None
 
 
 DEFAULT_DEFINITION = DatasetDefinition(
@@ -74,6 +79,36 @@ DEFAULT_DEFINITION = DatasetDefinition(
     expected_difficulty_counts={"L1": 15, "L2": 17, "L3": 18, "L4": 10},
     expected_timeout_counts={"300": 32, "600": 19, "900": 9},
 )
+
+GENERAL116_DEFINITION = DatasetDefinition(
+    dataset_id="general-custom116-v1",
+    created_at="2026-10-29T00:00:00+08:00",
+    include_tags=(),
+    exclude_tags=(),
+    expected_task_count=116,
+    expected_category_counts={
+        "01_Information_Search_Organization": 20, "02_Office": 30, "data-analysis": 66,
+    },
+    expected_grading_type_counts={"hybrid": 115, "llm_judge": 1},
+    expected_difficulty_counts={"L1": 2, "L2": 6, "L3": 42, "L4": 66},
+    expected_timeout_counts={"1800": 18, "2400": 3, "3600": 24, "5400": 2, "7200": 69},
+    task_root="tasks/general_e2e",
+    workspace_root="workspace/general_e2e",
+    task_glob="**/*_task_*.md",
+    source_revision="9bee3a1260676446880ed125f25b1026d1cca9ce",
+    category_directories=(
+        ("01_Information_Search_Organization", "01_Information_Search_Organization"),
+        ("02_Office", "02_Office"),
+        ("03_Data_Analysis_task", "data-analysis"),
+    ),
+)
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION)}
+
+
+def dataset_manifest_path(dataset_id: str) -> Path:
+    if dataset_id not in DATASETS:
+        raise ValueError(f"unknown dataset: {dataset_id}")
+    return Path(__file__).resolve().parent / "manifests" / f"{dataset_id}.json"
 
 
 @dataclass(frozen=True)
@@ -106,7 +141,8 @@ def _normalized_tags(raw: Any) -> list[str]:
     if raw is None:
         values: Iterable[Any] = []
     elif isinstance(raw, str):
-        values = raw.split(",")
+        # Some imported Office sources use folded YAML '-tag' lines.
+        values = [part.lstrip("-") for part in raw.split()] if raw.lstrip().startswith("-") else raw.split(",")
     elif isinstance(raw, (list, tuple)):
         values = raw
     else:
@@ -304,7 +340,27 @@ def _task_contracts(
     return execution, scoring
 
 
-def _derive_source_revision(repo_root: Path) -> str:
+def _adapt_imported_contract(contract: dict[str, Any]) -> None:
+    """Freeze transport adapters without rewriting the author's rubric or score budgets."""
+    weights = [float(value) for value in re.findall(
+        r"^###\s+.*\([^\n]*\bweight:\s*([0-9.]+)\s*\)",
+        contract["llm_judge_rubric"], re.MULTILINE)]
+    total = sum(weights)
+    budget = float(contract["grading_weights"].get("llm_judge", 1.0)) * 100
+    if abs(total - 1.0) > 1e-6:
+        if not weights or abs(total - budget) > 1e-6 or total <= 0:
+            raise ValueError(f"semantic point weights do not match group budget: {contract['task_id']}")
+        contract["semantic_weight_scale"] = total
+    contract["rule_result_adapter"] = {
+        "schema_version": "wildclawbench.general-e2e-numeric-diagnostics/v1",
+        "diagnostic_keys": ["diagnostics", "诊断"],
+        "evidence_only": float(contract["grading_weights"].get("automated", 0)) == 0,
+        # This source explicitly defines its numeric v2 interface as an equal mean.
+        "default_overall": "mean" if contract["task_id"] == "02_Office_task_001_multi_source_project_report" else None,
+    }
+
+
+def _derive_source_revision(repo_root: Path, scope: Sequence[str] = ("tasks/extension", "workspace/extension")) -> str:
     completed = subprocess.run(
         [
             "git",
@@ -312,8 +368,7 @@ def _derive_source_revision(repo_root: Path) -> str:
             "-1",
             "--format=%H",
             "--",
-            "tasks/extension",
-            "workspace/extension",
+            *scope,
         ],
         cwd=repo_root,
         check=False,
@@ -353,7 +408,7 @@ def compile_dataset(
 ) -> tuple[dict[str, Any], list[BundleMember]]:
     """Compile source tasks into a manifest plus deterministic archive members."""
     repo_root = repo_root.resolve()
-    tasks_root = repo_root / "tasks/extension"
+    tasks_root = repo_root / definition.task_root
     registry_path = tasks_root / "task_sources.yaml"
     schema_path = default_schema_path()
     if not registry_path.is_file() or not schema_path.is_file():
@@ -373,7 +428,7 @@ def compile_dataset(
     include = set(definition.include_tags)
     exclude = set(definition.exclude_tags)
     parsed: list[tuple[Path, dict[str, Any], dict[str, str], bytes]] = []
-    for task_path in sorted(tasks_root.glob("*/*_task_*.md")):
+    for task_path in sorted(tasks_root.glob(definition.task_glob)):
         metadata, sections, raw = _parse_task_source(task_path)
         tags = set(_normalized_tags(metadata.get("tags")))
         if include.issubset(tags) and not tags.intersection(exclude):
@@ -403,7 +458,9 @@ def compile_dataset(
         if not task_id or "/" in task_id or "\\" in task_id:
             raise ValueError(f"invalid task ID: {task_id!r}")
         category = str(metadata.get("category") or "").strip()
-        if category != task_path.parent.name:
+        category_directory = task_path.relative_to(tasks_root).parts[0]
+        expected_category = dict(definition.category_directories).get(category_directory, task_path.parent.name)
+        if category != expected_category:
             raise ValueError(f"category/path mismatch for {task_id}")
         workspace_text = _strip_codeblock(sections.get("Workspace Path", ""))
         workspace_rel = _safe_relative_path(workspace_text, label="workspace path")
@@ -419,6 +476,8 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
+        if definition.dataset_id == GENERAL116_DEFINITION.dataset_id:
+            _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)
         task_bundle_path = f"{task_root}/task.md"
@@ -484,7 +543,8 @@ def compile_dataset(
         "timeout_counts": dict(sorted(timeout_counts.items(), key=lambda item: int(item[0]))),
     }
     _assert_expected_statistics(statistics, definition)
-    revision = source_revision or _derive_source_revision(repo_root)
+    scope = [definition.task_root, definition.workspace_root]
+    revision = source_revision or definition.source_revision or _derive_source_revision(repo_root, scope)
     manifest: dict[str, Any] = {
         "schema_id": SCHEMA_ID,
         "schema_version": SCHEMA_VERSION,
@@ -496,7 +556,7 @@ def compile_dataset(
         "digest_algorithm": DATASET_DIGEST_ALGORITHM,
         "source": {
             "revision": revision,
-            "revision_scope": ["tasks/extension", "workspace/extension"],
+            "revision_scope": scope,
             "task_registry_path": "provenance/task_sources.yaml",
             "task_registry_sha256": _sha256_bytes(registry_bytes),
         },
@@ -505,7 +565,7 @@ def compile_dataset(
             "sha256": _sha256_bytes(schema_bytes),
         },
         "selection": {
-            "task_root": "tasks/extension",
+            "task_root": definition.task_root,
             "include_tags": list(definition.include_tags),
             "exclude_tags": list(definition.exclude_tags),
             "ordering": "source_path_posix_ascending",
@@ -580,9 +640,10 @@ def build_default_bundle(
     output_path: Path,
     *,
     manifest_path: Optional[Path] = None,
+    definition: DatasetDefinition = DEFAULT_DEFINITION,
 ) -> dict[str, Any]:
-    manifest, members = compile_dataset(repo_root, definition=DEFAULT_DEFINITION)
-    locked = load_manifest_lock(manifest_path)
+    manifest, members = compile_dataset(repo_root, definition=definition)
+    locked = load_manifest_lock(manifest_path or dataset_manifest_path(definition.dataset_id))
     if manifest != locked:
         raise ValueError(
             "dataset sources do not match the frozen manifest; review the change and "
@@ -598,11 +659,11 @@ def build_default_bundle(
     return result
 
 
-def _default_output(repo_root: Path) -> Path:
+def _default_output(repo_root: Path, dataset_id: str = DEFAULT_DEFINITION.dataset_id) -> Path:
     return (
         repo_root
-        / "report-workspace/general-e2e/datasets/general-custom60-v1"
-        / "general-custom60-v1.dataset.zip"
+        / "report-workspace/general-e2e/datasets" / dataset_id
+        / f"{dataset_id}.dataset.zip"
     )
 
 
@@ -612,12 +673,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
     update = subparsers.add_parser("update-lock", help="regenerate the reviewed manifest lock")
     update.add_argument("--repo-root", type=Path, default=_module_root())
-    update.add_argument("--manifest", type=Path, default=default_manifest_path())
+    update.add_argument("--dataset", choices=DATASETS, default=DEFAULT_DEFINITION.dataset_id)
+    update.add_argument("--manifest", type=Path)
     update.add_argument("--source-revision", default="")
 
     build = subparsers.add_parser("build", help="build and verify the frozen dataset ZIP")
     build.add_argument("--repo-root", type=Path, default=_module_root())
-    build.add_argument("--manifest", type=Path, default=default_manifest_path())
+    build.add_argument("--dataset", choices=DATASETS, default=DEFAULT_DEFINITION.dataset_id)
+    build.add_argument("--manifest", type=Path)
     build.add_argument("--output", type=Path)
 
     verify = subparsers.add_parser("verify", help="verify a bundle without a checkout")
@@ -630,10 +693,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     if args.command == "update-lock":
         manifest, _ = compile_dataset(
             args.repo_root,
-            definition=DEFAULT_DEFINITION,
+            definition=DATASETS[args.dataset],
             source_revision=args.source_revision or None,
         )
-        path = write_manifest_lock(manifest, args.manifest)
+        path = write_manifest_lock(manifest, args.manifest or dataset_manifest_path(args.dataset))
         result = {
             "dataset_id": manifest["dataset_id"],
             "dataset_digest": manifest["dataset_digest"],
@@ -641,9 +704,9 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             "manifest_path": str(path),
         }
     elif args.command == "build":
-        output = args.output or _default_output(args.repo_root.resolve())
+        output = args.output or _default_output(args.repo_root.resolve(), args.dataset)
         result = build_default_bundle(
-            args.repo_root, output, manifest_path=args.manifest
+            args.repo_root, output, manifest_path=args.manifest, definition=DATASETS[args.dataset]
         )
     else:
         result = verify_dataset_bundle(args.bundle)

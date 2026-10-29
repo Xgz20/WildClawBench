@@ -1,0 +1,35 @@
+{
+  "mock_app_meta": {
+    "mock_app_kind": "file_backed_release_board",
+    "case_label": "release_phase_gate_progression",
+    "release_id": "qs-local-2026-08-rc3",
+    "capture_file": true,
+    "not_hidden_gold": true,
+    "network_allowed": false
+  },
+  "capture_status": "pending_solver_update",
+  "captured_at_utc": null,
+  "artifact_state_summary": {
+    "workflow_state_path": "input/workspace/state/workflow_state.json",
+    "release_board_path": "input/workspace/release_board.md",
+    "validation_results_path": "input/workspace/state/validation_results.json",
+    "lookup_cache_path": "input/workspace/state/lookup_cache.json",
+    "audit_history_path": "input/workspace/audit/audit_history.md",
+    "progress_report_path": "input/workspace/outputs/release_progress_report.md",
+    "state_update_record_path": "input/workspace/outputs/state_update_record.json"
+  },
+  "phase_status_capture": {
+    "current_phase": null,
+    "state_phase_status": null,
+    "completion_claimed": null,
+    "candidate_next_phase": null
+  },
+  "validation_category_capture": [],
+  "lookup_cache_capture": [],
+  "audit_capture": {
+    "audit_ref": null,
+    "recorded_at_utc": null
+  },
+  "no_network_confirmation": null,
+  "notes": "填写最终文件状态：validation_category_capture 按 local_check_key/category 列出各项；lookup_cache_capture 摘录 active_cache；audit_capture 引用新增审计。no_network_confirmation 使用 network_used 布尔值及 scope 说明。"
+}

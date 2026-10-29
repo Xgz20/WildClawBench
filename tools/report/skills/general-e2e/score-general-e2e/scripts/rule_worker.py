@@ -10,10 +10,38 @@ from pathlib import Path
 import sys
 import traceback
 from typing import Any
+import math
 
 
 REQUEST_SCHEMA = "wildclawbench.general-e2e-rule-worker-request/v1"
 RESULT_SCHEMA = "wildclawbench.general-e2e-rule-worker-result/v1"
+
+
+def adapt_rule_result(raw: dict[str, Any], policy: object) -> dict[str, Any]:
+    """Adapt an explicitly frozen imported contract; keep the original in raw_result."""
+    if policy is None:
+        return raw
+    if not isinstance(policy, dict) or policy.get("schema_version") != "wildclawbench.general-e2e-numeric-diagnostics/v1":
+        raise ValueError("unsupported rule result adapter")
+    diagnostic_keys = policy.get("diagnostic_keys")
+    if not isinstance(diagnostic_keys, list) or any(key not in {"diagnostics", "诊断"} for key in diagnostic_keys):
+        raise ValueError("invalid diagnostic key policy")
+    result = dict(raw)
+    for key in diagnostic_keys:
+        if key in result:
+            if not isinstance(result[key], dict):
+                raise ValueError(f"diagnostics must be an object: {key}")
+            del result[key]
+    if "overall_score" not in result:
+        if policy.get("evidence_only") is True and not result:
+            # Neutral transport placeholder with a frozen zero scoring weight.
+            result["overall_score"] = 0.0
+        elif policy.get("default_overall") == "mean" and result:
+            values = list(result.values())
+            if any(isinstance(v, bool) or not isinstance(v, (float, int)) or not math.isfinite(v) or not 0 <= v <= 1 for v in values):
+                raise ValueError("mean aggregation requires numeric checkpoints in [0,1]")
+            result["overall_score"] = sum(values) / len(values)
+    return result
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -76,12 +104,14 @@ def execute(request_path: Path, result_path: Path) -> int:
         if not isinstance(raw, dict):
             raise ValueError("grade() must return a JSON object")
         json.dumps(raw, ensure_ascii=False, allow_nan=False)
+        adapted = adapt_rule_result(raw, request.get("rule_result_adapter"))
         _write_result(
             result_path,
             {
                 "schema_version": RESULT_SCHEMA,
                 "ok": True,
-                "result": raw,
+                "result": adapted,
+                **({"raw_result": raw} if request.get("rule_result_adapter") is not None else {}),
                 "error": None,
                 "worker": {
                     "pid": os.getpid(),

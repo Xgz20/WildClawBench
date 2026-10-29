@@ -1,0 +1,13 @@
+{
+  "message_id": "msg-20260503-delta-01",
+  "thread_id": "thread_delta_service",
+  "sent_local": "2026-05-03 10:11",
+  "subject": "Delta service packet",
+  "body_excerpt": "装卸区传感器继电器的服务包见附件。导出程序回执已一起保留。",
+  "attachment_refs": [
+    "attachments/packet_0503.pdf",
+    "attachments/notes_0503.md",
+    "attachments/export_0503.txt",
+    "attachments/image_0503.png"
+  ]
+}

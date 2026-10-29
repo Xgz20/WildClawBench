@@ -3,6 +3,9 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.7` 的七阶段链路同时支持 `general-custom60-v1`（旧 60 题、七维）与 `general-custom116-v1`（检索 20、Office 30、数据分析 66，独立五维）。管理员按 [数据集构建说明](../../../../../eval_general_e2e/datasets/README.md) 选择并构建 dataset bundle；独立安装后只消费冻结 ZIP，不依赖此源码链接。随后沿用相同的 prepare → execute → collect-evidence → score → package → import-return → report 流程；所有阶段保留 dataset ID/digest，不替换历史包或旧评分。
+
+
 # 运行 General E2E 全流程
 
 `0.7.6` 提供`prepare-imported-source --source-batch-root ABS --archive RETURN_ZIP --receipt PACKAGE_RECEIPT --output-root NEW_ROOT [--node ABS]`。它按原身份复制manifest/report-config、严格import/select并生成可移植source/task索引和只读JSON回放argv，不要求历史生产scoring ZIP，不初始化生产run state，不改制品锁或伪造完成状态。接收已有成绩时优先使用此入口；跨来源合并仍须逐条材料兼容与唯一报告单元映射，不能从旧Excel抄分或自动取交集。

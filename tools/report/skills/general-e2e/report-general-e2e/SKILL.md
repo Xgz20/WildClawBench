@@ -3,6 +3,9 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.11` 保留 `checkpoint_capability_map7.yaml` 的全部旧七维映射，新 116 题使用独立 `checkpoint_capability_map5.yaml`。按实际任务选择七维或五维列；同时涉及两套映射时分表展示。兼容视图均按任务内映射检查点均值、再对任务均值取平均，披露有效/涉及样本数；不把五维折算为七维，不把缺失证据补零。此兼容视图不代替题目内另外定义的能力预算或父检查点诊断公式。
+
+
 `0.8.0` 与 Web 统一展示“流程耗时”和“任务耗时”。新流程计时 Profile 从 Prompt 发送至本机确认终态；旧冻结来源继续按原 Profile 核验，调整历史口径只能使用保留来源身份及 SHA 的补充层。
 
 # 汇总 General E2E 报告
