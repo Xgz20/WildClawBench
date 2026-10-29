@@ -13626,23 +13626,34 @@
         "跨任务预算榜单硬排名"
       ],
       "ground_truth": {
-        "status": "construction_spec_only",
+        "status": "EXTERNAL_SOURCE_FIRST_PRIVATE_CONTRACT_FROZEN_BASELINE_BLOCKED",
         "synthetic_seed": 2026102631,
         "construction": "独立审核代表性、时点及证据类型，构造可检验的事实和典型过度推断反例；参考池不封闭，新增合法对象/论文按同一标准独立核验。检验恢复/成功率等关键主张是否有真实实验条件，不把代码或营销文档当运行证明；接受有证据的不同建设路线，不预设唯一排序。",
         "private_files": [
-          "expected.json",
+          "artifact_contract.json",
           "business_oracle.json",
           "counterexamples.json",
-          "artifact_contract.json",
-          "protected_sha256.json",
+          "embedded_json_lines.py",
           "evidence_requirements.json",
+          "expected.json",
+          "grader.py",
+          "native_io.py",
+          "office_runtime.py",
+          "protected_sha256.json",
           "reference_source_manifest.json",
-          "claim_evidence_oracle.json"
+          "research_source_policy.json",
+          "rule_evidence_contract.json",
+          "runtime_contract.json",
+          "scoring_contract.json",
+          "scoring_design.json",
+          "source_projection.py",
+          "source_review_reconciliation.json"
         ],
         "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
         "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。",
         "answer_policy": "参考库不是唯一合法答案；固定事实用独立oracle，池外合法来源/对象由Judge独立核验，不能因不在名单失分。",
-        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。"
+        "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。",
+        "authoring_evidence": "evidence/h031-source-blocked-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -13832,7 +13843,15 @@
         "task_md_materialized": false,
         "exec_materialized": false,
         "gt_materialized": false,
-        "runtime_verified": false
+        "runtime_verified": false,
+        "external_inputs_authored": true,
+        "external_GT_files": 18,
+        "external_reference_artifacts": 4,
+        "independent_sources_complete": false,
+        "blocked_by": "GitHub HTTPS connection timeout during independent production source acquisition",
+        "A": null,
+        "scoring_baseline_verified": false,
+        "evidence": "evidence/h031-source-blocked-20261029.json"
       },
       "retrieval_profile": {
         "primary_mode": "open_web_search",

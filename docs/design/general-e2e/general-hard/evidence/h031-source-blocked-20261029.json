@@ -1,0 +1,152 @@
+{
+  "schema_version": "h031-recovery-state/v5",
+  "status": "EXTERNAL_SOURCE_ACQUISITION_BLOCKED_NOT_ACCEPTED",
+  "task_id": "general_hard_research_verification_task_005_open_long_horizon_agent_research",
+  "review_kind": "read-only root model not human expert",
+  "private_contract_files": 18,
+  "private_contract_sha256": "248f056384893266e47ef37d8a049d747e6571762484fcf27c74eec4473cc998",
+  "GT18_and_reference4_exactly_unchanged": true,
+  "completed_source_only_fixtures": 15,
+  "full_selected_source_ids": 29,
+  "full_selected_distinct_urls": 27,
+  "offline_eligible_source_ids": 15,
+  "fresh_needed_source_ids": 14,
+  "fresh_needed_distinct_urls": 12,
+  "remaining": [
+    {
+      "source_id": "S01",
+      "url": "https://github.com/langchain-ai/langgraph/releases/tag/1.0.0"
+    },
+    {
+      "source_id": "S03",
+      "url": "https://github.com/OpenHands/OpenHands/releases/tag/0.39.0"
+    },
+    {
+      "source_id": "S04",
+      "url": "https://github.com/huggingface/smolagents/releases/tag/v1.18.0"
+    },
+    {
+      "source_id": "S05",
+      "url": "https://github.com/pydantic/pydantic-ai/releases/tag/v1.0.0"
+    },
+    {
+      "source_id": "S06",
+      "url": "https://github.com/langchain-ai/langgraph/blob/1.0.0/docs/docs/concepts/durable_execution.md"
+    },
+    {
+      "source_id": "S07",
+      "url": "https://github.com/langchain-ai/langgraph/blob/1.0.0/docs/docs/concepts/persistence.md"
+    },
+    {
+      "source_id": "S10",
+      "url": "https://github.com/OpenHands/OpenHands/blob/0.39.0/openhands/agenthub/codeact_agent/README.md"
+    },
+    {
+      "source_id": "S11",
+      "url": "https://github.com/OpenHands/OpenHands/blob/0.39.0/openhands/memory/README.md"
+    },
+    {
+      "source_id": "S12",
+      "url": "https://github.com/OpenHands/OpenHands/blob/0.39.0/openhands/controller/state/state.py"
+    },
+    {
+      "source_id": "S13",
+      "url": "https://github.com/huggingface/smolagents/blob/v1.18.0/src/smolagents/agents.py"
+    },
+    {
+      "source_id": "S14",
+      "url": "https://github.com/pydantic/pydantic-ai/blob/v1.0.0/docs/temporal.md"
+    },
+    {
+      "source_id": "S15",
+      "url": "https://github.com/pydantic/pydantic-ai/blob/v1.0.0/docs/output.md"
+    },
+    {
+      "source_id": "S16",
+      "url": "https://github.com/huggingface/smolagents/blob/v1.18.0/src/smolagents/agents.py"
+    },
+    {
+      "source_id": "S17",
+      "url": "https://github.com/OpenHands/OpenHands/blob/0.39.0/openhands/controller/state/state.py"
+    }
+  ],
+  "latest_observed_failure": {
+    "capture_id": "capture-01",
+    "url": "https://github.com/langchain-ai/langgraph/releases/tag/1.0.0",
+    "source_ids": [
+      "S01"
+    ],
+    "status": "FAILED",
+    "source_only_not_full_H031": true,
+    "attempts": [
+      {
+        "index": 1,
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/one-source-recheck-v4-1793227041979158000/source-only/capture-01/attempts/source-only-capture-v3__capture-01/capture-only-not-research-score/fresh-1",
+        "status": "FAILED",
+        "type": "ScoringRuntimeError",
+        "code": "RESEARCH_SOURCE_ACQUISITION_FAILED",
+        "error": "RESEARCH_SOURCE_ACQUISITION_FAILED: RESEARCH_SOURCE_ACQUISITION_FAILED: curl_exit=28: curl: (28) Failed to connect to github.com port 443 after 20010 ms: Timeout was reached"
+      }
+    ]
+  },
+  "earlier_v3_per_url_plus_main_scope_fetch_calls": 37,
+  "later_v4_additional_fetch_calls": 1,
+  "new_network_calls_this_audit": 0,
+  "full_sealed_source_bundle_count": 0,
+  "Worker_baseline_completed": false,
+  "A": null,
+  "S": null,
+  "hybrid_score": null,
+  "formal_registered": false,
+  "release_freeze_allowed": false,
+  "source_boundary": "15 source-only successes are not full H031 supply, scored research or runtime acceptance; unavailable independent supply is evaluation infrastructure, not candidate0",
+  "preserved_policy": {
+    "TLS_DNS_proxy_collector_changed": false,
+    "old_unsealed_QA_promoted": false,
+    "GT_or_references_edited": false,
+    "retry_now": false
+  },
+  "receipts": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/per-source-capture-v3-1793216536079693000/handoff.json",
+      "sha256": "1cd6dffb5c42eec253e14063e79365f40b1a0350d157b5efda3beb6d176ddef0",
+      "size": 13906
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/per-source-capture-v3-1793216536079693000/capture-results.json",
+      "sha256": "ff7e634bcf00b305c62315f9148e5f8886302efbe0381e2ca3b5df1478ea782b",
+      "size": 38252
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/per-source-capture-v3-1793216536079693000/reuse-readiness.json",
+      "sha256": "15cdb28fcec099cfe043bac1fe29d07ee6429fa436016c7bb0404225de89c173",
+      "size": 14028
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/per-source-capture-v3-1793216536079693000/GT-before.json",
+      "sha256": "1bfaa585abba6d0708b99211e543a230500a93d16fc05c30166a7b4e1699f3d9",
+      "size": 1715
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/per-source-capture-v3-1793216536079693000/reference-before.json",
+      "sha256": "c70141228632c8eba5f8ea82427d02742ad3cb567ac5cde0f64dd39eb04046d5",
+      "size": 374
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/per-source-capture-v3-1793216536079693000/plan.json",
+      "sha256": "26a769830c8f4c392dd8fe8478e640c6e95a24b1a973818c9c1f2ba1d3123621",
+      "size": 1753
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/grader/one-source-recheck-v4-1793227041979158000/result.json",
+      "sha256": "66ff4d9b69960220753d44c8d8e95442fedc97690385cd6bd1180cfb660d8207",
+      "size": 828
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/reference-v3-root-visual/review.json",
+      "sha256": "2aab428d9434b600114af8192bf58bd6ba4ff24ecca9faefd768ede808246f15",
+      "size": 3245
+    }
+  ],
+  "needed_next": "Use a grading environment that can reach exact public GitHub HTTPS URLs with existing production collector; reuse15 genuine sealed origins, collect14 remaining source IDs/12 URLs; then full sealed bundle, real Worker positive/negative controls, normal/moved verification and formal MD registration. Pending environment clarification remains unresolved."
+}
