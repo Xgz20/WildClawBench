@@ -1,0 +1,29 @@
+{
+  "record_meta": {
+    "record_type": "solver_public_state_update_scaffold",
+    "release_id": "qs-local-2026-08-rc3",
+    "run_time_utc": "2026-08-05T10:40:00Z",
+    "scaffold": true
+  },
+  "updated_artifacts": [],
+  "phase_decision": {
+    "from_phase": null,
+    "to_phase": null,
+    "advanced_adjacent_phase_only": null,
+    "blocked_or_carry_forward_reason": null,
+    "blocking_check_keys": []
+  },
+  "validation_category_handling": [],
+  "lookup_cache_updates": [],
+  "audit_history_updates": [
+    {
+      "audit_ref": null,
+      "recorded_at_utc": null
+    }
+  ],
+  "no_network_confirmation": {
+    "network_used": null,
+    "scope": null
+  },
+  "human_followup": []
+}

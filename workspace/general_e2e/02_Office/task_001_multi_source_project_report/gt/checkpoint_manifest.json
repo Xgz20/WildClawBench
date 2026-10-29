@@ -1,0 +1,767 @@
+{
+  "task_id": "02_Office_task_001_multi_source_project_report",
+  "scenario_template": "S2-01",
+  "difficulty": "L2",
+  "seed": 20260922,
+  "specifications": [
+    {
+      "name": "TaskDescription(1).md",
+      "path": "C:\\Users\\congzhang22\\Downloads\\TaskDescription(1).md",
+      "sha256": "3f15cbdb4a373451cb3fa4cd59c71d5038d98e12dc6746f9bfa7c51e5044f3b5"
+    },
+    {
+      "name": "AbilityEvaluationSpec.md",
+      "path": "C:\\Users\\congzhang22\\Downloads\\AbilityEvaluationSpec.md",
+      "sha256": "16da8c5c6aba760e757cfd2141cc224b4d1021c39c2fbfa8a6ab48eb52a2e027"
+    }
+  ],
+  "capability_names": [
+    "intent_understanding",
+    "state_awareness",
+    "reasoning_and_decision_making",
+    "tool_invocation",
+    "result_evaluation"
+  ],
+  "group_weights": {
+    "automated": 0.6,
+    "llm_judge": 0.4
+  },
+  "runtime_keys": {
+    "automated.c1_files": {
+      "checkpoint": "C1",
+      "within_group_weight": 0.17647058823529413,
+      "capability": "intent_understanding",
+      "spec_item": "意图理解#2"
+    },
+    "automated.c2_task_links": {
+      "checkpoint": "C2",
+      "within_group_weight": 0.23529411764705882,
+      "capability": "state_awareness",
+      "spec_item": "状态感知#3"
+    },
+    "automated.c3_numeric_facts": {
+      "checkpoint": "C3",
+      "within_group_weight": 0.35294117647058826,
+      "capability": null,
+      "spec_item": "业务验收"
+    },
+    "automated.c5_editability": {
+      "checkpoint": "C5",
+      "within_group_weight": 0.23529411764705882,
+      "capability": "intent_understanding",
+      "spec_item": "意图理解#8"
+    },
+    "llm_judge.c1_substance": {
+      "checkpoint": "C1",
+      "within_group_weight": 0.15,
+      "capability": "intent_understanding",
+      "spec_item": "意图理解#2"
+    },
+    "llm_judge.c2_source_links": {
+      "checkpoint": "C2",
+      "within_group_weight": 0.15,
+      "capability": "state_awareness",
+      "spec_item": "状态感知#3"
+    },
+    "llm_judge.c3_fidelity": {
+      "checkpoint": "C3",
+      "within_group_weight": 0.25,
+      "capability": null,
+      "spec_item": "业务验收"
+    },
+    "llm_judge.c4_no_fabrication": {
+      "checkpoint": "C4",
+      "within_group_weight": 0.1,
+      "capability": "state_awareness",
+      "spec_item": "状态感知（沿用已确定映射）"
+    },
+    "llm_judge.c6_readability": {
+      "checkpoint": "C6",
+      "within_group_weight": 0.2,
+      "capability": null,
+      "spec_item": "业务验收"
+    },
+    "llm_judge.c7_self_verification": {
+      "checkpoint": "C7",
+      "within_group_weight": 0.15,
+      "capability": "result_evaluation",
+      "spec_item": "结果评估#1"
+    }
+  },
+  "checkpoints": {
+    "C1": {
+      "spec_item": "意图理解#2",
+      "public": [
+        "Prompt / 第2、4段"
+      ],
+      "evidence": [
+        "project_report.docx",
+        "project_report.pdf"
+      ],
+      "criterion": "仅两种报告文件可读，五类主题有实质内容；不要求独立辅助附件"
+    },
+    "C2": {
+      "spec_item": "状态感知#3",
+      "public": [
+        "Prompt / 第1、3段",
+        "exec/06_报告模板.docx / 来源说明",
+        "原始材料的项目、任务与问题 ID"
+      ],
+      "evidence": [
+        "actual DOCX tables and paragraphs",
+        "report source annotations or appendix",
+        "actual public sources"
+      ],
+      "criterion": "按报告已陈述事实组评价 ID 关联与来源定位；接受跨表关联和共用来源说明。完全遗漏的条件或其他事实组仅计 C3，不因未写入的备注再扣 C2。",
+      "scoring": {
+        "type": "continuous",
+        "semantic_formula": "(correct association components + locatable source components) / (2 * present fact families including foreign units)",
+        "families": [
+          "goal",
+          "metrics",
+          "issue",
+          "plan",
+          "footnote",
+          "qualifier"
+        ],
+        "absent_family": "excluded; coverage assessed in C3",
+        "within_family": "any wrong association or unlocatable asserted fact fails that component; duplicates carry no extra weight",
+        "foreign_family": "both components zero",
+        "no_assertions": "fail",
+        "uncertain": "undetermined",
+        "rule_formula": "correct asserted ID/name/department/priority-issue relations divided by asserted relations plus foreign task IDs; missing content assessed in C3"
+      }
+    },
+    "C3": {
+      "spec_item": "业务验收",
+      "public": [
+        "Prompt / 第2、3段",
+        "三部门 DOCX / 各任务目标与安排、脚注",
+        "XLSX / 原始记录与字段",
+        "PPTX / 对应备注"
+      ],
+      "evidence": [
+        "actual candidate content",
+        "independent_facts.json",
+        "source_locations.json"
+      ],
+      "criterion": "目标24、安排/责任人/日期72、限定36三组分别计算正确覆盖率，取最低组；实质矛盾或捏造为0。报告各组及全部132项覆盖。",
+      "scoring": {
+        "type": "continuous",
+        "formula": "min(goal_coverage, arrangement_coverage, condition_coverage)",
+        "goal_coverage": "supported goals / source goals",
+        "atomic_fields": [
+          "goal",
+          "plan",
+          "owner",
+          "deadline",
+          "footnote",
+          "qualifier"
+        ],
+        "incorrect_or_unsupported_assertion": "fail",
+        "insufficient_evidence": "undetermined",
+        "groups": {
+          "goals": [
+            "goal"
+          ],
+          "arrangements": [
+            "plan",
+            "owner",
+            "deadline"
+          ],
+          "conditions": [
+            "footnote",
+            "qualifier"
+          ]
+        }
+      }
+    },
+    "C4": {
+      "spec_item": "状态感知（沿用已确定映射）",
+      "public": [
+        "Prompt / 第2段",
+        "exec/06_报告模板.docx / 待确认事项"
+      ],
+      "evidence": [
+        "actual candidate tables",
+        "report pending-confirmation section",
+        "final answer in raw trace when it discusses unknowns"
+      ],
+      "criterion": "4项状态与4项原因在表格和待确认事项中保持未知，列明来源及待确认责任人；回答无需重复列项但不得补造",
+      "semantic_thresholds": {
+        "1.0": "0 incomplete, no fabrication",
+        "0.75": "1 incomplete, no fabrication",
+        "0.5": "2 incomplete, no fabrication",
+        "0.25": "3-4 incomplete, no fabrication",
+        "0.0": "any fabrication or at least 5 incomplete",
+        "counting": "each of eight semantic gaps once; shared named owner via ID accepted, department only insufficient"
+      },
+      "evaluation_method": "semantic_only; llm_judge.c4_no_fabrication",
+      "interpretation": "结合正文、表格、符号说明及来源判断，不要求固定表头或未知措辞；有明确说明的“—”可表示未知，未解释的空白不能自动视为未知。原有完整性及不得补造要求不变。",
+      "semantic_protocol": {
+        "computed_by": "c4_from_review",
+        "items": "eight unknown_items from Judge; no automatic header/unknown-word detection",
+        "fields": [
+          "unknown_preserved_in_related_table",
+          "unknown_preserved_in_confirmation_section",
+          "source_identified",
+          "confirmation_owner_complete",
+          "fabricated"
+        ],
+        "null_fields": "undetermined unless another item proves fabrication",
+        "evidence": "per-item reason and citations required"
+      }
+    },
+    "C5": {
+      "spec_item": "意图理解#8",
+      "public": [
+        "Prompt / 第4段"
+      ],
+      "evidence": [
+        "known-good control",
+        "native edit save reopen receipt",
+        "edited disposable copy"
+      ],
+      "criterion": "真实应用中编辑正文和全部含目标任务的必需表格，保存重开验证标记"
+    },
+    "C6": {
+      "spec_item": "业务验收",
+      "public": [
+        "Prompt / 第3、4段"
+      ],
+      "evidence": [
+        "all DOCX-rendered pages",
+        "all delivered PDF pages",
+        "original editable file"
+      ],
+      "criterion": "评测端全页检查可读性和两版对应；从1分按缺陷实际影响扣分。同一缺陷跨页/版本只扣一次。内容覆盖遗漏计 C3。",
+      "scoring": {
+        "formula": "max(0, 1 - sum(unique defect deductions))",
+        "cosmetic": 0,
+        "minor": 0.1,
+        "moderate": 0.25,
+        "major": 0.6,
+        "critical": 1,
+        "minor_example": "局部需回看表头或接续行但含义完整",
+        "moderate_example": "明显增加阅读成本但内容仍可恢复",
+        "major_example": "局部实质内容截断、不可读或两版事实不同",
+        "critical_example": "核心章节/整表不可用、正文图片化或系统性两版不一致",
+        "required_evidence": [
+          "all viewed_pages",
+          "deduplicated defects with id, severity, impact, page citations"
+        ],
+        "render_failure": "evaluator_error",
+        "incomplete_visual_coverage": "undetermined"
+      }
+    },
+    "C7": {
+      "spec_item": "结果评估#1",
+      "public": [
+        "Prompt / 第3段"
+      ],
+      "evidence": [
+        "raw same-run trace",
+        "harness receipt",
+        "final artifact hashes"
+      ],
+      "criterion": "五类同次实际复核等权；语义完成程度标记0/0.5/1，实际计分0/0.25/1。来源实际复核、有意义两版抽查及不要求Agent看图的边界不变。",
+      "state_handling": {
+        "missing_or_incomplete_trace": "undetermined",
+        "any_undecidable_scope": "undetermined",
+        "all_zero": "fail",
+        "mean_between_zero_and_one": "partial",
+        "all_one": "pass"
+      },
+      "coverage_policy": {
+        "sources": "保持来源可追溯和实际复核口径；按任务或共用口径核对，允许穿插编写过程",
+        "facts": "核对实际报告事实、统计结果或未知信息",
+        "tables_figures": "接受非视觉数据、标签、结构或导出内容检查，不要求图像输入",
+        "editability": "接受实际可编辑结构检查或副本编辑保存重开；与评测端 C5 区分",
+        "docx_pdf_equivalence": "实际比较两版对应内容；允许有意义抽查，不固定深度"
+      },
+      "scoring": {
+        "formula": "mean({0:0, 0.5:0.25, 1:1}[semantic_scope_completion])",
+        "scopes": [
+          "sources",
+          "facts",
+          "tables_figures",
+          "editability",
+          "docx_pdf_equivalence"
+        ],
+        "unknown": "undetermined; never zero",
+        "actual_checks_only": true,
+        "meaningful_nonvisual_spot_checks": "accepted unchanged"
+      }
+    }
+  },
+  "execution_budget_seconds": 1800,
+  "scoring_budget_seconds": 900,
+  "tolerances": {
+    "counts": 0,
+    "percentage_points": "按展示精度四舍五入：±0.5 × 10^(-小数位数) 个百分点；不强制小数位数",
+    "semantic_paraphrase": "allowed if scope and meaning preserved",
+    "layout": "无固定分页、表头或脚注形式；微小美观差异不扣分，仍验收可读性"
+  },
+  "state_policy": {
+    "pass": 1,
+    "partial": "strictly between 0 and 1",
+    "fail": 0,
+    "not_applicable": null,
+    "undetermined": null,
+    "evaluator_error": null
+  },
+  "aggregation": "Keep fixed 0.6/0.4 and within-group weights; exclude nulls as before and label partial evidence provisional. Task score=max(0, weighted score - sum of fixed deduction bands), max one band per C. Missing-delivery deductions suppress derivative C2-C6 deductions. Deductions do not change checkpoint/capability scores. Collapse same-C subchecks using group*within-group weights, then equal-C capability mean; uncovered dimensions null.",
+  "business_only": [
+    "C3",
+    "C6"
+  ],
+  "no_forced_capabilities": [
+    "reasoning_and_decision_making",
+    "tool_invocation"
+  ],
+  "unknown_status_task_ids": [
+    "XQ-004",
+    "XQ-011",
+    "XQ-018",
+    "XQ-023"
+  ],
+  "unknown_reason_task_ids": [
+    "XQ-003",
+    "XQ-010",
+    "XQ-017",
+    "XQ-024"
+  ],
+  "semantic_atomic_denominator": 132,
+  "semantic_atomic_groups": {
+    "goals": 24,
+    "approved_plans": 24,
+    "owners": 24,
+    "dates": 24,
+    "footnote_conditions": 24,
+    "notes_qualifiers": 12
+  },
+  "readiness_gates": [
+    "task_parser",
+    "public_source_isolation",
+    "actual_office_recompute",
+    "native_open_edit_export",
+    "full_visual_review",
+    "mutation_tests",
+    "independent_judge_calibration",
+    "valid_actual_agent_trial"
+  ],
+  "packaging": {
+    "rules": "task Markdown / Automated Checks",
+    "rubric": "task Markdown / LLM Judge Rubric",
+    "runtime_evidence": "external evaluation output directory; not the static task workspace",
+    "gt_contents": "truth, manifests, reference deliverables and private revision regression; never distributed to candidate",
+    "cleanup_status": "Existing retired-file cleanup remains blocked; Automatic approval review rejected recursive cleanup of gt/.material_hint_revision/ with blocked by policy; no more specific reason supplied. Private temporary authoring files are excluded from distribution.",
+    "excluded_paths": [
+      "gt/.revision_two_outputs/",
+      "gt/reference/results/source_index.csv",
+      "gt/reference/results/information_gaps.md",
+      "gt/reference/results/validation_record.md",
+      "gt/.material_hint_revision/"
+    ],
+    "formal_file_count": 23,
+    "actual_file_count": 210,
+    "public_file_count": 6,
+    "fresh_workspace_required": "Do not retain retired 00_材料说明.md from earlier runs"
+  },
+  "numeric_adapter": {
+    "entrypoint": "grade(transcript, workspace_path)",
+    "rule_aggregation": "independent numeric scores; common v2 group uses equal mean",
+    "unresolved": "raise evaluator error; never substitute zero",
+    "six_state_entrypoints": [
+      "run",
+      "review_existing"
+    ],
+    "six_state_group_weights": "unchanged; use aggregation policy above",
+    "rule_keys": [
+      "automated.c1_files",
+      "automated.c2_task_links",
+      "automated.c3_numeric_facts",
+      "automated.c5_editability"
+    ]
+  },
+  "rubric_sha256": "ea0636af04b4a882ee7a250a429a9a012fa6729996367f2ae6318b961cb4c16c",
+  "required_deliverables": [
+    "results/project_report.docx",
+    "results/project_report.pdf"
+  ],
+  "report_embedded_requirements": {
+    "sources": "注释或附录：对应报告章节/表图或任务 ID、来源文件、版本及具体定位，可合并共用口径",
+    "unknowns": "待确认事项章节：8项缺失状态/原因、任务/问题 ID、来源及待确认责任人",
+    "self_verification": "实际复核来源、内容与一致性；非视觉方式和有效抽查可接受，不要求独立检查记录"
+  },
+  "rubric_hash_format": "UTF-8 LLM Judge Rubric section body, LF newlines, outer whitespace stripped",
+  "historical_revision_validation": {
+    "revision": "two-report-deliverables-2026-09-22",
+    "task_parser": "pass",
+    "mapping_and_runtime_keys": "pass",
+    "material_hashes": "pass",
+    "specification_hashes": "pass",
+    "rule_cases": [
+      {
+        "case": "only required DOCX and PDF, no auxiliary files",
+        "status": "pass",
+        "c1_score": 1
+      },
+      {
+        "case": "DOCX only",
+        "status": "pass",
+        "c1_score": 0.5
+      },
+      {
+        "case": "PDF only",
+        "status": "pass",
+        "c1_score": 0.5
+      },
+      {
+        "case": "both missing",
+        "status": "pass",
+        "c1_score": 0
+      },
+      {
+        "case": "corrupt PDF",
+        "status": "pass",
+        "c1_score": 0.5
+      },
+      {
+        "case": "extra auxiliary files do not alter score",
+        "status": "pass",
+        "c1_score": 1
+      }
+    ],
+    "c7_state_cases": [
+      {
+        "case": "missing trace",
+        "status": "pass",
+        "expected_c7_state": "undetermined"
+      },
+      {
+        "case": "self claim without complete trace",
+        "status": "pass",
+        "expected_c7_state": "undetermined"
+      },
+      {
+        "case": "complete trace confirms self claim only",
+        "status": "pass",
+        "expected_c7_state": "fail"
+      },
+      {
+        "case": "complete trace confirms partial checks",
+        "status": "pass",
+        "expected_c7_state": "partial"
+      },
+      {
+        "case": "complete trace confirms all five scopes",
+        "status": "pass",
+        "expected_c7_state": "pass"
+      }
+    ],
+    "reference_rules": {
+      "automated.c1_files": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Readable required DOCX and PDF; report content is assessed separately",
+        "evidence": [
+          {
+            "project_report.docx": true,
+            "project_report.pdf": true
+          },
+          {}
+        ]
+      },
+      "automated.c2_task_links": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Unique task ID/name/department links; other-project rows penalized",
+        "evidence": [
+          {
+            "foreign_rows": []
+          }
+        ]
+      },
+      "automated.c3_numeric_facts": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Five exact integer values for each target task",
+        "evidence": [
+          {
+            "differences": []
+          }
+        ]
+      },
+      "automated.c4_unknowns": {
+        "status": "pass",
+        "score": 1.0,
+        "reason": "Eight explicit missing fields in required tables",
+        "evidence": [
+          {
+            "differences": []
+          }
+        ]
+      }
+    },
+    "native_editability": {
+      "status": "pass",
+      "input_sha256": "8cf617232e08cd16a2472a3e0feafe22c4b669a92ef0843664cd58a7a62c278f",
+      "opened": true,
+      "exported_pdf": true,
+      "body_persisted": true,
+      "table_checks": [
+        {
+          "table": 1,
+          "persisted": true
+        },
+        {
+          "table": 2,
+          "persisted": true
+        }
+      ],
+      "temporary_probe_artifacts": "retained under gt/.revision_two_outputs because cleanup was rejected; construction evidence only, never Agent C7 evidence"
+    },
+    "office_application": {
+      "name": "WPS",
+      "com_version": "12.0",
+      "reference_pages": 9,
+      "template_pages": 1,
+      "file_version": "12.8.2.21555"
+    },
+    "reference_docx_sha256": "8cf617232e08cd16a2472a3e0feafe22c4b669a92ef0843664cd58a7a62c278f",
+    "reference_pdf_sha256": "6daf99a544777a1471a08dd4ea5c7934646bea653f0f4079df1b34f0238ad755",
+    "template_sha256": "5ef4f6b22aa613771edc6fb61876c871c7953f6cab89b551abf2c4be11efdabd",
+    "visual_review": {
+      "status": "pass",
+      "reference_pages_reviewed": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ],
+      "template_pages_reviewed": [
+        1
+      ],
+      "findings": "All pages inspected; no clipping, overlapping text, broken tables, missing glyphs or separated chart captions observed. Sources and eight pending-confirmation items are readable in the report."
+    },
+    "scope": "Author regression and reference validation only; no actual evaluated Agent trace or independent semantic Judge verdict is claimed.",
+    "independent_semantic_review": "not_ready",
+    "valid_actual_agent_trial": "not_ready",
+    "docx_pdf_export_identity": "Delivered reference PDF is the byte-identical WPS export produced from the final reference DOCX",
+    "change_scope": "Task and its workspace only; existing mapping entries before this task preserved byte-for-byte",
+    "legacy_mapping_prefix_sha256": "f3fd6d7e3bbd4c730174035f1dd544c1fbcd818de0ee005bd7698d0e273c9df9"
+  },
+  "rubric_revision": "evaluator-v7-20261012",
+  "revision_validation": {
+    "revision": "evaluator-v7-20261012",
+    "record": "gt/evaluator_v7_validation.json",
+    "status": "pass",
+    "scope": "Author banded-deduction, extraction, parser and protocol validation; historical cap assertions replaced with band assertions.",
+    "historical_trial_policy": "Historical scores and files remain frozen; projection is author arithmetic only.",
+    "tests_run": 52,
+    "protected_files_unchanged": true,
+    "task_sha256": "ca2224c10ab3bf1275113aafe97675ff6046774a46fd663006b09451f36dc350",
+    "frozen_delivery_projection": {
+      "source_run": "D:\\tmp\\_evaluation\\20261012T031051Z",
+      "source_review_sha256": "90205649ed8145cf0ed50b40fe764df8e3a7ee9bb17c281bed4655bb337ce36c",
+      "weighted_task_score": 0.883,
+      "task_score_deduction": 0.12000000000000001,
+      "task_score": 0.763,
+      "decidable_coverage": 1.0
+    },
+    "new_agent_or_judge_run": false
+  },
+  "revision_history": [
+    {
+      "revision": "realistic-prompt-v2-20260923",
+      "rubric_sha256": "cd764c249d46235149be10c4af5eaf67f88ebbf6b4cc21dced0f7900d78637a8",
+      "validation": {
+        "revision": "realistic-prompt-v2-20260923",
+        "record": "gt/realistic_prompt_validation.json",
+        "scope": "Author regression only; no new solver trial or semantic Judge calibration",
+        "historical_trial_policy": "Frozen historical runs and scores remain unchanged",
+        "mapping_sha256": "cd1a5cebf8c197081cc4eacf43eb6b3193787786b1ac093e3707b223d6ff711d",
+        "status": "pass",
+        "tests_run": 18
+      }
+    },
+    {
+      "revision": "evaluator-v3-20260923",
+      "rubric_sha256": "feeaeeea0d27e87a11379ef9316dcd7aea51ecdaedf56a26d34ecbae0f118295",
+      "automated_checks_sha256": "1373087c0e690c607a0604c6bd06553edc71e89b1d0f2e74af19d8c42d7789dc",
+      "validation": {
+        "revision": "evaluator-v3-20260923",
+        "record": "gt/evaluator_v3_validation.json",
+        "scope": "Author regression with frozen actual delivery; no new solver trial or semantic calibration",
+        "historical_trial_policy": "Frozen historical runs and scores unchanged",
+        "mapping_sha256": "cd1a5cebf8c197081cc4eacf43eb6b3193787786b1ac093e3707b223d6ff711d",
+        "status": "pass",
+        "tests_run": 35,
+        "historical_evidence_unchanged": true
+      }
+    },
+    {
+      "rubric_revision": "evaluator-v4-20260924",
+      "rubric_sha256": "2c28384c2c53ffd825e1c7f3b096ead1d84d4c417c92ed3c7a4a1a67d19b2a52",
+      "automated_checks_sha256": "3792f4fc6fc1e6c0ea3376a6b2d45e7f3274ac9ec9551a7aa492c9622e98963c",
+      "revision_validation": {
+        "revision": "evaluator-v4-20260924",
+        "record": "gt/evaluator_v4_validation.json",
+        "scope": "Author regression with frozen actual deliveries; no new solver trial or semantic calibration",
+        "historical_trial_policy": "Frozen historical runs and scores unchanged",
+        "mapping_sha256": "66bd038d1ad6f897a701c55d2408b460c113545748e390f7e814b8f15bb9cf42",
+        "status": "pass",
+        "tests_run": 37,
+        "historical_evidence_unchanged": true
+      }
+    },
+    {
+      "rubric_revision": "evaluator-v5-20261012",
+      "rubric_sha256": "337545faf2ec0fb301c15d33b79392746ec26e0d8e8248d64bbfdc46b22aaaf8",
+      "automated_checks_sha256": "a4f45607163554d17b9129d0755813589e0c89a7ce2eee5c67e2cef4b09d50b4",
+      "revision_validation": {
+        "revision": "evaluator-v5-20261012",
+        "record": "gt/evaluator_v5_validation.json",
+        "status": "pass",
+        "scope": "Author regression and arithmetic projection using frozen prior semantic judgments; no new Agent or Judge",
+        "historical_trial_policy": "Historical scores and files stay frozen",
+        "tests_run": 30,
+        "historical_evidence_unchanged": true,
+        "task_sha256": "2f8c245aa94e749f6389e39855a595c0e87e4b24145bde39dc813775f1dd34f9",
+        "arithmetic_projection": {
+          "historical_task_score": 0.9047272727272727,
+          "new_uncapped_task_score": 0.788,
+          "new_task_score": 0.59,
+          "source_review_sha256": "e38781cb3303dfd3afa0c19d2d09cef610eef9ea49c9d581c3d1d370f538c640",
+          "new_agent_or_judge_run": false
+        }
+      }
+    },
+    {
+      "rubric_revision": "evaluator-v6-20261012",
+      "rubric_sha256": "337545faf2ec0fb301c15d33b79392746ec26e0d8e8248d64bbfdc46b22aaaf8",
+      "automated_checks_sha256": "cc84944a976f3e32b9259fa510a21bb58abf1805fb409cdc895797ac70b22ca6",
+      "revision_validation": {
+        "revision": "evaluator-v6-20261012",
+        "record": "gt/evaluator_v6_validation.json",
+        "status": "pass",
+        "scope": "Author extraction regression against actual frozen delivery and equivalent/error cases; no new Agent or Judge",
+        "historical_trial_policy": "Historical scores and files remain frozen",
+        "tests_run": 52,
+        "protected_files_unchanged": true,
+        "task_sha256": "0dda3cb46020c95ab84bb56e19336f0318b2fc624ebb301c8764545dcfde2087",
+        "frozen_delivery_recheck": {
+          "source_run": "D:\\tmp\\_evaluation\\20261012T031051Z",
+          "new_agent_or_judge_run": false,
+          "source_review_sha256": "90205649ed8145cf0ed50b40fe764df8e3a7ee9bb17c281bed4655bb337ce36c",
+          "rules": 1.0,
+          "uncapped_task_score": 0.883,
+          "task_score": 0.59,
+          "decidable_coverage": 1.0,
+          "historical_results_unchanged": true
+        }
+      },
+      "task_score_caps": {
+        "scale": "0..1",
+        "implementation": "task Markdown / task_score_caps(scores)",
+        "table": " 题目总分上限（100分制） |\n|---|---:|\n| 两份必需报告均不可用 / 缺一份；主题至多2类 / 仅3–4类 | 0 / 49；19 / 59 |\n| 正文或必需表格不可编辑；实质矛盾或捏造；C4得0 | 49 |\n| 错绑任务或混入其他项目；可定位来源不足已陈述组的一半 | 69 |\n| 可定位来源不足80%，或C2得分不足0.8（低于0.5时69） | 84 |\n| 任务数值有已证实错误或遗漏：少于5% / 至少5% | 79 / 59 |\n| 目标、安排、限定任一组覆盖低于80% / 低于50% | 79 / 59 |\n| C4得0.5 / 0.25 | 89 / 79 |\n| C6有重大缺陷 / 严重缺陷或得0；无重大缺陷但得分低于0.8 / 0.5 | 69 / 49；84 / 69 |\n| C7不足1 / 低于0.5 / 得0 | 89 / 79 / 69 |",
+        "requirement": "confirmed defect evidence only, not uncertainty itself",
+        "numeric_unknown_interaction": "known wrong numbers retain caps even if other fields are unparsed",
+        "business_only": "caps do not enter YAML or capability scores",
+        "public_runner_support": "not implemented; use embedded six-state aggregate"
+      }
+    }
+  ],
+  "prompt_revision": "realistic-prompt-v2-20260923",
+  "extraction_policy": {
+    "headers": "Explicit aliases, slash/newline pairs and context wrappers; task-ID/name and issue-ID/reason compound cells, completion/planned and acceptance passed/sample pairs supported. Field order follows candidate headers or complete value labels, never GT.",
+    "acceptance": "Passed/total (including sample count), passed/failed or reverse order; total=passed+failed. Ambiguous or unmatched pair syntax is undetermined; parseable errors retained.",
+    "joins": "task ID across tables; issue-only rows use explicit candidate task/issue links, never private fact ordering",
+    "duplicates": "equivalent repeated assertions allowed; conflicting values retained and penalized",
+    "unknown_layout": "undetermined with extraction diagnostics, never automatic zero",
+    "candidate_scope": "actual DOCX content; source index or candidate configuration is not trusted",
+    "confirmed_errors": "Retain parseable wrong values when other fields are unparsed; confirmed errors may trigger a banded deduction on the provisional total.",
+    "identifiers": "Canonical ASCII-delimited IDs extracted before whitespace removal; adjacent Chinese, fullwidth forms and descriptive suffixes allowed. Multiple or malformed IDs require semantic review, never classified as foreign by raw cell text.",
+    "provenance": "Direct and compound observations retain original cell text and table/row/column locator; derived pass+fail totals use column 0 and preserve component observations."
+  },
+  "review_protocol": {
+    "schema": "office-review-v5",
+    "continuous_keys": [
+      "llm_judge.c2_source_links",
+      "llm_judge.c3_fidelity",
+      "llm_judge.c6_readability",
+      "llm_judge.c7_self_verification"
+    ],
+    "computed_by": "task embedded cN_from_review functions; Judge supplied totals ignored",
+    "calibration": "required for formal apply_review; not claimed by regression fixtures",
+    "semantic_c4_computation": "eight unknown_items, c4_from_review"
+  },
+  "automated_checks_sha256": "98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1",
+  "public_package_revision": "materials-dehint-v1-20261010",
+  "material_revision_validation": {
+    "revision": "materials-dehint-v1-20261010",
+    "status": "pass",
+    "scope": "Author material integrity and rendering checks only; no evaluated Agent run or Judge calibration",
+    "business_records_preserved": 3630,
+    "target_numeric_values_recomputed": 120,
+    "footnotes_preserved": 24,
+    "notes_qualifiers_preserved": 12,
+    "unknown_states_and_causes_preserved": 8,
+    "source_locations_unchanged": true,
+    "prompt_and_scoring_unchanged": true,
+    "visual_review": {
+      "engine": "WPS",
+      "docx_pages_reviewed": {
+        "01": 15,
+        "02": 15,
+        "03": 15,
+        "06": 1
+      },
+      "pptx_slides_reviewed": 24,
+      "workbook_changed_ranges_reviewed": "A1:I8 on all seven sheets, including the hidden supplement",
+      "findings": "No new clipping or overlap observed; existing layout preserved"
+    },
+    "packaged_docx_renderer": "Unavailable: LibreOffice soffice.exe not installed; actual WPS export used",
+    "pptx_package_layout_and_import": "pass",
+    "historical_runs_and_scores": "unchanged",
+    "regression_tests_run": 5,
+    "regression_tests": [
+      "test_public_prompt_and_packaging",
+      "test_task_parser",
+      "test_material_hashes",
+      "test_business_rules_are_in_sources",
+      "test_materials_keep_facts_without_solver_directions"
+    ],
+    "protected_files_unchanged": true,
+    "native_application_versions": {
+      "WPS Writer": "12.0",
+      "WPS Presentation": "12.0",
+      "WPS Spreadsheets": "12.0"
+    },
+    "cleanup_status": "Automatic approval review rejected recursive cleanup of gt/.material_hint_revision/ with blocked by policy; no more specific reason supplied. Private temporary authoring files are excluded from distribution."
+  },
+  "task_score_deductions": {
+    "scale": "0..1 internally; table displays 0..100 points",
+    "implementation": "task Markdown / task_score_deductions(scores) and aggregate(scores)",
+    "table": " 分档附加扣分（100分制） |\n|---|---:|\n| C1：缺一份可用报告 / 两份均不可用 | 20 / 100（未交付记0分） |\n| C1：实质主题仅3–4类 / 至多2类 | 5 / 15 |\n| C2：错绑或其他项目占已陈述关联单元的比例 r：0<r<5% / 5%≤r<20% / r≥20% | 2 / 5 / 10 |\n| C2：可定位来源比例或语义关联分 s：50%≤s<80% / s<50% | 5 / 10 |\n| C3：数值已证实错误或遗漏比例 r：0<r<5% / 5%≤r<20% / r≥20% | 2 / 5 / 10 |\n| C3：目标、安排、限定的最低正确覆盖率 s：50%≤s<80% / s<50%；实质矛盾或无依据断言 | 5 / 10；15 |\n| C4：2项 / 3–4项 / 至少5项未知信息不完整；任一未知被补造 | 2 / 5 / 10；20 |\n| C5：正文或必需表格不可编辑 | 15 |\n| C6：无重大缺陷且0.5≤s<0.8 / 有重大缺陷或0<s<0.5 / 有严重缺陷或s=0 | 2 / 10 / 20 |\n| C7：0.8≤s<1 / 0.5≤s<0.8 / 0<s<0.5 / s=0 | 2 / 5 / 10 / 15 |",
+    "formula": "max(0, weighted_task_score - sum(max deduction per C))",
+    "deduplication": "One largest deduction per C across rule/semantic triggers; independent Cs add. With missing report(s), only C1 and independently evidenced C7 receive additional deductions.",
+    "insufficient_evidence": "No charge for uncertainty or evaluator failure; confirmed errors remain deductible even when another field is unresolved.",
+    "business_only": "Does not affect YAML mapping, raw checkpoint scores, or capability scores.",
+    "public_runner_support": "Not implemented; use embedded six-state aggregate.",
+    "result_fields": [
+      "weighted_task_score",
+      "task_score_deduction",
+      "scheduled_task_score_deduction",
+      "deduction_reasons",
+      "score_adjustment"
+    ],
+    "legacy_alias": "uncapped_task_score equals weighted_task_score; cap fields removed"
+  }
+}

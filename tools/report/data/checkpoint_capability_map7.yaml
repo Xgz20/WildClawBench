@@ -1,4 +1,4 @@
-# WildClawBench 检查点 → 7 维能力映射（checkpoint_capability_map7）
+# WildClawBench 检查点 → 能力映射（历史七维 + general_e2e 新五维）
 #
 # 结构：{task_id: {checkpoint_key: [维度标签, ...]}}，每个检查点 1~2 个维度。
 # 7 维：code_generation 代码生成 / tool_use 工具调用 / data_processing 数据处理 /
@@ -1100,6 +1100,646 @@
   llm_judge.privacy_visual_clarity: [content_generation, verification_delivery]
   llm_judge.visual_hierarchy: [content_generation, verification_delivery]
   llm_judge.audience_readability: [content_generation, verification_delivery]
+
+# 搜索第1题：2026-10-16.1；保留原Prompt。
+# 规则22、语义78；QA覆盖25分；已交付分类/题名质量不重复扣遗漏。
+# W=51：状态16、推理15、工具8、结果12；资格规则应用与取证分别归因。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_001_acl2024_long_context_qa:
+  llm_judge.C3b_delivered_fact_binding: [state_awareness]  # 题目及能力预算=12
+  llm_judge.C9_source_availability: [state_awareness]  # 题目及能力预算=2
+  llm_judge.C10_object_identity: [state_awareness]  # 题目及能力预算=2
+  llm_judge.C3c_comparison_reasoning: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.C4a_corpus_acquisition: [reasoning_and_decision_making]  # 题目及能力预算=1
+  llm_judge.C4b_eligibility_acquisition: [reasoning_and_decision_making]  # 题目及能力预算=1
+  llm_judge.C4c_fact_acquisition: [reasoning_and_decision_making]  # 题目及能力预算=1
+  llm_judge.C4d_eligibility_decision: [reasoning_and_decision_making]  # 题目及能力预算=8
+  llm_judge.C11_call_contract: [tool_invocation]  # 题目及能力预算=6
+  llm_judge.C12_execution_context: [tool_invocation]  # 题目及能力预算=2
+  llm_judge.C8a_scope_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C8b_data_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C8c_citation_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C8d_file_verification: [result_evaluation]  # 题目及能力预算=2
+  llm_judge.C13_completion_calibration: [result_evaluation]  # 题目及能力预算=4
+
+# 搜索第2题：2026-10-16.1；保留原Prompt。
+# 语义100；历史召回25、历史署名准确25，错误数量/比例/虚构严重性取较严值。
+# W=50：状态35、推理15；真实正确预印本中性，缺关联不伪造能力满分。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography:
+  llm_judge.topic_selection: [reasoning_and_decision_making]  # 题目及能力预算=15
+  llm_judge.first_author_binding: [state_awareness]  # 题目及能力预算=10
+  llm_judge.historical_author_binding: [state_awareness]  # 题目及能力预算=25
+
+# 搜索第3题：2026-10-16.1；保留原Prompt。
+# 规则4、语义96；项目内硬约束门槛不跨项目，实验干预关联纳入状态。
+# W=90：状态42、推理32、工具10、结果6；三参数项合为8分，handoff统一不映射。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_003_batch_normalization_claim_verification:
+  llm_judge.followup_interventions: [state_awareness]  # 题目及能力预算=6
+  llm_judge.efficiency_metric: [state_awareness]  # 题目及能力预算=4
+  llm_judge.efficiency_configuration: [state_awareness]  # 题目及能力预算=4
+  llm_judge.small_batch_protocols: [state_awareness]  # 题目及能力预算=6
+  llm_judge.correlated_batch_protocols: [state_awareness]  # 题目及能力预算=6
+  llm_judge.transfer_protocols: [state_awareness]  # 题目及能力预算=6
+  llm_judge.source_identity: [state_awareness]  # 题目及能力预算=2
+  llm_judge.version_consistency: [state_awareness]  # 题目及能力预算=3
+  llm_judge.source_locators: [state_awareness]  # 题目及能力预算=5
+  llm_judge.mechanism_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.efficiency_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.small_batch_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.correlation_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.transfer_judgment: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.recommendation_p1: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.recommendation_p2: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.recommendation_p3: [reasoning_and_decision_making]  # 题目及能力预算=4
+  llm_judge.tool_call_contract: [tool_invocation]  # 题目及能力预算=8
+  llm_judge.tool_execution_context: [tool_invocation]  # 题目及能力预算=2
+  llm_judge.verification_calibration_A1: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A2: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A3: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A4: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A5: [result_evaluation]  # 题目及能力预算=1
+  llm_judge.verification_calibration_A6: [result_evaluation]  # 题目及能力预算=1
+
+# 搜索第4题：2026-10-16.1；保留原Prompt。
+# 规则2、语义98；新增回忆语义4，因果边界8；污染先判运行有效性。
+# W=82：状态40、推理26、工具12、结果4；三参数项合为8分，handoff统一不映射。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_004_luxun_national_character_source_comparison:
+  llm_judge.source_identity: [state_awareness]  # 题目及能力预算=4
+  llm_judge.chronology_binding: [state_awareness]  # 题目及能力预算=4
+  llm_judge.evidence_role_binding: [state_awareness]  # 题目及能力预算=4
+  llm_judge.period_genre_selection: [state_awareness]  # 题目及能力预算=4
+  llm_judge.source_locators: [state_awareness]  # 题目及能力预算=4
+  llm_judge.japan_text_fidelity: [state_awareness]  # 题目及能力预算=6
+  llm_judge.may_fourth_text_fidelity: [state_awareness]  # 题目及能力预算=6
+  llm_judge.recollection_text_fidelity: [state_awareness]  # 题目及能力预算=4
+  llm_judge.scholar_claim_binding: [state_awareness]  # 题目及能力预算=4
+  llm_judge.continuity_reasoning: [reasoning_and_decision_making]  # 题目及能力预算=6
+  llm_judge.change_reasoning: [reasoning_and_decision_making]  # 题目及能力预算=6
+  llm_judge.causal_limits: [reasoning_and_decision_making]  # 题目及能力预算=8
+  llm_judge.scholarly_comparison: [reasoning_and_decision_making]  # 题目及能力预算=6
+  llm_judge.verification_calibration: [result_evaluation]  # 题目及能力预算=4
+  llm_judge.tool_call_contract: [tool_invocation]  # 题目及能力预算=8
+  llm_judge.temporary_evidence_scope: [tool_invocation]  # 题目及能力预算=2
+  llm_judge.workspace_isolation: [tool_invocation]  # 题目及能力预算=2
+
+# 搜索第5题：2026-10-16.1；保留原Prompt。
+# 保留原结果15/20/30/25/10和两个原过程模块；原过程错误只归一个owner。
+# 独立m预算W=75：意图20、状态20、推理15（搜索5+比较推断10）、工具10、结果10。
+# 关键独立推断错误限制结果50/比较推断0.25；首条查询关键词不是意图代理。
+# 缺证不当0/1、不动态删项重归一；具体状态与算分依任务MD，未修改旧七维报告器。
+01_Information_Search_Organization_task_005_raptor_migration_monitoring_review:
+  llm_judge.process_tool_semantics: [intent_understanding]  # 独立能力m=20
+  llm_judge.process_evidence_mapping: [state_awareness]  # 独立能力m=20
+  llm_judge.process_search_planning: [reasoning_and_decision_making]  # 独立能力m=5
+  llm_judge.ability_comparison_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.ability_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.ability_completion_calibration: [result_evaluation]  # 独立能力m=10
+
+# 四家公司历史财务核验；18项业务weight合计100，另3项weight=0；五能力m权重W=35。
+# 推理m=2/2/6：阈值、年度组合、最终集合推导；真实集合conclusion只计业务，避免能力重复归因。
+# 原生七维报告不实现m加权；按本题aggregate_review计算；证据不足不重归一。
+01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening:
+  llm_judge.scope_and_version: [intent_understanding]  # 能力m=5
+  llm_judge.source_binding: [state_awareness]  # 能力m=5
+  llm_judge.calc_thresholds: [reasoning_and_decision_making]  # 能力m=2
+  llm_judge.calc_all_years: [reasoning_and_decision_making]  # 能力m=2，仅年度组合
+  llm_judge.decision_consistency: [reasoning_and_decision_making]  # 能力m=6，最终集合推导
+  llm_judge.tool_call_contract: [tool_invocation]  # 能力m=10
+  llm_judge.completion_calibration: [result_evaluation]  # 能力m=5
+
+# 搜索第12题：核心85、来源15；规则0业务分，能力独立m预算W=40。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=5
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 搜索第13题：核心85、来源15；规则0业务分，能力独立m预算W=45。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.scope_execution: [intent_understanding]  # 独立能力m=5
+  llm_judge.difference_inference: [reasoning_and_decision_making]  # 独立能力m=15
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 搜索第14题：核心85、来源15；规则0业务分，能力独立m预算W=45。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 搜索第15题：核心85、来源15；规则0业务分，能力独立m预算W=45。
+# 关键业务错误core≤0.5，关键独立推导错误reason≤0.25；同因唯一owner。
+# 缺证不记0/1、不删项重归一；发布前按题内aggregate_review复核。
+01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 2026-10-27 编号调整：历史测评记录保持原始ID及得分，不重写原始运行证据。
+# 历史 01_Information_Search_Organization_task_006_pientzehuang_multiyear_financial_screening -> 当前 01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening
+# 历史 01_Information_Search_Organization_task_007_credit_suisse_at1_regulatory_comparison -> 当前 01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison
+# 历史 01_Information_Search_Organization_task_008_spy_voo_2024_return_fee_comparison -> 当前 01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison
+# 历史 01_Information_Search_Organization_task_009_motor_insurance_water_damage_clause_comparison -> 当前 01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison
+# 历史 01_Information_Search_Organization_task_010_boc_mortgage_repricing_comparison -> 当前 01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison
+
+# 第006题：规则0业务分，业务100；独立能力m预算W=30。
+# core_accuracy不映射；缺证不删项重归一；按题内aggregate_review复核。
+01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=10
+
+# 第007题：规则0业务分，原文取证主导业务100；独立能力m预算W=45。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_007_rice_awd_field_trials:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第008题：规则0业务分，原文取证主导业务100；独立能力m预算W=45。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_008_human_cell_atlas_verification:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第009题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_009_global_methane_budget_revision:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+  llm_judge.rule_application: [reasoning_and_decision_making]  # 独立能力m=10
+
+# 第010题：规则0业务分，业务100；独立能力m预算W=20。
+# core_accuracy不映射；缺证不删项重归一；按题内aggregate_review复核。
+01_Information_Search_Organization_task_010_perovskite_stability_verification:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=5
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第016题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_016_balance_of_payments_reconciliation:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第017题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第018题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第019题：规则0业务分，业务100；独立能力m预算W=45。
+# core_accuracy不映射；缺证不删项重归一；按题内aggregate_review复核。
+# source_binding能力使用独立AbilityScore，业务豁免不替代能力判断。
+01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=10
+  llm_judge.scope_execution: [intent_understanding]  # 独立能力m=5
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=15
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=10
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+# 第020题：规则0业务分，原文取证主导业务100；独立能力m预算W=55。
+# core_accuracy不映射；source_binding仅能力；缺证不删项重归一。
+# 按题内aggregate_review复核；未设置独立意图理解项，避免来源/处理覆盖重复扣分。
+01_Information_Search_Organization_task_020_treasury_yield_rising_intervals:
+  llm_judge.source_binding: [state_awareness]  # 独立能力m=20
+  llm_judge.calculation_inference: [reasoning_and_decision_making]  # 独立能力m=10
+  llm_judge.tool_call_contract: [tool_invocation]  # 独立能力m=20
+  llm_judge.verification_calibration: [result_evaluation]  # 独立能力m=5
+
+02_Office_task_001_multi_source_project_report:
+  # C1 意图理解#2：仅 DOCX/PDF 两项交付及报告主题；不要求独立辅助附件。
+  automated.c1_files: [intent_understanding]
+  llm_judge.c1_substance: [intent_understanding]
+  # C2 状态感知#3：按 ID 关联，报告内注释或附录提供来源定位。
+  automated.c2_task_links: [state_awareness]
+  llm_judge.c2_source_links: [state_awareness]
+  # C4 状态感知：未提供的状态和原因保持明确未知，不补造。
+  llm_judge.c4_no_fabrication: [state_awareness]
+  # C5 意图理解#8：正文和必需表格实际编辑、保存及重开。
+  automated.c5_editability: [intent_understanding]
+  # C7 结果评估#1：同次原始轨迹中的实际自检，不依赖独立核验记录。
+  llm_judge.c7_self_verification: [result_evaluation]
+  # C3、C6 仅作业务验收；同 C 子项先合并，能力分不重复加权。
+
+02_Office_task_002_html_report_quadrant_ppt:
+  # capabilities-2026-09-23-v1; task weights and five-dimension normalization are defined in the task MD.
+  # Correctness / quality budgets: 50 / 50; execution budgets: automated 40, Judge 60.
+  # Mapped budget 55: intent 7, state 33, reasoning 15; not a full board-quality score.
+  # Intent #2: substantive PPTX delivery and four required business sections (3 + 4).
+  automated.delivery_contract: [intent_understanding]
+  automated.quadrant_structure: [intent_understanding]
+  # State #3: cross-source metric/object facts, risk facts, and quadrant-local provenance (14 + 6 + 8).
+  automated.metric_facts: [state_awareness]
+  automated.risk_facts: [state_awareness]
+  automated.source_binding: [state_awareness]
+  # State #7: current revision context rather than superseded draft states (5).
+  llm_judge.revision_consistency: [state_awareness]
+  # Reasoning #1: metric directions, target bands, and source-priority rules (15).
+  llm_judge.metric_interpretation: [reasoning_and_decision_making]
+
+02_Office_task_003_news_event_multifile_extract:
+  # capabilities-2026-09-23-v1; task 100 = automated 44 + Judge 56.
+  # Mapped budget 92 = intent 4 + state 60 + reasoning 20 + result evaluation 8; formulas in task MD.
+  # Intent #2: two usable deliverables and four populated archive tables.
+  automated.delivery: [intent_understanding]
+  # Reasoning #1: event identity from combined date, category and dedup rules.
+  automated.event_set: [reasoning_and_decision_making]
+  # State #3: observed aliases, normalized entities and types across frozen files.
+  automated.entity_links: [state_awareness]
+  # State #3: event facts and their supporting cross-file provenance.
+  llm_judge.core_facts: [state_awareness]
+  llm_judge.source_provenance: [state_awareness]
+  llm_judge.fragment_counts: [state_awareness]
+  # State #12: evidenced exclusion of out-of-scope, forecast and noise content.
+  llm_judge.exclusion_decisions: [state_awareness]
+  # Result #1: V1-V3 assess verification coverage; #10: V4 assesses the completion statement.
+  # c9-five-band-2026-10-09-v2: four partial-credit units, five score bands, one 8-point criterion.
+  # Stable key retained; scores from previous rubric versions must not be reused.
+  llm_judge.summary_consistency: [result_evaluation]
+  # Rollup arithmetic remains a business check, not self-verification.
+
+02_Office_task_005_xiaohongshu_psychology_note_pack:
+  # capabilities-2026-09-23-v1; task 100 = automated 8 + Judge 92.
+  # Mapped budget 48 = intent 2 + state 38 + reasoning 8.
+  # Tool invocation and result evaluation are not covered; content safety is separate.
+  # Intent #2: two readable, nonempty deliverables; substantive quality is scored separately.
+  automated.delivery_files: [intent_understanding]
+  # State #7: current editorial priorities rather than early provisional selections.
+  llm_judge.current_priorities: [state_awareness]
+  # State #3: material adoption and verifiable professional-source attribution.
+  llm_judge.source_fidelity: [state_awareness]
+  # Reasoning #3: evidence-based selection and coordination under the pack constraints.
+  llm_judge.selection_reuse: [reasoning_and_decision_making]
+
+02_Office_task_004_xmind_screenshot_template_ppt:
+  # capabilities-2026-09-23-v1; task 100 = automated 18 + Judge 82.
+  # Mapped budget 40 = intent 12 + state 8 + reasoning 10 + result evaluation 10.
+  # Intent #2: a valid, nonempty PPTX at the requested delivery path.
+  automated.delivery: [intent_understanding]
+  # Reasoning #1: source facts and conditions combined into actionable workshop arrangements.
+  llm_judge.action_rules: [reasoning_and_decision_making]
+  # State #12: distinguish resident, facilitator, backstage and optional material roles.
+  llm_judge.source_role_selection: [state_awareness]
+  # Intent #10: template and partial screenshot remain style references.
+  llm_judge.reference_boundary: [intent_understanding]
+  # Result #1: actual checks in original public trace, not grader-generated evidence.
+  llm_judge.self_verification: [result_evaluation]
+  # Result #10: final completion claims match deliverables and real verification depth.
+  llm_judge.completion_calibration: [result_evaluation]
+
+
+02_Office_task_006_wechat_tech_topic_board:
+  # capabilities-2026-09-23-v1; task 100 = automated 14 + Judge 86.
+  # Mapped budget 82 = intent 4 + state 46 + reasoning 26 + result evaluation 6.
+  # Intent #2: minimal readable delivery coverage; no inference of editorial quality.
+  automated.delivery_files: [intent_understanding]
+  # State #7: superseding statements, pilot scope, fix status and review responsibility.
+  llm_judge.current_states: [state_awareness]
+  # State #3: source-to-topic and prior-coverage-to-new-angle associations.
+  llm_judge.evidence_binding: [state_awareness]
+  llm_judge.history_novelty: [state_awareness]
+  # Reasoning #3 / #1: feasible editorial choices and conditional material use.
+  llm_judge.selection_tradeoffs: [reasoning_and_decision_making]
+  llm_judge.material_disposition: [reasoning_and_decision_making]
+  # Result #1 / #10: actual verification and calibrated claims; artifact correctness is insufficient.
+  llm_judge.self_verification: [result_evaluation]
+
+
+02_Office_task_007_release_phase_gate_progression:
+  # office007-r4; capabilities-2026-09-23-v1; task 100 = automated 60 + Judge 40.
+  # Mapped budget 87 = intent 1 + state 40 + reasoning 40 + result evaluation 6.
+  # Intent #2: minimum usable coverage of the eight in-place deliverables.
+  automated.delivery_readiness: [intent_understanding]
+  # State #3/#7: source binding, version validity and current file relationships.
+  automated.lookup_binding: [state_awareness]
+  automated.validation_categories: [state_awareness]
+  automated.validation_freshness: [state_awareness]
+  llm_judge.board_reconciliation: [state_awareness]
+  # Reasoning #1/#3: evidence-based hold, bounded phase choice and follow-up conditions.
+  automated.phase_transition: [reasoning_and_decision_making]
+  llm_judge.repair_rationale: [reasoning_and_decision_making]
+  llm_judge.followup_actionability: [reasoning_and_decision_making]
+  # Result #10: explicit completion/verification conclusions calibrated to evidence.
+  llm_judge.completion_calibration: [result_evaluation]
+  # End-state integrity and written audit entries do not prove tool or process behavior.
+
+
+02_Office_task_008_furniture_refinish_extract:
+  automated.material_coverage:
+  - state_awareness
+  llm_judge.operating_conditions:
+  - state_awareness
+  llm_judge.advice_synthesis:
+  - state_awareness
+  llm_judge.material_roles:
+  - state_awareness
+02_Office_task_009_fund_product_table_normalize:
+  # office009-r2; capabilities-2026-09-23-v1; task 100 = automated 66 + Judge 34.
+  # Mapped budget 74 = intent 2 + state 24 + reasoning 32 + result evaluation 16.
+  # Intent #2: minimum readable coverage of the four requested tables.
+  automated.delivery: [intent_understanding]
+  # State #3: cross-source product/share, fee and codebook associations.
+  automated.product_identity: [state_awareness]
+  automated.fee_population: [state_awareness]
+  automated.risk_mapping: [state_awareness]
+  # State #7: current effective management fee; all conflicting rows inspected.
+  automated.current_management_fee: [state_awareness]
+  # Reasoning #1: independent unit, status, condition and missing/channel rules.
+  automated.fee_amounts: [reasoning_and_decision_making]
+  automated.fee_unit_conversion: [reasoning_and_decision_making]
+  automated.fee_zero_status: [reasoning_and_decision_making]
+  automated.fee_conditions: [reasoning_and_decision_making]
+  automated.missing_promo_boundaries: [reasoning_and_decision_making]
+  # Result #1 and #10: actual verification and truthful completion claims.
+  llm_judge.self_verification: [result_evaluation]
+  llm_judge.completion_calibration: [result_evaluation]
+
+02_Office_task_010_warranty_recovery_allocation:
+  # capabilities-2026-09-23-v1; task 100 = automated 87 + Judge 13.
+  # Mapped budget 85 = intent 2 + state 8 + reasoning 75; no inferred tool/self-check evidence.
+  automated.workbook_delivery: [intent_understanding]
+  automated.recovery_eligibility: [reasoning_and_decision_making]
+  automated.recovery_amounts: [reasoning_and_decision_making]
+  llm_judge.allocation_basis: [state_awareness]
+
+02_Office_task_011_safety_inspection_extract:
+  automated.record_identity: [state_awareness]
+  llm_judge.violation_summary: [state_awareness]
+
+
+02_Office_task_012_service_channel_ticket_daily:
+  # capabilities-2026-09-23-v1; task 100 = automated 75 + Judge 25.
+  # Mapped budget 70 = reasoning 21 + state 49; no inferred tool/self-check behavior.
+  automated.scope_selection: [reasoning_and_decision_making]
+  automated.ticket_identity: [state_awareness]
+  automated.asof_state: [state_awareness]
+
+02_Office_task_014_invoice_email_archive_manifest:
+  # capabilities-2026-09-23-v1; task 100 = automated 60 + Judge 40.
+  # Mapped budget 64 = state 30 + reasoning 30 + result 4; no inferred tool/self-check behavior.
+  automated.source_facts: [state_awareness]
+  llm_judge.archive_decisions: [reasoning_and_decision_making]
+  llm_judge.completion_calibration: [result_evaluation]
+
+
+02_Office_task_015_procurement_reconciliation:
+  # capabilities-2026-09-23-v1; scoring v2 (2026-10-12); task 100 = rules 80 + Judge 20.
+  # Mapped budget 80: state 40, reasoning 40; each contributes at most 50/100.
+  # State #3: bind all four exception populations, accessible details and count summaries.
+  automated.exception_population: [state_awareness]
+  # Reasoning #1: compare quantities/amounts across all four classes and monetary summaries.
+  automated.reconciled_values: [reasoning_and_decision_making]
+  # Scope (6), interpretation (8) and review actions (6) do not prove tool use or active self-checks.
+
+
+02_Office_task_016_board_material_update_timeline_excel:
+  # capabilities-2026-09-23-v1; task 100 = rules 18 + Judge 82.
+  # Mapped budget 96: intent 2 + state 36 + reasoning 56 + result evaluation 2.
+  # Intent #2: a substantive requested deliverable exists; hashes prove only its source end state.
+  automated.delivery_validity: [intent_understanding]
+  # State #7: active material version and data cutoff; State #3: item-to-page fact bindings.
+  automated.version_alignment: [state_awareness]
+  automated.milestone_alignment: [state_awareness]
+  # State #12: current, archived, draft, monitoring and template contexts remain distinct.
+  llm_judge.scope_identity: [state_awareness]
+  # Reasoning #1: apply decision prerequisites, deadlines and conditional follow-up.
+  llm_judge.procurement_chain: [reasoning_and_decision_making]
+  llm_judge.risk_followup: [reasoning_and_decision_making]
+  # Result #1: actual verification in the public execution trace, never inferred from artifact quality.
+  llm_judge.delivery_verification: [result_evaluation]
+  # deck_structure (4) is not mapped; no tool-use capability is inferred from OOXML structures.
+  # New five-dimension weighted normalization is specified in the task, not implemented by legacy reports.
+
+02_Office_task_017_ipad_product_presentation:
+  # capabilities-2026-09-23-v1; 100 = automated 10 + Judge 90; eight checkpoints.
+  # Mapped budget 38: intent 30 + state 8. See task MD for independent normalization.
+  # Intent #8: application opening plus editable native text saved/reopened in an isolated copy.
+  automated.delivery_usable: [intent_understanding]
+  # Intent #2: substantive delivery of the five content topics explicitly requested in the prompt.
+  llm_judge.topic_coverage: [intent_understanding]
+  # State #12: distinguish the target A16 iPad and its accessories from comparison models.
+  llm_judge.model_scope: [state_awareness]
+  # Narrative, visual quality and factual fidelity are task outcomes, not inferred self-checks.
+
+
+02_Office_task_019_prd_system_design_breakdown:
+  # capabilities-2026-09-23-v1; 100 = automated 4 + Judge 96.
+  # Mapped budget 84: intent 4, state 8, reasoning 72. See task for normalization.
+  # Intent #2: actual format coverage, not inferred process compliance.
+  automated.delivery_pair: [intent_understanding]
+  # State #3: work-to-PRD-and-design bindings across frozen sources.
+  llm_judge.source_binding: [state_awareness]
+  # Reasoning #3: constraints on development, integration and release plans.
+  llm_judge.dependency_plan: [reasoning_and_decision_making]
+  # Reasoning #10: feasible work while product prerequisites remain unresolved.
+  llm_judge.unsettled_policy: [reasoning_and_decision_making]
+  # Reasoning #1: known business rules and exceptions combined in the plan.
+  llm_judge.business_invariants: [reasoning_and_decision_making]
+  # Executability and test-plan quality do not prove tool use or active self-review.
+  # Legacy seven-dimension reports do not implement the weighted five-dimension formula.
+
+02_Office_task_020_research_factor_table_extract:
+  # capabilities-2026-09-23-v1; task 100 = automated 44 + Judge 56; scoring 2026-10-13-v2.
+  # Mapped budget 93: intent 1 + state 52 + reasoning 40; normalize independently in task MD.
+  # Intent #2: the requested workbook and citation index contain substantive records.
+  automated.delivery_contract: [intent_understanding]
+  # State #3: dictionary-bound research subjects and industries.
+  automated.research_identity: [state_awareness]
+  # Reasoning #1: normalize identities, apply explicit local revisions and retain unchanged records.
+  automated.effective_factors: [reasoning_and_decision_making]
+  # State #3: field citations bind the correct source objects and versions.
+  llm_judge.citation_support: [state_awareness]
+  # State #12: reject superseded/non-research risks and unsupported core conclusions in summaries.
+  llm_judge.risk_disclosures: [state_awareness]
+  # citation_structure (1) and research_summary (6) are business acceptance, not loop behavior.
+  # Tool use and active verification are not inferred from artifact correctness.
+
+# Alphabet 2024Q1：能力规范 capabilities-2026-09-23-v1；预算10+20+10=40，题内定义加权归一化。
+02_Office_task_021_alphabet_2024q1_presentation:
+  # 实际应用编辑/保存/重开，意图理解 #8。
+  automated.delivery_usable: [intent_understanding]
+  # 三个公开主题的实质交付，意图理解 #2。
+  llm_judge.topic_coverage: [intent_understanding]
+  # 跨页期间、主体和财务口径关联，状态感知 #3。
+  llm_judge.financial_scope: [state_awareness]
+
+02_Office_task_022_namc_interview_schedule:
+  # capabilities-2026-09-23-v1; task 100 = automated 34 + LLM 66.
+  # Mapped budget 56: intent 12 + state 20 + reasoning 24; weighted formulas in task MD.
+  # Intent #2/#8: real deliverables and native editing verified on isolated copies.
+  automated.delivery_files: [intent_understanding]
+  automated.editable_structure: [intent_understanding]
+  # Reasoning #3: complete rotation/resources versus independent time-window constraints.
+  llm_judge.rotation_integrity: [reasoning_and_decision_making]
+  llm_judge.time_constraints: [reasoning_and_decision_making]
+  # State #3: correct identity and cross-document relationships for each named applicant.
+  llm_judge.allen_alignment: [state_awareness]
+  llm_judge.isabelle_alignment: [state_awareness]
+  # Unmapped 44 points are business coverage, page count, assets and information organization.
+  # No inferred tool invocation/self-review; ordinary weighted sum has no serious-error cap.
+  # Legacy seven-dimension reports do not implement this task's weighted five-dimension formula.
+# BridgeMind monthly report; capabilities-2026-09-23-v1.
+# Task budget 100 = automated 6 + LLM 94. Mapped budget 34 = intent 4 + state 24 + reasoning 6.
+02_Office_task_023_bridgemind_monthly_report:
+  # Actual application editing on isolated copies; intent #8.
+  automated.delivery_usable: [intent_understanding]
+  # Work packages and dated evidence; state #3.
+  llm_judge.progress_evidence: [state_awareness]
+  # Feedback incorporation versus final delivery prerequisites; reasoning #1.
+  llm_judge.milestone_consistency: [reasoning_and_decision_making]
+  # Financial sources, periods and formula relationships; state #3.
+  llm_judge.financial_basis: [state_awareness]
+  # Risk IDs, descriptions and bounded test evidence; state #3.
+  llm_judge.risk_traceability: [state_awareness]
+  # Relevant current actions versus historical records; state #12.
+  llm_judge.next_actions: [state_awareness]
+  # Other 66 points are business acceptance. No inferred tool invocation or self-review.
+  # Critical findings owns 40 points; a defined material falsehood yields zero there, hence task <=60.
+  # Weighted five-dimension normalization is defined in the task, not implemented by the legacy report.
+
+# Sterilization quotation; capabilities-2026-09-23-v1.
+# Base task budget 100 = automated 60 + LLM 40. Rule-group material-error cap is task-only.
+# Mapped raw budget 83 = state 25 + reasoning 55 + intent 3; formulas are defined in task MD.
+02_Office_task_024_sterilization_quote:
+  automated.order_identity: [state_awareness]
+  automated.pricing_basis: [reasoning_and_decision_making]
+  automated.freight_match: [state_awareness]
+  automated.scenario_totals: [reasoning_and_decision_making]
+  automated.lead_transit: [state_awareness]
+  automated.elapsed_time: [reasoning_and_decision_making]
+  automated.validity_by_mode: [state_awareness]
+  llm_judge.decision_soundness: [reasoning_and_decision_making]
+  automated.preserved_terms: [intent_understanding]
+  # rate_conditions, option_tradeoffs, workbook_usable: business acceptance, not loop behavior.
+  # No inferred tool invocation or active verification; do not map overall_score or cap diagnostics.
+  # Existing seven-dimension reports do not implement this weighted five-dimension calculation.
+
+
+
+# Offline indicator review; capabilities-2026-09-23-v1.
+# Revision v2: 88 rule + 12 Judge; mapped raw budget 76 = intent 4 + state 30 + reasoning 42.
+# Task-only critical-error caps do not alter raw capability checkpoints.
+02_Office_task_025_indicator_window_rules:
+  automated.delivery: [intent_understanding]
+  automated.review_population: [state_awareness]
+  automated.source_resolution: [state_awareness]
+  automated.calendar_binding: [state_awareness]
+  automated.history_validity: [reasoning_and_decision_making]
+  automated.rolling_metrics: [reasoning_and_decision_making]
+  automated.base_rules: [reasoning_and_decision_making]
+  automated.halt_timeline: [state_awareness]
+  automated.risk_timeline: [state_awareness]
+  automated.final_labels: [reasoning_and_decision_making]
+  # Summary/change reconciliation and semantic traceability are business acceptance.
+  # Tool invocation and result evaluation are not inferred from the artifact.
+
+# Work-order labor reconciliation; capabilities-2026-09-23-v1.
+# Base budget 90 rule + 10 Judge; mapped raw budget 85 = intent 10 + state 15 + reasoning 60.
+# Critical-error caps affect the task total only; keep raw independent checkpoints.
+02_Office_task_026_work_order_labor_reconciliation:
+  automated.order_scope: [intent_understanding]
+  automated.source_binding: [state_awareness]
+  automated.labor_reconciliation: [reasoning_and_decision_making]
+  automated.order_allocation: [reasoning_and_decision_making]
+  automated.quality_metrics: [reasoning_and_decision_making]
+  automated.anomaly_detection: [reasoning_and_decision_making]
+  # workbook_usable and the four semantic criteria are business acceptance, not process evidence.
+  # Tool invocation and result evaluation are not covered; existing seven-dimension reporting is unchanged.
+
+
+# Office 027: 渠道季度对比；题目100分，映射预算94分，公式见题目MD。
+# capabilities-2026-09-23-v1；数值比较不推断Agent主动核验。
+02_Office_task_027_channel_period_compare:
+  automated.delivery: [intent_understanding]
+  llm_judge.settlement_comparison: [reasoning_and_decision_making]
+  llm_judge.payment_comparison: [reasoning_and_decision_making]
+  llm_judge.verification_coverage: [result_evaluation]
+
+
+# Office 028: 项目整改状态与文书溯源；题目100分，纯LLM语义评分，无总分封顶。
+# capabilities-2026-09-23-v1；有效映射预算96 = 推理72 + 状态24。
+# 具体扣分、一次归因和五维归一化公式见本题MD；旧七维报告保持不变。
+02_Office_task_028_inspection_notice_provenance:
+  llm_judge.business_decisions: [reasoning_and_decision_making]
+  llm_judge.related_document_inventory: [state_awareness]
+
+
+# Office 029: W26设施周报DOCX；题目100=规则4+语义96，无总分封顶。
+# capabilities-2026-09-23-v1；映射预算80=推理64+状态16，公式见题目MD。
+02_Office_task_029_monitoring_weekly_docx:
+  llm_judge.pump_resolution: [reasoning_and_decision_making]
+  llm_judge.hvac_resolution: [reasoning_and_decision_making]
+  llm_judge.water_resolution: [reasoning_and_decision_making]
+  llm_judge.lighting_resolution: [state_awareness]
+  llm_judge.optional_gate: [reasoning_and_decision_making]
+  # source_snapshot与report_delivery只计业务验收，不推断全程操作或主动自检。
+
+
+# Office 030: 双城服务中心合并；题目100=规则2+语义98，无总分封顶。
+# capabilities-2026-09-23-v1；映射预算90=推理84+意图3+结果评估3。
+# 结果评估仅使用同次公开核验记录；缺必要证据不可生成正式总分。
+# 五维加权公式见本题MD；旧七维报告保持不变。
+02_Office_task_030_service_center_consolidation:
+  llm_judge.service_feasibility: [reasoning_and_decision_making]
+  llm_judge.financial_obligations: [reasoning_and_decision_making]
+  llm_judge.cutover_continuity: [reasoning_and_decision_making]
+  llm_judge.delivery_roles: [intent_understanding]
+  llm_judge.observable_verification: [result_evaluation]
+  # 源文件终态、证据可回查和三文件一致性仅计业务验收，不推断工具调用或状态过程。
+
+# Office 013: 会议终端专项质量处置客户包；题目100分，语义评分，无总分封顶。
+# capabilities-2026-09-23-v1；映射预算96=推理80+状态8+意图4+结果评估4。
+# 原子错误账本、根因去重与五维加权公式见本题MD；旧七维报告保持不变。
+02_Office_task_013_customer_remediation_pack:
+  llm_judge.action_validity: [reasoning_and_decision_making]
+  llm_judge.evidence_traceability: [state_awareness]
+  llm_judge.delivery_roles: [intent_understanding]
+  llm_judge.observable_verification: [result_evaluation]
+  # cross_document_consistency仅计产物一致性，不重复映射核心决策或主动核验。
+
+
+# Office 018: P26定向换修沟通包；题目100分，LLM语义评分，无总分封顶。
+# capabilities-2026-09-23-v1；映射预算88=推理56+状态28+结果评估4。
+# 同一根因传播只扣一次；结果评估须有同次公开验证证据；旧七维报告保持不变。
+02_Office_task_018_targeted_repair_communication_pack:
+  llm_judge.risk_scope: [reasoning_and_decision_making]
+  llm_judge.current_disposition: [state_awareness]
+  llm_judge.actionable_communications: [reasoning_and_decision_making]
+  llm_judge.observable_verification: [result_evaluation]
+  # evidence_traceability及delivery_roles仅计业务交付；去重豁免不作为能力证据。
 
 # general_e2e 数据处理与分析：001–066（五维能力映射，2026-10-27）
 # 本节按用户指定采用五维；上方已有任务的七维映射保持不变。

@@ -1,0 +1,3 @@
+River portal operation note
+
+The portal permits repeated exports under the original document number. The local save time changes on each export. The re-export receipt is retained with the original correspondence.

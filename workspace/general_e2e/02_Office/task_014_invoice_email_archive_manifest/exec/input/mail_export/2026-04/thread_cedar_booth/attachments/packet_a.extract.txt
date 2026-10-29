@@ -1,0 +1,14 @@
+Cedar Booth Services
+Invoice for booth reset and late pickup
+Document number
+CBS-2604-12
+Service period
+2026-04-10
+Show: Spring trade table, aisle C
+Upload title: Cedar quote packet A
+Exported: 2026-04-12
+AMOUNT  /  USD
+2,310.40
+SIMULATED BUSINESS RECORD  |  Mail export copy
+1 / 1
+

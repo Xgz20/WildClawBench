@@ -1,0 +1,134 @@
+{
+  "citation_map": {
+    "factor_mentions:FM02:direction": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "海外库存压力 负向 1Q"
+    },
+    "factor_mentions:FM02:horizon": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "海外库存压力 负向 1Q"
+    },
+    "factor_mentions:FM02:evidence_text": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "海外库存压力 负向 1Q"
+    },
+    "factor_mentions:FM01:direction": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "SYN-014 订单可见度 positive 2Q"
+    },
+    "factor_mentions:FM01:horizon": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "SYN-014 订单可见度 positive 2Q"
+    },
+    "factor_mentions:FM01:evidence_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "SYN-014 订单可见度 positive 2Q"
+    },
+    "factor_mentions:FM01:superseded_source": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "订单能见度 正向 1-2Q M-T1-R1"
+    },
+    "factor_mentions:FM04:direction": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "云澜设备 费用率改善 positive FY2026H2"
+    },
+    "factor_mentions:FM04:horizon": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "云澜设备 费用率改善 positive FY2026H2"
+    },
+    "factor_mentions:FM04:evidence_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "云澜设备 费用率改善 positive FY2026H2"
+    },
+    "factor_mentions:FM03:direction": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "盈利质量 中性 FY2026"
+    },
+    "factor_mentions:FM03:horizon": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "盈利质量 中性 FY2026"
+    },
+    "factor_mentions:FM03:evidence_text": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "盈利质量 中性 FY2026"
+    },
+    "factor_mentions:FM05:direction": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "海柏材料集团 原料成本 neutral 2Q"
+    },
+    "factor_mentions:FM05:horizon": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "海柏材料集团 原料成本 neutral 2Q"
+    },
+    "factor_mentions:FM05:evidence_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "表A：跟踪记录",
+      "snippet_anchor": "海柏材料集团 原料成本 neutral 2Q"
+    },
+    "factor_mentions:FM05:superseded_source": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "原料成本 负向 2Q M-T1-R4"
+    },
+    "research_points:RP01:summary_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "一、更新后的核心观点",
+      "snippet_anchor": "订单排期复核后，观察期限调整为2Q"
+    },
+    "research_points:RP01:superseded_source": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "订单能见度 正向 1-2Q M-T1-R1"
+    },
+    "research_points:RP02:summary_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "一、更新后的核心观点",
+      "snippet_anchor": "本次新增费用率改善线索，方向为positive，观察期限为FY2026H2"
+    },
+    "research_points:RP03:summary_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "一、更新后的核心观点",
+      "snippet_anchor": "原料成本由早间负向修订为neutral，观察期限仍为2Q"
+    },
+    "research_points:RP03:superseded_source": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "表1：因子暴露摘要",
+      "snippet_anchor": "原料成本 负向 2Q M-T1-R4"
+    },
+    "risk_disclosures:RK01:risk_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "三、风险提示",
+      "snippet_anchor": "若终端需求弱于预期，星河电子订单兑现节奏可能放缓。"
+    },
+    "risk_disclosures:RK02:risk_text": {
+      "source_document": "research_report_morning.pdf",
+      "section_or_table": "三、风险提示",
+      "snippet_anchor": "若海外库存去化低于预期，星河电子订单能见度改善可能延后。"
+    },
+    "risk_disclosures:RK03:risk_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "三、风险提示",
+      "snippet_anchor": "若云计算资本开支延期，云澜设备费用率改善可能低于预期。"
+    },
+    "risk_disclosures:RK04:risk_text": {
+      "source_document": "research_report_evening.html",
+      "section_or_table": "三、风险提示",
+      "snippet_anchor": "若锁价覆盖不足，海柏材料毛利率仍可能承压。"
+    }
+  }
+}

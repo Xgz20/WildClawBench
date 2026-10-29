@@ -1,0 +1,145 @@
+{
+  "conflict_priority": [
+    "standard_schema",
+    "risk_codebook",
+    "raw_fee_table",
+    "fund_product_summary_effective_date_note",
+    "fund_product_summary_table",
+    "ops_profile_note"
+  ],
+  "output_workbook": "fund_product_normalized.xlsx",
+  "scoped_out_fields": [
+    "fund_manager_name",
+    "custodian_name",
+    "fund_manager_biography",
+    "other_materials_url",
+    "phone_number",
+    "investment_recommendation",
+    "allocation_advice",
+    "live_lookup",
+    "message_notification"
+  ],
+  "sheets": {
+    "exceptions": {
+      "allowed_exception_types": [
+        "missing_field",
+        "resolved_effective_date_conflict",
+        "unmapped_risk",
+        "fee_waiver_note",
+        "scoped_out_field"
+      ],
+      "required_columns": [
+        "exception_id",
+        "canonical_product_id",
+        "share_class",
+        "exception_type",
+        "field_name",
+        "source_value",
+        "resolution_action",
+        "source_trace"
+      ]
+    },
+    "fee_schedule": {
+      "allowed_fee_sections": [
+        "sales_fee",
+        "operation_fee",
+        "comprehensive_fee"
+      ],
+      "allowed_fee_units": [
+        "percent_per_year",
+        "percent",
+        "CNY_per_txn"
+      ],
+      "field_defaults_by_fee_section": {
+        "comprehensive_fee": {
+          "charge_party": "产品资产",
+          "condition": "annualized_estimate",
+          "effective_date": "2026-06-01",
+          "investor_group": "全部投资群体"
+        },
+        "operation_fee": {
+          "condition": "annual_rate",
+          "investor_group": "全部投资群体"
+        },
+        "sales_fee": {
+          "charge_party": "销售机构",
+          "effective_date": "2026-06-01"
+        }
+      },
+      "required_columns": [
+        "canonical_product_id",
+        "share_class",
+        "fee_section",
+        "fee_type",
+        "investor_group",
+        "condition",
+        "fee_value",
+        "fee_unit",
+        "fee_status",
+        "charge_party",
+        "effective_date",
+        "source_trace"
+      ],
+      "unit_policy": {
+        "%": "percent",
+        "%/year": "percent_per_year",
+        "bp/year": "percent_per_year",
+        "不收取": "fee_value_0_fee_status_waived",
+        "每笔N元": "CNY_per_txn"
+      },
+      "fee_status_policy": {
+        "normal": [
+          "standard",
+          "normal",
+          "active",
+          "charged"
+        ],
+        "waived": [
+          "waived"
+        ],
+        "undisclosed": [
+          "missing",
+          "unknown"
+        ],
+        "note": "明确免收与数值为0的常规费率分别保留状态。渠道专属活动不属于普遍适用费率。"
+      }
+    },
+    "product_comparison": {
+      "required_columns": [
+        "canonical_product_id",
+        "canonical_product_name",
+        "share_class",
+        "product_code",
+        "fund_type",
+        "operation_mode",
+        "open_frequency",
+        "min_holding_days",
+        "strategy_summary",
+        "risk_return_feature_text",
+        "standard_risk_level",
+        "sales_suitability_bucket",
+        "esg_tag_internal",
+        "source_trace"
+      ]
+    },
+    "risk_level_mapping": {
+      "required_columns": [
+        "canonical_product_id",
+        "share_class",
+        "source_risk_label",
+        "standard_risk_level",
+        "risk_order",
+        "sales_suitability_bucket",
+        "risk_return_feature_text",
+        "mapping_source"
+      ]
+    }
+  },
+  "sort_keys": [
+    "canonical_product_id",
+    "share_class",
+    "fee_section",
+    "fee_type",
+    "condition"
+  ]
+}

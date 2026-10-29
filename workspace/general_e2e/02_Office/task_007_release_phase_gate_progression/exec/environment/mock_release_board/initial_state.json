@@ -1,0 +1,41 @@
+{
+  "mock_app_meta": {
+    "mock_app_kind": "file_backed_release_board",
+    "case_label": "release_phase_gate_progression",
+    "release_id": "qs-local-2026-08-rc3",
+    "public_initial_state": true,
+    "not_hidden_gold": true,
+    "network_allowed": false
+  },
+  "state_slots": {
+    "phase_status_slot": {
+      "source_path": "input/workspace/state/workflow_state.json",
+      "initial_current_phase": "local_validation",
+      "initial_state_phase_status": "in_progress",
+      "initial_completion_claimed": false
+    },
+    "validation_slot": {
+      "source_path": "input/workspace/state/validation_results.json",
+      "initial_blocking_categories_present": [
+        "failed",
+        "stale",
+        "missing_lookup"
+      ]
+    },
+    "lookup_slot": {
+      "source_path": "input/workspace/state/lookup_cache.json",
+      "initial_missing_lookup_keys": [
+        "doc_bundle:guide_set"
+      ]
+    },
+    "audit_slot": {
+      "source_path": "input/workspace/audit/audit_history.md",
+      "last_existing_audit_ref": "AUD-QS-041"
+    }
+  },
+  "capture_policy": {
+    "solver_should_update_final_capture": true,
+    "capture_only_local_artifact_state": true,
+    "do_not_call_live_service": true
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "scan_id": "20260412-0830",
+  "entries": [
+    {
+      "path": "mail_export/2026-03/thread_marble_supply/attachments/03a.pdf",
+      "message_id": "msg-20260301-marble-01"
+    },
+    {
+      "path": "mail_export/2026-03/thread_maple_cleanup/attachments/mail_0311_b.md",
+      "message_id": "msg-20260311-maple-01"
+    },
+    {
+      "path": "mail_export/2026-04/thread_cedar_booth/attachments/packet_a.pdf",
+      "message_id": "msg-20260412-cedar-01"
+    },
+    {
+      "path": "mail_export/2026-04/thread_cedar_booth/attachments/packet_c.txt",
+      "message_id": "msg-20260412-cedar-01"
+    }
+  ]
+}

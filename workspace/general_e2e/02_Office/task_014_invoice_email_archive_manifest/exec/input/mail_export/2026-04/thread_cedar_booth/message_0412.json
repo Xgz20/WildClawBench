@@ -1,0 +1,12 @@
+{
+  "message_id": "msg-20260412-cedar-01",
+  "thread_id": "thread_cedar_booth",
+  "sent_local": "2026-04-12 08:07",
+  "subject": "Cedar booth packet",
+  "body_excerpt": "展台服务资料和采购阶段留存文件一起发来，场次为 Spring trade table。",
+  "attachment_refs": [
+    "attachments/packet_a.pdf",
+    "attachments/packet_b.md",
+    "attachments/packet_c.txt"
+  ]
+}

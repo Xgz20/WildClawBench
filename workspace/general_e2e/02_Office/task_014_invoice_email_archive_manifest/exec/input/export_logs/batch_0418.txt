@@ -1,0 +1,3 @@
+2026-04-18 13:50 export_1350.txt saved; footer field truncated
+2026-04-18 14:20 export_1420.txt saved; footer field complete
+Batch: thread_river_bins
