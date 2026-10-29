@@ -1,0 +1,1521 @@
+{
+  "schema_version": "general-hard-active-provenance-clarification/v2",
+  "scope": "Current three provenance documents and one new evidence index only; no task prompt/exec/GT/historical QA writes",
+  "basis": {
+    "review_kind": "model_author_item_review_registration_not_human_expert",
+    "human_expert_record_provided": false,
+    "previous_independent_review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/provenance-review-independent-v1/review.md",
+    "previous_independent_review_sha256": "8a777e6550341391f8d657f13c5800d4170679af3fb4e6ae5c9b0879752e645b",
+    "visual_provenance_metadata_review": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/provenance-review-independent-v1/visual-provenance-metadata-check.json",
+    "visual_provenance_metadata_review_sha256": "0d68ad7fb7ed25dc05c8410e74130038e7ae0b1a2813ccd362e8d79c5d047f27",
+    "previous_independent_authorship_evidence": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/provenance-review-independent-v1/source-model-authorship.json",
+    "evidence_sha256": "b12cc071e49c493b43213d3c7e10131fd1aaad137786377dbd9ef2abb2b7aeb8",
+    "reviewed_model_tool_call_evidence": {
+      "schema": "independent-model-authorship-evidence/v1",
+      "review_kind": "independent_model_review_not_human_expert",
+      "session_id": "01a17732-1215-7f62-b084-7bda7de09430",
+      "events": [
+        {
+          "source_path": "/Users/gzx/.codex/sessions/2026/10/26/rollout-2026-10-26T15-52-12-01a17732-1215-7f62-b084-7bda7de09430.jsonl",
+          "source_line": 1,
+          "line_sha256_utf8_including_lf": "2c8329ce3b65a9771d1e9b1bd99c495b85c64d696c394eab1302f0f8ffd3cec6",
+          "timestamp_utc": "2026-10-26T07:52:34.385Z",
+          "event_type": "session_meta",
+          "payload_type": null,
+          "tool_name": null,
+          "call_id": null,
+          "session_id": "01a17732-1215-7f62-b084-7bda7de09430"
+        },
+        {
+          "source_path": "/Users/gzx/.codex/sessions/2026/10/26/rollout-2026-10-26T15-52-12-01a17732-1215-7f62-b084-7bda7de09430.jsonl",
+          "source_line": 563,
+          "line_sha256_utf8_including_lf": "3ef93a0f66997497189687639a2ecf287a12d41c5048e0f5641d55aa9decf258",
+          "timestamp_utc": "2026-10-26T09:40:16.838Z",
+          "event_type": "response_item",
+          "payload_type": "custom_tool_call",
+          "tool_name": "exec",
+          "call_id": "call_45a16ccfeed945b98a8ae30c349de560",
+          "input_sha256": "9218f9405a2c709029ade2bea228eee95d243f003d2f57a074b1cd8ac157baf9",
+          "target_creation_excerpt": "text(await tools.apply_patch(\"*** Begin Patch\\n*** Add File: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/build_blueprints.py\\n+\\\"\\\"\\\"Build the two planning deliverables; no runnable task/GT/manifest is emitted.\\\"\\\"\\\"\\n+import"
+        },
+        {
+          "source_path": "/Users/gzx/.codex/sessions/2026/10/26/rollout-2026-10-26T15-52-12-01a17732-1215-7f62-b084-7bda7de09430.jsonl",
+          "source_line": 613,
+          "line_sha256_utf8_including_lf": "4b3682b4570c90ac8d9839b7cf425a514a2a7c62d3695ea975ed5bde48d3b701",
+          "timestamp_utc": "2026-10-26T09:52:40.357Z",
+          "event_type": "response_item",
+          "payload_type": "custom_tool_call",
+          "tool_name": "exec",
+          "call_id": "call_293c925f3e2345d78bb5044ad0c0c0f9",
+          "input_sha256": "89813dda9e1ca4cd4504936be991c1956ee751968a3f4e3a6efef8c68c422720",
+          "target_patch_excerpt": "text(await tools.apply_patch(\"*** Begin Patch\\n*** Update File: /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/build_blueprints.py\\n@@\\n-add('research_verific",
+          "literal_excerpt": "s'],first_seen_local=s['first'],last_seen_local=s['last'],intent_summary=SOURCE_SUMMARIES[s['id']],review='accepted_intent_prototype',review_basis='AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。',adaptation='保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。')]\\n+ boundaries=['仅读取本题exec映射到/tmp_workspa",
+          "decoded_patch_sha256": "815fd091d7e0d64b714d38f15de1d095cc1aba881a539242a8c98b5b2e4b3d43",
+          "exact_source_line_added": [
+            "+  source=[dict(candidate_id=s['id'],query_hash=s['query_hash'],observed_astudio_turns=s['frequency'],distinct_users=s['users'],distinct_sessions=s['sessions'],first_seen_local=s['first'],last_seen_local=s['last'],intent_summary=SOURCE_SUMMARIES[s['id']],review='accepted_intent_prototype',review_basis='AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。',adaptation='保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。')]"
+          ]
+        },
+        {
+          "source_path": "/Users/gzx/.codex/sessions/2026/10/26/rollout-2026-10-26T15-52-12-01a17732-1215-7f62-b084-7bda7de09430.jsonl",
+          "source_line": 616,
+          "line_sha256_utf8_including_lf": "cb3a57a073fcff491b940e98615b0010da597ba68ed9f52c6d3758e83b7d1519",
+          "timestamp_utc": "2026-10-26T09:52:40.548Z",
+          "event_type": "response_item",
+          "payload_type": "custom_tool_call_output",
+          "tool_name": null,
+          "call_id": "call_293c925f3e2345d78bb5044ad0c0c0f9",
+          "tool_output": [
+            {
+              "type": "input_text",
+              "text": "Script completed\nWall time 0.0 seconds\nOutput:\n"
+            },
+            {
+              "type": "input_text",
+              "text": "{}"
+            }
+          ]
+        }
+      ],
+      "verified_chain": [
+        "The model tool-call event at line563 adds build_blueprints.py.",
+        "The model tool-call event at line613 adds the exact 人工复核主目标和输入依赖 review_basis literal through an apply_patch update.",
+        "The corresponding line616 tool output reports Script completed.",
+        "Current builder make_case:464 instantiates this literal per selected source; build:534 copies it into accepted review records; build:542 emits manual_review; write_doc:563 emits the human-review report phrase."
+      ],
+      "boundary": "These records establish model authorship of the wording and its generator propagation. They do not globally prove no human ever participated, and they do not establish an independent human expert audit or per-item review validity."
+    },
+    "tool_call_rechecked_live_in_this_script": false,
+    "boundary": "Model authorship is established by previously reviewed actual tool-call evidence; not proof of per-item correctness or global absence of human participation."
+  },
+  "materialized_ground_truth": {
+    "H001": {
+      "task_id": "general_hard_office_documents_task_001_policy_crosswalk",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/0/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102601,
+        "construction": "作者以版本有效区间×对象类型制作独立决策表，18例覆盖每个分支；双人核对过渡条款，GT保存例ID→版本/条款/状态，不接受只看文件修改时间。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102601,
+        "oracle_basis": "18 manually declared labels cross-checked against independent calendar/Decimal decisions; real LibreOffice recalculation of reference and faulty cached-formula controls.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H001",
+          "quote": "该项87项相关unittest及Skill布局门禁通过，覆盖旧清单原样、配置私有隔离、缺引擎、冲突锁、缺交付合法分、缓存清除、派生文件篡改、回传保留和无引擎/runtime的归档复核。伪CLI测试只验证运行时及证据链；另用真实受管LibreOfficeDev 26.8.0.0.alpha0重算H001参考原型，清除20个公式缓存后18个金额全部与独立标签一致。没有据此证明Windows或四端Office能力通过。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "external_authoring_state",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h001/authoring/STATE.md",
+          "sha256": "1ca24b66cbedc28e3b9b09fd966d5105b4e1539b6b9c743d10efcd1f56ec577a"
+        }
+      ]
+    },
+    "H002": {
+      "task_id": "general_hard_office_documents_task_002_meeting_decision_repair",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/1/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102602,
+        "construction": "用预先标注的事件状态机折叠90段记录；GT含12项最终待办、3项撤回、2项未决及每项最后有效证据，转写文本已提供，不测试音频识别。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102602,
+        "oracle_basis": "90 source-bound event annotations plus independently implemented state fold versus separately declared 17-item final labels; not generated from candidate/reference output.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H002",
+          "quote": "第四题H002（文档办公002）已制作并登记：`general_hard_office_documents_task_002_meeting_decision_repair`。包含90段转写、6条乱序会后记录及8人角色表；私有GT用绑定原段落SHA的事件标注和独立状态折叠，对照另行声明的17项最终标签，逐项字段及最终有效证据一致，形成12项待办、3项撤回、2项待定。普通成员的自称角色和延期申请不授予批准权限，撤回前历史字段保留，明确恢复的事项重新生效。状态计算的独立性不等于事件标注已获第二位人工审阅。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "external_authoring_state",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h002/authoring/STATE.md",
+          "sha256": "862213f12c11f82b5bfaf2908edf92b848889831366f8554ddd63d1b79ffd084"
+        }
+      ]
+    },
+    "H003": {
+      "task_id": "general_hard_office_documents_task_003_docx_clause_patch",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/2/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102603,
+        "construction": "把原DOCX解析为段落/表格/关系图，GT记录7项目标语义与保护节点哈希；规范化比较文本和关系，不以ZIP字节完全相等要求合法编辑。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102603,
+        "oracle_basis": "Seven approved outcomes authored from original contract/approval, checked by separate OOXML and python-docx/pypdf paths; no reference/candidate output used as oracle.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H003",
+          "quote": "第五题H003（文档办公003）已制作并登记：`general_hard_office_documents_task_003_docx_clause_patch`。输入为5页合同及7项批准/2项禁止修改清单，输出为可编辑修订合同和真实SHA/位置映射JSON。合同插入交付确认、删除培训后仍为12条，原生REF由8处变为9处，保留两张4列表。该题仅借鉴GDPval专业办公核验方法，不复制其题文、素材或答案，不计为线上原型题。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "external_authoring_state",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h003/authoring/STATE.md",
+          "sha256": "d7b53efbd851806d05570745983504d97dc8b29677549e6340d03929141c837f"
+        }
+      ]
+    },
+    "H004": {
+      "task_id": "general_hard_office_documents_task_004_bid_compliance",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/3/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102604,
+        "construction": "专家预标35项需求及最小证据集合；GT保留4项缺失、3项过度承诺、2项过期证书，核对同义表述和有效期，主观文采不覆盖事实错误。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102604,
+        "oracle_basis": "35 separately declared labels versus independent predicate/date/scope model over actual source cards; native source extraction and cache-free trusted Calc checks; no reference/candidate output used to derive GT.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H004",
+          "quote": "第六题H004（文档办公004）已制作并登记：`general_hard_office_documents_task_004_bid_compliance`。输入为5页需求DOCX（35项、20项必须）、8页响应DOCX（31条D初稿及35条F核验事实）与2页文本证书PDF（6条证明）；输出为覆盖矩阵XLSX、实际修订响应DOCX和必须项缺口Markdown。保留线上原型`ACQ-039f9e17f2cdb413`的需求覆盖核对意图，全部主体、产品、条款和证明均为合成，不复制线上原文或附件。题目离线、纯文本，L3仍为设计预估。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "external_authoring_state",
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h004/authoring/STATE.md",
+          "sha256": "f3d37ded7bc48d597d1ea2545b6e1bde807ca1f4815539dc367d0e0f23e8f439"
+        }
+      ]
+    },
+    "H005": {
+      "task_id": "general_hard_office_documents_task_005_annual_deck",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/4/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102605,
+        "construction": "独立计算12个关键指标，检查PPTX对象、页数、字号、图表缓存和数据源一致性；固定渲染器检查遮挡，容许等价排版，不把生成图表算作视觉输入。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102605,
+        "oracle_basis": "Decimal calculation before reference; SQL COALESCE/date predicates and Fraction over actual XLSX; original cache plus trusted embedded recalculation and actual rendered glyph observations.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H005",
+          "quote": "H005制作前已补齐PPTX原生文本证据链：score-general-e2e升至0.13.0、core升至0.5.0，新legacy Workspace证据策略为v4。独立裁判的文件查询及API输入均读取实际PPTX，按presentation关系顺序保留幻灯片、分组、表格、隐藏标记与独立备注定位。图表存储缓存与嵌入XLSX分别保留原始值、缺失点、公式引用、路径和SHA，不假定彼此一致；外部package/OLE关系不访问。PPTX引擎标识为`wildclawbench.pptx-text/v1`，外层投影schema仍为v1。图像、SmartArt、母版/布局继承文字、继承字号及文字溢出尚不解释，固定渲染和目标应用可编辑性仍需独立验证。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        }
+      ]
+    },
+    "H006": {
+      "task_id": "general_hard_office_documents_task_006_sop_knowledge_pack",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/5/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102606,
+        "construction": "作者先制作统一流程图及10个情境的正确路径，独立审核冲突消解；GT分别检查受众必需字段、步骤偏序和禁止承诺，不要求逐字相同。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102606,
+        "oracle_basis": "Pre-reference author labels versus policy DAG; actual six DOCX clause extraction and physical CSV/YAML re-evaluation. No candidate/reference output used to derive GT.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H006",
+          "quote": "第八题H006（文档办公006）已制作并登记：`general_hard_office_documents_task_006_sop_knowledge_pack`。输入为6份原生手册（27条款）、职权/流程YAML和10情境CSV，输出为操作员手册、主管手册及情境覆盖CSV。全部主体和材料为自有合成，仅借鉴GDPval职业工作包及交付核验方法，无自然线上来源。任务及分类层Workspace、双标签、来源与七维能力映射齐全；离线、纯文本、非代码主交付，L3仍为设计预估。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        }
+      ]
+    },
+    "H007": {
+      "task_id": "general_hard_office_documents_task_007_visual_handoff",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/6/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102607,
+        "construction": "两名标注者独立标8处批注的bbox、箭头目标和最终动作，分歧复核；执行输入移除EXIF、alt和隐藏文本，GT私有保存区域与段落对应关系。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json",
+          "visual_regions.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H007",
+          "quote": "H007制作前补齐静态图片评分传递：score-general-e2e升至0.16.0、core升至0.8.0。图片读取完整解码PNG/JPEG/WebP/单帧GIF，保留原字节SHA、尺寸、EXIF方向与Pillow版本；不OCR、不裁剪、不重编码。Codex图片查询返回经过核验的真实路径，独立裁判仍须实际看图；目录或查询元数据不能冒充已查看像素。API通过冻结`image_input`显式开启，三种transport发送带evidence ID的原始图片内容块，图片预算单独计算；未开启的配置保持文本行为，省略或不可用图片不得当作视觉依据。缺依赖/来源漂移保持异常，证据不足仍为null，不能补能力零分。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h007-reviewed-authoring-20261027.json",
+          "sha256": "c148a4b546a38f184da2bbb2636d4f860f1a2fc4f35d7df84b2ab4dded553fe4"
+        }
+      ]
+    },
+    "H008": {
+      "task_id": "general_hard_office_documents_task_008_bilingual_revision",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/7/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102608,
+        "construction": "双语审校者预标12项接受/拒绝及关键事实，规则核对数值、主体、ID和保护段落；语义Judge只判断译义与修改理由，不把中文稿重写计为加分。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102608,
+        "oracle_basis": "Pre-reference source facts and semantic proposals, deterministic conflict comparison; physical DOCX/CSV clauses with Decimal, calendar date and integer-subtraction cross-check. Reference text never used to derive expected facts.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H008",
+          "quote": "第九道已制作任务为H008（文档办公008）：`general_hard_office_documents_task_008_bilingual_revision`。输入为4页中文基线、2页越文草稿、2页越文意见及11条术语CSV；输出为2页完整越文稿、3页中文处理说明和16句对齐CSV。16句覆盖主体、金额/币种/税口径、服务期、工作时间/起算、否定/条件、验收、范围、数量和未知状态；12项意见按事实比较为8项采用、4项未采纳。保留线上原型`ACQ-03dc22e408f8729d`的双语审校工作形态，素材全部合成，GDPval仅方法启发。题面、分类层Workspace、双标签、来源及能力映射齐全，离线、纯文本、非代码主交付；H007仍未登记，题号空缺不被复用，L3仍为设计预估。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        }
+      ]
+    },
+    "H009": {
+      "task_id": "general_hard_office_documents_task_009_pdf_to_docx",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/8/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102609,
+        "construction": "原始生成数据构建结构oracle，再独立解析转换结果核对表格拓扑、数值和脚注关系；用固定渲染核查关键表不裁切，允许合理重排分页。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H009",
+          "quote": "H009前置适配增加Word结构证据：score-general-e2e 0.17.0、core 0.9.0保留物理单元格locator，新增声明网格/合并区间、重复表头、正文与单元格到实际脚注/尾注部件的关系链。缺关系、缺部件、缺注释与外部关系分开；同文注释挂错位置可以观察，孤立或跨度错误的合并不猜测。DOCX引擎为`wildclawbench.docx-text/v1`，新legacy策略为v5；其它格式及历史冻结入口保持原行为。嵌套表拓扑未展开，结构声明不证明版式、可编辑性或显示编号。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h009-reviewed-authoring-20261027.json",
+          "sha256": "5db0c82c8cf30ecc96ae756662312c6e2c882ee573476fd5230b44100e26a2db"
+        }
+      ]
+    },
+    "H010": {
+      "task_id": "general_hard_office_documents_task_010_capex_packet",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/9/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102610,
+        "construction": "Decimal独立核算每个报价组合及资本/费用映射，枚举有限可行方案；GT含预算上下界和不允许假设清单，各产物金额及阶段一致。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H010",
+          "quote": "H010（设备升级预算与资本申请一致性交付）的六份执行素材已在外部作者目录制作：三份单页原生文本报价PDF、12台设备与能耗台账、项目约束及申请模板。报价包含不同税基、按阶段判定的阶梯价、每阶段每供应商一次运费和交货/班组约束；A不能直接用于P2、C在决策日已过期，收益三项为空。独立读取实际PDF表格/文字和工作簿后，Decimal与整数分数路径对81种组合逐一核算一致；4种报价与排期有效的确定预算中，AABB总现金最低178,012.15元，BBBB为179,354.05元，BABB为179,685.85元，ABBB为179,990.35元。真值先于参考产物建立，没有使用参考公式计算GT。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h010-reviewed-authoring-20261027.json",
+          "sha256": "ebc8f42319afd6110dc445b24b115564caa4179e874a29da997beb767f3ff10a"
+        }
+      ]
+    },
+    "H011": {
+      "task_id": "general_hard_office_documents_task_011_linked_report_update",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/10/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102611,
+        "construction": "以有向依赖图生成8项更正的传递闭包；独立数值oracle校验各节点，GT标注应改/不应改单元格与段落，特别检查单位和基期。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H011",
+          "quote": "H011需要在同一评分Workspace中核对Word与PPTX的同步结果。前置复现用既有H010三页Word与H005八页PPTX作为明确的协议fixture：原单格式Word锁先导出Word，随后PPTX调用以`RULE_WORKER_FAILED / OFFICE_RENDER_PROFILE_MISMATCH`拒绝，没有生成能力分。没有把这两份既有文件冒充H011业务素材，也没有绕过原Profile。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h011-reviewed-authoring-20261027.json",
+          "sha256": "423ea9642803f68f176157367021f4bc99fd908ce9cd317635f06faef71d25b2"
+        }
+      ]
+    },
+    "H012": {
+      "task_id": "general_hard_office_documents_task_012_visual_redlines",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/11/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102612,
+        "construction": "双人逐区域标注14项修订与3项故意不可判读；人工按效力规则给最终状态。输入不包含答案型文件名、隐藏文字或转录，GT包含视觉定位与可接受不确定性。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json",
+          "visual_regions.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H012",
+          "quote": "第十四道已制作任务为H012（文档办公012）：`general_hard_office_documents_task_012_visual_redlines`，扫描件红线与签章状态核对。五张1500×2100原始PNG、未签Word及效力规则均已登记，输入不含答案型OCR、EXIF或隐藏转录；所有签章明确为虚构样例。17项包含6项可确认、4项待确认、2项划销、1项不采用、1项条件未满足及3项未决，考查局部框与备查印记的空间关系、底稿划线与红提议划销、选择冲突、条件满足和具体未知字段。H012属于既定六道视觉题，整版仍为6/60；离线、非代码主交付，L4继续标为实测前预估。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h012-reviewed-authoring-20261027.json",
+          "sha256": "01d6f0ede7e5f503ac920a25aebae1491cb458a304b8c567f9cb38c6c683c565"
+        }
+      ]
+    },
+    "H013": {
+      "task_id": "general_hard_office_documents_task_013_proposal_delivery",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/12/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102613,
+        "construction": "预设各屋顶情境下的可行性矩阵与预算oracle；GT核对硬约束、技术限制和四产物口径，语义Judge检查推荐理由是否被事实支撑。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H013",
+          "quote": "H013（多约束方案响应与报价交付包）已完成素材、独立真值与参考产物阶段，尚未登记第十五题。三个屋面场地与三个设备方案形成九个组合；输入为三页需求Word、三行固定设备参数CSV、四页可提取文本的技术PDF和一页响应模板。素材均为合成参数，不要求联网或视觉理解，不改变六道视觉题配额。任务考查目标年量的最小整片数量、不同屋面荷载、面积与DC上限、换屋面权限、整屋面施工范围、必要电气部件、设计检验费、三类税率和未知费用的决策边界。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h013-reviewed-authoring-20261027.json",
+          "sha256": "282ea7df43f001be26a061943ee1f5ee63e7e960bfc12b95a9c9adfd7f1a0aa4"
+        }
+      ]
+    },
+    "H015": {
+      "task_id": "general_hard_office_documents_task_015_board_decision_pack",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/14/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102615,
+        "construction": "作者预计算经营指标及可判定事实，标注6组冲突和4项不能推断的结论；GT用证据支持/反驳表评估推理，接受多种满足约束的方案。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H015",
+          "quote": "H015（经营材料到管理层决策包）已完成四输入、独立数值真值和四份原生参考交付阶段，尚未登记为正式任务。场景保留线上需求原型ACQ-009eeeb9a396b6aa的经营分析工作形态，重构全部合成公司、数字与冲突，采用GDPval的交付和证据方法，不复制真实附件。输入包含24条两期Q3渠道经营记录、18条窗口失单日志、12条分属六组的冲突访谈、可提取文本的市场PDF及专项账户约束。仍为纯文本、离线、非代码主交付，L4为未实测的设计预估，不改变整版6/60视觉题配额。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h015-reviewed-authoring-20261028.json",
+          "sha256": "99009a0b668e8075a2bcdafca3dce288a6c6b4cc99f84a95c6922ec208b1a5af"
+        }
+      ]
+    },
+    "H016": {
+      "task_id": "general_hard_office_documents_task_016_docx_structure_repair",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/15/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102616,
+        "construction": "以干净原稿为结构golden再注入12种缺陷；独立OOXML关系图比较保护节点、批注绑定及引用目标，固定引擎渲染核查关键页。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H016",
+          "quote": "H016（长文档结构修复与引用完整性）已完成素材、独立结构真值和参考交付阶段，尚未登记第十七题。输入为18页损坏Word、两页独立规范样式和保护内容JSON，正文包含26个标题、180个标记段落、六张数据表、六条真实批注和36个正文原生域。资料为全新合成手册，仅参考WorkBuddy Office的结构修复方法，没有线上需求原型或公开原题复制；纯文本、离线、非代码主交付，不增加六道视觉题配额，L4仍为未实测设计预估。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h016-reviewed-authoring-20261028.json",
+          "sha256": "49c4173128576a00e862086356798ca8c8c3253e89f98e304cfcaa2ee2ef56f1"
+        }
+      ]
+    },
+    "H017": {
+      "task_id": "general_hard_data_analysis_task_001_heterogeneous_join",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/16/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102617,
+        "construction": "用独立键连接构造120条预期结果，覆盖重名、重复键、空键和不同单位；比较键集合与字段值，明确一对多保留语义。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H017",
+          "quote": "H017（数据分析001：异构工作表字段对齐与匹配审计）已完成素材、独立GT与参考交付阶段，尚未登记第十八题。三份输入为四张异构工作表的原生XLSX、120行目标模板及规则MD，全部合成，沿用已接受线上原型ACQ-0018e88ab9477468的字段提取形态，不复制用户附件。任务保持L2设计预估、纯文本、离线、非代码主交付；同名实际/预算表头、四种列布局、元/千元/万元与分钟/小时换算、项目键优先及仅空键回退、一对多、跨月、重名、真实零和缺失值均有明确规则。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h017-reviewed-authoring-20261028.json",
+          "sha256": "f6a222a77c01bf2451f94acb0f458b5dc2662f43613f70fb2205df56b146e710"
+        }
+      ]
+    },
+    "H018": {
+      "task_id": "general_hard_data_analysis_task_002_survey_denominator",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/17/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102618,
+        "construction": "独立脚本分别生成题级有效分母、权重和多选计数；GT核对每题分母与区间，不将缺失自动置零。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H018",
+          "quote": "H018（数据分析002：问卷口径、缺失值与加权汇总）已完成素材、独立真值与原生参考数学验证，尚未登记第十九题。240条合成提交先按资格检查，再按规范化受访者ID选择最新有效提交，同时间取较大提交ID；33条整条无效，22条被有效新提交替代，保留185人。单题缺失、非法编码、未进入路由和路由未知不删除其余有效回答；Q3按受访者去重选项，N只可单选。四题有效分母分别为170、90、88、169，8指标同时给出原始及加权分子、分母、比例。代码本提供明确规则和样本范围限制，材料全部合成、纯文本、离线、非代码主交付，L2为设计预估，采用automated。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h018-reviewed-authoring-20261028.json",
+          "sha256": "f9cc7133998511c83e03296475aceb87345b18c2138ac7148d7ed0397088fef7"
+        }
+      ]
+    },
+    "H019": {
+      "task_id": "general_hard_data_analysis_task_003_formula_repair",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/18/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102619,
+        "construction": "用独立日期算法核算三个基准日下12例结果，锁定重算引擎；GT检查公式保留、命名区域及非目标单元格，不信任陈旧缓存。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H019",
+          "quote": "第二十道已制作任务为H019：`general_hard_data_analysis_task_003_formula_repair`，工龄政策变化下的公式修复。三份输入、独立GT、两份参考交付、业务评分器及来源/能力映射已登记。保留审核过的AStudio工龄公式需求原型ACQ-713df75edeb67ce8，全部人员、日期、政策和工作簿重新合成；SpreadsheetBench仅作方法参考。任务保持`custom`、`general-hard`双标签，L3设计预估、纯文本、离线、非代码主交付，不增加视觉任务配额。公司内部合成政策不作为真实法规依据。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h019-reviewed-authoring-20261028.json",
+          "sha256": "2c82a2ddc331cdc505a8fd73ea862792ac00315020a555c13c877d42450aec90"
+        }
+      ]
+    },
+    "H020": {
+      "task_id": "general_hard_data_analysis_task_004_financial_reconcile",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/19/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102620,
+        "construction": "Decimal核算27个核心值并预标4项不可比；GT区分报告期与披露期、归母与合并口径，容差按指标设定，不按小数位字符串硬匹配。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H020",
+          "quote": "H020已完成素材与独立财务核验阶段，尚未登记第二十一题。三家合成公司的2023至2025年度财务摘录按下一年披露日期命名，另含指标口径及两项历史更正，共11份输入。任务保留线上需求原型ACQ-5c5aef1f90057578，全部金额、公司与披露内容重新合成，GDPval仅作方法参考；L3仍为设计预估，纯文本、离线、非代码主交付，计划沿用0.75自动规则与0.25语义Judge，不增加视觉配额。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h020-reviewed-authoring-20261028.json",
+          "sha256": "04bfda9aac03b94285abbc7d12db39f4f73e88547922bc534997899c06079250"
+        }
+      ]
+    },
+    "H021": {
+      "task_id": "general_hard_data_analysis_task_005_retention_cohort",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/20/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102621,
+        "construction": "独立集合运算得到每日期望用户集合及分母，固定时区与去重键；GT核对3个故意同形但原因不同的曲线异常。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": null,
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H021",
+          "quote": "H021已完成素材与独立队列核验阶段，尚未登记第二十二题。三份输入为1,200条含时区与重传的事件CSV、业务定义、含旧计数/原生曲线及216行完整凭证的XLSX。保留线上原型ACQ-02bdaf5a9382caf0，全部数据/人群/业务时点重新合成，SpreadsheetBench仅作方法参考；L3为设计预估，纯文本、离线、非代码主交付，不增加视觉配额。图表数据及凭证均可从原生表格读取，完成任务不以图片理解为前提。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        },
+        {
+          "kind": "linked_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/evidence/h021-reviewed-authoring-20261028.json",
+          "sha256": "aee48e4f25234b7f3374c18336611092fb551991736ea2eac03ce6febe0b2ad1"
+        }
+      ]
+    },
+    "H041": {
+      "task_id": "general_hard_software_engineering_task_001_delimiter_validation",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/40/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102641,
+        "construction": "独立表驱动oracle和隐藏反例测试合法/非法分隔、转义、空字段及异常优先级；检查公开测试与样本哈希，执行日志绑定候选源码版本。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json",
+          "hidden_tests/"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102641,
+        "oracle_basis": "Declarative expected tables independently labelled against contract; not generated from candidate/reference outputs.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H041",
+          "quote": "已制作第一题H041（软件工程001）：`datasets/general-hard/tasks/software_engineering/general_hard_software_engineering_task_001_delimiter_validation.md`及对应分类层Workspace。它包含可运行缺陷CLI、7个不可修改的公开测试、4份编码/格式样本、完整输入契约、49个独立表驱动私有样例、参考解及离线评分。私有样例由声明式数据/错误标签构造，没有调用候选或参考实现生成预期答案；业务点按待修复需求分族汇总，已有正确行为作为回归检查，避免样例数改变需求权重。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        }
+      ]
+    },
+    "H042": {
+      "task_id": "general_hard_software_engineering_task_002_sqlite_import",
+      "source_blueprint_sha256": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+      "source_pointer": "/tasks/41/ground_truth",
+      "prior_ground_truth": {
+        "status": "construction_spec_only",
+        "synthetic_seed": 2026102642,
+        "construction": "私有测试在独立SQLite临时库执行失败注入和重复导入，核对表级不变量与关联集合；schema审计确认未绕过题设。",
+        "private_files": [
+          "expected.json",
+          "business_oracle.json",
+          "counterexamples.json",
+          "artifact_contract.json",
+          "protected_sha256.json",
+          "evidence_requirements.json",
+          "hidden_tests/"
+        ],
+        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
+        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。"
+      },
+      "authoring_registry": {
+        "kind": "synthetic_owned_fixture",
+        "seed": 2026102642,
+        "oracle_basis": "Explicit manually labelled SQL state and transaction-visibility vectors; no implementation imported to generate expected values.",
+        "review_status": "local_author_controls_passed_not_empirically_calibrated"
+      },
+      "source_registry_sha256": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae",
+      "linked_authoring_evidence": [
+        {
+          "kind": "materialization_registry_only",
+          "path": "docs/design/general-e2e/general-hard/evidence/materialization-status-reconciliation-20261029.json",
+          "sha256": "85c26977b267b1b66a639cb47ba9ab9390f06ca5695559525f9cb40b0e824fd6"
+        },
+        {
+          "kind": "current_design_authoring_record",
+          "path": "docs/design/general-e2e/general-hard/调研与设计方案.md",
+          "locator": "section12:H042",
+          "quote": "第二题H042（软件工程002）也已制作：`general_hard_software_engineering_task_002_sqlite_import`，包含三表应用层关联、容量及幂等约定、9个公开测试和40组独立标注的SQLite状态向量。样例覆盖整批失败、最后一次INSERT后注入、同批/跨批重试、关联/容量错误及调用者已有事务；对落盘schema另由可信评分进程只读查询。新增外键以及在候选进程伪造外键探针的控制组均不能获得业务/边界分。",
+          "scope": "Existing authoring narrative; not human expert/Harness/Judge proof"
+        }
+      ]
+    }
+  },
+  "before": {
+    "docs/design/general-e2e/general-hard/60题蓝图.json": "b8a37fdd4dbf82e520917a5db1654f3bfeb45d70952c30d7295a9ebbff1c16df",
+    "docs/design/general-e2e/general-hard/调研与设计方案.md": "0a985007ca5fc8cef40653bb7a5cee769081faadf86ce58c36b8a2192436417d",
+    "datasets/general-hard/task_sources.yaml": "5274f708c36621a9245cdd72a15cb356a3e5872c0dcbff30e16600b7b4e7eaae"
+  },
+  "after": {
+    "docs/design/general-e2e/general-hard/60题蓝图.json": "6b2818ee632e7af268614ed26180b1d6cdee264f91bb588c5cfbb5dcecc17f0e",
+    "docs/design/general-e2e/general-hard/调研与设计方案.md": "0247a548c5a89c9fbf3e8a2fbcc733f8152ded5640914b7ddb3db59dc4b4f8c9",
+    "datasets/general-hard/task_sources.yaml": "43a930a461d133c3b278de796918abcaafa566e52896a9fa08afa71428b17def"
+  },
+  "literal_counts_before": {
+    "blueprint": 83,
+    "source_registry": 30
+  },
+  "recomputed_statistics_before": {
+    "task_count": 60,
+    "category_counts": {
+      "office_documents": 16,
+      "data_analysis": 10,
+      "research_verification": 8,
+      "file_operations": 6,
+      "software_engineering": 12,
+      "planning_coordination": 4,
+      "content_operations": 4
+    },
+    "difficulty_counts": {
+      "L2": 12,
+      "L3": 24,
+      "L4": 24
+    },
+    "modality_counts": {
+      "pure-text": 54,
+      "multimodal": 6
+    },
+    "production_backed_tasks": 42,
+    "production_link_count": 42,
+    "distinct_production_candidate_ids": 39,
+    "distinct_production_query_hashes": 39,
+    "coding_primary_tasks": 12,
+    "controlled_network_tasks": 6,
+    "grading_type_counts": {
+      "hybrid": 36,
+      "automated": 24
+    },
+    "review_decisions": {
+      "accepted_intent_prototype": 39,
+      "accepted_not_selected": 2,
+      "excluded_benchmark_overlap": 3,
+      "excluded_or_unconfirmed": 9
+    }
+  },
+  "recomputed_statistics_after": {
+    "task_count": 60,
+    "category_counts": {
+      "office_documents": 16,
+      "data_analysis": 10,
+      "research_verification": 8,
+      "file_operations": 6,
+      "software_engineering": 12,
+      "planning_coordination": 4,
+      "content_operations": 4
+    },
+    "difficulty_counts": {
+      "L2": 12,
+      "L3": 24,
+      "L4": 24
+    },
+    "modality_counts": {
+      "pure-text": 54,
+      "multimodal": 6
+    },
+    "production_backed_tasks": 42,
+    "production_link_count": 42,
+    "distinct_production_candidate_ids": 39,
+    "distinct_production_query_hashes": 39,
+    "coding_primary_tasks": 12,
+    "controlled_network_tasks": 6,
+    "grading_type_counts": {
+      "hybrid": 36,
+      "automated": 24
+    },
+    "review_decisions": {
+      "accepted_intent_prototype": 39,
+      "accepted_not_selected": 2,
+      "excluded_benchmark_overlap": 3,
+      "excluded_or_unconfirmed": 9
+    }
+  },
+  "quotas_unchanged_measured": true,
+  "business_task_fields_unchanged_checked": true,
+  "status": "APPLIED",
+  "protected_measurement": {
+    "scope": "Measured: complete H029/H030 GT+QA, original H031 GT+QA and existing reference tree, central general-hard tasks/workspace plus dataset configuration/manifest-name files and manifest absence markers. Other historical QA is protected only by the strict four-file write-set exclusion and existing frozen records; no global dual-measurement claim. Links are hashed as links, never followed.",
+    "before": [
+      {
+        "root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks",
+        "root_mode": 493,
+        "file_count": 60,
+        "tree_sha256": "85e86beec680924ff5855ad2c94e5a3fd2f4afffae28ff37dd54f1b570afb123",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace",
+        "root_mode": 493,
+        "file_count": 1863,
+        "tree_sha256": "902cf020dccad3cb97c781af756976336288dffdd16551de7d30de1b0dcfc693",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/gt",
+        "root_mode": 493,
+        "file_count": 20,
+        "tree_sha256": "54f688a48955d66089e5d6e8e38cae71b09d2199e4c3eefd724c399feb8f9d5c",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa",
+        "root_mode": 493,
+        "file_count": 7129,
+        "tree_sha256": "8e3f987db73186d0c2dd05ff5b7897ada37f59ac3e89b73f8ab737fb7ea191ce",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/gt",
+        "root_mode": 493,
+        "file_count": 20,
+        "tree_sha256": "4ce9b7160505938d68c544459440fca8a90c1f31436f48cb3aa4a2419760c781",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa",
+        "root_mode": 493,
+        "file_count": 27530,
+        "tree_sha256": "b21dec95162a12d52c36dfa19f5cf46c0903d7497a2b9c4a90119c708b5b7259",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/gt",
+        "root_mode": 493,
+        "file_count": 18,
+        "tree_sha256": "328f137bd73e802d31a80ee520efc98d72342b6283ad648d72de5c62d7379318",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa",
+        "root_mode": 493,
+        "file_count": 3432,
+        "tree_sha256": "3f569f4fb89b65a589d3e70c4ecf9c942de0a0b290c10cd29460f4fb7b0d2646",
+        "unstable_reads": 0
+      }
+    ],
+    "after": [
+      {
+        "root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks",
+        "root_mode": 493,
+        "file_count": 60,
+        "tree_sha256": "85e86beec680924ff5855ad2c94e5a3fd2f4afffae28ff37dd54f1b570afb123",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace",
+        "root_mode": 493,
+        "file_count": 1863,
+        "tree_sha256": "902cf020dccad3cb97c781af756976336288dffdd16551de7d30de1b0dcfc693",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/gt",
+        "root_mode": 493,
+        "file_count": 20,
+        "tree_sha256": "54f688a48955d66089e5d6e8e38cae71b09d2199e4c3eefd724c399feb8f9d5c",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa",
+        "root_mode": 493,
+        "file_count": 7129,
+        "tree_sha256": "8e3f987db73186d0c2dd05ff5b7897ada37f59ac3e89b73f8ab737fb7ea191ce",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/gt",
+        "root_mode": 493,
+        "file_count": 20,
+        "tree_sha256": "4ce9b7160505938d68c544459440fca8a90c1f31436f48cb3aa4a2419760c781",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h030/qa",
+        "root_mode": 493,
+        "file_count": 27530,
+        "tree_sha256": "b21dec95162a12d52c36dfa19f5cf46c0903d7497a2b9c4a90119c708b5b7259",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/gt",
+        "root_mode": 493,
+        "file_count": 18,
+        "tree_sha256": "328f137bd73e802d31a80ee520efc98d72342b6283ad648d72de5c62d7379318",
+        "unstable_reads": 0
+      },
+      {
+        "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa",
+        "root_mode": 493,
+        "file_count": 3432,
+        "tree_sha256": "3f569f4fb89b65a589d3e70c4ecf9c942de0a0b290c10cd29460f4fb7b0d2646",
+        "unstable_reads": 0
+      }
+    ],
+    "before_aggregate_sha256": "c639720e13074f8db85c1b6f0dcc7a8b30b548252339318d82d86b8accd83d89",
+    "after_aggregate_sha256": "c639720e13074f8db85c1b6f0dcc7a8b30b548252339318d82d86b8accd83d89",
+    "protected_trees_unchanged_measured": true,
+    "protected_file_count": 40072,
+    "dataset_metadata_and_manifest_before": [
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/checkpoint_capability_map7.yaml",
+        "exists": true,
+        "sha256": "cabe473f7d33f5709e450e2c0ffed0f017c7989765c95b70be02dac4266b8a88",
+        "size": 21007
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/dataset.yaml",
+        "exists": true,
+        "sha256": "a3decd0526463bcff9c077cf6cfade9fa825a73d54e5fd544ed4bcc88f1ec7aa",
+        "size": 6326
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/manifest.json",
+        "exists": false,
+        "sha256": null,
+        "size": null
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/manifest.yaml",
+        "exists": false,
+        "sha256": null,
+        "size": null
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_002_source_bound_campaign/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "7130287392fce7dc0a223b2be392619380ad17271b7dca9ff6c4d28d80fca6ee",
+        "size": 2450
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_003_marketing_evidence/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "1515a3273dc1a8372048cdace19ec898d104195bf4a7137c689d853706eef007",
+        "size": 2307
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_005_split_bundle_restore/exec/release_manifest.json",
+        "exists": true,
+        "sha256": "62d4525f6130652773ab1cc6862a010dfe9a2a48046da933986910a5276f91b2",
+        "size": 16430
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_001_open_mineral_fact_discovery/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "b892074074b3ee19688093ab891894af5166266358eef996d86b8051fb3a76c0",
+        "size": 7976
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_002_api_spec_crosscheck/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "fc764bcd69b30e8d89661241f3dc671292c6800af2af0a1693472eccf5363c7e",
+        "size": 3042
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_003_open_product_event_research/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "d3b46af0b38e8cd73e5a4f4a1e244a7014a63e0dcfc0b002c86b78ac66571060",
+        "size": 9484
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_004_site_search_literature_screening/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "a460932d5f1c1c076002d59ce178cd4887f9ac2a9a227d8c4e1110160bcc63fd",
+        "size": 16545
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_005_open_long_horizon_agent_research/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "6ca035ccbb174242548ac88ab505029cee12b45f8d37ac50791dde90bd72056e",
+        "size": 499537
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "7889e97bd1ab373a2273b70832cfe053b9452f11856db87efa3769416b28987c",
+        "size": 72989
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_007_directed_notice_timeline/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "c8a6814f6bca748169cae3b183194e9168c3797d990a5982b7a7f71dfe08c45a",
+        "size": 86101
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_008_visual_paper_figures/gt/annotation_reviews/A/freeze_manifest.json",
+        "exists": true,
+        "sha256": "d59d74d6c6f402dc634f97980ce375d5278b9c058770c3e6fa2b45ceedfb2474",
+        "size": 1859
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_008_visual_paper_figures/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "f093bc2d886c1105c0130182e274751e5267d3dcc0ec4a7c79c1d38097f05f1f",
+        "size": 8147
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "36dac591d9dbda1b4681b6975379d148876824b930055aad4df1908131d0b8c8",
+        "size": 1489
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_005_sql_compatibility/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "4727be280c7d678ad761dc991f4fc25dfddc32f34402c79ceaf7cb92a68dc678",
+        "size": 2302
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_006_config_migration/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "8b399941532a6cfc4e68c63549621d936240b7029e754fe91d47f7d1415ae1fe",
+        "size": 2723
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_008_sse_state/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "485519a56b816e5ea5b9042128e243225a54107e3465f788e6fce2cec4fa4c87",
+        "size": 1481
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/exec/offline_wheels/manifest.json",
+        "exists": true,
+        "sha256": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+        "size": 2355
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/gt/protected_inputs/offline_wheels/manifest.json",
+        "exists": true,
+        "sha256": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+        "size": 2355
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "8831860b87bc13ae428e614f535b579fbab0046ff9deadea82db3d1eedc32522",
+        "size": 3264
+      }
+    ],
+    "dataset_metadata_and_manifest_after": [
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/checkpoint_capability_map7.yaml",
+        "exists": true,
+        "sha256": "cabe473f7d33f5709e450e2c0ffed0f017c7989765c95b70be02dac4266b8a88",
+        "size": 21007
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/dataset.yaml",
+        "exists": true,
+        "sha256": "a3decd0526463bcff9c077cf6cfade9fa825a73d54e5fd544ed4bcc88f1ec7aa",
+        "size": 6326
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/manifest.json",
+        "exists": false,
+        "sha256": null,
+        "size": null
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/manifest.yaml",
+        "exists": false,
+        "sha256": null,
+        "size": null
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_002_source_bound_campaign/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "7130287392fce7dc0a223b2be392619380ad17271b7dca9ff6c4d28d80fca6ee",
+        "size": 2450
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/content_operations/general_hard_content_operations_task_003_marketing_evidence/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "1515a3273dc1a8372048cdace19ec898d104195bf4a7137c689d853706eef007",
+        "size": 2307
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/file_operations/general_hard_file_operations_task_005_split_bundle_restore/exec/release_manifest.json",
+        "exists": true,
+        "sha256": "62d4525f6130652773ab1cc6862a010dfe9a2a48046da933986910a5276f91b2",
+        "size": 16430
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_001_open_mineral_fact_discovery/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "b892074074b3ee19688093ab891894af5166266358eef996d86b8051fb3a76c0",
+        "size": 7976
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_002_api_spec_crosscheck/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "fc764bcd69b30e8d89661241f3dc671292c6800af2af0a1693472eccf5363c7e",
+        "size": 3042
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_003_open_product_event_research/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "d3b46af0b38e8cd73e5a4f4a1e244a7014a63e0dcfc0b002c86b78ac66571060",
+        "size": 9484
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_004_site_search_literature_screening/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "a460932d5f1c1c076002d59ce178cd4887f9ac2a9a227d8c4e1110160bcc63fd",
+        "size": 16545
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_005_open_long_horizon_agent_research/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "6ca035ccbb174242548ac88ab505029cee12b45f8d37ac50791dde90bd72056e",
+        "size": 499537
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_006_paper_comparison/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "7889e97bd1ab373a2273b70832cfe053b9452f11856db87efa3769416b28987c",
+        "size": 72989
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_007_directed_notice_timeline/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "c8a6814f6bca748169cae3b183194e9168c3797d990a5982b7a7f71dfe08c45a",
+        "size": 86101
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_008_visual_paper_figures/gt/annotation_reviews/A/freeze_manifest.json",
+        "exists": true,
+        "sha256": "d59d74d6c6f402dc634f97980ce375d5278b9c058770c3e6fa2b45ceedfb2474",
+        "size": 1859
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_008_visual_paper_figures/gt/reference_source_manifest.json",
+        "exists": true,
+        "sha256": "f093bc2d886c1105c0130182e274751e5267d3dcc0ec4a7c79c1d38097f05f1f",
+        "size": 8147
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_004_rbac_export/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "36dac591d9dbda1b4681b6975379d148876824b930055aad4df1908131d0b8c8",
+        "size": 1489
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_005_sql_compatibility/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "4727be280c7d678ad761dc991f4fc25dfddc32f34402c79ceaf7cb92a68dc678",
+        "size": 2302
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_006_config_migration/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "8b399941532a6cfc4e68c63549621d936240b7029e754fe91d47f7d1415ae1fe",
+        "size": 2723
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_008_sse_state/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "485519a56b816e5ea5b9042128e243225a54107e3465f788e6fce2cec4fa4c87",
+        "size": 1481
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/exec/offline_wheels/manifest.json",
+        "exists": true,
+        "sha256": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+        "size": 2355
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/gt/protected_inputs/offline_wheels/manifest.json",
+        "exists": true,
+        "sha256": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+        "size": 2355
+      },
+      {
+        "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/software_engineering/general_hard_software_engineering_task_009_package_migration/gt/trusted_manifest.json",
+        "exists": true,
+        "sha256": "8831860b87bc13ae428e614f535b579fbab0046ff9deadea82db3d1eedc32522",
+        "size": 3264
+      }
+    ],
+    "other_historical_QA": "STATIC_WRITE_SET_EXCLUSION_ONLY; existing freezes retained, not globally rehashed",
+    "full_before_inventory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/provenance-clarification-v2-preparation/apply-after-all60/protected-before.json",
+    "full_after_inventory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/provenance-clarification-v2-preparation/apply-after-all60/protected-after.json"
+  },
+  "root_author_snapshot_finished_assertion": true,
+  "git_before": {
+    "head": "13a2112a21be1e21158e0837485596f5a430f342",
+    "status": ""
+  },
+  "finished_at_utc": "2026-10-29T03:28:04.134010+00:00"
+}

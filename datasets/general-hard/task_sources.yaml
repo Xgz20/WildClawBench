@@ -23,7 +23,7 @@ tasks:
           last_seen_local: '2026-09-24 14:49:13.813000'
           intent_summary: 修复科目分隔符校验与错误消息分流。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -67,7 +67,7 @@ tasks:
           last_seen_local: '2026-10-02 11:26:09.744000'
           intent_summary: 实现前后端预约系统，约束SQLite关联一致性与应用层校验。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -111,7 +111,7 @@ tasks:
           last_seen_local: '2026-09-25 23:32:33.358000'
           intent_summary: 多份培养方案中的条款提取、逐字核对与规范符合性对照。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -158,7 +158,7 @@ tasks:
           last_seen_local: '2026-10-15 13:29:59.198000'
           intent_summary: 将会议录音转为按议题、结论、待办组织的纪要；新题只使用已提供转写文本。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -240,7 +240,7 @@ tasks:
           last_seen_local: '2026-10-13 09:57:08.625000'
           intent_summary: 技术报告遗漏软件功能需求，要求核对需求与主要技术指标的覆盖关系。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -287,7 +287,7 @@ tasks:
           last_seen_local: '2026-09-26 04:54:44.432000'
           intent_summary: 依据附件数据制作部门年度总结PPT，约束字号、字体、页数及图表。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -368,7 +368,7 @@ tasks:
           last_seen_local: '2026-09-28 11:31:49.148000'
           intent_summary: 以越文修订为主，中文反馈修改意见，并交付完整Word意见。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -415,7 +415,7 @@ tasks:
           last_seen_local: '2026-09-28 17:27:17.081000'
           intent_summary: 依据图片修改话术并保持指定Word文档格式。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gaia
@@ -456,7 +456,7 @@ tasks:
           last_seen_local: '2026-09-26 03:52:20.604000'
           intent_summary: 设备升级项目的时间线、预算和资本申请理由，交付Word与网页。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -639,7 +639,7 @@ tasks:
           last_seen_local: '2026-09-19 07:51:13.713000'
           intent_summary: 按整年工龄规则重设休假天数工作簿公式。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - ssb2
@@ -664,7 +664,7 @@ tasks:
           last_seen_local: '2026-09-19 19:08:17.251000'
           intent_summary: 收集企业三年财务指标，形成带来源、排名及变动幅度的Excel与说明。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -689,7 +689,7 @@ tasks:
           last_seen_local: '2026-09-17 11:13:35.464000'
           intent_summary: 核对新老用户流失率定义及异常日期的原始数据。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - ssb2
@@ -1007,7 +1007,7 @@ tasks:
           last_seen_local: '2026-10-14 15:53:11.235000'
           intent_summary: 先检查磁盘文件并列清理候选，用户确认后才允许执行。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -1033,7 +1033,7 @@ tasks:
           last_seen_local: '2026-10-14 23:10:44.566000'
           intent_summary: 真实文献支撑的技术综述，比较方法适用性、效果、成本和局限。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gaia
@@ -1067,7 +1067,7 @@ tasks:
           last_seen_local: '2026-09-29 03:09:03.521000'
           intent_summary: 按类型复制文件到分类目录，处理无后缀文件并统计数量。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -1093,7 +1093,7 @@ tasks:
           last_seen_local: '2026-09-08 06:19:42.748000'
           intent_summary: 递归发现压缩包并提取到各自同名目录，避免混乱。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -1229,7 +1229,7 @@ tasks:
           last_seen_local: '2026-10-12 18:37:20.704000'
           intent_summary: 恢复同版分包为离线工作台，复用现有代码资料且避免覆盖目录。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -1255,7 +1255,7 @@ tasks:
           last_seen_local: '2026-10-10 01:14:06.902000'
           intent_summary: 分析匹配效率和多线程方案，提出并验证数据处理优化。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1280,7 +1280,7 @@ tasks:
           last_seen_local: '2026-09-28 10:00:54.984000'
           intent_summary: 修复现有项目的学生登录黑名单问题。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1305,7 +1305,7 @@ tasks:
           last_seen_local: '2026-09-23 16:42:41.488000'
           intent_summary: 现有数据库查询出现SQL语法错误，需定位并修复。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1330,7 +1330,7 @@ tasks:
           last_seen_local: '2026-09-04 16:58:11.691000'
           intent_summary: 将工作规划改为有体感、可衡量且与目标对应的动作。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -1356,7 +1356,7 @@ tasks:
           last_seen_local: '2026-10-15 10:23:13.857000'
           intent_summary: 依据参数说明修改数据处理配置函数，减少不必要设置并保持效率。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1381,7 +1381,7 @@ tasks:
           last_seen_local: '2026-09-17 10:56:25.088000'
           intent_summary: 账号和权限融合、系统切换、测试、免密及培训的项目推进计划。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-office
@@ -1407,7 +1407,7 @@ tasks:
           last_seen_local: '2026-09-08 11:38:59.337000'
           intent_summary: 现有对话型智能体链路存在Markdown显示、推理内容与会话状态问题。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1432,7 +1432,7 @@ tasks:
           last_seen_local: '2026-10-10 01:14:06.902000'
           intent_summary: 分析匹配效率和多线程方案，提出并验证数据处理优化。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1458,7 +1458,7 @@ tasks:
           last_seen_local: '2026-10-10 17:38:33.285000'
           intent_summary: 读取公众号草稿，优化结构与观点，交付可复制HTML。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -1484,7 +1484,7 @@ tasks:
           last_seen_local: '2026-09-03 14:35:50.652000'
           intent_summary: 审批列表在切换状态视图后丢失记录和计数，要求修复。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1524,7 +1524,7 @@ tasks:
           last_seen_local: '2026-10-15 14:27:23.855000'
           intent_summary: 按月安排课程、项目与实习的学生成长路径。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - gdpval
@@ -1575,7 +1575,7 @@ tasks:
           last_seen_local: '2026-09-17 11:11:15.314000'
           intent_summary: 按顺序分析和修复多个缺陷，只修改相关文件并逐项验证。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
@@ -1627,7 +1627,7 @@ tasks:
           last_seen_local: '2026-09-23 16:09:21.052000'
           intent_summary: 复核代码扫描、修复计划及结果，检查漏改、误改和逻辑不一致。
           review: accepted_intent_prototype
-          review_basis: AStudio桌面来源明确；无当前排除指纹；人工复核主目标和输入依赖；不等同生产结果正确或人类原创证明。
+          review_basis: AStudio桌面来源明确；无当前排除指纹；模型作者逐条复核/登记主目标和输入依赖（非人类专家）；不等同生产结果正确或人类原创证明。
           adaptation: 保留业务目标/工作形态，重构合成数据、规模、冲突和边界；不是原请求或用户附件的逐字复制。
       external_source_ids:
         - wb-code
