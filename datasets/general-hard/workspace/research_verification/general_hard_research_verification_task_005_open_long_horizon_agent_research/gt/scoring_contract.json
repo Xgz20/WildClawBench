@@ -1,0 +1,46 @@
+{
+  "schema_version": "h031-scoring-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_checkpoint_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "source_precedes_reference": true,
+  "reference_answer_is_oracle": false,
+  "candidate_answer_used_for_truth": false,
+  "private_sha256": {
+    "reference_source_manifest.json": "6ca035ccbb174242548ac88ab505029cee12b45f8d37ac50791dde90bd72056e",
+    "evidence_requirements.json": "214866a7493269bb0c686a42db5208db93096775b0a23ae88b6832532677fa37",
+    "source_review_reconciliation.json": "6f7c4d23c7b69737c7aec5bee3353f4cfb9a8df8c62203d9cfbac57edaec6bd8",
+    "business_oracle.json": "d3f72775c2385d9320e2360d6e3c57023bf0c7e87fc7b1899ee43843226320e0",
+    "protected_sha256.json": "1a55fa769c7df52daebc12ef1588c28f22a625eba5f7391393c14aed211c616d",
+    "expected.json": "cf07908afe797815710ef670328af8b27f07805b3f1caa534fb6a5c6ac53d81f",
+    "research_source_policy.json": "7a1f9a5542eea35f3de9fdb215847ce7705a1c4e2dc1a38fe87899791990569c",
+    "artifact_contract.json": "48c5b76929d0254b85b280d4ae2b866237e50464be51217e8631175d292a46d3",
+    "native_io.py": "6a8e5e92581bcbea414e3b00801a1087d3c6a90e4c8e5a1130d337e3ae8894f8",
+    "source_projection.py": "4de17daa6177925059f06c2d01dc41e78cf1c94045d839f2fbe6d1281b4c151a",
+    "embedded_json_lines.py": "c9991e90bc2a8f8962f2fdea7932ba0c6b13018ae73753f9f25f8c3e2a3deba9",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "grader.py": "7ff0dea03e2e09513b27d8b312b9f5c15ca663bb37043f3d797669c66b7be18c",
+    "scoring_design.json": "5dd712e3e6b8a231765d2182542ebfee42b7c784fcaaba37b71bfdbd0a014923",
+    "runtime_contract.json": "afdbf1fed978d35abb54999fad71f5b71b1882ce2df9ba2477ecf7410dc741fe",
+    "rule_evidence_contract.json": "89bd31e7030f2a088c435036c7386fa50295d7221838c494d827de81ce13a93c",
+    "counterexamples.json": "399cb11a6dbfee632435467981e104fc0563b76d7699c6544aae1fa9326c1c45"
+  },
+  "hash_only_fact_materials": [
+    "expected.json",
+    "business_oracle.json",
+    "reference_source_manifest.json",
+    "source_review_reconciliation.json"
+  ]
+}

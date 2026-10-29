@@ -1,0 +1,554 @@
+{
+  "artifacts": [
+    {
+      "accepted_forms": [
+        "reasonable Chinese or English headers",
+        "multiple sheets",
+        "split or combined tables",
+        "reordered rows/columns",
+        "transposed layout",
+        "static values",
+        "ordinary source hyperlinks",
+        "formulas if actually recalculable"
+      ],
+      "format": "native editable self-contained XLSX",
+      "maximum_bytes": 5242880,
+      "not_required": [
+        "fixed sheet names",
+        "fixed header row or cell coordinates",
+        "duplicate of every JSON citation",
+        "mandatory publication sheet",
+        "mandatory formulas"
+      ],
+      "path": "results/capability_matrix.xlsx",
+      "prohibited_core_substitutes": [
+        "screenshots",
+        "a giant JSON blob in one cell"
+      ],
+      "required_logical_content": [
+        "entity_id",
+        "name",
+        "selection_reason",
+        "read version",
+        "time basis",
+        "five dimensions with ability text, conditions and evidence level",
+        "clear linkage to ledger entities"
+      ],
+      "scoring_side_handling": "Read native cells, styles/visibility, tables, merged headers and formulas; normalize the logical matrix. Render/recalculate only on a separately bound derivative when needed; preserve original candidate bytes.",
+      "security_scope": "No macro or external data connection. Ordinary hyperlink relationships are allowed and must not be rejected merely because their target is external."
+    },
+    {
+      "contract_ref": "ledger",
+      "format": "JSON object",
+      "maximum_bytes": 5242880,
+      "path": "results/evidence_ledger.json"
+    },
+    {
+      "accepted_forms": [
+        "free readable prose and tables",
+        "equivalent Chinese wording",
+        "clear semantic correspondence without a fixed template"
+      ],
+      "format": "native editable DOCX",
+      "maximum_bytes": 5242880,
+      "not_required": [
+        "fixed paragraph or table coordinates",
+        "all JSON fields repeated verbatim",
+        "implemented system",
+        "new runtime experiment",
+        "PDF export"
+      ],
+      "path": "results/research_report.docx",
+      "required_logical_content": [
+        "representative selection",
+        "five-dimensional comparison and conditions",
+        "twelve key conclusions and support/qualification",
+        "comparability limits, counterexamples and unresolved matters",
+        "bounded priorities, effort assumptions, dependencies, future acceptance checks and counterexamples"
+      ],
+      "scoring_side_handling": "Native paragraph/table extraction plus independently bound format/visual inspection; meaning and adequacy remain Judge responsibilities."
+    },
+    {
+      "contract_ref": "coverage",
+      "format": "JSON object",
+      "maximum_bytes": 5242880,
+      "path": "results/coverage.json"
+    }
+  ],
+  "authority": {
+    "blueprint_role": "Scoring-interface weights and declared design scope only; not a source-fact oracle.",
+    "candidate_obligations": "Only the three public protocol-proposal inputs plus the public task deliverable instructions. This proposal and authoring drafts add no candidate fields or answer facts.",
+    "non_public_context_bindings": [
+      {
+        "lines": 45,
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/protocol-design-draft.md",
+        "relative_path": "protocol-design-draft.md",
+        "role": "authoring_design_context_only",
+        "sha256": "4adfe2fa0572364330abadea43904c2a55d88ba0c5e41323db6e4210a265dd8e",
+        "size": 7056
+      },
+      {
+        "lines": 393,
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/blueprint-snapshot.json",
+        "relative_path": "blueprint-snapshot.json",
+        "role": "authoring_design_context_only",
+        "sha256": "78c7ca12cda0c07a74523198ded7b1f700c224b5458fd9807b2d8946c544b092",
+        "size": 20705
+      }
+    ],
+    "public_input_bindings": [
+      {
+        "lines": 26,
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/protocol-proposal/research_brief.md",
+        "relative_path": "protocol-proposal/research_brief.md",
+        "role": "public_candidate_input",
+        "sha256": "effafc164df10fd862defbd70a1c6c0297fcf1ad95d10b54af6caebb09cfa6ed",
+        "size": 4846
+      },
+      {
+        "lines": 64,
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/protocol-proposal/business_constraints.md",
+        "relative_path": "protocol-proposal/business_constraints.md",
+        "role": "public_candidate_input",
+        "sha256": "20e00973a38bc64450d31c15b41bc1dc90473a92561280d298bd9b7d0cd5f6bd",
+        "size": 8570
+      },
+      {
+        "lines": 41,
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/protocol-proposal/scope.json",
+        "relative_path": "protocol-proposal/scope.json",
+        "role": "public_candidate_input",
+        "sha256": "80adeca7592820799969b6879a1e6d959b1214fcdd548f25f0a1e0bcbf001316",
+        "size": 4227
+      }
+    ],
+    "when_input_changes": "Rebind and review the changed public text before adopting this proposal."
+  },
+  "coverage": {
+    "dedup_groups": "Only actual merged members, kept_id and basis; a true empty array is valid. Keep same-group dedup distinct from cross-group relationships.",
+    "exclusions_and_unresolved": "Actual issue, effect and necessary next step. True empty arrays are valid; no required invented exclusion, conflict or failed-access case.",
+    "extra_fields_allowed": true,
+    "priorities": {
+      "acceptance_checks": "Future falsifiable checks and pass conditions; document/data/software verification coverage is assessed across the plan, not a private fixed count of tests per priority.",
+      "claim_ids": "Use IDs from the twelve conclusions; do not require a copied claim/citation closure.",
+      "counterexample_or_failure_mode": "Concrete boundary or failure that would overturn/limit a recommendation; clear text/object/list accepted.",
+      "dependencies": "Existing priority IDs or clearly marked external prerequisites; no directed cycle. Accept clear text/object marking without a compulsory private prefix/key.",
+      "docx_consistency": "The report has readable equivalent priorities, effort assumptions, dependencies, acceptance and counterexamples; no mandated table template.",
+      "effort_person_days": {
+        "constraints": [
+          "finite nonnegative estimates",
+          "upper >= lower",
+          "sum of all upper values <= 60 person-days"
+        ],
+        "meaning": "Inference with assumptions, not source-measured cost.",
+        "representation": "Numbers or unambiguous numeric person-day text may normalize to numbers; no forced integer unit or staffing language.",
+        "required_fields": [
+          "lower",
+          "upper"
+        ]
+      },
+      "entry_fields": [
+        "priority_id",
+        "rank",
+        "claim_ids",
+        "scope",
+        "effort_person_days",
+        "dependencies",
+        "acceptance_checks",
+        "counterexample_or_failure_mode"
+      ],
+      "id_field": "priority_id",
+      "maximum": 3,
+      "minimum": 1,
+      "optional_defer_or_reject_reason": "Optional as actually useful; do not turn the design draft's mention into a new mandatory public field.",
+      "rank": "Unambiguous nonduplicated order starting at 1; don't invent a fixed item sequence or an unpublished gap penalty.",
+      "type": "array"
+    },
+    "required_root_fields": [
+      "schema_version",
+      "scope",
+      "search_branches",
+      "dedup_groups",
+      "exclusions",
+      "unresolved",
+      "priorities"
+    ],
+    "root_type": "object",
+    "schema_version_value": "h031-coverage/v1",
+    "scope": "Actual research scope, cutoff and non-exhaustive boundary; clear text or structured representation accepted.",
+    "search_branches": "Explain actual coverage/noncoverage of each dimension and reasons. Clear objects or entries accepted; may refer to existing IDs without copying a complete hit list."
+  },
+  "date_record": {
+    "aware_timestamp": "Retain an actually available aware timestamp and its role. Do not invent one from a date-only source or round away meaningful source precision.",
+    "calendar_intervals": "Year/month precision represents the whole calendar interval. Confirm eligibility only if the supported interval ends no later than cutoff_end_exclusive; crossing, unknown or conflicting intervals remain unresolved.",
+    "date_roles": {
+      "arxiv": "Official base-ID v1 Submitted is the adopted report submission basis; read vN and its Submitted time are separate. No post-cutoff read revision. Submitted is not first-public-visibility proof.",
+      "benchmark_protocol": "Actual official fixed document/repository version and date role; a related manuscript's date is separate.",
+      "conference_proceedings": "Official proceedings publication year/date at actual precision and role. Event dates or copyright do not create an exact first-online day.",
+      "current_carrier": "Current retrieval may expose an identified older report/static version, but does not certify publication-day bytes or cutoff-latest status.",
+      "entity_release": "Official release published_at or explicit package distribution upload time, with original field role.",
+      "fixed_static_version": "Official fixed commit plus recorded timestamp can identify that static version; not first publication, deployment, tested durability or historical archive proof.",
+      "journal": "Prefer official first_online. Explicit issue_only fallback is permitted when online date cannot be established, retaining that uncertainty."
+    },
+    "missing_exact_day": "Do not reject a qualifying official proceedings year/month solely for lacking an invented day. Do not require historical webpage archiving where the public protocol permits a recorded fixed static version.",
+    "precision_values": [
+      "year",
+      "month",
+      "day",
+      "unknown"
+    ],
+    "required_logical_fields": [
+      "status",
+      "value",
+      "precision",
+      "basis",
+      "time-role explanation"
+    ],
+    "status_values": [
+      "documented",
+      "unknown"
+    ],
+    "timezone": "Aware timestamps convert to Asia/Shanghai. Date-only records retain stated calendar date and disclose unknown timezone; no invented UTC assignment.",
+    "value": "Preserve source precision; null when unknown. A named first-online field is not required if a different explicitly permitted role supplies the date."
+  },
+  "evidence_level": {
+    "allowed": [
+      "official_claim",
+      "static_implementation",
+      "author_experiment",
+      "independent_experiment",
+      "runtime_observation",
+      "unknown"
+    ],
+    "meaning": "Evidence nature, not an automatic truth/credibility ranking. Status and evidence_level have distinct meanings; mixed levels need sentence-wise boundaries.",
+    "representation": "One clear enum string or nonempty array of enum strings."
+  },
+  "generated_at_utc": "2026-10-28T15:55:49.487670Z",
+  "ledger": {
+    "claims": {
+      "citations": "Citations associate from sources through supports_fields. Do not demand a second citation_ids array, a reverse citation closure or a citation of each relation type for every claim.",
+      "conditions": "Clear text or object; no mandatory nested schema and no ambiguous bare 'same as above'.",
+      "entity_ids": "Array of existing entity IDs; may be empty if publication_ids is nonempty.",
+      "entry_fields": [
+        "claim_id",
+        "text",
+        "status",
+        "topics",
+        "entity_ids",
+        "publication_ids",
+        "evidence_level",
+        "conditions",
+        "implication"
+      ],
+      "evidence_level_ref": "evidence_level",
+      "exact_count": 12,
+      "id_field": "claim_id",
+      "id_uniqueness": "Within claims",
+      "publication_ids": "Array of existing publication IDs; may be empty if entity_ids is nonempty.",
+      "status_values": [
+        "documented",
+        "unknown",
+        "inference"
+      ],
+      "topics": "Nonempty subset of the five dimension keys; union across the twelve covers all five.",
+      "type": "array",
+      "unknown_and_inference": "Same explanatory treatment as capability cells; do not require fabricated supporting/refuting quotations for unknowns."
+    },
+    "entities": {
+      "as_of_ref": "date_record",
+      "capabilities": {
+        "cell_type": "object",
+        "conditions": "Must be understandable, but may be expressed in text rather than a separate cell key.",
+        "evidence_level_ref": "evidence_level",
+        "inference": "Explain reasoning; do not require an extra inference_basis field when clear in existing text.",
+        "keys": [
+          "planning",
+          "memory",
+          "tool_use",
+          "recovery",
+          "delivery_verification"
+        ],
+        "required_cell_fields": [
+          "status",
+          "text",
+          "evidence_level"
+        ],
+        "status_values": [
+          "documented",
+          "unknown",
+          "inference"
+        ],
+        "unknown": "Give reason and checked scope; scope/conditions may be in existing text. Do not require a duplicated checked_scope or conditions field."
+      },
+      "entry_fields": [
+        "entity_id",
+        "name",
+        "kind",
+        "selection_reason",
+        "version",
+        "as_of",
+        "capabilities"
+      ],
+      "id_field": "entity_id",
+      "id_uniqueness": "Within entities",
+      "kind_values": [
+        "product",
+        "framework"
+      ],
+      "qualified_count": "Identity, relevance, applicable version/time support and deduplication require independent assessment; raw array length alone is not qualified coverage.",
+      "structural_minimum": 5,
+      "type": "array",
+      "version": "The actually read version or clearly explained unknown; no mandatory release-tag type."
+    },
+    "extra_fields_allowed": true,
+    "publications": {
+      "authors": "Clear actual personal or organizational attribution. Public text does not impose an authors-array-only representation.",
+      "deduplication": "Preprint/journal/revisions and a benchmark's introducing paper/site are not separate contributions for quota purposes; related framework and research-work records are permitted across the two separately assessed groups.",
+      "entry_fields": [
+        "publication_id",
+        "title",
+        "authors",
+        "identifiers",
+        "work_identity",
+        "selected_report",
+        "report_date",
+        "version_date",
+        "research_question",
+        "task_and_budget",
+        "findings_and_limits",
+        "selection_reason"
+      ],
+      "findings_and_limits": "Clear text or object; qualitative findings are acceptable. Numeric claims follow numeric_record_semantics wherever located in the existing objects.",
+      "full_body_requirement": "At least five distinct qualified works have complete relevant paper text or complete official benchmark main protocol/document available, with relevant content actually read. Do not demand reading every page or an unseen manuscript when the official benchmark document is the selected report.",
+      "id_field": "publication_id",
+      "id_uniqueness": "Within publications",
+      "identifiers": "Actual identifiers in an intelligible representation, or null with explanation. No mandatory DOI or arXiv ID where none exists.",
+      "report_date_ref": "date_record",
+      "selected_report": "Clear text or object identifying the full paper or complete official benchmark main protocol/document and the actual carrier/version read; no new required kind/source_ids mirror.",
+      "structural_minimum": 5,
+      "task_and_budget": "Clear text or object describing relevant task, metric/direction, sample/denominator, budget and comparison conditions; unknowns remain explicit.",
+      "type": "array",
+      "version_date": "Actual read-version date/timestamp, or null plus reason; clear string or date object accepted.",
+      "work_identity": "Clear research-work identity; base work and read version/carrier remain distinguishable."
+    },
+    "required_root_fields": [
+      "schema_version",
+      "searches",
+      "entities",
+      "publications",
+      "claims",
+      "sources"
+    ],
+    "root_type": "object",
+    "schema_version_value": "h031-evidence-ledger/v1",
+    "searches": {
+      "entry_fields": [
+        "query_or_navigation",
+        "performed_at",
+        "outcome"
+      ],
+      "execution_truth": "Bound actual trajectory, assessed independently; an array or string alone does not prove a search/read happened.",
+      "fixed_query_count": null,
+      "performed_at": "Observed timezone-aware ISO8601, or null with unknown_reason. No invented timestamp from adjacent receipts.",
+      "type": "array"
+    },
+    "sources": {
+      "access_status_values": [
+        "read_full",
+        "read_excerpt",
+        "search_only",
+        "unavailable"
+      ],
+      "accessed_at": "Observed timezone-aware ISO8601, or null with unknown_reason. Reused old scoring-side snapshot retains original GET time and explicit reuse.",
+      "citations": {
+        "citation_id_uniqueness": "Across every citation in the whole ledger",
+        "entry_fields": [
+          "citation_id",
+          "quote",
+          "locator",
+          "supports_fields",
+          "relation"
+        ],
+        "locator": "Structured actual position; carrier-specific semantics are in locators, but no tool-specific key names are mandatory.",
+        "pointer_truth_boundary": "Resolvable target and matching quotation do not establish semantic support; Judge checks relevance, conditions and relation.",
+        "quote": "A short quotation from one actual source. No private fixed word limit and no joined multi-source quotation.",
+        "relation_values": [
+          "supports",
+          "refutes",
+          "qualifies"
+        ],
+        "supports_fields": "Array of RFC6901 JSON Pointer strings into the submitted ledger. Block targets, leaf targets, one citation to multiple targets and reordered arrays are allowed. ~0 and ~1 retain RFC6901 meaning.",
+        "type": "array"
+      },
+      "count_semantics": "The stated cap applies to ledger source records, not an invented cap on search result count, redirects or retry attempts. Repeated access facts must not be hidden or rewritten as fresh access. More URLs do not establish independent works.",
+      "entry_fields": [
+        "source_id",
+        "url",
+        "title",
+        "access_status",
+        "accessed_at",
+        "citations"
+      ],
+      "id_field": "source_id",
+      "id_uniqueness": "Within sources",
+      "maximum_records": 60,
+      "read_excerpt": "Only observed excerpt, abstract or partial content; not qualifying full research text.",
+      "read_full": "Complete original available and relevant content read. HTTP200, challenge shells and partial downloads do not suffice.",
+      "scoring_acquisition": "All cited or read_full/read_excerpt sources require independently acquired original/receipt/projection evidence on scoring side; the candidate is not required to build that private package.",
+      "type": "array",
+      "url": "Actual public HTTP/HTTPS source URL; meaningful source identity/version separate from mere hostname."
+    }
+  },
+  "locators": {
+    "content_api": "Official content API encoded response may bind the raw content field and declared encoding to a deterministically decoded original file path/version/line location. Decoding is not a new GET, a separate independent source or executed code.",
+    "equivalent_quote_handling": "Formatting-only whitespace, line-wrap hyphenation and decoded entity differences may be normalized with the original and derivation retained. Do not drop semantic words/numbers or change the source to force a match.",
+    "html": "Actual section/paragraph/anchor or ordinary node/XPath position; equivalent unambiguous structured positions accepted.",
+    "json_or_xml": "Actual field/node/record position plus date/metadata field role where relevant.",
+    "no_execution": "Source-provided code, scripts and instructions are not executed to obtain research facts.",
+    "pdf": "Physical page numbered from 1 plus relevant paragraph/text-table location; do not substitute only printed page label, title or URL.",
+    "text_or_code": "Original file path, fixed actual version and 1-based original line position; not a run of source code."
+  },
+  "normalization_and_non_obligations": {
+    "date_role": "Role-preserving year/month/day and timestamp representations are not forced into an exact day or first-online role.",
+    "json_keys": "Publicly named structural keys and schema_version values are the canonical contract. Do not silently impose an unpublished alias-only schema or a fixed nested form on text/object fields.",
+    "native_source_and_delivery_boundary": "PDF is a source-carrier locator case, not an added fifth deliverable. XLSX and DOCX native editability are delivery format requirements, not image-understanding questions.",
+    "not_required": [
+      "first query, object roster, URL seeds or domain whitelist",
+      "fixed search engine/tool/runtime/library",
+      "candidate-created source snapshots, HTTP receipts or SHA pack",
+      "source_ids lists on every entity/publication",
+      "claim.citation_ids",
+      "duplicate global ID or CID arrays",
+      "nonempty invented dedup/exclusion/unresolved data",
+      "new runtime experiments, deployment or business side effects",
+      "native PDF output artifact"
+    ],
+    "pointer_namespace": "IDs are unique in their declared arrays, except citation_id is ledger-global. Do not add global uniqueness across entity/publication/source namespaces or reverse graph mirrors.",
+    "unspecified_scalar_forms": "For authors, identifiers, version, selected_report, work_identity and explanatory values, retain a clear public-equivalent representation; do not privately require arrays/objects where the public text names no type.",
+    "xlsx_layout": "Chinese/English semantic headers and transposition are public equivalences; normalization difficulty is a scorer-side implementation issue."
+  },
+  "numeric_record_semantics": {
+    "accepted_values": [
+      "number",
+      "clearly expressed range",
+      "inequality string",
+      "value plus uncertainty string"
+    ],
+    "container": "Within appropriate existing ledger objects; no mandatory new numeric_results collection or fixed JSON Pointer prefix.",
+    "non_measurements": "Do not mechanically turn identifiers, dates, citation page numbers, ranks or schema counts into experimental metrics requiring a direction field.",
+    "qualitative_results": "Accepted; no numeric quota.",
+    "required_meanings_when_used": [
+      "metric",
+      "value",
+      "unit",
+      "direction",
+      "condition"
+    ],
+    "unknowns": "Unreported task, sample, budget, model, hardware, permission or denominator details stay explicitly unknown; do not invent them."
+  },
+  "readiness": {
+    "difficulty": "L4 remains design_estimate_unvalidated",
+    "formal_task_or_exec_frozen": false,
+    "grader_implementation_verified": false,
+    "harness_or_judge_run": false,
+    "office_preflight_performed": false,
+    "public_contract_blockers_remaining": 0,
+    "source_acquisition_verified_in_this_review": false,
+    "unknown_minimum_clarification": "Resolved in research_brief.md paragraph 5 / scope.json minimum_count_policy; bind current SHA before adoption."
+  },
+  "review_context": {
+    "answer_blind": false,
+    "human_expert": false,
+    "public_files_modified_by_reviewer": false,
+    "role": "informed public-contract reviewer A; previously authored an independent source review",
+    "semantic_judge": false,
+    "source_truth_or_future_gt_read": false
+  },
+  "schema_version": "h031-artifact-contract-proposal/v1",
+  "scope": {
+    "answer_roster": null,
+    "as_of_inclusive": "2026-09-30",
+    "cutoff_end_exclusive": "2026-10-01T00:00:00+08:00",
+    "dimensions": [
+      "planning",
+      "memory",
+      "tool_use",
+      "recovery",
+      "delivery_verification"
+    ],
+    "first_query": null,
+    "key_claim_count": 12,
+    "maximum_source_records": 60,
+    "minimum_count_policy": "Distinct relevant identity and supported pre-cutoff report/static-version basis are required for each minimum. Identity/time unresolved entries may remain without filling quotas. An unknown capability cell does not disqualify an otherwise identified, time-supported entity. Five-dimensional research coverage does not mean every framework possesses all five capabilities.",
+    "minimum_distinct_publication_or_benchmark_works": 5,
+    "minimum_entities": 5,
+    "required_candidate_runtime_or_library": null,
+    "required_search_language": null,
+    "required_search_tool": null,
+    "timezone": "Asia/Shanghai"
+  },
+  "scoring_interface": {
+    "automated_keys": [
+      {
+        "key": "record_contract",
+        "scope": "Public forms, IDs, field presence, graph resolution and equivalent native delivery structure; strings do not certify fact truth.",
+        "weight": 0.2
+      },
+      {
+        "key": "time_and_scope",
+        "scope": "Date syntax/calendar math and count/role consistency against independently supplied records; source role, identity and historical applicability are independently assessed.",
+        "weight": 0.25
+      },
+      {
+        "key": "citation_resolution",
+        "scope": "Source identity, raw/decoded lineage, exact observed quotation and locator/pointer resolution; not semantic support.",
+        "weight": 0.4
+      },
+      {
+        "key": "protected_delivery",
+        "scope": "Protected input bytes, required artifacts and native usable/recalculable delivery.",
+        "weight": 0.15
+      }
+    ],
+    "executed": false,
+    "fairness_boundary": "Underdelivery or unknown must not shrink baseline opportunities; extra quotations must not dilute fabricated ones. This proposal does not invent per-cell penalties, source-answer lists or a new point formula.",
+    "future_implementer": "A separate implementer who has not read this task's source facts will build rules after the public text and scoring interface freeze.",
+    "implemented": false,
+    "infrastructure_failure": "Missing necessary source proof, required rule baseline, Office engine or Judge is evaluation_error/pending evidence as applicable, not an invented candidate zero or reweighted total. Candidate errors after fair reachable conditions remain distinct.",
+    "judge_keys": [
+      {
+        "key": "factual_support",
+        "scope": "Semantic support/refutation/qualification, numbers/conditions, original metadata role and applicable version.",
+        "weight": 0.5
+      },
+      {
+        "key": "coverage_and_independence",
+        "scope": "Representative relevance, qualified identity/time/full-body coverage, actual search/reading and same-work dedup; pool is non-exhaustive.",
+        "weight": 0.3
+      },
+      {
+        "key": "bounded_conclusions",
+        "scope": "Comparability, knowledge limits, no static-to-runtime guarantee jump, justified priorities and counterexamples.",
+        "weight": 0.2
+      }
+    ],
+    "minimum_logical_slots": {
+      "capability_cells_at_floor": 25,
+      "dimensions": 5,
+      "distinct_qualifying_research_works": 5,
+      "entity_identities": 5,
+      "key_claims": 12,
+      "priorities_maximum": 3,
+      "priorities_minimum": 1
+    },
+    "no_final_score_without_judge": "No semantic/final score is reported from this review; a future missing Judge cannot be represented as completed scoring.",
+    "outer_weights": {
+      "automated": 0.4,
+      "llm_judge": 0.6
+    },
+    "proposal_only": true,
+    "source_preparation": "Separate scoring-side original/receipt/projection lock is a prerequisite for checking cited evidence. A complete bound reuse may retain old GET time and reuse lineage. Rule implementation stays read-only/offline and does not call an LLM or fetch network."
+  },
+  "status": "frozen",
+  "task_id": "general_hard_research_verification_task_005_open_long_horizon_agent_research"
+}

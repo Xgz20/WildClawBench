@@ -1,0 +1,25 @@
+{
+  "copy_policy": "Exactly these three source files are copied byte-for-byte from authoring/protocol-proposal into exec; results is writable.",
+  "hash_algorithm": "sha256",
+  "other_protected_candidate_inputs_required": false,
+  "protected_files": [
+    {
+      "path": "research_brief.md",
+      "sha256": "effafc164df10fd862defbd70a1c6c0297fcf1ad95d10b54af6caebb09cfa6ed",
+      "size": 4846
+    },
+    {
+      "path": "business_constraints.md",
+      "sha256": "20e00973a38bc64450d31c15b41bc1dc90473a92561280d298bd9b7d0cd5f6bd",
+      "size": 8570
+    },
+    {
+      "path": "scope.json",
+      "sha256": "80adeca7592820799969b6879a1e6d959b1214fcdd548f25f0a1e0bcbf001316",
+      "size": 4227
+    }
+  ],
+  "relative_to": "candidate exec root mapped to /tmp_workspace",
+  "schema_version": "h031.protected-inputs/v1",
+  "status": "frozen"
+}

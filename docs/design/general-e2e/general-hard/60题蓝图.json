@@ -13573,7 +13573,7 @@
         "exec": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_005_open_long_horizon_agent_research/exec",
         "gt": "datasets/general-hard/workspace/research_verification/general_hard_research_verification_task_005_open_long_horizon_agent_research/gt"
       },
-      "prompt_draft": "请完成以下工作：从主题自主建立检索与筛选方案，发现至少5个代表产品/框架和5份论文或benchmark，构建规划、记忆、工具、恢复和交付验证矩阵；追溯12项关键结论，区分官方宣称、静态实现、实验结果与运行保证，给出受约束的建设优先级与反例，不将不可比榜单直接排名。\n\n输入材料：\n- /tmp_workspace/research_brief.md：面向需跨日恢复的文档/数据/软件工作流，研究规划、记忆、工具、恢复与交付验证\n- /tmp_workspace/scope.json：截止2026-09-30，至少5个代表产品/框架和5份论文/benchmark，不给名单或URL\n- /tmp_workspace/business_constraints.md：本地文件、权限边界、恢复成本和可验证性要求\n\n交付：\n- /tmp_workspace/results/capability_matrix.xlsx：代表选择理由、能力/条件/证据等级\n- /tmp_workspace/results/evidence_ledger.json：12项关键结论、实际来源、版本、位置和支持/反驳关系\n- /tmp_workspace/results/research_report.docx：比较、风险、实施优先级与可验证假设\n- /tmp_workspace/results/coverage.json：检索范围、去重关系和未决事项\n\n约束：\n- 仅读取本题exec映射到/tmp_workspace的材料；GT和评分说明不提供给候选。\n- 不访问真实账号、不发送消息、不调用真实付费接口；输入和保护文件保持不变。\n- 结论区分事实、推断和未知；不得虚构缺失信息。\n- 所有新交付写入/tmp_workspace/results；原输入只读，不删除或覆盖。\n- 自主搜索题不提供答案URL或候选名单，按给定时点与范围自行发现；可以使用不同的有效搜索策略。\n- 引用须指向具体证据；域名正确或URL存在不等于正文支持结论。摘要只支持其中明确出现的事实，不能冒充已读全文。\n- 先保留搜索候选，再记录实际读取来源和最终引用；不可用来源、单源事实和冲突要明确标注，不补造事实。\n- 核心判据须有可提取文本/元数据证据，不要求额外视觉理解；本分类图像理解仅由H034考察。",
+      "prompt_draft": "请读取三份只读输入：/tmp_workspace/research_brief.md、/tmp_workspace/business_constraints.md、/tmp_workspace/scope.json，按其中完整公开记录契约完成研究。\n\n# 长程任务Agent能力与建设取舍\n\n请为一个已有本地文件Agent的团队研究：怎样支持需要跨日继续的文档、数据和软件工作流，同时保留权限边界和可核验的交付。研究截至2026-09-30，按Asia/Shanghai解释日期。研究范围和公开记录结构见另外两份输入。不要实施系统、调用真实业务或复现实验。\n\n从主题自行建立检索与筛选方案，发现至少5个代表产品/框架和至少5个论文或benchmark研究工作，不提供对象、论文、域名、URL或首条query名单。选择应能解释本业务需要的规划、记忆、工具、恢复和交付验证五维。不要求某个搜索引擎、语言或工具名；可以组合搜索、站内导航、浏览和fetch。\n\n不同版本或部署方式不能充当多个同组实体；同一贡献的benchmark官网及介绍论文、同一论文预印本/期刊版及修订，不能重复凑研究工作数。一个框架可有相关论文，但两组的身份、选择理由和实际阅读范围仍分别核验。至少5个研究工作须有与所用主张相关的完整可读论文正文或完整官方benchmark协议/主文档。benchmark文档可支持其明确的接口和协议，不冒充已经读过未取得的论文实验。摘要只支持它实际包含的事实。\n\n最低数量指身份、主题及所用版本/报告时点已有依据的合格对象。尚不能确认身份或截止前依据的对象可以保留为unknown/pending并说明，但不用于凑各组最低5个。某个能力格为unknown本身不排除一个已有身份/时点依据的代表对象；不要为了凑满矩阵把未知写成已有能力。五维覆盖评价实际研究与证据，不要求每个框架都拥有五种能力。\n\n形成恰好12项关键结论，覆盖五维并追溯其依据、反驳或限定关系。不要把已有checkpoint、聊天历史、可调用工具、角色分工或文档宣称，直接写成可靠跨日恢复、外部副作用只发生一次或交付必然正确。版本文档/静态代码、官方宣称、作者实验、独立实验和你实际观察的运行须分清；本题不要求制造新的运行实验。研究对象的实际能力与研究中的证据强度也要分开。\n\n对数字保留任务、数据/划分、指标方向、样本/分母、预算、权限、硬件、模型与版本等影响解释的条件。无共同可比条件时比较适用范围和证据强弱，不把不同榜单最高分直接排成统一名次。不要求填满性能数字，不知道可以unknown；unknown要说明实际检查范围和原因，不能把未找到当不存在。\n\n## 交付\n\n仅写入`/tmp_workspace/results/`，每文件不超过5MiB：\n\n1. `capability_matrix.xlsx`：原生可见、可编辑、自包含的代表产品/框架能力矩阵。表达entity_id、名称、选择理由、所读版本、时点依据及五维能力/条件/证据层级，并与JSON关联；可另附论文或benchmark索引。允许合理中文字段、不同Sheet/行列布局、重排、分表/合表、转置和普通来源超链接；静态值接受，使用公式时须可实际重算，不用宏或外部数据连接。不要用截图或单格巨大JSON代替核心矩阵。\n2. `evidence_ledger.json`：按`business_constraints.md`记录实际检索、实体、研究工作、12项结论、来源和引文。实际访问或引用的来源最多60条，不截断实际引文，不用重复URL凑独立来源。\n3. `research_report.docx`：原生可编辑的比较报告，解释代表选择、五维能力/条件、12项结论、可比性、反例和未决项，提出受约束的建设优先级和可验证假设。实际做过的过程与未来验收建议分别写，不把计划当完成。\n4. `coverage.json`：实际研究范围、分支覆盖、真实去重/排除/未决，以及优先级的结构化记录；不冒称穷尽互联网或系统综述。允许实际无排除、无合并、无未决，不为展示流程编造记录。\n\n所有新交付写入results，不以聊天代交。三份输入保持原字节，不修改、删除或覆盖；不读取GT或未提供私有材料。不登录真实账号、不发送消息、不付费、不执行真实业务写入。无需下载大型实验数据、部署框架、训练模型或读图像像素。DOCX/XLSX的格式本身不构成视觉理解要求。\n\n来源应保留实际失败、单源、冲突和未知。HTTP200、空壳、验证码、摘要或部分下载不证明正文可读。评分侧会独立获取和锁定实际引用材料，候选自写快照不能自行成为独立真值；来源获取故障和候选错误分开。已验证旧快照若被评分流程明确复用，要保留原GET时间及复用事实，不写成此次新访问。参考池非穷尽，池外合格对象按同一证据标准核验。\n",
       "inputs": [
         {
           "path": "research_brief.md",
@@ -13626,9 +13626,9 @@
         "跨任务预算榜单硬排名"
       ],
       "ground_truth": {
-        "status": "EXTERNAL_SOURCE_FIRST_PRIVATE_CONTRACT_FROZEN_BASELINE_BLOCKED",
+        "status": "SOURCE_FIRST_MODEL_AUTHORED_ROOT_REVIEWED_AND_FORMAL_DETACHED_AUTHOR_VALIDATED",
         "synthetic_seed": 2026102631,
-        "construction": "独立审核代表性、时点及证据类型，构造可检验的事实和典型过度推断反例；参考池不封闭，新增合法对象/论文按同一标准独立核验。检验恢复/成功率等关键主张是否有真实实验条件，不把代码或营销文档当运行证明；接受有证据的不同建设路线，不预设唯一排序。",
+        "construction": "原源先行科学材料及独立发现/给定URL复核/调和分别保留；原18GT、科学8/其余14及四参考不变，仅新修订消费者/兼容层四文件。真实本地代理采缺12URL，完整29源以27复用+2真实GET封存，旧GET时间/原响应保持。实际Worker参考四键1，等价native/unknown/budget60亦1；预算61环路、越截止和缺Word/改输入形成预期局部分；Office可信锁漂移前置typed。额外PDF假引文控制因host缺pypdf采集失败无A且未重试，不能列全PASS。独立实际PDF页/字面与未知日期类型边界、正式单题ZIP再次核验见成题记录。",
         "private_files": [
           "artifact_contract.json",
           "business_oracle.json",
@@ -13649,11 +13649,11 @@
           "source_projection.py",
           "source_review_reconciliation.json"
         ],
-        "independent_verification": "作者先构建输入和oracle，再由独立审阅者/独立计算路径复核；不得用候选实现自身输出生成GT。",
-        "equivalence": "允许满足契约的不同实现、排期、措辞与等价文件结构；数值容差/集合语义在冻结前按题明示。",
+        "independent_verification": "源先行独立计算路径及模型作者/复核证据见成题记录；不是人工专家或真实Harness/Judge。",
+        "equivalence": "支持普通JSONPointer别名、RFC6901块/叶/重排/多目标、原生表头布局/转置、明确物理页加唯一真实PDF引文及描述性section；falsequote/wrongpage无全文件回退，重复需消歧/typed。version_date明确null+解释及旧statusunknown/basis不编造日期或CID，固定分母/最低已支持日期不放松；known日期仍绑定实际原件。科学支持/真实搜索阅读/独立性/可比性/建设建议由60%Judge。",
         "answer_policy": "参考库不是唯一合法答案；固定事实用独立oracle，池外合法来源/对象由Judge独立核验，不能因不在名单失分。",
         "source_verification": "评分规则不联网、不调用LLM。独立证据收集阶段在评分侧读取真实页面/文件并锁定快照供规则/Judge使用；不修改原始冻结GT，不信任候选自行编写的源快照。缺该阶段材料时为评测输入不全，不据此捏造通过或零分。",
-        "authoring_evidence": "evidence/h031-source-blocked-20261029.json"
+        "authoring_evidence": "evidence/h031-reviewed-authoring-20261029.json"
       },
       "scoring": {
         "grading_type": "hybrid",
@@ -13668,7 +13668,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "交付和证据账本可解析，必要字段及工作/事件标识齐全；不以字数或表格漂亮代替事实。",
+            "criterion": "公开JSON形态、ID图、五维能力矩阵和原生报告的结构/跨文件关联；支持等价中文表头、重排、分表/合表、转置及静态值，不按固定模板评分。",
             "oracle_reference": "gt/artifact_contract.json"
           },
           {
@@ -13677,7 +13677,7 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "依据独立取得的来源元数据核对时间窗、版本/事件/论文范围；不能仅信任候选填写的日期。",
+            "criterion": "实际原件身份/日期/版本字面绑定、日期精度及时区截止、最低5实体/5研究工作声明和12结论/五维覆盖、1至3优先级预算DAG；语义资格及真实阅读交Judge。内部.40/.25/.20/.15。",
             "oracle_reference": "gt/reference_source_manifest.json + scoring-side independently acquired sources"
           },
           {
@@ -13686,7 +13686,7 @@
             "capabilities": [
               "retrieval_verification"
             ],
-            "criterion": "引用ID、文件/URL、实际片段和定位可对应到独立冻结的源证据；片段对主张的语义支持由Judge另核，不只检查域名。",
+            "criterion": "RFC6901块/叶/多目标指针、原件GET或真实复用谱系、实际quote/locator及状态/数字形态，固定最低能力/结论/元数据机会避免引用padding稀释。机械通过不等于语义支持。内部.20/.20/.40/.20。",
             "oracle_reference": "gt/evidence_requirements.json + scoring-side independently acquired sources"
           },
           {
@@ -13695,7 +13695,7 @@
             "capabilities": [
               "verification_delivery"
             ],
-            "criterion": "保护输入未改、交付可打开，数值或结构控制项符合契约；缺核心文件不能靠聊天自述补交。",
+            "criterion": "三输入原字节保护、四交付齐全且原生可解析/可编辑，公式须真实可信重算；仅对应机会失分。",
             "oracle_reference": "gt/protected_sha256.json + gt/artifact_contract.json"
           }
         ],
@@ -13840,18 +13840,14 @@
         }
       ],
       "readiness": {
-        "task_md_materialized": false,
-        "exec_materialized": false,
-        "gt_materialized": false,
-        "runtime_verified": false,
-        "external_inputs_authored": true,
-        "external_GT_files": 18,
-        "external_reference_artifacts": 4,
-        "independent_sources_complete": false,
-        "blocked_by": "GitHub HTTPS connection timeout during independent production source acquisition",
-        "A": null,
-        "scoring_baseline_verified": false,
-        "evidence": "evidence/h031-source-blocked-20261029.json"
+        "task_md_materialized": true,
+        "exec_materialized": true,
+        "gt_materialized": true,
+        "runtime_verified": true,
+        "runtime_verification_scope": "实际score0.28/core0.15.3独立ZIP，原参考四键自动A1，29源fresh2/reuse27、5次实际语义目录文件查询、1316非runtime文件正常/去runtime搬移同字节。新作者副本使用已审FS capsule-root guard围绕原CLI关闭Finder写入窗口，未改collector/verifier/源码/回执/锁；非裸CLI全环境保证，无真实Harness/Judge/S/混合分。",
+        "independent_candidate_semantic_score": null,
+        "four_harness_calibration": false,
+        "evidence": "evidence/h031-reviewed-authoring-20261029.json"
       },
       "retrieval_profile": {
         "primary_mode": "open_web_search",
