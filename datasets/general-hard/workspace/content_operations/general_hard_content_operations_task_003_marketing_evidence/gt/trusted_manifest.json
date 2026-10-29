@@ -1,0 +1,27 @@
+{
+  "schema": "h059-trusted-manifest/v1",
+  "files": {
+    "artifact_contract.json": "bb6bff1bd46567696b06a7f49ecbb124842bb31fe93775c4211d6fc6b8562108",
+    "business_oracle.json": "537ebf4a207a3e84b37579be8f767601ff2c7bab1c9603f100e5b2b4387d4ac5",
+    "counterexamples.json": "438f2fad5540504eb22c94e4e8bfe12a60e99c65e8068c0d3a8ba6920c4d427d",
+    "evidence_requirements.json": "68a00e7577caeecf0ac586a80c4fb1f1a83fb52698ac87a19619d481317f96af",
+    "expected.json": "6a3667d7aefc60cdf5ce32fc72300bc628252aade98d91f894f3f34daf65b89c",
+    "grader.py": "83e9fa35bd004955aa5093f7e46e36f8944b41f80488e99f793fa24bd7bc6158",
+    "office-render-lock.json": "6b6636d1c9315d3565779813fddb1f611a434c0eed650eff5ff1c016d5630c4b",
+    "office-runtime-lock.json": "6b5b216b9f30c081018ddfb758b87a24bf4b1c839e502d1e817e82851327e0be",
+    "office_runtime.py": "fea47f1879d26c95fa7929a13c25b8293b3ca4b8ca38cef05c9185140385e486",
+    "protected_inputs/acceptance.md": "fdcd9a91adcb9ee4e74eed4515165814d35aaca9f12084f699369e9e87a5d97e",
+    "protected_inputs/brand_constraints.md": "cf759faa4dc1c6fcbe1465e8f2173e5c729fcb5f89238945381e07b63364ca30",
+    "protected_inputs/metrics.csv": "e973c469178a0b93848721eb221720ca80a9cd4fd50213901ff522689fad75cf",
+    "protected_inputs/snapshots/S01.md": "d644c351b56cddc6172b727b7957579c377b2cd047eca70f18b069c232dcd543",
+    "protected_inputs/snapshots/S02.md": "f28a12f423df842de7f5d7e7ab661ace6e3f23e424d3c3166638269fe2876f1c",
+    "protected_inputs/snapshots/S03.md": "3e387178ab64c58282c77e543d09b0e66b0e9dc7601f1b5e23a828a0e956a9bf",
+    "protected_inputs/snapshots/S04.md": "026156c1356e69f62f7aa7b2432001fc58900db75b8648429b88d0e6680ee977",
+    "protected_inputs/snapshots/S05.md": "bcf04119bf2126d3be8674bdcb98c85ad449b717f6a21afc9b1c7e4ffea69546",
+    "protected_inputs/snapshots/S06.md": "3916e65749a843fe00d87d1a708337e4dd61ab319ebe9b990d544ce3790b93b1",
+    "protected_inputs/snapshots/S07.md": "0f7bda8a6dc1a86027ca565aec2f67e2767c6cb126ee4bb6786167caa85de494",
+    "protected_inputs/snapshots/S08.md": "d6f67969923ae52424423e4123ca89df559dbe13343603c74a3bde138705608f",
+    "protected_sha256.json": "8ab5a8f0bf21576c512bbc4d26c109562815318e6ca175d69f2d4e33e3dcc6ea",
+    "runtime_contract.json": "29a377053699aaeb410c4fbf83007bb88cbf73b130e502ecf07dda542e680eb1"
+  }
+}

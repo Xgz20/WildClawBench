@@ -1,0 +1,475 @@
+{
+  "schema": "h059-source-first-oracle/v1",
+  "sources": {
+    "S01": {
+      "path": "snapshots/S01.md",
+      "sha256": "d644c351b56cddc6172b727b7957579c377b2cd047eca70f18b069c232dcd543",
+      "lines": [
+        "# 青桥云会议纪要助手启动封闭试点",
+        "发布方：青桥云产品团队",
+        "材料类型：厂商官方公告",
+        "发布时间：2026-10-18 09:00 Asia/Shanghai",
+        "事件时间：2026-10-18",
+        "来源说明：本公告为本批最早原始发布。",
+        "",
+        "青桥云宣布“会议纪要助手”进入封闭试点。仅邀请名单内的20家企业可申请，每家最多5个席位；邀请和申请不等于已开通或实际使用。材料没有提供已激活企业数。试点功能只覆盖将用户上传的中文会议转写整理为待人工确认的行动项，不自动发送、不写入真实日历。暂未给出公开开放日期。",
+        "公告记录内部演示的12份材料中，有9份被两名产品同事认为可用于继续编辑。没有说明材料是否随机抽取，没有原始逐份结果或对照组。9/12是内部演示可编辑判断，不能称客观准确率、节省工时比例或商业转化率。"
+      ],
+      "parent_id": null,
+      "origin_id": "S01",
+      "published_date": "2026-10-18",
+      "event_date": "2026-10-18",
+      "source_kind": "official_claim",
+      "source_kind_zh": "厂商官方公告",
+      "in_week": true,
+      "independent_roots": 1
+    },
+    "S02": {
+      "path": "snapshots/S02.md",
+      "sha256": "f28a12f423df842de7f5d7e7ab661ace6e3f23e424d3c3166638269fe2876f1c",
+      "lines": [
+        "# 青桥云开放会议助手试用申请",
+        "发布方：商用软件观察周刊",
+        "材料类型：媒体转述",
+        "发布时间：2026-10-19 10:30 Asia/Shanghai",
+        "事件时间：2026-10-18",
+        "来源说明：正文转载自 S01，未另行访谈或运行产品。",
+        "",
+        "青桥云昨日启动会议纪要助手封闭试点，20家邀请企业可申请，每家最多5席。媒体把这一动作称作“小团队协作产品争夺入口的新信号”；后一句为编辑观点，没有新增市场份额证据。公开开放日期未定，行动项需人工确认。本稿提到的9份可继续编辑结果沿用原公告12份演示材料，不是本刊的独立测试。"
+      ],
+      "parent_id": "S01",
+      "origin_id": "S01",
+      "published_date": "2026-10-19",
+      "event_date": "2026-10-18",
+      "source_kind": "media_repost",
+      "source_kind_zh": "媒体转述",
+      "in_week": true,
+      "independent_roots": 1
+    },
+    "S03": {
+      "path": "snapshots/S03.md",
+      "sha256": "3e387178ab64c58282c77e543d09b0e66b0e9dc7601f1b5e23a828a0e956a9bf",
+      "lines": [
+        "# 企业会议助手迎来新进展",
+        "发布方：办公资讯聚合站",
+        "材料类型：聚合转载",
+        "发布时间：2026-10-20 08:15 Asia/Shanghai",
+        "事件时间：2026-10-18",
+        "来源说明：转载自 S02，保留其对 S01 公告的引用；没有新观察。",
+        "",
+        "聚合站再次介绍青桥云20家企业、每家最多5席的会议助手封闭试点，转引“争夺协作入口”的判断，并沿用12份内部演示中9份可编辑的说法。本文发布时间为10月20日，不意味着又一次产品发布、全面上线或额外独立试验。"
+      ],
+      "parent_id": "S02",
+      "origin_id": "S01",
+      "published_date": "2026-10-20",
+      "event_date": "2026-10-18",
+      "source_kind": "aggregate_repost",
+      "source_kind_zh": "聚合转载",
+      "in_week": true,
+      "independent_roots": 1
+    },
+    "S04": {
+      "path": "snapshots/S04.md",
+      "sha256": "026156c1356e69f62f7aa7b2432001fc58900db75b8648429b88d0e6680ee977",
+      "lines": [
+        "# 砚石文档上线团队模板库",
+        "发布方：砚石文档产品团队",
+        "材料类型：厂商官方公告",
+        "发布时间：2026-07-15 14:00 Asia/Shanghai",
+        "事件时间：2026-07-15",
+        "来源说明：本公告为模板库发布的原始材料。",
+        "",
+        "砚石文档在7月15日向付费团队上线30个行业文档模板。模板库属于文档起草功能，不能自动审批或证明合规。公告只宣布可用，不提供使用企业数、用户满意度或收入。以下时间均指2026年7月15日，没有10月更新记录。"
+      ],
+      "parent_id": null,
+      "origin_id": "S04",
+      "published_date": "2026-07-15",
+      "event_date": "2026-07-15",
+      "source_kind": "official_claim",
+      "source_kind_zh": "厂商官方公告",
+      "in_week": false,
+      "independent_roots": 1
+    },
+    "S05": {
+      "path": "snapshots/S05.md",
+      "sha256": "bcf04119bf2126d3be8674bdcb98c85ad449b717f6a21afc9b1c7e4ffea69546",
+      "lines": [
+        "# 回看 砚石文档的团队模板库",
+        "发布方：企业工具精选",
+        "材料类型：旧闻转载",
+        "发布时间：2026-10-21 16:00 Asia/Shanghai",
+        "事件时间：2026-07-15",
+        "来源说明：回顾转载自 S04，正文未记载新版本或新动作。",
+        "",
+        "这篇回顾再次介绍砚石文档7月15日面向付费团队开放30个模板的消息。站内推荐卡显示10月21日，这是转载上架时间。没有新增模板、扩大开放范围或新收费信息，不能记为本周新品发布。"
+      ],
+      "parent_id": "S04",
+      "origin_id": "S04",
+      "published_date": "2026-10-21",
+      "event_date": "2026-07-15",
+      "source_kind": "old_repost",
+      "source_kind_zh": "旧闻转载",
+      "in_week": false,
+      "independent_roots": 1
+    },
+    "S06": {
+      "path": "snapshots/S06.md",
+      "sha256": "3916e65749a843fe00d87d1a708337e4dd61ab319ebe9b990d544ce3790b93b1",
+      "lines": [
+        "# 一位运营用户的会议助手想法",
+        "发布方：虚构社区用户 林间笔记",
+        "材料类型：个人观点",
+        "发布时间：2026-10-19 19:30 Asia/Shanghai",
+        "事件时间：2026-10-19",
+        "来源说明：原始个人帖子；未试用所提产品，无新增产品公告。",
+        "",
+        "我看到会议助手新闻，觉得运营同事可能愿意把它当草稿起点，也许下个月大家都会用。但这只是我的感觉，我没有试用，也没有调查。若给我试用，我更想知道谁复核行动项、怎样撤回误派任务，而不是只看一次演示。我没有披露任职团队规模、采购意向或付费记录。"
+      ],
+      "parent_id": null,
+      "origin_id": "S06",
+      "published_date": "2026-10-19",
+      "event_date": "2026-10-19",
+      "source_kind": "user_opinion",
+      "source_kind_zh": "个人观点",
+      "in_week": true,
+      "independent_roots": 1
+    },
+    "S07": {
+      "path": "snapshots/S07.md",
+      "sha256": "0f7bda8a6dc1a86027ca565aec2f67e2767c6cb126ee4bb6786167caa85de494",
+      "lines": [
+        "# 社区热议 运营团队是否需要会议助手",
+        "发布方：效率工具媒体号",
+        "材料类型：观点转述",
+        "发布时间：2026-10-22 11:00 Asia/Shanghai",
+        "事件时间：2026-10-19",
+        "来源说明：摘编自 S06，未独立调查或新增用户样本。",
+        "",
+        "该号转引林间笔记对会议助手草稿与人工复核的想法，并以“运营团队可能普遍接受”为编者判断。除S06个人帖子外没有其他样本。媒体转述和个人意见不能分别计为两项独立需求证据，不能从这两篇材料推断采用率或市场规模。"
+      ],
+      "parent_id": "S06",
+      "origin_id": "S06",
+      "published_date": "2026-10-22",
+      "event_date": "2026-10-19",
+      "source_kind": "opinion_repost",
+      "source_kind_zh": "观点转述",
+      "in_week": true,
+      "independent_roots": 1
+    },
+    "S08": {
+      "path": "snapshots/S08.md",
+      "sha256": "d6f67969923ae52424423e4123ca89df559dbe13343603c74a3bde138705608f",
+      "lines": [
+        "# 澄墨协作发布审批记录导出更新",
+        "发布方：澄墨协作产品团队",
+        "材料类型：厂商官方公告",
+        "发布时间：2026-10-20 15:00 Asia/Shanghai",
+        "事件时间：2026-10-20",
+        "来源说明：本公告为本批原始更新说明。",
+        "",
+        "澄墨协作2026-10-20向专业版租户提供审批记录CSV导出，管理员可以导出本租户的记录；普通成员不开放。导出不等于取得外部合规认证，公告没有跨租户访问或自动删除能力。10月20日至31日可由管理员提交试用申请，公开材料没有标价或承诺折扣，也没有公布转化率、性能对照或采用人数。"
+      ],
+      "parent_id": null,
+      "origin_id": "S08",
+      "published_date": "2026-10-20",
+      "event_date": "2026-10-20",
+      "source_kind": "official_claim",
+      "source_kind_zh": "厂商官方公告",
+      "in_week": true,
+      "independent_roots": 1
+    }
+  },
+  "groups": [
+    {
+      "root": "S01",
+      "members": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "event_date": "2026-10-18",
+      "in_week": true,
+      "kind": "official_claim",
+      "independent_root_count": 1,
+      "notes": "closed pilot20invited/5seats; actual activation and public launch unknown; 9/12 subjective editing internal12 no causal/accuracy guarantee"
+    },
+    {
+      "root": "S04",
+      "members": [
+        "S04",
+        "S05"
+      ],
+      "event_date": "2026-07-15",
+      "in_week": false,
+      "kind": "official_claim",
+      "independent_root_count": 1,
+      "notes": "old30templates, repeated10-21 not new"
+    },
+    {
+      "root": "S06",
+      "members": [
+        "S06",
+        "S07"
+      ],
+      "event_date": "2026-10-19",
+      "in_week": true,
+      "kind": "user_opinion",
+      "independent_root_count": 1,
+      "notes": "no actual trial/survey; S07media editorial opinion adds no independent sample"
+    },
+    {
+      "root": "S08",
+      "members": [
+        "S08"
+      ],
+      "event_date": "2026-10-20",
+      "in_week": true,
+      "kind": "official_claim",
+      "independent_root_count": 1,
+      "notes": "pro tenant administrator CSV export, application10-20..31; no price/performance/conversion"
+    }
+  ],
+  "metrics": {
+    "M01": {
+      "metric_id": "M01",
+      "source_id": "S02",
+      "platform": "资讯阅读",
+      "window_start": "2026-10-19",
+      "window_end": "2026-10-21",
+      "denominator_kind": "article_views",
+      "denominator": 12000,
+      "numerator_kind": "engagement_actions",
+      "numerator": 400,
+      "paid_conversions": "unknown",
+      "sampling_note": "3天累计展示行为，浏览不是独立用户；互动=点赞300+评论60+分享40",
+      "value": "0.03333333333333333333333333333",
+      "status": "defined"
+    },
+    "M02": {
+      "metric_id": "M02",
+      "source_id": "S03",
+      "platform": "聚合信息流",
+      "window_start": "2026-10-20",
+      "window_end": "2026-10-22",
+      "denominator_kind": "impressions",
+      "denominator": 60000,
+      "numerator_kind": "engagement_actions",
+      "numerator": 720,
+      "paid_conversions": "unknown",
+      "sampling_note": "3天累计曝光行为，互动=点赞600+评论50+分享70；与阅读平台和窗口不同",
+      "value": "0.012",
+      "status": "defined"
+    },
+    "M03": {
+      "metric_id": "M03",
+      "source_id": "S06",
+      "platform": "社区推荐卡",
+      "window_start": "2026-10-19",
+      "window_end": "2026-10-19",
+      "denominator_kind": "impressions",
+      "denominator": 900,
+      "numerator_kind": "clicks",
+      "numerator": 90,
+      "paid_conversions": "unknown",
+      "sampling_note": "单日推荐卡点击/曝光；不等于试用或采购",
+      "value": "0.1",
+      "status": "defined"
+    },
+    "M04": {
+      "metric_id": "M04",
+      "source_id": "S08",
+      "platform": "申请落地页",
+      "window_start": "2026-10-20",
+      "window_end": "2026-10-22",
+      "denominator_kind": "landing_visits",
+      "denominator": 60,
+      "numerator_kind": "form_submissions",
+      "numerator": 6,
+      "paid_conversions": "unknown",
+      "sampling_note": "3天表单提交/访问；未去重，未确认合格线索、激活或付费",
+      "value": "0.1",
+      "status": "defined"
+    },
+    "M05": {
+      "metric_id": "M05",
+      "source_id": "S04",
+      "platform": "归档文章页",
+      "window_start": "2026-10-16",
+      "window_end": "2026-10-22",
+      "denominator_kind": "article_views",
+      "denominator": 0,
+      "numerator_kind": "engagement_actions",
+      "numerator": 0,
+      "paid_conversions": "unknown",
+      "sampling_note": "确认观察到0次阅读；0分母时比例undefined，不能显示0%",
+      "value": null,
+      "status": "zero_denominator"
+    },
+    "M06": {
+      "metric_id": "M06",
+      "source_id": "S07",
+      "platform": "媒体号卡片",
+      "window_start": "2026-10-22",
+      "window_end": "2026-10-22",
+      "denominator_kind": "impressions",
+      "denominator": "unknown",
+      "numerator_kind": "engagement_actions",
+      "numerator": 70,
+      "paid_conversions": "unknown",
+      "sampling_note": "分母未提供；unknown不是0，不能估算比例",
+      "value": null,
+      "status": "missing_denominator"
+    }
+  },
+  "noncomparable_pairs": [
+    [
+      "M01",
+      "M02"
+    ],
+    [
+      "M03",
+      "M04"
+    ]
+  ],
+  "unknown_obligations": [
+    "S01 activation and public launch",
+    "S01 objective accuracy/control/time saving",
+    "S06/S07 market adoption and sample representativeness",
+    "S08 price/qualified-lead/paid conversion",
+    "M05 zero denominator",
+    "M06 missing denominator"
+  ],
+  "question_kind_refs": {
+    "pilot_activation": [
+      "S01"
+    ],
+    "accuracy_validation": [
+      "S01"
+    ],
+    "adoption_sample": [
+      "S06",
+      "S07"
+    ],
+    "price_conversion": [
+      "S08",
+      "M04"
+    ],
+    "M05_rate": [
+      "M05"
+    ],
+    "M06_rate": [
+      "M06"
+    ]
+  },
+  "as_of": "2026-10-22T23:59:00+08:00",
+  "window": [
+    "2026-10-16",
+    "2026-10-22"
+  ],
+  "supported_meanings_and_bounds": [
+    {
+      "group": "qingqiao-pilot-20261018",
+      "root": "S01",
+      "members": [
+        "S01",
+        "S02",
+        "S03"
+      ],
+      "direct_edges": [
+        [
+          "S02",
+          "S01"
+        ],
+        [
+          "S03",
+          "S02"
+        ]
+      ],
+      "event_date": "2026-10-18",
+      "kind": "official_product_action",
+      "in_week": true,
+      "supported": "closed invited pilot: 20 enterprises may apply, max5 seats each; uploaded Chinese transcripts to human-confirmed action item drafts; no automatic sending/calendar writing; no public opening date",
+      "unknown": [
+        "activation/use count",
+        "objective accuracy",
+        "saved work hours",
+        "public launch date",
+        "adoption/revenue"
+      ],
+      "claim_boundary": "9/12 internal editable judgement of demo materials, no random sampling or control; media ingress-competition description is opinion, reposts add no test"
+    },
+    {
+      "group": "yanshi-template-20260715",
+      "root": "S04",
+      "members": [
+        "S04",
+        "S05"
+      ],
+      "direct_edges": [
+        [
+          "S05",
+          "S04"
+        ]
+      ],
+      "event_date": "2026-07-15",
+      "kind": "official_product_action_background",
+      "in_week": false,
+      "supported": "30 templates available to paid teams since July15; drafting only",
+      "unknown": [
+        "use count",
+        "satisfaction",
+        "income"
+      ],
+      "claim_boundary": "S05 Oct21 is repost listing time, not new feature or expanded access; not automatic approval/compliance"
+    },
+    {
+      "group": "personal-opinion-20261019",
+      "root": "S06",
+      "members": [
+        "S06",
+        "S07"
+      ],
+      "direct_edges": [
+        [
+          "S07",
+          "S06"
+        ]
+      ],
+      "event_date": "2026-10-19",
+      "kind": "single_person_opinion",
+      "in_week": true,
+      "supported": "one untested personal view about drafts, human review ownership and revocation questions",
+      "unknown": [
+        "team size",
+        "actual trial",
+        "purchase intent",
+        "willingness to pay",
+        "market acceptance"
+      ],
+      "claim_boundary": "S07 adds editor speculation, not new sample; possible broad adoption is a hypothesis, not survey"
+    },
+    {
+      "group": "chengmo-export-20261020",
+      "root": "S08",
+      "members": [
+        "S08"
+      ],
+      "direct_edges": [],
+      "event_date": "2026-10-20",
+      "kind": "official_product_action",
+      "in_week": true,
+      "supported": "professional plan tenant administrators can export own approval records as CSV; ordinary members excluded; trial application Oct20..31",
+      "unknown": [
+        "price",
+        "discount",
+        "activation",
+        "conversion",
+        "performance",
+        "adoption count"
+      ],
+      "claim_boundary": "no external compliance certificate, cross-tenant access or automatic deletion; application is not activation"
+    }
+  ],
+  "review": "root model synthetic author plus independent Python/Node calculation and separate model source-only observation before truth compare; not blind or human expert",
+  "reference_exists": false
+}

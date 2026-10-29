@@ -1,6 +1,6 @@
 schema_version: 1
 registry_contract:
-  active_task_count: 57
+  active_task_count: 58
   category_task_counts:
     office_documents: 16
     data_analysis: 10
@@ -8,7 +8,7 @@ registry_contract:
     file_operations: 6
     software_engineering: 12
     planning_coordination: 4
-    content_operations: 2
+    content_operations: 3
 tasks:
   - task_id: general_hard_software_engineering_task_001_delimiter_validation
     origin:
@@ -1640,3 +1640,28 @@ tasks:
       requires_visual_input: false
       coding_primary: true
       difficulty_status: design_estimate_unvalidated
+  - task_id: general_hard_content_operations_task_003_marketing_evidence
+    origin:
+      mode: internal_benchmark_inspired_with_open_benchmark_methods
+      production_refs: []
+      external_source_ids:
+        - assistantbench
+      direct_task_copy: false
+      internal_reference_ids:
+        - astudio-search108
+      reference_benchmark_refs:
+        - source_id: astudio-search108
+          sheet_id: kVfH8e
+          revision: 392
+          case_id: 82
+          row: 84
+          query_hash: bb53929b298e89750bcddf8e1d75dbb219ae14b6c4a3f907452f32a944965e61
+          reuse: 工作形态/评价机制参考，重构输入、问题、时点与GT；不直接搬运题文或原始分数。
+      attribution_note: 原线上Query与search测评集Case82文字一致；不能独立确认自然来源，保守改记内部评测参考，不改任务业务设计。
+    network:
+      mode: offline
+      allowed_urls: []
+      freeze_requirement: null
+    attributes:
+      requires_visual_input: false
+      coding_primary: false

@@ -1,0 +1,11 @@
+{
+  "schema": "h059-evidence-requirements/v1",
+  "source_slots": 8,
+  "per_source": [
+    "frozen_source_SHA",
+    "actual_original_quote",
+    "actual_line_range"
+  ],
+  "claim_links": "four origin groups must have nonempty support statements with actual native Word locating headings/phrases, also in locked Office PDF text. This is location binding, not semantic support.",
+  "derived": "actual DOCX PDF, cache-cleared reopened XLSX and audits plus final rule witness; derived hashes custody only"
+}

@@ -1,0 +1,40 @@
+{
+  "schema": "h059-source-first-counterexamples/v1",
+  "cases": [
+    {
+      "kind": "independence",
+      "wrong": "S01/S02/S03 count3 independent tests",
+      "right": "one original announcement, two derivative publications"
+    },
+    {
+      "kind": "event_clock",
+      "wrong": "S05 event2026-10-21 is weekly new template launch",
+      "right": "original event2026-07-15; Oct21 is repost time"
+    },
+    {
+      "kind": "metrics",
+      "wrong": "M01/M02 performance comparison or pooled conversion",
+      "right": "different denominator/platform/window; same original announcement"
+    },
+    {
+      "kind": "metrics",
+      "wrong": "M03/M04 both10% therefore same qualified-lead/paid conversion",
+      "right": "different numerator, denominator and funnel action"
+    },
+    {
+      "kind": "zero",
+      "wrong": "M05 0/0 is0%",
+      "right": "undefined, observed zero denominator"
+    },
+    {
+      "kind": "missing",
+      "wrong": "M06 unknown denominator replaced0",
+      "right": "unknown distinct from observed0"
+    },
+    {
+      "kind": "semantic_only",
+      "wrong": "9/12 objective accuracy, universal adoption, brand superiority or compliance certification",
+      "right": "requires semantic support review; labels/source IDs alone not enough"
+    }
+  ]
+}

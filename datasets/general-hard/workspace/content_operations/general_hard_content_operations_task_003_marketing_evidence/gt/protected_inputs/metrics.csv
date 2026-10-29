@@ -1,0 +1,7 @@
+metric_id,source_id,platform,window_start,window_end,denominator_kind,denominator,numerator_kind,numerator,paid_conversions,sampling_note
+M01,S02,资讯阅读,2026-10-19,2026-10-21,article_views,12000,engagement_actions,400,unknown,3天累计展示行为，浏览不是独立用户；互动=点赞300+评论60+分享40
+M02,S03,聚合信息流,2026-10-20,2026-10-22,impressions,60000,engagement_actions,720,unknown,3天累计曝光行为，互动=点赞600+评论50+分享70；与阅读平台和窗口不同
+M03,S06,社区推荐卡,2026-10-19,2026-10-19,impressions,900,clicks,90,unknown,单日推荐卡点击/曝光；不等于试用或采购
+M04,S08,申请落地页,2026-10-20,2026-10-22,landing_visits,60,form_submissions,6,unknown,3天表单提交/访问；未去重，未确认合格线索、激活或付费
+M05,S04,归档文章页,2026-10-16,2026-10-22,article_views,0,engagement_actions,0,unknown,确认观察到0次阅读；0分母时比例undefined，不能显示0%
+M06,S07,媒体号卡片,2026-10-22,2026-10-22,impressions,unknown,engagement_actions,70,unknown,分母未提供；unknown不是0，不能估算比例
