@@ -1345,6 +1345,30 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 now=self.t0,
             )
 
+    def test_pending_native_trust_receipt_requires_exact_folder_proof(self) -> None:
+        fixture = Fixture(self.root)
+        view = fixture.initialize(now=self.t0)
+        task = view["tasks"][0]
+        expected = Path(task["attempt_path"])
+        evidence = fixture.registration_evidence(task, expected)
+        payload = json.loads(evidence.read_text())
+        row = payload["projects"][0]
+        row["ui_method"] = "confirm-pending-trust"
+        row["native_selection"] = {"folder": str(expected), "method": "trust-dialog-recovery", "status": "registered"}
+        root = Path(view["orchestration_root"])
+        for changed in [None, {"folder": str(self.root), "method": "trust-dialog-recovery", "status": "registered"}]:
+            row["native_selection"] = changed
+            evidence.write_text(json.dumps(payload), encoding="utf-8")
+            with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError, "PROJECT_REGISTRATION_TRUST_PROOF_INVALID"):
+                ORCHESTRATOR.record_project(root, task_id=task["task_id"], project_id="project-one",
+                    host_id="host-local", project_path=expected, registration_evidence=evidence, now=self.t0)
+        row["native_selection"] = {"folder": str(expected), "method": "trust-dialog-recovery", "status": "registered"}
+        evidence.write_text(json.dumps(payload), encoding="utf-8")
+        ORCHESTRATOR.record_project(root, task_id=task["task_id"], project_id="project-one",
+            host_id="host-local", project_path=expected, registration_evidence=evidence, now=self.t0)
+        state = json.loads((root / "orchestration-state.json").read_text())
+        self.assertEqual(state["tasks"][0]["project"]["registration_method"], "confirm-pending-trust")
+
     def test_project_path_and_frozen_material_drift_fail_closed(self) -> None:
         fixture = Fixture(self.root)
         view = fixture.initialize(now=self.t0)

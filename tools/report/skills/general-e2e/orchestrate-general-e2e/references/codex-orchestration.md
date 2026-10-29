@@ -87,6 +87,8 @@ bash <skill-dir>/scripts/run-codex-project-registrar.sh \
 
 再次调用 `list_projects` 确认绝对路径唯一匹配，再执行 `record-project`，并增加 `--registration-evidence /private/path/registration.json`。项目名相同或路径尾部相同不能代替完整路径匹配。
 
+macOS 辅助功能未授予时，也可先核实随已发现 Codex 应用安装的官方 CLI 支持 `app [PATH]`，使用该入口打开同一绝对目录，再运行注册器确认唯一匹配该路径的原生信任弹窗。保留 CLI 打开调用和注册回执；不自动下载客户端，也不使用私有 renderer bridge。注册器会生成 `confirm-pending-trust / trust-dialog-recovery` 证明，编排器继续验证精确目录与客户端版本。之后仍须用 `list_projects` 回读唯一项目，再创建评分聊天；恢复时已有项目和原线程均不重复创建。
+
 随后执行前置检查；Desktop 版本必须与项目登记时一致：
 
 ```bash

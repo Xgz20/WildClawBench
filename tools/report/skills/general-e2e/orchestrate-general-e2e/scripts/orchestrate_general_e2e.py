@@ -80,6 +80,7 @@ REGISTRATION_METHODS = {
     "add-project-then-open-folder",
     "renderer-bridge",
     "existing-project",
+    "confirm-pending-trust",
 }
 BUSINESS_STATUSES = {
     "completed",
@@ -2391,6 +2392,14 @@ def record_project(
         method = _required_string(matches[0].get("ui_method"), "registration ui_method")
         if method not in REGISTRATION_METHODS - {"existing-project"}:
             raise OrchestrationError("PROJECT_REGISTRATION_METHOD_INVALID", method)
+        if method == "confirm-pending-trust":
+            selection = matches[0].get("native_selection")
+            if (not isinstance(selection, dict) or selection.get("method") != "trust-dialog-recovery"
+                    or selection.get("status") != "registered"
+                    or not isinstance(selection.get("folder"), str)
+                    or not Path(selection["folder"]).is_absolute()
+                    or _regular_directory(Path(selection["folder"]), "PROJECT_REGISTRATION_TRUST_PROOF_INVALID") != actual_path):
+                raise OrchestrationError("PROJECT_REGISTRATION_TRUST_PROOF_INVALID", "bound trust folder")
         evidence_desktop_version = _required_string(
             evidence.get("desktop_version"), "registration desktop_version"
         )
