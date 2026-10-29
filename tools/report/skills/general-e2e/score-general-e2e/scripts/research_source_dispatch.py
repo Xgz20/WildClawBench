@@ -20,6 +20,11 @@ def backend(root: Path):
     private_gt = v1.within(root, manifest["paths"]["gt"])
     schema = v1.read(v1.within(private_gt, v1.POLICY_PATH)).get("schema_version")
     if schema == v1.POLICY_SCHEMA:
+        lock_path = root / v1.LOCK_PATH
+        if lock_path.is_file():
+            import research_sources_proxy as proxy
+            if v1.read(lock_path).get("schema_version") == proxy.LOCK_SCHEMA:
+                return proxy
         return v1
     if schema == "wildclawbench.research-source-policy/v2":
         import research_sources_native as v2
@@ -33,6 +38,15 @@ def verify(root: Path, **kwargs):
 
 def collect(root: Path, *, reuse_sources_from: tuple[Path, ...] = (), **kwargs):
     current = backend(root)
+    explicit_proxy = kwargs.pop("trusted_http_connect_proxy", None)
+    import research_sources_proxy as proxy
+    if explicit_proxy is not None:
+        if current not in (v1, proxy):
+            raise v1.ResearchSourceError("RESEARCH_SOURCE_TRANSPORT_UNSUPPORTED", "explicit HTTP CONNECT currently supports policy v1 only")
+        proxy.proxy_endpoint(explicit_proxy)
+        current = proxy
+    if current is proxy:
+        kwargs["trusted_http_connect_proxy"] = explicit_proxy
     manifest = current.read(root / "attempt-manifest.json")
     policy = current.policy(root, manifest)
     # Policy/stage/input errors precede origin admission in both collectors.
@@ -53,7 +67,8 @@ def collect(root: Path, *, reuse_sources_from: tuple[Path, ...] = (), **kwargs):
     for origin in origins:
         other = backend(origin)
         old = other.policy(origin, other.read(origin / "attempt-manifest.json"))
-        if (other is not current or policy is None or old is None
+        compatible = other is current or current is proxy and other is v1
+        if (not compatible or policy is None or old is None
                 or old.get("projection_profile") != policy.get("projection_profile")):
             raise v1.ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "incompatible source policy/profile")
     return current.collect(root, reuse_sources_from=reuse_sources_from, **kwargs)
@@ -61,7 +76,11 @@ def collect(root: Path, *, reuse_sources_from: tuple[Path, ...] = (), **kwargs):
 
 def copy_for_rescore(source: Path, target: Path, **kwargs):
     current = backend(source)
-    if backend(target) is not current:
+    target_backend = backend(target)
+    import research_sources_proxy as proxy
+    compatible = target_backend is current or current is proxy and target_backend is v1
+    if (not compatible or current.policy(source, current.read(source / "attempt-manifest.json"))
+            != target_backend.policy(target, target_backend.read(target / "attempt-manifest.json"))):
         raise v1.ResearchSourceError("RESEARCH_SOURCE_REUSE_INVALID", "rescore source policy changed")
     return current.copy_for_rescore(source, target, **kwargs)
 
@@ -70,7 +89,7 @@ def required_api_paths(root: Path, binding: dict) -> set[str]:
     paths = {v1.LOCK_PATH, f"{v1.BUNDLE_PATH}/manifest.json"}
     paths.update(row["path"] for row in binding["references"]
                  if row["path"].endswith(("/text.txt", "/response.json", "/original-response.json")))
-    if backend(root) is not v1:
+    if backend(root).PROJECTION_SCHEMA != v1.PROJECTION_SCHEMA:
         document = v1.read(root / v1.BUNDLE_PATH / "manifest.json")
         paths.update(f"{v1.BUNDLE_PATH}/{row['projection_path']}" for row in document["sources"]
                      if row["status"] == "acquired")
@@ -86,7 +105,7 @@ def frozen_file_view(root: Path, path: Path, expected_sha: str | None, *,
     here to avoid substituting a different file during evidence construction.
     Candidate Office artifacts and every v1 path retain the old native helper.
     """
-    if backend(root) is v1:
+    if backend(root).PROJECTION_SCHEMA == v1.PROJECTION_SCHEMA:
         return None
     bundle = root / v1.BUNDLE_PATH
     document = v1.read(bundle / "manifest.json")

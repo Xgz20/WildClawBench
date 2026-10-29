@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.28.0`新增显式受信loopback HTTP CONNECT传输：`collect-research-sources --trusted-http-connect-proxy http://127.0.0.1:7897`。仅支持private policy v1；不带开关的v1/v2仍走原直连实现，v2加开关明确拒绝。每跳校验全部DNS公网结果，以选定IP作为CONNECT目标，保留原URL hostname的Host/SNI及默认TLS校验；`proxy_peer`只表示本地代理，不能称为已观测到源站IP。新bundle/lock/receipt及collector身份与旧direct分离，旧v1封存来源按完整验证后可复用且原GET回执字节/时间不变。不得从系统/环境/候选ledger自动启用代理。见[独立公开来源取证](references/research-sources.md)。
+
 # 评分 General E2E 单题
 
 `0.27.1`装配core `0.15.3`，规则依赖目录增加可选`pillow`/`PIL`，允许直接静态导入`from PIL import Image`。实际受管Worker的冻结锁仍须声明`PIL`与安装版本，并通过版本和导入探测；缺包、缺声明或版本不符均为评测异常，不计能力零分。默认安装Profile与requirements不增加Pillow，旧任务和冻结材料不自动改写。详见[本地受管规则运行时](references/local-rule-runtime.md)。

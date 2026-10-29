@@ -80,7 +80,7 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("score-general-e2e").version,
                 get_skill_spec("score-general-e2e").implementation_status,
             ),
-            ("0.25.0", "operational"),
+            ("0.28.0", "operational"),
         )
         self.assertEqual(
             (

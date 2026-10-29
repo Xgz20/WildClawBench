@@ -160,11 +160,13 @@ def _frozen_research_source_view(root: Path, path: Path, expected_sha: str | Non
 
 
 def collect_research_sources_attempt(*, attempt_root: Path, curl: Path | None = None,
-                                     reuse_sources_from: tuple[Path, ...] = ()) -> dict:
+                                     reuse_sources_from: tuple[Path, ...] = (),
+                                     trusted_http_connect_proxy: str | None = None) -> dict:
     root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(root)
     try:
         result = research_source_dispatch.collect(root, curl=curl, reuse_sources_from=reuse_sources_from,
+                                          trusted_http_connect_proxy=trusted_http_connect_proxy,
                                           attempt_verifier=verify_attempt)
     except research_sources.ResearchSourceError as exc:
         raise ScoringRuntimeError(exc.code, exc.detail) from exc
@@ -6242,6 +6244,7 @@ def main(argv: list[str] | None = None) -> int:
     research = subparsers.add_parser("collect-research-sources")
     research.add_argument("--attempt-root", required=True, type=Path)
     research.add_argument("--curl", type=Path)
+    research.add_argument("--trusted-http-connect-proxy", help="Explicit trusted HTTP loopback proxy, e.g. http://127.0.0.1:7897; policy v1 only")
     research.add_argument("--reuse-sources-from", type=Path, action="append", default=[],
                           help="Explicit prior successful source attempt; exact requested-URL reuse only (repeatable)")
 
@@ -6359,7 +6362,8 @@ def main(argv: list[str] | None = None) -> int:
             result = verify_attempt(args.attempt_root)
         elif args.command == "collect-research-sources":
             result = collect_research_sources_attempt(attempt_root=args.attempt_root, curl=args.curl,
-                                                      reuse_sources_from=tuple(args.reuse_sources_from))
+                                                      reuse_sources_from=tuple(args.reuse_sources_from),
+                                                      trusted_http_connect_proxy=args.trusted_http_connect_proxy)
         elif args.command == "run-rules":
             result = run_rules_attempt(
                 attempt_root=args.attempt_root,

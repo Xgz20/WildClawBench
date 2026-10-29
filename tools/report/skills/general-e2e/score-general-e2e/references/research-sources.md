@@ -166,3 +166,16 @@ core 仍为 `0.15.2`。默认不提供复用目录，所有选中来源仍独立
 
 
 raw body的机械引文匹配只接受明确文本media type、严格UTF-8解码且不含非文本C0控制字符的内容；不丢弃坏字节。PDF magic即使误报text/plain也不使用raw字节查引文，PDF/非文本来源仅用已封存projection和raw_metadata。origins/provenance容器、路径和复用时间的畸形类型明确返回结构化RESEARCH_SOURCE错误，不进入评分或变成能力0。
+
+
+## 0.28 显式受信loopback HTTP CONNECT（仅policy v1）
+
+在可信采集入口显式给出`--trusted-http-connect-proxy http://127.0.0.1:7897`或`http://[::1]:<port>`，必须无凭据/路径/查询。该开关不能来自候选材料，也不读系统代理或代理环境变量；不给开关保持旧direct v1/v2，新模式与native-v2组合会typed拒绝，不回退。
+
+每个URL和手动redirect先由冻结v1公网校验器验证全部DNS结果，curl以`--connect-to`向代理请求选定公网IP:port的CONNECT，原URL继续控制Host、TLS SNI和证书名称校验。保留`-q`和默认TLS，无`-k/-L`；清除代理及CA覆盖环境，代理握手头用`--suppress-connect-headers`分离。公网URL校验器不因本地代理而放宽。HTTPS逐跳要求CONNECT200和TLSverify0，HTTP逐跳明确无源站TLS。
+
+`research_sources_proxy.py`为固定受信backend，使用`trusted-http-connect-v1` bundle/lock/reuse身份和`research-source-http-connect-receipt/v1`GET回执。回执记录原URL、全部验证地址、选中IP、CONNECT目标、实际loopback TCP peer、分离的源HTTP状态与TLS结果，声明`origin_socket_observed=false`。信任本地代理遵守CONNECT目标；不能由curl声称独立观测了代理之后的源站socket。源逻辑hostname的TLS验证也不等同独立专家内容审核。
+
+新private policy仍是原v1；新旧direct/proxy来源只通过明确兼容矩阵复用，经当前attempt verifier先核完整旧包，再校验精确URL、cutoff/timezone、预算和引用覆盖。原GET `original-response.json`与时间保持，新增response只表示reuse事件；fresh proxy和reused direct混合时各源保持实际原传输。正常/归档/复用都离线严格校验新receipt，不从attempt/capsule载入代码，rescore保留同一原来源。v1/v2旧模块原字节不变；未来若修改新proxy backend，先保留其固定版本兼容实现，再升级可信分派。
+
+分发必须包含新proxy module及更新后的dispatch/入口，使用独立ZIP中实际文件SHA清单。若业务GT自行硬编码旧bundle schema或旧collector SHA，基础设施支持同一private policy不代表它会接受新身份；应另行明确版本化业务consumer适配，不得将proxy GET伪称旧no-proxy采集。
