@@ -1,0 +1,112 @@
+{
+  "schema_version": "general-hard-implementation-completion-audit/v1",
+  "status": "IMPLEMENTATION_COMPLETE_FROZEN_V1",
+  "checked_at": "2026-10-29T03:56:10.652114+00:00",
+  "audited_base_commit": "77baf6a652d0956e3d40f6c952192de6a6eeb1c9",
+  "branch": "feat/general-hard",
+  "dataset_id": "general-hard-v1",
+  "scope": "本次完成实施与本地提交核验；仅修订当前说明、冻结版本回归测试和本收据，不回写冻结素材或manifest。",
+  "checks": {
+    "static_contract": {
+      "status": "PASS",
+      "tasks": 60,
+      "issues": 0,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/static/20261029T034909Z_56073bfaaa/report.json",
+        "sha256": "cc0e0feabaebe920ae77f1f945ff21205d7facf8b810dc7b1a22c03829f136ba"
+      }
+    },
+    "quotas_and_legacy_isolation": {
+      "status": "PASS",
+      "task_count": 60,
+      "visual_count": 6,
+      "difficulty_counts": {
+        "L2": 12,
+        "L3": 24,
+        "L4": 24
+      },
+      "retrieval_counts": {
+        "open_search": 3,
+        "directed_web_retrieval": 3,
+        "local_evidence": 2
+      },
+      "production_backed_tasks": 42,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/requirements-counts.json",
+        "sha256": "0ed83f25b11f23e3979189f254a059fbc2b6d3b8e31e19d6682da5b076b39af0"
+      }
+    },
+    "blueprint_and_raw_git_bytes": {
+      "status": "PASS",
+      "blueprints": 60,
+      "material_files": 1923,
+      "material_path_bytes_digest": "d435a03e259cb7343aea6830748831e9510f8973bf0886318730dceefe0a5bb8",
+      "evidence_links_checked": 99,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/blueprint-and-raw-materials.json",
+        "sha256": "40ce0b0a82f7dbb399db30189b0255feae0567c5356baedb08f5ab2e68bc82f3"
+      }
+    },
+    "regression": {
+      "status": "PASS",
+      "tests": 40,
+      "exit_code": 0,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/regression-attempt3-result.json",
+        "sha256": "7c53ff9a6a3fc0f60fee86a84f7f4d1e3e3cfceca32bba294f4051fa76ba4486"
+      },
+      "stderr": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/regression-attempt3.stderr.txt",
+        "sha256": "6f3da1f9f8c1809bae036a649b3c8fdf20ea29c85e2044f9f1ead3394d8ecd7d"
+      },
+      "earlier_attempts_retained": [
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/regression-result.json",
+          "sha256": "d55db0657df49321eebd66835f69fa9124fd7395d35921dcf7be036b56d4e9c9"
+        },
+        {
+          "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/regression-attempt2-result.json",
+          "sha256": "293214d2fdb89494be6c9e478e713a4940531581fd7d79a7236cb9debb4e4413"
+        }
+      ],
+      "changes": "旧测试假定building且manifest不存在；改为显式冻结v1、核对原源码锁下的编译结果与清单，并按成员而非蓝图顺序核对题号。"
+    },
+    "frozen_distribution": {
+      "status": "PASS",
+      "dataset_digest": "a781532a1d8e9bc80d1fb4fd8b2d85a738f7d8e9386bc15a6a8fd14e9cfca8e5",
+      "sha256": {
+        "manifest": "66fd8732edf4756775d7a284482a6a5c4d7b1564b66562605e1bd0abb0773ea1",
+        "bundle": "a861919455853fac4556f3ad1744eb8a90b93fa415a5ed5c13c592a600608a24",
+        "legacy": "1911c10e5d571a24e798f66e80dbbb608533052e24eebcf50447e61690f596ea",
+        "skill": "a8981189234290bc2d8afa5dbe750339c125b2aedf52dac0f9fa07d4df4f3995"
+      },
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/frozen-and-isolation.json",
+        "sha256": "4cc52d5f04224b2f33211dc2cca943da9300057635a0ac166b33bc35d955be91"
+      },
+      "verify_subcommand_output": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/goal-completion-audit-20261029/distribution-verify.stdout.json",
+        "sha256": "f63cd1999178bf42770ada0f1fae675c8554c00357265a156dd32c10bb2e40e8"
+      }
+    },
+    "original_checkout": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench",
+      "branch": "feature/astroncode-eval",
+      "head": "e7a70c8cc77462f046cd8676bd87df1e3aa8b9ad"
+    }
+  },
+  "boundaries": {
+    "four_harness_executed": false,
+    "formal_semantic_judge_executed": false,
+    "pilot_calibration_status": "planned_not_executed",
+    "difficulty_status": "design_estimate_unvalidated",
+    "legacy_runtime_verified_false_preserved": 22,
+    "evidence_link_verification": "存在性与已记录哈希核对，不据此追加科学或语义正确性结论。",
+    "H031": "已完成来源补采；额外N03采集异常及仅作者副本的FS保护边界按原成题/分发收据保留。"
+  },
+  "related_receipts": [
+    "general-hard-v1-material-acceptance-20261029.json",
+    "general-hard-v1-freeze-20261029.json",
+    "general-hard-v1-distribution-20261029.json"
+  ]
+}

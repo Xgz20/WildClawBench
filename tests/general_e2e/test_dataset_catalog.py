@@ -448,11 +448,12 @@ class DatasetCatalogTests(unittest.TestCase):
 
 
 class RegisteredSourceContractTests(unittest.TestCase):
-    def test_general_hard_building_definition_matches_the_approved_60_blueprints(self) -> None:
+    def test_general_hard_frozen_v1_matches_the_approved_60_blueprints(self) -> None:
         source = json.loads((REPO_ROOT / "docs/design/general-e2e/general-hard/60题蓝图.json").read_text())
-        registered = load_registered_dataset(REPO_ROOT, "general-hard")
+        registered = load_registered_dataset(REPO_ROOT, "general-hard-v1")
         definition = registered.definition
-        self.assertEqual(registered.status, "building")
+        self.assertEqual(registered.status, "frozen")
+        self.assertEqual(definition.dataset_id, "general-hard-v1")
         self.assertEqual(definition.task_ids, tuple(task["task_id"] for task in source["tasks"]))
         self.assertEqual(definition.include_tags, ("custom", "general-hard"))
         self.assertEqual(definition.expected_task_count, 60)
@@ -460,7 +461,14 @@ class RegisteredSourceContractTests(unittest.TestCase):
         self.assertEqual(definition.constraints["multimodal_exact"], 6)
         self.assertEqual(definition.constraints["research_retrieval_group_counts"],
                          {"open_search": 3, "directed_web_retrieval": 3, "local_evidence": 2})
-        self.assertFalse(registered.manifest_path.exists())
+        manifest = load_manifest_lock(registered.manifest_path)
+        # Verify the selected bytes while retaining the release's source pin,
+        # as build_registered_bundle does after later repository commits.
+        compiled, _ = compile_dataset(REPO_ROOT, definition=definition,
+                                      source_revision=manifest["source"]["revision"])
+        self.assertEqual(compiled, manifest)
+        self.assertEqual(manifest["dataset_id"], definition.dataset_id)
+        self.assertCountEqual([task["task_id"] for task in manifest["tasks"]], definition.task_ids)
 
     def test_legacy_registration_uses_the_existing_manifest_ids(self) -> None:
         registered = load_registered_dataset(REPO_ROOT, "general-custom60-v1")
