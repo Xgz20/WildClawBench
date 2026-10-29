@@ -32,7 +32,13 @@
       "astudio-search108"
     ],
     "manifest_sha256": "66fd8732edf4756775d7a284482a6a5c4d7b1564b66562605e1bd0abb0773ea1",
-    "frozen_source_commit": "541cfae0007fd0b2e25ba0424c334f3d3a7ece1d"
+    "frozen_source_commit": "541cfae0007fd0b2e25ba0424c334f3d3a7ece1d",
+    "distribution": {
+      "bundle_path": "report-workspace/general-e2e/datasets/general-hard-v1/general-hard-v1.dataset.zip",
+      "bundle_sha256": "a861919455853fac4556f3ad1744eb8a90b93fa415a5ed5c13c592a600608a24",
+      "bundle_bytes": 49507681,
+      "verified": true
+    }
   },
   "constraints": {
     "task_count": 60,
@@ -23527,6 +23533,7 @@
     "material_acceptance": "evidence/general-hard-v1-material-acceptance-20261029.json",
     "freeze_receipt": "evidence/general-hard-v1-freeze-20261029.json",
     "calibration_status": "planned_not_executed",
-    "legacy_runtime_flags": "22 early false flags retained; linked author evidence is not relabeled as new execution"
+    "legacy_runtime_flags": "22 early false flags retained; linked author evidence is not relabeled as new execution",
+    "distribution_receipt": "evidence/general-hard-v1-distribution-20261029.json"
   }
 }
