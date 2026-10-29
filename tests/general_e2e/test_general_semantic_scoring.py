@@ -49,12 +49,13 @@ class GeneralSemanticScoringTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def _hybrid_attempt(self, name: str = "hybrid") -> Path:
+    def _hybrid_attempt(self, name: str = "hybrid", *, office_reference: bool = False) -> Path:
         fixture = Fixture(
             self.root / name,
             grading_type="hybrid",
             grading_weights={"automated": 0.5, "llm_judge": 0.5},
             llm_judge_rubric=RUBRIC,
+            office_reference=office_reference,
         )
         attempt = fixture.prepare(f"score-{name}")
         rule_component = {
@@ -208,6 +209,29 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         catalog = json.loads((attempt / "semantic/evidence-catalog.json").read_text())
         paths = [item["reference"].get("path") for item in catalog["evidence_index"]["entries"]]
         self.assertIn("candidate-original/workspace/workspace/results/answer.txt", paths)
+
+    def test_sealed_office_reference_ids_and_mapping_survive_semantic_archive(self) -> None:
+        attempt = self._hybrid_attempt("office-reference", office_reference=True)
+        response, candidate_id, transcript_id = self._prepare_and_query(attempt)
+        catalog = json.loads((attempt / "semantic/evidence-catalog.json").read_text())
+        private = [e for e in catalog["evidence_index"]["entries"] if e["reference"]["type"] == "private_reference"]
+        container_id = next(e["id"] for e in private if e["reference"]["path"].endswith(".gtref.zip"))
+        mapping_id = next(e["id"] for e in private if e["reference"]["path"] == "attempt-manifest.json")
+        RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="catalog", evidence_id=container_id)
+        RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="file", evidence_id=mapping_id)
+        for row, score, ids, queries in zip(response["criteria"], [1.0, .5],
+                [[candidate_id, container_id, mapping_id], [transcript_id]],
+                [["query-0001", "query-0003", "query-0004"], ["query-0002"]]):
+            row.update(status="judged", score=score, reason="本合成测试仅验证参考容器的证据绑定与归档接口。",
+                evidence_ids=ids, review={"query_ids": queries, "supporting_evidence_checked": True,
+                    "contradicting_evidence_checked": True, "absence_claim": False,
+                    "complete_event_range_checked": False})
+        source = attempt / "synthetic-office-response.json"
+        source.write_text(json.dumps(response, ensure_ascii=False), encoding="utf-8")
+        RUNTIME.record_semantics_attempt(attempt_root=attempt, response_path=source)
+        RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        RUNTIME._remove_tree(attempt / "runtime")
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt, archived=True)["score_valid"])
 
     def test_hybrid_codex_response_is_queried_validated_combined_and_verified(self) -> None:
         attempt = self._hybrid_attempt()

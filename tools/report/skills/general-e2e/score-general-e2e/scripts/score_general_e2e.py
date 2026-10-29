@@ -856,6 +856,108 @@ def _write_gt(root: Path, entries: Sequence[tuple[Mapping[str, Any], bytes]]) ->
             os.chmod(target, int(mode_text, 8))
 
 
+OFFICE_REFERENCE_SUFFIXES = frozenset({
+    ".xlsx", ".xlsm", ".xltx", ".xltm", ".docx", ".docm", ".dotx", ".dotm",
+    ".pptx", ".pptm", ".potx", ".potm", ".ppsx", ".ppsm",
+})
+GT_OFFICE_STORAGE_PROFILE = "canonical-office-reference-zip/v1"
+
+
+def _office_gt_entries(entries: Sequence[Mapping[str, Any]]) -> list[Mapping[str, Any]]:
+    return sorted((e for e in entries if e.get("kind") == "file"
+                   and PurePosixPath(str(e.get("path"))).suffix.lower() in OFFICE_REFERENCE_SUFFIXES),
+                  key=lambda e: e["path"])
+
+
+def _office_gt_container_name(logical: str) -> str:
+    return "office-" + _sha256_bytes(logical.encode("utf-8"))[:32] + ".gtref.zip"
+
+
+def _seal_office_gt(root: Path, entries: Sequence[Mapping[str, Any]]) -> dict[str, Any] | None:
+    files = []
+    for entry in _office_gt_entries(entries):
+        logical = str(_safe_relative(entry["path"], "GT logical path"))
+        source = _resolve_within(root, logical, "GT logical path")
+        data = source.read_bytes()
+        if source.is_symlink() or len(data) != entry["size"] or _sha256_bytes(data) != entry["sha256"]:
+            raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", logical)
+        stored = _office_gt_container_name(logical)
+        target = root / stored
+        if os.path.lexists(target):
+            raise ScoringRuntimeError("GT_REFERENCE_STORAGE_COLLISION", stored)
+        info = zipfile.ZipInfo(logical, (1980, 1, 1, 0, 0, 0))
+        info.create_system = 3
+        info.external_attr = (stat.S_IFREG | int(entry["mode"], 8)) << 16
+        with zipfile.ZipFile(target, "x", compression=zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr(info, data, compress_type=zipfile.ZIP_DEFLATED)
+        os.chmod(target, int(entry["mode"], 8))
+        files.append({"logical_path": logical, "stored_path": stored,
+                      "content_sha256": entry["sha256"], "content_size": entry["size"],
+                      "container_sha256": _sha256_file(target), "container_size": target.stat().st_size})
+        # Only a newly prepared, byte-verified input copy is replaced. Historical
+        # Office variants and their manifests are never rewritten or stripped.
+        source.unlink()
+    return {"profile": GT_OFFICE_STORAGE_PROFILE, "files": files} if files else None
+
+
+def _read_office_gt_member(root: Path, row: Mapping[str, Any], entry: Mapping[str, Any]) -> bytes:
+    logical = str(_safe_relative(entry["path"], "GT logical path"))
+    if (row.get("logical_path") != logical or row.get("stored_path") != _office_gt_container_name(logical)
+            or row.get("content_sha256") != entry["sha256"] or row.get("content_size") != entry["size"]):
+        raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", logical)
+    path = _resolve_within(root, row["stored_path"], "GT container")
+    if path.is_symlink() or path.stat().st_size != row.get("container_size") or _sha256_file(path) != row.get("container_sha256"):
+        raise ScoringRuntimeError("GT_REFERENCE_STORAGE_DRIFT", logical)
+    try:
+        with zipfile.ZipFile(path) as archive:
+            infos = archive.infolist()
+            if (len(infos) != 1 or infos[0].filename != logical or _zip_kind(infos[0]) != "file"
+                    or infos[0].file_size != entry["size"]):
+                raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", logical)
+            data = archive.read(infos[0])
+    except (OSError, zipfile.BadZipFile) as exc:
+        raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", str(exc)) from exc
+    if len(data) != entry["size"] or _sha256_bytes(data) != entry["sha256"]:
+        raise ScoringRuntimeError("GT_REFERENCE_STORAGE_DRIFT", logical)
+    return data
+
+
+def _validate_gt_storage(root: Path, private: Mapping[str, Any]) -> None:
+    storage = private.get("storage")
+    if storage is None:
+        return
+    if not isinstance(private.get("entries"), list):
+        raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", "source entries")
+    entries = _office_gt_entries(private["entries"])
+    if (not isinstance(storage, dict) or set(storage) != {"profile", "files"} or storage.get("profile") != GT_OFFICE_STORAGE_PROFILE
+            or not entries or not isinstance(storage.get("files"), list) or len(storage["files"]) != len(entries)):
+        raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", "profile")
+    for row, entry in zip(storage["files"], entries):
+        if not isinstance(row, Mapping):
+            raise ScoringRuntimeError("GT_REFERENCE_STORAGE_INVALID", "file mapping")
+        _read_office_gt_member(root, row, entry)
+
+
+def _restore_runtime_gt(root: Path, private: Mapping[str, Any]) -> None:
+    _validate_gt_storage(root, private)
+    for directory in [root, *[p for p in root.rglob("*") if p.is_dir() and not p.is_symlink()]]:
+        directory.chmod(stat.S_IMODE(directory.stat().st_mode) | 0o700)
+    storage = private.get("storage")
+    if storage:
+        for row, entry in zip(storage["files"], _office_gt_entries(private["entries"])):
+            data = _read_office_gt_member(root, row, entry)
+            target = root.joinpath(*_safe_relative(row["logical_path"], "GT logical path").parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target = _resolve_within(root, row["logical_path"], "GT logical path")
+            with target.open("xb") as handle:
+                handle.write(data)
+            (root / row["stored_path"]).unlink()
+    for entry in private["entries"]:
+        if entry.get("kind") != "symlink":
+            target = _resolve_within(root, entry["path"], "GT mode path")
+            os.chmod(target, int(entry["mode"], 8))
+
+
 def _validate_transcript(path: Path) -> int:
     return len(_read_transcript(path))
 
@@ -1438,9 +1540,9 @@ def prepare_attempt(
         shutil.copytree(gt_private, runtime_workspace / "gt", symlinks=True)
         if path_resolution["mode"] == "mapped-nested":
             shutil.copytree(gt_private, mapped_runtime / "gt", symlinks=True)
-        # Private references are immutable inputs, just like candidate-original.
-        # Freeze before inventory so host Office attribution cannot rewrite a
-        # loose GT file between preparation and the independent judge.
+        gt_storage = _seal_office_gt(gt_private, scoring_task["private_scoring"]["entries"])
+        # Private references are inputs. Office bytes are sealed above; read-only
+        # permissions alone do not prevent a host from publishing a new variant.
         _make_read_only(gt_private)
         private_gt_entries, private_gt_sha = _inventory_tree(gt_private)
         _, runtime_initial_sha = _inventory_tree(runtime_workspace)
@@ -1531,6 +1633,7 @@ def prepare_attempt(
             "private_scoring": {
                 "entries": scoring_task["private_scoring"]["entries"],
                 "workspace_entries": private_gt_entries,
+                **({"storage": gt_storage} if gt_storage else {}),
             },
             "runtime": {
                 "kind": "local-managed-python-worker",
@@ -1744,6 +1847,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         private_scoring.get("workspace_entries"),
         compare_mode=os.name != "nt",
     )
+    _validate_gt_storage(private_gt, private_scoring)
     _safe_relative(paths.get("runtime_workspace"), "runtime_workspace")
     if require_runtime:
         runtime = _resolve_within(root, paths.get("runtime_workspace"), "runtime_workspace")
@@ -2805,6 +2909,8 @@ def _semantic_reference_inputs(
     private_gt = attempt_root / manifest["paths"]["gt"]
     for path in _regular_evidence_files(private_gt):
         add_file("private_reference", path)
+    if manifest["private_scoring"].get("storage"):
+        add_file("private_reference", attempt_root / "attempt-manifest.json")
     contract = _read_json(attempt_root / manifest["paths"]["contract"], code="SCORING_CONTRACT_INVALID")
     for path in _snapshot_generated_evidence(attempt_root, manifest, contract):
         add_file("grader_generated_evidence", path)
@@ -5204,6 +5310,10 @@ def prepare_rescore_attempt(
         target_gt = private_root / "gt"
         _copy_inventory(source_gt, target_gt, source_gt_entries)
         shutil.copytree(target_gt, runtime_workspace / "gt", symlinks=True)
+        _restore_runtime_gt(runtime_workspace / "gt", source_private_scoring)
+        gt_storage = source_private_scoring.get("storage")
+        if gt_storage is None:
+            gt_storage = _seal_office_gt(target_gt, source_private_scoring["entries"])
         _make_read_only(target_gt)
         private_gt_entries, private_gt_sha = _inventory_tree(target_gt)
         _, runtime_initial_sha = _inventory_tree(runtime_workspace)
@@ -5308,6 +5418,7 @@ def prepare_rescore_attempt(
             "private_scoring": {
                 "entries": source_private_scoring.get("entries"),
                 "workspace_entries": private_gt_entries,
+                **({"storage": gt_storage} if gt_storage else {}),
             },
             "runtime": {
                 "kind": "local-managed-python-worker",

@@ -12,6 +12,7 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 import warnings
 import zipfile
 
@@ -125,6 +126,7 @@ class Fixture:
         mapped_nested_results: bool = False,
         dual_results: bool = False,
         contract_overrides: dict | None = None,
+        office_reference: bool = False,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -234,9 +236,14 @@ class Fixture:
             "size": len(gt_bytes),
             "sha256": sha256_bytes(gt_bytes),
         }
+        gt_entries = [gt_entry]
+        office_bytes = b"opaque frozen Office reference bytes"
+        if office_reference:
+            gt_entries.append({"kind": "file", "path": "reference.xlsx", "mode": "0644",
+                               "size": len(office_bytes), "sha256": sha256_bytes(office_bytes)})
         private_tree = {
             "algorithm": RUNTIME.DATASET_TREE_HASH_ALGORITHM,
-            "entries": [gt_entry],
+            "entries": gt_entries,
         }
         package_root = f"{self.batch_id}__{self.unit_id}"
         private_root = f"score/tasks/{self.task_id}/private-scoring"
@@ -263,7 +270,7 @@ class Fixture:
                     "private_scoring": {
                         "path": f"{private_root}/gt",
                         "tree_sha256": canonical_sha256(private_tree),
-                        "entries": [gt_entry],
+                        "entries": gt_entries,
                     },
                 }
             ],
@@ -287,6 +294,8 @@ class Fixture:
                 zip_info(f"{package_root}/{private_root}/gt/expected.json"),
                 gt_bytes,
             )
+            if office_reference:
+                archive.writestr(zip_info(f"{package_root}/{private_root}/gt/reference.xlsx"), office_bytes)
         self.output_root = root / "attempts"
 
     def prepare(self, attempt_id: str = "score-attempt") -> Path:
@@ -430,6 +439,71 @@ class LocalScoringRuntimeTests(unittest.TestCase):
             {"rule_result", "rule_worker_result", "rule_source"},
         )
         self.assertTrue(RUNTIME.verify_score_attempt(attempt)["score_valid"])
+
+    def test_office_gt_is_sealed_portably_and_restored_only_in_disposable_runtime(self) -> None:
+        fixture = Fixture(self.root, office_reference=True)
+        attempt = fixture.prepare()
+        manifest = json.loads((attempt / "attempt-manifest.json").read_text())
+        private = manifest["private_scoring"]
+        row = private["storage"]["files"][0]
+        self.assertEqual(private["storage"]["profile"], RUNTIME.GT_OFFICE_STORAGE_PROFILE)
+        self.assertEqual(row["logical_path"], "reference.xlsx")
+        self.assertFalse((attempt / "private/gt/reference.xlsx").exists())
+        container = attempt / "private/gt" / row["stored_path"]
+        original = (attempt / "runtime/workspace/gt/reference.xlsx").read_bytes()
+        with zipfile.ZipFile(container) as archive:
+            self.assertEqual(archive.namelist(), ["reference.xlsx"])
+            self.assertEqual(archive.read("reference.xlsx"), original)
+        self.assertEqual(sha256_bytes(original), row["content_sha256"])
+        self.assertEqual(RUNTIME.verify_attempt(attempt)["status"], "PASS")
+        refs, _ = RUNTIME._semantic_reference_inputs(attempt, manifest, [])
+        reference_paths = {r["path"] for r in refs if r["type"] == "private_reference"}
+        self.assertIn("private/gt/" + row["stored_path"], reference_paths)
+        self.assertIn("attempt-manifest.json", reference_paths)
+        restored = self.root / "restored-runtime-gt"
+        RUNTIME.shutil.copytree(attempt / "private/gt", restored)
+        RUNTIME._restore_runtime_gt(restored, private)
+        self.assertEqual((restored / "reference.xlsx").read_bytes(), original)
+        self.assertTrue((restored / "reference.xlsx").stat().st_mode & stat.S_IWUSR)
+        self.assertFalse((restored / row["stored_path"]).exists())
+        changed = json.loads(json.dumps(private))
+        changed["storage"]["files"][0]["logical_path"] = "unbound.xlsx"
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "GT_REFERENCE_STORAGE_INVALID"):
+            RUNTIME._validate_gt_storage(attempt / "private/gt", changed)
+        RUNTIME.run_rules_attempt(attempt_root=attempt, runtime_python=self.runtime_python, timeout_seconds=10)
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        replacement = RUNTIME.prepare_rescore_attempt(source_attempt_root=attempt,
+            scoring_attempt_id="office-rescore", output_root=self.root / "rescores")
+        replacement_root = Path(replacement["attempt_root"])
+        self.assertEqual((replacement_root / "runtime/workspace/gt/reference.xlsx").read_bytes(), original)
+        self.assertEqual(RUNTIME.verify_attempt(replacement_root)["status"], "PASS")
+        RUNTIME._remove_tree(attempt / "runtime")
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt, archived=True)["score_valid"])
+        container.chmod(0o644)
+        with container.open("ab") as handle:
+            handle.write(b"unbound bytes")
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "ATTEMPT_PRIVATE_MATERIAL_DRIFT"):
+            RUNTIME.verify_attempt(attempt)
+
+    def test_rescore_seals_legacy_loose_office_reference_without_rewriting_source(self) -> None:
+        fixture = Fixture(self.root, office_reference=True)
+        with patch.object(RUNTIME, "_seal_office_gt", return_value=None):
+            attempt = fixture.prepare()
+        original = (attempt / "private/gt/reference.xlsx").read_bytes()
+        source_manifest = (attempt / "attempt-manifest.json").read_bytes()
+        RUNTIME.run_rules_attempt(attempt_root=attempt, runtime_python=self.runtime_python, timeout_seconds=10)
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        replacement = RUNTIME.prepare_rescore_attempt(source_attempt_root=attempt,
+            scoring_attempt_id="legacy-office-rescore", output_root=self.root / "rescores")
+        target = Path(replacement["attempt_root"])
+        manifest = json.loads((target / "attempt-manifest.json").read_text())
+        self.assertEqual(manifest["private_scoring"]["storage"]["profile"], RUNTIME.GT_OFFICE_STORAGE_PROFILE)
+        self.assertEqual((target / "runtime/workspace/gt/reference.xlsx").read_bytes(), original)
+        self.assertEqual((attempt / "private/gt/reference.xlsx").read_bytes(), original)
+        self.assertEqual((attempt / "attempt-manifest.json").read_bytes(), source_manifest)
+        self.assertEqual(RUNTIME.verify_attempt(target)["status"], "PASS")
 
     def test_mapped_nested_results_use_frozen_prompt_path_without_mutating_candidate(self) -> None:
         fixture = Fixture(self.root, rule=MAPPED_RESULTS_RULE, mapped_nested_results=True)

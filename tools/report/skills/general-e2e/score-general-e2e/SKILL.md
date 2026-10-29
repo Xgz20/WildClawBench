@@ -3,7 +3,11 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
-`0.10.12` 在记录摘要前将私有 GT 副本设为只读，防止宿主给 Office 文件追加属性后造成评分输入漂移。规则运行时仍先从原始 GT 建立独立副本；原候选、原评分 ZIP 与旧 attempt 不改写。已经漂移的历史副本保留为变体，使用新 attempt 从冻结输入准备，不删除宿主属性、不修改旧摘要。
+`0.10.13` 将新准备的 Office GT 封装为单成员 `*.gtref.zip` 参考容器，防止宿主把松散参考文件当作生成制品追加属性。`attempt-manifest.json` 的 `private_scoring.storage.files` 明确记录原始 `logical_path`、容器 `stored_path`、原始字节 SHA/大小及容器 SHA/大小。规则运行时仍获得原文件名和原始字节；重评分恢复同一逻辑输入。旧 attempt、原候选、评分 ZIP 和宿主变体均不改写。
+
+语义裁判须先通过 `query-evidence --mode catalog` 查询对应 `private_reference` 容器证据 ID，通过 `--mode file` 查询清单 JSON，再用 `zipfile.ZipFile` 读取唯一的原始成员；二进制 ZIP 不使用 UTF-8 文本查询。Office 解析器使用成员字节的 `io.BytesIO`，或读取已校验的 `runtime/workspace/gt/<logical_path>`。参考容器属于评分材料，不改变候选的原定文件格式或交付位置要求；GT 不能计作候选产物，也不向私有原件目录解压 Office 文件。归档会保留容器和映射，移除 runtime 后仍可严格验分。
+
+`0.10.12` 在记录摘要前将私有 GT 副本设为只读。只读位限制普通文件写入，但不能单独阻止宿主生成新变体；已漂移的旧副本保留，使用新的评分 attempt，不删除宿主属性或修改旧摘要。
 
 `0.10.11` 按冻结契约的 `judge_evidence.required` 收集评分端取证材料。受管 Worker 成功后校验 runtime 的完整 SHA，再把声明目录复制为不可变 `grader-evidence/` 快照，记录原路径、文件 SHA、contract 和 rule audit SHA，并以 `grader_generated_evidence` 类型加入可查询证据索引。它们属于评分端材料，不能计作候选产物或候选自检。缺失、路径越界、链接、候选预占目录和生成后漂移均阻断准入；回传排除一次性 runtime 后仍可 `verify-score --archived`。旧无此声明的契约保持原行为。
 
