@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.9` 按原生内容原子记录归一化守恒：终态工具含调用/结果两个原子，同消息多个文本片段无损合并并显式计数；原始 part 数另存，不把 part 行数误作事件数。
+
 `0.11.8` 支持显式 qwenwork-opencode-sqlite-v1 证据 Profile：绑定宿主已受理用户消息、原始题目与 engineSessionBindingV1，读取一致只读 SQLite 快照中的精确原生会话子树，校验终稿和工具终态后导出原始范围行、标准轨迹与终稿。账号/凭据表不查询。新引擎 Token、请求语义及原生总耗时未经准入时保持 unavailable，不套用旧 SDK Profile；旧 JSONL 采集保持原契约。
 
 `0.11.7` 提供显式的[源目录 Office 属性变体审计](references/source-office-metadata-variance.md)。冻结候选和原回执仍须逐字节通过原 SHA；仅在实时源目录与冻结副本具有完全相同的文件范围、差异全部为指定 CWM 自定义属性及其必要关系声明时，可用新补充包同时保留原/现字节并重新核验。此协议不改评分输入，不删除属性，不改旧摘要；业务内容、其他元数据、非 Office 文件及任何冻结候选漂移仍阻断。未显式指定补充包时继续严格核验原实时源目录摘要。
