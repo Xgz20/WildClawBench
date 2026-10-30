@@ -87,7 +87,9 @@ bash <skill-dir>/scripts/run-codex-project-registrar.sh \
 
 再次调用 `list_projects` 确认绝对路径唯一匹配，再执行 `record-project`，并增加 `--registration-evidence /private/path/registration.json`。项目名相同或路径尾部相同不能代替完整路径匹配。
 
-macOS 辅助功能未授予时，也可先核实随已发现 Codex 应用安装的官方 CLI 支持 `app [PATH]`，使用该入口打开同一绝对目录，再运行注册器确认唯一匹配该路径的原生信任弹窗。保留 CLI 打开调用和注册回执；不自动下载客户端，也不使用私有 renderer bridge。注册器会生成 `confirm-pending-trust / trust-dialog-recovery` 证明，编排器继续验证精确目录与客户端版本。之后仍须用 `list_projects` 回读唯一项目，再创建评分聊天；恢复时已有项目和原线程均不重复创建。
+macOS 注册器默认核实随已发现 Codex 应用安装的官方 CLI 支持 `app [PATH]`，直接打开同一绝对目录，再自动点击完整回显该路径的唯一“Trust folder／信任文件夹”。此路径不依赖辅助功能，不使用 Computer Use，也不使用私有 renderer bridge。回执使用 `official-cli-trust`，绑定 CLI 实际文件/SHA/argv、精确目录和真实点击；编排器校验这些字段。CLI 不可用时沿用原生文件选择器，`--no-cli-open` 可显式禁用新入口。先前已打开的同路径弹窗仍用 `confirm-pending-trust / trust-dialog-recovery` 恢复。
+
+CLI 打开后没有观察到信任弹窗时，先调用 `list_projects` 回读规范路径；已注册则按 existing-project 记录，不重复打开、不默认转人工。不匹配目录、多个信任弹窗或未知对话框不点击；也不修改全局信任配置来绕过注册。注册后仍须回读唯一项目，再创建独立评分聊天；恢复时已有项目和原线程均不重复创建。
 
 随后执行前置检查；Desktop 版本必须与项目登记时一致：
 

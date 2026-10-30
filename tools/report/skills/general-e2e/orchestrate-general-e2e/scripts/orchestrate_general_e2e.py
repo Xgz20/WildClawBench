@@ -81,6 +81,7 @@ REGISTRATION_METHODS = {
     "renderer-bridge",
     "existing-project",
     "confirm-pending-trust",
+    "official-cli-trust",
 }
 BUSINESS_STATUSES = {
     "completed",
@@ -2447,6 +2448,18 @@ def record_project(
                     or not Path(selection["folder"]).is_absolute()
                     or _regular_directory(Path(selection["folder"]), "PROJECT_REGISTRATION_TRUST_PROOF_INVALID") != actual_path):
                 raise OrchestrationError("PROJECT_REGISTRATION_TRUST_PROOF_INVALID", "bound trust folder")
+        if method == "official-cli-trust":
+            selection = matches[0].get("native_selection")
+            cli = selection.get("cli") if isinstance(selection, dict) else None
+            if (not isinstance(selection, dict) or selection.get("method") != "official-cli-trust-dialog"
+                    or selection.get("status") != "registered" or selection.get("trust_dialog_path_verified") is not True
+                    or selection.get("trust_button_clicked") is not True
+                    or not isinstance(selection.get("folder"), str)
+                    or _regular_directory(Path(selection["folder"]), "PROJECT_REGISTRATION_TRUST_PROOF_INVALID") != actual_path
+                    or not isinstance(cli, dict) or cli.get("argv") != ["app", str(actual_path)]
+                    or not SHA256_RE.fullmatch(str(cli.get("executable_sha256", "")))
+                    or not Path(str(cli.get("executable", ""))).is_absolute()):
+                raise OrchestrationError("PROJECT_REGISTRATION_TRUST_PROOF_INVALID", "official CLI and exact trust dialog")
         evidence_desktop_version = _required_string(
             evidence.get("desktop_version"), "registration desktop_version"
         )

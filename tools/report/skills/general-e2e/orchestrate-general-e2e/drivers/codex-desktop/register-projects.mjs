@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 import { realpathSync } from "node:fs";
-import { mkdir, realpath, writeFile } from "node:fs/promises";
+import { mkdir, realpath, writeFile, readFile, stat } from "node:fs/promises";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { createHash } from "node:crypto";
 import { createRequire } from "node:module";
-import { basename, dirname, isAbsolute, join, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, resolve, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import {
@@ -16,6 +19,44 @@ const DEFAULT_ENDPOINT = "http://127.0.0.1:9230";
 const DEFAULT_BUNDLE_ID = "com.openai.codex";
 const DRIVER_DIR = dirname(fileURLToPath(import.meta.url));
 let cdpDownloadCompatibilityInstalled = false;
+const runFile = promisify(execFile);
+
+export async function openProjectWithOfficialCli({ appPath, project, timeout, platform = process.platform, run = runFile }) {
+  if (platform !== 'darwin') return null;
+  const app = await realpath(appPath);
+  const folder = await realpath(project);
+  const expected = join(app, 'Contents/Resources/codex-cli/CodexCLI.app/Contents/MacOS/codex');
+  let cli;
+  try { cli = await realpath(expected); } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+  const inside = relative(app, cli);
+  if (inside.startsWith('..') || isAbsolute(inside) || !(await stat(cli)).isFile()) {
+    throw new Error('官方 Codex CLI 必须位于已核验应用包内');
+  }
+  const help = await run(cli, ['app', '--help'], { timeout, maxBuffer: 100000, encoding: 'utf8' });
+  if (!/Usage:\s+codex app\b/u.test(help.stdout) || !/\[PATH\]/u.test(help.stdout)) {
+    throw new Error('已安装 CLI 未证明支持官方 app [PATH] 入口');
+  }
+  const digest = createHash('sha256').update(await readFile(cli)).digest('hex');
+  const opened = await run(cli, ['app', folder], { timeout, maxBuffer: 100000, encoding: 'utf8' });
+  if (digest !== createHash('sha256').update(await readFile(cli)).digest('hex')) {
+    throw new Error('官方 Codex CLI 在打开评分目录期间发生变化');
+  }
+  return { executable: cli, executable_sha256: digest, argv: ['app', folder],
+    stdout_sha256: createHash('sha256').update(opened.stdout || '').digest('hex'),
+    stderr_sha256: createHash('sha256').update(opened.stderr || '').digest('hex') };
+}
+
+export async function waitForExactProjectTrust(page, project, timeout) {
+  const end = Date.now() + timeout;
+  do {
+    if (await confirmProjectTrust(page, project, Math.max(1, end - Date.now()))) return true;
+    await page.waitForTimeout(Math.min(100, Math.max(1, end - Date.now())));
+  } while (Date.now() < end);
+  throw new Error('官方 CLI 已打开目录但未观察到匹配的信任弹窗；先用 list_projects 回读，已有项目直接复用，禁止盲目重复注册');
+}
 
 export function isUnsupportedDownloadBehaviorError(error) {
   const message = String(error?.message || error || "");
@@ -68,6 +109,7 @@ export function usage() {
   --probe                         只读探测 CDP 页面和项目入口
   --project <目录>                要注册为 Codex Desktop 项目的评分目录；可重复
   --renderer-bridge               显式使用 Desktop 私有 renderer bridge 注册，跳过文件选择器
+  --no-cli-open                   macOS 禁用默认的官方 CLI 打开目录及自动信任流程
   --endpoint <URL>                Codex Desktop 本机 CDP 地址
   --page-url <URL>                多窗口时精确指定主页面 URL
   --bundle-id <ID>                macOS 应用 bundle id
@@ -81,6 +123,7 @@ export function parseArgs(argv) {
   const args = {
     probe: false,
     rendererBridge: false,
+    cliOpen: process.platform === 'darwin',
     projects: [],
     endpoint: DEFAULT_ENDPOINT,
     pageUrl: "",
@@ -94,6 +137,7 @@ export function parseArgs(argv) {
     const token = argv[index];
     if (token === "--probe") args.probe = true;
     else if (token === "--renderer-bridge") args.rendererBridge = true;
+    else if (token === "--no-cli-open") args.cliOpen = false;
     else if (token === "--project") args.projects.push(argv[++index] || "");
     else if (token === "--endpoint") args.endpoint = argv[++index] || "";
     else if (token === "--page-url") args.pageUrl = argv[++index] || "";
@@ -174,7 +218,7 @@ export function trustDialogMatchesProject(dialogText, project) {
     .includes(project);
 }
 
-async function confirmProjectTrust(page, project, timeout) {
+export async function confirmProjectTrust(page, project, timeout) {
   const matches = [];
   for (const dialog of await visible(page.getByRole("dialog"))) {
     const trust = dialog.getByRole("button", { name: /^(Trust folder|信任文件夹)$/i });
@@ -391,6 +435,14 @@ export async function run(args) {
         nativeSelection = { folder: project, method: "trust-dialog-recovery", status: "registered" };
       } else {
         await dismissStaleProjectDialog(page, args.timeoutSeconds * 1000);
+        const cli = args.cliOpen && !args.rendererBridge
+          ? await openProjectWithOfficialCli({ appPath, project, timeout: args.timeoutSeconds * 1000 }) : null;
+        if (cli) {
+          await waitForExactProjectTrust(page, project, args.timeoutSeconds * 1000);
+          registration = { method: 'official-cli-trust', finalize: false };
+          nativeSelection = { folder: project, method: 'official-cli-trust-dialog', status: 'registered',
+                              trust_dialog_path_verified: true, trust_button_clicked: true, cli };
+        } else {
         registration = args.rendererBridge
           ? await registerWithRendererBridge(page, project)
           : await beginProjectRegistration(page, args.timeoutSeconds * 1000);
@@ -404,6 +456,7 @@ export async function run(args) {
         });
         if (registration.finalize) await finalizeProjectRegistration(page, project, args.timeoutSeconds * 1000);
         await confirmProjectTrust(page, project, args.timeoutSeconds * 1000);
+        }
       }
       await page.waitForTimeout(1000);
       const evidenceDir = args.output ? dirname(resolve(args.output)) : "";

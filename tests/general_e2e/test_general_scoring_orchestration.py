@@ -1495,6 +1495,26 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         state = json.loads((root / "orchestration-state.json").read_text())
         self.assertEqual(state["tasks"][0]["project"]["registration_method"], "confirm-pending-trust")
 
+    def test_official_cli_trust_receipt_requires_real_click_and_exact_argv(self) -> None:
+        fixture = Fixture(self.root)
+        view = fixture.initialize(now=self.t0)
+        task = view["tasks"][0]; expected = Path(task["attempt_path"])
+        evidence = fixture.registration_evidence(task, expected)
+        payload = json.loads(evidence.read_text()); row = payload["projects"][0]
+        row["ui_method"] = "official-cli-trust"
+        selection = {"folder":str(expected),"method":"official-cli-trust-dialog","status":"registered",
+                     "trust_dialog_path_verified":True,"trust_button_clicked":True,
+                     "cli":{"executable":"/Applications/Codex.app/Contents/MacOS/codex","executable_sha256":"a"*64,"argv":["app",str(expected)]}}
+        root = Path(view["orchestration_root"])
+        for change in [{"trust_button_clicked":False},{"folder":str(self.root)},
+                       {"cli":{**selection["cli"],"argv":["app",str(self.root)]}}]:
+            row["native_selection"]={**selection,**change};evidence.write_text(json.dumps(payload))
+            with self.subTest(change=change),self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,"PROJECT_REGISTRATION_TRUST_PROOF_INVALID"):
+                ORCHESTRATOR.record_project(root,task_id=task["task_id"],project_id="project-one",host_id="host-local",project_path=expected,registration_evidence=evidence,now=self.t0)
+        row["native_selection"]=selection;evidence.write_text(json.dumps(payload))
+        ORCHESTRATOR.record_project(root,task_id=task["task_id"],project_id="project-one",host_id="host-local",project_path=expected,registration_evidence=evidence,now=self.t0)
+        self.assertEqual(json.loads((root/'orchestration-state.json').read_text())['tasks'][0]['project']['registration_method'],'official-cli-trust')
+
     def test_project_path_and_frozen_material_drift_fail_closed(self) -> None:
         fixture = Fixture(self.root)
         view = fixture.initialize(now=self.t0)

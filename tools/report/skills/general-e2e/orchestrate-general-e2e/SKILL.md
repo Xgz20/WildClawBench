@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.24` 的 macOS 项目注册默认使用已核验应用包内的官方 `codex app ABS`，再自动点击完整回显同一绝对目录的唯一“Trust folder／信任文件夹”。回执绑定 CLI 路径/SHA/argv、目标目录及实际点击；先前已有的同路径信任弹窗继续可恢复。未知弹窗或目录不符不点击；未观察到弹窗时先用 list_projects 回读复用，不盲目注册、不默认等待人工。只有 CLI 不可用才沿用原生文件选择器，`--no-cli-open` 可显式禁用新入口。
+
 `0.11.23` 的基础设施纠正选择使用真实 initial 编排类型，并保持相同冻结输入与完整范围；历史 rescore 选择规则不变。
 
 `0.11.22` 的 record-score --native-response-recovery-proof 只收口原生 High 裁判已完整写出的原样结构化判定：严格绑定 SDK 身份、Prompt、工具写入调用、响应 SHA、已导入相同 JSON 和 server_overloaded 明确终态，机械导入/合分仍须 verify-score 通过。真实线程 FAILED 状态保留，控制器不补判、不改判定、不重发；未知失败、缺失判定或其他档位不适用。
