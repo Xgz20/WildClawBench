@@ -168,14 +168,16 @@ class RuleInputContextTests(unittest.TestCase):
                     with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "NATIVE_PUBLIC_CONTEXT_BINDING_INVALID"):
                         RUNTIME._native_context_rule_input(self.root, self.manifest, self.contract, self.transcript)
 
-    def formal_completion_fixture(self):
+    def formal_completion_fixture(self, *, document_suffix="", native_harness=None):
         unit=self.root/"completion-source-unit";base=unit/"evidence/tasks/fixture/execution"
         base.mkdir(parents=True);(unit/"receipts").mkdir()
         identity={"task_id":"fixture","attempt_id":"execution"}
-        final_path=base/"final-response.md";final_path.write_text("answer",encoding="utf-8")
+        final_path=base/"final-response.md";final_path.write_text("answer"+document_suffix,encoding="utf-8")
         final_relative=final_path.relative_to(unit).as_posix()
         execution={"identity":identity,"phase":"COMPLETED","session":{"verified":True,"session_id":"session","turn_id":"turn","cwd":"/bound/workspace"},
             "evidence":{"final_response_path":final_relative}}
+        if native_harness is not None:
+            execution["harness"]={"id":native_harness}
         record=base/"execution-record.json";record.write_text(json.dumps(execution),encoding="utf-8")
         evidence=base/"evidence-manifest.json";evidence.write_text(json.dumps({"identity":identity,"artifacts":[{
             "path":final_relative,"sha256":RUNTIME._sha256_file(final_path),"size":len(final_path.read_bytes())}]}),encoding="utf-8")
@@ -203,6 +205,23 @@ class RuleInputContextTests(unittest.TestCase):
         (self.root/"worker/request.json").write_text(json.dumps({"transcript":view}))
         with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,"RULE_INPUT_CONTEXT_DRIFT"):
             RUNTIME._verify_rule_input_context(self.root,self.manifest)
+
+    def test_astudio_document_single_terminal_lf_retains_exact_native_body(self):
+        self.formal_completion_fixture(document_suffix="\n",native_harness="astronstudio")
+        original=(self.root/"private/completion/final-response.md").read_bytes()
+        view,proof=RUNTIME._formal_completion_rule_input(self.root,self.manifest,self.transcript)
+        self.assertEqual(view[-1]["last_agent_message"],"answer")
+        self.assertEqual(proof["final_response_transport_normalization"]["removed_document_suffix"],"\n")
+        self.assertEqual((self.root/"private/completion/final-response.md").read_bytes(),original)
+        for text in [" answer","answer\n\n","answer\r","answer ","different"]:
+            altered=json.loads(json.dumps(self.transcript));altered[-1]["content"]=text
+            with self.subTest(text=text),self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,"FORMAL_COMPLETION_BINDING_INVALID"):
+                RUNTIME._formal_completion_rule_input(self.root,self.manifest,altered)
+
+    def test_unknown_harness_does_not_gain_astudio_document_lf_compatibility(self):
+        self.formal_completion_fixture(document_suffix="\n",native_harness="unknown")
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,"FORMAL_COMPLETION_BINDING_INVALID"):
+            RUNTIME._formal_completion_rule_input(self.root,self.manifest,self.transcript)
 
     def test_completion_receipt_must_match_last_reply_and_all_original_hashes(self):
         self.formal_completion_fixture()

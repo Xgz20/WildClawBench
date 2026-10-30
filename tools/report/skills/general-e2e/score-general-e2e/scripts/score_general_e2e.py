@@ -988,6 +988,8 @@ def _freeze_formal_completion(root: Path, unit: Path, record_path: Path, executi
     source_paths = {"execution_record": record_path.relative_to(unit).as_posix(), "evidence_manifest": evidence_path.relative_to(unit).as_posix(), "final_response": str(relative)}
     receipt = {"profile": FORMAL_COMPLETION_PROFILE, "identity": execution["identity"], "source_paths": source_paths,
         "execution_record_sha256": _sha256_file(record_path), "files": {}}
+    if execution.get("harness", {}).get("id") == "astronstudio":
+        receipt["final_response_text_profile"] = "astronstudio-appended-document-lf/v1"
     _completion_payload(execution, receipt, data, source_paths, record_path.read_bytes())
     directory = root / "private/completion"; directory.mkdir(parents=True)
     for key, content in data.items():
@@ -1012,14 +1014,27 @@ def _formal_completion_rule_input(root: Path, manifest: Mapping[str, Any], trans
             raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", key)
         data[key] = content
     execution_path = root / manifest["paths"]["execution_record"]
-    body = _completion_payload(_read_json(execution_path), receipt, data, receipt["source_paths"], execution_path.read_bytes())
+    execution = _read_json(execution_path)
+    body = _completion_payload(execution, receipt, data, receipt["source_paths"], execution_path.read_bytes())
     messages = [r for r in transcript if r.get("type") == "assistant_message" and r.get("role") == "assistant" and _instruction_text(r)]
+    normalization = None
+    if (messages and body != _instruction_text(messages[-1])
+            and receipt.get("final_response_text_profile") == "astronstudio-appended-document-lf/v1"
+            and execution.get("harness", {}).get("id") == "astronstudio"
+            and body == _instruction_text(messages[-1]) + "\n"):
+        # execute_astronstudio_macos.mjs writes `${finalResponse}\n`.
+        # Use the exact already-bound native message; keep the collected document bytes.
+        body = _instruction_text(messages[-1])
+        normalization = {"profile": "astronstudio-appended-document-lf/v1", "removed_document_suffix": "\n",
+                         "native_message_sha256": _sha256_bytes(body.encode("utf-8"))}
     if (body and (not messages or _instruction_text(messages[-1]) != body)) or (not body and messages):
         raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "canonical final reply differs or is ambiguous")
     proof = {"schema_version":"wildclawbench.general-e2e-rule-input-completion/v1", "identity":manifest["identity"],
         "formal_completion_receipt_sha256":descriptor["sha256"], "canonical_transcript_sha256":manifest["digests"]["transcript_sha256"],
         "final_response_sha256":_sha256_bytes(data["final_response"]), "last_assistant_event_id":messages[-1].get("event_id") if messages else None,
         "candidate_content_synthesized":False}
+    if normalization is not None:
+        proof["final_response_transport_normalization"] = normalization
     event = {"type":"task_complete", "last_agent_message":body, "identity":manifest["identity"],
         "source":{"adapter":FORMAL_COMPLETION_PROFILE,"receipt_path":descriptor["path"],"receipt_sha256":descriptor["sha256"]}}
     return [*transcript, event], proof
