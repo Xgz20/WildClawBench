@@ -35,7 +35,7 @@ export const WORKBUDDY_MACOS_INSTALLATION_VARIANTS = Object.freeze([
 ]);
 
 export const WORKBUDDY_PROBE_SCHEMA = "wildclawbench.general-e2e-workbuddy-macos-probe/v1";
-export const WORKBUDDY_PROBE_VERSION = "0.1.1";
+export const WORKBUDDY_PROBE_VERSION = "0.1.2";
 export const DEFAULT_SESSION_DB = join(
   homedir(),
   "Library",
@@ -212,6 +212,8 @@ function parseNativeSessionRows(stdout) {
   if (!Array.isArray(rows)) throw new Error("native sessions result must be an array");
   const seen = new Set();
   return rows.map((row) => {
+    if (row?.transport === "cloud") return null;
+    if (row?.transport !== "local") throw new Error("unknown native session transport");
     if (!row || typeof row.conversation_id !== "string" || !row.conversation_id.trim()
         || typeof row.cwd !== "string" || !row.cwd.startsWith("/")
         || typeof row.status !== "string" || !row.status.trim()
@@ -219,8 +221,8 @@ function parseNativeSessionRows(stdout) {
     seen.add(row.conversation_id);
     return { conversation_id: row.conversation_id, cwd: row.cwd, status: row.status,
       created_at_ms: Number.isFinite(row.created_at_ms) ? row.created_at_ms : null,
-      updated_at_ms: Number.isFinite(row.updated_at_ms) ? row.updated_at_ms : null };
-  });
+      updated_at_ms: Number.isFinite(row.updated_at_ms) ? row.updated_at_ms : null, transport: row.transport };
+  }).filter(Boolean);
 }
 
 export async function queryWorkBuddySessions(sessionDb, overrides = {}) {
@@ -246,7 +248,7 @@ export async function queryWorkBuddySessions(sessionDb, overrides = {}) {
     backend = "sqlite3-readonly-native-sessions/v1";
     result = await runCommand(overrides.sqliteBin || "/usr/bin/sqlite3", [
       "-readonly", "-json", metadata.path,
-      "SELECT id AS conversation_id, cwd, status, created_at AS created_at_ms, updated_at AS updated_at_ms FROM sessions ORDER BY id;",
+      "SELECT id AS conversation_id, cwd, status, created_at AS created_at_ms, updated_at AS updated_at_ms, transport FROM sessions ORDER BY id;",
     ], { capture: true, allowFailure: true }).catch((error) => ({ code: null, stdout: "", stderr: String(error) }));
   }
   if (result.code !== 0) {
@@ -263,6 +265,7 @@ export async function queryWorkBuddySessions(sessionDb, overrides = {}) {
       status: "observed",
       backend,
       snapshot_semantics: "single read transaction; source database is not modified",
+      session_scope: backend === "sqlite3-readonly-native-sessions/v1" ? "local-desktop; explicit cloud transport excluded; unknown transport rejected" : "legacy-local-index",
       metadata,
       sessions: backend === "sqlite3-readonly" ? parseSessionRows(result.stdout)
         : parseNativeSessionRows(result.stdout),

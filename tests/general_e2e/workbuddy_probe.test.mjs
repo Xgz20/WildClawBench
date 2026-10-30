@@ -23,7 +23,7 @@ test("native sessions schema fallback is read-only and rejects malformed or dupl
   try {
     const db = join(root, "workbuddy.db");
     await writeFile(db, "fixture");
-    let rows = [{ conversation_id: "native-1", cwd: "/exact/workspace", status: "Running", created_at_ms: 1, updated_at_ms: 2 }];
+    let rows = [{ conversation_id: "native-1", cwd: "/exact/workspace", status: "Running", created_at_ms: 1, updated_at_ms: 2, transport: "local" }];
     const calls = [];
     const runCommand = async (bin, args) => {
       calls.push(args);
@@ -37,11 +37,19 @@ test("native sessions schema fallback is read-only and rejects malformed or dupl
     assert.equal(result.status, "observed");
     assert.deepEqual(result.sessions, rows);
     assert.equal(calls.length, 2);
+    rows.push({ conversation_id: "cloud-team", cwd: "", status: "active", transport: "cloud" });
+    result = await queryWorkBuddySessions(db, { runCommand });
+    assert.equal(result.status, "observed");
+    assert.equal(result.sessions.length, 1);
+    assert.equal(result.sessions[0].conversation_id, "native-1");
+    rows.push({ conversation_id: "unknown", cwd: "", status: "active", transport: "future" });
+    assert.equal((await queryWorkBuddySessions(db, { runCommand })).status, "unavailable");
+    rows = rows.slice(0, 1);
     rows = [...rows, ...rows];
     result = await queryWorkBuddySessions(db, { runCommand });
     assert.equal(result.status, "unavailable");
     assert.deepEqual(result.sessions, []);
-    rows = [{ conversation_id: "native-1", cwd: null, status: "Running" }];
+    rows = [{ conversation_id: "native-1", cwd: null, status: "Running", transport: "local" }];
     assert.equal((await queryWorkBuddySessions(db, { runCommand })).status, "unavailable");
   } finally { await rm(root, { recursive: true, force: true }); }
 });

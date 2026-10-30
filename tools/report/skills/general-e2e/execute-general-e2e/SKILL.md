@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.8` 对新版原生索引显式按 transport 区分本地与云端会话：仅已声明 cloud 的同步会话不进入本机槽位判断，未知 transport 或本地身份不完整仍拒绝。
+
 `0.14.7` 支持显式指定新版 WorkBuddy `workbuddy.db` 的原生 sessions 表；仅在旧 ItemTable 不存在时尝试此只读结构，缺失身份、目录、状态及重复身份仍拒绝。新版运行时取证不要求旧 history 目录存在，但发送前仍核验应用、进程、CDP、完整原生会话索引、UI 配置与 runtime 能力。队列若子执行器在 journal 落盘前返回，保持 NEEDS_ATTENTION，禁止把未核实的 DISPATCHING 误报完成或继续派发。
 
 `0.14.0` 新执行的流程耗时从 Prompt 发送开始，到本机确认终态结束，不计发送前准备。原始发送确认时间和任务身份继续保留；旧冻结状态与回执不改写。
