@@ -59,7 +59,7 @@ def compose(args, *, frozen=None):
     if not ss.get('submission') or not rs.get('submission') or (rs.get('kind')!='rescore' and not correction):
         raise ValueError('LOCKED_SOURCE_AND_RESCORE_SUBMISSIONS_REQUIRED')
     if correction:
-        if rs.get('kind')!='scoring':raise ValueError('INITIAL_CORRECTION_SCOPE_REQUIRED')
+        if rs.get('kind')!='initial':raise ValueError('INITIAL_CORRECTION_SCOPE_REQUIRED')
         for key in ('unit_manifest_sha256','scoring_package_sha256','report_config_sha256'):
             if ss['sources'].get(key)!=rs['sources'].get(key):raise ValueError('FROZEN_INPUT_CHANGED:'+key)
     elif rs['sources']['source_state_sha256']!=digest(src/'orchestration-state.json') or rs['sources']['source_submission_sha256']!=digest(src/'submission.json'):

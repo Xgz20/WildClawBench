@@ -47,7 +47,7 @@ class NativeContextCorrectionTests(unittest.TestCase):
         scope={'batch_id':'b','unit_id':'u'};dataset={'id':'d','digest':'f'};judge={'model':'gpt-fixture','reasoning_effort':'high'};sources={k:k+'-sha' for k in ['unit_manifest_sha256','scoring_package_sha256','report_config_sha256']}
         old={'task_id':'b','phase':'THREAD_FAILED','score':None,'native_context_rejection':{'actual_effort':'medium'},'thread':{'thread_id':'old-thread','status':'COMPLETED'},'attempt_path':'attempts/old-b','scoring_attempt_id':'old-b'}
         new={'task_id':'b','phase':'SCORE_RECORDED','thread':{'thread_id':'new-thread','status':'COMPLETED'},'attempt_path':'attempts/new-b','scoring_attempt_id':'new-b','prompt_path':'prompts/b.md'}
-        ss={'submission':True,'judge':judge,'sources':sources,'score_skill':{},'tasks':[old]};rs={'submission':True,'kind':'scoring','judge':judge,'sources':sources,'tasks':[new]}
+        ss={'submission':True,'judge':judge,'sources':sources,'score_skill':{},'tasks':[old]};rs={'submission':True,'kind':'initial','judge':judge,'sources':sources,'tasks':[new]}
         original=src/old['attempt_path'];adopted=rep/new['attempt_path'];original.mkdir(parents=True);adopted.mkdir(parents=True)
         for directory in (original,adopted):(directory/'attempt-manifest.json').write_text(json.dumps({k:{'same':'frozen'} for k in ['candidate','contract','dataset','execution','task']}))
         (adopted/'score.json').write_text('{"fixed":"score"}');(src/'execution-records/a.json').write_text('{}');(src/'execution-records/b.json').write_text('{}')
