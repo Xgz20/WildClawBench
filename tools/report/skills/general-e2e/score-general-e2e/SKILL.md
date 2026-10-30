@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.33` 对齐Office001原探针的候选打开失败分支：只有同一原生应用已打开已知好控制文件、却不能把候选打开为原生文档时，才返回原C5的fail/0；连接、控制文件、后续检查、导出、保存重开、超时或收尾故障仍评测异常。上游结构损坏判定不代替该实际打开检查，旧attempt不重写。
+
 `0.10.32` 为Office001新macOS attempt提供显式已验证的原生Writer API编辑探针。先按[本地运行时](references/local-rule-runtime.md)配置独立JDK/固定UNO JAR并真实跑合成文档编辑、保存、重开；只有精确原contract/source和实测runtime marker匹配才启用。原C5正文位置、段落、两份必需表格及逐表单元格编辑条件沿用，原grade数值函数/权重不变；Windows原WPS COM和旧attempt不改。评分端原生PDF、两版全页图、编辑副本及进程回执独立冻结，不冒充候选交付或主动验收。未知原生错误仍评测异常，不补零。新建grader-evidence里的Office副本也做只读字节保护；旧快照不原地修改。
 
 `0.10.31` 为精确契约/规则SHA绑定的四象限PPT、XMind转PPT及库存分析002–004新attempt冻结公开Office输入兼容v2。仅当业务OPC部件与原公开材料逐字节一致、差异限于CWM属性及必要登记时，原哈希判据接受该有审计变体；原权重、分母、公式、候选和原件不改。模板未修改识别同样只在注册的交付路径检查等价模板，不把属性变体当作实际改稿。旧attempt没有新marker时沿用原有效源码，包括旧分页/跨月协议；不原地启用、不改旧分数。完整规则见[本地受管规则运行时](references/local-rule-runtime.md)。

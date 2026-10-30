@@ -139,6 +139,10 @@ public class NativeDocxEditProbe {
             receipt.setProperty("control_opened","true");close(control);control=null;
             receipt.setProperty("phase","original_open_readonly");
             document=loader.loadComponentFromURL(args[2],"_blank",0,opening(true));
+            if(UnoRuntime.queryInterface(XTextDocument.class,document)==null)
+                throw new IllegalStateException("Candidate did not open as a native text document");
+            receipt.setProperty("opened","true");
+            receipt.setProperty("phase","original_inspection");
             Facts original=inspect(document);
             receipt.setProperty("native_paragraphs",Integer.toString(original.paragraphs));
             receipt.setProperty("native_tables",Integer.toString(original.tableNames.length));
@@ -186,7 +190,13 @@ public class NativeDocxEditProbe {
                 receipt.setProperty("status","pass");exit=0;
             }
         } catch(Throwable error) {
-            receipt.setProperty("status","evaluator_error");receipt.setProperty("error",error.toString());error.printStackTrace();
+            if("original_open_readonly".equals(receipt.getProperty("phase"))
+                    && "true".equals(receipt.getProperty("control_opened"))) {
+                receipt.setProperty("status","candidate_not_openable");
+                receipt.setProperty("reason","Candidate cannot open in the same native application that opened the known-good control");
+                exit=0;
+            } else receipt.setProperty("status","evaluator_error");
+            receipt.setProperty("error",error.toString());error.printStackTrace();
         } finally {
             close(control);close(document);
             try(var stream=Files.newBufferedWriter(Path.of(args[6]),StandardCharsets.UTF_8)){receipt.store(stream,"Managed native Writer editability evidence");}

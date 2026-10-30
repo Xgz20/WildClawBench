@@ -189,7 +189,7 @@ def run_probe(*, config_path, source, control, output_root, timeout_seconds=180)
         facts={'status':'evaluator_error','reason':'native receipt invalid'}
     unchanged = all(sha(item['path'])==item['sha256'] for item in inputs)
     status = facts.get('status')
-    if timed_out or startup_error or residual or not unchanged or server.returncode!=0 or client is None or client.returncode not in (0,) or status not in {'pass','candidate_not_editable'}:
+    if timed_out or startup_error or residual or not unchanged or server.returncode!=0 or client is None or client.returncode not in (0,) or status not in {'pass','candidate_not_editable','candidate_not_openable'}:
         status = 'evaluator_error'
     profile_archive = None
     if status!='evaluator_error' and profile.is_dir():

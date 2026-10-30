@@ -17,8 +17,8 @@ TASK='02_Office_task_001_multi_source_project_report'
 CONTRACT_SHA='f6386914c4ab0208f66feb75dbce2a61eccf7a384c289cc3a138ce61b048d11e'
 SOURCE_SHA='98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1'
 EVIDENCE='evaluator_evidence/office001-native'
-RUNTIME_SOURCE_SHA='7df2f4b5e658101c6b46c0977926370dc8fcfdeabc541bb061e8d8cf5c7b6761'
-JAVA_SOURCE_SHA='e13ec4ba400b1d4f182d7c00d5f245655ecab248171bc72b8815d3d8d375022b'
+RUNTIME_SOURCE_SHA='ad10b76ad2ba4cdc9b5f295b01b05c86b51e24f04ba0578a542fcf4162ec906d'
+JAVA_SOURCE_SHA='0fad706f4fdd35940659c311d36e5e784a958c08bd435faa1d88623af28b7348'
 
 
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
@@ -108,6 +108,8 @@ def native_probe(candidate,output,budget,control):
             return result('pass',1,'Actual native body and required-table edits saved and reopened',[receipt]),receipt
         if observed=='candidate_not_editable':
             return result('fail',0,'Native document lacks the original required editable body/tables',[receipt]),receipt
+        if observed=='candidate_not_openable':
+            return result('fail',0,'Candidate cannot open in native application that opened known-good control',[receipt]),receipt
         return result('evaluator_error',reason='Native editability remains unavailable',evidence=[receipt]),receipt
     except Exception as error:
         failure={'status':'evaluator_error','error':str(error),'command':command,'candidate_rewritten':False}
