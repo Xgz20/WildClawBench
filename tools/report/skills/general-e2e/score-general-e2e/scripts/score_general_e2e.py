@@ -31,6 +31,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
+import dataset_rule_corrections
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -2614,7 +2615,16 @@ def _materialize_rule_component_evidence(
 def _effective_rule_source(
     manifest: Mapping[str, Any], source: str
 ) -> tuple[str, dict[str, Any] | None]:
-    """Apply the reviewed null-ID correction only to the exact frozen rule."""
+    """Apply implementation repairs only to an exact frozen task/source pair."""
+
+    try:
+        corrected, receipt = dataset_rule_corrections.effective_source(
+            manifest.get("identity", {}).get("task_id"), source
+        )
+    except ValueError as exc:
+        raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
+    if receipt is not None:
+        return corrected, receipt
 
     task_id = "06_Safety_Alignment_task_009_consent_filtering"
     original_sha = "7ed41a9d02321b35f61528bc1f4b01eaaf736bf860052427081f6cfc486a07bb"
@@ -4573,6 +4583,7 @@ def query_evidence_attempt(
     path_contains: str | None = None,
     text: str | None = None,
     max_chars: int = 65536,
+    file_char_offset: int | None = None,
 ) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(root)
@@ -4582,6 +4593,11 @@ def query_evidence_attempt(
         raise ScoringRuntimeError("SEMANTIC_QUERY_PAGE_INVALID")
     if max_chars < 1 or max_chars > MAX_EVIDENCE_TEXT_PAGE_CHARS:
         raise ScoringRuntimeError("SEMANTIC_QUERY_SIZE_INVALID")
+    if file_char_offset is not None and (
+        mode != "file" or offset != 0 or isinstance(file_char_offset, bool)
+        or not isinstance(file_char_offset, int) or file_char_offset < 0
+    ):
+        raise ScoringRuntimeError("SEMANTIC_QUERY_CHAR_PAGE_INVALID")
     catalog = _load_semantic_catalog(root)
     index_entries = catalog.get("evidence_index", {}).get("entries")
     if not isinstance(index_entries, list):
@@ -4677,6 +4693,29 @@ def query_evidence_attempt(
             "end": offset + len(items),
             "total": len(events),
         }
+    elif mode == "file" and file_char_offset is not None:
+        if evidence_id is None or evidence_id not in by_id:
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_ID_UNKNOWN", repr(evidence_id))
+        relative = by_id[evidence_id].get("reference", {}).get("path")
+        if not isinstance(relative, str):
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_FILE_REQUIRED", evidence_id)
+        path = _resolve_within(root, relative, "semantic evidence file")
+        if path.stat().st_size > MAX_PACKAGE_MEMBER_BYTES:
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_FILE_TOO_LARGE", relative)
+        try:
+            content = path.read_bytes().decode("utf-8")
+        except UnicodeDecodeError as exc:
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_NOT_UTF8", relative) from exc
+        if file_char_offset > len(content):
+            raise ScoringRuntimeError("SEMANTIC_QUERY_CHAR_PAGE_INVALID")
+        end = min(file_char_offset + max_chars, len(content))
+        selected = content[file_char_offset:end]
+        items = ([{"char_start": file_char_offset, "char_end": end, "text": selected,
+                   "text_truncated": False, "evidence_id": evidence_id, "path": relative}]
+                 if selected else [])
+        returned_evidence_ids = [evidence_id] if items else []
+        coverage = {"kind": "file-characters", "path": relative,
+                    "start": file_char_offset, "end": max(end, file_char_offset), "total": len(content)}
     else:
         if evidence_id is None or evidence_id not in by_id:
             raise ScoringRuntimeError(
@@ -4735,22 +4774,26 @@ def query_evidence_attempt(
             "total_lines": total_lines,
             "truncated_by_chars": truncated_by_chars,
         }
-    total_matches = len(matches) if mode != "file" else total_lines
+    character_page = mode == "file" and file_char_offset is not None
+    total_matches = len(content) if character_page else len(matches) if mode != "file" else total_lines
     result_payload = {
         "mode": mode,
         "offset": offset,
         "limit": limit,
         "total_matches": total_matches,
         "returned_count": len(items),
-        "has_more": offset + len(items) < total_matches,
+        "has_more": end < total_matches if character_page else offset + len(items) < total_matches,
         "items": items,
     }
+    if character_page:
+        result_payload.update(file_char_offset=file_char_offset,
+                              next_file_char_offset=end if end < total_matches else None)
     query_id = _append_semantic_query(
         root,
         mode=mode,
         filters=filters,
-        offset=offset,
-        limit=limit,
+        offset=file_char_offset if character_page else offset,
+        limit=max_chars if character_page else limit,
         total=total_matches,
         returned_evidence_ids=returned_evidence_ids,
         returned_event_ids=returned_event_ids,
@@ -6145,6 +6188,8 @@ def main(argv: list[str] | None = None) -> int:
     query_evidence.add_argument("--path-contains")
     query_evidence.add_argument("--text")
     query_evidence.add_argument("--max-chars", type=int, default=65536)
+    query_evidence.add_argument("--file-char-offset", type=int,
+                                help="文件按 Unicode 字符分页；用于超过单页的长行 JSON，与行 offset 不混用")
 
     record_semantics = subparsers.add_parser("record-semantics")
     record_semantics.add_argument("--attempt-root", required=True, type=Path)
@@ -6239,6 +6284,7 @@ def main(argv: list[str] | None = None) -> int:
                 path_contains=args.path_contains,
                 text=args.text,
                 max_chars=args.max_chars,
+                file_char_offset=args.file_char_offset,
             )
         elif args.command == "record-semantics":
             result = record_semantics_attempt(

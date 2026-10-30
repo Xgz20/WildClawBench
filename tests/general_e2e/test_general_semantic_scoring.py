@@ -51,13 +51,15 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         RUNTIME._remove_tree(self.root)
         self.temp.cleanup()
 
-    def _hybrid_attempt(self, name: str = "hybrid", *, office_reference: bool = False) -> Path:
+    def _hybrid_attempt(self, name: str = "hybrid", *, office_reference: bool = False,
+                        candidate_text: str = "ready\n") -> Path:
         fixture = Fixture(
             self.root / name,
             grading_type="hybrid",
             grading_weights={"automated": 0.5, "llm_judge": 0.5},
             llm_judge_rubric=RUBRIC,
             office_reference=office_reference,
+            candidate_text=candidate_text,
         )
         attempt = fixture.prepare(f"score-{name}")
         rule_component = {
@@ -473,6 +475,34 @@ class GeneralSemanticScoringTests(unittest.TestCase):
                 mode="catalog",
                 text="answer",
             )
+
+    def test_character_pages_recover_an_entire_long_unicode_line(self) -> None:
+        text = "起点😀" + "文🚀" * 40000 + "终点\r\n"
+        attempt = self._hybrid_attempt("long-character-pages", candidate_text=text)
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        catalog = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="catalog", evidence_type="candidate_file")
+        eid = next(item["id"] for item in catalog["items"] if item["reference"]["path"].endswith("answer.txt"))
+        offset = 0
+        parts = []
+        while True:
+            page = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="file", evidence_id=eid,
+                                                  file_char_offset=offset, max_chars=8192)
+            parts.append(page["items"][0]["text"])
+            self.assertFalse(page["items"][0]["text_truncated"])
+            if not page["has_more"]:
+                self.assertIsNone(page["next_file_char_offset"])
+                break
+            self.assertGreater(page["next_file_char_offset"], offset)
+            offset = page["next_file_char_offset"]
+        self.assertEqual("".join(parts), text)
+        log = json.loads((attempt / "semantic/query-log.json").read_text())
+        self.assertEqual(log["queries"][-1]["coverage"]["end"], len(text))
+        for args in [{"mode": "catalog", "file_char_offset": 0},
+                     {"mode": "file", "file_char_offset": -1},
+                     {"mode": "file", "file_char_offset": len(text) + 1},
+                     {"mode": "file", "file_char_offset": 1, "offset": 1}]:
+            with self.subTest(args=args), self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "CHAR_PAGE_INVALID"):
+                RUNTIME.query_evidence_attempt(attempt_root=attempt, evidence_id=eid, **args)
 
     def test_absence_claim_requires_unfiltered_complete_transcript_pages(self) -> None:
         attempt = self._hybrid_attempt("absence")

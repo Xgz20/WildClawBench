@@ -3,6 +3,10 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.20` 对精确绑定原源码 SHA 的四象限 PPT 和整改溯源评分器启用完整分页取证：每文件 4 MiB、合计 16 MiB 的资源上限替代过小的内置字符门槛。所有正文完整落盘，沿用 query-evidence 分页接口，禁止截断后判分。规则修正回执保留新旧源码 SHA、资源策略及原冻结契约；只对新评分 attempt 生效，旧题面、权重、检查点、分值锚点和评分记录不改写。
+
+对长行 JSON 使用 `query-evidence --mode file --evidence-id ID --file-char-offset 0 --max-chars 16384`；按返回的 `next_file_char_offset` 继续，直到 `has_more=false`。此 offset 按 Unicode 字符计数，保留中文、emoji 和原换行；不得与行级 `--offset` 混用。每页 query_id 都保留在复核引用中，全部契约要求的取证正文读取完整后才能记录语义判定。原有行分页继续兼容。
+
 `0.10.19` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。
 
 `0.10.18` 为新 attempt 冻结正式采集的终稿、完成回执和证据清单。只有已验证原生终态、原执行记录与证据清单受到采集回执 SHA 绑定、终稿受到证据清单绑定，且终稿与标准转录中最后的助手正文完全一致时，才在规则输入视图追加有来源的 task_complete 收据；原标准转录保持原字节，不合成候选内容。rule-input-completion.json、Worker 请求和规则审计均重新核验，完成收据可按 rule_audit 分页查询；移除 runtime 后仍可验分。旧 attempt 没有该冻结描述时保持原行为，不猜测最后一段计划是终稿，不重评已完成语义分。

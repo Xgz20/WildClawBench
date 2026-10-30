@@ -128,6 +128,7 @@ class Fixture:
         contract_overrides: dict | None = None,
         office_reference: bool = False,
         office_candidate: bool = False,
+        candidate_text: str = "ready\n",
     ):
         self.root = root
         self.grading_type = grading_type
@@ -145,7 +146,7 @@ class Fixture:
         self.unit_root = root / "unit"
         self.candidate = self.unit_root / "evidence/candidate/workspace"
         self.candidate.mkdir(parents=True)
-        (self.candidate / "answer.txt").write_text("ready\n", encoding="utf-8")
+        (self.candidate / "answer.txt").write_text(candidate_text, encoding="utf-8")
         if office_candidate:
             (self.candidate / "candidate.xlsx").write_bytes(b"frozen candidate Office bytes")
         if mapped_nested_results:
