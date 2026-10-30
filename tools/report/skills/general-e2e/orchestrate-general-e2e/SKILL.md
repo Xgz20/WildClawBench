@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.20` 的 reject-native-context 只在原线程明确完成且尚未准入成绩后，按原始 SDK 逐项核验线程、工作空间、冻结 Prompt、唯一实际模型档位及完整单 turn，留证拒绝不符的裁判配置。保留原会话与分数文件，不冒充失败终态或纳入固定裁判比较；配置匹配的合法会话不可用此入口拒绝。
+
 `0.11.19` 的状态恢复同时验证显式公共上下文 setup 未评分记录及其原 worker/contract SHA；已创建裁判的登记沿用同一线程，不因该记录类型重建或重发。
 
 `0.11.18` 允许显式留证数据集原规则声明的精确公共上下文准入失败（ValueError: EVALUATOR_SETUP_INVALID: public task context delivery not evidenced）。仅保留 evaluator-public-context-setup-error/v1 未评分，不补上下文、不补零或代替裁判；其他 ValueError、身份和基础设施异常仍失败关闭。

@@ -1196,6 +1196,22 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             terminal["recommended_actions"][0]["action"], "VERIFY_SCORE"
         )
 
+    def test_native_configuration_rejection_requires_real_completed_mismatch(self) -> None:
+        for label,effort,completed,prompt_ok,allowed in [("mismatch","medium",True,True,True),("correct","high",True,True,False),("active","medium",False,True,False),("wrong-prompt","medium",True,False,False)]:
+            with self.subTest(label=label):
+                fixture=Fixture(self.root/label,task_ids=("task-one",));view=fixture.initialize(now=self.t0);view=self._record_first_project(fixture,view);root=Path(view["orchestration_root"])
+                ORCHESTRATOR.preflight(root,task_id="task-one",desktop_version="2026.918.1",now=self.t0)
+                ORCHESTRATOR.record_thread(root,task_id="task-one",thread_id="thread-one",host_id="host-local",now=self.t0)
+                state=json.loads((root/"orchestration-state.json").read_text());task=state["tasks"][0];cwd=str((root/task["attempt_path"]).resolve());prompt=(root/task["prompt_path"]).read_text() if prompt_ok else "not the frozen prompt"
+                rows=[{"type":"session_meta","payload":{"id":"thread-one","cwd":cwd,"runtime_workspace_roots":[cwd]}},{"type":"turn_context","payload":{"cwd":cwd,"model":"gpt-fixture","effort":effort}},{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":prompt}]}},{"type":"event_msg","timestamp":"2026-01-01T00:00:00Z","payload":{"type":"task_started","turn_id":"turn-one"}},{"type":"event_msg","timestamp":"2026-01-01T00:00:01Z","payload":{"type":"task_complete","turn_id":"turn-one","duration_ms":1000}}]
+                sdk=root/"native-fixture.jsonl";sdk.write_text("".join(json.dumps(r)+"\n" for r in rows))
+                if completed:ORCHESTRATOR.record_wait(root,task_id="task-one",wait_sequence=1,wait_cursor="cursor",wait_status="COMPLETED",now=self.t0)
+                if allowed:
+                    result=ORCHESTRATOR.reject_native_judge_context(root,task_id="task-one",sdk_file=sdk,now=self.t0)
+                    self.assertEqual(result["tasks"][0]["phase"],"THREAD_FAILED");saved=json.loads((root/"orchestration-state.json").read_text());self.assertEqual(saved["tasks"][0]["thread"]["status"],"COMPLETED");self.assertIsNone(saved["tasks"][0]["score"]);ORCHESTRATOR.status(root,now=self.t0)
+                else:
+                    with self.assertRaises((ORCHESTRATOR.OrchestrationError,ValueError)):ORCHESTRATOR.reject_native_judge_context(root,task_id="task-one",sdk_file=sdk,now=self.t0)
+
     def test_late_completion_replaces_only_the_strictly_reproducible_submission(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))
         view = fixture.initialize(timeout=10, now=self.t0)

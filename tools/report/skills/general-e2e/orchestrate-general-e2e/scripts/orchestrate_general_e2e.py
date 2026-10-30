@@ -1598,6 +1598,17 @@ def _late_completion_submission_recovery(
             raise OrchestrationError("SUBMISSION_CONTENT_MISMATCH")
         event = late_events[0]
         thread = task.get("thread")
+        rejection = task.get("native_context_rejection")
+        if rejection is not None:
+            proof_path = _regular_file(root/rejection["path"], "NATIVE_CONTEXT_REJECTION_INVALID")
+            proof = _read_json(proof_path, "NATIVE_CONTEXT_REJECTION_INVALID")
+            if (not _inside(root,proof_path) or _sha256_file(proof_path)!=rejection["sha256"]
+                    or task.get("phase")!="THREAD_FAILED" or task.get("score") is not None
+                    or proof.get("thread_id")!=task.get("thread",{}).get("thread_id")
+                    or proof.get("expected_model")!=state["judge"]["model"]
+                    or proof.get("expected_effort")!=state["judge"]["reasoning_effort"]
+                    or (proof.get("model"),proof.get("effort"))==(state["judge"]["model"],state["judge"]["reasoning_effort"])):
+                raise OrchestrationError("NATIVE_CONTEXT_REJECTION_INVALID",str(task.get("task_id")))
         score = task.get("score")
         if (
             task.get("phase") != "SCORE_RECORDED"
@@ -2692,6 +2703,40 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     return _save(root, state, event_time)
 
 
+def reject_native_judge_context(orchestration_root: Path, *, task_id: str, sdk_file: Path, now: datetime | None = None) -> dict[str, Any]:
+    """Reject a completed, unadmitted native judge with proven wrong configuration."""
+    from verify_judge_context import verify_context
+    root = _state_root(orchestration_root)
+    state = _verify_state(root)
+    task = _task_by_id(state, _identifier(task_id, "task_id"))
+    if (state["judge"]["protocol"] != "codex-agent-judge-v1"
+            or task.get("phase") != "SCORE_VERIFICATION_PENDING" or task.get("score")
+            or task.get("thread", {}).get("status") != "COMPLETED"):
+        raise OrchestrationError("NATIVE_CONTEXT_REJECTION_NOT_ALLOWED", task_id)
+    path = _regular_file(sdk_file, "NATIVE_JUDGE_SDK_INVALID")
+    rows = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    contexts = [r["payload"] for r in rows if r.get("type") == "turn_context"]
+    settings = {(c.get("model"), c.get("effort")) for c in contexts}
+    expected = (state["judge"]["model"], state["judge"]["reasoning_effort"])
+    if len(settings) != 1 or expected in settings:
+        raise OrchestrationError("NATIVE_CONTEXT_REJECTION_NOT_ALLOWED", "not a unique actual configuration mismatch")
+    actual = next(iter(settings))
+    proof = verify_context(path, thread_id=task["thread"]["thread_id"],
+        cwd=str((root/task["attempt_path"]).resolve()), model=actual[0], effort=actual[1],
+        prompt=(root/task["prompt_path"]).read_text(encoding="utf-8"))
+    proof.update(expected_model=expected[0], expected_effort=expected[1],
+                 rejection="native-judge-model-or-effort-mismatch/v1", score_admitted=False)
+    target = root/"rejected-native-context"/(task["scoring_attempt_id"]+".json")
+    target.parent.mkdir(exist_ok=True)
+    _write_new_json(target, proof)
+    task["native_context_rejection"] = {"path":target.relative_to(root).as_posix(),"sha256":_sha256_file(target),
+        "thread_id":task["thread"]["thread_id"],"expected_model":expected[0],"expected_effort":expected[1],
+        "actual_model":actual[0],"actual_effort":actual[1]}
+    task["phase"] = "THREAD_FAILED"
+    task["history"].append({"at":_timestamp(now or _now()),"event":"NATIVE_JUDGE_CONFIGURATION_REJECTED",**task["native_context_rejection"]})
+    return _save(root,state,now or _now())
+
+
 def record_score(
     orchestration_root: Path,
     *,
@@ -3049,6 +3094,10 @@ def main(argv: list[str] | None = None) -> int:
     check.add_argument("--desktop-version", required=True)
     check.add_argument("--browser-runtime-python", type=Path)
     check.add_argument("--playwright-browsers-path", type=Path)
+    rejected = subparsers.add_parser("reject-native-context", help="Reject a completed wrong-model/effort native judge without admitting its score")
+    rejected.add_argument("--orchestration-root",type=Path,required=True)
+    rejected.add_argument("--task-id",required=True)
+    rejected.add_argument("--sdk-file",type=Path,required=True)
     native = subparsers.add_parser("verify-native-context", help="Read-only native model/cwd/prompt/turn verification without exporting reasoning")
     _parse_common(native)
     native.add_argument("--task-id", required=True)
@@ -3154,6 +3203,8 @@ def main(argv: list[str] | None = None) -> int:
                 registration_evidence=args.registration_evidence,
                 desktop_version=args.desktop_version,
             )
+        elif args.command == "reject-native-context":
+            result = reject_native_judge_context(args.orchestration_root,task_id=args.task_id,sdk_file=args.sdk_file)
         elif args.command == "verify-native-context":
             from verify_judge_context import verify_context
             root = _state_root(args.orchestration_root)
