@@ -1394,6 +1394,23 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                     with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,"RULE_ERROR_DEFERRAL_NOT_ALLOWED"):
                         ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Must not ignore other evidence errors",now=self.t0)
 
+    def test_only_declared_public_context_setup_guard_can_be_retained_unscored(self) -> None:
+        message="EVALUATOR_SETUP_INVALID: public task context delivery not evidenced"
+        for label,error_type,text,allowed in [("declared","ValueError",message,True),("other-value","ValueError","Unexpected setup damage",False),("other-type","RuntimeError",message,False)]:
+            with self.subTest(label=label):
+                source="def grade(transcript, workspace_path):\n raise "+error_type+"("+repr(text)+")"
+                fixture=Fixture(self.root/label,task_ids=("task-error",),grading_type="hybrid",contract_overrides={"automated_checks":source})
+                root=Path(fixture.initialize(now=self.t0)["orchestration_root"])
+                with patch.object(ORCHESTRATOR,"_run_score_command",side_effect=self._direct_local_score_command):
+                    with self.assertRaises((ORCHESTRATOR.OrchestrationError,SCORE_RUNTIME.ScoringRuntimeError)):
+                        ORCHESTRATOR.run_rule_score_task(root,task_id="task-error",runtime_python=Path(sys.executable),now=self.t0)
+                if allowed:
+                    ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Public context delivery unavailable; preserve setup error without capability score",now=self.t0)
+                    state=json.loads((root/"orchestration-state.json").read_text());self.assertEqual(state["tasks"][0]["scoring_error"]["kind"],"evaluator-public-context-setup-error/v1")
+                else:
+                    with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,"RULE_ERROR_DEFERRAL_NOT_ALLOWED"):
+                        ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Do not bypass unknown errors",now=self.t0)
+
     def test_explicit_partial_and_additional_scores_restore_full_scope_without_rejudging(self) -> None:
         fixture = Fixture(self.root / "scope-selection", task_ids=("task-a", "task-b"), grading_type="automated")
         partial = ORCHESTRATOR.initialize(unit_root=fixture.unit_root, scoring_package=fixture.scoring_package,

@@ -2657,23 +2657,28 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     result = _read_json(result_path, "RULE_FAILURE_AUDIT_INVALID")
     manifest = _read_json(attempt / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID")
     dataset_error = result.get("error", {})
+    contract = _read_json(attempt / manifest["paths"]["contract"], "RULE_FAILURE_CONTRACT_INVALID")
+    context_guard = "EVALUATOR_SETUP_INVALID: public task context delivery not evidenced"
+    setup_context_error = (dataset_error.get("type") == "ValueError"
+        and dataset_error.get("message") == context_guard
+        and context_guard in str(contract.get("automated_checks", "")))
     allowed_error = dataset_error.get("type") in {"EvaluationError", "EvaluationReviewRequired", "ReviewRequired"}
     allowed_error = allowed_error or (dataset_error.get("type") == "EvidenceError" and dataset_error.get("message") ==
         "Required text evidence exceeds collector budget; do not report a valid semantic/capability score")
     allowed_error = allowed_error or (dataset_error.get("type") == "RuntimeError" and dataset_error.get("message") ==
         "EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging")
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or not allowed_error
+            or not (allowed_error or setup_context_error)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
     event_time = now or _now()
-    task["scoring_error"] = {"kind": "dataset-rule-evaluation-error/v1", "reason": _required_string(reason, "reason"),
+    task["scoring_error"] = {"kind": "evaluator-public-context-setup-error/v1" if setup_context_error else "dataset-rule-evaluation-error/v1", "reason": _required_string(reason, "reason"),
         "rule_audit_path": audit_path.relative_to(root).as_posix(), "rule_audit_sha256": _sha256_file(audit_path),
         "worker_result_path": result_path.relative_to(root).as_posix(), "worker_result_sha256": _sha256_file(result_path),
         "error": result["error"]}
     task["phase"] = "UNSCORED"
-    task["history"].append({"at": _timestamp(event_time), "event": "DATASET_RULE_ERROR_DEFERRED_UNSCORED", **task["scoring_error"]})
+    task["history"].append({"at": _timestamp(event_time), "event": "EVALUATOR_SETUP_DEFERRED_UNSCORED" if setup_context_error else "DATASET_RULE_ERROR_DEFERRED_UNSCORED", **task["scoring_error"]})
     return _save(root, state, event_time)
 
 
