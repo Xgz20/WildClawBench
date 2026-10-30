@@ -83,6 +83,22 @@ test("WorkBuddy serial queue freezes scope and resumes without dispatching compl
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
 
+test("preflight failure without a journal stops before the next task and is never completion or redispatch", async () => {
+  const f = await fixture();
+  try {
+    let calls = 0;
+    const execute = async () => { calls++; return 2; };
+    const result = await runWorkBuddyBatch(f.args, { execute });
+    assert.equal(result.phase, "NEEDS_ATTENTION");
+    assert.equal(calls, 1);
+    assert.deepEqual(result.tasks.map(t => t.phase), ["DISPATCHING", "PENDING", "PENDING"]);
+    const resumed = await runWorkBuddyBatch([...f.args, "--resume"], { execute });
+    assert.equal(resumed.phase, "NEEDS_ATTENTION");
+    assert.equal(calls, 1);
+    await assert.rejects(readFile(result.receipt_file, "utf8"), { code: "ENOENT" });
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
 test("WorkBuddy queue stops on uncertain send and resumes only the reserved attempt", async () => {
   const f = await fixture();
   try {

@@ -18,6 +18,34 @@ test("WorkBuddy probe arguments reject non-loopback CDP endpoints", () => {
   assert.equal(parseArgs(["--timeout-ms", "1234"]).timeoutMs, 1234);
 });
 
+test("native sessions schema fallback is read-only and rejects malformed or duplicate identities", async () => {
+  const root = await mkdtemp(join(tmpdir(), "workbuddy-native-db-"));
+  try {
+    const db = join(root, "workbuddy.db");
+    await writeFile(db, "fixture");
+    let rows = [{ conversation_id: "native-1", cwd: "/exact/workspace", status: "Running", created_at_ms: 1, updated_at_ms: 2 }];
+    const calls = [];
+    const runCommand = async (bin, args) => {
+      calls.push(args);
+      assert.equal(args[0], "-readonly");
+      return args.at(-1).includes("ItemTable")
+        ? { code: 1, stdout: "", stderr: "Error: no such table: ItemTable" }
+        : { code: 0, stdout: JSON.stringify(rows), stderr: "" };
+    };
+    let result = await queryWorkBuddySessions(db, { runCommand });
+    assert.equal(result.backend, "sqlite3-readonly-native-sessions/v1");
+    assert.equal(result.status, "observed");
+    assert.deepEqual(result.sessions, rows);
+    assert.equal(calls.length, 2);
+    rows = [...rows, ...rows];
+    result = await queryWorkBuddySessions(db, { runCommand });
+    assert.equal(result.status, "unavailable");
+    assert.deepEqual(result.sessions, []);
+    rows = [{ conversation_id: "native-1", cwd: null, status: "Running" }];
+    assert.equal((await queryWorkBuddySessions(db, { runCommand })).status, "unavailable");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
 test("WorkBuddy macOS profile gates identity and records version compatibility separately", () => {
   assert.equal(WORKBUDDY_MACOS_APP_PROFILE.macos.executableNames.includes("Electron"), true);
   assert.equal(identifyWorkBuddyMacosInstallation({

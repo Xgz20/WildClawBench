@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.0";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.1";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -398,6 +398,7 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
         : null,
       compatibility_status: runtime.application.compatibility_status || "unverified",
       installation_variant: runtime.application.installation_variant,
+      native_session_backend: runtime.native_sources?.session_index?.backend || null,
       endpoint: config.endpoint,
     },
     preflight: {
@@ -466,11 +467,18 @@ async function defaultInspectRuntime(config) {
     endpoint: config.endpoint,
     timeoutMs: Math.min(config.timeoutMs, 10_000),
   });
+  return assertWorkBuddyExecutionReadiness(report, config.endpoint);
+}
+
+export function assertWorkBuddyExecutionReadiness(report, endpoint) {
+  const nativeIndex = report.native_sources?.session_index;
+  const sourceReady = report.status === "PASS" || (nativeIndex?.status === "observed"
+    && nativeIndex.backend === "sqlite3-readonly-native-sessions/v1");
   if (
-    report.status !== "PASS"
+    !sourceReady || report.application?.identity_verified !== true
     || report.process?.running !== true
     || report.cdp?.status !== "observed"
-    || report.cdp.endpoint !== config.endpoint
+    || report.cdp.endpoint !== endpoint
   ) {
     throw new Error(`WorkBuddy 执行前只读检查未通过：status=${report.status}; process=${report.process?.running}; cdp=${report.cdp?.status}`);
   }
@@ -857,6 +865,9 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
         config.candidateWorkspace,
       );
     } catch (error) {
+      if (journal.runtime.native_session_backend === "sqlite3-readonly-native-sessions/v1") {
+        throw new Error(`WorkBuddy native sessions backend requires runtime API evidence before send: ${error instanceof Error ? error.message : String(error)}`);
+      }
       journal.native.baseline.runtime = null;
       journal.history.push({
         phase: journal.phase,

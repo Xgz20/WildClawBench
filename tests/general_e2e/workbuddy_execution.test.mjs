@@ -8,6 +8,7 @@ import test from "node:test";
 
 import {
   executeWorkBuddyTask,
+  assertWorkBuddyExecutionReadiness,
   assertWorkBuddyNativeAvailability,
   assertWorkBuddyUiAvailable,
   assertWorkBuddyProjectPath,
@@ -28,6 +29,22 @@ import {
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
+
+test("modern native session index permits runtime collection without legacy history, with identity gates intact", () => {
+  const endpoint = "http://127.0.0.1:9229";
+  const report = { status: "PARTIAL", application: { identity_verified: true }, process: { running: true },
+    cdp: { status: "observed", endpoint }, native_sources: { session_index: {
+      status: "observed", backend: "sqlite3-readonly-native-sessions/v1", sessions: [],
+    }, history: { status: "unavailable" } } };
+  assert.equal(assertWorkBuddyExecutionReadiness(report, endpoint), report);
+  assert.equal(assertWorkBuddyNativeAvailability(report, null).verified, true);
+  assert.throws(() => assertWorkBuddyExecutionReadiness({ ...report, application: { identity_verified: false } }, endpoint));
+  assert.throws(() => assertWorkBuddyExecutionReadiness(report, "http://127.0.0.1:9230"));
+  report.native_sources.session_index.sessions.push({ conversation_id: "unrelated", cwd: "/other", status: "Running" });
+  assert.throws(() => assertWorkBuddyNativeAvailability(report, null), /活动或未知/u);
+  report.native_sources.session_index.status = "unavailable";
+  assert.throws(() => assertWorkBuddyExecutionReadiness(report, endpoint));
+});
 
 async function createExecutionUnit() {
   let root = await mkdtemp(join(tmpdir(), "workbuddy-execution-test-"));
@@ -159,6 +176,26 @@ function dependencies(config, counters, selectedBinding, clock = { value: Date.p
     nowMilliseconds: () => clock.value,
   };
 }
+
+test("native sessions backend refuses to arm a prompt if runtime evidence API is absent", async () => {
+  const f = await createExecutionUnit();
+  try {
+    const counters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
+    const deps = dependencies(f.config, counters, () => binding(f.config));
+    deps.inspectRuntime = async () => {
+      const report = runtime();
+      report.native_sources.session_index.backend = "sqlite3-readonly-native-sessions/v1";
+      return report;
+    };
+    deps.snapshotRuntimeBaseline = async () => { throw new Error("requestEntries unavailable"); };
+    const result = await executeWorkBuddyTask(f.config, deps);
+    assert.equal(result.journal.phase, "FAILED");
+    assert.equal(result.journal.send.dispatch_attempt_count, 0);
+    assert.equal(counters.fill, 0);
+    assert.equal(counters.dispatch, 0);
+    assert.match(result.journal.execution.error.message, /requires runtime API evidence/u);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
 
 test("WorkBuddy P2 arguments and UI readback fail closed", () => {
   assert.throws(

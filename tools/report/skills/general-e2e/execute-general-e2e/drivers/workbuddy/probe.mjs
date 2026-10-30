@@ -35,7 +35,7 @@ export const WORKBUDDY_MACOS_INSTALLATION_VARIANTS = Object.freeze([
 ]);
 
 export const WORKBUDDY_PROBE_SCHEMA = "wildclawbench.general-e2e-workbuddy-macos-probe/v1";
-export const WORKBUDDY_PROBE_VERSION = "0.1.0";
+export const WORKBUDDY_PROBE_VERSION = "0.1.1";
 export const DEFAULT_SESSION_DB = join(
   homedir(),
   "Library",
@@ -207,13 +207,29 @@ function parseSessionRows(stdout) {
   return sessions;
 }
 
+function parseNativeSessionRows(stdout) {
+  const rows = JSON.parse(String(stdout || "").trim() || "[]");
+  if (!Array.isArray(rows)) throw new Error("native sessions result must be an array");
+  const seen = new Set();
+  return rows.map((row) => {
+    if (!row || typeof row.conversation_id !== "string" || !row.conversation_id.trim()
+        || typeof row.cwd !== "string" || !row.cwd.startsWith("/")
+        || typeof row.status !== "string" || !row.status.trim()
+        || seen.has(row.conversation_id)) throw new Error("native session identity/cwd/status invalid or duplicated");
+    seen.add(row.conversation_id);
+    return { conversation_id: row.conversation_id, cwd: row.cwd, status: row.status,
+      created_at_ms: Number.isFinite(row.created_at_ms) ? row.created_at_ms : null,
+      updated_at_ms: Number.isFinite(row.updated_at_ms) ? row.updated_at_ms : null };
+  });
+}
+
 export async function queryWorkBuddySessions(sessionDb, overrides = {}) {
   const runCommand = overrides.runCommand || runCapture;
   const metadata = await pathMetadata(sessionDb, "file");
   if (!metadata.exists || !metadata.type_matches) {
     return { status: "unavailable", backend: "sqlite3-readonly", metadata, sessions: [], error: metadata.error };
   }
-  const result = await runCommand(
+  let result = await runCommand(
     overrides.sqliteBin || "/usr/bin/sqlite3",
     [
       "-readonly",
@@ -223,10 +239,20 @@ export async function queryWorkBuddySessions(sessionDb, overrides = {}) {
     ],
     { capture: true, allowFailure: true },
   ).catch((error) => ({ code: null, stdout: "", stderr: error instanceof Error ? error.message : String(error) }));
+  let backend = "sqlite3-readonly";
+  if (result.code !== 0 && /no such table:\s*ItemTable\b/iu.test(String(result.stderr))) {
+    // New native clients store sessions in workbuddy.db. Read only identity,
+    // cwd and lifecycle fields; never copy account settings or credentials.
+    backend = "sqlite3-readonly-native-sessions/v1";
+    result = await runCommand(overrides.sqliteBin || "/usr/bin/sqlite3", [
+      "-readonly", "-json", metadata.path,
+      "SELECT id AS conversation_id, cwd, status, created_at AS created_at_ms, updated_at AS updated_at_ms FROM sessions ORDER BY id;",
+    ], { capture: true, allowFailure: true }).catch((error) => ({ code: null, stdout: "", stderr: String(error) }));
+  }
   if (result.code !== 0) {
     return {
       status: "unavailable",
-      backend: "sqlite3-readonly",
+      backend,
       metadata,
       sessions: [],
       error: String(result.stderr || `sqlite3 exit ${result.code}`).trim(),
@@ -235,16 +261,17 @@ export async function queryWorkBuddySessions(sessionDb, overrides = {}) {
   try {
     return {
       status: "observed",
-      backend: "sqlite3-readonly",
+      backend,
       snapshot_semantics: "single read transaction; source database is not modified",
       metadata,
-      sessions: parseSessionRows(result.stdout),
+      sessions: backend === "sqlite3-readonly" ? parseSessionRows(result.stdout)
+        : parseNativeSessionRows(result.stdout),
       error: null,
     };
   } catch (error) {
     return {
       status: "unavailable",
-      backend: "sqlite3-readonly",
+      backend,
       metadata,
       sessions: [],
       error: error instanceof Error ? error.message : String(error),

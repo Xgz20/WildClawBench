@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { main as execute, parseArgs, resolveExecutionConfig } from "./execute.mjs";
 
 export const WORKBUDDY_QUEUE_SCHEMA = "wildclawbench.general-e2e-workbuddy-execution-queue/v3";
-export const WORKBUDDY_QUEUE_VERSION = "0.3.0";
+export const WORKBUDDY_QUEUE_VERSION = "0.3.1";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -350,6 +350,12 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
 
     for (;;) {
       for (const row of state.tasks) await synchronizeRow(root, row);
+      if (state.tasks.some((row) => row.phase === "DISPATCHING")) {
+        state.phase = "NEEDS_ATTENTION";
+        state.events.push({ event: "DISPATCH_OUTCOME_UNACCOUNTED", at: now() });
+        await persistState(statePath, receiptPath, state);
+        return { ...state, state_file: statePath, receipt_file: receiptPath };
+      }
       let running = state.tasks.filter((row) => row.phase === "RUNNING");
       let attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
       if (batch.resume) {
@@ -412,6 +418,12 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
           completed_before_dispatch: state.tasks.filter((row) => row.phase === "COMPLETED").length,
         });
         await persistState(statePath, receiptPath, state);
+        if (pending.phase === "DISPATCHING") {
+          state.phase = "NEEDS_ATTENTION";
+          state.events.push({ event: "DISPATCH_OUTCOME_UNACCOUNTED", at: now(), task_id: pending.task_id, exit_code: code });
+          await persistState(statePath, receiptPath, state);
+          return { ...state, state_file: statePath, receipt_file: receiptPath };
+        }
         if (pending.phase === "NEEDS_ATTENTION" || pending.phase === "FAILED") break;
         running = state.tasks.filter((row) => row.phase === "RUNNING");
       }

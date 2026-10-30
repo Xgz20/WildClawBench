@@ -45,6 +45,8 @@ Prompt digest、一次发送、原生 `conversationId`/`requestId`/`cwd` 和每�
 
 新版客户端支持 `window.wb.conversations.get(id).requestEntries()` 时，执行器按精确 cwd、会话、request、Prompt SHA 绑定并归档原始运行时快照；collector 读取该快照，无需 `--history-root`。旧 SQLite/history 路径保留。运行时版本只作为元数据，未见过的版本仍按应用身份与实际能力验证。
 
+使用原生 `~/.workbuddy/workbuddy.db` 的客户端须显式传入 `--session-db ABS`；只读探针支持其中的 sessions 表，不再把缺少旧 history 目录当作运行时取证失败。该准入仍要求原生会话列表可读，实际 runtime API 能力在发送前验证；无法读取会话状态时不发送。零发送的旧预检队列保留现场，升级后的新队列必须先证明没有 journal、原生任务和 Prompt 发送记录，不能据此重跑已发送或未知发送的题目。
+
 collector 输出目录中的 `execution/automation-state.json` 带有最终回复的路径和哈希；正式收口须使用这个输出状态，而非执行器的原始状态：
 
 ```bash
