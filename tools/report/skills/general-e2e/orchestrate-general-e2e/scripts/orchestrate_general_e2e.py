@@ -636,6 +636,7 @@ def _prompt_text(
     prompt_protocol: str = PROMPT_PROTOCOL,
     rule_evidence_required: bool = False,
     rule_review_required: bool = False,
+    independent_validity_required: bool = False,
 ) -> str:
     runtime_usage = ""
     rule_instruction = (
@@ -657,6 +658,23 @@ def _prompt_text(
             "把完整响应写到新的UTF-8文件，用 record-rule-review --attempt-root . --response NEW_JSON 校验锁、范围和query_ids；证据不足时保留status=unresolved、passed=null并说明具体缺口，此时停止依赖评分并报告，不猜测布尔值。不得直接赋规则分或改变参考要求。"
             "随后在本独立裁判中调用 run-rules --attempt-root . --runtime-python REQUEST_RUNTIME_PYTHON 运行原数值公式；此参数必须使用 rule-review/request.json 的 runtime_python 字段并核对 runtime_python_sha256，浏览器目录同样读取其中已冻结字段。复核 rule-component.json，再 prepare-semantics 并按原语义Rubric判分、finalize、verify-score。"
             "原始候选、题面、GT、权重和既有判定不修改；未知复核上下文或证据缺失保留错误，不按0/1猜测。"
+        )
+    if independent_validity_required:
+        if score_skill is None or not isinstance(score_skill.get('python'),Mapping):
+            raise OrchestrationError('SCORE_PYTHON_LOCK_MISSING')
+        aggregation_python=_required_string(score_skill['python'].get('executable'),'score python executable')
+        aggregation_argv=json.dumps([aggregation_python,'-X','utf8',str(_score_entrypoint(score_skill)),
+            'check-aggregation','--attempt-root','.','--response','NEW_UTF8_RESPONSE_JSON',
+            '--runtime-python',aggregation_python],ensure_ascii=False)
+        rule_instruction += (
+            "本题启用原契约精确SHA绑定的independent-business-capability/v2，必须完整读取semantic/request.json的completion_policy及原aggregate_review。"
+            "逐项填写criterion_evidence_statuses、capability_evidence_statuses中的独立score/状态、run_validity及aggregation_review原函数辅助参数；未知必须null，不套SPY的85/15或45预算。"
+            "零业务权重的结果诊断仍可能是result_final的必要依赖；来源业务归因豁免不等于实际关联能力满分，允许另列能力分的字段以原契约为准。"
+            "所有查询完成并保存新的UTF-8响应后，先用同一冻结CLI及score_python_executable运行check-aggregation --attempt-root . --response NEW_JSON --runtime-python SCORE_PYTHON，"
+            "由受管Worker调用原aggregate_review校验原权重、分母、封顶、唯一归因台账及辅助单元，不得在控制器或本聊天普通Python进程exec grader。"
+            f"聚合预检冻结argv（只替换响应文件参数）：{aggregation_argv}。"
+            "预检失败不修改候选或锁；修正本独立裁判的结构/算术响应后用新文件重做预检，PASS后才record-semantics、finalize、verify-score。"
+            "raw SDK首行session_meta.dynamic_tools可能含真实inputSchema，须查询已有定义；这不覆盖其它MCP registry，缺定义的能力继续保留未知。"
         )
     if validation is None:
         readiness_instruction = (
@@ -1058,6 +1076,7 @@ def initialize(
                         score_skill,
                         rule_evidence_required=rule_evidence_required,
                         rule_review_required=bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
+                        independent_validity_required=attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1072,6 +1091,7 @@ def initialize(
                     "grading_type": grading_type,
                     "rule_evidence_required": rule_evidence_required,
                     "rule_review_required": bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
+                    'independent_validity_required':attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -1308,6 +1328,7 @@ def initialize_rescore(
                         score_skill,
                         rule_evidence_required=rule_evidence_required,
                         rule_review_required=bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
+                        independent_validity_required=attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1323,6 +1344,7 @@ def initialize_rescore(
                     "grading_type": grading_type,
                     "rule_evidence_required": rule_evidence_required,
                     "rule_review_required": bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
+                    'independent_validity_required':attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                     "execution": dict(source_task["execution"]),
                     "execution_record_path": frozen_record.relative_to(staging).as_posix(),
                     "execution_record_sha256": source_task["execution_record_sha256"],
@@ -1896,6 +1918,7 @@ def _verify_state(
                 prompt_protocol=str(state.get("prompt_protocol")),
                 rule_evidence_required=task.get("rule_evidence_required", False),
                 rule_review_required=task.get('rule_review_required',False),
+                independent_validity_required=task.get('independent_validity_required',False),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
@@ -1925,6 +1948,8 @@ def _verify_state(
         manifest_grading_type = (manifest_document.get("grading") or {}).get("type")
         if task.get('rule_review_required',False)!=bool(manifest_document.get('runtime',{}).get('rule_review_profile')):
             raise OrchestrationError('SCORING_RULE_REVIEW_ROUTE_DRIFT',str(task.get('task_id')))
+        if task.get('independent_validity_required',False)!=(manifest_document.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2'):
+            raise OrchestrationError('SCORING_INDEPENDENT_VALIDITY_ROUTE_DRIFT',str(task.get('task_id')))
         review_request=task.get('rule_review_request')
         if review_request is not None:
             rp=_regular_file(root/review_request['path'],'RULE_REVIEW_REQUEST_INVALID')

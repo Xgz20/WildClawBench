@@ -3,6 +3,9 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.29` 精确注册15道新检索题的独立业务/能力协议v2，保留每题原业务权重、能力m、诊断依赖及原聚合函数。独立裁判完整填写每项证据状态、单独能力分与原函数辅助参数后，先运行 check-aggregation --attempt-root ABS --response NEW_JSON --runtime-python FROZEN_PYTHON；只有受管Worker原函数校验PASS才record-semantics。预检只做结构和算术，结果与原响应SHA绑定、未知保持null；不得普通Python exec grader、代判事实或用数值占位发布分数。旧SPY v1、旧attempt、API及旧60/七维路径保持原契约。
+
+
 `0.10.28` 对精确 HR 原源码绑定的新 Codex attempt，显式冻结等价来源行定位 Profile：接受“文件.xlsx#工作表!行N”这一公开允许的物理行引用，沿用原存在性、来源相关性、排班必须具体单元格和78/22计分。修复不修改候选，不扩大10,000复核资源上限；仍无法确定的字段/来源继续独立裁判复核。旧 attempt 未启用该 Profile 时有效源码和已锁定复核保持原样。
 
 

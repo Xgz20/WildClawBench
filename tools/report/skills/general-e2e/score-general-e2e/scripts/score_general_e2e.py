@@ -35,6 +35,7 @@ import dataset_rule_corrections
 import rule_review
 import rule_review_runtime
 import business_capability
+import semantic_aggregation
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1796,8 +1797,8 @@ def prepare_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(contract) and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
-                **({'business_capability_profile':business_capability.PROFILE}
-                   if business_capability.matches(contract) and _sha256_bytes(contract_bytes)==business_capability.CONTRACT_SHA
+                **({'business_capability_profile':business_capability.profile_marker(contract,_sha256_bytes(contract_bytes))}
+                   if business_capability.profile_marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(contract) else {}),
@@ -3784,7 +3785,7 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "notes": "",
                 }
                 if independent_policy is not None:
-                    template.update(business_capability.template_fields())
+                    template.update(business_capability.template_fields(independent_policy))
                 query_log = {
                     "schema_version": SEMANTIC_QUERY_LOG_SCHEMA,
                     "identity": manifest["identity"],
@@ -5046,7 +5047,7 @@ def record_semantics_attempt(
         if independent_policy is not None:
             if request.get('completion_policy')!=independent_policy:
                 raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_POLICY_DRIFT')
-            auxiliary=business_capability.validate_auxiliary(sys.modules[__name__],response,backend_rows,catalog,queries)
+            auxiliary=business_capability.validate_auxiliary(sys.modules[__name__],response,backend_rows,catalog,queries,independent_policy)
         component = evaluate_semantics(
             core_criteria,
             evaluator=evaluator,
@@ -5054,6 +5055,8 @@ def record_semantics_attempt(
             protocol=request["judge"]["protocol"],
         )
         if independent_policy is not None:
+            if independent_policy['profile']=='independent-business-capability/v2':
+                auxiliary['aggregation_review']=semantic_aggregation.verify(sys.modules[__name__],root=root,response_path=response_path)
             independent_record=business_capability.derive(manifest,component,auxiliary,
                 _independent_capability_sources(root,manifest,raw_sha,_sha256_bytes(_pretty_json_bytes(component))))
     except BaseException as exc:
@@ -5384,7 +5387,9 @@ def _verified_independent_capabilities(root,manifest,contract,component):
     if request.get('completion_policy')!=expected_policy:
         raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_POLICY_DRIFT')
     auxiliary=business_capability.validate_auxiliary(sys.modules[__name__],response,component['criteria'],
-        _read_json(paths['catalog']),_read_json(paths['query_log'])['queries'])
+        _read_json(paths['catalog']),_read_json(paths['query_log'])['queries'],expected_policy)
+    if expected_policy['profile']=='independent-business-capability/v2':
+        auxiliary['aggregation_review']=semantic_aggregation.verify(sys.modules[__name__],root=root,response_path=paths['response'])
     expected=business_capability.derive(manifest,component,auxiliary,
         _independent_capability_sources(root,manifest,_sha256_file(paths['response']),_sha256_file(paths['component'])))
     path=root/'capability-evaluation.json'
@@ -6019,9 +6024,8 @@ def prepare_rescore_attempt(
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(_read_json(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
-                **({'business_capability_profile':business_capability.PROFILE}
-                   if business_capability.matches(_read_json(staging/source_paths['contract']))
-                   and _sha256_file(staging/source_paths['contract'])==business_capability.CONTRACT_SHA
+                **({'business_capability_profile':business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(_read_json(staging/source_paths['contract'])) else {}),
@@ -6328,6 +6332,11 @@ def main(argv: list[str] | None = None) -> int:
     query_evidence.add_argument("--file-char-offset", type=int,
                                 help="文件按 Unicode 字符分页；用于超过单页的长行 JSON，与行 offset 不混用")
 
+    aggregation = subparsers.add_parser('check-aggregation')
+    aggregation.add_argument('--attempt-root',required=True,type=Path)
+    aggregation.add_argument('--response',required=True,type=Path)
+    aggregation.add_argument('--runtime-python',required=True,type=Path)
+
     record_semantics = subparsers.add_parser("record-semantics")
     record_semantics.add_argument("--attempt-root", required=True, type=Path)
     record_semantics.add_argument("--response", required=True, type=Path)
@@ -6430,6 +6439,8 @@ def main(argv: list[str] | None = None) -> int:
                 max_chars=args.max_chars,
                 file_char_offset=args.file_char_offset,
             )
+        elif args.command == 'check-aggregation':
+            result=semantic_aggregation.check(sys.modules[__name__],attempt_root=args.attempt_root,response_path=args.response,runtime_python=args.runtime_python)
         elif args.command == "record-semantics":
             result = record_semantics_attempt(
                 attempt_root=args.attempt_root,

@@ -601,6 +601,18 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertTrue(all(len(task["prompt_sha256"]) == 64 for task in state["tasks"]))
         self.assertNotEqual(state["tasks"][0]["prompt_sha256"], state["tasks"][1]["prompt_sha256"])
 
+    def test_registered_independent_prompt_freezes_managed_helper_command_only_for_new_route(self) -> None:
+        lock=ORCHESTRATOR._score_skill_lock(SCORE_SKILL,python_runtime=ORCHESTRATOR._score_python_lock(Path(sys.executable)))
+        judge={'protocol':'codex-agent-judge-v1','model':'gpt-fixture','reasoning_effort':'high'}
+        regular=ORCHESTRATOR._prompt_text('task','attempt',judge,'hybrid',None,lock)
+        registered=ORCHESTRATOR._prompt_text('task','attempt',judge,'hybrid',None,lock,independent_validity_required=True)
+        self.assertNotIn('check-aggregation',regular)
+        self.assertIn('independent-business-capability/v2',registered)
+        self.assertIn('check-aggregation',registered)
+        self.assertIn(json.dumps(lock['python']['executable'],ensure_ascii=False),registered)
+        self.assertIn('零业务权重的结果诊断',registered)
+        self.assertEqual(regular,ORCHESTRATOR._prompt_text('task','attempt',judge,'hybrid',None,lock,independent_validity_required=False))
+
     def test_operational_normal_prompt_uses_the_frozen_production_skill(self) -> None:
         fixture = Fixture(self.root / "normal-gate", task_ids=("task-one",))
         view = fixture.initialize(now=self.t0)

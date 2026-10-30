@@ -189,6 +189,23 @@ class GeneralReleasePrepareTests(unittest.TestCase):
         self.assertEqual(readiness, {spec.name: (spec.version, spec.implementation_status)
                                      for spec in GENERAL_E2E_SKILLS})
 
+    def test_private_validity_registry_is_shipped_only_to_score_and_report(self) -> None:
+        manifest=json.loads((self.release_root/'skills/skills-build-manifest.json').read_text())
+        for row in manifest['skills']:
+            with self.subTest(skill=row['name']),zipfile.ZipFile(self.release_root/'skills'/row['archive']) as archive:
+                names=archive.namelist();private=[n for n in names if '/independent-validity/' in n or 'independent_validity' in n]
+                self.assertEqual(bool(private),row['name'] in {'score-general-e2e','report-general-e2e'})
+                if row['name']=='score-general-e2e':
+                    target=self.temp_root/'standalone-validity-score';archive.extractall(target)
+                    script=target/'score-general-e2e/scripts/score_general_e2e.py'
+                    code=('import importlib.util,sys; p=sys.argv[1]; '
+                          's=importlib.util.spec_from_file_location("standalone_score",p); m=importlib.util.module_from_spec(s); '
+                          'sys.modules[s.name]=m; s.loader.exec_module(m); '
+                          'assert len(m.business_capability.general_module().REGISTRY)==15; '
+                          'assert m.business_capability.profile_marker({"task_id":"unknown","automated_checks":"","grading_weights":{}},"f"*64) is None')
+                    completed=subprocess.run([sys.executable,'-I','-c',code,str(script)],cwd=self.temp_root,capture_output=True,text=True)
+                    self.assertEqual(completed.returncode,0,completed.stdout+completed.stderr)
+
     def test_packaged_prepare_runs_without_checkout_or_pythonpath(self) -> None:
         detached = self.temp_root / "detached"
         detached.mkdir()

@@ -26,6 +26,12 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="independent-validity", version="1.0.0",
+        source_root="tools/report/e2e-shared/independent-validity",
+        vendor_root="vendor/e2e-shared/independent-validity",
+        entrypoints=("independent_validity.py", "independent_validity_profiles.json"),
+    ),
+    SharedComponentSpec(
         name="sqlite-snapshot", version="1.0.0",
         source_root="tools/report/e2e-shared/sqlite-snapshot",
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),

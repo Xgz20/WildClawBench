@@ -3,6 +3,9 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.27` v8 Prompt可对新注册的独立有效性v2交接动态原权重/能力预算、辅助判定与受管聚合预检。该路由在新attempt和Prompt中显式冻结并核验，不把零业务权重都当作可忽略的能力项；旧v3–v8及未启用v2的Prompt内容不变。
+
+
 `0.11.26` compose-full-scope-selection 可显式 --allow-scoring-infrastructure-repair 并说明 --infrastructure-repair-reason，纳入已修复的原规则基础设施错误及合法 evaluation_error 重评分，保持原执行、题目和完整范围。有效旧分不由此覆盖；--source-selection-root 可延续已校验的原完整范围选择，全部来源锁和旧文件保留。
 
 

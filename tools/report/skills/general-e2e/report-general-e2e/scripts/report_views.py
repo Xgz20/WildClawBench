@@ -10,12 +10,20 @@ from pathlib import Path
 import re
 import os
 import subprocess
+import importlib.util
 
 CAPABILITIES = {
     "code_generation": "代码生成", "tool_use": "工具调用", "data_processing": "数据处理",
     "retrieval_verification": "检索验证", "reasoning_planning": "推理规划",
     "content_generation": "内容生成", "verification_delivery": "验证交付",
 }
+
+
+def _independent_v2_reader():
+    path=Path(__file__).with_name('independent_report.py')
+    spec=importlib.util.spec_from_file_location('_general_e2e_independent_report',path)
+    module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+    return module
 CAPABILITIES5 = {
     "intent_understanding": "意图理解", "state_awareness": "状态感知",
     "reasoning_and_decision_making": "推理与决策", "tool_invocation": "工具调用",
@@ -72,6 +80,8 @@ def independent_capabilities(score,score_path,resolve_file,sha256_file):
     relative,expected_sha=next(iter(refs));path=resolve_file(score_path.parent,relative,'capability evaluation')
     if sha256_file(path)!=expected_sha:raise ValueError('REPORT_INDEPENDENT_CAPABILITY_DRIFT')
     record=json.loads(path.read_text(encoding='utf-8'));identity=record.get('identity',{});sid=score['identity']
+    if record.get('profile')=='independent-business-capability/v2':
+        return _independent_v2_reader().verify(record,score,score_path,resolve_file,sha256_file),{'path':relative,'sha256':expected_sha}
     if (record.get('schema_version')!='wildclawbench.general-e2e-independent-capabilities/v1'
             or record.get('profile')!='independent-business-capability/v1'
             or any(identity.get(k)!=sid.get(k) for k in ['batch_id','unit_id','task_id'])
@@ -147,7 +157,8 @@ def checkpoints(score, score_path, resolve_file, sha256_file):
         result.update(capability_values=cap_values,semantic_criteria=independent['semantic_criteria'],
             independent_capability_eligible=independent['run_validity']['status']=='valid',
             independent_capabilities={'profile':independent['profile'],'criteria':independent['capability_criteria'],
-                                     'total_score':independent['capability_total_score'],'budget':45,
+                                     'total_score':independent['capability_total_score'],'budget':independent['capability_budget'],
+                                     'dimensions':independent['capabilities'],
                                      'run_status':independent['run_validity']['status']})
     return result
 
@@ -238,6 +249,13 @@ def capability_scores(rows, mapping, dimensions=CAPABILITIES):
                 continue
             eligible += 1
             if row["score_status"] != "valid" and row.get('checkpoints',{}).get('independent_capability_eligible') is not True:
+                continue
+            independent=row.get('checkpoints',{}).get('independent_capabilities',{})
+            if independent.get('profile')=='independent-business-capability/v2':
+                declared=['llm_judge.'+item['key'] for item in independent['criteria'] if item['dimension']==dimension]
+                if set(keys)!=set(declared):raise ValueError('REPORT_INDEPENDENT_V2_MAPPING_DRIFT')
+                value=independent['dimensions'].get(dimension,{}).get('score')
+                if number(value):scores.append(value)
                 continue
             values = row.get("checkpoints", {}).get("capability_values",row.get('checkpoints',{}).get('values',{}))
             mapped = [normalized(key, values.get(key), values) for key in keys]

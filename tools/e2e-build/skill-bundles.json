@@ -68,13 +68,13 @@
       "name": "score-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/score-general-e2e",
-      "components": ["workspace-integrity", "grading-core", "general-contracts"]
+      "components": ["workspace-integrity", "grading-core", "general-contracts", "independent-validity"]
     },
     {
       "name": "report-general-e2e",
       "scene": "general-e2e",
       "source_root": "tools/report/skills/general-e2e/report-general-e2e",
-      "components": ["general-contracts", "resource-metrics", "workbuddy-jsonl-metrics", "report-reference-data", "doubaowork", "general-resource-supplements", "desktop-gui", "sqlite-snapshot"]
+      "components": ["general-contracts", "resource-metrics", "workbuddy-jsonl-metrics", "report-reference-data", "doubaowork", "general-resource-supplements", "desktop-gui", "sqlite-snapshot", "independent-validity"]
     },
     {
       "name": "run-general-e2e",

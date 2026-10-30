@@ -180,6 +180,16 @@
       "entrypoints": [
         "index.mjs"
       ]
+    },
+    {
+      "name": "independent-validity",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/independent-validity",
+      "vendor_root": "vendor/e2e-shared/independent-validity",
+      "entrypoints": [
+        "independent_validity.py",
+        "independent_validity_profiles.json"
+      ]
     }
   ]
 }

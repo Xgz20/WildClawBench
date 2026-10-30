@@ -1,8 +1,11 @@
-"""Separate the frozen SPY business budget from independent capability validity."""
+"""Registered independent validity, retaining the original SPY v1 path."""
 from __future__ import annotations
 from copy import deepcopy
 from decimal import Decimal
 import hashlib
+import importlib.util
+from pathlib import Path
+import sys
 
 PROFILE='independent-business-capability/v1'
 SCHEMA='wildclawbench.general-e2e-independent-capabilities/v1'
@@ -17,6 +20,29 @@ AVAILABLE={'pass','partial','fail'}
 UNAVAILABLE={'evidence_insufficient','blocked_external','not_observed','evaluator_error'}
 
 
+def general_module():
+    vendor=Path(__file__).resolve().parents[1]/'vendor/e2e-shared/independent-validity'
+    if str(vendor) not in sys.path:sys.path.insert(0,str(vendor))
+    try:
+        import independent_validity
+        return independent_validity
+    except ModuleNotFoundError as exc:
+        if exc.name != 'independent_validity':raise
+    # Source checkout only; released Skills include the general-contracts vendor.
+    key='_general_e2e_independent_validity_source'
+    if key not in sys.modules:
+        path=Path(__file__).resolve().parents[6]/'tools/report/e2e-shared/independent-validity/independent_validity.py'
+        spec=importlib.util.spec_from_file_location(key,path);module=importlib.util.module_from_spec(spec)
+        sys.modules[key]=module;spec.loader.exec_module(module)
+    return sys.modules[key]
+
+
+def profile_marker(contract,contract_sha256):
+    if matches(contract) and contract_sha256==CONTRACT_SHA:return PROFILE
+    general=general_module()
+    return general.PROFILE if general.registered(contract,contract_sha256) is not None else None
+
+
 def matches(contract):
     return (contract.get('task_id')==TASK
         and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()==SOURCE_SHA
@@ -26,6 +52,8 @@ def matches(contract):
 def policy(manifest,contract):
     marker=manifest.get('runtime',{}).get('business_capability_profile')
     if marker is None:return None
+    if marker=='independent-business-capability/v2':
+        return general_module().completion_policy(manifest,contract)
     if (marker!=PROFILE or not matches(contract) or manifest['digests']['contract_sha256']!=CONTRACT_SHA
             or manifest.get('judge',{}).get('protocol')!='codex-agent-judge-v1'):
         raise ValueError('INDEPENDENT_CAPABILITY_PROFILE_MISMATCH')
@@ -34,7 +62,9 @@ def policy(manifest,contract):
             'unavailable_capabilities_do_not_zero_business':True,'valid_run_required_for_both':True}
 
 
-def template_fields():
+def template_fields(policy=None):
+    if policy is not None and policy.get('profile')=='independent-business-capability/v2':
+        return general_module().template_fields(policy)
     review={'query_ids':[],'supporting_evidence_checked':False,'contradicting_evidence_checked':False,
             'absence_claim':False,'complete_event_range_checked':False}
     decision={'status':'evidence_insufficient','reason':'','evidence_ids':[],'review':review}
@@ -66,7 +96,9 @@ def _decision(rt,value,catalog,queries,valid_statuses):
             'evidence':[deepcopy(index[i]) for i in ids],'query_ids':list(qids)}
 
 
-def validate_auxiliary(rt,response,criteria,catalog,queries):
+def validate_auxiliary(rt,response,criteria,catalog,queries,policy=None):
+    if policy is not None and policy.get('profile')=='independent-business-capability/v2':
+        return validate_general_auxiliary(rt,response,criteria,catalog,queries,policy)
     run=_decision(rt,response.get('run_validity'),catalog,queries,{'valid','contaminated_run','evidence_insufficient'})
     if run['status']=='valid':
         review=response['run_validity']['review'];total=catalog.get('transcript',{}).get('event_count',0)
@@ -91,6 +123,10 @@ def validate_auxiliary(rt,response,criteria,catalog,queries):
 
 
 def derive(manifest,component,auxiliary,sources):
+    if manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2':
+        general=general_module()
+        return general.derive_record(manifest,component,auxiliary,sources,
+            auxiliary['policy'],auxiliary['aggregation_review'])
     by_key={row['key']:row for row in component['criteria']}
     if set(by_key)!=set(BUSINESS)|set(ABILITY):
         raise ValueError('INDEPENDENT_CAPABILITY_CRITERIA_MISMATCH')
@@ -120,9 +156,14 @@ def derive(manifest,component,auxiliary,sources):
 
 def business_component(component,record):
     result=deepcopy(component);business=record['business_result']
-    result['criteria']=[row for row in result['criteria'] if row['key'] in BUSINESS]
+    result['criteria']=[row for row in result['criteria'] if row['key'] in business['criterion_keys']]
     result['status']='completed' if business['valid'] else 'evaluation_error'
     result['score']=business['score']
     result['error']=None if business['valid'] else {'code':'BUSINESS_EVALUATION_UNAVAILABLE',
         'message':'Frozen business criteria or explicit native run validity are unavailable; no score is published.'}
     return result
+
+
+def validate_general_auxiliary(rt,response,criteria,catalog,queries,policy):
+    try:return general_module().validate_auxiliary(response,criteria,catalog,queries,policy)
+    except ValueError as exc:raise rt.ScoringRuntimeError(str(exc)) from exc
