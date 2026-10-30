@@ -2584,6 +2584,8 @@ def _native_context_rule_input(root: Path, manifest: Mapping[str, Any], contract
     if not bundle_ref:
         return transcript, None
     bundle = _read_json(root / bundle_ref["path"])
+    if "raw/workbuddy-session.jsonl" in bundle.get("raw_trace", []):
+        return _workbuddy_context_rule_input(root, manifest, transcript, bundle, context_path, context_bytes, context)
     relative = "raw/astronstudio-rollout.jsonl"
     if relative not in bundle.get("raw_trace", []):
         return transcript, None
@@ -2633,6 +2635,67 @@ def _native_context_rule_input(root: Path, manifest: Mapping[str, Any], contract
     event = {"type": "instruction_context", "role": "user", "content": body,
              "event_id": f"native-context:{sid}:L{line}", "source": {"raw_ref": proof["raw_path"] + f"#L{line}",
              "raw_sha256": proof["raw_sha256"], "adapter": "bound-native-user-instructions/v1"}}
+    return [event, *transcript], proof
+
+
+def _workbuddy_context_rule_input(root: Path, manifest: Mapping[str, Any], transcript: list[dict[str, Any]],
+                                  bundle: Mapping[str, Any], context_path: Path, context_bytes: bytes,
+                                  context: str) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    relative = "raw/workbuddy-session.jsonl"
+    runtime_relative = "raw/workbuddy-runtime/runtime-binding.json"
+    if runtime_relative not in bundle.get("raw_trace", []):
+        return transcript, None
+    execution = _read_json(root / manifest["paths"]["execution_record"])
+    session = execution.get("session", {})
+    sid, turn, cwd = (session.get(k) for k in ("session_id", "turn_id", "cwd"))
+    runtime_path = root / "trace" / runtime_relative
+    binding = _read_json(runtime_path)
+    snapshot = binding.get("runtime_snapshot", {})
+    request = snapshot.get("request", {})
+    conversation = snapshot.get("conversation", {})
+    questions = [_instruction_text(r) for r in transcript if r.get("type") == "user_message" and r.get("role") == "user"]
+    if (execution.get("harness", {}).get("id") != "workbuddy"
+            or binding.get("source_kind") != "workbuddy-runtime-api" or binding.get("identity") != execution.get("identity")
+            or conversation.get("id") != sid or conversation.get("space", {}).get("cwd") != cwd
+            or request.get("id") != turn or request.get("conversationRequestId") != turn
+            or len(questions) != 1 or _instruction_text(request.get("userMessage", {})) != questions[0]
+            or _sha256_bytes(questions[0].encode("utf-8")) != execution.get("prompt", {}).get("sha256")):
+        raise ScoringRuntimeError("NATIVE_PUBLIC_CONTEXT_BINDING_INVALID", "WorkBuddy bound runtime request/question")
+    raw = (root / "trace" / relative).read_bytes()
+    rows = [(n, json.loads(line), line) for n, line in enumerate(raw.splitlines(keepends=True), 1) if line.strip()]
+    events = [(n, row, line) for n, row, line in rows if row.get("type") in {"message", "function_call", "function_call_result"}]
+    if (not events or any(row.get("sessionId") != sid or row.get("cwd") != cwd for _, row, _ in events)
+            or any(row.get("providerData", {}).get("conversationRequestId") not in {None, turn} for _, row, _ in events)):
+        raise ScoringRuntimeError("NATIVE_PUBLIC_CONTEXT_BINDING_INVALID", "WorkBuddy native session/request/cwd")
+    users = [(n, row, line) for n, row, line in events if row.get("type") == "message"
+             and row.get("role") == "user" and not row.get("providerData", {}).get("isMeta")]
+    if len(users) != 1:
+        raise ScoringRuntimeError("NATIVE_PUBLIC_CONTEXT_BINDING_INVALID", "WorkBuddy unique native user request")
+    line, row, line_bytes = users[0]
+    provider = row.get("providerData", {})
+    if provider.get("startsNewUserRequest") is not True or provider.get("conversationRequestId") != turn:
+        raise ScoringRuntimeError("NATIVE_PUBLIC_CONTEXT_BINDING_INVALID", "WorkBuddy user request identity")
+    body = _instruction_text(row)
+    normalized = body.replace("\r\n", "\n")
+    question = questions[0]
+    wrapped = any(body.endswith(s) for s in (f"<user_query>{question}</user_query>", f"<user_query>\n{question}\n</user_query>"))
+    header = f"File: {cwd}/AGENTS.md"
+    if (not wrapped or body.count("<user_query>") != 1 or header not in normalized.splitlines()
+            or normalized.count(context) != 1 or not (normalized.find(header) < normalized.find(context)
+                and normalized.find(context) + len(context) < normalized.find("<user_query>"))):
+        return transcript, None
+    proof = {"schema_version": "wildclawbench.general-e2e-native-public-context/v1", "identity": manifest["identity"],
+        "session": {"session_id": sid, "turn_id": turn, "cwd": cwd},
+        "canonical_transcript_sha256": manifest["digests"]["transcript_sha256"],
+        "public_file": context_path.relative_to(root).as_posix(), "public_file_sha256": _sha256_bytes(context_bytes),
+        "raw_path": "trace/" + relative, "raw_sha256": _sha256_bytes(raw), "raw_line": line,
+        "raw_line_sha256": _sha256_bytes(line_bytes), "native_user_message_sha256": _sha256_bytes(body.encode("utf-8")),
+        "runtime_binding_path": "trace/" + runtime_relative, "runtime_binding_sha256": _sha256_file(runtime_path),
+        "delivery_basis": "bound WorkBuddy native user request includes exact public file before unique frozen query",
+        "candidate_output": False}
+    event = {"type": "instruction_context", "role": "user", "content": body,
+        "event_id": f"native-context:{sid}:L{line}", "source": {"raw_ref": proof["raw_path"] + f"#L{line}",
+        "raw_sha256": proof["raw_sha256"], "adapter": "bound-workbuddy-user-instructions/v1"}}
     return [event, *transcript], proof
 
 

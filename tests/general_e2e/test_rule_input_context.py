@@ -103,6 +103,71 @@ class RuleInputContextTests(unittest.TestCase):
         self.assertEqual(RUNTIME._required_generated_evidence(contract, extended=True),
                          ["evaluator_evidence/reference.md", "evaluator_evidence/answer.md"])
 
+    def workbuddy_fixture(self) -> list[dict]:
+        path = self.root / "private/execution-record.json"
+        execution = json.loads(path.read_text())
+        execution.update(identity={"task_id": "fixture"}, harness={"id": "workbuddy"},
+                         prompt={"sha256": RUNTIME._sha256_bytes(b"question")})
+        path.write_text(json.dumps(execution))
+        (self.root / "trace/raw/workbuddy-runtime").mkdir(exist_ok=True)
+        (self.root / "trace/raw/workbuddy-runtime/runtime-binding.json").write_text(json.dumps({
+            "identity": execution["identity"], "source_kind": "workbuddy-runtime-api", "runtime_snapshot": {
+                "conversation": {"id": "session", "space": {"cwd": "/bound/workspace"}},
+                "request": {"id": "turn", "conversationRequestId": "turn", "traceId": "distributed",
+                    "userMessage": {"content": [{"type": "text", "text": "question"}]}}}}))
+        (self.root / "trace/bundle-manifest.json").write_text(json.dumps({"raw_trace": [
+            "raw/workbuddy-session.jsonl", "raw/workbuddy-runtime/runtime-binding.json"]}))
+        rows = [{"type": "message", "role": "user", "sessionId": "session", "cwd": "/bound/workspace",
+                 "providerData": {"conversationRequestId": "turn", "startsNewUserRequest": True},
+                 "content": [{"type": "input_text", "text": "<system-reminder>\nFile: /bound/workspace/AGENTS.md\n"
+                     + self.context + "</system-reminder>\n<user_query>question</user_query>"}]}]
+        self.write_workbuddy(rows)
+        return rows
+
+    def write_workbuddy(self, rows: list[dict]) -> None:
+        (self.root / "trace/raw/workbuddy-session.jsonl").write_text("".join(json.dumps(row)+"\n" for row in rows), encoding="utf-8")
+
+    def test_workbuddy_bound_public_context_is_preserved_as_a_reverified_rule_view(self) -> None:
+        self.workbuddy_fixture()
+        before = (self.root / "private/transcript.jsonl").read_bytes()
+        canonical = RUNTIME._canonical_rule_view(self.transcript)
+        view, proof = RUNTIME._native_context_rule_input(self.root, self.manifest, self.contract, canonical)
+        self.assertEqual(proof["raw_line"], 1)
+        self.assertEqual(view[0]["source"]["adapter"], "bound-workbuddy-user-instructions/v1")
+        self.assertIn(self.context.strip(), view[0]["content"])
+        (self.root / "rule-input-context.json").write_text(json.dumps(proof))
+        (self.root / "worker/request.json").write_text(json.dumps({"transcript": view}))
+        RUNTIME._verify_rule_input_context(self.root, self.manifest)
+        self.assertEqual((self.root / "private/transcript.jsonl").read_bytes(), before)
+        binding_path = self.root / "trace/raw/workbuddy-runtime/runtime-binding.json"
+        binding = json.loads(binding_path.read_text())
+        binding["runtime_snapshot"]["request"]["id"] = "other"
+        binding_path.write_text(json.dumps(binding))
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "NATIVE_PUBLIC_CONTEXT_BINDING_INVALID"):
+            RUNTIME._verify_rule_input_context(self.root, self.manifest)
+
+    def test_workbuddy_context_rejects_other_requests_and_does_not_infer_file_delivery(self) -> None:
+        original = self.workbuddy_fixture()
+        for mutation in ("session", "request", "cwd", "assistant", "duplicate", "not_new_request", "missing_header", "late_context"):
+            with self.subTest(mutation=mutation):
+                rows = json.loads(json.dumps(original))
+                if mutation == "session": rows[0]["sessionId"] = "other"
+                elif mutation == "request": rows[0]["providerData"]["conversationRequestId"] = "other"
+                elif mutation == "cwd": rows[0]["cwd"] = "/other"
+                elif mutation == "assistant": rows[0]["role"] = "assistant"
+                elif mutation == "duplicate": rows.append(rows[0])
+                elif mutation == "not_new_request": rows[0]["providerData"]["startsNewUserRequest"] = False
+                elif mutation == "missing_header": rows[0]["content"][0]["text"] = self.context + "<user_query>question</user_query>"
+                else: rows[0]["content"][0]["text"] = "<user_query>question</user_query>\nFile: /bound/workspace/AGENTS.md\n" + self.context
+                self.write_workbuddy(rows)
+                if mutation in {"missing_header", "late_context"}:
+                    view, proof = RUNTIME._native_context_rule_input(self.root, self.manifest, self.contract, self.transcript)
+                    self.assertIsNone(proof)
+                    self.assertEqual(view, self.transcript)
+                else:
+                    with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "NATIVE_PUBLIC_CONTEXT_BINDING_INVALID"):
+                        RUNTIME._native_context_rule_input(self.root, self.manifest, self.contract, self.transcript)
+
 
 if __name__ == "__main__":
     unittest.main()
