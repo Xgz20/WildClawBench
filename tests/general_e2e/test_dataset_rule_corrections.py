@@ -14,6 +14,20 @@ from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT, SCR
 
 
 class DatasetRuleCorrectionTests(unittest.TestCase):
+    def test_procurement_alias_fix_preserves_all_numeric_scoring_functions(self):
+        tid='02_Office_task_015_procurement_reconciliation'
+        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))
+        source=_strip_codeblock(sections['Automated Checks'])
+        effective,receipt=RUNTIME._effective_rule_source({'identity':{'task_id':tid}},source)
+        def functions(code):
+            return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(code).body if isinstance(n,ast.FunctionDef)}
+        old,new=functions(source),functions(effective)
+        for name in ['grade','population','numeric_score','summary_diagnostics','score_tool' if 'score_tool' in old else 'summary_key']:
+            with self.subTest(name=name):self.assertEqual(old[name],new[name])
+        self.assertIn("'id':['单号'",effective)
+        self.assertEqual(receipt['correction_id'],'procurement-header-summary-aliases/v1')
+        self.assertEqual(RUNTIME._effective_rule_source({'identity':{'task_id':tid}},source+'\n'),(source+'\n',None))
+
     def test_declared_text_diagnostic_is_not_a_numeric_checkpoint(self):
         worker = load_module('rule_worker_text_adapter_test', SCRIPT_PATH.with_name('rule_worker.py'))
         raw = {'C2': 1.0, 'overall_score': 0.75, 'evidence_status': '仅规则组，不冒充正式总分', 'diagnostics': {'checked': True}}

@@ -24,6 +24,8 @@ _PAGED_RULES = {
 
 
 def effective_source(task_id: str, source: str):
+    if task_id == '02_Office_task_015_procurement_reconciliation':
+        return _procurement_source(source)
     if task_id == '03_Data_Analysis_task_005_cross_month_returns_regional_sales':
         return _office_public_inputs(source)
     entry = _PAGED_RULES.get(task_id)
@@ -85,3 +87,39 @@ def effective_result_adapter(task_id, source, policy):
     effective = json.loads(json.dumps(policy))
     effective['diagnostic_text_keys'] = ['evidence_status']
     return effective
+
+
+def _procurement_source(source):
+    digest = hashlib.sha256(source.encode('utf-8')).hexdigest()
+    if digest != 'e0ce3c13706112766a91b1d6309dae0c13ddb99aa4b7b8c6f9f574b9ed97490c':
+        return source, None
+    replacements = [
+        (" 'id':['订单号'", " 'id':['单号','订单号'"),
+        (" 'orders':['总采购订单数'", " 'orders':['采购订单笔数','总采购订单数'"),
+        (" 'receipts':['总入库单数'", " 'receipts':['入库记录笔数','入库记录总数','总入库单数'"),
+        (" 'matched':['匹配订单数'", " 'matched':['已匹配笔数','已匹配订单数','匹配订单数'"),
+        (" 'qty':['数量差异订单数'", " 'qty':['数量差异笔数','数量差异订单数'"),
+        (" 'amount':['金额差异订单数'", " 'amount':['金额差异笔数','金额差异订单数'"),
+        (" 'missing':['未入库订单数'", " 'missing':['未入库订单笔数','未入库订单数'"),
+        (" 'orphan':['无对应订单入库单数'", " 'orphan':['无对应订单入库笔数','无对应订单的入库','无对应订单入库单数'"),
+        (" 'clean':['匹配且数量金额均一致订单数'", " 'clean':['数量金额一致','数量金额一致笔数','匹配且数量金额均一致订单数'"),
+        (" 'net_amount':['金额差异净额合计'", " 'net_amount':['金额差额净额','金额差异净额合计'"),
+        (" 'price_only':['纯单价差异'", " 'price_only':['数量一致的纯金额差异','纯单价差异'"),
+        ("    if max(map(len,encoded.values()))>19500 or sum(map(len,encoded.values()))>76000:",
+         "    if max(len(t.encode('utf-8')) for t in encoded.values())>4*1024*1024 or sum(len(t.encode('utf-8')) for t in encoded.values())>16*1024*1024:"),
+    ]
+    effective = source
+    for old, new in replacements:
+        if effective.count(old) != 1:
+            raise ValueError('PROCUREMENT_EXTRACTION_SOURCE_MISMATCH')
+        effective = effective.replace(old, new)
+    return effective, {
+        'schema_version': 'wildclawbench.general-e2e-rule-source-correction/v1',
+        'correction_id': 'procurement-header-summary-aliases/v1',
+        'task_id': '02_Office_task_015_procurement_reconciliation',
+        'original_source_sha256': digest,
+        'effective_source_sha256': hashlib.sha256(effective.encode('utf-8')).hexdigest(),
+        'reason': '补充等价订单编号及笔数/净额字段名称，完整导出取证；原总体、数值、汇总评分公式及80/20权重保持不变。',
+        'evidence_policy': {'truncation_allowed': False, 'page_query_required': True,
+                            'max_file_bytes':4*1024*1024, 'max_total_bytes':16*1024*1024},
+    }
