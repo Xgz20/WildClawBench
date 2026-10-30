@@ -55,9 +55,14 @@ def compose(args, *, frozen=None):
         frozen=importlib.util.module_from_spec(spec);sys.modules[spec.name]=frozen;spec.loader.exec_module(frozen)
     src=args.source.resolve(strict=True);rep=args.replacement.resolve(strict=True)
     ss=frozen._verify_state(src);rs=frozen._verify_state(rep)
-    if not ss.get('submission') or not rs.get('submission') or rs.get('kind')!='rescore':
+    correction=getattr(args,'allow_native_context_correction',False)
+    if not ss.get('submission') or not rs.get('submission') or (rs.get('kind')!='rescore' and not correction):
         raise ValueError('LOCKED_SOURCE_AND_RESCORE_SUBMISSIONS_REQUIRED')
-    if rs['sources']['source_state_sha256']!=digest(src/'orchestration-state.json') or rs['sources']['source_submission_sha256']!=digest(src/'submission.json'):
+    if correction:
+        if rs.get('kind')!='scoring':raise ValueError('INITIAL_CORRECTION_SCOPE_REQUIRED')
+        for key in ('unit_manifest_sha256','scoring_package_sha256','report_config_sha256'):
+            if ss['sources'].get(key)!=rs['sources'].get(key):raise ValueError('FROZEN_INPUT_CHANGED:'+key)
+    elif rs['sources']['source_state_sha256']!=digest(src/'orchestration-state.json') or rs['sources']['source_submission_sha256']!=digest(src/'submission.json'):
         raise ValueError('RESCORE_SOURCE_LINEAGE_MISMATCH')
     if ss['judge']!=rs['judge']:raise ValueError('JUDGE_CONFIG_CHANGED')
     source=json.loads((src/'submission.json').read_text(encoding='utf-8'))
@@ -66,7 +71,21 @@ def compose(args, *, frozen=None):
     old_by={t['task_id']:t for t in ss['tasks']}
     for task in rs['tasks']:
         old=old_by[task['task_id']]
-        if task['source']['score_sha256']!=old['score']['sha256'] or task['source']['scoring_attempt_id']!=old['scoring_attempt_id']:
+        if correction:
+            rejection=old.get('native_context_rejection')
+            if (old.get('phase')!='THREAD_FAILED' or old.get('score') is not None or not rejection
+                    or old.get('thread',{}).get('status')!='COMPLETED'):
+                raise ValueError('UNADMITTED_NATIVE_CONTEXT_REJECTION_REQUIRED')
+            from verify_judge_context import verify_context
+            proof_path=pathlib.Path(getattr(args,'native_context_proof',None) or '')
+            if not proof_path.is_file() or proof_path.is_symlink():raise ValueError('CORRECTION_NATIVE_PROOF_REQUIRED')
+            proof=json.loads(proof_path.read_text(encoding='utf-8'))
+            verify_context(pathlib.Path(proof['sdk_path']),thread_id=task['thread']['thread_id'],
+                cwd=str((rep/task['attempt_path']).resolve()),model=rs['judge']['model'],effort=rs['judge']['reasoning_effort'],
+                prompt=(rep/task['prompt_path']).read_text(encoding='utf-8'))
+            if proof.get('thread_id')!=task['thread']['thread_id'] or proof.get('model')!=rs['judge']['model'] or proof.get('effort')!=rs['judge']['reasoning_effort']:
+                raise ValueError('CORRECTION_NATIVE_PROOF_MISMATCH')
+        elif task['source']['score_sha256']!=old['score']['sha256'] or task['source']['scoring_attempt_id']!=old['scoring_attempt_id']:
             raise ValueError('TASK_SOURCE_LINEAGE_MISMATCH')
         original=json.loads((src/old['attempt_path']/'attempt-manifest.json').read_text(encoding='utf-8'))
         adopted=json.loads((rep/task['attempt_path']/'attempt-manifest.json').read_text(encoding='utf-8'))
@@ -81,6 +100,7 @@ def compose(args, *, frozen=None):
     shutil.copytree(src/'execution-records',stage/'execution-records')
     allowed=set(args.task_id)
     for row in rows:
+        if row['score_path'] is None:continue
         relative=pathlib.PurePosixPath(row['score_path'])
         if relative.is_absolute() or '..' in relative.parts or relative.parts[0]!='attempts' or relative.name!='score.json':
             raise ValueError('UNSAFE_SCORE_PATH')
@@ -94,7 +114,9 @@ def compose(args, *, frozen=None):
     document.update(created_at=datetime.datetime.now(datetime.timezone.utc).isoformat(),tasks=rows)
     frozen._validate_contract(document,expected_schema_id=frozen.SUBMISSION_SCHEMA)
     (stage/'submission.json').write_text(json.dumps(document,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    lineage={'kind':'explicit-full-scope-rescore-selection/v1','source_orchestration':str(src),'replacement_orchestration':str(rep),'selected_replacements':args.task_id,'unchanged_task_count':len(rows)-len(allowed),'task_count':len(rows),'source_locks':locks,'operator_sha256':digest(pathlib.Path(__file__)),'orchestrator':{'path':str(script),'sha256':digest(script)},'old_files_unchanged':True,'score_creation_performed':False,'scope_shrunk':False,'submission_sha256':digest(stage/'submission.json')}
+    lineage={'kind':'explicit-full-scope-native-context-correction/v1' if correction else 'explicit-full-scope-rescore-selection/v1','source_orchestration':str(src),'replacement_orchestration':str(rep),'selected_replacements':args.task_id,'unchanged_task_count':len(rows)-len(allowed),'task_count':len(rows),'source_locks':locks,'operator_sha256':digest(pathlib.Path(__file__)),'orchestrator':{'path':str(script),'sha256':digest(script)},'old_files_unchanged':True,'score_creation_performed':False,'scope_shrunk':False,'submission_sha256':digest(stage/'submission.json')}
+    if correction:
+        lineage['native_context_proof']={'path':str(args.native_context_proof),'sha256':digest(args.native_context_proof)}
     for lock in locks:
         if digest(pathlib.Path(lock['path']))!=lock['sha256']:raise ValueError('SOURCE_CHANGED_DURING_COMPOSITION')
     (stage/'selection-lineage.json').write_text(json.dumps(lineage,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

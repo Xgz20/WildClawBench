@@ -1609,6 +1609,17 @@ def _late_completion_submission_recovery(
                     or proof.get("expected_effort")!=state["judge"]["reasoning_effort"]
                     or (proof.get("model"),proof.get("effort"))==(state["judge"]["model"],state["judge"]["reasoning_effort"])):
                 raise OrchestrationError("NATIVE_CONTEXT_REJECTION_INVALID",str(task.get("task_id")))
+        native_recovery=task.get("native_response_recovery")
+        if native_recovery is not None:
+            recovery_path=_regular_file(root/native_recovery["path"],"NATIVE_RESPONSE_RECOVERY_INVALID")
+            recovered=_read_json(recovery_path,"NATIVE_RESPONSE_RECOVERY_INVALID")
+            if (not _inside(root,recovery_path) or _sha256_file(recovery_path)!=native_recovery["sha256"]
+                    or recovered.get("profile")!="native-authored-response-after-capacity/v1"
+                    or recovered.get("parent_semantic_judging_performed") is not False
+                    or recovered.get("native_context",{}).get("thread_id")!=task.get("thread",{}).get("thread_id")
+                    or recovered.get("native_context",{}).get("model")!=state["judge"]["model"]
+                    or recovered.get("native_context",{}).get("effort")!=state["judge"]["reasoning_effort"]):
+                raise OrchestrationError("NATIVE_RESPONSE_RECOVERY_INVALID","frozen recovery proof drift")
         score = task.get("score")
         if (
             task.get("phase") != "SCORE_RECORDED"
@@ -2737,11 +2748,44 @@ def reject_native_judge_context(orchestration_root: Path, *, task_id: str, sdk_f
     return _save(root,state,now or _now())
 
 
+def _verify_native_response_recovery(root: Path, state: dict, task: dict, proof_file: Path) -> dict:
+    from verify_judge_context import verify_context
+    if (task.get("phase")!="THREAD_FAILED" or task.get("thread",{}).get("status")!="FAILED" or task.get("score") is not None):
+        raise OrchestrationError("NATIVE_RESPONSE_RECOVERY_NOT_ALLOWED")
+    proof_path=_regular_file(proof_file,"NATIVE_RESPONSE_RECOVERY_INVALID")
+    proof=_read_json(proof_path,"NATIVE_RESPONSE_RECOVERY_INVALID")
+    attempt=root/task["attempt_path"]
+    response=_regular_file(Path(proof.get("response_path","")),"NATIVE_RESPONSE_RECOVERY_INVALID")
+    sdk=_regular_file(Path(proof.get("sdk_path","")),"NATIVE_RESPONSE_RECOVERY_INVALID")
+    if (proof.get("profile")!="native-authored-response-after-capacity/v1" or proof.get("thread_id")!=task["thread"]["thread_id"]
+            or proof.get("task_id")!=task["task_id"] or proof.get("scoring_attempt_id")!=task["scoring_attempt_id"]
+            or not _inside(attempt,response) or _sha256_file(response)!=proof.get("response_sha256")
+            or _sha256_file(sdk)!=proof.get("sdk_sha256") or proof.get("parent_selected_or_modified_criteria") is not False):
+        raise OrchestrationError("NATIVE_RESPONSE_RECOVERY_INVALID","identity or original bytes")
+    native=verify_context(sdk,thread_id=task["thread"]["thread_id"],cwd=str(attempt.resolve()),
+        model=state["judge"]["model"],effort=state["judge"]["reasoning_effort"],prompt=(root/task["prompt_path"]).read_text(encoding="utf-8"))
+    rows=[json.loads(line) for line in sdk.read_text(encoding="utf-8").splitlines() if line.strip()]
+    # Locate by original physical line, including any intentionally blank lines.
+    lines=sdk.read_text(encoding="utf-8").splitlines();line=int(proof.get("native_tool_input_line",0));tool=json.loads(lines[line-1]).get("payload",{}) if 0<line<=len(lines) else {}
+    completed=[r.get("payload",{}) for r in rows if r.get("type")=="event_msg" and r.get("payload",{}).get("type")=="task_complete"]
+    if (len(completed)!=1 or completed[0].get("error",{}).get("message")!="Selected model is at capacity. Please try a different model."
+            or completed[0].get("error",{}).get("codex_error_info")!="server_overloaded"
+            or tool.get("type")!="custom_tool_call" or tool.get("name")!="exec"
+            or tool.get("call_id")!=proof.get("native_tool_call_id")
+            or _sha256_bytes(str(tool.get("input","")).encode())!=proof.get("native_tool_input_sha256")
+            or response.name not in str(tool.get("input",""))
+            or _read_json(response,"NATIVE_RESPONSE_RECOVERY_INVALID")!=_read_json(attempt/"semantic/response.json","NATIVE_RESPONSE_RECOVERY_INVALID")):
+        raise OrchestrationError("NATIVE_RESPONSE_RECOVERY_INVALID","native authorship, capacity terminal or imported decision")
+    return {"profile":proof["profile"],"authorship_proof":proof,"authorship_proof_sha256":_sha256_file(proof_path),"native_context":native,
+            "original_thread_status":"FAILED","parent_semantic_judging_performed":False}
+
+
 def record_score(
     orchestration_root: Path,
     *,
     task_id: str,
     allow_late_completion: bool = False,
+    native_response_recovery_proof: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     root = _state_root(orchestration_root)
@@ -2749,6 +2793,7 @@ def record_score(
     task_id = _identifier(task_id, "task_id")
     task = _task_by_id(state, task_id)
     late_completion = False
+    recovery = _verify_native_response_recovery(root,state,task,native_response_recovery_proof) if native_response_recovery_proof else None
     if task.get("grading_type") != "automated":
         if (
             allow_late_completion
@@ -2758,9 +2803,9 @@ def record_score(
             and task["thread"].get("timed_out_at")
         ):
             late_completion = True
-        else:
+        elif recovery is None:
             task = _require_active(state, task_id)
-    if task.get("phase") != "SCORE_VERIFICATION_PENDING" and not late_completion:
+    if task.get("phase") != "SCORE_VERIFICATION_PENDING" and not late_completion and recovery is None:
         raise OrchestrationError("SCORE_VERIFICATION_NOT_EXPECTED", task_id)
     attempt = (root / task["attempt_path"]).resolve(strict=True)
     verification = _run_score_command(
@@ -2771,6 +2816,10 @@ def record_score(
     if verification.get("score_valid") is not score.get("result", {}).get("valid"):
         raise OrchestrationError("SCORE_VERIFICATION_MISMATCH", task_id)
     event_time = now or _now()
+    if recovery:
+        target=root/"native-response-recovery"/(task["scoring_attempt_id"]+".json");target.parent.mkdir(exist_ok=True)
+        _write_new_json(target,recovery);task["native_response_recovery"]={"path":target.relative_to(root).as_posix(),"sha256":_sha256_file(target)}
+        task["history"].append({"at":_timestamp(event_time),"event":"NATIVE_AUTHORED_RESPONSE_MECHANICALLY_RECOVERED","proof_sha256":_sha256_file(target)})
     task["score"] = {
         "path": score_path.relative_to(root).as_posix(),
         "sha256": _sha256_file(score_path),
@@ -3078,6 +3127,8 @@ def main(argv: list[str] | None = None) -> int:
     compose.add_argument("--replacement-orchestration-root", required=True, type=Path, dest="replacement")
     compose.add_argument("--task-id", required=True, action="append")
     compose.add_argument("--output-root", required=True, type=Path)
+    compose.add_argument("--allow-native-context-correction",action="store_true")
+    compose.add_argument("--native-context-proof",type=Path)
 
     project = subparsers.add_parser("record-project")
     _parse_common(project)
@@ -3126,6 +3177,7 @@ def main(argv: list[str] | None = None) -> int:
     score = subparsers.add_parser("record-score")
     _parse_common(score)
     score.add_argument("--task-id", required=True)
+    score.add_argument("--native-response-recovery-proof",type=Path)
     score.add_argument(
         "--allow-late-completion",
         action="store_true",
@@ -3258,6 +3310,7 @@ def main(argv: list[str] | None = None) -> int:
                 args.orchestration_root,
                 task_id=args.task_id,
                 allow_late_completion=args.allow_late_completion,
+                native_response_recovery_proof=args.native_response_recovery_proof,
             )
         elif args.command == "record-unscored-rule-error":
             result = record_unscored_rule_error(args.orchestration_root, task_id=args.task_id, reason=args.reason)

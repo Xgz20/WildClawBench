@@ -3,6 +3,10 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.22` 的 record-score --native-response-recovery-proof 只收口原生 High 裁判已完整写出的原样结构化判定：严格绑定 SDK 身份、Prompt、工具写入调用、响应 SHA、已导入相同 JSON 和 server_overloaded 明确终态，机械导入/合分仍须 verify-score 通过。真实线程 FAILED 状态保留，控制器不补判、不改判定、不重发；未知失败、缺失判定或其他档位不适用。
+
+`0.11.21` 的 compose-rescore-selection 可显式 --allow-native-context-correction 并提供完成态 --native-context-proof：只替换已有真实配置拒绝、从未准入成绩的线程，用相同冻结输入下实际 High 新会话的合法评分补入原完整范围。原始错误配置评分、未评分行、原编排与回执保留，不按高分择优，不覆盖有效旧成绩。
+
 `0.11.20` 的 reject-native-context 只在原线程明确完成且尚未准入成绩后，按原始 SDK 逐项核验线程、工作空间、冻结 Prompt、唯一实际模型档位及完整单 turn，留证拒绝不符的裁判配置。保留原会话与分数文件，不冒充失败终态或纳入固定裁判比较；配置匹配的合法会话不可用此入口拒绝。
 
 `0.11.19` 的状态恢复同时验证显式公共上下文 setup 未评分记录及其原 worker/contract SHA；已创建裁判的登记沿用同一线程，不因该记录类型重建或重发。

@@ -1212,6 +1212,20 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 else:
                     with self.assertRaises((ORCHESTRATOR.OrchestrationError,ValueError)):ORCHESTRATOR.reject_native_judge_context(root,task_id="task-one",sdk_file=sdk,now=self.t0)
 
+    def test_native_authored_capacity_response_recovery_preserves_decision_and_rejects_other_failures(self) -> None:
+        for kind in ["valid","wrong-effort","other-error","tampered-response","imported-diff"]:
+            with self.subTest(kind=kind):
+                fixture=Fixture(self.root/kind,task_ids=("task-one",));view=fixture.initialize(now=self.t0);view=self._record_first_project(fixture,view);root=Path(view["orchestration_root"])
+                ORCHESTRATOR.preflight(root,task_id="task-one",desktop_version="2026.918.1",now=self.t0);ORCHESTRATOR.record_thread(root,task_id="task-one",thread_id="thread-one",host_id="host-local",now=self.t0);ORCHESTRATOR.record_wait(root,task_id="task-one",wait_sequence=1,wait_cursor="cursor",wait_status="FAILED",now=self.t0)
+                state=json.loads((root/"orchestration-state.json").read_text());task=state["tasks"][0];attempt=root/task["attempt_path"];cwd=str(attempt.resolve());prompt=(root/task["prompt_path"]).read_text();response=attempt/"native-response.json";data={"criteria":[{"native_decision":1}]};response.write_text(json.dumps(data));(attempt/"semantic").mkdir(exist_ok=True);(attempt/"semantic/response.json").write_text(json.dumps({"changed":True} if kind=="imported-diff" else data));tool="const response = {}; // native-response.json";error={"message":"Selected model is at capacity. Please try a different model.","codex_error_info":"server_overloaded"}
+                if kind=="other-error":error["message"]="Unexpected failure"
+                rows=[{"type":"session_meta","payload":{"id":"thread-one","cwd":cwd,"runtime_workspace_roots":[cwd]}},{"type":"turn_context","payload":{"model":"gpt-fixture","effort":"medium" if kind=="wrong-effort" else "high","cwd":cwd}},{"type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":prompt}]}},{"type":"response_item","payload":{"type":"custom_tool_call","name":"exec","input":tool,"call_id":"native-write"}},{"type":"event_msg","payload":{"type":"task_started","turn_id":"turn"}},{"type":"event_msg","payload":{"type":"task_complete","turn_id":"turn","error":error}}];sdk=root/"sdk.jsonl";sdk.write_text("".join(json.dumps(x)+"\n" for x in rows));proof={"profile":"native-authored-response-after-capacity/v1","thread_id":"thread-one","task_id":"task-one","scoring_attempt_id":task["scoring_attempt_id"],"response_path":str(response),"response_sha256":sha256_bytes(response.read_bytes()),"sdk_path":str(sdk),"sdk_sha256":sha256_bytes(sdk.read_bytes()),"native_tool_input_line":4,"native_tool_call_id":"native-write","native_tool_input_sha256":sha256_bytes(tool.encode()),"parent_selected_or_modified_criteria":False};file=root/"proof.json";file.write_text(json.dumps(proof))
+                if kind=="tampered-response":response.write_text('{"tampered":true}')
+                if kind=="valid":
+                    result=ORCHESTRATOR._verify_native_response_recovery(root,state,task,file);self.assertFalse(result["parent_semantic_judging_performed"]);self.assertEqual(json.loads(response.read_text()),data);self.assertEqual(task["thread"]["status"],"FAILED")
+                else:
+                    with self.assertRaises((ORCHESTRATOR.OrchestrationError,ValueError)):ORCHESTRATOR._verify_native_response_recovery(root,state,task,file)
+
     def test_late_completion_replaces_only_the_strictly_reproducible_submission(self) -> None:
         fixture = Fixture(self.root, task_ids=("task-one",))
         view = fixture.initialize(timeout=10, now=self.t0)
