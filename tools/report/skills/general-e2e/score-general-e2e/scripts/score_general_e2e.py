@@ -31,6 +31,8 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
+import utf8_redecode
 
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
@@ -952,6 +954,10 @@ def _completion_payload(execution: Mapping[str, Any], receipt: Mapping[str, Any]
         refs = [r for r in collected.get("artifacts", []) if r.get("path") == source_paths.get(key)]
         if len(refs) != 1 or refs[0].get("sha256") != _sha256_bytes(data) or refs[0].get("size") != len(data):
             raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", key)
+    try:
+        utf8_redecode.verify_completion(execution, evidence, collected, files, source_paths)
+    except ValueError as exc:
+        raise ScoringRuntimeError("TRACE_UTF8_REDECODE_INVALID", str(exc)) from exc
     final = files["final_response"]
     refs = [r for r in evidence.get("artifacts", []) if r.get("path") == source_paths.get("final_response")]
     if (len(refs) != 1 or refs[0].get("sha256") != _sha256_bytes(final) or refs[0].get("size") != len(final)
@@ -964,19 +970,27 @@ def _freeze_formal_completion(root: Path, unit: Path, record_path: Path, executi
     relative = execution.get("evidence", {}).get("final_response_path")
     evidence_path = record_path.parent / "evidence-manifest.json"
     collected_path = unit / "receipts/collect-evidence-receipt.json"
+    extra_files = {}
+    if evidence_path.is_file():
+        try:
+            selection = utf8_redecode.completion_sources(unit, record_path, json.loads(evidence_path.read_bytes()))
+        except ValueError as exc:
+            raise ScoringRuntimeError("TRACE_UTF8_REDECODE_INVALID", str(exc)) from exc
+        if selection:
+            collected_path, extra_files = selection
     if not relative or not evidence_path.is_file() or not collected_path.is_file():
         return None
     final_path = _resolve_within(unit, relative, "formal final response")
     if any(p.is_symlink() for p in (record_path, evidence_path, collected_path, final_path)):
         raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "symlink")
-    data = {"collect_receipt": collected_path.read_bytes(), "evidence_manifest": evidence_path.read_bytes(), "final_response": final_path.read_bytes()}
+    data = {"collect_receipt": collected_path.read_bytes(), "evidence_manifest": evidence_path.read_bytes(), "final_response": final_path.read_bytes(), **extra_files}
     source_paths = {"execution_record": record_path.relative_to(unit).as_posix(), "evidence_manifest": evidence_path.relative_to(unit).as_posix(), "final_response": str(relative)}
     receipt = {"profile": FORMAL_COMPLETION_PROFILE, "identity": execution["identity"], "source_paths": source_paths,
         "execution_record_sha256": _sha256_file(record_path), "files": {}}
     _completion_payload(execution, receipt, data, source_paths, record_path.read_bytes())
     directory = root / "private/completion"; directory.mkdir(parents=True)
     for key, content in data.items():
-        filename = {"collect_receipt":"collect-receipt.json", "evidence_manifest":"evidence-manifest.json", "final_response":"final-response.md"}[key]
+        filename = {"collect_receipt":"collect-receipt.json", "evidence_manifest":"evidence-manifest.json", "final_response":"final-response.md"}.get(key, key + ".json")
         target = directory / filename; target.write_bytes(content)
         receipt["files"][key] = {"path": target.relative_to(root).as_posix(), "sha256": _sha256_bytes(content), "size": len(content)}
     target = directory / "completion-receipt.json"; _write_new_json(target, receipt)
@@ -990,7 +1004,7 @@ def _formal_completion_rule_input(root: Path, manifest: Mapping[str, Any], trans
     if descriptor.get("profile") != FORMAL_COMPLETION_PROFILE or path.is_symlink() or _sha256_file(path) != descriptor.get("sha256"):
         raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "receipt digest")
     receipt = _read_json(path); data = {}
-    for key in ("collect_receipt", "evidence_manifest", "final_response"):
+    for key in receipt["files"]:
         row = receipt.get("files", {}).get(key, {}); file = _resolve_within(root, row.get("path"), "completion evidence")
         content = file.read_bytes()
         if file.is_symlink() or _sha256_bytes(content) != row.get("sha256") or len(content) != row.get("size"):

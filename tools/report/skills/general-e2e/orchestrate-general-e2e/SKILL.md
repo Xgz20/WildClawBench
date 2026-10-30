@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.17` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。
+
 `0.11.16` 可显式保留原数据集的两种固定证据预算终止信息为未评分：EvidenceError 的“Required text evidence exceeds collector budget; do not report a valid semantic/capability score”，以及 RuntimeError 的“EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging”。不扩大预算、不截断必需材料、不创建缺证据的 Judge，也不改变规则、权重或能力分；其他 EvidenceError/RuntimeError 继续失败关闭。
 
 `0.11.15` 的 `init/init-rescore --protect-runtime-office-inputs` 显式转交 score Skill 的只读 Office runtime 输入选项。必须先审查冻结规则不会改写候选 Office 文件；默认关闭，原有可写 runtime 契约保持兼容。已建立的编排和 Prompt 不追加此选项；需要修复尚未评分的输入副本时保留旧 attempt，并从同一冻结执行创建新评分 attempt，不重跑 Harness 或重新判断已完成语义分。

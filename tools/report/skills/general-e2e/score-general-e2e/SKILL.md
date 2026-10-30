@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.19` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。
+
 `0.10.18` 为新 attempt 冻结正式采集的终稿、完成回执和证据清单。只有已验证原生终态、原执行记录与证据清单受到采集回执 SHA 绑定、终稿受到证据清单绑定，且终稿与标准转录中最后的助手正文完全一致时，才在规则输入视图追加有来源的 task_complete 收据；原标准转录保持原字节，不合成候选内容。rule-input-completion.json、Worker 请求和规则审计均重新核验，完成收据可按 rule_audit 分页查询；移除 runtime 后仍可验分。旧 attempt 没有该冻结描述时保持原行为，不猜测最后一段计划是终稿，不重评已完成语义分。
 
 `0.10.17` 在 macOS 为新建的评分原件 Office 副本设置用户不可变标志并再次验证原 SHA，保护已冻结的输入字节。新增 `prepare/prepare-rescore --protect-runtime-office-inputs`：仅在审查原规则不会改写这些候选 Office 文件后显式使用，对一次性 runtime 中的候选 Office 输入也设置同一保护；规则生成的取证目录继续可写。运行时副本默认保持原可写行为，非 macOS 不接受该显式保护选项。manifest 分别记录原件和显式 runtime 的保护 Profile；旧 attempt、原规则、权重和宿主变体不修改，清理受管临时目录仍解除自身保护标志。

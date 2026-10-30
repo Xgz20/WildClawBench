@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.12` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。
+
 `0.11.11` 使用 desktop-runtime 1.0.1：进程 stdio 完整关闭后合并字节并统一解码 UTF-8，避免多字节中文跨 pipe chunk 时产生替换字符，也不在 exit 提前截断。历史原件保留，已冻结证据只能通过显式只读传输补采和原 SHA 绑定选择，不覆盖旧制品或重发题目。
 
 `0.11.10` 为 QwenWork 原生目录外清理增加显式人工取消回执：--human-interaction-supplement 只接受已绑定 call/part/session、精确目标列表、直接用户决定、点击前原件及原生 PATH_NOT_AUTHORIZED 逐目标拒绝结果的完整闭包。正式回执记 human_assisted、1 次机械介入和 0 次语义介入，保留原执行 journal 与 SHA；不批准删除、不补用户答案、不重发 Prompt。默认不补人工记录，旧 Profile 不变。

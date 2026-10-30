@@ -132,11 +132,11 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="general-contracts",
-        version="1.3.0",
+        version="1.3.1",
         source_root="eval_general_e2e/contracts",
         vendor_root="vendor/e2e-shared/general-contracts",
         entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json",
-                     "collection_validation.py", "schemas/trace-index-v2.schema.json"),
+                     "collection_validation.py", "schemas/trace-index-v2.schema.json", "utf8_redecode.py"),
     ),
 )
 

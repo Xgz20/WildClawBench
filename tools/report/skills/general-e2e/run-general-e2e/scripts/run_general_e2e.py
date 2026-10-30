@@ -1800,6 +1800,7 @@ def build_parser() -> argparse.ArgumentParser:
     entry.add_argument("--skill-root",type=Path,default=suite_root);entry.add_argument("--orchestration-id",required=True)
     entry.add_argument("--task-id",action="append",default=[]);entry.add_argument("--scoring-package",type=Path);entry.add_argument("--report-config",type=Path)
     entry.add_argument("--keep-scoring-external",action="store_true",help="Keep the scoring ZIP outside round-root, binding its absolute path and SHA")
+    entry.add_argument("--execution-record",action="append",default=[],help="Explicit source-bound execution record selection, task=path")
     entry.add_argument("--protect-runtime-office-inputs",action="store_true",help="Explicitly protect reviewed read-only Office runtime inputs")
     sys.path.insert(0, str(Path(__file__).resolve().parent))
     from prepare_imported_source import add_arguments as imported_source_arguments
@@ -1868,7 +1869,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             import round_workspace
             if args.command=="init-round":result=round_workspace.init_round(args.round_root,args.batch_root,args.prepare_skill)
             elif args.command=="install-unit":result=round_workspace.install_unit(args.round_root,args.execution_package,args.prepare_skill)
-            else:result=round_workspace.prepare_score(args.round_root,args.harness,args.skill_root,args.orchestration_id,args.task_id,args.scoring_package,args.report_config,keep_scoring_external=args.keep_scoring_external,protect_runtime_office_inputs=args.protect_runtime_office_inputs)
+            else:result=round_workspace.prepare_score(args.round_root,args.harness,args.skill_root,args.orchestration_id,args.task_id,args.scoring_package,args.report_config,keep_scoring_external=args.keep_scoring_external,protect_runtime_office_inputs=args.protect_runtime_office_inputs,execution_records=args.execution_record)
         elif args.command == "init":
             result = initialize_state(args)
         elif args.command in {"status", "resume"}:

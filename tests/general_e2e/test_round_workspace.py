@@ -135,6 +135,10 @@ class ExternalScoringPackageTests(unittest.TestCase):
         self.assertIn('--protect-runtime-office-inputs',self.last_init_command)
         self.assertFalse(list(self.root.rglob('*.zip')))
 
+    def test_explicit_execution_record_selection_is_forwarded(self):
+        self.prepare(scoring_package=self.scoring,keep_scoring_external=True,execution_records=['task=/frozen/recapture.json'])
+        self.assertEqual(self.last_init_command[self.last_init_command.index('--execution-record')+1],'task=/frozen/recapture.json')
+
     def test_runtime_office_guard_defaults_off_in_both_entrypoints(self):
         self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
         self.assertNotIn('--protect-runtime-office-inputs',self.last_init_command)
