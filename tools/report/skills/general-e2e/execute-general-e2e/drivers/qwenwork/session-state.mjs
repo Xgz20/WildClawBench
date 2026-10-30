@@ -41,6 +41,7 @@ function normalizeSession(row) {
     conversation_id: row?.conversation_id || null,
     sub_chat_id: row?.sub_chat_id || null,
     sub_chat_name: row?.sub_chat_name || null,
+    sub_chat_ext: row?.sub_chat_ext || null,
     session_id: row?.session_id || null,
     local_project_id: row?.local_project_id || null,
     cwd: rawCwd && isAbsolute(rawCwd) ? resolve(rawCwd) : null,
@@ -139,7 +140,11 @@ export function buildQwenGeneralSessionBinding(session, bindingEvidence) {
 
 export async function queryQwenSessionRows(sessionDb, overrides = {}) {
   const rows = await querySnapshot(sessionDb, QWENWORK_SESSION_QUERY, overrides);
-  return rows.map(normalizeSession);
+  const columns=await querySnapshot(sessionDb, 'PRAGMA table_info(sub_chats);', overrides);
+  const extras=columns.some(x=>x.name==='ext')
+    ? await querySnapshot(sessionDb, 'SELECT id, ext FROM sub_chats;', overrides) : [];
+  const bindings=new Map(extras.map(x=>[x.id,x.ext]));
+  return rows.map(row=>normalizeSession({...row,sub_chat_ext:bindings.get(row.sub_chat_id)||null}));
 }
 
 export async function queryQwenProjectRows(sessionDb, overrides = {}) {

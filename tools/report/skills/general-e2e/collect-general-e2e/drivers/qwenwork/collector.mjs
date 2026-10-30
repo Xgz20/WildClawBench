@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { collectQwenEngineEvidence } from "./engine-collector.mjs";
 import { createHash } from "node:crypto";
 import { realpathSync } from "node:fs";
 import {
@@ -552,6 +553,10 @@ export async function collectQwenWorkEvidence(options) {
       throw Error("QWENWORK_AUTHORIZED_INTERACTION_EVIDENCE_INVALID");
     }
     authorizationSources.push(journalSource, configSource, auth);
+  }
+  if (journalSource.value.session?.prompt_evidence?.profile === 'qwenwork-opencode-sqlite-v1') {
+    if (authorizationSources.length) throw Error('QWEN_ENGINE_SENSITIVE_AUTHORIZATION_PROFILE_UNSUPPORTED');
+    return collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,redacted:options.redacted===true});
   }
   const sessionId = requireString(state.session.session_id, "state.session.session_id");
   const transcriptSource = await discoverTranscript(journalSource.value, clientTraceRoot, sessionId);

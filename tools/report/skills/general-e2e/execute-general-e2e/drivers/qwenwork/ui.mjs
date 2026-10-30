@@ -252,6 +252,19 @@ export async function restoreQwenPreparedProject(page, projectName, timeoutMilli
   return openQwenProjectByName(page, projectName, timeoutMilliseconds, knownProjectNames);
 }
 
+export const QWEN_SELECTED_TASK_SELECTOR = '[data-chat-item="true"][data-selected="true"][data-chat-id]';
+export async function readQwenSelectedTask(page) {
+  const rows=await visibleLocators(page.locator(QWEN_SELECTED_TASK_SELECTOR));
+  if(rows.length>1)throw Error('QWENWORK_SELECTED_TASK_AMBIGUOUS');
+  if(rows.length===0)return null;
+  const row=rows[0], active=await visibleLocators(row.locator('button[aria-current="page"]'));
+  const region=row.locator('xpath=ancestor::*[@data-task-order-region][1]');
+  if(active.length!==1||await region.count()!==1)throw Error('QWENWORK_SELECTED_TASK_STRUCTURE_INVALID');
+  const project=await region.getAttribute('data-task-order-region');
+  if(!project?.startsWith('project:'))throw Error('QWENWORK_SELECTED_TASK_PROJECT_MISSING');
+  return {conversation_id:await row.getAttribute('data-chat-id'),local_project_id:project.slice(8),title:visibleValue(await active[0].innerText())};
+}
+
 async function readQwenUiBinding(page, expectedSession, sessionRows, allowProvisional = false) {
   const readRows = typeof sessionRows === "function" ? sessionRows : async () => sessionRows;
   const deadline = Date.now() + (typeof sessionRows === "function" ? 2_000 : 0);
@@ -261,7 +274,9 @@ async function readQwenUiBinding(page, expectedSession, sessionRows, allowProvis
     const heading = views.length === 1
       ? visibleValue((await views[0].innerText().catch(() => "")).split(/\r?\n/u)[0]) : "";
     const title = visibleValue(typeof page.title === "function" ? await page.title().catch(() => "") : "");
-    const conversationId = currentQwenConversationId(typeof page.url === "function" ? page.url() : "");
+    const urlConversationId = currentQwenConversationId(typeof page.url === "function" ? page.url() : "");
+    const selected = urlConversationId ? null : await readQwenSelectedTask(page);
+    const conversationId = urlConversationId || selected?.conversation_id || null;
     const exact = Array.isArray(rows) ? rows.filter((row) => expectedSession?.conversation_id && expectedSession?.sub_chat_id
       && expectedSession?.local_project_id && expectedSession?.cwd
       && row.conversation_id === expectedSession.conversation_id
@@ -273,7 +288,8 @@ async function readQwenUiBinding(page, expectedSession, sessionRows, allowProvis
       && visibleValue(row.sub_chat_name) === nativeName) : [];
     const uiName = heading || title;
     const exactPeer = exact.length === 1 && peers.length === 1;
-    const routeMatches = Boolean(expectedSession?.conversation_id && conversationId === expectedSession.conversation_id);
+    const routeMatches = Boolean(expectedSession?.conversation_id && conversationId === expectedSession.conversation_id
+      && (!selected || selected.local_project_id===expectedSession.local_project_id && selected.title===nativeName));
     const titleMatches = Boolean(nativeName && nativeName === uiName);
     if (typeof sessionRows === "function" && exactPeer && routeMatches && views.length === 1
         && !titleMatches && Date.now() < deadline) {
@@ -366,8 +382,24 @@ export async function openQwenTaskByProjectAndName(
   subChatName,
   conversationId,
   timeoutMilliseconds = 30_000,
+  projectId = null,
 ) {
   if (!subChatName) throw new Error("QWENWORK_SUB_CHAT_NAME_MISSING");
+  if (projectId) {
+    const nativeRows=await visibleLocators(page.locator(`[data-chat-item="true"][data-chat-id="${conversationId}"]`));
+    if(nativeRows.length>1)throw Error('QWENWORK_SIDEBAR_TASK_AMBIGUOUS');
+    if(nativeRows.length===1){
+      const row=nativeRows[0],region=row.locator('xpath=ancestor::*[@data-task-order-region][1]');
+      if(await region.count()!==1||await region.getAttribute('data-task-order-region')!==`project:${projectId}`)throw Error('QWENWORK_SIDEBAR_TASK_PROJECT_MISMATCH');
+      const task=await requireUniqueVisible(row.getByRole('button',{name:subChatName,exact:true}),'native-sidebar-task');
+      await task.click({timeout:timeoutMilliseconds});
+      await waitForUniqueVisible(async()=>{
+        const selected=await readQwenSelectedTask(page),route=currentQwenConversationId(page.url());
+        return selected?.conversation_id===conversationId&&selected.local_project_id===projectId&&selected.title===subChatName&&(!route||route===conversationId)?[task]:[];
+      },timeoutMilliseconds,'selected-native-sidebar-task');
+      return {opened:true,method:'native-sidebar-chat-project-identity'};
+    }
+  }
   const currentConversation = currentQwenConversationId(page.url());
   if (currentConversation === conversationId) return { opened: true, method: "already-selected" };
   const projectToggle = await requireUniqueVisible(

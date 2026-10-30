@@ -1461,3 +1461,12 @@ test("queue draft overrides require managed identity and SHA-256", () => {
   assert.throws(() => parseDriverArgs(["--config", "/tmp/x", "--allowed-queue-draft-sha256", "a".repeat(64)]), /managed-queue/);
   assert.deepEqual(parseDriverArgs(["--config", "/tmp/x", "--managed-queue-id", "q", "--allowed-queue-draft-sha256", "a".repeat(64)]).allowedQueueDraftSha256s, ["a".repeat(64)]);
 });
+
+for(const scenario of ['matching','foreign-project','duplicate-selection','foreign-url'])test(`modern selected sidebar identity ${scenario}`,async()=>{
+ const expected={...session(),sub_chat_name:'Fixture task'},region={count:async()=>1,getAttribute:async()=>`project:${scenario==='foreign-project'?'foreign':expected.local_project_id}`};
+ const active=fakeElement({text:'Fixture task'}),row={...fakeElement({attributes:{'data-chat-id':expected.conversation_id}}),locator:selector=>selector.startsWith('xpath=')?region:fakeLocator([active])};
+ const view={...fakeElement({text:'Fixture task'}),locator:()=>fakeLocator([])};
+ const page={url:()=>scenario==='foreign-url'?'file:///app#chat=foreign':'file:///app#windowId=main',title:async()=>'',locator:selector=>fakeLocator(selector===QWEN_TASK_VIEW_SELECTOR?[view]:selector.includes('data-selected')?(scenario==='duplicate-selection'?[row,row]:[row]):[])};
+ if(scenario==='duplicate-selection')await assert.rejects(inspectQwenTaskUi(page,'2026-01-01T00:00:00Z',expected,[expected]),/SELECTED_TASK_AMBIGUOUS/);
+ else {const r=await inspectQwenTaskUi(page,'2026-01-01T00:00:00Z',expected,[expected]);assert.equal(r.target_session_verified,scenario==='matching');}
+});

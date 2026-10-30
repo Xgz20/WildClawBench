@@ -3,6 +3,10 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.12` 支持新版无 chat URL 的导航：唯一 data-selected/data-chat-id 当前任务、aria-current、原生 project 区域、标题及 SQLite 单一 sub-chat 必须同时一致；URL 若声明另一会话则仍拒绝。
+
+`0.14.12` 在会话投影和两次恢复选择中保留原始 sub-chat 引擎绑定，避免新版会话误走旧 SDK 路径。
+
 `0.14.11` 显式支持 QwenWork 1.4 的 OpenCode/flash 原生 SQLite 身份链：读取宿主 sub-chat 的 engineSessionBindingV1，再绑定本机原生 session 子树、原始用户消息和已受理输入；只导出会话范围的表字段，不读取账号或凭据。旧 SDK JSONL 路径保留，未知引擎/版本/目录/Prompt 一致性失败仍停止。
 
 `0.14.10` 在托管队列内仅允许恢复已准备 journal、冻结配置和 Prompt 原件三方摘要一致的全局草稿；切换项目后重新填入当前题目并再次核验项目、模型、权限和全文，未知草稿仍失败关闭。新版“发送消息”按钮只在输入区内精确定位。零发送修复允许已持久化意图，但仍要求未预留、未调用、计数零且新鲜原生库为空；升级源修复链也重新校验该边界。

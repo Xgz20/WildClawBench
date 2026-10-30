@@ -13,7 +13,6 @@ SELECT
   sub_chats.id AS sub_chat_id,
   sub_chats.name AS sub_chat_name,
   sub_chats.session_id AS session_id,
-  sub_chats.ext AS sub_chat_ext,
   chats.local_project_id AS local_project_id,
   COALESCE(
     json_extract(local_projects.root_paths, '$[0]'),

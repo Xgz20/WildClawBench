@@ -1216,6 +1216,7 @@ export async function createLiveDependencies(config) {
       session.sub_chat_name,
       session.conversation_id,
       timeout,
+      project.project_id,
     );
   };
   const guard = action => async (...args) => { await checkEnvironment(); return action(...args); };
