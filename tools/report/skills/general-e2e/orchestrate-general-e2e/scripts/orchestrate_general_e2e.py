@@ -867,6 +867,7 @@ def initialize(
     acceptance_id: str | None = None,
     score_timeout_seconds: int | None = None,
     score_slots: int = DEFAULT_SCORE_SLOTS,
+    protect_runtime_office_inputs: bool = False,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     # General E2E deliberately has no task-level scoring deadline.  Keep the
@@ -983,6 +984,8 @@ def initialize(
                 # Existing frozen units predate the round layout. Managed new
                 # rounds always retain the strict, self-contained trace gate.
                 prepare_arguments.append("--legacy-transcript-only")
+            if protect_runtime_office_inputs:
+                prepare_arguments.append("--protect-runtime-office-inputs")
             if api_runtime_config is not None:
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
@@ -1138,6 +1141,7 @@ def initialize_rescore(
     acceptance_id: str | None = None,
     score_timeout_seconds: int | None = None,
     score_slots: int = DEFAULT_SCORE_SLOTS,
+    protect_runtime_office_inputs: bool = False,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     # See initialize(): scoring threads are not stopped by an orchestration
@@ -1239,6 +1243,8 @@ def initialize_rescore(
                 "--judge-attempt-id",
                 attempt_id,
             ]
+            if protect_runtime_office_inputs:
+                prepare_arguments.append("--protect-runtime-office-inputs")
             if api_runtime_config is not None:
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
@@ -2966,6 +2972,7 @@ def main(argv: list[str] | None = None) -> int:
         help="兼容旧脚本的参数；General E2E 评分不设置任务级超时，传入值会被忽略",
     )
     init.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
+    init.add_argument("--protect-runtime-office-inputs", action="store_true")
 
     init_rescore = subparsers.add_parser("init-rescore")
     init_rescore.add_argument(
@@ -2985,6 +2992,7 @@ def main(argv: list[str] | None = None) -> int:
         help="兼容旧脚本的参数；General E2E 评分不设置任务级超时，传入值会被忽略",
     )
     init_rescore.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
+    init_rescore.add_argument("--protect-runtime-office-inputs", action="store_true")
 
     for name in ("status", "resume"):
         _parse_common(subparsers.add_parser(name))
@@ -3092,6 +3100,7 @@ def main(argv: list[str] | None = None) -> int:
                 acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
                 score_slots=args.score_slots,
+                protect_runtime_office_inputs=args.protect_runtime_office_inputs,
             )
         elif args.command == "init-rescore":
             result = initialize_rescore(
@@ -3105,6 +3114,7 @@ def main(argv: list[str] | None = None) -> int:
                 acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
                 score_slots=args.score_slots,
+                protect_runtime_office_inputs=args.protect_runtime_office_inputs,
             )
         elif args.command in {"status", "resume"}:
             result = status(args.orchestration_root)

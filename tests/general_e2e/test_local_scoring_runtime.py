@@ -127,6 +127,7 @@ class Fixture:
         dual_results: bool = False,
         contract_overrides: dict | None = None,
         office_reference: bool = False,
+        office_candidate: bool = False,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -145,6 +146,8 @@ class Fixture:
         self.candidate = self.unit_root / "evidence/candidate/workspace"
         self.candidate.mkdir(parents=True)
         (self.candidate / "answer.txt").write_text("ready\n", encoding="utf-8")
+        if office_candidate:
+            (self.candidate / "candidate.xlsx").write_bytes(b"frozen candidate Office bytes")
         if mapped_nested_results:
             nested_results = self.candidate / "workspace/results"
             nested_results.mkdir(parents=True)
@@ -298,7 +301,7 @@ class Fixture:
                 archive.writestr(zip_info(f"{package_root}/{private_root}/gt/reference.xlsx"), office_bytes)
         self.output_root = root / "attempts"
 
-    def prepare(self, attempt_id: str = "score-attempt") -> Path:
+    def prepare(self, attempt_id: str = "score-attempt", *, protect_runtime_office_inputs: bool = False) -> Path:
         semantic = self.grading_type != "automated"
         result = RUNTIME.prepare_attempt(
             unit_root=self.unit_root,
@@ -312,6 +315,7 @@ class Fixture:
             judge_model="gpt-fixture" if semantic else None,
             judge_reasoning_effort="high" if semantic else None,
             judge_attempt_id=attempt_id if semantic else None,
+            protect_runtime_office_inputs=protect_runtime_office_inputs,
         )
         return Path(result["attempt_root"])
 
@@ -486,6 +490,38 @@ class LocalScoringRuntimeTests(unittest.TestCase):
             handle.write(b"unbound bytes")
         with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "ATTEMPT_PRIVATE_MATERIAL_DRIFT"):
             RUNTIME.verify_attempt(attempt)
+
+    def test_candidate_office_original_is_guarded_and_runtime_remains_writable_by_default(self) -> None:
+        fixture=Fixture(self.root,office_candidate=True)
+        attempt=fixture.prepare();manifest=json.loads((attempt/"attempt-manifest.json").read_text())
+        canonical=attempt/"candidate-original/workspace/candidate.xlsx"
+        runtime=attempt/"runtime/workspace/candidate.xlsx"
+        self.assertEqual(canonical.read_bytes(),runtime.read_bytes())
+        self.assertEqual(manifest["runtime"]["canonical_office_guard"]["files"][0]["sha256"],sha256_bytes(canonical.read_bytes()))
+        self.assertNotIn("candidate_office_input_guard",manifest["runtime"])
+        if sys.platform=="darwin":
+            self.assertTrue(canonical.stat().st_flags & stat.UF_IMMUTABLE)
+            self.assertFalse(runtime.stat().st_flags & stat.UF_IMMUTABLE)
+        runtime.write_bytes(b"legitimate writable runtime copy")
+        self.assertEqual(canonical.read_bytes(),b"frozen candidate Office bytes")
+
+    @unittest.skipUnless(sys.platform=="darwin","explicit native immutable input profile is macOS only")
+    def test_explicit_readonly_runtime_office_inputs_preserve_bytes_through_rules_and_rescore(self) -> None:
+        fixture=Fixture(self.root,office_candidate=True)
+        attempt=fixture.prepare(protect_runtime_office_inputs=True)
+        runtime=attempt/"runtime/workspace/candidate.xlsx"
+        self.assertTrue(runtime.stat().st_flags & stat.UF_IMMUTABLE)
+        with self.assertRaises(PermissionError):runtime.write_bytes(b"attempted host metadata append")
+        RUNTIME.run_rules_attempt(attempt_root=attempt,runtime_python=self.runtime_python,timeout_seconds=10)
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt);RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt)["score_valid"])
+        replacement=RUNTIME.prepare_rescore_attempt(source_attempt_root=attempt,scoring_attempt_id="guarded-rescore",
+            output_root=self.root/"rescores",protect_runtime_office_inputs=True)
+        target=Path(replacement["attempt_root"])/"runtime/workspace/candidate.xlsx"
+        self.assertTrue(target.stat().st_flags & stat.UF_IMMUTABLE)
+        self.assertEqual(target.read_bytes(),b"frozen candidate Office bytes")
+        RUNTIME._remove_tree(attempt/"runtime")
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt,archived=True)["score_valid"])
 
     def test_rescore_seals_legacy_loose_office_reference_without_rewriting_source(self) -> None:
         fixture = Fixture(self.root, office_reference=True)

@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.17` 在 macOS 为新建的评分原件 Office 副本设置用户不可变标志并再次验证原 SHA，保护已冻结的输入字节。新增 `prepare/prepare-rescore --protect-runtime-office-inputs`：仅在审查原规则不会改写这些候选 Office 文件后显式使用，对一次性 runtime 中的候选 Office 输入也设置同一保护；规则生成的取证目录继续可写。运行时副本默认保持原可写行为，非 macOS 不接受该显式保护选项。manifest 分别记录原件和显式 runtime 的保护 Profile；旧 attempt、原规则、权重和宿主变体不修改，清理受管临时目录仍解除自身保护标志。
+
 `0.10.16` 为 WorkBuddy 原生 user-query 包装增加公开上下文交接：仅当归档 runtime binding 与 execution 的 session/request/cwd、Prompt SHA 和唯一问题一致，原生 user 行明确 startsNewUserRequest、绑定同一 request，且目标 AGENTS.md 路径及全文出现在唯一 user_query 之前，才生成可复核的规则输入视图。助手引用、缺少送达记录、错误目录或其他请求不能替代。原始标准转录、执行证据和候选原件不改写；rule-input-context.json 同时绑定 runtime 原件和 JSONL 行 SHA。
 
 `0.10.15` 在 macOS 准备评分时，对从规范容器恢复的运行时 Office GT 副本设置用户不可变标志，避免宿主追加属性使规则完成后的摘要漂移；只保护评分参考副本，不修改候选或原始 GT。运行时不进入回传包；清理受管临时目录时会解除自身设置的标志。其他平台仍按原有容器与权限保护口径，不据此声明 Windows 真机验收。

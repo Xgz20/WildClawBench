@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.15` 的 `init/init-rescore --protect-runtime-office-inputs` 显式转交 score Skill 的只读 Office runtime 输入选项。必须先审查冻结规则不会改写候选 Office 文件；默认关闭，原有可写 runtime 契约保持兼容。已建立的编排和 Prompt 不追加此选项；需要修复尚未评分的输入副本时保留旧 attempt，并从同一冻结执行创建新评分 attempt，不重跑 Harness 或重新判断已完成语义分。
+
 `0.11.14` 接受数据集明确抛出的 `EvaluationReviewRequired` 和 `ReviewRequired`，同样仅作留证未评分，不由控制器猜测规则分。运行环境、身份、证据漂移等其他异常仍不进入此分支。
 
 `0.11.13` 提供显式 `record-unscored-rule-error --task-id ID --reason TEXT`：仅接受原数据集规则抛出的 `EvaluationError`，且尚无语义线程、规则组件或分数；保留 Worker/审计 SHA 和完整题目范围，不计能力零分，不用于跳过额度故障或有效评分。`compose-full-scope-selection` 可将已锁定的部分 submission 与明确指定、已严格验分的缺失题目制品合成完整原范围；不重评、不按高分选择、不伪造编排完成状态。

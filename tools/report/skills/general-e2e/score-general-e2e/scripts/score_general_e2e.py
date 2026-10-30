@@ -919,6 +919,23 @@ def _guard_runtime_office_references(roots: Sequence[Path], entries: Sequence[Ma
             "files": guarded, "business_bytes_changed": False}
 
 
+def _guard_candidate_office_copies(root: Path, entries: Sequence[Mapping[str, Any]], *, role: str) -> dict[str, Any]:
+    guarded = []
+    for entry in entries:
+        if entry.get("type") != "file" or PurePosixPath(str(entry.get("path"))).suffix.lower() not in OFFICE_REFERENCE_SUFFIXES:
+            continue
+        path = _resolve_within(root, entry["path"], "candidate Office input")
+        if path.is_symlink() or not path.is_file():
+            raise ScoringRuntimeError("CANDIDATE_OFFICE_GUARD_INVALID", entry["path"])
+        if sys.platform == "darwin":
+            os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE, follow_symlinks=False)
+        if _sha256_file(path) != entry["sha256"]:
+            raise ScoringRuntimeError("CANDIDATE_OFFICE_GUARD_SOURCE_MISMATCH", entry["path"])
+        guarded.append({"logical_path": entry["path"], "sha256": entry["sha256"]})
+    return {"profile": "candidate-office-byte-guard/v1", "role": role, "platform": sys.platform,
+            "user_immutable": sys.platform == "darwin", "files": guarded, "business_bytes_changed": False}
+
+
 def _read_office_gt_member(root: Path, row: Mapping[str, Any], entry: Mapping[str, Any]) -> bytes:
     logical = str(_safe_relative(entry["path"], "GT logical path"))
     if (row.get("logical_path") != logical or row.get("stored_path") != _office_gt_container_name(logical)
@@ -1381,7 +1398,10 @@ def prepare_attempt(
     api_runtime_config_path: Path | None = None,
     acceptance_id: str | None = None,
     require_trace_bundle: bool = False,
+    protect_runtime_office_inputs: bool = False,
 ) -> dict[str, Any]:
+    if protect_runtime_office_inputs and sys.platform != "darwin":
+        raise ScoringRuntimeError("RUNTIME_OFFICE_PROTECTION_PLATFORM_UNSUPPORTED", sys.platform)
     unit_root = unit_root.expanduser().resolve(strict=True)
     if not unit_root.is_dir() or unit_root.is_symlink():
         raise ScoringRuntimeError("UNIT_ROOT_INVALID", str(unit_root))
@@ -1544,8 +1564,10 @@ def prepare_attempt(
         _compare_candidate_entries(copied_entries, artifact.get("entries"))
         shutil.copyfile(artifact_path, staging / "candidate-original/candidate-artifact.json")
         _make_read_only(staging / "candidate-original")
+        canonical_office_guard = _guard_candidate_office_copies(original_workspace, entries, role="canonical-candidate-original")
 
         _copy_inventory(original_workspace, runtime_workspace, entries)
+        runtime_office_guard = _guard_candidate_office_copies(runtime_workspace, entries, role="explicit-readonly-runtime-inputs") if protect_runtime_office_inputs else None
         if os.path.lexists(runtime_workspace / "gt"):
             raise ScoringRuntimeError("RUNTIME_GT_COLLISION")
         mapped_runtime = runtime_workspace / "workspace"
@@ -1665,6 +1687,8 @@ def prepare_attempt(
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 "reference_guard": reference_guard,
+                "canonical_office_guard": canonical_office_guard,
+                **({"candidate_office_input_guard": runtime_office_guard} if runtime_office_guard else {}),
                 "docker_required": False,
                 "lock": runtime_lock,
             },
@@ -5503,7 +5527,10 @@ def prepare_rescore_attempt(
     judge_attempt_id: str | None = None,
     api_runtime_config_path: Path | None = None,
     acceptance_id: str | None = None,
+    protect_runtime_office_inputs: bool = False,
 ) -> dict[str, Any]:
+    if protect_runtime_office_inputs and sys.platform != "darwin":
+        raise ScoringRuntimeError("RUNTIME_OFFICE_PROTECTION_PLATFORM_UNSUPPORTED", sys.platform)
     source_root = source_attempt_root.expanduser().resolve(strict=True)
     source_attempt_verification = verify_attempt(source_root)
     source_score_verification = verify_score_attempt(source_root)
@@ -5587,8 +5614,10 @@ def prepare_rescore_attempt(
             source_artifact, staging / "candidate-original/candidate-artifact.json"
         )
         _make_read_only(staging / "candidate-original")
+        canonical_office_guard = _guard_candidate_office_copies(original_workspace, candidate_entries, role="canonical-candidate-original")
 
         _copy_inventory(original_workspace, runtime_workspace, candidate_entries)
+        runtime_office_guard = _guard_candidate_office_copies(runtime_workspace, candidate_entries, role="explicit-readonly-runtime-inputs") if protect_runtime_office_inputs else None
         if os.path.lexists(runtime_workspace / "gt"):
             raise ScoringRuntimeError("RUNTIME_GT_COLLISION")
         source_gt = _resolve_within(source_root, source_paths.get("gt"), "gt")
@@ -5714,6 +5743,8 @@ def prepare_rescore_attempt(
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 "reference_guard": reference_guard,
+                "canonical_office_guard": canonical_office_guard,
+                **({"candidate_office_input_guard": runtime_office_guard} if runtime_office_guard else {}),
                 "docker_required": False,
                 "lock": runtime_lock,
             },
@@ -5958,6 +5989,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--api-runtime-config", type=Path)
     prepare.add_argument("--acceptance-id")
     prepare.add_argument("--legacy-transcript-only", action="store_true", help="Only for frozen legacy evidence without a raw trace index")
+    prepare.add_argument("--protect-runtime-office-inputs", action="store_true", help="macOS only; explicit read-only candidate Office inputs, after reviewing that rules never rewrite them")
 
     prepare_rescore = subparsers.add_parser("prepare-rescore")
     prepare_rescore.add_argument("--source-attempt-root", required=True, type=Path)
@@ -5969,6 +6001,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare_rescore.add_argument("--judge-attempt-id")
     prepare_rescore.add_argument("--api-runtime-config", type=Path)
     prepare_rescore.add_argument("--acceptance-id")
+    prepare_rescore.add_argument("--protect-runtime-office-inputs", action="store_true")
 
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
@@ -6051,6 +6084,7 @@ def main(argv: list[str] | None = None) -> int:
                 api_runtime_config_path=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
                 require_trace_bundle=not args.legacy_transcript_only,
+                protect_runtime_office_inputs=args.protect_runtime_office_inputs,
             )
         elif args.command == "prepare-rescore":
             result = prepare_rescore_attempt(
@@ -6063,6 +6097,7 @@ def main(argv: list[str] | None = None) -> int:
                 judge_attempt_id=args.judge_attempt_id,
                 api_runtime_config_path=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
+                protect_runtime_office_inputs=args.protect_runtime_office_inputs,
             )
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)

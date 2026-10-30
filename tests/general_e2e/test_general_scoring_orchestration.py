@@ -302,6 +302,7 @@ class Fixture:
         api_runtime_config: Path | None = None,
         acceptance_id: str | None = None,
         score_slots: int = ORCHESTRATOR.DEFAULT_SCORE_SLOTS,
+        protect_runtime_office_inputs: bool = False,
         now: datetime | None = None,
     ) -> dict:
         return ORCHESTRATOR.initialize(
@@ -316,6 +317,7 @@ class Fixture:
             acceptance_id=acceptance_id,
             score_timeout_seconds=timeout,
             score_slots=score_slots,
+            protect_runtime_office_inputs=protect_runtime_office_inputs,
             now=now,
         )
 
@@ -370,6 +372,15 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
 
     def tearDown(self) -> None:
         self.temp.cleanup()
+
+    @unittest.skipUnless(sys.platform=="darwin","explicit native Office input protection is macOS only")
+    def test_explicit_runtime_office_protection_is_forwarded_and_frozen_in_attempt(self) -> None:
+        fixture=Fixture(self.root/"office-protection",task_ids=("task-one",),grading_type="automated")
+        view=fixture.initialize(now=self.t0,protect_runtime_office_inputs=True)
+        attempt=Path(view["tasks"][0]["attempt_path"])
+        manifest=json.loads((attempt/"attempt-manifest.json").read_text())
+        self.assertEqual(manifest["runtime"]["candidate_office_input_guard"]["role"],"explicit-readonly-runtime-inputs")
+        self.assertTrue(manifest["runtime"]["candidate_office_input_guard"]["user_immutable"])
 
     def test_pure_semantic_evidence_producer_runs_before_project_and_uses_no_semantic_slot(self) -> None:
         overrides = {
