@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.19` 同步 general-resource-supplements 1.3.5 的显式紧邻 compaction 持久化延迟审计；保留完整 SDK 正文、原始来源和旧 Profile，不把冗余镜像缺失变成候选能力扣分。
+
 `0.8.18` 校验原契约独立有效性v2的精确SHA注册、动态能力m、多个检查点同维聚合、证据/原聚合Worker闭包及null传播；来源业务豁免与实际能力可独立记录，不归一缺失项。旧SPY v1和旧60题七维视图保持原行为。
 
 

@@ -641,8 +641,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
         editor_empty: editor.editor_text === "", ...selected };
     },
     (value) => value.thread_id && value.editor_count === 1 && value.editor_empty
-      && value.count === 1 && value.path === workspace
-      && (!options.forceNew || value.thread_id !== initialRoute),
+      && value.count === 1 && value.path === workspace,
     timeoutMs,
     "等待 AstronStudio 目标项目新对话路由和绝对路径",
   );
@@ -654,8 +653,17 @@ export async function openExactProjectConversation(client, workspace, stateDatab
   if (options.forceNew && !await queryPristineThread(stateDatabase, confirmed.thread_id)) {
     throw new Error("AstronStudio 目标项目新对话并非未使用的原生路由");
   }
+  // A delayed workspace selection can complete on the initial, already
+  // pristine target route. The native project and unused-thread checks above
+  // establish freshness; a different opaque route ID is not required.
+  const finalEditor = await editorState(client);
+  const finalWorkspace = await workspaceState(client);
+  if (finalEditor.thread_id !== confirmed.thread_id || finalEditor.editor_count !== 1
+    || finalEditor.editor_text !== "" || finalWorkspace.count !== 1 || finalWorkspace.path !== workspace) {
+    throw new Error("AstronStudio 原生项目核验后路由、路径或草稿发生变化");
+  }
   return { method: confirmed.thread_id === initialRoute
-    ? "late-visible-current-value" : "exact-project-new-conversation",
+    ? (options.forceNew ? "native-pristine-project-conversation" : "late-visible-current-value") : "exact-project-new-conversation",
     project_id: projectId, projection_reloaded: projectionReloaded, ...confirmed };
 }
 

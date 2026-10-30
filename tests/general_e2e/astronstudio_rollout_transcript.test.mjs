@@ -82,11 +82,18 @@ for (const [name,normalize] of [['canonical',normalizeRolloutTranscript],['vendo
     assert.equal(result.completeness.status,'complete');assert.equal(result.compaction_mirror_gaps.length,1);
     assert.ok(result.events.some(e=>e.content==='Retained original.'));
     for(const mutate of [
-      rows=>rows[7].timestamp='2026-10-10T15:00:02Z',
+      rows=>rows[7].timestamp='2026-10-10T14:59:59Z',
       rows=>rows[7].payload.replacement_history=null,
       rows=>rows[6].payload.internal_chat_message_metadata_passthrough.turn_id='wrong',
       rows=>rows[7].type='unknown',
     ]) {const changed=structuredClone(rows);mutate(changed);assert.throws(()=>normalize(bytes(changed),state,projection));}
+    const delayed=structuredClone(rows);delayed[7].timestamp='2026-10-10T15:00:01.113Z';
+    const audited=normalize(bytes(delayed),state,projection);
+    assert.equal(audited.compaction_mirror_gaps[0].profile,'bound-sdk-adjacent-compaction-latency/v1');
+    assert.equal(audited.compaction_mirror_gaps[0].persistence_delay_ms,1113);
+    assert.ok(audited.events.some(e=>e.content==='Retained original.'));
+    const interrupted=structuredClone(delayed);interrupted.splice(7,0,r('response_item',{type:'function_call',name:'other',call_id:'other',arguments:'{}'}));
+    assert.throws(()=>normalize(bytes(interrupted),state,projection),/ROLLOUT_ASSISTANT_MIRROR_CONFLICT/);
   });
   test(`${name}: structured tool search results preserve complete schemas and raw references`,()=>{
     for(const tools of [toolSearchFixture()[5].payload.tools,[]]) {

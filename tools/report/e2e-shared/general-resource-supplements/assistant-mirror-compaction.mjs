@@ -17,9 +17,17 @@ export function verifyAssistantMirrors(assistants, mirrors, bytes, state) {
     const compacted = rows[boundary], start = Date.parse(row.timestamp), end = Date.parse(compacted?.timestamp);
     require(compacted?.type === 'compacted' && typeof compacted.payload?.message === 'string'
       && Array.isArray(compacted.payload?.replacement_history) && Number.isFinite(start) && Number.isFinite(end)
-      && end >= start && end - start <= 1000);
-    gaps.push({ response_line: line, response_id: payload.id, compaction_line: boundary + 1,
-      reason: 'Original SDK message retained; redundant UI mirror absent immediately before explicit compaction.' });
+      && end >= start);
+    // Physical source adjacency, the bound turn and explicit compaction prove
+    // this redundant-mirror gap. Compaction persistence latency is not a
+    // content-identity test; retain longer delays as an explicit audit profile.
+    const gap = { response_line: line, response_id: payload.id, compaction_line: boundary + 1,
+      reason: 'Original SDK message retained; redundant UI mirror absent immediately before explicit compaction.' };
+    if (end - start > 1000) {
+      gap.profile = 'bound-sdk-adjacent-compaction-latency/v1';
+      gap.persistence_delay_ms = end - start;
+    }
+    gaps.push(gap);
   }
   require(next === mirrors.length);
   return gaps;

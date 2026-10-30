@@ -48,7 +48,7 @@ SDK 模式仍核验同一 session/turn/cwd、原始 Prompt、终态、最终回�
 
 原生 `tool_search_output` 的工具定义从 `tools` 字段解析为结构化结果，空数组也是一次已返回的搜索；完整 schema 和原始行保留。失败/未知执行状态、非法工具定义、重复工具名或同时出现歧义 output/tools 均不伪装成功。
 
-SDK 原始 assistant 消息在显式 compaction 前可能没有冗余 UI mirror。仅对同 turn、有原生响应 ID、紧邻 compaction（中间只允许 usage 事件且不超过一秒）的形状保留缺失 mirror 审计；原 SDK 消息仍在标准转录中。普通消息内容冲突不放行。
+SDK 原始 assistant 消息在显式 compaction 前可能没有冗余 UI mirror。仅对同 turn、有原生响应 ID、源记录紧邻 compaction（中间只允许 usage 事件）的形状保留缺失 mirror 审计；原 SDK 消息仍在标准转录中。持久化延迟超过一秒时增加 `bound-sdk-adjacent-compaction-latency/v1` 和实际延迟，一秒内沿用原审计结构。逆序时间、插入工具/其他消息及普通内容冲突不放行。
 
 最终正式归档复制索引引用的全部 `binding_evidence`。收口与 `--verify-only` 均核验 transcript、SDK/provider 和绑定文件的存在、SHA、大小及引用闭包；旧冻结原件不自动修复或改写。
 
