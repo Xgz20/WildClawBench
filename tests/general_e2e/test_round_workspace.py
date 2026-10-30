@@ -106,6 +106,7 @@ class ExternalScoringPackageTests(unittest.TestCase):
     def prepare(self,**kw):
         import types
         def fake_init(command,**unused):
+            self.last_init_command=command
             output=Path(command[command.index('--output-root')+1])/command[command.index('--orchestration-id')+1]
             ROUND.write(output/'orchestration-state.json',{'tasks':[]})
             return types.SimpleNamespace(returncode=0,stdout='{}',stderr='')
@@ -128,6 +129,19 @@ class ExternalScoringPackageTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'STORAGE_MODE_DRIFT'):self.prepare(scoring_package=self.scoring)
         self.scoring.write_bytes(b'changed')
         with self.assertRaisesRegex(ValueError,'PACKAGE_DRIFT'):self.prepare(keep_scoring_external=True)
+
+    def test_runtime_office_guard_is_explicit_and_preserves_external_storage(self):
+        self.prepare(scoring_package=self.scoring,keep_scoring_external=True,protect_runtime_office_inputs=True)
+        self.assertIn('--protect-runtime-office-inputs',self.last_init_command)
+        self.assertFalse(list(self.root.rglob('*.zip')))
+
+    def test_runtime_office_guard_defaults_off_in_both_entrypoints(self):
+        self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
+        self.assertNotIn('--protect-runtime-office-inputs',self.last_init_command)
+        import run_general_e2e as run
+        args=['prepare-score','--harness','AstronStudio','--orchestration-id','fixture']
+        self.assertFalse(run.build_parser().parse_args(args).protect_runtime_office_inputs)
+        self.assertTrue(run.build_parser().parse_args(args+['--protect-runtime-office-inputs']).protect_runtime_office_inputs)
 
     def test_default_mode_retains_existing_cache_behavior(self):
         result=self.prepare(scoring_package=self.scoring)

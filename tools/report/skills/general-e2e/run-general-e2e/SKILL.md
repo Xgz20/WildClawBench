@@ -3,6 +3,8 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.8` 的 prepare-score 显式透传 --protect-runtime-office-inputs 到同一冻结编排；与 --keep-scoring-external 可同时使用，默认仍为可写 runtime。使用前必须确认冻结规则只读 Office 输入；不改现有编排或评分 attempt，不修改源 Workspace、原件或 SHA。
+
 `0.7.7` 的七阶段链路同时支持 `general-custom60-v1`（旧 60 题、七维）与 `general-custom116-v1`（检索 20、Office 30、数据分析 66，独立五维）。管理员按 [数据集构建说明](../../../../../eval_general_e2e/datasets/README.md) 选择并构建 dataset bundle；独立安装后只消费冻结 ZIP，不依赖此源码链接。随后沿用相同的 prepare → execute → collect-evidence → score → package → import-return → report 流程；所有阶段保留 dataset ID/digest，不替换历史包或旧评分。
 
 
