@@ -76,6 +76,7 @@ API_PROVIDERS = {
 API_CREDENTIAL_ENV_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
 API_RETRYABLE_HTTP_STATUSES = {408, 409, 425, 429, 500, 502, 503, 504}
 REASON_LANGUAGE = "zh-CN"
+EVALUATOR_INPUT_PROFILE = "declared-evidence-and-native-context/v1"
 REASONING_EFFORTS = {
     "none",
     "minimal",
@@ -1641,6 +1642,7 @@ def prepare_attempt(
                 "workspace_argument": path_resolution["workspace_argument"],
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
+                "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 "docker_required": False,
                 "lock": runtime_lock,
             },
@@ -1887,8 +1889,9 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
             raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
         if (root / "rule-component.json").is_file():
             contract = _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID")
-            if _required_generated_evidence(contract):
+            if _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest)):
                 _generated_evidence_files(root, manifest, contract)
+    _verify_rule_input_context(root, manifest)
     return {
         "status": "PASS",
         "attempt_root": str(root),
@@ -2515,6 +2518,123 @@ def _effective_rule_source(
     return effective, correction
 
 
+def _extended_evaluator_inputs(manifest: Mapping[str, Any]) -> bool:
+    value = manifest.get("runtime", {}).get("evaluator_input_profile")
+    if value not in {None, EVALUATOR_INPUT_PROFILE}:
+        raise ScoringRuntimeError("EVALUATOR_INPUT_PROFILE_INVALID", str(value))
+    return value == EVALUATOR_INPUT_PROFILE
+
+
+def _instruction_text(row: Mapping[str, Any]) -> str:
+    content = row.get("content", "")
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list) and all(isinstance(b, dict) and b.get("type") in {"text", "input_text", "output_text"}
+                                         and isinstance(b.get("text"), str) for b in content):
+        return "\n".join(b["text"] for b in content)
+    return ""
+
+
+def _canonical_rule_view(transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    view = json.loads(json.dumps(transcript, ensure_ascii=False))
+    for row in view:
+        if row.get("type") == "assistant_message" and row.get("role") == "assistant" and row.get("final") is True:
+            row.update(channel="final", end_turn=True)
+            if isinstance(row.get("message"), dict) and row["message"].get("role") == "assistant":
+                row["message"].update(channel="final", end_turn=True)
+    return view
+
+
+def _native_context_rule_input(root: Path, manifest: Mapping[str, Any], contract: Mapping[str, Any],
+                               transcript: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    required = contract.get("judge_evidence", {}).get("required", [])
+    if not any(isinstance(r, dict) and r.get("role") == "public_task_context" for r in required):
+        return transcript, None
+    context_path = root / manifest["paths"]["candidate_original"] / "AGENTS.md"
+    if not context_path.is_file() or context_path.is_symlink():
+        return transcript, None
+    context_bytes = context_path.read_bytes()
+    context = context_bytes.decode("utf-8").strip().replace("\r\n", "\n")
+    if not context or any(r.get("role") in {"user", "system", "developer"}
+                          and context in _instruction_text(r).replace("\r\n", "\n") for r in transcript):
+        return transcript, None
+    bundle_ref = manifest.get("trace_bundle")
+    if not bundle_ref:
+        return transcript, None
+    bundle = _read_json(root / bundle_ref["path"])
+    relative = "raw/astronstudio-rollout.jsonl"
+    if relative not in bundle.get("raw_trace", []):
+        return transcript, None
+    sdk_path = root / "trace" / relative
+    raw = sdk_path.read_bytes()
+    rows = [(n, json.loads(line), line) for n, line in enumerate(raw.splitlines(keepends=True), 1) if line.strip()]
+    execution = _read_json(root / manifest["paths"]["execution_record"])
+    session = execution.get("session", {})
+    sid, turn, cwd = (session.get(k) for k in ("session_id", "turn_id", "cwd"))
+    metas = [r[1]["payload"] for r in rows if r[1].get("type") == "session_meta"]
+    starts = [r[1]["payload"].get("turn_id") for r in rows if r[1].get("type") == "event_msg"
+              and r[1].get("payload", {}).get("type") == "task_started"]
+    contexts = [r[1]["payload"] for r in rows if r[1].get("type") == "turn_context"]
+    loaded = [r[1].get("payload", {}).get("state", {}).get("agents_md", {}) for r in rows if r[1].get("type") == "world_state"]
+    if (len(metas) != 1 or metas[0].get("id") != sid or metas[0].get("cwd") != cwd or starts != [turn]
+            or not any(c.get("turn_id") == turn and c.get("cwd") == cwd for c in contexts)
+            or not any(c.get("directory") == cwd and str(c.get("text", "")).strip().replace("\r\n", "\n") == context for c in loaded)):
+        raise ScoringRuntimeError("NATIVE_PUBLIC_CONTEXT_BINDING_INVALID", "session/turn/cwd/loaded context")
+    questions = [_instruction_text(r) for r in transcript if r.get("type") == "user_message"]
+    question_lines = [n for n, r, _ in rows if r.get("type") == "event_msg"
+                      and r.get("payload", {}).get("type") == "user_message"
+                      and r["payload"].get("message") in questions]
+    start_lines = [n for n, r, _ in rows if r.get("type") == "event_msg"
+                   and r.get("payload", {}).get("type") == "task_started"]
+    if len(questions) != 1 or len(question_lines) != 1:
+        raise ScoringRuntimeError("NATIVE_PUBLIC_CONTEXT_BINDING_INVALID", "unique frozen question")
+    messages = []
+    for line, row, line_bytes in rows:
+        value = row.get("payload", {})
+        if row.get("type") != "response_item" or value.get("type") != "message" or value.get("role") != "user":
+            continue
+        body = _instruction_text(value)
+        if (start_lines[0] < line < question_lines[0]
+                and f"# AGENTS.md instructions for {cwd}" in body.splitlines()
+                and context in body.replace("\r\n", "\n")):
+            messages.append((line, body, line_bytes))
+    if not messages:
+        return transcript, None
+    line, body, line_bytes = messages[0]
+    proof = {"schema_version": "wildclawbench.general-e2e-native-public-context/v1", "identity": manifest["identity"],
+             "session": {"session_id": sid, "turn_id": turn, "cwd": cwd},
+             "canonical_transcript_sha256": manifest["digests"]["transcript_sha256"],
+             "public_file": context_path.relative_to(root).as_posix(), "public_file_sha256": _sha256_bytes(context_bytes),
+             "raw_path": "trace/" + relative, "raw_sha256": _sha256_bytes(raw), "raw_line": line,
+             "raw_line_sha256": _sha256_bytes(line_bytes), "native_user_message_sha256": _sha256_bytes(body.encode("utf-8")),
+             "delivery_basis": "observed bound native user instruction message; not file presence", "candidate_output": False}
+    event = {"type": "instruction_context", "role": "user", "content": body,
+             "event_id": f"native-context:{sid}:L{line}", "source": {"raw_ref": proof["raw_path"] + f"#L{line}",
+             "raw_sha256": proof["raw_sha256"], "adapter": "bound-native-user-instructions/v1"}}
+    return [event, *transcript], proof
+
+
+def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
+    if not _extended_evaluator_inputs(manifest):
+        return
+    request_path = root / "worker/request.json"
+    proof_path = root / "rule-input-context.json"
+    if not request_path.is_file() and not proof_path.is_file():
+        return
+    contract = _read_json(root / manifest["paths"]["contract"])
+    transcript = _canonical_rule_view(_read_transcript(root / manifest["paths"]["transcript"])) if manifest["paths"].get("transcript") else []
+    expected, proof = _native_context_rule_input(root, manifest, contract, transcript)
+    if (proof is None and proof_path.exists()) or (proof is not None and _read_json(proof_path) != proof):
+        raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "native delivery proof")
+    if request_path.is_file() and _read_json(request_path).get("transcript") != expected:
+        raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "worker transcript view")
+    audit_path = root / "rule-audit.json"
+    if audit_path.is_file():
+        expected_ref = {"path": "rule-input-context.json", "sha256": _sha256_file(proof_path)} if proof else None
+        if _read_json(audit_path).get("rule_input_context") != expected_ref:
+            raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "audit binding")
+
+
 def run_rules_attempt(
     *,
     attempt_root: Path,
@@ -2539,7 +2659,7 @@ def run_rules_attempt(
     rule_workspace = _resolve_within(
         attempt_root, manifest["runtime"]["workspace_argument"], "rule_workspace"
     ).resolve(strict=True)
-    for relative in _required_generated_evidence(contract):
+    for relative in _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest)):
         if os.path.lexists(rule_workspace / relative):
             raise ScoringRuntimeError("JUDGE_EVIDENCE_TARGET_COLLISION", relative)
     _, runtime_initial_sha = _inventory_tree(runtime_workspace)
@@ -2578,7 +2698,12 @@ def run_rules_attempt(
     if len(transcript) != manifest.get("transcript_event_count"):
         raise ScoringRuntimeError("TRANSCRIPT_EVENT_COUNT_MISMATCH")
     started_at = _now()
+    context_receipt = None
     try:
+        if _extended_evaluator_inputs(manifest):
+            transcript, context_receipt = _native_context_rule_input(attempt_root, manifest, contract, _canonical_rule_view(transcript))
+            if context_receipt:
+                _write_new_json(attempt_root / "rule-input-context.json", context_receipt)
         component = run_rules(
             effective_checks,
             executor=executor if effective_checks.strip() else None,
@@ -2634,6 +2759,8 @@ def run_rules_attempt(
     }
     if component is not None:
         _write_new_json(attempt_root / "rule-component.json", component)
+    if context_receipt:
+        audit["rule_input_context"] = {"path": "rule-input-context.json", "sha256": _sha256_file(attempt_root / "rule-input-context.json")}
     if correction is not None:
         audit["source_correction"] = {
             "path": "rule-source-correction.json",
@@ -2773,7 +2900,7 @@ def _semantic_paths(root: Path) -> dict[str, Path]:
     }
 
 
-def _required_generated_evidence(contract: Mapping[str, Any]) -> list[str]:
+def _required_generated_evidence(contract: Mapping[str, Any], *, extended: bool = False) -> list[str]:
     declarations = contract.get("judge_evidence") or {}
     if not isinstance(declarations, dict):
         raise ScoringRuntimeError("JUDGE_EVIDENCE_CONTRACT_INVALID", "judge_evidence must be an object")
@@ -2784,7 +2911,9 @@ def _required_generated_evidence(contract: Mapping[str, Any]) -> list[str]:
     for entry in required:
         if not isinstance(entry, dict):
             raise ScoringRuntimeError("JUDGE_EVIDENCE_CONTRACT_INVALID", "required entry")
-        if entry.get("role") == "grader_generated_evidence":
+        declared = entry.get("path")
+        evaluator_namespace = isinstance(declared, str) and declared.rstrip("/").split("/")[0] == "evaluator_evidence"
+        if entry.get("role") == "grader_generated_evidence" or (extended and evaluator_namespace):
             if not isinstance(entry.get("path"), str):
                 raise ScoringRuntimeError("JUDGE_EVIDENCE_CONTRACT_INVALID", "path must be a string")
             relative = _safe_relative(entry["path"].rstrip("/"), "judge evidence")
@@ -2797,7 +2926,7 @@ def _required_generated_evidence(contract: Mapping[str, Any]) -> list[str]:
 
 
 def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract: Mapping[str, Any]) -> list[Path]:
-    required = _required_generated_evidence(contract)
+    required = _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest))
     if not required:
         return []
     component = _read_json(root / "rule-component.json", code="JUDGE_EVIDENCE_NOT_PREPARED")
@@ -2920,6 +3049,9 @@ def _semantic_reference_inputs(
     rule_audit = attempt_root / "rule-audit.json"
     if rule_audit.is_file() and not rule_audit.is_symlink():
         add_file("rule_audit", rule_audit)
+    context_receipt = attempt_root / "rule-input-context.json"
+    if context_receipt.is_file():
+        add_file("rule_audit", context_receipt)
     if manifest.get("trace_bundle"):
         bundle = _read_json(attempt_root / manifest["trace_bundle"]["path"])
         add_file("trace_index", attempt_root / "trace" / bundle["trace_index"])
@@ -4715,7 +4847,7 @@ def _rule_score_label(value: object) -> str:
     return "未形成有效分数"
 
 
-def _automated_component_reason(rules: Mapping[str, Any]) -> str:
+def _automated_component_reason(rules: Mapping[str, Any], *, automated_weight: float = 1.0) -> str:
     rows = rules.get("criteria")
     if rules.get("schema_version") != RULE_COMPONENT_SCHEMA_V2 or not isinstance(rows, list):
         return "冻结自动规则组件已通过受管 Worker 执行和契约校验。"
@@ -4729,6 +4861,9 @@ def _automated_component_reason(rules: Mapping[str, Any]) -> str:
             score_text = f"{float(score):g}" if isinstance(score, (int, float)) and not isinstance(score, bool) else "无效"
             summaries.append(f"{key}={score_text}（{_rule_score_label(score)}）")
     if not summaries:
+        if (automated_weight == 0 and rows == [] and rules.get("status") == "completed"
+                and rules.get("purpose") == "evidence_preparation_only"):
+            return "自动组件为零权重，未定义业务规则检查点；仅保留取证准备状态，不产生业务分或能力奖励。"
         raise ScoringRuntimeError("RULE_COMPONENT_INVALID", "criterion summaries")
     return (
         f"冻结自动规则组件总分为 {float(rules.get('score')):g}。逐检查点结果："
@@ -4786,7 +4921,7 @@ def _standard_score_criteria(
                 "status": rule_status,
                 "score": rules.get("score") if rule_status == "judged" else None,
                 "reason": (
-                    _automated_component_reason(rules)
+                    _automated_component_reason(rules, automated_weight=weights["automated"])
                     if rule_status == "judged"
                     else (
                         "自动规则未形成有效组件："
@@ -5096,9 +5231,9 @@ def _build_standard_score(
     return score
 
 
-def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
+def finalize_score_attempt(*, attempt_root: Path, archived: bool = False) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
-    verify_attempt(root)
+    verify_attempt(root, require_runtime=not archived)
     score_path = root / "score.json"
     audit_path = root / "score-audit.json"
     if score_path.exists() or audit_path.exists():
@@ -5158,6 +5293,72 @@ def finalize_score_attempt(*, attempt_root: Path) -> dict[str, Any]:
         "score": score,
         "audit": audit,
     }
+
+
+def repair_zero_weight_finalization(*, source_attempt_root: Path, output_root: Path) -> dict[str, Any]:
+    """Recompute a known failed aggregation while retaining its native decision."""
+    source = source_attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(source)
+    manifest = _read_json(source / "attempt-manifest.json")
+    contract = _read_json(source / manifest["paths"]["contract"])
+    rules = _read_json(source / "rule-component.json")
+    failure = _read_json(source / "score-audit.json")
+    weights = contract.get("grading_weights", {})
+    if (contract.get("grading_type") != "hybrid" or weights.get("automated") != 0
+            or weights.get("llm_judge") != 1 or rules.get("criteria") != []
+            or rules.get("purpose") != "evidence_preparation_only"
+            or contract.get("rule_result_adapter", {}).get("evidence_only") is not True
+            or rules.get("status") != "completed" or failure.get("status") != "failed"
+            or failure.get("error", {}).get("code") != "RULE_COMPONENT_INVALID"
+            or failure.get("error", {}).get("message") != "criterion summaries"
+            or (source / "score.json").exists()):
+        raise ScoringRuntimeError("FINALIZATION_REPAIR_PROFILE_MISMATCH")
+    _verify_semantic_terminal(source, manifest)
+    if _read_json(_semantic_paths(source)["component"]).get("status") != "completed":
+        raise ScoringRuntimeError("FINALIZATION_REPAIR_SEMANTICS_INCOMPLETE")
+    output = output_root.expanduser().resolve()
+    if output.exists() or output == source or source in output.parents:
+        raise ScoringRuntimeError("FINALIZATION_REPAIR_OUTPUT_INVALID", str(output))
+    output.parent.mkdir(parents=True, exist_ok=True)
+    stage = output.parent / ("." + output.name + ".staging-" + uuid.uuid4().hex)
+    stage.mkdir()
+    source_locks = {p.relative_to(source).as_posix(): _sha256_file(p)
+                    for p in source.rglob("*") if p.is_file() and not p.is_symlink()
+                    and "runtime" not in p.relative_to(source).parts}
+    try:
+        for child in source.iterdir():
+            if child.name == "runtime":
+                continue
+            target = stage / child.name
+            if child.name in {"score-audit.json", "scoring-infrastructure-blocker.json"}:
+                target = stage / "repair-source" / child.name
+                target.parent.mkdir(exist_ok=True)
+            if child.is_symlink():
+                raise ScoringRuntimeError("FINALIZATION_REPAIR_SOURCE_LINK", child.name)
+            if child.is_dir():
+                shutil.copytree(child, target, symlinks=True)
+            else:
+                shutil.copy2(child, target)
+        finalize_score_attempt(attempt_root=stage, archived=True)
+        verification = verify_score_attempt(stage, archived=True)
+        for relative, digest in source_locks.items():
+            if _sha256_file(source / relative) != digest:
+                raise ScoringRuntimeError("FINALIZATION_REPAIR_SOURCE_DRIFT", relative)
+        receipt = {"schema_version": "wildclawbench.general-e2e-finalization-repair/v1",
+                   "profile": "zero-weight-rule-summary/v1", "source_attempt_root": str(source),
+                   "identity": manifest["identity"], "source_locks": source_locks,
+                   "semantic_decision_rejudged": False, "rules_reexecuted": False,
+                   "grading_inputs_changed": False, "source_files_changed": False,
+                   "finalizer_entrypoint_sha256": _sha256_file(Path(__file__)),
+                   "score_sha256": _sha256_file(stage / "score.json")}
+        _write_new_json(stage / "finalization-repair-receipt.json", receipt)
+        stage.rename(output)
+    except BaseException:
+        _remove_tree(stage)
+        raise
+    verification = verify_score_attempt(output, archived=True)
+    return {"status": "PASS", "attempt_root": str(output), "score_valid": verification["score_valid"],
+            "semantic_decision_rejudged": False, "score_sha256": receipt["score_sha256"]}
 
 
 def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[str, Any]:
@@ -5425,6 +5626,7 @@ def prepare_rescore_attempt(
                 "logical_workspace_root": "/tmp_workspace",
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
+                "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 "docker_required": False,
                 "lock": runtime_lock,
             },
@@ -5486,7 +5688,7 @@ def run_api_score_attempt(
         raise ScoringRuntimeError("API_JUDGE_PROTOCOL_REQUIRED", judge["protocol"])
     grading_type = manifest["grading"]["type"]
     contract = _read_json(root / manifest["paths"]["contract"], code="SCORING_CONTRACT_INVALID")
-    if (grading_type == "hybrid" or _required_generated_evidence(contract)) and not (
+    if (grading_type == "hybrid" or _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest))) and not (
         (root / "rule-component.json").is_file()
         or (root / "rule-audit.json").is_file()
     ):
@@ -5724,6 +5926,10 @@ def main(argv: list[str] | None = None) -> int:
     finalize = subparsers.add_parser("finalize")
     finalize.add_argument("--attempt-root", required=True, type=Path)
 
+    repair = subparsers.add_parser("repair-zero-weight-finalization")
+    repair.add_argument("--source-attempt-root", required=True, type=Path)
+    repair.add_argument("--output-root", required=True, type=Path)
+
     verify_score = subparsers.add_parser("verify-score")
     verify_score.add_argument("--attempt-root", required=True, type=Path)
     verify_score.add_argument("--archived", action="store_true", help="Verify frozen score evidence after disposable runtime/ has been omitted")
@@ -5812,6 +6018,8 @@ def main(argv: list[str] | None = None) -> int:
             )
         elif args.command == "finalize":
             result = finalize_score_attempt(attempt_root=args.attempt_root)
+        elif args.command == "repair-zero-weight-finalization":
+            result = repair_zero_weight_finalization(source_attempt_root=args.source_attempt_root, output_root=args.output_root)
         elif args.command == "verify-score":
             result = verify_score_attempt(args.attempt_root, archived=args.archived)
         elif args.command == "probe-runtime":

@@ -3,6 +3,12 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.14` 为新 attempt 冻结 `declared-evidence-and-native-context/v1` 规则输入 Profile。标准转录保持原字节；规则视图仅为已验证的终稿增加兼容的 final/end_turn 标记，并可从同 session/turn/cwd 的原生 SDK user 指令消息补入实际送达的公开 AGENTS 上下文。必须同时核验原生加载目录、完整上下文、唯一任务/问题边界及问题前送达记录，不能以文件存在、助手引用或事后消息冒充送达。`rule-input-context.json` 和 Worker 请求随评分保留并重新核验，裁判可查询其规则审计证据。
+
+新 Profile 还冻结契约声明在 `evaluator_evidence/` 下的全部评分端材料，保留原契约的具体 role；候选的 `results/` 交付物不属于该生成范围。参考、候选终稿抽取、公开上下文和诊断属于裁判输入，不能据此奖励候选创建这些文件或完成自检。
+
+零权重且明确声明 `evidence_preparation_only` 的空规则组件可生成说明文字，不增加业务分。已经完成独立语义判定、仅因该理由生成错误而合分失败时，可用 `repair-zero-weight-finalization --source-attempt-root ABS --output-root NEW` 从原冻结组件产生独立、可归档验证的合分修复制品；原 attempt、失败审计与语义决定保持不变，不重跑规则或调用 Judge。
+
 `0.10.13` 将新准备的 Office GT 封装为单成员 `*.gtref.zip` 参考容器，防止宿主把松散参考文件当作生成制品追加属性。`attempt-manifest.json` 的 `private_scoring.storage.files` 明确记录原始 `logical_path`、容器 `stored_path`、原始字节 SHA/大小及容器 SHA/大小。规则运行时仍获得原文件名和原始字节；重评分恢复同一逻辑输入。旧 attempt、原候选、评分 ZIP 和宿主变体均不改写。
 
 语义裁判须先通过 `query-evidence --mode catalog` 查询对应 `private_reference` 容器证据 ID，通过 `--mode file` 查询清单 JSON，再用 `zipfile.ZipFile` 读取唯一的原始成员；二进制 ZIP 不使用 UTF-8 文本查询。Office 解析器使用成员字节的 `io.BytesIO`，或读取已校验的 `runtime/workspace/gt/<logical_path>`。参考容器属于评分材料，不改变候选的原定文件格式或交付位置要求；GT 不能计作候选产物，也不向私有原件目录解压 Office 文件。归档会保留容器和映射，移除 runtime 后仍可严格验分。

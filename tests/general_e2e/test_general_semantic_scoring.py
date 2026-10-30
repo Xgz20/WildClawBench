@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 import unittest
 import zipfile
+from unittest.mock import patch
 
 from eval_general_e2e.contracts import validate_contract_file
 from eval_general_e2e.datasets.bundle import build_default_bundle
@@ -209,6 +210,42 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         catalog = json.loads((attempt / "semantic/evidence-catalog.json").read_text())
         paths = [item["reference"].get("path") for item in catalog["evidence_index"]["entries"]]
         self.assertIn("candidate-original/workspace/workspace/results/answer.txt", paths)
+
+    def test_zero_weight_empty_rules_finalize_and_known_failed_aggregation_is_repaired_without_rejudging(self) -> None:
+        fixture = Fixture(self.root / "zero-rules", grading_type="hybrid",
+            grading_weights={"automated": 0.0, "llm_judge": 1.0}, llm_judge_rubric=RUBRIC,
+            rule="def grade(transcript, workspace_path):\n return {'overall_score':0.0}",
+            contract_overrides={"rule_result_adapter": {"schema_version": "wildclawbench.general-e2e-numeric-diagnostics/v1",
+                "diagnostic_keys": ["diagnostics"], "evidence_only": True, "default_overall": None}})
+        attempt = fixture.prepare("zero-rules")
+        RUNTIME.run_rules_attempt(attempt_root=attempt, runtime_python=Path(sys.executable), timeout_seconds=10)
+        response, candidate_id, transcript_id = self._prepare_and_query(attempt)
+        for row, score, evidence in zip(response["criteria"], [1.0, .5], [[candidate_id], [transcript_id]]):
+            row.update(status="judged", score=score, reason="本合成用例仅验证零权重规则组件的合分接口。", evidence_ids=evidence,
+                review={"query_ids": ["query-0001", "query-0002"], "supporting_evidence_checked": True,
+                    "contradicting_evidence_checked": True, "absence_claim": False, "complete_event_range_checked": False})
+        source = attempt / "synthetic-zero-response.json"
+        source.write_text(json.dumps(response, ensure_ascii=False), encoding="utf-8")
+        RUNTIME.record_semantics_attempt(attempt_root=attempt, response_path=source)
+        semantic_before = (attempt / "semantic/semantic-component.json").read_bytes()
+        with patch.object(RUNTIME, "_automated_component_reason",
+                          side_effect=RUNTIME.ScoringRuntimeError("RULE_COMPONENT_INVALID", "criterion summaries")):
+            with self.assertRaises(RUNTIME.ScoringRuntimeError):
+                RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        failed_before = (attempt / "score-audit.json").read_bytes()
+        output = self.root / "repaired-zero"
+        repaired = RUNTIME.repair_zero_weight_finalization(source_attempt_root=attempt, output_root=output)
+        self.assertTrue(repaired["score_valid"])
+        self.assertFalse(repaired["semantic_decision_rejudged"])
+        self.assertEqual((attempt / "score-audit.json").read_bytes(), failed_before)
+        self.assertEqual((output / "semantic/semantic-component.json").read_bytes(), semantic_before)
+        score = json.loads((output / "score.json").read_text())
+        self.assertAlmostEqual(score["result"]["total_score"], .8)
+        self.assertIn("零权重", score["evaluation"]["criteria"][0]["reason"])
+        self.assertTrue(RUNTIME.verify_score_attempt(output, archived=True)["score_valid"])
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "RULE_COMPONENT_INVALID"):
+            RUNTIME._automated_component_reason({"schema_version": RUNTIME.RULE_COMPONENT_SCHEMA_V2,
+                "status": "completed", "score": 0.0, "criteria": []}, automated_weight=1.0)
 
     def test_sealed_office_reference_ids_and_mapping_survive_semantic_archive(self) -> None:
         attempt = self._hybrid_attempt("office-reference", office_reference=True)
