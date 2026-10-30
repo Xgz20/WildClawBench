@@ -9,6 +9,15 @@ import { isRetryablePreSendFailure, isBlockingActiveSession } from './execute_as
 
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 function require(ok, code) { if (!ok) throw new Error(code); }
+export function frozenPromptDigest(descriptor) {
+  require(descriptor && typeof descriptor === 'object', 'ZERO_SEND_PROMPT_DESCRIPTOR_INVALID');
+  const hasSent = Object.hasOwn(descriptor, 'sent_sha256');
+  const hasLegacy = Object.hasOwn(descriptor, 'sha256');
+  const expected = hasSent ? descriptor.sent_sha256 : descriptor.sha256;
+  require(typeof expected === 'string' && /^[a-f0-9]{64}$/.test(expected), 'ZERO_SEND_PROMPT_DIGEST_INVALID');
+  require(!hasSent || !hasLegacy || descriptor.sent_sha256 === descriptor.sha256, 'ZERO_SEND_PROMPT_DIGEST_AMBIGUOUS');
+  return expected;
+}
 function inside(root, value) {
   const path = resolve(root, value), rel = relative(root, path);
   require(rel && !isAbsolute(rel) && rel !== '..' && !rel.startsWith('../'), 'ZERO_SEND_PATH_ESCAPE');
@@ -52,7 +61,7 @@ export async function prepareZeroSendUi({ unitRoot, stateDatabase, endpoint, aud
       const promptPath = inside(unitRoot, task.prompt.path);
       require(await realpath(promptPath) === promptPath, 'ZERO_SEND_PROMPT_SYMLINK');
       const prompt = await readFile(promptPath);
-      require(sha(prompt) === task.prompt.sha256, 'ZERO_SEND_PROMPT_SHA_MISMATCH');
+      require(sha(prompt) === frozenPromptDigest(task.prompt), 'ZERO_SEND_PROMPT_SHA_MISMATCH');
       const statePath = join(unitRoot, '.general-e2e/execution', task.task_id, 'automation-state.json');
       let bytes;
       try { bytes = await readFile(statePath); } catch (error) { if (error.code === 'ENOENT') continue; throw error; }

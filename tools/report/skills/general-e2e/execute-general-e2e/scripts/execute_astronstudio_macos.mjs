@@ -42,7 +42,7 @@ import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.15";
+export const EXECUTION_DRIVER_VERSION = "0.4.16";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";

@@ -4,12 +4,21 @@ import { mkdtemp,mkdir,writeFile,readFile,readdir,access,rm,realpath } from 'nod
 import { createHash } from 'node:crypto';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { identifyOwnedDraft,prepareZeroSendUi } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/prepare_astronstudio_zero_send_ui.mjs';
+import { identifyOwnedDraft,prepareZeroSendUi,frozenPromptDigest } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/prepare_astronstudio_zero_send_ui.mjs';
 import { preSendInfrastructureFailure } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/run_astronstudio_macos_batch.mjs';
 
 const state=()=>({identity:{task_id:'task'},phase:'FAILED',execution:{business_status:'infrastructure_error',error:{code:'PRE_SEND_DRIVER_ERROR'}},prompt:{send_status:'not_sent',sent_at:null},send:{dispatch_attempt_count:0,dispatch_armed_at:null,dispatch_completed_at:null},session:{verified:false},history:[]});
 const ui=()=>({count:1,dialogs:[],text:'exact frozen prompt',chips:[],workspace:['/tmp/owned']});
 const candidate=()=>({task_id:'task',prompt:'exact frozen prompt',workspace:'/tmp/owned',state:state()});
+test('new sent digest and legacy byte digest remain compatible without a source-digest fallback',()=>{
+  const sha='a'.repeat(64),other='b'.repeat(64);
+  assert.equal(frozenPromptDigest({sent_sha256:sha,source_sha256:other}),sha);
+  assert.equal(frozenPromptDigest({sha256:sha}),sha);
+  assert.equal(frozenPromptDigest({sent_sha256:sha,sha256:sha}),sha);
+  assert.throws(()=>frozenPromptDigest({sent_sha256:sha,sha256:other}),/AMBIGUOUS/);
+  assert.throws(()=>frozenPromptDigest({source_sha256:sha}),/DIGEST_INVALID/);
+  assert.throws(()=>frozenPromptDigest({sent_sha256:null,sha256:sha}),/DIGEST_INVALID/);
+});
 test('only an exact zero-send draft in its own workspace can be selected',()=>{
   const c=candidate();assert.equal(identifyOwnedDraft(ui(),[c]),c);
   assert.equal(identifyOwnedDraft({...ui(),text:''},[c]),null);
@@ -31,12 +40,12 @@ test('preparation failures block refilling separately from candidate failures',(
   assert.equal(preSendInfrastructureFailure({phase:'FAILED',dispatch_attempt_count:0,error:{code:'CANDIDATE_ERROR'}}),false);
 });
 
-for(const foreign of [false,true]) test(foreign?'foreign draft never gets a key event and is not exported':'owned draft clearing preserves state and only emits Backspace',async()=>{
+for(const digestField of ['sha256','sent_sha256']) for(const foreign of [false,true]) test(digestField+': '+(foreign?'foreign draft never gets a key event and is not exported':'owned draft clearing preserves state and only emits Backspace'),async()=>{
   const root=await realpath(await mkdtemp(join(tmpdir(),'bound-zero-send-')));
   try{
     const prompt='exact frozen prompt',workspace=join(root,'workspace'),control=join(root,'.general-e2e/execution/task');
     await mkdir(workspace);await mkdir(control,{recursive:true});await writeFile(join(root,'PROMPT.md'),prompt);
-    await writeFile(join(root,'manifest.json'),JSON.stringify({batch_id:'batch',unit_id:'unit',tasks:[{task_id:'task',prompt:{path:'PROMPT.md',sha256:createHash('sha256').update(prompt).digest('hex')},workspace:{path:'workspace'}}]}));
+    await writeFile(join(root,'manifest.json'),JSON.stringify({batch_id:'batch',unit_id:'unit',tasks:[{task_id:'task',prompt:{path:'PROMPT.md',[digestField]:createHash('sha256').update(prompt).digest('hex')},workspace:{path:'workspace'}}]}));
     const source=state();source.identity={batch_id:'batch',unit_id:'unit',task_id:'task',attempt_id:'original'};
     const statePath=join(control,'automation-state.json');await writeFile(statePath,JSON.stringify(source));const before=await readFile(statePath);
     const audit=join(root,'audit'),keys=[];let reads=0,closed=false;
