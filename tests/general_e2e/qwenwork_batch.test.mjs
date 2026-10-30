@@ -96,6 +96,11 @@ test("source repair at preparation requires every journal unsent and a fresh emp
     const probePath=join(root,"fresh-probe.json");let bytes=Buffer.from(JSON.stringify(probe));await writeFile(probePath,bytes);
     const repair={boundary:"zero-send-preparation",boundary_probe_path:probePath,boundary_probe_sha256:sha256(bytes)};
     await assertZeroSendSourceRepair(state,repair,root);
+    journal.prompt.send_status="intent_persisted";await writeFile(path,JSON.stringify(journal));
+    await assertZeroSendSourceRepair(state,repair,root);
+    journal.send.reservation_id="reserved";await writeFile(path,JSON.stringify(journal));
+    await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/ZERO_SEND_SOURCE_REPAIR_INVALID/u);
+    journal.send.reservation_id=null;
     journal.prompt.send_status="uncertain";await writeFile(path,JSON.stringify(journal));
     await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/ZERO_SEND_SOURCE_REPAIR_INVALID/u);
     journal.prompt.send_status="not_sent";await writeFile(path,JSON.stringify(journal));
@@ -243,7 +248,11 @@ function journal(root, taskId, attemptId, phase, {
 
 async function writeJournal(root, taskId, attemptId, phase, options = {}) {
   const path = join(controlRoot(root, taskId), "dispatch-journal.json");
-  await writeJson(path, journal(root, taskId, attemptId, phase, options));
+  const config = JSON.parse(await readFile(join(controlRoot(root, taskId), "config.json"), "utf8"));
+  const value = journal(root, taskId, attemptId, phase, options);
+  value.config_digest = config.config_digest;
+  value.prompt.sha256 = config.prompt.sha256;
+  await writeJson(path, value);
   return path;
 }
 

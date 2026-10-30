@@ -50,7 +50,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.10";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.11";
 const PROVISIONAL_SESSION_SETTLE_MS = 60_000;
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
@@ -77,6 +77,7 @@ function usage() {
   --observe-once    与 --resume 一起使用；只做一次原生状态/UI 观察
   --managed-queue-id  由 QwenWork 批量队列传入的稳定队列 ID
   --allowed-active-session-id  批量队列当前允许保持 running 的原生 session；可重复
+  --allowed-queue-draft-sha256  托管队列已准备并核验的草稿摘要；只允许恢复精确已知草稿
   --allowed-active-conversation-id  session_id 延迟落库时允许保持 running 的 conversation；可重复
   -h, --help        显示帮助
 
@@ -103,6 +104,7 @@ export function calculateQwenCanaryConfigDigest(config) {
   delete copy.managed_queue_id;
   delete copy.allowed_active_session_ids;
   delete copy.allowed_active_conversation_ids;
+  delete copy.allowed_queue_draft_sha256s;
   delete copy.prepare_only;
   delete copy.path_preflight;
   delete copy.execution_environment;
@@ -243,6 +245,7 @@ export function parseDriverArgs(argv) {
     managedQueueId: "",
     allowedActiveSessionIds: [],
     allowedActiveConversationIds: [],
+    allowedQueueDraftSha256s: [],
     help: false,
   };
   for (let index = 0; index < argv.length; index += 1) {
@@ -282,6 +285,12 @@ export function parseDriverArgs(argv) {
       result.allowedActiveConversationIds.push(value);
       index += 1;
     }
+    else if (argument === "--allowed-queue-draft-sha256") {
+      const value = argv[index + 1];
+      if (!/^[a-f0-9]{64}$/u.test(value || "")) throw new Error("--allowed-queue-draft-sha256 需要 SHA-256");
+      result.allowedQueueDraftSha256s.push(value);
+      index += 1;
+    }
     else if (argument === "--validate-only") result.validateOnly = true;
     else if (argument === "--prepare-only") result.prepareOnly = true;
     else if (argument === "--config") {
@@ -305,6 +314,9 @@ export function parseDriverArgs(argv) {
   if (!result.help && !result.config) throw new Error("必须指定 --config");
   if (result.allowedActiveSessionIds.length && !result.managedQueueId) {
     throw new Error("--allowed-active-session-id 必须与 --managed-queue-id 一起使用");
+  }
+  if (result.allowedQueueDraftSha256s.length && !result.managedQueueId) {
+    throw new Error("--allowed-queue-draft-sha256 必须与 --managed-queue-id 一起使用");
   }
   if (result.prepareOnly && !result.managedQueueId) {
     throw new Error("--prepare-only 只能由托管队列使用");
@@ -404,7 +416,7 @@ function journalExpectation(config) {
   };
 }
 
-function samePreparedProject(state, prepared) {
+function assertPreparedProjectConfiguration(state, prepared) {
   const project = prepared?.project;
   if (
     project?.project_id !== state.workspace.local_project_id
@@ -412,6 +424,11 @@ function samePreparedProject(state, prepared) {
     || project?.project_name !== state.workspace.project_name
   ) throw new Error("QWENWORK_PREPARED_PROJECT_DRIFT");
   assertStableQwenUiConfiguration(state.configuration, prepared.configuration);
+  return prepared;
+}
+
+function samePreparedProject(state, prepared) {
+  assertPreparedProjectConfiguration(state, prepared);
   if (prepared.prompt_sha256 !== state.prompt.sha256) throw new Error("QWENWORK_PREPARED_PROMPT_DRIFT");
   return prepared;
 }
@@ -985,10 +1002,19 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
       // The queue may have prepared several projects before dispatch. Navigate
       // to this exact project and restore its frozen prompt before readback.
       const beforeFill = await dependencies.verifyPreparedUi(config, state);
-      if (![sha256(""), config.prompt.sha256].includes(beforeFill.prompt_sha256)) {
+      assertPreparedProjectConfiguration(state, beforeFill);
+      const allowedDrafts = new Set([sha256(""), config.prompt.sha256,
+        ...(config.managed_queue_id ? config.allowed_queue_draft_sha256s || [] : [])]);
+      if (!allowedDrafts.has(beforeFill.prompt_sha256)) {
         throw new Error("QWENWORK_PRE_DISPATCH_DRAFT_DRIFT");
       }
       await recordDispatchStage("prepared-project-restored");
+      if (![sha256(""), config.prompt.sha256].includes(beforeFill.prompt_sha256)) {
+        state.events.push({ type: "MANAGED_QUEUE_DRAFT_RESTORED", at: dependencies.now(), details: {
+          previous_prompt_sha256: beforeFill.prompt_sha256, target_prompt_sha256: config.prompt.sha256,
+          queue_id: config.managed_queue_id } });
+        await dependencies.writeJournal(config.state_file, state);
+      }
       if (beforeFill.prompt_sha256 !== config.prompt.sha256) {
         await dependencies.fillPrompt(config.prompt.content, recordPromptFallback);
         await recordDispatchStage("frozen-prompt-filled");
@@ -1265,6 +1291,7 @@ async function main(argv = process.argv.slice(2)) {
   config.managed_queue_id = args.managedQueueId || null;
   config.allowed_active_session_ids = [...args.allowedActiveSessionIds];
   config.allowed_active_conversation_ids = [...args.allowedActiveConversationIds];
+  config.allowed_queue_draft_sha256s = [...args.allowedQueueDraftSha256s];
   config.prepare_only = args.prepareOnly;
   if (args.validateOnly) {
     process.stdout.write(`${JSON.stringify({

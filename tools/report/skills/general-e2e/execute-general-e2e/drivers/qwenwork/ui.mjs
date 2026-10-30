@@ -6,6 +6,7 @@ export const QWEN_PERMISSION_SELECTOR = 'button[aria-label="选择权限模式"]
 export const QWEN_PROJECT_SELECTOR = '.new-task-chat-input button';
 export const QWEN_PROMPT_SELECTOR = '[data-voice-input-target="chat-input"]';
 export const QWEN_SEND_SELECTOR = [
+  '.new-task-chat-input button[aria-label="发送消息"]:visible',
   'button[aria-label="发送"]:visible',
   'button[title="发送"]:visible',
   'button[aria-label="Send"]:visible',

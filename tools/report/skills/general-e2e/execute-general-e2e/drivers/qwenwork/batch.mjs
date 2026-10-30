@@ -11,7 +11,7 @@ import { assertQwenExecutionEnvironment } from "./environment.mjs";
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.2.5";
+export const QWENWORK_QUEUE_VERSION = "0.2.6";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -50,7 +50,7 @@ export async function assertZeroSendSourceRepair(state, repair, root) {
     if (journal.identity?.task_id !== row.task_id || journal.identity?.attempt_id !== row.attempt_id
         || journal.send?.dispatch_attempt_count !== 0 || journal.send.state !== "not_reserved"
         || journal.send.reservation_id || journal.send.invoking_at || journal.send.returned_at
-        || journal.prompt?.send_status !== "not_sent" || journal.prompt.sent_at
+        || !["not_sent", "intent_persisted"].includes(journal.prompt?.send_status) || journal.prompt.sent_at
         || journal.session?.session_id || journal.session?.conversation_id || journal.session?.sub_chat_id
         || journal.session?.verified === true) {
       throw new Error("QWENWORK_QUEUE_ZERO_SEND_SOURCE_REPAIR_INVALID");
@@ -469,6 +469,19 @@ async function runQwenTask(configPath, row, state, options, dependencies, {
   }
   if (prepareOnly) args.push("--prepare-only");
   args.push("--managed-queue-id", state.queue_id, ...activeSessionArgs(state));
+  for (const task of state.tasks) {
+    const journal = await optionalJson(task.state_file);
+    if (!journal?.workspace?.local_project_id || !["intent_persisted", "sent"].includes(journal.prompt?.send_status)) continue;
+    const config = await readJson(task.config_path);
+    if (config.identity?.task_id !== task.task_id || config.identity?.attempt_id !== task.attempt_id
+        || calculateQwenCanaryConfigDigest(config) !== config.config_digest
+        || journal.config_digest !== config.config_digest
+        || journal.prompt.sha256 !== config.prompt.sha256
+        || sha256(await readFile(config.prompt.path)) !== config.prompt.sha256) {
+      throw new Error("QWENWORK_QUEUE_DRAFT_PROVENANCE_INVALID");
+    }
+    args.push("--allowed-queue-draft-sha256", config.prompt.sha256);
+  }
   const code = dependencies.execute ? await dependencies.execute(args)
     : (await runCapture(process.execPath, [DRIVER_PATH, ...args], { capture: true, allowFailure: true })).code;
   // A disconnected CDP client can exit before updating the journal. Preserve
@@ -654,6 +667,12 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
         && sourceRepair.prior_patched_driver_sha256 === state.source_repair.patched_driver_sha256
         && sha256(await readFile(statePath)) === sourceRepair.original_queue_state_sha256
         && state.phase === "NEEDS_ATTENTION";
+      if (upgradedRepair && sourceRepair.boundary === "zero-send-preparation") {
+        if (sha256(await readFile(sourceRepair.anchor_journal_path)) !== sourceRepair.anchor_journal_sha256) {
+          throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_BOUNDARY_INVALID");
+        }
+        await assertZeroSendSourceRepair(state, sourceRepair, root);
+      }
       if (!sameRepair && !upgradedRepair) {
         throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_CHANGED");
       }

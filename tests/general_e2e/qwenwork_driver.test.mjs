@@ -1359,3 +1359,105 @@ for (const failAt of [1, 2]) test(`GUI or listener loss at environment check ${f
   assert.equal(resumed.journal.send.dispatch_attempt_count, 1);
   assert.equal(dispatches, 1);
 });
+
+test("managed global draft restores known queue prompt", async () => {
+  const config = makeConfig({ managed_queue_id: "qwen-queue-fixture", prepare_only: true });
+  let stored = null;
+  let dispatches = 0;
+  let fills = 0;
+  const now = clock();
+  let draft = PROMPT_SHA;
+  const otherDraft = "c".repeat(64);
+  const dependencies = {
+    withAttemptLock: async (_config, operation) => operation(),
+    now,
+    readJournal: async () => structuredClone(stored),
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: async () => ({ project: project(), configuration: configuration() }),
+    verifyPreparedUi: async () => ({ project: project(), configuration: configuration(), prompt_sha256: draft }),
+    fillPrompt: async () => { fills += 1; draft = PROMPT_SHA; },
+    dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
+    querySessions: async () => dispatches ? [session()] : [],
+    verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    observeUi: async () => ({ observed_at: now(), target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
+    writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
+  };
+  const prepared = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(prepared.journal.phase, "READY_TO_DISPATCH");
+  assert.equal(prepared.journal.send.dispatch_attempt_count, 0);
+  assert.equal(dispatches, 0);
+  config.resume = true;
+  config.prepare_only = false;
+  config.recovery_probe = {
+    verified: true,
+    path: "/private/tmp/qwenwork-general-driver/resume-probe.json",
+    sha256: "f".repeat(64),
+    probed_at: "2026-09-19T10:00:05.000Z",
+    active_or_pending_count: 0,
+  };
+  draft = otherDraft;
+  config.allowed_queue_draft_sha256s = [otherDraft];
+  const completed = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(completed.journal.phase, "COMPLETED");
+  assert.equal(completed.journal.identity.attempt_id, prepared.journal.identity.attempt_id);
+  assert.equal(completed.journal.send.dispatch_attempt_count, 1);
+  assert.equal(dispatches, 1);
+  assert.equal(fills, 2);
+  assert.deepEqual(completed.journal.events
+    .filter((event) => event.type === "DISPATCH_STAGE_OBSERVED")
+    .map((event) => event.details.stage), [
+    "managed-active-check-completed",
+    "prepared-project-restored",
+    "frozen-prompt-filled",
+    "final-readback-verified",
+  ]);
+});
+
+test("managed global draft rejects unknown prompt", async () => {
+  const config = makeConfig({ managed_queue_id: "qwen-queue-fixture", prepare_only: true });
+  let stored = null;
+  let dispatches = 0;
+  let fills = 0;
+  const now = clock();
+  let draft = PROMPT_SHA;
+  const otherDraft = "c".repeat(64);
+  const dependencies = {
+    withAttemptLock: async (_config, operation) => operation(),
+    now,
+    readJournal: async () => structuredClone(stored),
+    writeJournal: async (_path, next) => { stored = structuredClone(next); },
+    prepareUi: async () => ({ project: project(), configuration: configuration() }),
+    verifyPreparedUi: async () => ({ project: project(), configuration: configuration(), prompt_sha256: draft }),
+    fillPrompt: async () => { fills += 1; draft = PROMPT_SHA; },
+    dispatchPrompt: async () => { dispatches += 1; return { method: "fixture-click" }; },
+    querySessions: async () => dispatches ? [session()] : [],
+    verifySessionPrompt: async () => ({ verified: true, prompt_sha256: PROMPT_SHA, match_count: 1 }),
+    observeUi: async () => ({ observed_at: now(), target_session_verified: true, active_stream: false, stop_confirmed: true, conflicts: [] }),
+    writeBindingEvidence: async () => [{ path: "evidence/binding.json", sha256: "b".repeat(64), size: 10 }],
+  };
+  const prepared = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(prepared.journal.phase, "READY_TO_DISPATCH");
+  assert.equal(prepared.journal.send.dispatch_attempt_count, 0);
+  assert.equal(dispatches, 0);
+  config.resume = true;
+  config.prepare_only = false;
+  config.recovery_probe = {
+    verified: true,
+    path: "/private/tmp/qwenwork-general-driver/resume-probe.json",
+    sha256: "f".repeat(64),
+    probed_at: "2026-09-19T10:00:05.000Z",
+    active_or_pending_count: 0,
+  };
+  draft = otherDraft;
+  const completed = await runQwenGeneralAttempt(config, dependencies);
+  assert.equal(completed.journal.phase, "NEEDS_ATTENTION");
+  assert.equal(completed.journal.send.dispatch_attempt_count, 0);
+  assert.equal(dispatches, 0);
+  assert.match(completed.journal.attention.message, /DRAFT_DRIFT/);
+});
+
+test("queue draft overrides require managed identity and SHA-256", () => {
+  assert.throws(() => parseDriverArgs(["--config", "/tmp/x", "--allowed-queue-draft-sha256", "x"]), /需要 SHA/);
+  assert.throws(() => parseDriverArgs(["--config", "/tmp/x", "--allowed-queue-draft-sha256", "a".repeat(64)]), /managed-queue/);
+  assert.deepEqual(parseDriverArgs(["--config", "/tmp/x", "--managed-queue-id", "q", "--allowed-queue-draft-sha256", "a".repeat(64)]).allowedQueueDraftSha256s, ["a".repeat(64)]);
+});
