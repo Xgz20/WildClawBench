@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.14` 接受数据集明确抛出的 `EvaluationReviewRequired` 和 `ReviewRequired`，同样仅作留证未评分，不由控制器猜测规则分。运行环境、身份、证据漂移等其他异常仍不进入此分支。
+
 `0.11.13` 提供显式 `record-unscored-rule-error --task-id ID --reason TEXT`：仅接受原数据集规则抛出的 `EvaluationError`，且尚无语义线程、规则组件或分数；保留 Worker/审计 SHA 和完整题目范围，不计能力零分，不用于跳过额度故障或有效评分。`compose-full-scope-selection` 可将已锁定的部分 submission 与明确指定、已严格验分的缺失题目制品合成完整原范围；不重评、不按高分选择、不伪造编排完成状态。
 
 `0.11.12` 接受原生注册器已有的 `confirm-pending-trust` 回执。除原有路径、版本与哈希门禁外，必须证明 `trust-dialog-recovery`、`registered` 和精确的非链接文件夹路径；未知方法或缺失证明仍拒绝。macOS 可用官方 `codex app ABS` 打开目录，再由注册器确认绑定路径的原生信任弹窗。已冻结评分材料、Prompt、裁判和原线程保持不变。

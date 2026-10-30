@@ -1348,7 +1348,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
 
     def test_dataset_evaluation_error_can_be_explicitly_retained_unscored_without_a_judge(self) -> None:
         fixture = Fixture(self.root / "rule-error", task_ids=("task-error",), grading_type="hybrid",
-            contract_overrides={"automated_checks": "class EvaluationError(Exception): pass\ndef grade(transcript, workspace_path):\n raise EvaluationError('Unknown business ID header')"})
+            contract_overrides={"automated_checks": "class EvaluationReviewRequired(Exception): pass\ndef grade(transcript, workspace_path):\n raise EvaluationReviewRequired('Unknown business ID header')"})
         view = fixture.initialize(now=self.t0)
         root = Path(view["orchestration_root"])
         with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=self._direct_local_score_command):

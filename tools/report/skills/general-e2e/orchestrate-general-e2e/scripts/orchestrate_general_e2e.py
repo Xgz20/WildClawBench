@@ -2651,10 +2651,10 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     result = _read_json(result_path, "RULE_FAILURE_AUDIT_INVALID")
     manifest = _read_json(attempt / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID")
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or result.get("error", {}).get("type") != "EvaluationError"
+            or result.get("error", {}).get("type") not in {"EvaluationError", "EvaluationReviewRequired", "ReviewRequired"}
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
-        raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset EvaluationError without a judge")
+        raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
     event_time = now or _now()
     task["scoring_error"] = {"kind": "dataset-rule-evaluation-error/v1", "reason": _required_string(reason, "reason"),
         "rule_audit_path": audit_path.relative_to(root).as_posix(), "rule_audit_sha256": _sha256_file(audit_path),
