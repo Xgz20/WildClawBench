@@ -76,7 +76,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="desktop-runtime",
-        version="1.0.0",
+        version="1.0.1",
         source_root="tools/report/e2e-shared/desktop-runtime",
         vendor_root="vendor/e2e-shared/desktop-runtime",
         entrypoints=("process.mjs",),
