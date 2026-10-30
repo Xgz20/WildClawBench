@@ -29,6 +29,24 @@ python scripts/score_general_e2e.py bootstrap-runtime \
 
 `--offline` 只使用已有 `uv` 缓存。`--skip-browser` 可准备不含浏览器的环境，但 Playwright 规则会在运行前失败关闭，不能据此宣称完整运行时就绪。
 
+### macOS 原生 Office 依赖
+
+原规则调用 `soffice` 时，先在尚未启动评分的专用 Python runtime 中配置实际 Office 二进制。使用 `load_workspace_dependencies` 返回的本机路径；不要硬编码其他机器的缓存版本，也不要把依赖包的 shell 包装器放入只有 Python bin/ 的 Worker PATH。
+
+```bash
+python scripts/configure_native_office.py \
+  --runtime-python /absolute/runtime/bin/python \
+  --soffice-binary /absolute/LibreOffice.app/Contents/MacOS/soffice \
+  --support-root /absolute/runtime/native-office \
+  --font-dir /System/Library/Fonts \
+  --font-dir /System/Library/Fonts/Supplemental \
+  --font-dir /Library/Fonts
+```
+
+只传实际存在的字体目录；有其他已安装字体可继续追加 `--font-dir`。入口拒绝已存在的 `bin/soffice` 或 support-root，保留原 runtime，不覆盖冻结轮次。回执记录真实二进制 SHA、版本、启动器和字体目录；每次调用核验二进制 SHA，独立临时字体缓存不需要扩大 Worker 环境白名单或继承 HOME。
+
+`CONFIGURED_REAL_RENDER_SMOKE_REQUIRED` 只证明已配置及版本命令成功。使用 `_sanitized_environment` 的真实环境，对合成 DOCX/PPTX 实际渲染、在副本编辑后保存重开，并查看含中文页面截图；只有文本提取成功仍可能漏画中文字形。保存命令、环境键、二进制/启动器/输入/输出 SHA 和截图。原规则明确要求 Windows WPS COM 时须提供对应环境；此配置不把 LibreOffice 当作该 COM 检查的替代品。
+
 ## 准备私有 attempt
 
 ```bash

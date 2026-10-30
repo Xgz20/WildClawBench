@@ -87,6 +87,7 @@ class E2EBuildTests(unittest.TestCase):
                 "dataset-bundle-verifier",
                 "grading-core",
                 "general-contracts",
+                "independent-validity",
                 "general-resource-supplements",
                 "workbuddy-evidence",
                 "desktop-gui",
