@@ -32,6 +32,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
 import dataset_rule_corrections
+import rule_review
+import rule_review_runtime
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1791,6 +1793,8 @@ def prepare_attempt(
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                **({"rule_review_profile":rule_review.PROFILE}
+                   if rule_review.matches(contract) and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -2370,6 +2374,7 @@ class _WorkerExecutor:
         timeout_seconds: float,
         playwright_browsers_path: Path | None,
         rule_result_adapter: Mapping[str, Any] | None = None,
+        rule_review_configuration: Mapping[str, Any] | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
@@ -2378,6 +2383,7 @@ class _WorkerExecutor:
         self.playwright_browsers_path = playwright_browsers_path
         self.audit: dict[str, Any] = {}
         self.rule_result_adapter = rule_result_adapter
+        self.rule_review_configuration = rule_review_configuration
 
     def __call__(self, source: str, context: Mapping[str, Any]) -> Mapping[str, Any]:
         dependency_roots = [
@@ -2401,6 +2407,7 @@ class _WorkerExecutor:
             "workspace_path": context["workspace_path"],
             "transcript": context["transcript"],
             "rule_result_adapter": self.rule_result_adapter,
+            **({'rule_review':self.rule_review_configuration} if self.rule_review_configuration is not None else {}),
         }
         request_path.write_bytes(_pretty_json_bytes(request))
         worker_path = Path(__file__).with_name("rule_worker.py").resolve(strict=True)
@@ -2634,7 +2641,8 @@ def _effective_rule_source(
 
     try:
         corrected, receipt = dataset_rule_corrections.effective_source(
-            manifest.get("identity", {}).get("task_id"), source
+            manifest.get("identity", {}).get("task_id"), source,
+            rule_review_enabled=manifest.get('runtime',{}).get('rule_review_profile')==rule_review.PROFILE,
         )
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
@@ -2907,6 +2915,12 @@ def run_rules_attempt(
     )
     if (attempt_root / "rule-component.json").exists() or (attempt_root / "rule-audit.json").exists():
         raise ScoringRuntimeError("RULE_ATTEMPT_ALREADY_TERMINAL")
+    review_configuration=rule_review_runtime.application_configuration(sys.modules[__name__],attempt_root,manifest,contract)
+    if review_configuration is not None:
+        review_request=_read_json(attempt_root/'rule-review/request.json')
+        if (str(runtime_python)!=review_request.get('runtime_python')
+                or _sha256_file(runtime_python)!=review_request.get('runtime_python_sha256')):
+            raise ScoringRuntimeError('RULE_REVIEW_RUNTIME_MISMATCH','use the frozen rule-review runtime_python')
     if correction is not None:
         _write_new_json(attempt_root / "rule-source-correction.json", correction)
     executor = _WorkerExecutor(
@@ -2918,6 +2932,7 @@ def run_rules_attempt(
         rule_result_adapter=dataset_rule_corrections.effective_result_adapter(
             manifest["identity"]["task_id"], automated_checks, contract.get("rule_result_adapter")
         ),
+        rule_review_configuration=review_configuration,
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -3282,6 +3297,10 @@ def _semantic_reference_inputs(
     contract = _read_json(attempt_root / manifest["paths"]["contract"], code="SCORING_CONTRACT_INVALID")
     for path in _snapshot_generated_evidence(attempt_root, manifest, contract):
         add_file("grader_generated_evidence", path)
+    if manifest.get('runtime',{}).get('rule_review_profile'):
+        rule_review_runtime.application_configuration(sys.modules[__name__],attempt_root,manifest,contract)
+        for name in ['request.json','response.json','audit.json','query-log.json','discovery-audit.json']:
+            add_file('grader_rule_review',attempt_root/'rule-review'/name)
     rule_component = attempt_root / "rule-component.json"
     if rule_component.is_file() and not rule_component.is_symlink():
         add_file("rule_result", rule_component)
@@ -5310,12 +5329,16 @@ def _score_source_digests(root: Path) -> dict[str, str | None]:
         "rule_audit_sha256": digest_if_file(root / "rule-audit.json"),
         "semantic_component_sha256": digest_if_file(semantic_paths["component"]),
         "semantic_audit_sha256": digest_if_file(semantic_paths["audit"]),
+        **({'rule_review_audit_sha256':digest_if_file(root/'rule-review/audit.json')}
+           if (root/'rule-review/audit.json').is_file() else {}),
     }
 
 
 def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> None:
     path = root / "rule-source-correction.json"
     if not path.exists():
+        if manifest.get('runtime',{}).get('rule_review_profile'):
+            raise ScoringRuntimeError('RULE_REVIEW_BINDING_MISSING')
         return
     if path.is_symlink() or not path.is_file():
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "path")
@@ -5336,6 +5359,9 @@ def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> N
     )
     if request.get("rule_result_adapter") != expected_adapter:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker result adapter")
+    expected_review=rule_review_runtime.application_configuration(sys.modules[__name__],root,manifest,contract)
+    if request.get('rule_review')!=expected_review:
+        raise ScoringRuntimeError('RULE_SOURCE_CORRECTION_INVALID','worker semantic review binding')
     audit = _read_json(root / "rule-audit.json", code="RULE_AUDIT_INVALID")
     if audit.get("source_correction") != {
         "path": "rule-source-correction.json",
@@ -5922,6 +5948,9 @@ def prepare_rescore_attempt(
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                **({"rule_review_profile":rule_review.PROFILE}
+                   if rule_review.matches(_read_json(staging/source_paths['contract']))
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -6193,6 +6222,18 @@ def main(argv: list[str] | None = None) -> int:
     run.add_argument("--timeout-seconds", type=float, default=120.0)
     run.add_argument("--playwright-browsers-path", type=Path)
 
+    review_prepare=subparsers.add_parser('prepare-rule-review')
+    review_prepare.add_argument('--attempt-root',required=True,type=Path)
+    review_prepare.add_argument('--runtime-python',required=True,type=Path)
+    review_prepare.add_argument('--playwright-browsers-path',type=Path)
+    review_query=subparsers.add_parser('query-rule-review')
+    review_query.add_argument('--attempt-root',required=True,type=Path)
+    review_query.add_argument('--offset',type=int,default=0)
+    review_query.add_argument('--limit',type=int,default=10)
+    review_record=subparsers.add_parser('record-rule-review')
+    review_record.add_argument('--attempt-root',required=True,type=Path)
+    review_record.add_argument('--response',required=True,type=Path)
+
     prepare_semantics = subparsers.add_parser("prepare-semantics")
     prepare_semantics.add_argument("--attempt-root", required=True, type=Path)
 
@@ -6291,6 +6332,13 @@ def main(argv: list[str] | None = None) -> int:
                 timeout_seconds=args.timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
             )
+        elif args.command == 'prepare-rule-review':
+            result=rule_review_runtime.prepare(sys.modules[__name__],attempt_root=args.attempt_root,
+                runtime_python=args.runtime_python,playwright_browsers_path=args.playwright_browsers_path)
+        elif args.command == 'query-rule-review':
+            result=rule_review_runtime.query(sys.modules[__name__],attempt_root=args.attempt_root,offset=args.offset,limit=args.limit)
+        elif args.command == 'record-rule-review':
+            result=rule_review_runtime.record(sys.modules[__name__],attempt_root=args.attempt_root,response_path=args.response)
         elif args.command == "prepare-semantics":
             result = prepare_semantics_attempt(attempt_root=args.attempt_root)
         elif args.command == "query-evidence":

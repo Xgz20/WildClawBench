@@ -3,6 +3,10 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.25` 为精确绑定原源码的人事工时题加入独立语义复核交接。`prepare-rule-review` 仅在隔离副本收集原规则明确无法决定的字段/来源问题，抑制发现阶段所有临时数值，移除自身临时 runtime，原评分 runtime 保持未执行状态。独立裁判用 `query-rule-review` 分页查询全部问题，按冻结候选/参考判断 passed 布尔值及中文理由，写新的 UTF-8 JSON 并 `record-rule-review`。该命令核对身份、Judge、输入锁、精确范围和实际查询，不接受数值占位或控制器代判。随后裁判用 request.json 中冻结的 runtime_python 运行原数值规则，再完成正常语义评分、合分和 verify-score。原确定性判定、公式、分母和78/22权重不改，未知问题继续失败关闭；回传保留完整复核及 Worker 谱系。旧 attempt 和 API 路径沿用原行为。
+
+复核响应须复制 `rule-review/response-template.json` 的身份、Judge 和 locks。可判定项填写 status=judged、passed（仅 true/false）；证据不足时保留 status=unresolved、passed=null并解释具体缺口。每项都填写中文 reason 和实际返回的 query_ids，不得覆盖模板。不可判定复核会留证 NEEDS_ATTENTION 并阻止数值评分，不能猜测或补零。发现阶段的 Worker result 是空对象，不能作为规则分；其产物不得替代候选或正式评分端证据。完成全部复核后才允许 run-rules，后续证据目录由 prepare-semantics 正式冻结。
+
 `0.10.24` 为精确绑定原源码的采购核对题补充等价的“单号”、订单/入库笔数、匹配笔数、净额等字段名称，并完整分页导出取证；原总体、数值、汇总计分函数、80/20权重及分值锚点不变。未识别的数字主张和未求值公式仍不能补零或跳过。
 
 `0.10.23` 将跨月销售原规则明确返回的 evidence_status 文本按注册的原源码 SHA 分离为诊断元数据，避免把说明文字当数值检查点。Worker 保留完整 raw_result；有效适配策略与原冻结契约分别存证并复核。仅显式声明的 evidence_status 字符串可分离，数值、对象或其他未知字段继续拒绝；规则数值和原总分不改变。

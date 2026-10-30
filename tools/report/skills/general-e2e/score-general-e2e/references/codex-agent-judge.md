@@ -14,6 +14,14 @@
 
 新建 `prepare` 或 `prepare-rescore` attempt 时，显式选择 `--judge-protocol codex-agent-judge-v1` 后，省略模型和推理参数即冻结 `gpt-6.1-sol/high`；attempt ID 仍必填。显式模型/档位优先，已有 attempt 读取原冻结配置，API Judge 不使用这些默认值。控制器调用 `create_thread` 时必须同时传入冻结的 `model` 和 `thinking`。
 
+## 原规则声明的语义复核
+
+新 attempt 的 `runtime.rule_review_profile=hr-fields-and-sources-semantic-review/v1` 表示控制器已在隔离副本中发现原规则无法确定的字段/来源问题。发现阶段抑制所有临时数值，正式规则尚未执行。先读取 `rule-review/request.json` 与模板，用冻结 CLI 的 `query-rule-review --attempt-root "$PWD" --offset 0 --limit 10` 查询全部 context，按 next_offset 继续。
+
+依据冻结候选、参考行和公开来源独立判断每项：可判定时 status=judged、passed=true/false；缺证时 status=unresolved、passed=null并明确缺口。理由必须为中文，query_ids 必须来自实际查询；完整保留模板的 identity、judge、locks 和全部 context_id，写入新的 UTF-8 JSON 文件。`record-rule-review --response NEW_JSON` 通过后，读取 request.json 的 runtime_python 并核验其 SHA，使用该解释器运行 `run-rules`。原计分函数和78/22权重保持不变。复核不可判定时停止依赖评分并报告，不能猜测、补零或改参考要求。
+
+完成原规则后再进入以下正常语义流程。`prepare-semantics` 会把正式取证和复核 request/response/audit 共同纳入冻结证据目录，供逐项引用。旧 attempt 没有此 Profile，继续沿用原路径。
+
 ## 单题流程
 
 v6 Prompt 给出冻结 `score_cli_argv_prefix`、Python 解释器和元数据路径。执行以下示例时，将 `<frozen-python>` 替换为该解释器的绝对路径；不调用裸 python/python3。私有项目的能力门禁读取冻结 skill-metadata.json，不依赖仓库模块。响应使用 UTF-8 JSON 文件，优先用文件编辑工具写入；临时脚本先保存文件并声明编码，禁止把含中文的 Python 源码通过 stdin/heredoc 直接执行。

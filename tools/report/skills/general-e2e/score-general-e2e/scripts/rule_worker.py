@@ -104,6 +104,15 @@ def execute(request_path: Path, result_path: Path) -> int:
             "__builtins__": __builtins__,
             "__name__": "__general_e2e_rule__",
         }
+        review=request.get('rule_review')
+        if review is not None:
+            if (not isinstance(review,dict) or review.get('schema_version')!='wildclawbench.general-e2e-rule-review-worker/v1'
+                    or review.get('profile')!='hr-fields-and-sources-semantic-review/v1'
+                    or review.get('mode') not in {'discover','apply'}
+                    or not isinstance(review.get('decisions'),dict)
+                    or any(not isinstance(k,str) or not isinstance(v,bool) for k,v in review['decisions'].items())):
+                raise ValueError('Invalid rule review configuration')
+            namespace['_GENERAL_E2E_RULE_REVIEW']=dict(review)
         exec(compile(source, "<general-e2e-automated-checks>", "exec"), namespace)
         grade = namespace.get("grade")
         if not callable(grade):
@@ -112,14 +121,19 @@ def execute(request_path: Path, result_path: Path) -> int:
         if not isinstance(raw, dict):
             raise ValueError("grade() must return a JSON object")
         json.dumps(raw, ensure_ascii=False, allow_nan=False)
-        adapted = adapt_rule_result(raw, request.get("rule_result_adapter"))
+        discovery=review is not None and review['mode']=='discover'
+        adapted = {} if discovery else adapt_rule_result(raw, request.get("rule_result_adapter"))
+        observed=namespace.get('_GENERAL_E2E_RULE_REVIEW',{})
         _write_result(
             result_path,
             {
                 "schema_version": RESULT_SCHEMA,
                 "ok": True,
-                "result": adapted,
-                **({"raw_result": raw} if request.get("rule_result_adapter") is not None else {}),
+                "result": {} if discovery else adapted,
+                **({"raw_result": raw} if request.get("rule_result_adapter") is not None and not discovery else {}),
+                **({'rule_review':{'profile':review['profile'],'mode':review['mode'],
+                    'contexts':observed.get('observations',{}),'applied':observed.get('applied',[]),
+                    'provisional_scores_suppressed':discovery}} if review is not None else {}),
                 "error": None,
                 "worker": {
                     "pid": os.getpid(),

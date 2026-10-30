@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 import office_input_compat
+import rule_review
 
 
 EVIDENCE_PAGING_PROFILE = "complete-paged-grader-evidence/v1"
@@ -23,7 +24,11 @@ _PAGED_RULES = {
 }
 
 
-def effective_source(task_id: str, source: str):
+def effective_source(task_id: str, source: str, *, rule_review_enabled=False):
+    if rule_review_enabled:
+        if task_id != rule_review.TASK_ID:
+            raise ValueError('RULE_REVIEW_TASK_MISMATCH')
+        return rule_review.effective_source(source)
     if task_id == '02_Office_task_015_procurement_reconciliation':
         return _procurement_source(source)
     if task_id == '03_Data_Analysis_task_005_cross_month_returns_regional_sales':

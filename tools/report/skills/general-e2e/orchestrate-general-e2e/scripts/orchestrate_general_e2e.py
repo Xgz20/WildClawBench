@@ -29,9 +29,10 @@ PACKAGE_SCHEMA = "urn:wildclawbench:schema:general-e2e:package-manifest:v1"
 SCORE_SCHEMA = "urn:wildclawbench:schema:general-e2e:score:v1"
 SUBMISSION_SCHEMA = "urn:wildclawbench:schema:general-e2e:submission:v1"
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
-PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v7"
+PROMPT_PROTOCOL = "general-e2e-codex-scoring-prompt/v8"
 LEGACY_CODEX_PROMPT_PROTOCOLS = {"general-e2e-codex-scoring-prompt/v3"}
 FROZEN_SKILL_PROMPT_PROTOCOLS = {
+    "general-e2e-codex-scoring-prompt/v7",
     "general-e2e-codex-scoring-prompt/v6",
     "general-e2e-codex-scoring-prompt/v4",
     "general-e2e-codex-scoring-prompt/v5",
@@ -634,6 +635,7 @@ def _prompt_text(
     *,
     prompt_protocol: str = PROMPT_PROTOCOL,
     rule_evidence_required: bool = False,
+    rule_review_required: bool = False,
 ) -> str:
     runtime_usage = ""
     rule_instruction = (
@@ -647,6 +649,14 @@ def _prompt_text(
             "本题是 llm_judge；控制端已用受管 Worker 生成并冻结契约要求的取证材料，自动计分权重为零。"
             "先核对 rule-component.json 的 evidence_preparation_only 标记与取证来源，勿重复运行取证代码；"
             "只按语义 Rubric 计分，并通过 query-evidence 查询 grader_generated_evidence，不能把评分端生成的材料当作候选产物。"
+        )
+    if rule_review_required:
+        rule_instruction = (
+            "本题是 hybrid，原数据集规则明确要求先语义复核若干字段/补充来源。控制器只在隔离副本中发现并冻结了 rule-review/request.json 中的疑问，发现阶段的临时数值已抑制，不是规则分。"
+            "先完整读取 rule-review/request.json 和 response-template.json；用冻结CLI的 query-rule-review 按offset/limit分页查询全部context，每项结合冻结候选和参考材料独立判断passed布尔值并写中文证据理由。"
+            "把完整响应写到新的UTF-8文件，用 record-rule-review --attempt-root . --response NEW_JSON 校验锁、范围和query_ids；证据不足时保留status=unresolved、passed=null并说明具体缺口，此时停止依赖评分并报告，不猜测布尔值。不得直接赋规则分或改变参考要求。"
+            "随后在本独立裁判中调用 run-rules --attempt-root . --runtime-python REQUEST_RUNTIME_PYTHON 运行原数值公式；此参数必须使用 rule-review/request.json 的 runtime_python 字段并核对 runtime_python_sha256，浏览器目录同样读取其中已冻结字段。复核 rule-component.json，再 prepare-semantics 并按原语义Rubric判分、finalize、verify-score。"
+            "原始候选、题面、GT、权重和既有判定不修改；未知复核上下文或证据缺失保留错误，不按0/1猜测。"
         )
     if validation is None:
         readiness_instruction = (
@@ -691,7 +701,7 @@ def _prompt_text(
             f"所有评分命令只调用 `{score_entrypoint}`。不得使用项目、仓库或自动发现路径中的同名 Skill；"
             "冻结目录缺失、身份或哈希不匹配时立即停止"
         )
-        if prompt_protocol in {"general-e2e-codex-scoring-prompt/v6", PROMPT_PROTOCOL}:
+        if prompt_protocol in {"general-e2e-codex-scoring-prompt/v6", "general-e2e-codex-scoring-prompt/v7", PROMPT_PROTOCOL}:
             python_runtime = score_skill.get("python")
             if not isinstance(python_runtime, Mapping):
                 raise OrchestrationError("SCORE_PYTHON_LOCK_MISSING")
@@ -736,7 +746,7 @@ def _prompt_text(
             )
     else:
         raise OrchestrationError("SCORING_PROMPT_PROTOCOL_UNSUPPORTED", prompt_protocol)
-    if prompt_protocol == PROMPT_PROTOCOL:
+    if prompt_protocol in {"general-e2e-codex-scoring-prompt/v7",PROMPT_PROTOCOL}:
         runtime_usage += """
 
 离线页面的独立验证：网页产物需要实际渲染/交互观察时，先读取控制器预检后冻结的 `judge-environment.json`，核验其中的解释器、Playwright/browser runtime与离线观察脚本SHA。仅使用该脚本加载SHA绑定的候选HTML字节到全新 about:blank 上下文；页面请求offline且全部abort，service workers禁用，不导航file/HTTP URL、不启动localhost服务、不使用CDP或修改浏览器URL策略，不声称OS级网络隔离。按原Rubric独立编写视口、键盘、状态和截图观察计划；工具只记录事实，不产生分数，输出必须在候选之外的新目录。用本地图片查看工具检查实际截图，不以自动规则或源码推断冒充独立实测。
@@ -1047,6 +1057,7 @@ def initialize(
                         validation,
                         score_skill,
                         rule_evidence_required=rule_evidence_required,
+                        rule_review_required=bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1060,6 +1071,7 @@ def initialize(
                     **common_task,
                     "grading_type": grading_type,
                     "rule_evidence_required": rule_evidence_required,
+                    "rule_review_required": bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -1295,6 +1307,7 @@ def initialize_rescore(
                         validation,
                         score_skill,
                         rule_evidence_required=rule_evidence_required,
+                        rule_review_required=bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1309,6 +1322,7 @@ def initialize_rescore(
                     "order": index,
                     "grading_type": grading_type,
                     "rule_evidence_required": rule_evidence_required,
+                    "rule_review_required": bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                     "execution": dict(source_task["execution"]),
                     "execution_record_path": frozen_record.relative_to(staging).as_posix(),
                     "execution_record_sha256": source_task["execution_record_sha256"],
@@ -1881,6 +1895,7 @@ def _verify_state(
                 state["score_skill"],
                 prompt_protocol=str(state.get("prompt_protocol")),
                 rule_evidence_required=task.get("rule_evidence_required", False),
+                rule_review_required=task.get('rule_review_required',False),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
@@ -1908,6 +1923,14 @@ def _verify_state(
         manifest_identity = manifest_document.get("identity")
         manifest_judge = manifest_document.get("judge")
         manifest_grading_type = (manifest_document.get("grading") or {}).get("type")
+        if task.get('rule_review_required',False)!=bool(manifest_document.get('runtime',{}).get('rule_review_profile')):
+            raise OrchestrationError('SCORING_RULE_REVIEW_ROUTE_DRIFT',str(task.get('task_id')))
+        review_request=task.get('rule_review_request')
+        if review_request is not None:
+            rp=_regular_file(root/review_request['path'],'RULE_REVIEW_REQUEST_INVALID')
+            if (not _inside(attempt,rp) or _sha256_file(rp)!=review_request.get('sha256')
+                    or len(_read_json(rp,'RULE_REVIEW_REQUEST_INVALID').get('contexts',[]))!=review_request.get('context_count')):
+                raise OrchestrationError('RULE_REVIEW_REQUEST_DRIFT',str(task.get('task_id')))
         if task.get("rule_evidence_required", False) != _requires_rule_evidence(attempt):
             raise OrchestrationError("SCORING_EVIDENCE_ROUTE_DRIFT", str(task.get("task_id")))
         expected_judge = state.get("judge", {})
@@ -2889,6 +2912,17 @@ def run_rule_score_task(
             {"at": _timestamp(event_time), "event": "RULE_COMPONENT_STARTED"}
         )
         _save(root, state, event_time)
+    if task.get('rule_review_required'):
+        args=['prepare-rule-review','--attempt-root',str(attempt),'--runtime-python',str(runtime_python)]
+        if playwright_browsers_path is not None:args+=['--playwright-browsers-path',str(playwright_browsers_path)]
+        reviewed=_run_score_command(state['score_skill'],args)
+        task['rule_review_request']={'path':(Path(task['attempt_path'])/'rule-review/request.json').as_posix(),
+                                     'sha256':reviewed['request_sha256'],'context_count':reviewed['context_count']}
+        task['rule_runtime']={'python':_score_python_lock(runtime_python),
+            'playwright_browsers_path':str(playwright_browsers_path.expanduser().absolute()) if playwright_browsers_path else None}
+        task['history'].append({'at':_timestamp(event_time),'event':'DECLARED_RULE_REVIEW_PREPARED','context_count':reviewed['context_count']})
+        task['phase']='AWAITING_PROJECT'
+        return _save(root,state,event_time)
     rule_component = attempt / "rule-component.json"
     failed_audit_path = attempt / "rule-audit.json"
     if (
