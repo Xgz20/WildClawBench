@@ -3,6 +3,10 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.26` 对原源码及 contract SHA 精确绑定的 SPY/VOO 新 Codex attempt，按题目原有协议分开发布业务与能力有效性。全部6个语义 key 仍须判定并保存在原始组件；响应还须完整填写模板中的 run_validity 和5项 capability_evidence_statuses，均以实际 query_ids、证据和中文理由说明。运行有效性为valid须已无过滤覆盖完整标准轨迹。业务仍按core_accuracy 85、source_binding 15合分；零业务权重能力项缺证不会阻断已有效的业务分。能力缺证保留null、预算45不删项重归一，运行污染/隔离缺证则两类都禁发。原始组件不改写，独立 capability-evaluation.json 保留全部检查点、状态、m预算及来源SHA；标准score.json发布业务视图并引用该文件，verify-score重新推导校验。旧 attempt、其他任务和API路径保持原行为。
+
+启用独立有效性Profile时，以CLI返回的business_semantic_status及最终score.json判断业务有效性；原始semantic-component.json可能因某项能力unresolved而保留evaluation_error。不得修改原始组件或把未知能力补零。所有运行有效性/能力证据查询须在record-semantics前完成，之后只合分和验分，避免漂移已锁定的query-log。
+
 `0.10.25` 为精确绑定原源码的人事工时题加入独立语义复核交接。`prepare-rule-review` 仅在隔离副本收集原规则明确无法决定的字段/来源问题，抑制发现阶段所有临时数值，移除自身临时 runtime，原评分 runtime 保持未执行状态。独立裁判用 `query-rule-review` 分页查询全部问题，按冻结候选/参考判断 passed 布尔值及中文理由，写新的 UTF-8 JSON 并 `record-rule-review`。该命令核对身份、Judge、输入锁、精确范围和实际查询，不接受数值占位或控制器代判。随后裁判用 request.json 中冻结的 runtime_python 运行原数值规则，再完成正常语义评分、合分和 verify-score。原确定性判定、公式、分母和78/22权重不改，未知问题继续失败关闭；回传保留完整复核及 Worker 谱系。旧 attempt 和 API 路径沿用原行为。
 
 复核响应须复制 `rule-review/response-template.json` 的身份、Judge 和 locks。可判定项填写 status=judged、passed（仅 true/false）；证据不足时保留 status=unresolved、passed=null并解释具体缺口。每项都填写中文 reason 和实际返回的 query_ids，不得覆盖模板。不可判定复核会留证 NEEDS_ATTENTION 并阻止数值评分，不能猜测或补零。发现阶段的 Worker result 是空对象，不能作为规则分；其产物不得替代候选或正式评分端证据。完成全部复核后才允许 run-rules，后续证据目录由 prepare-semantics 正式冻结。

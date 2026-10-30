@@ -127,13 +127,24 @@ def checkpoint_text(row, *, lost_only=False):
         if lost_only and not 0 <= normalized < 1:
             continue
         lines.append(f"{key}: {value:g}")
+    if not lost_only:
+        for item in row.get('checkpoints',{}).get('independent_capabilities',{}).get('criteria',[]):
+            if item['score'] is None:
+                status=item['status'] if item.get('run_status','valid')=='valid' else '运行无效: '+item['run_status']
+                lines.append(f"能力 llm_judge.{item['key']}: - ({status})")
     if not lines and not lost_only:
-        for item in (row.get("evaluation") or {}).get("criteria", []):
+        for item in display_criteria(row):
             value = item.get("score")
             lines.append(f"{item['key']}: {value if value is not None else '-'} ({item['status']})")
     if lost_only and row["score_status"] != "valid":
         return "评分未有效，不推断能力失分点"
     return "\n".join(lines) or ("无低于满分的检查点" if lost_only and values else None)
+
+
+def display_criteria(row):
+    business=(row.get('evaluation') or {}).get('criteria',[])
+    semantic=row.get('checkpoints',{}).get('semantic_criteria')
+    return [r for r in business if r['key']=='automated_component']+semantic if semantic is not None else business
 
 
 def score_cell(row):
@@ -254,7 +265,7 @@ def build_case_views(data, units, labels, table, categories, modalities):
             # Per-unit metadata must keep its own missing fields even if another
             # unit supplied a common definition to the comparison view.
             meta = meta_by_task[task][:5] + [definition.get("tags"), excerpt(definition.get("prompt")), excerpt(definition.get("expected")), excerpt(definition.get("criteria"))]
-            reasons = "\n".join(f"{item['key']}: {item.get('reason') or '-'}" for item in (row.get("evaluation") or {}).get("criteria", []))
+            reasons = "\n".join(f"{item['key']}: {item.get('reason') or '-'}" for item in display_criteria(row))
             errors = [row.get("execution_error"), (row.get("evaluation") or {}).get("error")]
             error_text = "\n".join(json.dumps(error, ensure_ascii=False) for error in errors if error)
             resource = lambda key: row["resource"][key]["value"] if row["resource"][key]["complete"] else None

@@ -14,6 +14,14 @@
 
 新建 `prepare` 或 `prepare-rescore` attempt 时，显式选择 `--judge-protocol codex-agent-judge-v1` 后，省略模型和推理参数即冻结 `gpt-6.1-sol/high`；attempt ID 仍必填。显式模型/档位优先，已有 attempt 读取原冻结配置，API Judge 不使用这些默认值。控制器调用 `create_thread` 时必须同时传入冻结的 `model` 和 `thinking`。
 
+## 独立业务与能力有效性
+
+新 SPY/VOO attempt 的 `runtime.business_capability_profile=independent-business-capability/v1` 精确绑定原 contract 和源码。仍逐项返回原全部6个语义 key；同时完整填写模板新增的 run_validity 和 capability_evidence_statuses，不能以业务分替代过程能力证据。
+
+运行有效性填写 valid、contaminated_run 或 evidence_insufficient，附中文理由、冻结 evidence_ids、实际 review.query_ids 及支持/反例检查。valid 必须已无过滤查询完整标准轨迹，并声明 complete_event_range_checked=true。5个能力项分别填写 pass/partial/fail 或 evidence_insufficient/blocked_external/not_observed/evaluator_error；有效状态须与对应原 criterion 分值一致，缺证仍为null。来源业务依据成立不自动证明实际取得并使用材料，允许source_binding业务可判、其状态感知能力缺证。not_observed/未发生类结论必须有完整无过滤轨迹覆盖。
+
+record-semantics 会保留原始全6项组件，并生成 capability-evaluation.json。标准 score.json 只发布按85/15合分的业务视图，同时以SHA引用完整能力记录。零业务权重能力缺证不会阻断已有效业务分；业务缺证也不抹去独立有效的过程能力。运行污染或必要隔离证据缺失时，两类都不可发布。不得改原组件、占位补零或删掉能力预算后重归一。以CLI的business_semantic_status及最终score.json判断业务有效性，不能只看原始组件的evaluation_error。记录响应后不要新增查询；直接合分和验分。
+
 ## 原规则声明的语义复核
 
 新 attempt 的 `runtime.rule_review_profile=hr-fields-and-sources-semantic-review/v1` 表示控制器已在隔离副本中发现原规则无法确定的字段/来源问题。发现阶段抑制所有临时数值，正式规则尚未执行。先读取 `rule-review/request.json` 与模板，用冻结 CLI 的 `query-rule-review --attempt-root "$PWD" --offset 0 --limit 10` 查询全部 context，按 next_offset 继续。

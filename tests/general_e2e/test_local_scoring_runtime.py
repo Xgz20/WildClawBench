@@ -129,12 +129,13 @@ class Fixture:
         office_reference: bool = False,
         office_candidate: bool = False,
         candidate_text: str = "ready\n",
+        task_id: str = 'task-fixture',
     ):
         self.root = root
         self.grading_type = grading_type
         self.batch_id = "batch-fixture"
         self.unit_id = "unit-fixture"
-        self.task_id = "task-fixture"
+        self.task_id = task_id
         self.identity = {
             "batch_id": self.batch_id,
             "unit_id": self.unit_id,

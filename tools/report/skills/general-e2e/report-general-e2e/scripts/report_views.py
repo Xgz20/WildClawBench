@@ -64,12 +64,56 @@ def load_references():
     return reference_payload(Path(__file__).resolve().parents[4] / "data")
 
 
+def independent_capabilities(score,score_path,resolve_file,sha256_file):
+    refs={(r.get('path'),r.get('sha256')) for c in score.get('evaluation',{}).get('criteria',[])
+          for r in c.get('evidence',[]) if r.get('type')=='capability_evaluation'}
+    if not refs:return None,None
+    if len(refs)!=1:raise ValueError('REPORT_INDEPENDENT_CAPABILITY_AMBIGUOUS')
+    relative,expected_sha=next(iter(refs));path=resolve_file(score_path.parent,relative,'capability evaluation')
+    if sha256_file(path)!=expected_sha:raise ValueError('REPORT_INDEPENDENT_CAPABILITY_DRIFT')
+    record=json.loads(path.read_text(encoding='utf-8'));identity=record.get('identity',{});sid=score['identity']
+    if (record.get('schema_version')!='wildclawbench.general-e2e-independent-capabilities/v1'
+            or record.get('profile')!='independent-business-capability/v1'
+            or any(identity.get(k)!=sid.get(k) for k in ['batch_id','unit_id','task_id'])
+            or identity.get('scoring_attempt_id')!=sid.get('attempt_id')
+            or sid.get('task_id')!='01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison'):
+        raise ValueError('REPORT_INDEPENDENT_CAPABILITY_IDENTITY')
+    paths={'attempt_manifest_sha256':'attempt-manifest.json','contract_sha256':'private/contract.json',
+        'semantic_request_sha256':'semantic/request.json','semantic_catalog_sha256':'semantic/evidence-catalog.json',
+        'semantic_response_sha256':'semantic/response.json','semantic_component_sha256':'semantic/semantic-component.json',
+        'query_log_sha256':'semantic/query-log.json'}
+    for key,value in paths.items():
+        source=resolve_file(score_path.parent,value,'independent capability source')
+        if sha256_file(source)!=record.get('sources',{}).get(key):
+            raise ValueError('REPORT_INDEPENDENT_CAPABILITY_SOURCE_DRIFT')
+    raw=json.loads(resolve_file(score_path.parent,'semantic/semantic-component.json','semantic component').read_text(encoding='utf-8'))
+    if record.get('semantic_criteria')!=raw.get('criteria'):
+        raise ValueError('REPORT_INDEPENDENT_CAPABILITY_CRITERIA')
+    mapping={'source_binding':('state_awareness',10),'scope_execution':('intent_understanding',5),
+        'difference_inference':('reasoning_and_decision_making',15),'tool_call_contract':('tool_invocation',10),
+        'verification_calibration':('result_evaluation',5)}
+    rows=record.get('capability_criteria',[]);by_key={r['key']:r for r in rows};raw_keys={r['key']:r for r in raw['criteria']}
+    if len(rows)!=5 or set(by_key)!=set(mapping):raise ValueError('REPORT_INDEPENDENT_CAPABILITY_SCOPE')
+    valid_run=record.get('run_validity',{}).get('status')=='valid'
+    for key,(dimension,budget) in mapping.items():
+        r=by_key[key];value=raw_keys[key].get('score') if valid_run and r.get('status') in {'pass','partial','fail'} and raw_keys[key]['status']=='judged' else None
+        if r.get('dimension')!=dimension or r.get('budget')!=budget or r.get('score')!=value:
+            raise ValueError('REPORT_INDEPENDENT_CAPABILITY_VALUE')
+    total=sum(r['score']*r['budget'] for r in rows)/45 if all(r['score'] is not None for r in rows) else None
+    if (total is None)!=(record.get('capability_total_score') is None) or (total is not None and abs(total-record['capability_total_score'])>1e-10):
+        raise ValueError('REPORT_INDEPENDENT_CAPABILITY_TOTAL')
+    return record,{'path':relative,'sha256':expected_sha}
+
+
 def checkpoints(score, score_path, resolve_file, sha256_file):
-    if not score or score.get("result", {}).get("valid") is not True:
+    if not score:
         return {"values": {}, "sources": []}
+    independent,independent_source=independent_capabilities(score,score_path,resolve_file,sha256_file)
+    if score.get('result',{}).get('valid') is not True and independent is None:
+        return {'values':{},'sources':[]}
     values, sources = {}, []
     semantic = score.get("components", {}).get("semantics", {}).get("status") == "completed"
-    for criterion in score.get("evaluation", {}).get("criteria", []):
+    for criterion in score.get("evaluation", {}).get("criteria", []) if score.get('result',{}).get('valid') else []:
         if criterion["key"] != "automated_component":
             if criterion.get("status") == "judged":
                 values[f"llm_judge.{criterion['key']}"] = criterion.get("score")
@@ -90,8 +134,22 @@ def checkpoints(score, score_path, resolve_file, sha256_file):
         for key, value in rule.get("raw_scores", {}).items():
             values[("automated." if semantic else "") + key] = value
         sources.append({"path": ref["path"], "sha256": digest})
-    values["overall_score"] = score["result"]["total_score"]
-    return {"values": values, "sources": sources}
+    if score.get('result',{}).get('valid'):values["overall_score"] = score["result"]["total_score"]
+    result={'values':values,'sources':sources}
+    if independent is not None:
+        for row in independent['semantic_criteria']:
+            if independent['run_validity']['status']=='valid' and row['status']=='judged':values['llm_judge.'+row['key']]=row['score']
+        cap_values=dict(values)
+        for row in independent['capability_criteria']:
+            key='llm_judge.'+row['key'];cap_values.pop(key,None)
+            if row['score'] is not None:cap_values[key]=row['score']
+        sources.append(independent_source)
+        result.update(capability_values=cap_values,semantic_criteria=independent['semantic_criteria'],
+            independent_capability_eligible=independent['run_validity']['status']=='valid',
+            independent_capabilities={'profile':independent['profile'],'criteria':independent['capability_criteria'],
+                                     'total_score':independent['capability_total_score'],'budget':45,
+                                     'run_status':independent['run_validity']['status']})
+    return result
 
 
 def trace_tools(root, execution, resolve_file, sha256_file):
@@ -179,9 +237,9 @@ def capability_scores(rows, mapping, dimensions=CAPABILITIES):
             if not keys:
                 continue
             eligible += 1
-            if row["score_status"] != "valid":
+            if row["score_status"] != "valid" and row.get('checkpoints',{}).get('independent_capability_eligible') is not True:
                 continue
-            values = row.get("checkpoints", {}).get("values", {})
+            values = row.get("checkpoints", {}).get("capability_values",row.get('checkpoints',{}).get('values',{}))
             mapped = [normalized(key, values.get(key), values) for key in keys]
             # Missing a mapped criterion must not silently improve the task mean.
             if all(value is not None for value in mapped):

@@ -34,6 +34,7 @@ import trace_handoff
 import dataset_rule_corrections
 import rule_review
 import rule_review_runtime
+import business_capability
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1795,6 +1796,9 @@ def prepare_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 **({"rule_review_profile":rule_review.PROFILE}
                    if rule_review.matches(contract) and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'business_capability_profile':business_capability.PROFILE}
+                   if business_capability.matches(contract) and _sha256_bytes(contract_bytes)==business_capability.CONTRACT_SHA
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -3739,6 +3743,9 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "reason_language": REASON_LANGUAGE,
                 },
             }
+            independent_policy=business_capability.policy(manifest,contract)
+            if independent_policy is not None:
+                request['completion_policy']=independent_policy
             _write_new_json(staging / "request.json", request)
             request_sha = _sha256_file(staging / "request.json")
             response_locks = {
@@ -3772,6 +3779,8 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     ],
                     "notes": "",
                 }
+                if independent_policy is not None:
+                    template.update(business_capability.template_fields())
                 query_log = {
                     "schema_version": SEMANTIC_QUERY_LOG_SCHEMA,
                     "identity": manifest["identity"],
@@ -4911,6 +4920,9 @@ def record_semantics_attempt(
     del build_evidence_index
     error: dict[str, str] | None = None
     component: dict[str, Any] | None = None
+    independent_record=None
+    contract=_read_json(root/manifest['paths']['contract'])
+    independent_policy=business_capability.policy(manifest,contract)
     try:
         if parse_error is not None:
             raise parse_error
@@ -5026,13 +5038,23 @@ def record_semantics_attempt(
                 "notes": response.get("notes", ""),
             }
 
+        auxiliary=None
+        if independent_policy is not None:
+            if request.get('completion_policy')!=independent_policy:
+                raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_POLICY_DRIFT')
+            auxiliary=business_capability.validate_auxiliary(sys.modules[__name__],response,backend_rows,catalog,queries)
         component = evaluate_semantics(
             core_criteria,
             evaluator=evaluator,
             evidence_index=catalog["evidence_index"],
             protocol=request["judge"]["protocol"],
         )
+        if independent_policy is not None:
+            independent_record=business_capability.derive(manifest,component,auxiliary,
+                _independent_capability_sources(root,manifest,raw_sha,_sha256_bytes(_pretty_json_bytes(component))))
     except BaseException as exc:
+        if independent_policy is not None and independent_record is None:
+            component=None
         if isinstance(exc, ScoringRuntimeError):
             error = {"code": exc.code, "message": exc.detail or exc.code}
         elif isinstance(exc, grading_error_type):
@@ -5068,6 +5090,8 @@ def record_semantics_attempt(
     }
     if component is not None:
         terminal_files[paths["component"]] = _pretty_json_bytes(component)
+    if independent_record is not None:
+        terminal_files[root/'capability-evaluation.json']=_pretty_json_bytes(independent_record)
     _publish_new_files(terminal_files)
     if error is not None:
         raise ScoringRuntimeError(error["code"], error["message"])
@@ -5076,6 +5100,9 @@ def record_semantics_attempt(
         "attempt_root": str(root),
         "semantic_component": component,
         "audit": audit,
+        **({'business_semantic_status':'completed' if independent_record['business_result']['valid'] else 'evaluation_error',
+            'capability_total_score':independent_record['capability_total_score'],
+            'independent_capability_record':'capability-evaluation.json'} if independent_record is not None else {}),
     }
 
 
@@ -5331,7 +5358,35 @@ def _score_source_digests(root: Path) -> dict[str, str | None]:
         "semantic_audit_sha256": digest_if_file(semantic_paths["audit"]),
         **({'rule_review_audit_sha256':digest_if_file(root/'rule-review/audit.json')}
            if (root/'rule-review/audit.json').is_file() else {}),
+        **({'capability_evaluation_sha256':digest_if_file(root/'capability-evaluation.json')}
+           if (root/'capability-evaluation.json').is_file() else {}),
     }
+
+
+def _independent_capability_sources(root,manifest,response_sha,component_sha):
+    paths=_semantic_paths(root)
+    return {'attempt_manifest_sha256':_sha256_file(root/'attempt-manifest.json'),
+        'contract_sha256':manifest['digests']['contract_sha256'],
+        'semantic_request_sha256':_sha256_file(paths['request']),
+        'semantic_catalog_sha256':_sha256_file(paths['catalog']),
+        'semantic_response_sha256':response_sha,'semantic_component_sha256':component_sha,
+        'query_log_sha256':_sha256_file(paths['query_log'])}
+
+
+def _verified_independent_capabilities(root,manifest,contract,component):
+    expected_policy=business_capability.policy(manifest,contract)
+    if expected_policy is None:return None
+    paths=_semantic_paths(root);request=_read_json(paths['request']);response=_read_json(paths['response'])
+    if request.get('completion_policy')!=expected_policy:
+        raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_POLICY_DRIFT')
+    auxiliary=business_capability.validate_auxiliary(sys.modules[__name__],response,component['criteria'],
+        _read_json(paths['catalog']),_read_json(paths['query_log'])['queries'])
+    expected=business_capability.derive(manifest,component,auxiliary,
+        _independent_capability_sources(root,manifest,_sha256_file(paths['response']),_sha256_file(paths['component'])))
+    path=root/'capability-evaluation.json'
+    if path.is_symlink() or not path.is_file() or _read_json(path)!=expected:
+        raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_RECORD_DRIFT')
+    return expected
 
 
 def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> None:
@@ -5474,6 +5529,11 @@ def _build_standard_score(
     grading_type = manifest["grading"]["type"]
     rules = _load_rule_component_for_final(root, grading_type)
     semantics = _load_semantic_component_for_final(root, grading_type)
+    contract=_read_json(root/manifest['paths']['contract'])
+    independent=None
+    if business_capability.policy(manifest,contract) is not None and (root/'semantic/semantic-component.json').is_file():
+        independent=_verified_independent_capabilities(root,manifest,contract,semantics)
+        semantics=business_capability.business_component(semantics,independent)
     final = finalize_score(
         grading_type=grading_type,
         grading_weights=manifest["grading"].get("weights"),
@@ -5487,6 +5547,10 @@ def _build_standard_score(
         rules=rules,
         semantics=semantics,
     )
+    if independent is not None:
+        reference=_score_evidence_reference(root/'capability-evaluation.json',root,'capability_evaluation')
+        for criterion in criteria:
+            criterion['evidence'].append(dict(reference))
     execution = _read_json(
         root / manifest["paths"]["execution_record"],
         code="EXECUTION_RECORD_INVALID",
@@ -5950,6 +6014,10 @@ def prepare_rescore_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 **({"rule_review_profile":rule_review.PROFILE}
                    if rule_review.matches(_read_json(staging/source_paths['contract']))
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'business_capability_profile':business_capability.PROFILE}
+                   if business_capability.matches(_read_json(staging/source_paths['contract']))
+                   and _sha256_file(staging/source_paths['contract'])==business_capability.CONTRACT_SHA
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
