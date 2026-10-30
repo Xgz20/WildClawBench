@@ -2656,8 +2656,14 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     audit = _read_json(audit_path, "RULE_FAILURE_AUDIT_INVALID")
     result = _read_json(result_path, "RULE_FAILURE_AUDIT_INVALID")
     manifest = _read_json(attempt / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID")
+    dataset_error = result.get("error", {})
+    allowed_error = dataset_error.get("type") in {"EvaluationError", "EvaluationReviewRequired", "ReviewRequired"}
+    allowed_error = allowed_error or (dataset_error.get("type") == "EvidenceError" and dataset_error.get("message") ==
+        "Required text evidence exceeds collector budget; do not report a valid semantic/capability score")
+    allowed_error = allowed_error or (dataset_error.get("type") == "RuntimeError" and dataset_error.get("message") ==
+        "EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging")
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or result.get("error", {}).get("type") not in {"EvaluationError", "EvaluationReviewRequired", "ReviewRequired"}
+            or not allowed_error
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")

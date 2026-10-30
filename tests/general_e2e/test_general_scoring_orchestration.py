@@ -1374,6 +1374,26 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertEqual(document["tasks"][0]["score_status"], "unscored")
         self.assertIsNone(document["tasks"][0]["score_path"])
 
+    def test_only_the_explicit_dataset_evidence_budget_guard_can_be_retained_unscored(self) -> None:
+        budget="Required text evidence exceeds collector budget; do not report a valid semantic/capability score"
+        limit="EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging"
+        for label,message,error_type,allowed in [("budget",budget,"EvidenceError",True),("limit",limit,"RuntimeError",True),
+                ("other","Missing private evidence resource","EvidenceError",False),("runtime","Unexpected infrastructure failure","RuntimeError",False)]:
+            with self.subTest(label=label):
+                source=("class EvidenceError(Exception): pass\n" if error_type=="EvidenceError" else "")+"def grade(transcript, workspace_path):\n raise "+error_type+"("+repr(message)+")"
+                fixture=Fixture(self.root/label,task_ids=("task-error",),grading_type="hybrid",contract_overrides={"automated_checks":source})
+                root=Path(fixture.initialize(now=self.t0)["orchestration_root"])
+                with patch.object(ORCHESTRATOR,"_run_score_command",side_effect=self._direct_local_score_command):
+                    with self.assertRaises((ORCHESTRATOR.OrchestrationError,SCORE_RUNTIME.ScoringRuntimeError)):
+                        ORCHESTRATOR.run_rule_score_task(root,task_id="task-error",runtime_python=Path(sys.executable),now=self.t0)
+                if allowed:
+                    view=ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Original collector budget needs dataset-owner review",now=self.t0)
+                    self.assertEqual(view["tasks"][0]["phase"],"UNSCORED")
+                    self.assertIsNone(view["tasks"][0]["thread_id"])
+                else:
+                    with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,"RULE_ERROR_DEFERRAL_NOT_ALLOWED"):
+                        ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Must not ignore other evidence errors",now=self.t0)
+
     def test_explicit_partial_and_additional_scores_restore_full_scope_without_rejudging(self) -> None:
         fixture = Fixture(self.root / "scope-selection", task_ids=("task-a", "task-b"), grading_type="automated")
         partial = ORCHESTRATOR.initialize(unit_root=fixture.unit_root, scoring_package=fixture.scoring_package,
