@@ -634,6 +634,10 @@ def _assert_read_only_tree(root: Path) -> None:
 def _remove_tree(path: Path) -> None:
     def make_writable_and_retry(function: Any, target: str, _error: object) -> None:
         try:
+            if hasattr(os, "chflags") and not Path(target).is_symlink():
+                flags = Path(target).stat().st_flags
+                if flags & getattr(stat, "UF_IMMUTABLE", 0):
+                    os.chflags(target, flags & ~stat.UF_IMMUTABLE, follow_symlinks=False)
             os.chmod(target, stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
             function(target)
         except OSError:
@@ -899,6 +903,20 @@ def _seal_office_gt(root: Path, entries: Sequence[Mapping[str, Any]]) -> dict[st
         # Office variants and their manifests are never rewritten or stripped.
         source.unlink()
     return {"profile": GT_OFFICE_STORAGE_PROFILE, "files": files} if files else None
+
+
+def _guard_runtime_office_references(roots: Sequence[Path], entries: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    guarded = []
+    for root in dict.fromkeys(roots):
+        for entry in _office_gt_entries(entries):
+            path = _resolve_within(root, entry["path"], "runtime GT")
+            if path.is_symlink() or _sha256_file(path) != entry["sha256"]:
+                raise ScoringRuntimeError("RUNTIME_REFERENCE_SOURCE_MISMATCH", entry["path"])
+            if sys.platform == "darwin":
+                os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE, follow_symlinks=False)
+            guarded.append({"logical_path": entry["path"], "sha256": entry["sha256"]})
+    return {"profile": "macos-user-immutable-reference/v1" if sys.platform == "darwin" else "canonical-container-reference/v1",
+            "files": guarded, "business_bytes_changed": False}
 
 
 def _read_office_gt_member(root: Path, row: Mapping[str, Any], entry: Mapping[str, Any]) -> bytes:
@@ -1541,6 +1559,9 @@ def prepare_attempt(
         shutil.copytree(gt_private, runtime_workspace / "gt", symlinks=True)
         if path_resolution["mode"] == "mapped-nested":
             shutil.copytree(gt_private, mapped_runtime / "gt", symlinks=True)
+        reference_guard = _guard_runtime_office_references(
+            [runtime_workspace / "gt", *( [mapped_runtime / "gt"] if path_resolution["mode"] == "mapped-nested" else [])],
+            scoring_task["private_scoring"]["entries"])
         gt_storage = _seal_office_gt(gt_private, scoring_task["private_scoring"]["entries"])
         # Private references are inputs. Office bytes are sealed above; read-only
         # permissions alone do not prevent a host from publishing a new variant.
@@ -1643,6 +1664,7 @@ def prepare_attempt(
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                "reference_guard": reference_guard,
                 "docker_required": False,
                 "lock": runtime_lock,
             },
@@ -5512,6 +5534,7 @@ def prepare_rescore_attempt(
         _copy_inventory(source_gt, target_gt, source_gt_entries)
         shutil.copytree(target_gt, runtime_workspace / "gt", symlinks=True)
         _restore_runtime_gt(runtime_workspace / "gt", source_private_scoring)
+        reference_guard = _guard_runtime_office_references([runtime_workspace / "gt"], source_private_scoring["entries"])
         gt_storage = source_private_scoring.get("storage")
         if gt_storage is None:
             gt_storage = _seal_office_gt(target_gt, source_private_scoring["entries"])
@@ -5627,6 +5650,7 @@ def prepare_rescore_attempt(
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                "reference_guard": reference_guard,
                 "docker_required": False,
                 "lock": runtime_lock,
             },

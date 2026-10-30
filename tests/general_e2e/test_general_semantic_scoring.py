@@ -48,6 +48,7 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         self.root = Path(self.temp.name)
 
     def tearDown(self) -> None:
+        RUNTIME._remove_tree(self.root)
         self.temp.cleanup()
 
     def _hybrid_attempt(self, name: str = "hybrid", *, office_reference: bool = False) -> Path:

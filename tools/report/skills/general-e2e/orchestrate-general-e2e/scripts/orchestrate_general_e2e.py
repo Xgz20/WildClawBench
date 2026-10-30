@@ -1933,6 +1933,15 @@ def _verify_state(
                 or _sha256_file(evidence) != project.get("evidence_sha256")
             ):
                 raise OrchestrationError("PROJECT_REGISTRATION_DRIFT", str(task.get("task_id")))
+        scoring_error = task.get("scoring_error")
+        if scoring_error is not None:
+            if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
+                    or scoring_error.get("kind") != "dataset-rule-evaluation-error/v1"):
+                raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
+            for key in ("rule_audit", "worker_result"):
+                path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
+                if not _inside(attempt, path) or _sha256_file(path) != scoring_error[key + "_sha256"]:
+                    raise OrchestrationError("RULE_ERROR_DEFERRAL_DRIFT", key)
         score = task.get("score")
         if score is not None:
             score_path = root / str(score.get("path", ""))
@@ -2629,6 +2638,33 @@ def record_wait(
     return _save(root, state, event_time)
 
 
+def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason: str, now: datetime | None = None) -> dict[str, Any]:
+    root = _state_root(orchestration_root)
+    state = _verify_state(root)
+    task = _task_by_id(state, _identifier(task_id, "task_id"))
+    if task.get("phase") != "RULES_NEEDS_ATTENTION" or task.get("thread") or task.get("score"):
+        raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", task_id)
+    attempt = root / task["attempt_path"]
+    audit_path = attempt / "rule-audit.json"
+    result_path = attempt / "worker/result.json"
+    audit = _read_json(audit_path, "RULE_FAILURE_AUDIT_INVALID")
+    result = _read_json(result_path, "RULE_FAILURE_AUDIT_INVALID")
+    manifest = _read_json(attempt / "attempt-manifest.json", "ATTEMPT_MANIFEST_INVALID")
+    if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
+            or result.get("error", {}).get("type") != "EvaluationError"
+            or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
+            or (attempt / "semantic/semantic-component.json").exists()):
+        raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset EvaluationError without a judge")
+    event_time = now or _now()
+    task["scoring_error"] = {"kind": "dataset-rule-evaluation-error/v1", "reason": _required_string(reason, "reason"),
+        "rule_audit_path": audit_path.relative_to(root).as_posix(), "rule_audit_sha256": _sha256_file(audit_path),
+        "worker_result_path": result_path.relative_to(root).as_posix(), "worker_result_sha256": _sha256_file(result_path),
+        "error": result["error"]}
+    task["phase"] = "UNSCORED"
+    task["history"].append({"at": _timestamp(event_time), "event": "DATASET_RULE_ERROR_DEFERRED_UNSCORED", **task["scoring_error"]})
+    return _save(root, state, event_time)
+
+
 def record_score(
     orchestration_root: Path,
     *,
@@ -2956,6 +2992,13 @@ def main(argv: list[str] | None = None) -> int:
     build = subparsers.add_parser("build-submission")
     _parse_common(build)
     build.add_argument("--replace-after-late-completion", action="store_true")
+    complete_scope = subparsers.add_parser("compose-full-scope-selection", help="Join a locked partial submission with explicit validated missing scores; never judge or shrink scope")
+    complete_scope.add_argument("--source-orchestration-root", type=Path, required=True)
+    complete_scope.add_argument("--unit-root", type=Path, required=True)
+    complete_scope.add_argument("--additional-attempt", action="append", required=True)
+    complete_scope.add_argument("--score-skill-dir", type=Path, required=True)
+    complete_scope.add_argument("--output-root", type=Path, required=True)
+
     compose = subparsers.add_parser("compose-rescore-selection", help="Select explicit rescored tasks into the complete original scope; preserve all source orchestrations")
     compose.add_argument("--source-orchestration-root", required=True, type=Path, dest="source")
     compose.add_argument("--replacement-orchestration-root", required=True, type=Path, dest="replacement")
@@ -3013,6 +3056,11 @@ def main(argv: list[str] | None = None) -> int:
             "保留迟到审计，不适用于未知线程终态"
         ),
     )
+
+    unscored_rule = subparsers.add_parser("record-unscored-rule-error")
+    _parse_common(unscored_rule)
+    unscored_rule.add_argument("--task-id", required=True)
+    unscored_rule.add_argument("--reason", required=True)
 
     rule_score = subparsers.add_parser("run-rule-score")
     _parse_common(rule_score)
@@ -3088,6 +3136,9 @@ def main(argv: list[str] | None = None) -> int:
                 allow_running=args.allow_running)
             if args.output:
                 _write_new_json(args.output, result)
+        elif args.command == "compose-full-scope-selection":
+            from compose_full_scope_selection import compose as compose_full_scope
+            result = compose_full_scope(args, frozen=sys.modules[__name__])
         elif args.command == "compose-rescore-selection":
             from compose_rescore_selection import compose
             result = compose(args, frozen=sys.modules[__name__])
@@ -3126,6 +3177,8 @@ def main(argv: list[str] | None = None) -> int:
                 task_id=args.task_id,
                 allow_late_completion=args.allow_late_completion,
             )
+        elif args.command == "record-unscored-rule-error":
+            result = record_unscored_rule_error(args.orchestration_root, task_id=args.task_id, reason=args.reason)
         elif args.command == "run-rule-score":
             result = run_rule_score_task(
                 args.orchestration_root,

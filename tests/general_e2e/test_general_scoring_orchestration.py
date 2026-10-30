@@ -14,6 +14,7 @@ import unittest
 from unittest.mock import patch
 import warnings
 import zipfile
+from types import SimpleNamespace
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -549,7 +550,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         if command == "finalize":
             return SCORE_RUNTIME.finalize_score_attempt(attempt_root=attempt_root)
         if command == "verify-score":
-            return SCORE_RUNTIME.verify_score_attempt(attempt_root)
+            return SCORE_RUNTIME.verify_score_attempt(attempt_root, archived="--archived" in arguments)
         raise AssertionError(arguments)
 
     def test_init_creates_isolated_attempts_and_freezes_judge_and_prompt(self) -> None:
@@ -1344,6 +1345,51 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 score_slots=9,
                 now=self.t0,
             )
+
+    def test_dataset_evaluation_error_can_be_explicitly_retained_unscored_without_a_judge(self) -> None:
+        fixture = Fixture(self.root / "rule-error", task_ids=("task-error",), grading_type="hybrid",
+            contract_overrides={"automated_checks": "class EvaluationError(Exception): pass\ndef grade(transcript, workspace_path):\n raise EvaluationError('Unknown business ID header')"})
+        view = fixture.initialize(now=self.t0)
+        root = Path(view["orchestration_root"])
+        with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=self._direct_local_score_command):
+            with self.assertRaises((ORCHESTRATOR.OrchestrationError, SCORE_RUNTIME.ScoringRuntimeError)):
+                ORCHESTRATOR.run_rule_score_task(root, task_id="task-error", runtime_python=Path(sys.executable), now=self.t0)
+        view = ORCHESTRATOR.record_unscored_rule_error(root, task_id="task-error", reason="Requires dataset owner ID-schema review", now=self.t0)
+        self.assertEqual(view["tasks"][0]["phase"], "UNSCORED")
+        self.assertIsNone(view["tasks"][0]["thread_id"])
+        built = ORCHESTRATOR.build_submission(root, now=self.t0)
+        document = json.loads(Path(built["submission_path"]).read_text())
+        self.assertEqual(document["task_ids"], ["task-error"])
+        self.assertEqual(document["tasks"][0]["score_status"], "unscored")
+        self.assertIsNone(document["tasks"][0]["score_path"])
+
+    def test_explicit_partial_and_additional_scores_restore_full_scope_without_rejudging(self) -> None:
+        fixture = Fixture(self.root / "scope-selection", task_ids=("task-a", "task-b"), grading_type="automated")
+        partial = ORCHESTRATOR.initialize(unit_root=fixture.unit_root, scoring_package=fixture.scoring_package,
+            report_config=fixture.report_config, score_skill_dir=SCORE_SKILL, output_root=fixture.output_root,
+            orchestration_id="partial", task_ids=("task-b",), execution_records={"task-b": fixture.execution_records["task-b"]}, now=self.t0)
+        extra = ORCHESTRATOR.initialize(unit_root=fixture.unit_root, scoring_package=fixture.scoring_package,
+            report_config=fixture.report_config, score_skill_dir=SCORE_SKILL, output_root=fixture.output_root,
+            orchestration_id="extra", task_ids=("task-a",), execution_records={"task-a": fixture.execution_records["task-a"]}, now=self.t0)
+        with patch.object(ORCHESTRATOR, "_run_score_command", side_effect=self._direct_local_score_command):
+            for view, task in [(partial, "task-b"), (extra, "task-a")]:
+                root = Path(view["orchestration_root"])
+                ORCHESTRATOR.run_rule_score_task(root, task_id=task, runtime_python=Path(sys.executable), now=self.t0)
+            partial_root = Path(partial["orchestration_root"])
+            ORCHESTRATOR.build_submission(partial_root, now=self.t0)
+            extra_state = json.loads((Path(extra["orchestration_root"]) / "orchestration-state.json").read_text())
+            extra_attempt = Path(extra["orchestration_root"]) / extra_state["tasks"][0]["attempt_path"]
+            sys.path.insert(0, str(ORCHESTRATOR_PATH.parent))
+            from compose_full_scope_selection import compose
+            output = self.root / "complete-selection"
+            args = SimpleNamespace(source_orchestration_root=partial_root, unit_root=fixture.unit_root,
+                score_skill_dir=SCORE_SKILL, additional_attempt=["task-a=" + str(extra_attempt)], output_root=output)
+            result = compose(args, frozen=ORCHESTRATOR)
+            self.assertEqual(result["task_count"], 2)
+            document = json.loads((output / "submission.json").read_text())
+            self.assertEqual(document["task_ids"], ["task-a", "task-b"])
+            self.assertTrue(all(t["score_status"] == "valid" for t in document["tasks"]))
+            self.assertFalse((output / "orchestration-state.json").exists())
 
     def test_pending_native_trust_receipt_requires_exact_folder_proof(self) -> None:
         fixture = Fixture(self.root)

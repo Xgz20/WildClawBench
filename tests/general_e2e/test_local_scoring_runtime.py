@@ -364,6 +364,7 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         self.root = Path(self.temp.name)
 
     def tearDown(self) -> None:
+        RUNTIME._remove_tree(self.root)
         self.temp.cleanup()
 
     def test_prepare_verify_and_run_rules_use_private_managed_attempt(self) -> None:
