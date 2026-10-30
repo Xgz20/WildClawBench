@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.16` 在领导版开头和 Excel 总览披露评分覆盖；按真实任务 ID 检查各单元有效题目集合。当集合不同（即使有效数量相同）时，保留各自描述性均分，停止自动撰写得分高低比较，不将部分评分视为完整评测集排名。原分数、分母、资源及来源不改写。
+
 `0.8.15` 按实际选中执行记录读取显式 UTF-8 补采资源：仅接受已绑定的 bound-qwen-native-utf8-redecode/v1、新采集回执中的执行/manifest SHA、相同原执行身份和指标 SHA。初始采集记录保留，不把旧 manifest 的资源路径误用于新评分输入；没有该明确 Profile 的其他漂移仍拒绝。
 
 `0.8.14` 同步 workbuddy-jsonl-metrics 0.2.3，保留原 traceId Profile 的完整历史复算行为，并继续严格验证新版独立 request ID Profile。旧资源字节与统计值不改写。

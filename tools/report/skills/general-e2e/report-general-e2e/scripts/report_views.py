@@ -343,6 +343,28 @@ def paired_token_measure(rows, fields, *, ratio=False):
             "operand_fields": list(fields), "operand_subtotals": totals if count else None}
 
 
+def scoring_coverage(tasks, labels):
+    units = []
+    valid_sets = []
+    for unit_id, label in labels.items():
+        rows = [row for row in tasks if row["unit_id"] == unit_id]
+        counts = Counter(row["score_status"] for row in rows)
+        valid_ids = sorted(row["task_id"] for row in rows if row["score_status"] == "valid")
+        valid_sets.append(frozenset(valid_ids))
+        units.append({"unit_id": unit_id, "label": label, "task_run_count": len(rows),
+                      "valid_score_count": counts["valid"], "evaluation_error_count": counts["evaluation_error"],
+                      "unscored_count": counts["unscored"], "valid_task_ids": valid_ids})
+    counts = Counter(row["score_status"] for row in tasks)
+    identical = len(set(valid_sets)) <= 1
+    note = (f"本版保留 {len(tasks)} 项任务运行：有效评分 {counts['valid']} 项，"
+            f"评测异常 {counts['evaluation_error']} 项，未评分 {counts['unscored']} 项。")
+    if not identical:
+        note += "各单元均分来自不同有效题目子集，仅作当前评分覆盖下的描述，不能据此对完整评测集排名。"
+    return {"task_run_count": len(tasks), "valid_score_count": counts["valid"],
+            "evaluation_error_count": counts["evaluation_error"], "unscored_count": counts["unscored"],
+            "valid_task_sets_identical": identical, "units": units, "note": note}
+
+
 def build_views(data, references):
     import report_case_views
     mapping5 = references.get("capabilities5", {})
@@ -453,6 +475,8 @@ def build_views(data, references):
                            "缓存命中率只在同一用例、相同原生覆盖的输入与命中统计上计算：命中小计/输入小计。部分统计仅代表已知样本，样本范围见下表；不平均逐题比例。"]),
     }
     views["总览"]["cell_annotations"] = overview_cells
+    score_coverage = scoring_coverage(data["tasks"], labels_by_id)
+    views["总览"]["notes"].insert(0, score_coverage["note"])
     views["总览"]["coverage_table"] = table(["模型@Harness", "Token覆盖", "请求覆盖", "工具覆盖", "任务耗时覆盖", "流程耗时覆盖"], overview_coverage)
     views["效率对比"]["cell_annotations"] = efficiency_cells
     views["效率对比"]["coverage_table"] = table(["模型@Harness", "总Token覆盖", "平均Token覆盖", "输入覆盖", "普通输入覆盖", "缓存命中覆盖", "缓存写入覆盖", "输出覆盖", "命中率样本"], efficiency_coverage)
@@ -524,6 +548,7 @@ def build_views(data, references):
             **report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES),
             "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
+            "score_coverage": score_coverage,
             "reference_sources": references["sources"],
             "capability_coverage": caps, "resource_display": resource_display_by_unit,
             "capability_profile": "general5" if dimensions is CAPABILITIES5 else "legacy7",

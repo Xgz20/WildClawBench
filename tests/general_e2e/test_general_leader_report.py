@@ -64,6 +64,21 @@ def comparison_fixture():
 
 
 class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
+    def test_incomparable_valid_subsets_keep_tables_without_automatic_score_ranking(self):
+        _, data, _ = comparison_fixture()
+        before = copy.deepcopy(data["tables"])
+        data["score_coverage"] = {"valid_task_sets_identical": False,
+                                  "note": "本版保留 30 项任务运行：有效评分 15 项，评测异常 2 项，未评分 13 项。"}
+        text = LEADER.summaries(data)
+        for key in ["总览", *LEADER.DIMENSIONS]:
+            self.assertNotIn("相较", text[key])
+            self.assertNotIn("总体均分最高", text[key])
+        self.assertIn("有效题目子集不同", text["总览"])
+        self.assertEqual(data["tables"], before)
+        data["narratives"] = text
+        markdown = LEADER.render(data)
+        self.assertLess(markdown.index("有效评分 15 项"), markdown.index("## 一、总览"))
+
     def test_same_client_version_is_primary_and_all_comparison_rows_remain(self):
         source, data, labels = comparison_fixture()
         before = copy.deepcopy(data)

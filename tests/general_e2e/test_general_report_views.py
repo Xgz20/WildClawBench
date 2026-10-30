@@ -13,6 +13,20 @@ CASES = REPORT.report_case_views
 
 
 class GeneralReportViewsTests(unittest.TestCase):
+    def test_equal_score_counts_with_different_task_ids_do_not_establish_common_scope(self):
+        tasks = [{"unit_id": unit, "task_id": task, "score_status": status}
+                 for unit, task, status in [("a", "one", "valid"), ("a", "two", "unscored"),
+                                             ("b", "one", "evaluation_error"), ("b", "two", "valid")]]
+        before = copy.deepcopy(tasks)
+        coverage = VIEWS.scoring_coverage(tasks, {"a": "A", "b": "B"})
+        self.assertFalse(coverage["valid_task_sets_identical"])
+        self.assertEqual([coverage[key] for key in ["task_run_count", "valid_score_count", "evaluation_error_count", "unscored_count"]], [4, 2, 1, 1])
+        self.assertIn("不同有效题目子集", coverage["note"])
+        self.assertEqual(tasks, before)
+        tasks[2]["score_status"] = "valid"
+        tasks[3]["score_status"] = "unscored"
+        self.assertTrue(VIEWS.scoring_coverage(tasks, {"a": "A", "b": "B"})["valid_task_sets_identical"])
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.root = Path(self.temp.name)

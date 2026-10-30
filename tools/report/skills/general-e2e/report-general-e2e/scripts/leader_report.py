@@ -394,6 +394,7 @@ def extract(workbook, data, target_unit_id):
                         "comparison_gap_basis": "difference-of-unrounded-final-excel-values"},
               "tables": tables, "dimensions": {}, "narratives": {}}
     result["comparison_context"] = comparison_context(data, target_unit_id)
+    result["score_coverage"] = deepcopy(data["presentation"].get("score_coverage", {}))
     for name in DIMENSIONS:
         view = tables[name]
         result["dimensions"][name] = {
@@ -426,9 +427,12 @@ def summaries(data):
         if delta == 0:
             return "相同"
         return f"{'高' if delta > 0 else '低'} {num(abs(delta))} 分"
-    overall = [f"相较{r[0]}{compare(Decimal(str(o[1]))-Decimal(str(r[1])))}" for r in peers("总览") if numeric(r[1]) and numeric(o[1])]
+    same_valid_scope = data.get("score_coverage", {}).get("valid_task_sets_identical", True)
+    overall = [f"相较{r[0]}{compare(Decimal(str(o[1]))-Decimal(str(r[1])))}" for r in peers("总览") if numeric(r[1]) and numeric(o[1])] if same_valid_scope else []
     out = {"总览": prefix + f"{label} 均分为 {num(o[1])}。" + ("；".join(overall)+"。" if overall else "没有可比较的参照均分。") +
            "执行完成情况与有效评分分母分别统计，真实能力零分保留。"}
+    if not same_valid_scope:
+        out["总览"] = f"{label} 的当前有效评分均分为 {num(o[1])}。各单元有效题目子集不同，本版不据此判定完整冻结题集的优劣；有效评分数与未评分数见表。"
     clean = lambda h: re.sub(r"平均分.*$", "", re.sub(r"^\d+_", "", h))
     def gaps(name, peer):
         row = target(name)
@@ -438,6 +442,9 @@ def summaries(data):
                 values.append((clean(heading), Decimal(str(row[i])) - Decimal(str(peer[i]))))
         return sorted(values, key=lambda x: x[1], reverse=True)
     for name in DIMENSIONS:
+        if not same_valid_scope:
+            out[name] = "各单元当前有效评分的分层结果见表；有效题目子集不同，分层均分不作为完整评测集的受控排名。"
+            continue
         descriptions = []
         for peer in peers(name):
             values = gaps(name, peer)
@@ -461,7 +468,7 @@ def summaries(data):
     # Supplemental references never change the primary peer group or the tables.
     references = [r for r in tables["总览"]["rows"] if r[0] != label and numeric(r[1])]
     best = max(references, key=lambda r: r[1]) if references else None
-    if best is not None and primary is not None and best[0] not in primary:
+    if same_valid_scope and best is not None and primary is not None and best[0] not in primary:
         for name in context.get("secondary_tables", []):
             if name == "总览" and numeric(o[1]):
                 out[name] += f"补充跨配置参照：其余参照中总体均分最高的{best[0]}为{num(best[1])}，目标单元{compare(Decimal(str(o[1]))-Decimal(str(best[1])))}。"
@@ -509,6 +516,8 @@ def render(data):
              f"> 参评范围：{scope['unit_count']} 个模型与 Harness 组合，每组 {scope['unique_task_count']} 道相同用例", "",
              "各章节保留全部参评组合，文字总结以目标单元为主体。模型与 Harness 同时变化的组合不能作为单因素因果对照。", "",
              "以下结论只基于得分、执行状态和可核验资源，不包含低分用例的模型侧／Harness 侧因果归因。", ""]
+    if data.get("score_coverage", {}).get("note"):
+        lines += ["> 评分覆盖：" + data["score_coverage"]["note"], ""]
     titles={"总览":"一、总览","分类对比":"二、分类维度","Agent能力对比":"三、Agent能力","难度对比":"四、难度等级","模态对比":"五、模态对比","效率对比":"六、效率与资源","工具调用对比":"七、工具调用"}
     for name in ["总览",*DIMENSIONS,"效率对比","工具调用对比"]:
         v=tables[name]; lines += ["## "+titles[name], ""]
