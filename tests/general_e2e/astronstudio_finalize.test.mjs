@@ -345,6 +345,12 @@ test("CLI separates finalization from immutable verification", () => {
     /--task-id/u,
   );
   assert.equal(parseArgs(["--help"]).help, true);
+  assert.throws(() => parseArgs(["--unit-root", "/tmp/unit", "--state-file", "/tmp/state.json",
+    "--source-office-metadata-supplement", "/tmp/proof.json"]), /SOURCE_OFFICE_VARIANCE_VERIFY_ONLY/u);
+  const variance = parseArgs(["--verify-only", "--unit-root", "/tmp/unit", "--task-id", "task",
+    "--source-office-metadata-supplement", "/tmp/proof.json", "--source-office-python", "/absolute/python"]);
+  assert.equal(variance.sourceOfficeMetadataSupplement, "/tmp/proof.json");
+  assert.equal(variance.sourceOfficeMetadataPython, "/absolute/python");
 });
 
 async function addBinding(value) {

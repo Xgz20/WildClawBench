@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash, randomUUID } from "node:crypto";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import { constants as fsConstants, createReadStream, realpathSync } from "node:fs";
 import {
   chmod,
@@ -96,6 +98,8 @@ export function parseArgs(argv) {
     processWaitMilliseconds: 15_000,
     verifyOnly: false,
     taskId: "",
+    sourceOfficeMetadataSupplement: "",
+    sourceOfficeMetadataPython: "",
     help: false,
   };
   const valued = new Map([
@@ -105,6 +109,8 @@ export function parseArgs(argv) {
     ["--resource-metrics", "resourceMetrics"],
     ["--candidate-policy", "candidatePolicy"],
     ["--task-id", "taskId"],
+    ["--source-office-metadata-supplement", "sourceOfficeMetadataSupplement"],
+    ["--source-office-python", "sourceOfficeMetadataPython"],
   ]);
   const numeric = new Map([
     ["--stability-ms", "stabilityMilliseconds"],
@@ -128,6 +134,7 @@ export function parseArgs(argv) {
     if (result.verifyOnly) {
       if (!result.taskId) throw new Error("--verify-only 必须指定 --task-id");
     } else if (!result.stateFile) throw new Error("必须指定 --state-file");
+    if (result.sourceOfficeMetadataSupplement && !result.verifyOnly) throw new Error("SOURCE_OFFICE_VARIANCE_VERIFY_ONLY");
   }
   return result;
 }
@@ -823,12 +830,26 @@ export async function verifyGeneralCollection(options) {
     "verify:frozen-candidate",
     { allowIgnoredRuntimeDirectories: true },
   );
-  const sourceCheck = integrity.verifyWorkspace(
-    sourcePath,
-    candidate.source_workspace.sha256,
-    "verify:source-workspace",
-    { allowIgnoredRuntimeDirectories: true },
-  );
+  let sourceCheck;
+  if (options.sourceOfficeMetadataSupplement) {
+    if (!options.sourceOfficeMetadataPython || !isAbsolute(options.sourceOfficeMetadataPython)) {
+      throw new Error("SOURCE_OFFICE_VARIANCE_REQUIRES_ABSOLUTE_PYTHON");
+    }
+    const helper = fileURLToPath(new URL("../source_office_metadata.py", import.meta.url));
+    const { stdout } = await promisify(execFile)(options.sourceOfficeMetadataPython, ["-X", "utf8", helper,
+      "verify", "--unit-root", unitRoot, "--task-id", options.taskId,
+      "--supplement", resolve(options.sourceOfficeMetadataSupplement)],
+    { encoding: "utf8", timeout: 30_000, maxBuffer: 2 * 1024 * 1024 });
+    sourceCheck = JSON.parse(stdout);
+    if (sourceCheck.status !== "SOURCE_OFFICE_METADATA_VARIANCE_VERIFIED" || sourceCheck.valid !== true
+        || sourceCheck.raw_source_matches_original !== false || sourceCheck.canonical_sha256 !== candidate.expected_sha256) {
+      throw new Error("SOURCE_OFFICE_VARIANCE_PROOF_INVALID");
+    }
+  } else {
+    sourceCheck = integrity.verifyWorkspace(sourcePath, candidate.source_workspace.sha256,
+      "verify:source-workspace", { allowIgnoredRuntimeDirectories: true });
+  }
+  const originalSourceScope = options.sourceOfficeMetadataSupplement ? candidateCheck : sourceCheck;
   const artifactPolicy = {
     ignored_directories: (runtimePolicy?.ignored_directories || []).map((name) => ({ name })),
     forbidden_directories: (runtimePolicy?.forbidden_directories || []).map((name) => ({ name })),
@@ -837,8 +858,8 @@ export async function verifyGeneralCollection(options) {
   if (JSON.stringify(candidate.entries) !== JSON.stringify(candidateEntries)
       || candidate.candidate.file_count !== candidateCheck.file_count
       || candidate.candidate.total_bytes !== candidateCheck.total_bytes
-      || candidate.source_workspace.file_count !== sourceCheck.file_count
-      || candidate.source_workspace.total_bytes !== sourceCheck.total_bytes
+      || candidate.source_workspace.file_count !== originalSourceScope.file_count
+      || candidate.source_workspace.total_bytes !== originalSourceScope.total_bytes
       || candidate.source_workspace.sha256 !== candidate.expected_sha256
       || candidate.source_workspace.snapshot_before_sha256 !== candidate.expected_sha256
       || candidate.source_workspace.snapshot_after_stability_sha256 !== candidate.expected_sha256

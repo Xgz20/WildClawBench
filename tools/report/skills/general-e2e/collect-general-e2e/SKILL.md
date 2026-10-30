@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.7` 提供显式的[源目录 Office 属性变体审计](references/source-office-metadata-variance.md)。冻结候选和原回执仍须逐字节通过原 SHA；仅在实时源目录与冻结副本具有完全相同的文件范围、差异全部为指定 CWM 自定义属性及其必要关系声明时，可用新补充包同时保留原/现字节并重新核验。此协议不改评分输入，不删除属性，不改旧摘要；业务内容、其他元数据、非 Office 文件及任何冻结候选漂移仍阻断。未显式指定补充包时继续严格核验原实时源目录摘要。
+
 `0.11.6` 锁定旧版 request/trace 对账的完整兼容性：原始 traceId 绑定通过的历史快照逐字保留原资源结果，即使带有旧版次级 conversationRequestId。只有旧绑定不适用且新版显式 request.id 绑定全部通过时使用 v2 Profile；混合请求和未知 ID 仍拒绝。
 
 `0.11.5` 同步 workbuddy-jsonl-metrics 0.2.2。新版快照显式提供 conversationRequestId 时，要求它等于已绑定的 request.id，再分别核对 JSONL 的 request ID 与可用的 distributed trace ID；不把不同类型 ID 混用。旧快照继续原 traceId 契约，所有原生会话、Workspace、唯一 Prompt、工具全集、终稿及 usage 对账不变。新 Profile 留在资源 warnings 审计中，不改历史回执或补零。
