@@ -2,6 +2,15 @@ import { createHash } from 'node:crypto';
 import { isAbsolute, resolve } from 'node:path';
 import { lstat, realpath } from 'node:fs/promises';
 import { querySnapshot } from './index.mjs';
+import { runCapture } from '../desktop-runtime/process.mjs';
+async function queryEngineSnapshot(database, query) {
+  const script = `import json,sqlite3,sys
+c=sqlite3.connect(sys.argv[1],uri=True);c.row_factory=sqlite3.Row
+print(json.dumps([dict(r) for r in c.execute(sys.argv[2])],ensure_ascii=False,separators=(',',':')))
+`;
+  const r=await runCapture('/usr/bin/python3',['-c',script,database,query],{capture:true});
+  return JSON.parse(r.stdout);
+}
 export const QWEN_ENGINE_PROFILE = 'qwenwork-opencode-sqlite-v1';
 const sha = x => createHash('sha256').update(x).digest('hex');
 const sqlId = x => { if (!/^[A-Za-z0-9._:-]+$/u.test(x || '')) throw Error('QWEN_ENGINE_ID_INVALID'); return `'${x}'`; };
@@ -64,7 +73,7 @@ export function verifyQwenEngineEvidence(evidence, {session, prompt, terminal = 
 export async function captureQwenEngineEvidence({sessionDatabase, session, prompt, terminal=false}) {
   const sid=sqlId(session.session_id), chat=sqlId(session.conversation_id), sub=sqlId(session.sub_chat_id);
   const hostQuery=`SELECT json_object('record',(SELECT json_object('session_id',s.session_id,'conversation_id',c.id,'sub_chat_id',s.id,'local_project_id',c.local_project_id,'cwd',json_extract(p.root_paths,'$[0]'),'stream_id',s.stream_id,'native_status',CASE WHEN s.stream_id IS NOT NULL THEN 'running' ELSE coalesce(json_extract(c.ext,'$.taskStatus'),'ready') END,'sub_chat_ext',s.ext) FROM sub_chats s JOIN chats c ON c.id=s.chat_id JOIN local_projects p ON p.id=c.local_project_id WHERE s.id=${sub} AND c.id=${chat} AND s.session_id=${sid} AND c.deleted_at IS NULL),'inputs',(SELECT json_group_array(json_object('id',id,'message_id',message_id,'chat_id',chat_id,'sub_chat_id',sub_chat_id,'state',state,'content',content,'created_at',created_at,'accepted_at',accepted_at)) FROM agent_turn_inputs WHERE chat_id=${chat} AND sub_chat_id=${sub}),'messages',(SELECT json_group_array(json_object('message_id',message_id,'role',role,'parts',parts,'metadata',metadata,'created_at',created_at,'updated_at',updated_at)) FROM messages WHERE chat_id=${chat} AND sub_chat_id=${sub})) AS payload;`;
-  const h=await querySnapshot(sessionDatabase,hostQuery,{consistentOnlineBackup:true,captureEvidence:true});
+  const h=await querySnapshot(sessionDatabase,hostQuery,{consistentOnlineBackup:true,captureEvidence:true,query:queryEngineSnapshot});
   require(h.rows.length===1,'HOST_ROW_COUNT_INVALID');const host=json(h.rows[0].payload);require(host.record,'HOST_RECORD_MISSING');
   const binding=json(host.record.sub_chat_ext).engineSessionBindingV1;
   require(binding?.engineId==='opencode' && isAbsolute(binding.storageNamespace||''),'ENGINE_ROUTE_UNSUPPORTED');
@@ -74,7 +83,7 @@ export async function captureQwenEngineEvidence({sessionDatabase, session, promp
   const nativeId=sqlId(binding.nativeSessionId);
   // Only the bound session subtree is exported. Credential/account tables are never selected.
   const query=`WITH RECURSIVE scope(id) AS (SELECT id FROM session WHERE id=${nativeId} UNION ALL SELECT s.id FROM session s JOIN scope x ON s.parent_id=x.id) SELECT json_object('sessions',(SELECT json_group_array(json_object('id',id,'parent_id',parent_id,'directory',directory,'version',version,'model',model,'time_created',time_created,'time_updated',time_updated)) FROM session WHERE id IN scope),'messages',(SELECT json_group_array(json_object('id',id,'session_id',session_id,'time_created',time_created,'time_updated',time_updated,'data',data)) FROM (SELECT * FROM message WHERE session_id IN scope ORDER BY time_created,id)),'parts',(SELECT json_group_array(json_object('id',id,'message_id',message_id,'session_id',session_id,'time_created',time_created,'time_updated',time_updated,'data',data)) FROM (SELECT * FROM part WHERE session_id IN scope ORDER BY time_created,id))) AS payload;`;
-  const n=await querySnapshot(database,query,{consistentOnlineBackup:true,captureEvidence:true});
+  const n=await querySnapshot(database,query,{consistentOnlineBackup:true,captureEvidence:true,query:queryEngineSnapshot});
   require(n.rows.length===1,'NATIVE_ROW_COUNT_INVALID');const native=json(n.rows[0].payload);
   const evidence={profile:QWEN_ENGINE_PROFILE,host:{...host,snapshot:h.snapshot},native:{...native,snapshot:n.snapshot}};
   verifyQwenEngineEvidence(evidence,{session,prompt,terminal});return evidence;
