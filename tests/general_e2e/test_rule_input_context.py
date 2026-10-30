@@ -168,6 +168,55 @@ class RuleInputContextTests(unittest.TestCase):
                     with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "NATIVE_PUBLIC_CONTEXT_BINDING_INVALID"):
                         RUNTIME._native_context_rule_input(self.root, self.manifest, self.contract, self.transcript)
 
+    def formal_completion_fixture(self):
+        unit=self.root/"completion-source-unit";base=unit/"evidence/tasks/fixture/execution"
+        base.mkdir(parents=True);(unit/"receipts").mkdir()
+        identity={"task_id":"fixture","attempt_id":"execution"}
+        final_path=base/"final-response.md";final_path.write_text("answer",encoding="utf-8")
+        final_relative=final_path.relative_to(unit).as_posix()
+        execution={"identity":identity,"phase":"COMPLETED","session":{"verified":True,"session_id":"session","turn_id":"turn","cwd":"/bound/workspace"},
+            "evidence":{"final_response_path":final_relative}}
+        record=base/"execution-record.json";record.write_text(json.dumps(execution),encoding="utf-8")
+        evidence=base/"evidence-manifest.json";evidence.write_text(json.dumps({"identity":identity,"artifacts":[{
+            "path":final_relative,"sha256":RUNTIME._sha256_file(final_path),"size":len(final_path.read_bytes())}]}),encoding="utf-8")
+        artifacts=[{"path":p.relative_to(unit).as_posix(),"sha256":RUNTIME._sha256_file(p),"size":len(p.read_bytes())} for p in [record,evidence]]
+        (unit/"receipts/collect-evidence-receipt.json").write_text(json.dumps({"stage":"collect-evidence","tasks":[identity],"artifacts":artifacts}),encoding="utf-8")
+        (self.root/"private/execution-record.json").write_bytes(record.read_bytes())
+        descriptor=RUNTIME._freeze_formal_completion(self.root,unit,record,execution)
+        self.manifest["runtime"]["formal_completion_receipt"]=descriptor
+        return descriptor
+
+    def test_formal_completion_bridges_missing_terminal_flags_without_changing_transcript(self):
+        self.formal_completion_fixture();before=(self.root/"private/transcript.jsonl").read_bytes()
+        canonical=RUNTIME._canonical_rule_view(self.transcript)
+        completed,proof=RUNTIME._formal_completion_rule_input(self.root,self.manifest,canonical)
+        self.assertEqual(completed[-1]["type"],"task_complete")
+        self.assertEqual(completed[-1]["last_agent_message"],"answer")
+        self.assertFalse(proof["candidate_content_synthesized"])
+        view,context=RUNTIME._native_context_rule_input(self.root,self.manifest,self.contract,completed)
+        (self.root/"rule-input-completion.json").write_text(json.dumps(proof))
+        (self.root/"rule-input-context.json").write_text(json.dumps(context))
+        (self.root/"worker/request.json").write_text(json.dumps({"transcript":view}))
+        RUNTIME._verify_rule_input_context(self.root,self.manifest)
+        self.assertEqual((self.root/"private/transcript.jsonl").read_bytes(),before)
+        view[-1]["last_agent_message"]="fabricated answer"
+        (self.root/"worker/request.json").write_text(json.dumps({"transcript":view}))
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,"RULE_INPUT_CONTEXT_DRIFT"):
+            RUNTIME._verify_rule_input_context(self.root,self.manifest)
+
+    def test_completion_receipt_must_match_last_reply_and_all_original_hashes(self):
+        self.formal_completion_fixture()
+        other=json.loads(json.dumps(self.transcript));other[-1]["content"]="trailing partial plan"
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,"FORMAL_COMPLETION_BINDING_INVALID"):
+            RUNTIME._formal_completion_rule_input(self.root,self.manifest,other)
+        final=self.root/"private/completion/final-response.md";final.write_text("altered")
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,"FORMAL_COMPLETION_BINDING_INVALID"):
+            RUNTIME._formal_completion_rule_input(self.root,self.manifest,self.transcript)
+
+    def test_legacy_attempt_without_a_bound_completion_receipt_does_not_guess_last_reply(self):
+        view,proof=RUNTIME._formal_completion_rule_input(self.root,self.manifest,self.transcript)
+        self.assertEqual(view,self.transcript);self.assertIsNone(proof)
+
 
 if __name__ == "__main__":
     unittest.main()

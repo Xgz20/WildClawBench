@@ -936,6 +936,80 @@ def _guard_candidate_office_copies(root: Path, entries: Sequence[Mapping[str, An
             "user_immutable": sys.platform == "darwin", "files": guarded, "business_bytes_changed": False}
 
 
+FORMAL_COMPLETION_PROFILE = "formal-collection-completion/v1"
+
+def _completion_payload(execution: Mapping[str, Any], receipt: Mapping[str, Any], files: Mapping[str, bytes],
+                        source_paths: Mapping[str, str], execution_bytes: bytes) -> str:
+    identity = execution.get("identity", {})
+    if execution.get("phase") != "COMPLETED" or execution.get("session", {}).get("verified") is not True:
+        raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "verified native terminal")
+    collected = json.loads(files["collect_receipt"])
+    evidence = json.loads(files["evidence_manifest"])
+    selected = [r for r in collected.get("tasks", []) if r.get("task_id") == identity.get("task_id") and r.get("attempt_id") == identity.get("attempt_id")]
+    if collected.get("stage") != "collect-evidence" or len(selected) != 1 or evidence.get("identity") != identity:
+        raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "collection identity")
+    for key, data in (("execution_record", execution_bytes), ("evidence_manifest", files["evidence_manifest"])):
+        refs = [r for r in collected.get("artifacts", []) if r.get("path") == source_paths.get(key)]
+        if len(refs) != 1 or refs[0].get("sha256") != _sha256_bytes(data) or refs[0].get("size") != len(data):
+            raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", key)
+    final = files["final_response"]
+    refs = [r for r in evidence.get("artifacts", []) if r.get("path") == source_paths.get("final_response")]
+    if (len(refs) != 1 or refs[0].get("sha256") != _sha256_bytes(final) or refs[0].get("size") != len(final)
+            or execution.get("evidence", {}).get("final_response_path") != source_paths.get("final_response")
+            or receipt.get("identity") != identity or receipt.get("execution_record_sha256") != _sha256_bytes(execution_bytes)):
+        raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "final response")
+    return final.decode("utf-8")
+
+def _freeze_formal_completion(root: Path, unit: Path, record_path: Path, execution: Mapping[str, Any]) -> dict[str, Any] | None:
+    relative = execution.get("evidence", {}).get("final_response_path")
+    evidence_path = record_path.parent / "evidence-manifest.json"
+    collected_path = unit / "receipts/collect-evidence-receipt.json"
+    if not relative or not evidence_path.is_file() or not collected_path.is_file():
+        return None
+    final_path = _resolve_within(unit, relative, "formal final response")
+    if any(p.is_symlink() for p in (record_path, evidence_path, collected_path, final_path)):
+        raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "symlink")
+    data = {"collect_receipt": collected_path.read_bytes(), "evidence_manifest": evidence_path.read_bytes(), "final_response": final_path.read_bytes()}
+    source_paths = {"execution_record": record_path.relative_to(unit).as_posix(), "evidence_manifest": evidence_path.relative_to(unit).as_posix(), "final_response": str(relative)}
+    receipt = {"profile": FORMAL_COMPLETION_PROFILE, "identity": execution["identity"], "source_paths": source_paths,
+        "execution_record_sha256": _sha256_file(record_path), "files": {}}
+    _completion_payload(execution, receipt, data, source_paths, record_path.read_bytes())
+    directory = root / "private/completion"; directory.mkdir(parents=True)
+    for key, content in data.items():
+        filename = {"collect_receipt":"collect-receipt.json", "evidence_manifest":"evidence-manifest.json", "final_response":"final-response.md"}[key]
+        target = directory / filename; target.write_bytes(content)
+        receipt["files"][key] = {"path": target.relative_to(root).as_posix(), "sha256": _sha256_bytes(content), "size": len(content)}
+    target = directory / "completion-receipt.json"; _write_new_json(target, receipt)
+    return {"profile": FORMAL_COMPLETION_PROFILE, "path": target.relative_to(root).as_posix(), "sha256": _sha256_file(target)}
+
+def _formal_completion_rule_input(root: Path, manifest: Mapping[str, Any], transcript: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], dict[str, Any] | None]:
+    descriptor = manifest.get("runtime", {}).get("formal_completion_receipt")
+    if descriptor is None:
+        return transcript, None
+    path = _resolve_within(root, descriptor.get("path"), "completion receipt")
+    if descriptor.get("profile") != FORMAL_COMPLETION_PROFILE or path.is_symlink() or _sha256_file(path) != descriptor.get("sha256"):
+        raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "receipt digest")
+    receipt = _read_json(path); data = {}
+    for key in ("collect_receipt", "evidence_manifest", "final_response"):
+        row = receipt.get("files", {}).get(key, {}); file = _resolve_within(root, row.get("path"), "completion evidence")
+        content = file.read_bytes()
+        if file.is_symlink() or _sha256_bytes(content) != row.get("sha256") or len(content) != row.get("size"):
+            raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", key)
+        data[key] = content
+    execution_path = root / manifest["paths"]["execution_record"]
+    body = _completion_payload(_read_json(execution_path), receipt, data, receipt["source_paths"], execution_path.read_bytes())
+    messages = [r for r in transcript if r.get("type") == "assistant_message" and r.get("role") == "assistant" and _instruction_text(r)]
+    if (body and (not messages or _instruction_text(messages[-1]) != body)) or (not body and messages):
+        raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "canonical final reply differs or is ambiguous")
+    proof = {"schema_version":"wildclawbench.general-e2e-rule-input-completion/v1", "identity":manifest["identity"],
+        "formal_completion_receipt_sha256":descriptor["sha256"], "canonical_transcript_sha256":manifest["digests"]["transcript_sha256"],
+        "final_response_sha256":_sha256_bytes(data["final_response"]), "last_assistant_event_id":messages[-1].get("event_id") if messages else None,
+        "candidate_content_synthesized":False}
+    event = {"type":"task_complete", "last_agent_message":body, "identity":manifest["identity"],
+        "source":{"adapter":FORMAL_COMPLETION_PROFILE,"receipt_path":descriptor["path"],"receipt_sha256":descriptor["sha256"]}}
+    return [*transcript, event], proof
+
+
 def _read_office_gt_member(root: Path, row: Mapping[str, Any], entry: Mapping[str, Any]) -> bytes:
     logical = str(_safe_relative(entry["path"], "GT logical path"))
     if (row.get("logical_path") != logical or row.get("stored_path") != _office_gt_container_name(logical)
@@ -1606,6 +1680,7 @@ def prepare_attempt(
             transcript_sha = _sha256_file(transcript_target)
 
         shutil.copyfile(execution_record_path, private_root / "execution-record.json")
+        formal_completion = _freeze_formal_completion(staging, unit_root, execution_record_path, execution)
         trace_bundle = trace_handoff.freeze(unit_root, execution, staging,
             required=require_trace_bundle and evidence_admission != failure_evidence.ADMISSION)
         if reviewed_files is not None:
@@ -1688,6 +1763,7 @@ def prepare_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
+                **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
                 **({"candidate_office_input_guard": runtime_office_guard} if runtime_office_guard else {}),
                 "docker_required": False,
                 "lock": runtime_lock,
@@ -2728,11 +2804,15 @@ def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
         return
     request_path = root / "worker/request.json"
     proof_path = root / "rule-input-context.json"
-    if not request_path.is_file() and not proof_path.is_file():
-        return
+    completion_path = root / "rule-input-completion.json"
     contract = _read_json(root / manifest["paths"]["contract"])
     transcript = _canonical_rule_view(_read_transcript(root / manifest["paths"]["transcript"])) if manifest["paths"].get("transcript") else []
+    transcript, completion = _formal_completion_rule_input(root, manifest, transcript)
+    if not request_path.is_file() and not proof_path.is_file() and not completion_path.is_file():
+        return
     expected, proof = _native_context_rule_input(root, manifest, contract, transcript)
+    if (completion is None and completion_path.exists()) or (completion is not None and _read_json(completion_path) != completion):
+        raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "formal completion proof")
     if (proof is None and proof_path.exists()) or (proof is not None and _read_json(proof_path) != proof):
         raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "native delivery proof")
     if request_path.is_file() and _read_json(request_path).get("transcript") != expected:
@@ -2742,6 +2822,9 @@ def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
         expected_ref = {"path": "rule-input-context.json", "sha256": _sha256_file(proof_path)} if proof else None
         if _read_json(audit_path).get("rule_input_context") != expected_ref:
             raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "audit binding")
+        expected_completion = {"path":"rule-input-completion.json", "sha256":_sha256_file(completion_path)} if completion else None
+        if _read_json(audit_path).get("rule_input_completion") != expected_completion:
+            raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "completion audit binding")
 
 
 def run_rules_attempt(
@@ -2808,9 +2891,13 @@ def run_rules_attempt(
         raise ScoringRuntimeError("TRANSCRIPT_EVENT_COUNT_MISMATCH")
     started_at = _now()
     context_receipt = None
+    completion_receipt = None
     try:
         if _extended_evaluator_inputs(manifest):
-            transcript, context_receipt = _native_context_rule_input(attempt_root, manifest, contract, _canonical_rule_view(transcript))
+            transcript, completion_receipt = _formal_completion_rule_input(attempt_root, manifest, _canonical_rule_view(transcript))
+            if completion_receipt:
+                _write_new_json(attempt_root / "rule-input-completion.json", completion_receipt)
+            transcript, context_receipt = _native_context_rule_input(attempt_root, manifest, contract, transcript)
             if context_receipt:
                 _write_new_json(attempt_root / "rule-input-context.json", context_receipt)
         component = run_rules(
@@ -2870,6 +2957,8 @@ def run_rules_attempt(
         _write_new_json(attempt_root / "rule-component.json", component)
     if context_receipt:
         audit["rule_input_context"] = {"path": "rule-input-context.json", "sha256": _sha256_file(attempt_root / "rule-input-context.json")}
+    if completion_receipt:
+        audit["rule_input_completion"] = {"path":"rule-input-completion.json", "sha256":_sha256_file(attempt_root / "rule-input-completion.json")}
     if correction is not None:
         audit["source_correction"] = {
             "path": "rule-source-correction.json",
@@ -3161,6 +3250,15 @@ def _semantic_reference_inputs(
     context_receipt = attempt_root / "rule-input-context.json"
     if context_receipt.is_file():
         add_file("rule_audit", context_receipt)
+    completion_proof = attempt_root / "rule-input-completion.json"
+    if completion_proof.is_file():
+        add_file("rule_audit", completion_proof)
+    completion = manifest.get("runtime", {}).get("formal_completion_receipt")
+    if completion:
+        completion_path = attempt_root / completion["path"]
+        add_file("rule_audit", completion_path)
+        for row in _read_json(completion_path)["files"].values():
+            add_file("rule_audit", attempt_root / row["path"])
     if manifest.get("trace_bundle"):
         bundle = _read_json(attempt_root / manifest["trace_bundle"]["path"])
         add_file("trace_index", attempt_root / "trace" / bundle["trace_index"])
@@ -5647,6 +5745,9 @@ def prepare_rescore_attempt(
                 ),
                 private_root / target_name,
             )
+        formal_completion = source_manifest.get("runtime", {}).get("formal_completion_receipt")
+        if formal_completion:
+            shutil.copytree(source_root / "private/completion", private_root / "completion", symlinks=False)
         runtime_lock, runtime_lock_sha = _load_runtime_lock(
             private_root / "runtime-lock.json"
         )
@@ -5744,6 +5845,7 @@ def prepare_rescore_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
+                **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
                 **({"candidate_office_input_guard": runtime_office_guard} if runtime_office_guard else {}),
                 "docker_required": False,
                 "lock": runtime_lock,
