@@ -72,8 +72,18 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   const wrapped = [ `<user_query>${prompt}</user_query>`, `<user_query>\n${prompt}\n</user_query>` ].some(s => nativePrompt.endsWith(s))
     && nativePrompt.split("<user_query>").length === 2;
   if (nativePrompt !== prompt && !wrapped) fail("PROMPT_MISMATCH");
-  const traceId = snapshot.request.traceId || snapshot.request.conversationRequestId;
-  if (!traceId || events.filter(x => x.providerData?.messageId).some(x => x.providerData.conversationRequestId !== traceId)) fail("REQUEST_SCOPE_MISMATCH");
+  const conversationRequestId = snapshot.request.conversationRequestId;
+  const separateRequestIdentity = conversationRequestId != null;
+  if (separateRequestIdentity && conversationRequestId !== snapshot.request.id) fail("RUNTIME_REQUEST_SCOPE_MISMATCH");
+  // New clients expose a distinct distributed trace ID. Bind native request
+  // events to the explicit conversation request ID, never to an arbitrary ID
+  // found in the file. Legacy snapshots without that field retain their exact
+  // original trace-ID binding and derived metrics.
+  const requestScope = separateRequestIdentity ? conversationRequestId : snapshot.request.traceId;
+  const providerEvents = events.filter(x => x.providerData?.messageId);
+  if (!requestScope || providerEvents.some(x => x.providerData.conversationRequestId !== requestScope
+      || (separateRequestIdentity && x.providerData.traceId != null
+        && x.providerData.traceId !== snapshot.request.traceId))) fail("REQUEST_SCOPE_MISMATCH");
   const runtimeCalls = new Set((snapshot.request.assistantMessage?.content || [])
     .filter(x => x.type === "tool" || x.sessionUpdate === "tool_call_update").map(x => x.toolCallId));
   const nativeCalls = new Set(events.filter(x => x.type === "function_call").map(x => x.callId));
@@ -95,6 +105,9 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
     }
   }
   const parsed = parser(rows);
+  if (separateRequestIdentity) parsed.collection.warnings.push(
+    "WORKBUDDY_REQUEST_SCOPE_BINDING_V2: explicit conversationRequestId equals runtime request.id; native request IDs and any distributed trace IDs verified separately",
+  );
   const usages = new Map(events.filter(x => x.providerData?.usage).map(x => [x.providerData.messageId, x.providerData.usage]));
   const read = (u, field) => ({ input_tokens: u.inputTokens, output_tokens: u.outputTokens, total_tokens: u.totalTokens,
     cache_read_input_tokens: u.inputTokensDetails?.reduce((sum, x) => sum + x.cached_tokens, 0),

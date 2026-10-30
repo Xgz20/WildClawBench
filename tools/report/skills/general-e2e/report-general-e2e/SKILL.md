@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.13` 随包分发 workbuddy-jsonl-metrics 0.2.2，复核新版客户端分离的 conversation request ID 和 distributed trace ID；旧冻结快照仍按原协议复算，报告分数、分母和资源口径保持不变。
+
 `0.8.11` 保留 `checkpoint_capability_map7.yaml` 的全部旧七维映射，新 116 题使用独立 `checkpoint_capability_map5.yaml`。按实际任务选择七维或五维列；同时涉及两套映射时分表展示。兼容视图均按任务内映射检查点均值、再对任务均值取平均，披露有效/涉及样本数；不把五维折算为七维，不把缺失证据补零。此兼容视图不代替题目内另外定义的能力预算或父检查点诊断公式。
 
 

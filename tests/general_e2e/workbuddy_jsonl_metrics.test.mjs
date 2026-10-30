@@ -64,6 +64,28 @@ test("WorkBuddy JSONL counts model responses once across multiple tools and mirr
   assert.equal(withoutModelResponseCount(f.base).metrics.requests.request_count.value, null);
 });
 
+test("explicit conversation request IDs remain distinct from distributed trace IDs", () => {
+  const f = fixture();
+  f.snapshot.request.conversationRequestId = f.snapshot.request.id;
+  for (const row of f.rows.filter(x => x.providerData?.messageId)) {
+    row.providerData.conversationRequestId = f.snapshot.request.id;
+    row.providerData.traceId = f.snapshot.request.traceId;
+  }
+  const parsed = parseBoundJsonl(f.bytes(), f.options);
+  assert.equal(parsed.usage.total_tokens, 350);
+  assert.equal(parsed.usage.request_count, 2);
+  assert.equal(parsed.tools.call_count, 2);
+  assert.ok(parsed.collection.warnings.some(x => x.startsWith("WORKBUDDY_REQUEST_SCOPE_BINDING_V2")));
+  f.rows[1].providerData.conversationRequestId = f.snapshot.request.traceId;
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /REQUEST_SCOPE_MISMATCH/u);
+  f.rows[1].providerData.conversationRequestId = f.snapshot.request.id;
+  f.rows[1].providerData.traceId = "unrelated-distributed-trace";
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /REQUEST_SCOPE_MISMATCH/u);
+  f.rows[1].providerData.traceId = f.snapshot.request.traceId;
+  f.snapshot.request.conversationRequestId = "unrelated-request";
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /RUNTIME_REQUEST_SCOPE_MISMATCH/u);
+});
+
 test("WorkBuddy fresh collector archives JSONL and passes the formal finalizer with corrected counters", async () => {
   const root = await mkdtemp(join(tmpdir(), "wb-jsonl-collect-"));
   try {
