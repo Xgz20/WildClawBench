@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { basename, join, isAbsolute } from "node:path";
 import { createHash } from "node:crypto";
 import { runCapture } from "../desktop-runtime/process.mjs";
-export const COMPONENT_VERSION = "1.0.0";
+export const COMPONENT_VERSION = "1.1.0";
 const SNAPSHOT_RETRY_LIMIT = 8;
 const SNAPSHOT_RETRY_BACKOFF_MS = 25;
 const sha = value => createHash("sha256").update(value).digest("hex");
@@ -13,6 +13,7 @@ SELECT
   sub_chats.id AS sub_chat_id,
   sub_chats.name AS sub_chat_name,
   sub_chats.session_id AS session_id,
+  sub_chats.ext AS sub_chat_ext,
   chats.local_project_id AS local_project_id,
   COALESCE(
     json_extract(local_projects.root_paths, '$[0]'),

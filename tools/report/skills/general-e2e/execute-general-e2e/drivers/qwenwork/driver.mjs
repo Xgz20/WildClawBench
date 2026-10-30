@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { captureQwenEngineEvidence } from '../../vendor/e2e-shared/qwenwork-native-state/engine-sqlite.mjs';
 
 import { createHash, randomUUID } from "node:crypto";
 import { lstat, open, readFile, readdir, realpath, writeFile, mkdir, rename, rm } from "node:fs/promises";
@@ -50,7 +51,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.11";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.12";
 const PROVISIONAL_SESSION_SETTLE_MS = 60_000;
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
@@ -1110,7 +1111,19 @@ async function findFiles(root, name, matches = []) {
   return matches;
 }
 
-export async function verifyQwenSessionPromptEvidence({ traceRoot, session, prompt }) {
+export async function verifyQwenSessionPromptEvidence({ traceRoot, session, prompt, sessionDatabase, evidenceRoot }) {
+  const ext = typeof session.sub_chat_ext === 'string' ? JSON.parse(session.sub_chat_ext) : session.sub_chat_ext;
+  if (ext?.engineSessionBindingV1?.engineId === 'opencode') {
+    if (!sessionDatabase || !evidenceRoot) throw Error('QWENWORK_ENGINE_PROFILE_CONTEXT_REQUIRED');
+    const evidence = await captureQwenEngineEvidence({sessionDatabase,session,prompt});
+    const bytes = Buffer.from(JSON.stringify(evidence,null,2)+'\n');
+    const directory=join(evidenceRoot,'engine-prompt-evidence');await mkdir(directory,{recursive:true});
+    const path=join(directory,sha256(bytes)+'.json');
+    await writeFile(path,bytes,{flag:'wx'}).catch(async error=>{if(error.code!=='EEXIST')throw error;if(sha256(await readFile(path))!==sha256(bytes))throw Error('QWENWORK_ENGINE_EVIDENCE_COLLISION');});
+    return {verified:true,profile:evidence.profile,prompt_sha256:prompt.sha256,match_count:1,
+      transcript_path:path,transcript_sha256:sha256(bytes),transcript_size:bytes.length,
+      native_engine_session_id:evidence.native.sessions.find(x=>x.parent_id===null).id};
+  }
   if (!/^[A-Za-z0-9._:-]+$/u.test(String(session?.session_id || ""))) {
     throw new Error("QWENWORK_SESSION_ID_UNSAFE_FOR_TRACE_LOOKUP");
   }
@@ -1229,6 +1242,7 @@ export async function createLiveDependencies(config) {
       querySessions: () => queryQwenSessionRows(config.client.session_db, snapshotOptions),
       verifySessionPrompt: (session, prompt) => verifyQwenSessionPromptEvidence({
         traceRoot: config.client.trace_root,
+        sessionDatabase:config.client.session_db,evidenceRoot:config.evidence_root,
         session,
         prompt,
       }),
