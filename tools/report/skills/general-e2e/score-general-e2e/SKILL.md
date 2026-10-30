@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.21` 为跨月销售规则提供精确源码绑定的公开 Office 输入兼容：评分包内携带原公开输入字节与 SHA，仅当全部业务 OPC 成员逐字节相同、差异限于 CWM 自定义属性及其登记时接受。原候选、旧 SHA、题面、GT 和权重不改写；变体审计写入评分证据。业务、公式、样式、其他属性或登记变化继续触发原 ReviewRequired。
+
 `0.10.20` 对精确绑定原源码 SHA 的四象限 PPT 和整改溯源评分器启用完整分页取证：每文件 4 MiB、合计 16 MiB 的资源上限替代过小的内置字符门槛。所有正文完整落盘，沿用 query-evidence 分页接口，禁止截断后判分。规则修正回执保留新旧源码 SHA、资源策略及原冻结契约；只对新评分 attempt 生效，旧题面、权重、检查点、分值锚点和评分记录不改写。
 
 对长行 JSON 使用 `query-evidence --mode file --evidence-id ID --file-char-offset 0 --max-chars 16384`；按返回的 `next_file_char_offset` 继续，直到 `has_more=false`。此 offset 按 Unicode 字符计数，保留中文、emoji 和原换行；不得与行级 `--offset` 混用。每页 query_id 都保留在复核引用中，全部契约要求的取证正文读取完整后才能记录语义判定。原有行分页继续兼容。

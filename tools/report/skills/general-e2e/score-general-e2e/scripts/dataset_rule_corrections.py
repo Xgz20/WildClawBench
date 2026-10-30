@@ -2,6 +2,10 @@
 from __future__ import annotations
 
 import hashlib
+import json
+from pathlib import Path
+
+import office_input_compat
 
 
 EVIDENCE_PAGING_PROFILE = "complete-paged-grader-evidence/v1"
@@ -20,6 +24,8 @@ _PAGED_RULES = {
 
 
 def effective_source(task_id: str, source: str):
+    if task_id == '03_Data_Analysis_task_005_cross_month_returns_regional_sales':
+        return _office_public_inputs(source)
     entry = _PAGED_RULES.get(task_id)
     digest = hashlib.sha256(source.encode('utf-8')).hexdigest()
     if entry is None or digest != entry[0]:
@@ -37,4 +43,33 @@ def effective_source(task_id: str, source: str):
         "reason": "评分取证完整落盘并通过既有分页接口查询；调整传输资源上限，不截断证据，不改变题面、检查点、权重或分值锚点。",
         "evidence_policy": {"truncation_allowed": False, "page_query_required": True,
                             "max_file_bytes": 4*1024*1024, "max_total_bytes": 16*1024*1024},
+    }
+
+
+def _office_public_inputs(source):
+    original_sha = 'fb529c42c7a68e5f238e9c80ec71118da3afa875b7deaf5804a943b1403d4904'
+    if hashlib.sha256(source.encode('utf-8')).hexdigest() != original_sha:
+        return source, None
+    baseline_file = Path(__file__).resolve().parents[1] / 'data/public-input-baselines/cross-month-sales-v1.json'
+    baseline_bytes = baseline_file.read_bytes()
+    baseline_sha = '6608c454e51ff2d508907fb1aa94d54ea1a7c9b032485e810c0db7f76a6911ad'
+    if hashlib.sha256(baseline_bytes).hexdigest() != baseline_sha:
+        raise ValueError('PUBLIC_OFFICE_BASELINE_SOURCE_DRIFT')
+    payload = json.loads(baseline_bytes)
+    old = "        if hashlib.sha256(p.read_bytes()).hexdigest()!=item['sha256']:"
+    new = old[:-1] + " and not _general_e2e_public_input_matches(p,item['sha256'],base):"
+    if source.count(old) != 1:
+        raise ValueError('PUBLIC_OFFICE_INPUT_GUARD_MISMATCH')
+    helper = Path(office_input_compat.__file__).read_text(encoding='utf-8')
+    baselines = {row['sha256']: {'path': row['path'], 'base64': row['base64']} for row in payload['files']}
+    effective = helper + '\n_GENERAL_E2E_PUBLIC_INPUT_BASELINES = ' + repr(baselines) + '\n\n' + source.replace(old, new)
+    return effective, {
+        'schema_version': 'wildclawbench.general-e2e-rule-source-correction/v1',
+        'correction_id': 'canonical-public-office-cwm-only/v1',
+        'task_id': payload['task_id'], 'original_source_sha256': original_sha,
+        'effective_source_sha256': hashlib.sha256(effective.encode('utf-8')).hexdigest(),
+        'baseline_catalog_sha256': baseline_sha,
+        'canonical_public_input_sha256s': sorted(baselines),
+        'reason': '仅接受与原公开输入逐个业务OPC成员字节一致的CWM自定义属性变体，原始文件及SHA保留；其他数据、样式、公式、元数据变化继续阻断。',
+        'candidate_rewritten': False,
     }
