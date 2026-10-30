@@ -86,6 +86,15 @@ test("explicit conversation request IDs remain distinct from distributed trace I
   assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /RUNTIME_REQUEST_SCOPE_MISMATCH/u);
 });
 
+test("legacy trace-ID bindings retain identical metrics even when snapshots carry another conversationRequestId", () => {
+  const f = fixture();
+  const original = parseBoundJsonl(f.bytes(), f.options);
+  f.snapshot.request.conversationRequestId = "legacy-secondary-runtime-id";
+  const retained = parseBoundJsonl(f.bytes(), f.options);
+  assert.deepEqual(retained, original);
+  assert.equal(retained.collection.warnings.some(x => x.startsWith("WORKBUDDY_REQUEST_SCOPE_BINDING_V2")), false);
+});
+
 test("WorkBuddy fresh collector archives JSONL and passes the formal finalizer with corrected counters", async () => {
   const root = await mkdtemp(join(tmpdir(), "wb-jsonl-collect-"));
   try {

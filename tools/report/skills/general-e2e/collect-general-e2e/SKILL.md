@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.6` 锁定旧版 request/trace 对账的完整兼容性：原始 traceId 绑定通过的历史快照逐字保留原资源结果，即使带有旧版次级 conversationRequestId。只有旧绑定不适用且新版显式 request.id 绑定全部通过时使用 v2 Profile；混合请求和未知 ID 仍拒绝。
+
 `0.11.5` 同步 workbuddy-jsonl-metrics 0.2.2。新版快照显式提供 conversationRequestId 时，要求它等于已绑定的 request.id，再分别核对 JSONL 的 request ID 与可用的 distributed trace ID；不把不同类型 ID 混用。旧快照继续原 traceId 契约，所有原生会话、Workspace、唯一 Prompt、工具全集、终稿及 usage 对账不变。新 Profile 留在资源 warnings 审计中，不改历史回执或补零。
 
 `0.10.0` 采集共用流程计时 Profile：Prompt 发送至本机确认终态，不混减客户端与服务端时钟。原生任务耗时单列；AstronStudio profile 2 继续使用 rollout 的终态 `payload.duration_ms`，缺失保留 unavailable。

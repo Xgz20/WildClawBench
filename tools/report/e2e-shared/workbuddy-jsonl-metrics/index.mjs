@@ -73,17 +73,21 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
     && nativePrompt.split("<user_query>").length === 2;
   if (nativePrompt !== prompt && !wrapped) fail("PROMPT_MISMATCH");
   const conversationRequestId = snapshot.request.conversationRequestId;
-  const separateRequestIdentity = conversationRequestId != null;
-  if (separateRequestIdentity && conversationRequestId !== snapshot.request.id) fail("RUNTIME_REQUEST_SCOPE_MISMATCH");
   // New clients expose a distinct distributed trace ID. Bind native request
   // events to the explicit conversation request ID, never to an arbitrary ID
-  // found in the file. Legacy snapshots without that field retain their exact
-  // original trace-ID binding and derived metrics.
-  const requestScope = separateRequestIdentity ? conversationRequestId : snapshot.request.traceId;
+  // found in the file. Any exact legacy trace-ID binding retains its original
+  // validation and derived metrics, including old optional secondary IDs.
   const providerEvents = events.filter(x => x.providerData?.messageId);
-  if (!requestScope || providerEvents.some(x => x.providerData.conversationRequestId !== requestScope
-      || (separateRequestIdentity && x.providerData.traceId != null
-        && x.providerData.traceId !== snapshot.request.traceId))) fail("REQUEST_SCOPE_MISMATCH");
+  const legacyScope = snapshot.request.traceId || conversationRequestId;
+  const legacyMatches = Boolean(legacyScope)
+    && providerEvents.every(x => x.providerData.conversationRequestId === legacyScope);
+  let separateRequestIdentity = false;
+  if (!legacyMatches) {
+    if (!conversationRequestId || conversationRequestId !== snapshot.request.id) fail("RUNTIME_REQUEST_SCOPE_MISMATCH");
+    if (providerEvents.some(x => x.providerData.conversationRequestId !== conversationRequestId
+        || (x.providerData.traceId != null && x.providerData.traceId !== snapshot.request.traceId))) fail("REQUEST_SCOPE_MISMATCH");
+    separateRequestIdentity = true;
+  }
   const runtimeCalls = new Set((snapshot.request.assistantMessage?.content || [])
     .filter(x => x.type === "tool" || x.sessionUpdate === "tool_call_update").map(x => x.toolCallId));
   const nativeCalls = new Set(events.filter(x => x.type === "function_call").map(x => x.callId));
