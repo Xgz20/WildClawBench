@@ -14,6 +14,36 @@ from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT, SCR
 
 
 class DatasetRuleCorrectionTests(unittest.TestCase):
+    def test_hr_row_prefix_is_equivalent_parsing_with_legacy_source_unchanged(self):
+        tid='03_Data_Analysis_task_001_hr_worktime_reconciliation'
+        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))
+        source=_strip_codeblock(sections['Automated Checks']);review=RUNTIME.rule_review
+        old,old_receipt=review.effective_source(source)
+        fixed,receipt=review.effective_source(source,source_row_aliases=True)
+        def functions(code):
+            return {n.name:ast.dump(n,include_attributes=False) for n in ast.parse(code).body if isinstance(n,ast.FunctionDef)}
+        a,b=functions(old),functions(fixed)
+        for name in a:
+            if name!='parse_source_refs':self.assertEqual(a[name],b[name],name)
+        self.assertNotIn('source_locator_profile',old_receipt)
+        self.assertEqual(receipt['source_locator_profile'],review.ROW_LOCATOR_PROFILE)
+        # Only the pure source-locator parser is exercised; never execute grade here.
+        node=next(n for n in ast.parse(fixed).body if isinstance(n,ast.FunctionDef) and n.name=='parse_source_refs')
+        scope={'re':re,'normalize_text':lambda x:str(x or '').strip()}
+        exec(compile(ast.Module(body=[node],type_ignores=[]),'<locator-fixture>','exec'),scope)
+        parse=scope['parse_source_refs']
+        for raw in ['员工与组织信息.xlsx#人员名册!行5','员工与组织信息.xlsx#人员名册!第5行','员工与组织信息.xlsx#人员名册!A5']:
+            self.assertEqual(parse(raw),frozenset({('员工与组织信息.xlsx','人员名册',5,'')}))
+        self.assertEqual(parse('月度排班计划.xlsx#生产一部8月!C7'),frozenset({('月度排班计划.xlsx','生产一部8月',7,'C')}))
+        # Row-only schedule refs remain column-less, so the unchanged existence rule rejects them.
+        self.assertEqual(parse('月度排班计划.xlsx#生产一部8月!行7'),frozenset({('月度排班计划.xlsx','生产一部8月',7,'')}))
+        for raw in ['员工与组织信息.xlsx#人员名册!行A5','员工与组织信息.xlsx#人员名册!行5行']:
+            self.assertEqual(next(iter(parse(raw)))[0],'无效定位')
+        manifest={'identity':{'task_id':tid},'runtime':{'rule_review_profile':review.PROFILE}}
+        self.assertEqual(RUNTIME._effective_rule_source(manifest,source)[0],old)
+        manifest['runtime']['hr_source_locator_profile']=review.ROW_LOCATOR_PROFILE
+        self.assertEqual(RUNTIME._effective_rule_source(manifest,source)[0],fixed)
+
     def test_procurement_alias_fix_preserves_all_numeric_scoring_functions(self):
         tid='02_Office_task_015_procurement_reconciliation'
         _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))

@@ -25,11 +25,11 @@ _PAGED_RULES = {
 }
 
 
-def effective_source(task_id: str, source: str, *, rule_review_enabled=False, procurement_layout_enabled=False):
+def effective_source(task_id: str, source: str, *, rule_review_enabled=False, procurement_layout_enabled=False, hr_source_locator_enabled=False):
     if rule_review_enabled:
         if task_id != rule_review.TASK_ID:
             raise ValueError('RULE_REVIEW_TASK_MISMATCH')
-        return rule_review.effective_source(source)
+        return rule_review.effective_source(source,source_row_aliases=hr_source_locator_enabled)
     if task_id == '02_Office_task_015_procurement_reconciliation':
         corrected,receipt=_procurement_source(source)
         return _procurement_matrix_source(source,corrected,receipt) if procurement_layout_enabled and receipt is not None else (corrected,receipt)

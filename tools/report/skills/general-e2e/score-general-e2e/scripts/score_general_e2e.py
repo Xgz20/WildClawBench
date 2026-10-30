@@ -1794,7 +1794,7 @@ def prepare_attempt(
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
-                **({"rule_review_profile":rule_review.PROFILE}
+                **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(contract) and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'business_capability_profile':business_capability.PROFILE}
                    if business_capability.matches(contract) and _sha256_bytes(contract_bytes)==business_capability.CONTRACT_SHA
@@ -2649,6 +2649,7 @@ def _effective_rule_source(
         corrected, receipt = dataset_rule_corrections.effective_source(
             manifest.get("identity", {}).get("task_id"), source,
             rule_review_enabled=manifest.get('runtime',{}).get('rule_review_profile')==rule_review.PROFILE,
+            hr_source_locator_enabled=manifest.get('runtime',{}).get('hr_source_locator_profile')==rule_review.ROW_LOCATOR_PROFILE,
             procurement_layout_enabled=manifest.get('runtime',{}).get('procurement_layout_profile')=='procurement-matrix-formulas/v2',
         )
     except ValueError as exc:
@@ -6015,7 +6016,7 @@ def prepare_rescore_attempt(
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
-                **({"rule_review_profile":rule_review.PROFILE}
+                **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(_read_json(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'business_capability_profile':business_capability.PROFILE}
