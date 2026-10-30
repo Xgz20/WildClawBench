@@ -31,6 +31,7 @@ import {
   assertStableQwenUiConfiguration,
   confirmQwenWorkspaceProject,
   ensureQwenNewTaskView,
+  findQwenCreateProjectButton,
   inspectQwenTaskUi,
   inspectQwenPendingInteraction,
   QWEN_QUESTION_SELECTOR,
@@ -308,6 +309,21 @@ test("completed conversation route navigates through the unique new-task control
   const result = await ensureQwenNewTaskView(page, 100);
   assert.equal(result, selectedProject);
   assert.equal(clickCount, 1);
+});
+
+test("modern project actions without menu attributes remain scoped to the current composer", async () => {
+  const create=fakeElement({text:"新建项目",attributes:{"aria-label":"新建项目"}});
+  const sidebar=fakeElement({attributes:{"aria-label":"新建项目"}});
+  const mode=fakeElement({text:"通用"});
+  const model=fakeElement({text:"标准"});
+  const page=fakeProjectPage([fakeTaskView([mode,model,create])]);
+  assert.equal(await ensureQwenNewTaskView(page,100),create);
+  assert.equal(await readSelectedQwenProjectName(page),"新建项目");
+  const task={...fakeElement(),locator:()=>fakeLocator([create])};
+  const duplicateGlobalPage={locator:s=>s===QWEN_TASK_VIEW_SELECTOR?fakeLocator([task]):fakeLocator([sidebar,create])};
+  assert.equal(await findQwenCreateProjectButton(duplicateGlobalPage),create);
+  const ambiguous={...task,locator:()=>fakeLocator([create,create])};
+  await assert.rejects(findQwenCreateProjectButton({locator:()=>fakeLocator([ambiguous])}),/contextual-new-project:2/u);
 });
 
 test("prepared project dispatch restores the new-task route before project readback", async () => {

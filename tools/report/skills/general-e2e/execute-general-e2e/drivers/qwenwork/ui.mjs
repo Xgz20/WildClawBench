@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 
 export const QWEN_MODEL_SELECTOR = ".new-task-model-selector button";
 export const QWEN_PERMISSION_SELECTOR = 'button[aria-label="选择权限模式"]';
-export const QWEN_PROJECT_SELECTOR = '.new-task-chat-input button[aria-haspopup="menu"]';
+export const QWEN_PROJECT_SELECTOR = '.new-task-chat-input button';
 export const QWEN_PROMPT_SELECTOR = '[data-voice-input-target="chat-input"]';
 export const QWEN_SEND_SELECTOR = [
   'button[aria-label="发送"]:visible',
@@ -151,7 +151,7 @@ export function confirmQwenWorkspaceProject({ projects, workspace, baselineProje
 
 function isQwenProjectAccessibleName(label, expectedProjectName = null, knownProjectNames = []) {
   const value = visibleValue(label);
-  if (/^(?:选择项目|Select project)$/iu.test(value)) return true;
+  if (/^(?:选择项目|Select project|新建项目|Create project|New project)$/iu.test(value)) return true;
   const knownNames = new Set([
     expectedProjectName,
     ...knownProjectNames,
@@ -444,7 +444,7 @@ export async function createQwenLocalProject({
     };
   }
   const baselineProjectIds = before.map((project) => project.project_id || project.projectId).filter(Boolean);
-  const createButton = await requireUniqueVisible(page.locator('button[aria-label="新建项目"]'), "new-project-button");
+  const createButton = await findQwenCreateProjectButton(page);
   await createButton.evaluate((element) => element.click());
   const dialog = await waitForUniqueVisible(
     () => visibleLocators(page.getByRole("dialog", { name: "新建个人项目" })),
@@ -490,6 +490,14 @@ export async function createQwenLocalProject({
     [...knownProjectNames, project.project_name],
   );
   return project;
+}
+
+export async function findQwenCreateProjectButton(page) {
+  const taskView = await requireUniqueVisible(page.locator(QWEN_TASK_VIEW_SELECTOR), "task-view");
+  const contextual = await visibleLocators(taskView.locator('.new-task-chat-input button[aria-label="新建项目"]'));
+  if (contextual.length > 1) throw new Error(`QWENWORK_UI_CONTROL_COUNT: contextual-new-project:${contextual.length}`);
+  if (contextual.length === 1) return contextual[0];
+  return requireUniqueVisible(page.locator('button[aria-label="新建项目"]'), "new-project-button");
 }
 
 export async function findQwenPromptEditor(page) {

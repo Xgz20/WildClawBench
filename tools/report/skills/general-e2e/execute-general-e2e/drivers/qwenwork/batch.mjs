@@ -11,7 +11,7 @@ import { assertQwenExecutionEnvironment } from "./environment.mjs";
 import { calculateQwenCanaryConfigDigest } from "./driver.mjs";
 
 export const QWENWORK_QUEUE_SCHEMA = "wildclawbench.general-e2e-qwenwork-execution-queue/v1";
-export const QWENWORK_QUEUE_VERSION = "0.2.4";
+export const QWENWORK_QUEUE_VERSION = "0.2.5";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -34,6 +34,37 @@ async function optionalJson(path) {
   try { return await readJson(path); } catch (error) {
     if (error?.code === "ENOENT") return null;
     throw error;
+  }
+}
+
+export async function assertZeroSendSourceRepair(state, repair, root) {
+  if (repair.boundary !== "zero-send-preparation" || state.phase !== "NEEDS_ATTENTION"
+      || !state.tasks?.length || state.tasks.some(row => row.dispatch_attempt_count !== 0
+        || row.session_id || row.conversation_id || row.sub_chat_id)) {
+    throw new Error("QWENWORK_QUEUE_ZERO_SEND_SOURCE_REPAIR_INVALID");
+  }
+  for (const row of state.tasks) {
+    const paths = executionPaths(root, row.task_id, row.attempt_id);
+    const journal = await optionalJson(paths.journal);
+    if (!journal) continue;
+    if (journal.identity?.task_id !== row.task_id || journal.identity?.attempt_id !== row.attempt_id
+        || journal.send?.dispatch_attempt_count !== 0 || journal.send.state !== "not_reserved"
+        || journal.send.reservation_id || journal.send.invoking_at || journal.send.returned_at
+        || journal.prompt?.send_status !== "not_sent" || journal.prompt.sent_at
+        || journal.session?.session_id || journal.session?.conversation_id || journal.session?.sub_chat_id
+        || journal.session?.verified === true) {
+      throw new Error("QWENWORK_QUEUE_ZERO_SEND_SOURCE_REPAIR_INVALID");
+    }
+  }
+  const bytes = await readFile(repair.boundary_probe_path);
+  const probe = JSON.parse(bytes.toString("utf8"));
+  const age = Date.now() - Date.parse(probe.probed_at);
+  if (sha256(bytes) !== repair.boundary_probe_sha256 || !Number.isFinite(age) || age < -5000 || age > 300_000
+      || probe.app?.identity_verified !== true || probe.app.bundle_id !== BUNDLE_ID
+      || probe.execution_environment?.verified !== true || probe.execution_environment.endpoint !== state.frozen.endpoint
+      || probe.native_state?.session_database !== state.frozen.session_db
+      || probe.native_state.database.session_count !== 0 || probe.native_state.database.active_or_pending_count !== 0) {
+    throw new Error("QWENWORK_QUEUE_ZERO_SEND_SOURCE_REPAIR_PROBE_INVALID");
   }
 }
 
@@ -178,7 +209,7 @@ async function readManifest(root) {
   return { manifest, taskIds, tasks, bytes };
 }
 
-async function driverSourceDigest() {
+export async function driverSourceDigest() {
   const parts = [];
   for (const file of DRIVER_SOURCE_FILES) {
     parts.push(Buffer.from(file + "\0"));
@@ -633,9 +664,12 @@ export async function runQwenWorkBatch(argv, dependencies = {}) {
           || sha256(await readFile(sourceRepair.anchor_journal_path)) !== sourceRepair.anchor_journal_sha256
           || !manifestInfo.taskIds.includes(sourceRepair.anchor_task_id) || taskJournal.identity?.task_id !== sourceRepair.anchor_task_id
           || taskJournal.identity?.attempt_id !== state.tasks.find(t => t.task_id === sourceRepair.anchor_task_id)?.attempt_id
-          || taskJournal.phase !== "COMPLETED"
-          || taskJournal.send?.dispatch_attempt_count !== 1
-          || taskJournal.session?.verified !== true) {
+          ) {
+        throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_BOUNDARY_INVALID");
+      }
+      if (sourceRepair.boundary === "zero-send-preparation") {
+        await assertZeroSendSourceRepair(state, sourceRepair, root);
+      } else if (taskJournal.phase !== "COMPLETED" || taskJournal.send?.dispatch_attempt_count !== 1 || taskJournal.session?.verified !== true) {
         throw new Error("QWENWORK_QUEUE_SOURCE_REPAIR_BOUNDARY_INVALID");
       }
     }

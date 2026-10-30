@@ -8,6 +8,7 @@ import test from "node:test";
 
 import {
   acquireQwenQueueOwner,
+  assertZeroSendSourceRepair,
   activeSessionArgs,
   parseBatchArgs,
   runQwenWorkBatch,
@@ -78,6 +79,32 @@ test("queue observation allow-list retains only sent queue-owned attention bindi
 function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
+
+test("source repair at preparation requires every journal unsent and a fresh empty native probe", async () => {
+  const root=await mkdtemp(join(tmpdir(),"qwen-zero-send-repair-"));
+  try{
+    const base=join(root,".general-e2e/execution/task/qwenwork");await mkdir(base,{recursive:true});
+    const path=join(base,"dispatch-journal.json");
+    const journal={identity:{task_id:"task",attempt_id:"attempt"},phase:"NEEDS_ATTENTION",
+      prompt:{send_status:"not_sent",sent_at:null},send:{dispatch_attempt_count:0,state:"not_reserved",reservation_id:null,invoking_at:null,returned_at:null},
+      session:{session_id:null,conversation_id:null,sub_chat_id:null,verified:false}};
+    await writeFile(path,JSON.stringify(journal));
+    const state={phase:"NEEDS_ATTENTION",frozen:{endpoint:"http://127.0.0.1:9250",session_db:"/fixture/agents.db"},
+      tasks:[{task_id:"task",attempt_id:"attempt",dispatch_attempt_count:0,session_id:null,conversation_id:null,sub_chat_id:null}]};
+    const probe={probed_at:new Date().toISOString(),app:{identity_verified:true,bundle_id:"cn.qwenwork.desktop.mac"},
+      execution_environment:{verified:true,endpoint:state.frozen.endpoint},native_state:{session_database:state.frozen.session_db,database:{session_count:0,active_or_pending_count:0}}};
+    const probePath=join(root,"fresh-probe.json");let bytes=Buffer.from(JSON.stringify(probe));await writeFile(probePath,bytes);
+    const repair={boundary:"zero-send-preparation",boundary_probe_path:probePath,boundary_probe_sha256:sha256(bytes)};
+    await assertZeroSendSourceRepair(state,repair,root);
+    journal.prompt.send_status="uncertain";await writeFile(path,JSON.stringify(journal));
+    await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/ZERO_SEND_SOURCE_REPAIR_INVALID/u);
+    journal.prompt.send_status="not_sent";await writeFile(path,JSON.stringify(journal));
+    probe.native_state.database.session_count=1;bytes=Buffer.from(JSON.stringify(probe));await writeFile(probePath,bytes);repair.boundary_probe_sha256=sha256(bytes);
+    await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/SOURCE_REPAIR_PROBE_INVALID/u);
+    state.tasks[0].dispatch_attempt_count=1;
+    await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/ZERO_SEND_SOURCE_REPAIR_INVALID/u);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
 
 function taskRoot(root, taskId) {
   return join(root, "execution", "tasks", taskId);

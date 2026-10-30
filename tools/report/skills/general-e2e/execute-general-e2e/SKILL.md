@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.9` 支持 QwenWork 新版无 aria-haspopup 的项目入口：只在当前唯一任务视图的输入区内按空项目或精确已知项目名识别，创建按钮优先使用该输入区入口，避免混入侧栏同名按钮。原队列可显式声明 zero-send-preparation 源修复边界；必须同时锁定原队列和锚点 journal SHA、全部 journal 未预留/未调用/未发送且无会话身份，以及新鲜、身份一致、空原生数据库的 probe。未知发送或任何已发送记录不进入这个边界，不删除未知锁。
+
 `0.14.8` 对新版原生索引显式按 transport 区分本地与云端会话：仅已声明 cloud 的同步会话不进入本机槽位判断，未知 transport 或本地身份不完整仍拒绝。
 
 `0.14.7` 支持显式指定新版 WorkBuddy `workbuddy.db` 的原生 sessions 表；仅在旧 ItemTable 不存在时尝试此只读结构，缺失身份、目录、状态及重复身份仍拒绝。新版运行时取证不要求旧 history 目录存在，但发送前仍核验应用、进程、CDP、完整原生会话索引、UI 配置与 runtime 能力。队列若子执行器在 journal 落盘前返回，保持 NEEDS_ATTENTION，禁止把未核实的 DISPATCHING 误报完成或继续派发。
