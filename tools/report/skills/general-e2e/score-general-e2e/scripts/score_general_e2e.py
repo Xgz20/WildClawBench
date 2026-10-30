@@ -36,6 +36,7 @@ import rule_review
 import rule_review_runtime
 import business_capability
 import semantic_aggregation
+import public_office_profiles
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1802,6 +1803,8 @@ def prepare_attempt(
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(contract) else {}),
+                **({'public_office_input_profile':public_office_profiles.marker(contract,_sha256_bytes(contract_bytes))}
+                   if public_office_profiles.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -2653,6 +2656,7 @@ def _effective_rule_source(
             hr_source_locator_enabled=manifest.get('runtime',{}).get('hr_source_locator_profile')==rule_review.ROW_LOCATOR_PROFILE,
             procurement_layout_enabled=manifest.get('runtime',{}).get('procurement_layout_profile')=='procurement-matrix-formulas/v2',
         )
+        corrected, receipt = public_office_profiles.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -6029,6 +6033,8 @@ def prepare_rescore_attempt(
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(_read_json(staging/source_paths['contract'])) else {}),
+                **({'public_office_input_profile':public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),

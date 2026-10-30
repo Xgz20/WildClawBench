@@ -49,6 +49,8 @@ python scripts/configure_native_office.py \
 
 ## 准备私有 attempt
 
+新attempt可按精确contract/source SHA注册`canonical-public-office-cwm-only/v2`，只覆盖公开Office输入的环境属性变体。注册表携带经原数据集manifest SHA验证的公开字节；`runtime.public_office_input_profile`冻结该表和原contract/source SHA。匹配时所有业务OPC成员和非CWM属性必须完全一致，新增审计进入原声明的评分证据目录，不把它当候选主动检查。原件、候选、整体哈希及原规则公式不重写；其他数据、公式、样式、属性或缺文件仍按原规则判断。旧manifest没有marker保持原源码。已使用的v2表和匹配器须保留；后续扩展建立新版本，不覆盖已冻结评分依赖。
+
 ```bash
 python scripts/score_general_e2e.py prepare \
   --unit-root /absolute/path/to/execution-unit \

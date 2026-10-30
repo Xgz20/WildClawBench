@@ -130,6 +130,7 @@ class Fixture:
         office_candidate: bool = False,
         candidate_text: str = "ready\n",
         task_id: str = 'task-fixture',
+        candidate_files: dict[str, bytes] | None = None,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -148,6 +149,10 @@ class Fixture:
         self.candidate = self.unit_root / "evidence/candidate/workspace"
         self.candidate.mkdir(parents=True)
         (self.candidate / "answer.txt").write_text(candidate_text, encoding="utf-8")
+        for relative, content in (candidate_files or {}).items():
+            target = self.candidate / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(content)
         if office_candidate:
             (self.candidate / "candidate.xlsx").write_bytes(b"frozen candidate Office bytes")
         if mapped_nested_results:
