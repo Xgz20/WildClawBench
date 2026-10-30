@@ -593,6 +593,27 @@ def map_prompt_workspace(prompt: str) -> tuple[str, list[dict[str, str]]]:
     return mapped, mapping
 
 
+def inline_public_context(prompt: str, workspace_entries, *, workspace_prefix: str):
+    """Deliver the existing public root instructions; do not read private material."""
+    matches = [e for e in workspace_entries if e.name == workspace_prefix + 'AGENTS.md']
+    if not matches:
+        return prompt, []
+    if len(matches) != 1 or matches[0].kind != 'file':
+        raise PrepareError('PUBLIC_CONTEXT_MUST_BE_UNIQUE_REGULAR_FILE')
+    raw = matches[0].data
+    if len(raw) > 512 * 1024:
+        raise PrepareError('PUBLIC_CONTEXT_EXCEEDS_DELIVERY_BUDGET')
+    try:
+        context = raw.decode('utf-8')
+    except UnicodeDecodeError as exc:
+        raise PrepareError('PUBLIC_CONTEXT_NOT_UTF8') from exc
+    prefix = '工作区公开指令（AGENTS.md）：\n\n'
+    sent = prefix + context + '\n\n任务：\n\n' + prompt
+    return sent, [{'profile': 'inline-public-agents/v1', 'workspace_path': 'AGENTS.md',
+                   'sha256': sha256_bytes(raw), 'char_offset': len(prefix),
+                   'char_count': len(context), 'mapped_task_sha256': sha256_bytes(prompt.encode('utf-8'))}]
+
+
 def _package_identity(
     dataset: Mapping[str, Any],
     release: Mapping[str, Any],
@@ -685,12 +706,16 @@ def _unit_packages(
         if not isinstance(original_prompt, str):
             raise PrepareError(f"DATASET_PROMPT_INVALID: {task_id}")
         mapped_prompt, prompt_mapping = map_prompt_workspace(original_prompt)
+        workspace_entries, workspace_manifest_entries = _copy_execution_tree(
+            archive, dataset_root, unit_root, task
+        )
+        mapped_prompt, public_context = inline_public_context(
+            mapped_prompt, workspace_entries,
+            workspace_prefix=f'{unit_root}/execution/tasks/{task_id}/workspace/',
+        )
         prompt_path = f"execution/tasks/{task_id}/PROMPT.md"
         execution_entries.append(
             ZipEntry(f"{unit_root}/{prompt_path}", mapped_prompt.encode("utf-8"))
-        )
-        workspace_entries, workspace_manifest_entries = _copy_execution_tree(
-            archive, dataset_root, unit_root, task
         )
         execution_entries.extend(workspace_entries)
         execution_tasks.append(
@@ -708,6 +733,7 @@ def _unit_packages(
                     "original_sha256": sha256_bytes(original_prompt.encode("utf-8")),
                     "mapping": prompt_mapping,
                     "sent_sha256": sha256_bytes(mapped_prompt.encode("utf-8")),
+                    **({'public_context_delivery': public_context} if public_context else {}),
                 },
                 "workspace": {
                     "path": f"execution/tasks/{task_id}/workspace",
@@ -968,10 +994,25 @@ def _verify_execution_archive(path: Path, batch_manifest: Mapping[str, Any]) -> 
             sent_prompt = data.data.decode("utf-8")
         except UnicodeError as exc:
             raise PrepareError(f"EXECUTION_PROMPT_UTF8_INVALID: {task_id}") from exc
-        if PROMPT_WORKSPACE_RE.search(sent_prompt):
-            raise PrepareError(f"EXECUTION_PROMPT_MAPPING_INCOMPLETE: {task_id}")
         workspace = task["workspace"]
         workspace_root = _safe_relative(workspace["path"], label="workspace path").as_posix()
+        mapped_task = sent_prompt
+        if 'public_context_delivery' in prompt:
+            delivery = prompt['public_context_delivery']
+            public = members.get(workspace_root + '/AGENTS.md')
+            if (not isinstance(delivery, list) or len(delivery) != 1
+                    or not isinstance(delivery[0], dict) or public is None or public.kind != 'file'
+                    or type(delivery[0].get('char_offset')) is not int
+                    or type(delivery[0].get('char_count')) is not int):
+                raise PrepareError(f'PUBLIC_CONTEXT_DELIVERY_INVALID: {task_id}')
+            end = delivery[0]['char_offset'] + delivery[0]['char_count']
+            mapped_task = sent_prompt[end + len('\n\n任务：\n\n'):]
+            rebuilt, proof = inline_public_context(mapped_task,
+                [ZipEntry('AGENTS.md', public.data, public.kind)], workspace_prefix='')
+            if rebuilt != sent_prompt or delivery != proof:
+                raise PrepareError(f'PUBLIC_CONTEXT_DELIVERY_MISMATCH: {task_id}')
+        if PROMPT_WORKSPACE_RE.search(mapped_task):
+            raise PrepareError(f"EXECUTION_PROMPT_MAPPING_INCOMPLETE: {task_id}")
         tree_entries = []
         for entry in workspace["entries"]:
             suffix = "/" if entry["kind"] == "directory" else ""

@@ -3168,6 +3168,9 @@ def main(argv: list[str] | None = None) -> int:
     complete_scope.add_argument("--additional-attempt", action="append", required=True)
     complete_scope.add_argument("--score-skill-dir", type=Path, required=True)
     complete_scope.add_argument("--output-root", type=Path, required=True)
+    complete_scope.add_argument('--allow-scoring-infrastructure-repair',action='store_true')
+    complete_scope.add_argument('--infrastructure-repair-reason')
+    complete_scope.add_argument('--source-selection-root',type=Path)
 
     compose = subparsers.add_parser("compose-rescore-selection", help="Select explicit rescored tasks into the complete original scope; preserve all source orchestrations")
     compose.add_argument("--source-orchestration-root", required=True, type=Path, dest="source")

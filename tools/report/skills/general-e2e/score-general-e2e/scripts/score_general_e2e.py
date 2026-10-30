@@ -1799,6 +1799,8 @@ def prepare_attempt(
                 **({'business_capability_profile':business_capability.PROFILE}
                    if business_capability.matches(contract) and _sha256_bytes(contract_bytes)==business_capability.CONTRACT_SHA
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
+                   if dataset_rule_corrections.procurement_matches(contract) else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -2647,6 +2649,7 @@ def _effective_rule_source(
         corrected, receipt = dataset_rule_corrections.effective_source(
             manifest.get("identity", {}).get("task_id"), source,
             rule_review_enabled=manifest.get('runtime',{}).get('rule_review_profile')==rule_review.PROFILE,
+            procurement_layout_enabled=manifest.get('runtime',{}).get('procurement_layout_profile')=='procurement-matrix-formulas/v2',
         )
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
@@ -6019,6 +6022,8 @@ def prepare_rescore_attempt(
                    if business_capability.matches(_read_json(staging/source_paths['contract']))
                    and _sha256_file(staging/source_paths['contract'])==business_capability.CONTRACT_SHA
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
+                   if dataset_rule_corrections.procurement_matches(_read_json(staging/source_paths['contract'])) else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),

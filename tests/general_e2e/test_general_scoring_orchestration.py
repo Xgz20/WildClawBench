@@ -1470,6 +1470,19 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             self.assertEqual(document["task_ids"], ["task-a", "task-b"])
             self.assertTrue(all(t["score_status"] == "valid" for t in document["tasks"]))
             self.assertFalse((output / "orchestration-state.json").exists())
+            # Infrastructure repair cannot silently replace an already valid result.
+            state = json.loads((partial_root / 'orchestration-state.json').read_text())
+            existing = partial_root / state['tasks'][0]['attempt_path']
+            protected = SimpleNamespace(**vars(args))
+            protected.output_root = self.root / 'invalid-replacement'
+            protected.additional_attempt = ['task-b=' + str(existing)]
+            protected.allow_scoring_infrastructure_repair = True
+            protected.infrastructure_repair_reason = 'Explicit framework repair does not authorize selecting a valid score again'
+            with self.assertRaisesRegex(ValueError, 'VALID_SOURCE_SCORE_REQUIRES_RESCORE_SELECTION'):
+                compose(protected, frozen=ORCHESTRATOR)
+            protected.infrastructure_repair_reason = None
+            with self.assertRaisesRegex(ValueError, 'EXPLICIT_INFRASTRUCTURE_REPAIR_REASON_REQUIRED'):
+                compose(protected, frozen=ORCHESTRATOR)
 
     def test_pending_native_trust_receipt_requires_exact_folder_proof(self) -> None:
         fixture = Fixture(self.root)

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import office_input_compat
 import rule_review
+import procurement_layout
 
 
 EVIDENCE_PAGING_PROFILE = "complete-paged-grader-evidence/v1"
@@ -24,13 +25,14 @@ _PAGED_RULES = {
 }
 
 
-def effective_source(task_id: str, source: str, *, rule_review_enabled=False):
+def effective_source(task_id: str, source: str, *, rule_review_enabled=False, procurement_layout_enabled=False):
     if rule_review_enabled:
         if task_id != rule_review.TASK_ID:
             raise ValueError('RULE_REVIEW_TASK_MISMATCH')
         return rule_review.effective_source(source)
     if task_id == '02_Office_task_015_procurement_reconciliation':
-        return _procurement_source(source)
+        corrected,receipt=_procurement_source(source)
+        return _procurement_matrix_source(source,corrected,receipt) if procurement_layout_enabled and receipt is not None else (corrected,receipt)
     if task_id == '03_Data_Analysis_task_005_cross_month_returns_regional_sales':
         return _office_public_inputs(source)
     entry = _PAGED_RULES.get(task_id)
@@ -128,3 +130,29 @@ def _procurement_source(source):
         'evidence_policy': {'truncation_allowed': False, 'page_query_required': True,
                             'max_file_bytes':4*1024*1024, 'max_total_bytes':16*1024*1024},
     }
+
+
+def procurement_matches(contract):
+    return (contract.get('task_id')=='02_Office_task_015_procurement_reconciliation'
+            and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()=='e0ce3c13706112766a91b1d6309dae0c13ddb99aa4b7b8c6f9f574b9ed97490c')
+
+
+def _procurement_matrix_source(original,effective,receipt):
+    replacements=[
+        (" 'oa':['订单金额'", " 'oa':['订单总额','订单金额'"),
+        ("                if name in ('COUNTIF','COUNTIFS') and len(args)%2==0:\n"
+         "                    arrays=[x if isinstance(x,list) else [x] for x in args[::2]];criteria=args[1::2]\n"
+         "                    if len({len(x) for x in arrays})!=1: raise ValueError('range mismatch')\n"
+         "                    return sum(all(str(x)==str(c) for x,c in zip(row,criteria)) for row in zip(*arrays))",
+         "                if name in ('COUNTIF','COUNTIFS','SUMIF'):\n                    return _pl_conditional(name,args,number)"),
+        (";expected=dict(metrics)",";expected=dict(metrics);expected.update(_PL_EXPECTED)"),
+    ]
+    for old,new in replacements:
+        if effective.count(old)!=1:raise ValueError('PROCUREMENT_MATRIX_SOURCE_MISMATCH')
+        effective=effective.replace(old,new)
+    helper=Path(procurement_layout.__file__).read_text(encoding='utf-8')
+    effective+='\n'+helper+"\nSUMMARY_LABELS.update({key:[key] for key in _PL_MATRIX_KEYS})\nMONEY_KEYS.update(_PL_MATRIX_KEYS)\n_pl_install_summary_view()\n"
+    return effective,{**receipt,'correction_id':'procurement-matrix-formulas/v2',
+        'effective_source_sha256':hashlib.sha256(effective.encode('utf-8')).hexdigest(),
+        'reason':'支持有明确列标题的横向汇总及等价订单总额字段，保留原单元格定位；只读求值实际使用的字面条件SUMIF/COUNTIF，未知公式与未识别数字不猜测。矩阵金额按原候选总体/数值因果口径核对，原80/20权重和评分公式不变。',
+        'previous_profile':'procurement-header-summary-aliases/v1','candidate_rewritten':False}

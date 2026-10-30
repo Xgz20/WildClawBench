@@ -3,6 +3,9 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.27` 对精确原源码绑定的新采购题 attempt，支持有明确标题的横向汇总、订单总额字段和字面条件 SUMIF/COUNTIF/COUNTIFS。保留原单元格定位、可见性、原差额方向、候选总体因果口径及80/20公式；未知列/条件、重复矩阵类别继续失败关闭。旧 attempt 沿用原 Profile。
+
+
 `0.10.26` 对原源码及 contract SHA 精确绑定的 SPY/VOO 新 Codex attempt，按题目原有协议分开发布业务与能力有效性。全部6个语义 key 仍须判定并保存在原始组件；响应还须完整填写模板中的 run_validity 和5项 capability_evidence_statuses，均以实际 query_ids、证据和中文理由说明。运行有效性为valid须已无过滤覆盖完整标准轨迹。业务仍按core_accuracy 85、source_binding 15合分；零业务权重能力项缺证不会阻断已有效的业务分。能力缺证保留null、预算45不删项重归一，运行污染/隔离缺证则两类都禁发。原始组件不改写，独立 capability-evaluation.json 保留全部检查点、状态、m预算及来源SHA；标准score.json发布业务视图并引用该文件，verify-score重新推导校验。旧 attempt、其他任务和API路径保持原行为。
 
 启用独立有效性Profile时，以CLI返回的business_semantic_status及最终score.json判断业务有效性；原始semantic-component.json可能因某项能力unresolved而保留evaluation_error。不得修改原始组件或把未知能力补零。所有运行有效性/能力证据查询须在record-semantics前完成，之后只合分和验分，避免漂移已锁定的query-log。

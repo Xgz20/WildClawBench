@@ -447,6 +447,22 @@ class GeneralReleasePrepareTests(unittest.TestCase):
             [{"from": "/tmp_workspace", "to": "."}],
         )
 
+    def test_public_agents_delivery_is_exact_and_excludes_private_material(self) -> None:
+        raw = '公开指令🙂\r\n原路径 /tmp_workspace 保持原文\n'.encode('utf-8')
+        entries = [PREPARE.ZipEntry('workspace/AGENTS.md', raw),
+                   PREPARE.ZipEntry('private/AGENTS.md', b'PRIVATE REFERENCE')]
+        prompt, proof = PREPARE.inline_public_context('原始题目 ./input.txt', entries, workspace_prefix='workspace/')
+        self.assertNotIn('PRIVATE REFERENCE', prompt)
+        self.assertTrue(prompt.endswith('原始题目 ./input.txt'))
+        d = proof[0]
+        self.assertEqual(prompt[d['char_offset']:d['char_offset'] + d['char_count']].encode('utf-8'), raw)
+        self.assertEqual(d['sha256'], hashlib.sha256(raw).hexdigest())
+        self.assertEqual(PREPARE.inline_public_context('旧题', [], workspace_prefix='workspace/'), ('旧题', []))
+        for material in [PREPARE.ZipEntry('workspace/AGENTS.md', b'../private', 'symlink'),
+                         PREPARE.ZipEntry('workspace/AGENTS.md', b'\xff')]:
+            with self.subTest(material=material), self.assertRaises(PREPARE.PrepareError):
+                PREPARE.inline_public_context('题目', [material], workspace_prefix='workspace/')
+
     def test_release_catalog_and_skill_tampering_fail_closed(self) -> None:
         release_directory_tampered = self.temp_root / "release-directory-tampered"
         shutil.copytree(self.release_root, release_directory_tampered)

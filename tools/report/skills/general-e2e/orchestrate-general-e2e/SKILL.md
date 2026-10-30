@@ -3,6 +3,9 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.26` compose-full-scope-selection 可显式 --allow-scoring-infrastructure-repair 并说明 --infrastructure-repair-reason，纳入已修复的原规则基础设施错误及合法 evaluation_error 重评分，保持原执行、题目和完整范围。有效旧分不由此覆盖；--source-selection-root 可延续已校验的原完整范围选择，全部来源锁和旧文件保留。
+
+
 `0.11.25` 的 v8 Prompt 支持原规则声明的语义复核：精确 HR 源码对应的新 Codex attempt 先由受管 Worker 在隔离副本发现问题，冻结 request SHA 后进入独立裁判项目。发现过程不发布任何临时规则分，不占语义槽；裁判自己查询、判断字段/来源、记录复核，再运行原数值规则及正常语义评分。控制器不代判，缺少/漂移的复核上下文不按0/1猜测。其他 hybrid 路由及旧 v3–v7 Prompt 保持原契约。
 
 `0.11.24` 的 macOS 项目注册默认使用已核验应用包内的官方 `codex app ABS`，再自动点击完整回显同一绝对目录的唯一“Trust folder／信任文件夹”。回执绑定 CLI 路径/SHA/argv、目标目录及实际点击；先前已有的同路径信任弹窗继续可恢复。未知弹窗或目录不符不点击；未观察到弹窗时先用 list_projects 回读复用，不盲目注册、不默认等待人工。只有 CLI 不可用才沿用原生文件选择器，`--no-cli-open` 可显式禁用新入口。

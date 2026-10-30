@@ -3,6 +3,9 @@ name: prepare-general-e2e-workspaces
 description: 从版本化数据集构建 General E2E 批次、执行包和私有评分包；用于准备隔离工作空间，不负责启动 Harness、收集证据、评分或报告。
 ---
 
+`0.3.4` 新执行包将已有公开 workspace/AGENTS.md 全文放入冻结 Prompt，记录文件SHA、字符范围及映射后的原题SHA，解决仅复制文件无法证明送达的问题。只读取执行材料内的根级普通文件，不跟随链接、不读取评分材料、不修改原题或公开指令。无该文件的题目沿用原Prompt，既有包保持不变。
+
+
 `0.3.3` 同时消费旧 `general-custom60-v1` 和新 `general-custom116-v1` bundle，按输入 manifest 冻结数据集身份和题目顺序。旧配置和旧包保持可读。新题配置示例见 [prepare-config.general116.example.json](references/prepare-config.general116.example.json)；同一批次使用一个数据集，不把新旧 ID 拼成混合 bundle。
 
 
