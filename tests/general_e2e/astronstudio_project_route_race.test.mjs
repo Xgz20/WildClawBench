@@ -16,12 +16,13 @@ async function fixture(mode){
  db.prepare('INSERT INTO projection_projects VALUES(?,?,NULL)').run('target',workspace);
  db.prepare('INSERT INTO projection_projects VALUES(?,?,NULL)').run('old',join(temp,'other'));
  db.exec("INSERT INTO projection_threads VALUES('old-route','old',NULL,NULL)");
- db.prepare('INSERT INTO projection_threads VALUES(?,?,NULL,NULL)').run('target-route',mode==='wrong-native-after-click'?'old':'target');
+ db.prepare('INSERT INTO projection_threads VALUES(?,?,NULL,NULL)').run('target-route',['wrong-native-after-click','native-binding-delayed'].includes(mode)?'old':'target');
  if(mode==='used-target')db.exec("INSERT INTO projection_thread_messages VALUES('target-route')");
  db.close();let editorReads=0,workspaceReads=0,clicked=0,route=mode==='same-pristine-route'?'target-route':'old-route';const sends=[];
  const client={send:async(name)=>{sends.push(name)},evaluate:async text=>{
   if(text.includes('link_chips:')){
    editorReads++;if(mode==='route-changed'&&editorReads>=2)route='target-route';
+   if(mode==='native-binding-delayed'&&clicked&&editorReads>=6){const update=new DatabaseSync(path);update.exec("UPDATE projection_threads SET project_id='target' WHERE thread_id='target-route'");update.close();}
    return {thread_id:route,editor_count:1,editor_text:'',link_chips:[]};
   }
   if(text.includes('dialog_count:'))return {editor_count:1,editor_empty:mode!=='foreign-draft',dialog_count:0,stop_count:0};
@@ -46,6 +47,9 @@ test('picker path with an old pristine native project navigates the exact target
 });
 test('a delayed picker may settle on the same exact unused native route after New conversation',async()=>{
  const f=await fixture('same-pristine-route');try{const value=await openExactProjectConversation(f.client,f.workspace,f.path,500,{forceNew:true});assert.equal(value.thread_id,'target-route');assert.equal(value.method,'native-pristine-project-conversation');assert.equal(value.project_id,'target');assert.equal(f.clicks(),1);assert.deepEqual(f.sends,['Input.dispatchMouseEvent']);}finally{await rm(f.temp,{recursive:true,force:true})}
+});
+test('UI route and absolute path wait for a delayed exact native project binding before admission',async()=>{
+ const f=await fixture('native-binding-delayed');try{const value=await openExactProjectConversation(f.client,f.workspace,f.path,3000,{forceNew:true});assert.equal(value.thread_id,'target-route');assert.equal(value.project_id,'target');assert.equal(f.clicks(),1);assert.deepEqual(f.sends,['Input.dispatchMouseEvent']);}finally{await rm(f.temp,{recursive:true,force:true})}
 });
 for(const mode of ['foreign-draft','wrong-native-after-click','used-target'])test('unsafe route remains blocked: '+mode,async()=>{
  const f=await fixture(mode);try{await assert.rejects(openExactProjectConversation(f.client,f.workspace,f.path,500,{forceNew:true}),/AstronStudio/);if(mode==='foreign-draft')assert.equal(f.clicks(),0);}finally{await rm(f.temp,{recursive:true,force:true})}

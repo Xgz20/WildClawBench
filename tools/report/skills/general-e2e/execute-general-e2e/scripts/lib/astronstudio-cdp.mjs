@@ -645,14 +645,26 @@ export async function openExactProjectConversation(client, workspace, stateDatab
     timeoutMs,
     "等待 AstronStudio 目标项目新对话路由和绝对路径",
   );
-  const native = await queryProjectForThread(stateDatabase, confirmed.thread_id);
-  if (native.length !== 1 || native[0].project_id !== projectId
-    || native[0].workspace_root !== workspace) {
-    throw new Error("AstronStudio 新对话原生项目与目标 Workspace 不一致");
-  }
-  if (options.forceNew && !await queryPristineThread(stateDatabase, confirmed.thread_id)) {
-    throw new Error("AstronStudio 目标项目新对话并非未使用的原生路由");
-  }
+  await waitFor(async () => {
+    const editor = await editorState(client);
+    const selected = await workspaceState(client);
+    const active = await readActivity();
+    if (editor.thread_id !== confirmed.thread_id || editor.editor_count !== 1 || editor.editor_text !== ""
+      || selected.count !== 1 || selected.path !== workspace || active.dialog_count || active.stop_count) {
+      throw new Error("AstronStudio 等待原生项目同步期间路由、路径、草稿或活动状态发生变化");
+    }
+    const native = await queryProjectForThread(stateDatabase, confirmed.thread_id);
+    if (native.length > 1) throw new Error("AstronStudio 新对话原生项目身份歧义");
+    const pristine = !options.forceNew || await queryPristineThread(stateDatabase, confirmed.thread_id);
+    if (native.length === 1 && !pristine) {
+      throw new Error("AstronStudio 目标项目新对话并非未使用的原生路由");
+    }
+    return { thread_id: confirmed.thread_id, native_projects: native, pristine,
+      expected_project_id: projectId, expected_workspace: workspace };
+  }, (value) => value.pristine && value.native_projects.length === 1
+    && value.native_projects[0].project_id === projectId
+    && value.native_projects[0].workspace_root === workspace,
+  timeoutMs, "等待 AstronStudio 新对话原生项目与目标 Workspace 精确同步");
   // A delayed workspace selection can complete on the initial, already
   // pristine target route. The native project and unused-thread checks above
   // establish freshness; a different opaque route ID is not required.
