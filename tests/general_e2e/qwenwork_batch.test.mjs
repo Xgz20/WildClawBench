@@ -106,6 +106,16 @@ test("source repair at preparation requires every journal unsent and a fresh emp
     journal.prompt.send_status="not_sent";await writeFile(path,JSON.stringify(journal));
     probe.native_state.database.session_count=1;bytes=Buffer.from(JSON.stringify(probe));await writeFile(probePath,bytes);repair.boundary_probe_sha256=sha256(bytes);
     await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/SOURCE_REPAIR_PROBE_INVALID/u);
+    const db=probe.native_state.database;
+    db.business_status_counts={completed:1};
+    db.stable_identity_coverage=Object.fromEntries(['session_id','conversation_id','sub_chat_id','local_project_id','cwd'].map(k=>[k,1]));
+    db.workspace_identity_index={profile:'complete-native-workspace-sha256/v1',row_count:1,identified_row_count:1,sha256s:[sha256('/unrelated/completed/workspace')]};
+    const saveProbe=async()=>{bytes=Buffer.from(JSON.stringify(probe));await writeFile(probePath,bytes);repair.boundary_probe_sha256=sha256(bytes)};
+    await saveProbe();await assertZeroSendSourceRepair(state,repair,root);
+    db.workspace_identity_index.sha256s=[sha256(join(root,'execution/tasks/task/workspace'))];
+    await saveProbe();await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/SOURCE_REPAIR_PROBE_INVALID/u);
+    db.workspace_identity_index.sha256s=[sha256('/unrelated/completed/workspace')];db.stable_identity_coverage.cwd=0;
+    await saveProbe();await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/SOURCE_REPAIR_PROBE_INVALID/u);
     state.tasks[0].dispatch_attempt_count=1;
     await assert.rejects(assertZeroSendSourceRepair(state,repair,root),/ZERO_SEND_SOURCE_REPAIR_INVALID/u);
   }finally{await rm(root,{recursive:true,force:true});}

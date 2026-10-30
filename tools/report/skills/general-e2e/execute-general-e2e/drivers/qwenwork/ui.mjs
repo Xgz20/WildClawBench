@@ -543,8 +543,44 @@ export function normalizeQwenPromptText(value) {
     .replace(/\n{3,}/gu, "\n\n");
 }
 
+export function serializeQwenPlainEditor(nodes) {
+  if (!Array.isArray(nodes)) throw new Error('QWENWORK_PROMPT_DOM_UNSUPPORTED');
+  let value = '', blockSeen = false;
+  for (const [index, node] of nodes.entries()) {
+    if (node.tag === '#text' && !blockSeen && typeof node.text === 'string') {
+      value += node.text;
+      continue;
+    }
+    if (node.tag !== 'DIV' || !Array.isArray(node.children)) throw new Error('QWENWORK_PROMPT_DOM_UNSUPPORTED');
+    blockSeen = true;
+    const line = node.children;
+    let text = '';
+    if (!(line.length === 1 && line[0].tag === 'BR')) {
+      if (line.some(child => child.tag !== '#text' || typeof child.text !== 'string')) {
+        throw new Error('QWENWORK_PROMPT_DOM_UNSUPPORTED');
+      }
+      text = line.map(child => child.text).join('');
+    }
+    if (index > 0) value += '\n';
+    value += text;
+  }
+  return value;
+}
+
 export async function readQwenPrompt(page) {
   const editor = await findQwenPromptEditor(page);
+  const structure = await editor.evaluate(element => {
+    if (['INPUT', 'TEXTAREA'].includes(element.tagName)) return { profile: 'form-value', value: element.value };
+    if (!element.isContentEditable) return null;
+    return { profile: 'plain-editor-dom', nodes: [...element.childNodes].map(node => ({
+      tag: node.nodeName, text: node.nodeType === 3 ? node.textContent : null,
+      children: node.nodeType === 1 ? [...node.childNodes].map(child => ({
+        tag: child.nodeName, text: child.nodeType === 3 ? child.textContent : null,
+      })) : null,
+    })) };
+  }).catch(() => null);
+  if (structure?.profile === 'form-value') return structure.value;
+  if (structure?.profile === 'plain-editor-dom') return serializeQwenPlainEditor(structure.nodes);
   const value = await editor.innerText().catch(async () => (
     await editor.inputValue().catch(async () => (
       await editor.textContent().catch(() => "")

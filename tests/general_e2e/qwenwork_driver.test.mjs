@@ -44,6 +44,7 @@ import {
   requireUniqueVisible,
   skipQwenClarification,
   normalizeQwenPromptText,
+  serializeQwenPlainEditor,
   fillQwenPrompt,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/qwenwork/ui.mjs";
 
@@ -57,6 +58,18 @@ const PROMPT_SHA = "e".repeat(64);
 
 test("contenteditable prompt readback normalizes macOS paragraph boundaries", () => {
   assert.equal(normalizeQwenPromptText("第一段\n\n\n第二段\r\n\r\n第三段"), "第一段\n\n第二段\n\n第三段");
+});
+
+test('plain editor preserves every blank line instead of collapsing innerText spacing', () => {
+  const text = value => ({ tag: '#text', text: value });
+  const div = value => ({ tag: 'DIV', children: value === '' ? [{ tag: 'BR' }] : [text(value)] });
+  const nodes = [text('公开指令🙂'), div(''), div('# 上下文'), div(''), div(''), div('任务正文')];
+  assert.equal(serializeQwenPlainEditor(nodes), '公开指令🙂\n\n# 上下文\n\n\n任务正文');
+  assert.equal(serializeQwenPlainEditor([div(''), div('尾行'), div('')]), '\n尾行\n');
+  for (const unknown of [[{ tag: 'P', children: [text('未知块')] }],
+    [div('开头'), text('块后的未知文本')], [{ tag: 'DIV', children: [{ tag: 'SPAN', text: '隐藏节点' }] }]]) {
+    assert.throws(() => serializeQwenPlainEditor(unknown), /PROMPT_DOM_UNSUPPORTED/);
+  }
 });
 
 test("keyboard fallback verifies focus twice, records a diagnostic and preserves readback", async () => {

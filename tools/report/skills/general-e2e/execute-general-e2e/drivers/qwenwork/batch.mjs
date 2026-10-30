@@ -59,11 +59,24 @@ export async function assertZeroSendSourceRepair(state, repair, root) {
   const bytes = await readFile(repair.boundary_probe_path);
   const probe = JSON.parse(bytes.toString("utf8"));
   const age = Date.now() - Date.parse(probe.probed_at);
+  const database = probe.native_state?.database;
+  const index = database?.workspace_identity_index;
+  const historyCount = database?.session_count;
+  const completedHistory = Number.isSafeInteger(historyCount) && historyCount > 0
+    && database.business_status_counts?.completed === historyCount
+    && Object.values(database.business_status_counts).reduce((a, b) => a + b, 0) === historyCount
+    && ['session_id', 'conversation_id', 'sub_chat_id', 'local_project_id', 'cwd']
+      .every(key => database.stable_identity_coverage?.[key] === historyCount)
+    && index?.profile === 'complete-native-workspace-sha256/v1'
+    && index.row_count === historyCount && index.identified_row_count === historyCount
+    && Array.isArray(index.sha256s) && index.sha256s.length > 0
+    && index.sha256s.every(value => typeof value === 'string' && /^[a-f0-9]{64}$/u.test(value))
+    && state.tasks.every(row => !index.sha256s.includes(sha256(resolve(root, 'execution/tasks', row.task_id, 'workspace'))));
   if (sha256(bytes) !== repair.boundary_probe_sha256 || !Number.isFinite(age) || age < -5000 || age > 300_000
       || probe.app?.identity_verified !== true || probe.app.bundle_id !== BUNDLE_ID
       || probe.execution_environment?.verified !== true || probe.execution_environment.endpoint !== state.frozen.endpoint
       || probe.native_state?.session_database !== state.frozen.session_db
-      || probe.native_state.database.session_count !== 0 || probe.native_state.database.active_or_pending_count !== 0) {
+      || !(historyCount === 0 || completedHistory) || database.active_or_pending_count !== 0) {
     throw new Error("QWENWORK_QUEUE_ZERO_SEND_SOURCE_REPAIR_PROBE_INVALID");
   }
 }

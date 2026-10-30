@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.14` 对千问普通文本编辑器按实际 DOM 行边界精确读回，保留连续空行和末尾 LF，不把 innerText 的渲染间距当作 Prompt 文本；未知节点继续拒绝。零发送源码修复在完整身份及 cwd 哈希索引证明所有历史原生会话已完成、且没有目标 Workspace 会话时允许接续；历史记录、冻结 Prompt 和原队列不清空，未知发送及活动/缺身份记录继续阻断。
+
+
 `0.14.13` 允许一次发送后迟到的原生会话通过只读恢复归属核验：必须同时匹配原 attempt 的完整目录、project、完整 pre-send baseline、发送时间和唯一原始 Prompt，再加入本次观察允许集合；未知或额外活动会话仍阻断。只对发送计数为 1 的恢复观察生效，不进入第二次发送。
 
 `0.14.12` 支持新版无 chat URL 的导航：唯一 data-selected/data-chat-id 当前任务、aria-current、原生 project 区域、标题及 SQLite 单一 sub-chat 必须同时一致；URL 若声明另一会话则仍拒绝。

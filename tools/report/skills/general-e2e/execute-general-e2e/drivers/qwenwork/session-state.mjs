@@ -1,4 +1,5 @@
 import { isAbsolute, join, resolve } from "node:path";
+import { createHash } from 'node:crypto';
 
 import { querySnapshot, QWENWORK_SESSION_QUERY, QWENWORK_PROJECT_QUERY } from "../../vendor/e2e-shared/qwenwork-native-state/index.mjs";
 export { querySnapshot, QWENWORK_SESSION_QUERY, QWENWORK_PROJECT_QUERY };
@@ -121,6 +122,13 @@ export function summarizeQwenSessions(rows) {
     },
     native_status_counts: nativeStatuses,
     business_status_counts: businessStatuses,
+    workspace_identity_index: {
+      profile: 'complete-native-workspace-sha256/v1',
+      row_count: sessions.length,
+      identified_row_count: sessions.filter(session => session.cwd).length,
+      sha256s: [...new Set(sessions.filter(session => session.cwd)
+        .map(session => createHash('sha256').update(session.cwd).digest('hex')))].sort(),
+    },
   };
 }
 
