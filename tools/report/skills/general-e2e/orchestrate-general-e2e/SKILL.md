@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.19` 的状态恢复同时验证显式公共上下文 setup 未评分记录及其原 worker/contract SHA；已创建裁判的登记沿用同一线程，不因该记录类型重建或重发。
+
 `0.11.18` 允许显式留证数据集原规则声明的精确公共上下文准入失败（ValueError: EVALUATOR_SETUP_INVALID: public task context delivery not evidenced）。仅保留 evaluator-public-context-setup-error/v1 未评分，不补上下文、不补零或代替裁判；其他 ValueError、身份和基础设施异常仍失败关闭。
 
 `0.11.17` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。

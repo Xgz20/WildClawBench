@@ -1407,6 +1407,8 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 if allowed:
                     ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Public context delivery unavailable; preserve setup error without capability score",now=self.t0)
                     state=json.loads((root/"orchestration-state.json").read_text());self.assertEqual(state["tasks"][0]["scoring_error"]["kind"],"evaluator-public-context-setup-error/v1")
+                    recovered=ORCHESTRATOR.status(root,now=self.t0);self.assertEqual(recovered["tasks"][0]["phase"],"UNSCORED")
+                    built=ORCHESTRATOR.build_submission(root,now=self.t0);self.assertEqual(json.loads(Path(built["submission_path"]).read_text())["tasks"][0]["score_status"],"unscored")
                 else:
                     with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,"RULE_ERROR_DEFERRAL_NOT_ALLOWED"):
                         ORCHESTRATOR.record_unscored_rule_error(root,task_id="task-error",reason="Do not bypass unknown errors",now=self.t0)

@@ -1942,12 +1942,22 @@ def _verify_state(
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
-                    or scoring_error.get("kind") != "dataset-rule-evaluation-error/v1"):
+                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1"}):
                 raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
             for key in ("rule_audit", "worker_result"):
                 path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
                 if not _inside(attempt, path) or _sha256_file(path) != scoring_error[key + "_sha256"]:
                     raise OrchestrationError("RULE_ERROR_DEFERRAL_DRIFT", key)
+            if scoring_error.get("kind") == "evaluator-public-context-setup-error/v1":
+                failure = _read_json(root / scoring_error["worker_result_path"], "RULE_ERROR_DEFERRAL_INVALID")
+                frozen_manifest = _read_json(attempt / "attempt-manifest.json", "RULE_ERROR_DEFERRAL_INVALID")
+                frozen_contract = _read_json(attempt / frozen_manifest["paths"]["contract"], "RULE_ERROR_DEFERRAL_INVALID")
+                guard = "EVALUATOR_SETUP_INVALID: public task context delivery not evidenced"
+                if (failure.get("error", {}).get("type") != "ValueError"
+                        or failure.get("error", {}).get("message") != guard
+                        or failure.get("error") != scoring_error.get("error")
+                        or guard not in str(frozen_contract.get("automated_checks", ""))):
+                    raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", "undeclared context guard")
         score = task.get("score")
         if score is not None:
             score_path = root / str(score.get("path", ""))
