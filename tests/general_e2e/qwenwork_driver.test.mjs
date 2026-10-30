@@ -1470,3 +1470,17 @@ for(const scenario of ['matching','foreign-project','duplicate-selection','forei
  if(scenario==='duplicate-selection')await assert.rejects(inspectQwenTaskUi(page,'2026-01-01T00:00:00Z',expected,[expected]),/SELECTED_TASK_AMBIGUOUS/);
  else {const r=await inspectQwenTaskUi(page,'2026-01-01T00:00:00Z',expected,[expected]);assert.equal(r.target_session_verified,scenario==='matching');}
 });
+
+for(const scenario of ['own-delayed','wrong-prompt','foreign-active','ambiguous-native','old-native'])test(`one-send delayed native recovery ${scenario}`,async()=>{
+ const config=makeConfig({resume:true,managed_queue_id:'queue'}),now=clock();
+ let stored=createQwenAttemptJournal({identity:config.identity,dataset:config.dataset,taskRoot:config.task_root,candidateWorkspace:config.candidate_workspace,prompt:config.prompt,configDigest:config.config_digest,now:now()});
+ recordQwenDispatchIntent(stored,{project:project(),configuration:configuration(),baseline:[],now:now()});reserveQwenDispatch(stored,{now:now()});markQwenDispatchReturned(stored,{now:now(),method:'fixture'});stored.phase='NEEDS_ATTENTION';stored.attention={code:'QWENWORK_SESSION_NOT_FOUND',message:'native persistence late'};
+ const own={...session(),native_status:'running',stream_id:'stream',classification:{kind:'running',business_status:'running'}};
+ if(scenario==='old-native')own.created_at_ms=Date.parse('2026-01-01T00:00:00Z');
+ const rows=[own];if(scenario==='foreign-active')rows.push({...own,session_id:'foreign',conversation_id:'foreign-chat',cwd:WORKSPACE+'-foreign',local_project_id:'foreign'});if(scenario==='ambiguous-native')rows.push({...own,session_id:'other',sub_chat_id:'other',conversation_id:'other'});
+ let ui=0,dispatch=0;
+ const result=await runQwenGeneralAttempt(config,{withAttemptLock:async(_c,action)=>action(),now,readJournal:async()=>structuredClone(stored),writeJournal:async(_p,value)=>{stored=structuredClone(value);},prepareUi:async()=>{ui++;throw Error('no preparation');},verifyPreparedUi:async()=>{ui++;throw Error('no preparation');},fillPrompt:async()=>{ui++;},dispatchPrompt:async()=>{dispatch++;},querySessions:async()=>rows,verifySessionPrompt:async()=>({verified:true,prompt_sha256:scenario==='wrong-prompt'?'0'.repeat(64):PROMPT_SHA,match_count:1}),observeUi:async()=>{ui++;return {observed_at:now(),target_session_verified:true,active_stream:true,stop_confirmed:false,conflicts:[]};},writeBindingEvidence:async()=>[{path:'binding.json',sha256:'a'.repeat(64),size:1}]});
+ assert.equal(dispatch,0);assert.equal(result.journal.send.dispatch_attempt_count,1);
+ if(scenario==='own-delayed'){assert.equal(result.journal.phase,'RUNNING');assert.equal(result.journal.session.verified,true);assert.ok(result.journal.events.some(x=>x.type==='RECOVERY_NATIVE_CANDIDATE_READONLY_VERIFIED'));}
+ else {assert.equal(result.journal.phase,'NEEDS_ATTENTION');assert.equal(ui,0);}
+});

@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.13` 允许一次发送后迟到的原生会话通过只读恢复归属核验：必须同时匹配原 attempt 的完整目录、project、完整 pre-send baseline、发送时间和唯一原始 Prompt，再加入本次观察允许集合；未知或额外活动会话仍阻断。只对发送计数为 1 的恢复观察生效，不进入第二次发送。
+
 `0.14.12` 支持新版无 chat URL 的导航：唯一 data-selected/data-chat-id 当前任务、aria-current、原生 project 区域、标题及 SQLite 单一 sub-chat 必须同时一致；URL 若声明另一会话则仍拒绝。
 
 `0.14.12` 在会话投影和两次恢复选择中保留原始 sub-chat 引擎绑定，避免新版会话误走旧 SDK 路径。

@@ -51,7 +51,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.12";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.13";
 const PROVISIONAL_SESSION_SETTLE_MS = 60_000;
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
@@ -850,6 +850,24 @@ async function assertManagedActiveSessions(config, state, dependencies) {
   const active = rows.filter((row) => row?.classification?.kind === "running");
   const allowed = new Set(config.allowed_active_session_ids || []);
   const allowedConversations = new Set(config.allowed_active_conversation_ids || []);
+  let recoveryCandidate = null;
+  if (config.resume && state.send?.dispatch_attempt_count === 1 && !state.session?.verified
+      && state.send.invoking_at && ["uncertain", "sent"].includes(state.prompt?.send_status)) {
+    const candidate = selectQwenSessionForAttempt({sessions:rows,workspace:config.candidate_workspace,
+      nativeBinding:{...state.session,local_project_id:state.workspace.local_project_id},
+      baseline:state.session.baseline,sentAt:state.send.invoking_at});
+    if (candidate?.session_id && candidate.classification?.kind === 'running') {
+      const proof = await dependencies.verifySessionPrompt(candidate,config.prompt);
+      if (proof?.verified !== true || proof.prompt_sha256 !== config.prompt.sha256 || proof.match_count !== 1) {
+        throw Error('QWENWORK_RECOVERY_ACTIVE_PROMPT_UNVERIFIED');
+      }
+      allowed.add(candidate.session_id);
+      recoveryCandidate={session_id:candidate.session_id,conversation_id:candidate.conversation_id,
+        sub_chat_id:candidate.sub_chat_id,local_project_id:candidate.local_project_id,cwd:candidate.cwd,
+        prompt_sha256:proof.prompt_sha256,transcript_sha256:proof.transcript_sha256||null,
+        basis:'Exact original one-send attempt, complete pre-send baseline, project/cwd/time and native prompt readback; inspect only'};
+    }
+  }
   if (state.session?.session_id) allowed.add(state.session.session_id);
   if (state.session?.conversation_id) allowedConversations.add(state.session.conversation_id);
   const unknown = active.filter((row) => (
@@ -859,6 +877,10 @@ async function assertManagedActiveSessions(config, state, dependencies) {
   ));
   if (unknown.length) {
     throw new Error(`QWENWORK_MANAGED_ACTIVE_SESSION_NOT_ALLOWED: ${unknown.map((row) => row.session_id || row.conversation_id || "<missing>").join(",")}`);
+  }
+  if(recoveryCandidate){
+    state.events.push({type:'RECOVERY_NATIVE_CANDIDATE_READONLY_VERIFIED',at:dependencies.now(),details:recoveryCandidate});
+    await dependencies.writeJournal(config.state_file,state);
   }
 }
 
