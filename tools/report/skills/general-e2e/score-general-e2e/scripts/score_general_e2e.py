@@ -37,6 +37,7 @@ import rule_review_runtime
 import business_capability
 import semantic_aggregation
 import public_office_profiles
+import office001_native_profile
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1805,6 +1806,8 @@ def prepare_attempt(
                    if dataset_rule_corrections.procurement_matches(contract) else {}),
                 **({'public_office_input_profile':public_office_profiles.marker(contract,_sha256_bytes(contract_bytes))}
                    if public_office_profiles.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'office001_native_profile':office001_native_profile.marker(contract,_sha256_bytes(contract_bytes))}
+                   if office001_native_profile.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -2055,7 +2058,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
             raise ScoringRuntimeError("RUNTIME_WORKSPACE_INVALID", "rule workspace")
         if (root / "rule-component.json").is_file():
             contract = _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID")
-            if _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest)):
+            if _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest):
                 _generated_evidence_files(root, manifest, contract)
     _verify_rule_input_context(root, manifest)
     return {
@@ -2657,6 +2660,7 @@ def _effective_rule_source(
             procurement_layout_enabled=manifest.get('runtime',{}).get('procurement_layout_profile')=='procurement-matrix-formulas/v2',
         )
         corrected, receipt = public_office_profiles.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = office001_native_profile.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -2911,7 +2915,7 @@ def run_rules_attempt(
     rule_workspace = _resolve_within(
         attempt_root, manifest["runtime"]["workspace_argument"], "rule_workspace"
     ).resolve(strict=True)
-    for relative in _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest)):
+    for relative in _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest):
         if os.path.lexists(rule_workspace / relative):
             raise ScoringRuntimeError("JUDGE_EVIDENCE_TARGET_COLLISION", relative)
     _, runtime_initial_sha = _inventory_tree(runtime_workspace)
@@ -3167,7 +3171,8 @@ def _semantic_paths(root: Path) -> dict[str, Path]:
     }
 
 
-def _required_generated_evidence(contract: Mapping[str, Any], *, extended: bool = False) -> list[str]:
+def _required_generated_evidence(contract: Mapping[str, Any], *, extended: bool = False,
+                                 manifest: Mapping[str, Any] | None = None) -> list[str]:
     declarations = contract.get("judge_evidence") or {}
     if not isinstance(declarations, dict):
         raise ScoringRuntimeError("JUDGE_EVIDENCE_CONTRACT_INVALID", "judge_evidence must be an object")
@@ -3189,11 +3194,18 @@ def _required_generated_evidence(contract: Mapping[str, Any], *, extended: bool 
             paths.append(relative.as_posix())
     if len(paths) != len(set(paths)):
         raise ScoringRuntimeError("JUDGE_EVIDENCE_CONTRACT_INVALID", "duplicate path")
+    if manifest is not None:
+        try:
+            native = office001_native_profile.policy(manifest)
+        except ValueError as error:
+            raise ScoringRuntimeError('NATIVE_WRITER_PROFILE_INVALID',str(error)) from error
+        if native and not any(path == native['evidence_directory'] or native['evidence_directory'].startswith(path+'/') for path in paths):
+            paths.append(native['evidence_directory'])
     return paths
 
 
 def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract: Mapping[str, Any]) -> list[Path]:
-    required = _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest))
+    required = _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest)
     if not required:
         return []
     component = _read_json(root / "rule-component.json", code="JUDGE_EVIDENCE_NOT_PREPARED")
@@ -3259,6 +3271,9 @@ def _snapshot_generated_evidence(root: Path, manifest: Mapping[str, Any], contra
                 shutil.copyfile(source, output, follow_symlinks=False)
             _write_new_json(staging / "manifest.json", document)
             _make_read_only(staging)
+            _guard_candidate_office_copies(staging,
+                [{"type":"file","path":entry["path"],"sha256":entry["sha256"]} for entry in entries],
+                role="new-grader-generated-office-snapshot")
             staging.rename(target)
         except BaseException:
             _remove_tree(staging)
@@ -6035,6 +6050,8 @@ def prepare_rescore_attempt(
                    if dataset_rule_corrections.procurement_matches(_read_json(staging/source_paths['contract'])) else {}),
                 **({'public_office_input_profile':public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'office001_native_profile':office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -6100,7 +6117,7 @@ def run_api_score_attempt(
         raise ScoringRuntimeError("API_JUDGE_PROTOCOL_REQUIRED", judge["protocol"])
     grading_type = manifest["grading"]["type"]
     contract = _read_json(root / manifest["paths"]["contract"], code="SCORING_CONTRACT_INVALID")
-    if (grading_type == "hybrid" or _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest))) and not (
+    if (grading_type == "hybrid" or _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest)) and not (
         (root / "rule-component.json").is_file()
         or (root / "rule-audit.json").is_file()
     ):

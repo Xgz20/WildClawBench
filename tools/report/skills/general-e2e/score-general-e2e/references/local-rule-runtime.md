@@ -49,6 +49,24 @@ python scripts/configure_native_office.py \
 
 ## 准备私有 attempt
 
+### 可选的macOS原生Writer API
+
+Office001的原实现依赖Windows WPS COM。新的macOS评分可显式配置同等正文/必需表格编辑、保存重开证据的原生Writer API；它使用独立原生Office实例，不通过修改XML或仅做转换冒充实际编辑。真实候选和GT仍只在执行/正式采集/停机屏障后交接；运行时配置自测仅使用新生成的合成DOCX。
+
+准备已存在的JDK17+及官方UNO Java类JAR `org.libreoffice:libreoffice:26.2.2`（MPL2.0），固定SHA256为`37b94f944cb35fdbdb586d08df65419b42f1bd2363e143958dbae63ca15c23b3`。官方不可变地址为`https://repo.maven.apache.org/maven2/org/libreoffice/libreoffice/26.2.2/libreoffice-26.2.2.jar`；保留下载来源、校验和POM。无需改系统Java配置或安装Python UNO。
+
+```bash
+python scripts/native_writer_runtime.py configure \
+  --runtime-python /absolute/runtime/bin/python \
+  --jdk-home /absolute/installed-jdk \
+  --uno-jar /absolute/libreoffice-26.2.2.jar \
+  --office-configuration /absolute/runtime/native-office/native-office.json
+```
+
+它拒绝覆盖既有marker/启动器/支持目录，锁定原生Office、JDK、JAR、Java源码/class及Python启动器SHA，并执行实际合成文档打开、正文/两表编辑、保存重开和进程收尾后才发布`VALIDATED_REAL_NATIVE_EDIT_SAVE_REOPEN`。每次加载文档均禁用宏及外部链接更新，源文件不改；原生实例使用本机临时socket和独立Profile。已停止Profile封存为ZIP、日志与原生回执保留，成功后的自有缓存清理不触碰未知锁。
+
+新attempt显式冻结该验证marker、原contract/source SHA和运行时配置；旧attempt不追加。原规则函数只改入口声明以交接受管适配，原public numeric-v2算法和语义标准保留。评分端原生PDF/两版完整页图、编辑副本与进程证据放入独立grader-evidence；C6需逐页看图，C7只能看原始候选轨迹。缺交付导致原规则未调用探针时保留原数值结果与缺失说明；原生环境故障不转候选零分。v1匹配器与运行时源码已被评分采用后须保持冻结，后续改动使用新Profile版本。
+
 新attempt可按精确contract/source SHA注册`canonical-public-office-cwm-only/v2`，只覆盖公开Office输入的环境属性变体。注册表携带经原数据集manifest SHA验证的公开字节；`runtime.public_office_input_profile`冻结该表和原contract/source SHA。匹配时所有业务OPC成员和非CWM属性必须完全一致，新增审计进入原声明的评分证据目录，不把它当候选主动检查。原件、候选、整体哈希及原规则公式不重写；其他数据、公式、样式、属性或缺文件仍按原规则判断。旧manifest没有marker保持原源码。已使用的v2表和匹配器须保留；后续扩展建立新版本，不覆盖已冻结评分依赖。
 
 ```bash

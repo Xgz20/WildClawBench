@@ -767,6 +767,21 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 self.assertEqual(error["status"], "FAIL")
                 self.assertIn("缺少清单的评分目录", error["error"]["detail"])
 
+    def test_native_writer_prompt_route_cannot_drift_from_frozen_attempt(self) -> None:
+        fixture=Fixture(self.root/'native-route-drift',task_ids=('task-one',))
+        view=fixture.initialize(now=self.t0)
+        root=Path(view['orchestration_root']);state_path=root/'orchestration-state.json'
+        state=json.loads(state_path.read_text());task=state['tasks'][0]
+        manifest_path=root/task['attempt_path']/'attempt-manifest.json'
+        manifest=json.loads(manifest_path.read_text())
+        manifest['runtime']['office001_native_profile']={'profile':'office001-validated-native-writer-api/v1'}
+        manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
+        task['attempt_manifest_sha256']=ORCHESTRATOR._sha256_file(manifest_path)
+        state['queue_digest']=ORCHESTRATOR._queue_digest(state)
+        state_path.write_text(json.dumps(state),encoding='utf-8')
+        with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,'NATIVE_WRITER_PROMPT_PROFILE_MISMATCH'):
+            ORCHESTRATOR.status(root,now=self.t0)
+
     def test_acceptance_marker_mismatch_and_api_backend_fail_closed(self) -> None:
         fixture = Fixture(self.root / "acceptance-mismatch", task_ids=("task-one",))
         view = fixture.initialize(acceptance_id="G4-03", now=self.t0)

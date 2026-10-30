@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.32` 为Office001新macOS attempt提供显式已验证的原生Writer API编辑探针。先按[本地运行时](references/local-rule-runtime.md)配置独立JDK/固定UNO JAR并真实跑合成文档编辑、保存、重开；只有精确原contract/source和实测runtime marker匹配才启用。原C5正文位置、段落、两份必需表格及逐表单元格编辑条件沿用，原grade数值函数/权重不变；Windows原WPS COM和旧attempt不改。评分端原生PDF、两版全页图、编辑副本及进程回执独立冻结，不冒充候选交付或主动验收。未知原生错误仍评测异常，不补零。新建grader-evidence里的Office副本也做只读字节保护；旧快照不原地修改。
+
 `0.10.31` 为精确契约/规则SHA绑定的四象限PPT、XMind转PPT及库存分析002–004新attempt冻结公开Office输入兼容v2。仅当业务OPC部件与原公开材料逐字节一致、差异限于CWM属性及必要登记时，原哈希判据接受该有审计变体；原权重、分母、公式、候选和原件不改。模板未修改识别同样只在注册的交付路径检查等价模板，不把属性变体当作实际改稿。旧attempt没有新marker时沿用原有效源码，包括旧分页/跨月协议；不原地启用、不改旧分数。完整规则见[本地受管规则运行时](references/local-rule-runtime.md)。
 
 `0.10.30` 提供显式原生 Office 运行环境配置脚本，适用于尚未开始评分的 macOS 专用 runtime。启动器在 Worker 的最小 PATH 下使用绝对 Python/Office 路径，每次调用独立配置字体目录、可写字体缓存和缺省用户配置；保留规则显式提供的 UserInstallation。配置不等于实际渲染验收，须用合成 Office 文件在同一隔离环境执行渲染、编辑重开及中文页面截图验证，详见[本地受管规则运行时](references/local-rule-runtime.md)。不替代原规则明确要求的 Windows WPS COM，不修改旧 runtime 或评分标准。

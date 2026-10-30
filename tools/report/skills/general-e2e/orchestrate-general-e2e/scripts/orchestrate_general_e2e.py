@@ -637,6 +637,7 @@ def _prompt_text(
     rule_evidence_required: bool = False,
     rule_review_required: bool = False,
     independent_validity_required: bool = False,
+    native_writer_evidence_required: bool = False,
 ) -> str:
     runtime_usage = ""
     rule_instruction = (
@@ -675,6 +676,13 @@ def _prompt_text(
             f"聚合预检冻结argv（只替换响应文件参数）：{aggregation_argv}。"
             "预检失败不修改候选或锁；修正本独立裁判的结构/算术响应后用新文件重做预检，PASS后才record-semantics、finalize、verify-score。"
             "raw SDK首行session_meta.dynamic_tools可能含真实inputSchema，须查询已有定义；这不覆盖其它MCP registry，缺定义的能力继续保留未知。"
+        )
+    if native_writer_evidence_required:
+        rule_instruction += (
+            "本题的新attempt已显式冻结已实测的原生Writer API编辑性Profile。先查询grader_generated_evidence中的scope.json、原生probe-result.json及rendered-pages.json，核对原生引擎/版本、原件SHA和正文/必需表格保存重开证据。"
+            "C6须实际查看DOCX原生导出的完整页图与候选PDF完整页图；根据索引逐页核对，不用XML摘要、生成脚本或只看首页代替。"
+            "原生编辑副本、评分端导出PDF/页图均是评测材料，不是候选交付或候选主动验收；C7只能引用同次原始执行轨迹。"
+            "缺候选文件、损坏、渲染不可用与原生环境故障分别保留证据，按原Rubric判断，不能把评测故障当能力零分；不得重跑或改写自动规则。"
         )
     if validation is None:
         readiness_instruction = (
@@ -1077,6 +1085,7 @@ def initialize(
                         rule_evidence_required=rule_evidence_required,
                         rule_review_required=bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                         independent_validity_required=attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
+                        native_writer_evidence_required=bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1092,6 +1101,7 @@ def initialize(
                     "rule_evidence_required": rule_evidence_required,
                     "rule_review_required": bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                     'independent_validity_required':attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
+                    'native_writer_evidence_required':bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -1329,6 +1339,7 @@ def initialize_rescore(
                         rule_evidence_required=rule_evidence_required,
                         rule_review_required=bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                         independent_validity_required=attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
+                        native_writer_evidence_required=bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1345,6 +1356,7 @@ def initialize_rescore(
                     "rule_evidence_required": rule_evidence_required,
                     "rule_review_required": bool(attempt_manifest.get('runtime',{}).get('rule_review_profile')),
                     'independent_validity_required':attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
+                    'native_writer_evidence_required':bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                     "execution": dict(source_task["execution"]),
                     "execution_record_path": frozen_record.relative_to(staging).as_posix(),
                     "execution_record_sha256": source_task["execution_record_sha256"],
@@ -1919,6 +1931,7 @@ def _verify_state(
                 rule_evidence_required=task.get("rule_evidence_required", False),
                 rule_review_required=task.get('rule_review_required',False),
                 independent_validity_required=task.get('independent_validity_required',False),
+                native_writer_evidence_required=task.get('native_writer_evidence_required',False),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
@@ -1950,6 +1963,8 @@ def _verify_state(
             raise OrchestrationError('SCORING_RULE_REVIEW_ROUTE_DRIFT',str(task.get('task_id')))
         if task.get('independent_validity_required',False)!=(manifest_document.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2'):
             raise OrchestrationError('SCORING_INDEPENDENT_VALIDITY_ROUTE_DRIFT',str(task.get('task_id')))
+        if task.get('native_writer_evidence_required',False)!=bool(manifest_document.get('runtime',{}).get('office001_native_profile')):
+            raise OrchestrationError('NATIVE_WRITER_PROMPT_PROFILE_MISMATCH',task['task_id'])
         review_request=task.get('rule_review_request')
         if review_request is not None:
             rp=_regular_file(root/review_request['path'],'RULE_REVIEW_REQUEST_INVALID')
