@@ -1,3 +1,4 @@
+import {validateQwenCleanupCancellation} from './human-interaction.mjs';
 import {createHash} from 'node:crypto';
 import {readFile,writeFile,mkdir,mkdtemp,rename,rm} from 'node:fs/promises';
 import {join,dirname,relative} from 'node:path';
@@ -46,7 +47,7 @@ export function buildQwenEngineResources({state,sources,calls,collectedAt}) {
  coverage.call_count={known:calls.length,total:calls.length,unit:'tool_call'};coverage.duration_seconds={known:1,total:1,unit:'attempt'};
  return {schema_id:RESOURCE_SCHEMA,schema_version:1,identity:state.identity,collection:{collector:QWEN_ENGINE_PROFILE,version:'1.0.0',status:'partial',collected_at:collectedAt,sources,warnings:['QWEN_ENGINE_TOKEN_SEMANTICS_UNVERIFIED','QWEN_ENGINE_REQUEST_SEMANTICS_UNVERIFIED'],excluded_scope:['judge-usage','control-usage','unobserved-http-retries','client-background-services'],coverage,metric_sources:Object.fromEntries(names.map(x=>[x,refs]))},metrics:{usage:Object.fromEntries(names.slice(0,6).map(x=>[x,unavailable('Native engine token totals retained as raw evidence; semantics not admitted')])),requests:{request_count:unavailable('Assistant messages are not independently verified model requests'),request_attempt_count:unavailable('HTTP attempts unavailable')},tools:{call_count:{value:calls.length,status:'observed',basis:'Unique bound native tool parts with terminal results; includes linked child sessions'}},timing:{duration_seconds:flow,agent_duration_seconds:unavailable('No admitted native end-to-end agent timing profile')}}};
 }
-export async function collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,redacted=false}) {
+export async function collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,manualSources=null,redacted=false}) {
  if(redacted)throw Error('QWEN_ENGINE_LIVE_REDACTION_PROFILE_UNSUPPORTED');
  const config=configSource?.value,journal=journalSource.value;
  if(!config||config.config_digest!==journal.config_digest||config.identity.task_id!==state.identity.task_id)throw Error('QWEN_ENGINE_FROZEN_CONFIG_INVALID');
@@ -61,6 +62,13 @@ export async function collectQwenEngineEvidence({state,bindingSources,journalSou
  if(oldBinding.binding.nativeSessionId!==latest.binding.nativeSessionId)throw Error('QWEN_ENGINE_NATIVE_SESSION_REPLACED');
  const normalized=normalizeQwenEngineTrace(evidence,{state,prompt});
  const files=new Map([['raw/native-engine-snapshot.json',bytes(evidence)],['raw/native-part-rows.jsonl',lines(evidence.native.parts)],['raw/native-message-rows.jsonl',lines(evidence.native.messages)],['raw/prior-prompt-evidence.json',b],['raw/dispatch-journal.json',journalSource.bytes],['raw/frozen-config.json',configSource.bytes]]);
+ if(manualSources){
+   state.human_assistance=validateQwenCleanupCancellation({...manualSources,state,nativeEvidence:evidence});
+   for(const [key,source] of Object.entries(manualSources))files.set('raw/human-interaction/'+key+'.json',source.bytes);
+   state.extensions.qwenwork.explicit_human_interaction={profile:'bound-user-authorized-native-cleanup-cancellation/v1',
+     receipt_path:'trace/raw/human-interaction/receipt.json',receipt_sha256:sha(manualSources.receipt.bytes),
+     operation_count:1,semantic_intervention_count:0,prompt_resends:0};
+ }
  const raw=[...files].map(([p,v])=>artifact(p,v));const bindings=bindingSources.map((x,i)=>artifact(`bindings/${i+1}-session-binding.json`,x.bytes));bindings.forEach((x,i)=>files.set(x.path,bindingSources[i].bytes));
  state.extensions.qwenwork.native_terminal_reconciliation={mode:QWEN_ENGINE_PROFILE,verified:true,native_root_session_id:normalized.native_root_session_id};
  state.extensions.client={...(state.extensions.client||{}),model:journal.configuration?.model?.actual_model??null,model_verification_status:'verified',model_identity_kind:'client-ui-option',model_evidence_sha256:journalSource.sha256,native_engine:'opencode',native_model_id:latest.route.modelId};

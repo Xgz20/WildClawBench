@@ -51,12 +51,13 @@ function usage() {
 }
 
 function parseArgs(argv) {
-  const result = { unitRoot: "", journalFile: "", clientTraceRoot: "", outputRoot: "", redacted: false, help: false };
+  const result = { unitRoot: "", journalFile: "", clientTraceRoot: "", outputRoot: "", redacted: false, humanInteractionSupplement: "", help: false };
   const valued = new Map([
     ["--unit-root", "unitRoot"],
     ["--journal-file", "journalFile"],
     ["--client-trace-root", "clientTraceRoot"],
     ["--output-root", "outputRoot"],
+    ["--human-interaction-supplement", "humanInteractionSupplement"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -556,8 +557,17 @@ export async function collectQwenWorkEvidence(options) {
   }
   if (journalSource.value.session?.prompt_evidence?.profile === 'qwenwork-opencode-sqlite-v1') {
     if (authorizationSources.length) throw Error('QWEN_ENGINE_SENSITIVE_AUTHORIZATION_PROFILE_UNSUPPORTED');
-    return collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,redacted:options.redacted===true});
+    let manualSources=null;
+    if(options.humanInteractionSupplement){
+      const receipt=await readJson(options.humanInteractionSupplement);
+      if(!unitRelative(unitRoot,receipt.absolute,'HUMAN_INTERACTION').startsWith('.general-e2e/native-interactions/'))throw Error('QWENWORK_HUMAN_INTERACTION_OUTSIDE_CONTROL_ROOT');
+      manualSources={receipt,authorization:await readJson(join(dirname(receipt.absolute),'authorization.json')),
+        invocation:await readJson(join(dirname(receipt.absolute),'invocation.json')),
+        before:await readJson(join(dirname(receipt.absolute),'before-native-pending.json'))};
+    }
+    return collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,manualSources,redacted:options.redacted===true});
   }
+  if(options.humanInteractionSupplement)throw Error('QWENWORK_HUMAN_INTERACTION_PROFILE_UNSUPPORTED');
   const sessionId = requireString(state.session.session_id, "state.session.session_id");
   const transcriptSource = await discoverTranscript(journalSource.value, clientTraceRoot, sessionId);
   const segmentSources = await discoverSegments(clientTraceRoot, sessionId);
