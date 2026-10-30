@@ -42,7 +42,7 @@ import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.14";
+export const EXECUTION_DRIVER_VERSION = "0.4.15";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -1054,16 +1054,22 @@ export async function executeSingleTask(config, overrides = {}) {
       admitted_at: new Date(stream.admittedAt).toISOString(),
     });
     await persist(config, state);
-    await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
-    if (config.runConfig.tested_model.custom_mapping) {
+    const sendTarget = await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
+    if (config.runConfig.tested_model.custom_mapping || sendTarget.settled_transient_dialog) {
       const lastUi = await dependencies.readUiConfiguration(client, config.stateDatabase);
       if (lastUi.model !== config.expectedModel || lastUi.reasoning !== config.expectedReasoning
         || lastUi.permission !== config.expectedPermission
+        || (sendTarget.settled_transient_dialog && lastUi.thread_id !== state.send.pre_send_route_thread_id)
         || JSON.stringify(lastUi.custom_mapping || null)
-          !== JSON.stringify(config.runConfig.tested_model.custom_mapping)) {
-        throw new Error("CUSTOM_MODEL_CONFIGURATION_CHANGED_BEFORE_SEND");
+          !== JSON.stringify(config.runConfig.tested_model.custom_mapping || null)) {
+        throw new Error(config.runConfig.tested_model.custom_mapping
+          ? "CUSTOM_MODEL_CONFIGURATION_CHANGED_BEFORE_SEND" : "MODEL_CONFIGURATION_CHANGED_AFTER_DIALOG");
       }
-      state.client.final_custom_model_check = lastUi;
+      if (config.runConfig.tested_model.custom_mapping) state.client.final_custom_model_check = lastUi;
+      if (sendTarget.settled_transient_dialog) state.client.transient_dialog_readiness = {
+        profile: 'unchanged-frozen-prompt-natural-dialog-settlement/v1',
+        dialog_wait_ms: sendTarget.dialog_wait_ms, final_ui: lastUi, dialog_clicks: 0,
+      };
     }
     state.prompt.send_status = "intent_persisted";
     state.send.dispatch_armed_at = dependencies.now();

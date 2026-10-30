@@ -420,6 +420,46 @@ test("pre-arm check fails before mouse press when the send button remains obscur
   assert.deepEqual(calls.map(({ params }) => params.type), ["mouseMoved"]);
 });
 
+function transientDialogClient(after) {
+  const calls=[];
+  const blocked={ready:false,count:1,editor_count:1,prompt_matches:true,workspace_count:1,
+    workspace_matches:true,dialog_count:1,thread_id:'thread-1'};
+  let read=0;
+  const client={
+    evaluate:async expression=>{
+      if(expression.includes('innerWidth'))return {width:1344,height:810};
+      return read++===0?blocked:after(blocked);
+    },
+    send:async(method,params)=>calls.push({method,params}),
+  };
+  return {client,calls};
+}
+
+test('a transient dialog may disappear naturally while the frozen target stays unchanged',async()=>{
+  const f=transientDialogClient(()=>({ready:true,count:1,thread_id:'thread-1',x:800,y:500}));
+  const target=await ensureSendTargetReady(f.client,'prompt','/tmp/workspace',{sleep:async()=>{}});
+  assert.equal(target.settled_transient_dialog,true);
+  assert.deepEqual(f.calls.map(c=>c.params.type),['mouseMoved']);
+});
+
+test('a persistent unknown dialog is never clicked or approved',async()=>{
+  const f=transientDialogClient(blocked=>blocked);
+  await assert.rejects(ensureSendTargetReady(f.client,'prompt','/tmp/workspace',{dialogWaitMs:20}),/dialog_count/);
+  assert.deepEqual(f.calls.map(c=>c.params.type),['mouseMoved']);
+});
+
+test('a changed prompt during dialog settlement is preserved without sending',async()=>{
+  const f=transientDialogClient(blocked=>({...blocked,prompt_matches:false}));
+  await assert.rejects(ensureSendTargetReady(f.client,'prompt','/tmp/workspace',{sleep:async()=>{}}),/prompt_matches/);
+  assert.deepEqual(f.calls.map(c=>c.params.type),['mouseMoved']);
+});
+
+test('a changed native route cannot pass after a dialog disappears',async()=>{
+  const f=transientDialogClient(()=>({ready:true,count:1,thread_id:'foreign-route'}));
+  await assert.rejects(ensureSendTargetReady(f.client,'prompt','/tmp/workspace',{sleep:async()=>{}}),/原生路由/);
+  assert.deepEqual(f.calls.map(c=>c.params.type),['mouseMoved']);
+});
+
 test("CLI requires resume for observation and keeps identity timeout bounded", () => {
   assert.throws(() => parseArgs(["--observe-once"]), /--observe-once/u);
   assert.throws(
@@ -811,6 +851,32 @@ test("obscured send target fails before persisting a send intent", async () => {
   } finally {
     await rm(config.unitRoot, { recursive: true, force: true });
   }
+});
+
+test('natural dialog settlement with unchanged frozen configuration still sends exactly once',async()=>{
+  const config=await fixture(),clicks={count:0};
+  try{
+    const dependencies=commonDependencies(config,[[],[nativeSession('completed')]],clicks);
+    dependencies.ensureSendTargetReady=async()=>({ready:true,count:1,settled_transient_dialog:true,dialog_wait_ms:100});
+    dependencies.readUiConfiguration=async()=>({thread_id:'thread-1',model:config.expectedModel,reasoning:config.expectedReasoning,permission:config.expectedPermission});
+    const result=await executeSingleTask(config,dependencies);
+    assert.equal(result.phase,'COMPLETED');assert.equal(result.send.dispatch_attempt_count,1);assert.equal(clicks.count,1);
+    assert.equal(result.client.transient_dialog_readiness.dialog_clicks,0);
+  }finally{await rm(config.unitRoot,{recursive:true,force:true});}
+});
+
+test('model configuration is rechecked after natural dialog settlement before arming',async()=>{
+  const config=await fixture(),clicks={count:0};
+  try{
+    const dependencies=commonDependencies(config,[[]],clicks);
+    dependencies.ensureSendTargetReady=async()=>({ready:true,count:1,settled_transient_dialog:true,dialog_wait_ms:100});
+    dependencies.readUiConfiguration=async()=>({thread_id:'thread-1',model:config.expectedModel,reasoning:'Low',permission:config.expectedPermission});
+    const result=await executeSingleTask(config,dependencies);
+    assert.equal(result.phase,'FAILED');assert.equal(result.send.dispatch_attempt_count,0);
+    assert.equal(result.prompt.send_status,'not_sent');assert.equal(clicks.count,0);
+    assert.match(result.execution.error.message,/MODEL_CONFIGURATION_CHANGED_AFTER_DIALOG/);
+    assert.equal(result.history.some(item=>item.event==='PROMPT_DISPATCH_ARMED'),false);
+  }finally{await rm(config.unitRoot,{recursive:true,force:true});}
 });
 
 test("explicit zero-send recovery preserves failure bytes and the attempt, and sends once", async () => {

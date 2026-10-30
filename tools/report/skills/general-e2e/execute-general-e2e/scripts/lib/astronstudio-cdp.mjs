@@ -815,9 +815,14 @@ export async function inspectSendTarget(client, prompt, workspace) {
       || dialogs.length !== 0 || buttons.length !== 1) {
       return {
         ready: false, count: buttons.length, editor_count: editors.length,
+        thread_id: threadId(),
         prompt_matches: promptMatches, link_chip_count: linkChips.length,
         workspace_count: workspaces.length, workspace_matches: workspacePath === expectedWorkspace,
-        dialog_count: dialogs.length
+        dialog_count: dialogs.length,
+        dialogs: dialogs.map((dialog) => ({ role: dialog.getAttribute('role'),
+          label: dialog.getAttribute('aria-label'),
+          headings: Array.from(dialog.querySelectorAll('h1,h2,[role="heading"]')).map((e) => e.innerText),
+          buttons: Array.from(dialog.querySelectorAll('button')).map((e) => e.innerText || e.getAttribute('aria-label')) }))
       };
     }
     const rect = buttons[0].getBoundingClientRect();
@@ -831,7 +836,7 @@ export async function inspectSendTarget(client, prompt, workspace) {
   `));
 }
 
-export async function ensureSendTargetReady(client, prompt, workspace) {
+export async function ensureSendTargetReady(client, prompt, workspace, options = {}) {
   // Project preview cards can cover the composer after selecting a Workspace.
   // Verify the exact target before persisting any send intent. A failed check
   // here is provably before the first mouse press.
@@ -847,11 +852,30 @@ export async function ensureSendTargetReady(client, prompt, workspace) {
     button: "none",
   });
   await sleep(500);
-  const target = await inspectSendTarget(client, prompt, workspace);
+  let target = await inspectSendTarget(client, prompt, workspace);
+  const boundRoute = target.thread_id;
+  const started = Date.now();
+  const deadline = started + (options.dialogWaitMs ?? 5_000);
+  const sleepFor = options.sleep || sleep;
+  let observedDialog = false;
+  while (!target.ready && target.dialog_count > 0 && typeof boundRoute === 'string'
+    && boundRoute && target.thread_id === boundRoute && target.count === 1
+    && target.editor_count === 1 && target.prompt_matches && target.workspace_count === 1
+    && target.workspace_matches && Date.now() < deadline) {
+    // Wait only for an overlay to disappear on its own. Never approve, dismiss
+    // or click a dialog. Any route, prompt or workspace change remains fatal.
+    observedDialog = true;
+    await sleepFor(Math.min(100, Math.max(1, deadline - Date.now())));
+    target = await inspectSendTarget(client, prompt, workspace);
+  }
+  if (observedDialog && target.thread_id !== boundRoute) {
+    throw new Error("AstronStudio 弹窗等待期间目标原生路由发生变化");
+  }
   if (!target.ready) {
     throw new Error(`AstronStudio 发送前目标未就绪：${JSON.stringify(target)}`);
   }
-  return target;
+  return observedDialog ? { ...target, settled_transient_dialog: true,
+    dialog_wait_ms: Date.now() - started } : target;
 }
 
 export async function clickSend(client, prompt, workspace) {
