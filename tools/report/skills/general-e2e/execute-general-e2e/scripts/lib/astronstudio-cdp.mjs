@@ -501,15 +501,33 @@ export async function openExactProjectConversation(client, workspace, stateDatab
     throw new Error("AstronStudio 目标项目导航时存在草稿、弹窗或活动任务");
   }
   const lateWorkspace = await workspaceState(client);
-  if (lateWorkspace.count === 1 && lateWorkspace.path === workspace
-    && (!options.forceNew || await queryPristineThread(stateDatabase, initialRoute))) {
-    const native = await queryProjectForThread(stateDatabase, initialRoute);
-    if (native.length !== 1 || native[0].project_id !== projectId
-      || native[0].workspace_root !== workspace) {
-      throw new Error("AstronStudio 延迟出现的项目路径与原生路由不一致");
+  if (lateWorkspace.count === 1 && lateWorkspace.path === workspace) {
+    // The picker can finish rendering after the initial route was sampled.
+    // Accept only a fresh, stable route with the exact native project binding.
+    const lateEditor = await editorState(client);
+    if (lateEditor.editor_count !== 1 || lateEditor.editor_text !== "") {
+      throw new Error("AstronStudio 延迟项目导航期间出现草稿或编辑器歧义");
     }
-    return { method: options.forceNew ? "native-pristine-project-conversation" : "late-visible-current-value", project_id: projectId,
-      thread_id: initialRoute, editor_count: 1, editor_empty: true, ...lateWorkspace };
+    const lateRoute = lateEditor.thread_id;
+    const native = lateRoute ? await queryProjectForThread(stateDatabase, lateRoute) : [];
+    const pristine = !options.forceNew || (lateRoute && await queryPristineThread(stateDatabase, lateRoute));
+    const stableEditor = await editorState(client);
+    const stableWorkspace = await workspaceState(client);
+    if (stableEditor.editor_count !== 1 || stableEditor.editor_text !== "") {
+      throw new Error("AstronStudio 延迟项目核验期间出现草稿或编辑器歧义");
+    }
+    if (lateRoute && lateRoute === stableEditor.thread_id && stableWorkspace.count === 1
+      && stableWorkspace.path === workspace && pristine && native.length === 1
+      && native[0].project_id === projectId && native[0].workspace_root === workspace) {
+      return { method: options.forceNew ? "native-pristine-project-conversation" : "late-visible-current-value", project_id: projectId,
+        thread_id: lateRoute, editor_count: 1, editor_empty: true, ...stableWorkspace };
+    }
+    // A visible picker selection alone does not rebind a pristine conversation.
+    // Continue through the exact project's own New conversation entry below.
+    activity = await readActivity();
+    if (activity.editor_count !== 1 || !activity.editor_empty || activity.dialog_count || activity.stop_count) {
+      throw new Error("AstronStudio 原生项目切换前出现草稿、弹窗或活动任务");
+    }
   }
   if (lateWorkspace.count > 1 || (!options.forceNew && lateWorkspace.count === 1
     && lateWorkspace.path !== null && lateWorkspace.path !== workspace)) {
@@ -632,6 +650,9 @@ export async function openExactProjectConversation(client, workspace, stateDatab
   if (native.length !== 1 || native[0].project_id !== projectId
     || native[0].workspace_root !== workspace) {
     throw new Error("AstronStudio 新对话原生项目与目标 Workspace 不一致");
+  }
+  if (options.forceNew && !await queryPristineThread(stateDatabase, confirmed.thread_id)) {
+    throw new Error("AstronStudio 目标项目新对话并非未使用的原生路由");
   }
   return { method: confirmed.thread_id === initialRoute
     ? "late-visible-current-value" : "exact-project-new-conversation",
