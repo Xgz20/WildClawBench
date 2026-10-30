@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.13` 支持千问 OpenCode 运行期间的原生工具目录补采。用 `drivers/qwenwork/native-tools.mjs --journal-file ABS --output-dir NEW_DIR` 只读查询属于已绑定应用/SDK进程、同一 cwd、原生 session 及 provider/model 的 GET 元数据，不调用工具、不读取认证配置。正式 collector 可显式传 `--native-tool-catalog-proof ABS/proof.json`，验证原冻结配置/探针、PID启动身份、会话、捕获时间及原响应 SHA，再将四份原件纳入 raw_trace。只声明实际 registry 响应的覆盖；其他 registry/MCP 接口未知时仍不补造定义或能力分。采集在执行期间完成，正式终态收口时校验，不改旧轨迹。
+
+
 `0.11.12` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。
 
 `0.11.11` 使用 desktop-runtime 1.0.1：进程 stdio 完整关闭后合并字节并统一解码 UTF-8，避免多字节中文跨 pipe chunk 时产生替换字符，也不在 exit 提前截断。历史原件保留，已冻结证据只能通过显式只读传输补采和原 SHA 绑定选择，不覆盖旧制品或重发题目。

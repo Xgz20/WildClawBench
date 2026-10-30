@@ -51,13 +51,14 @@ function usage() {
 }
 
 function parseArgs(argv) {
-  const result = { unitRoot: "", journalFile: "", clientTraceRoot: "", outputRoot: "", redacted: false, humanInteractionSupplement: "", help: false };
+  const result = { unitRoot: "", journalFile: "", clientTraceRoot: "", outputRoot: "", redacted: false, humanInteractionSupplement: "", nativeToolCatalogProof: "", help: false };
   const valued = new Map([
     ["--unit-root", "unitRoot"],
     ["--journal-file", "journalFile"],
     ["--client-trace-root", "clientTraceRoot"],
     ["--output-root", "outputRoot"],
     ["--human-interaction-supplement", "humanInteractionSupplement"],
+    ["--native-tool-catalog-proof", "nativeToolCatalogProof"],
   ]);
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -565,9 +566,10 @@ export async function collectQwenWorkEvidence(options) {
         invocation:await readJson(join(dirname(receipt.absolute),'invocation.json')),
         before:await readJson(join(dirname(receipt.absolute),'before-native-pending.json'))};
     }
-    return collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,manualSources,redacted:options.redacted===true});
+    return collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,manualSources,nativeToolCatalogProof:options.nativeToolCatalogProof,redacted:options.redacted===true});
   }
   if(options.humanInteractionSupplement)throw Error('QWENWORK_HUMAN_INTERACTION_PROFILE_UNSUPPORTED');
+  if(options.nativeToolCatalogProof)throw Error('QWENWORK_NATIVE_TOOL_CATALOG_PROFILE_UNSUPPORTED');
   const sessionId = requireString(state.session.session_id, "state.session.session_id");
   const transcriptSource = await discoverTranscript(journalSource.value, clientTraceRoot, sessionId);
   const segmentSources = await discoverSegments(clientTraceRoot, sessionId);
