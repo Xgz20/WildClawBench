@@ -107,6 +107,24 @@ def checked_metric_path(unit_root: Path, execution: dict, record_path: Path) -> 
                                   / ident["attempt_id"] / "evidence-manifest.json", unit_root)
     manifest = load(evidence_manifest)
     entries = [x for x in manifest["artifacts"] if x.get("path") == relative]
+    if not entries:
+        # An explicitly selected, frozen scoring record may use an append-only
+        # UTF-8 recapture; its initial collection remains historical evidence.
+        recaptured=safe_file(metric_path.parent/"evidence-manifest.json",unit_root)
+        adopted=load(recaptured);profile=adopted.get("collection",{}).get("trace_utf8_redecode",{})
+        require(profile.get("profile")=="bound-qwen-native-utf8-redecode/v1" and adopted.get("identity")==ident,
+                "RESOURCE_RECAPTURE_PROFILE_INVALID")
+        collected=safe_file(report.resolve_file(unit_root,profile.get("collection_receipt_path"),"recapture collect receipt"),unit_root)
+        receipt=load(collected);record_relative=adopted["collection"]["execution_record_path"]
+        authoritative=safe_file(report.resolve_file(unit_root,record_relative,"recaptured execution record"),unit_root)
+        require(sha(authoritative)==sha(record_path) and load(authoritative)==execution,"RESOURCE_RECAPTURE_EXECUTION_DRIFT")
+        require(receipt.get("stage")=="collect-evidence" and receipt.get("scope")=={"batch_id":ident["batch_id"],"unit_id":ident["unit_id"]}
+                and receipt.get("dataset")==execution["dataset"],"RESOURCE_RECAPTURE_RECEIPT_IDENTITY")
+        for path in (authoritative,recaptured):
+            refs=[r for r in receipt["artifacts"] if r.get("path")==path.relative_to(unit_root).as_posix()]
+            require(len(refs)==1 and refs[0].get("sha256")==sha(path) and refs[0].get("size")==path.stat().st_size,"RESOURCE_RECAPTURE_RECEIPT_DRIFT")
+        manifest=adopted
+        entries=[x for x in manifest["artifacts"] if x.get("path")==relative]
     require(len(entries) == 1 and entries[0].get("sha256") == sha(metric_path),
             f"RESOURCE_METRIC_SHA_DRIFT:{execution['identity']['task_id']}")
     return metric_path

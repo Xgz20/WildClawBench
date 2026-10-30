@@ -53,6 +53,21 @@ class SelectedReportSourcesTest(unittest.TestCase):
                 REPORT.select_source_package(sources, {"source_package_id": choice}, task)
         self.assertIs(REPORT.select_source_package({"original": sources["original"]}, {}, "a"), sources["original"])
 
+    def test_recaptured_resources_bind_selected_record_receipt_and_manifest(self):
+        for variant in ['valid','profile','record','receipt','metric']:
+            with self.subTest(variant=variant),tempfile.TemporaryDirectory() as temp:
+                root=Path(temp).resolve();unit=root/'unit';unit.mkdir();identity={'batch_id':'b','unit_id':'u','task_id':'task','attempt_id':'attempt'}
+                prior=unit/'evidence/tasks/task/attempt/evidence-manifest.json';prior.parent.mkdir(parents=True);prior.write_text(json.dumps({'identity':identity,'artifacts':[]}))
+                folder=unit/'evidence/trace-recaptures/fix/task';folder.mkdir(parents=True);metric=folder/'resource.json';metric.write_text('{}');relative=metric.relative_to(unit).as_posix();execution={'identity':identity,'dataset':{'id':'d','digest':'f'},'resource_metrics_path':relative};record=folder/'execution-record.json';record.write_text(json.dumps(execution));snapshot=root/'scoring-record.json';snapshot.write_bytes(record.read_bytes())
+                def ref(path):return {'path':path.relative_to(unit).as_posix(),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),'size':path.stat().st_size}
+                manifest=folder/'evidence-manifest.json';manifest.write_text(json.dumps({'identity':identity,'collection':{'execution_record_path':record.relative_to(unit).as_posix(),'trace_utf8_redecode':{'profile':'wrong' if variant=='profile' else 'bound-qwen-native-utf8-redecode/v1','collection_receipt_path':'receipts/recapture.json'}},'artifacts':[ref(metric)]}));receipt=unit/'receipts/recapture.json';receipt.parent.mkdir();receipt.write_text(json.dumps({'stage':'collect-evidence','scope':{'batch_id':'b','unit_id':'u'},'dataset':execution['dataset'],'artifacts':[ref(record),ref(manifest)]}))
+                if variant=='record':snapshot.write_text('{"changed":true}')
+                elif variant=='receipt':d=json.loads(receipt.read_text());d['artifacts'][1]['sha256']='0'*64;receipt.write_text(json.dumps(d))
+                elif variant=='metric':metric.write_text('{"drift":true}')
+                if variant=='valid':self.assertEqual(REPORT.checked_metric_path(unit,execution,snapshot),metric)
+                else:
+                    with self.assertRaises(ValueError):REPORT.checked_metric_path(unit,execution,snapshot)
+
     def test_duplicate_or_empty_source_lists_are_rejected(self):
         for value, error in [([], "PACKAGES_INVALID"), ([{"package_id": "same"}, {"package_id": "same"}], "PACKAGE_DUPLICATE")]:
             with self.assertRaisesRegex(ValueError, error):
