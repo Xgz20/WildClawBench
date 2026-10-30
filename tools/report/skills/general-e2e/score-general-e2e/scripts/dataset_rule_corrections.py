@@ -70,6 +70,18 @@ def _office_public_inputs(source):
         'effective_source_sha256': hashlib.sha256(effective.encode('utf-8')).hexdigest(),
         'baseline_catalog_sha256': baseline_sha,
         'canonical_public_input_sha256s': sorted(baselines),
+        'result_adapter_extension': {'diagnostic_text_keys': ['evidence_status']},
         'reason': '仅接受与原公开输入逐个业务OPC成员字节一致的CWM自定义属性变体，原始文件及SHA保留；其他数据、样式、公式、元数据变化继续阻断。',
         'candidate_rewritten': False,
     }
+
+
+def effective_result_adapter(task_id, source, policy):
+    if (task_id != '03_Data_Analysis_task_005_cross_month_returns_regional_sales'
+            or hashlib.sha256(source.encode('utf-8')).hexdigest() != 'fb529c42c7a68e5f238e9c80ec71118da3afa875b7deaf5804a943b1403d4904'):
+        return policy
+    if not isinstance(policy, dict) or policy.get('schema_version') != 'wildclawbench.general-e2e-numeric-diagnostics/v1':
+        raise ValueError('PUBLIC_OFFICE_RESULT_ADAPTER_MISMATCH')
+    effective = json.loads(json.dumps(policy))
+    effective['diagnostic_text_keys'] = ['evidence_status']
+    return effective

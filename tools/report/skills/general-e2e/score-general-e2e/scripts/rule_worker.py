@@ -32,6 +32,14 @@ def adapt_rule_result(raw: dict[str, Any], policy: object) -> dict[str, Any]:
             if not isinstance(result[key], dict):
                 raise ValueError(f"diagnostics must be an object: {key}")
             del result[key]
+    text_keys = policy.get("diagnostic_text_keys", [])
+    if not isinstance(text_keys, list) or len(text_keys) != len(set(text_keys)) or any(key != "evidence_status" for key in text_keys):
+        raise ValueError("invalid diagnostic text key policy")
+    for key in text_keys:
+        if key in result:
+            if not isinstance(result[key], str):
+                raise ValueError(f"diagnostic text must be a string: {key}")
+            del result[key]
     if "overall_score" not in result:
         if policy.get("evidence_only") is True and not result:
             # Neutral transport placeholder with a frozen zero scoring weight.

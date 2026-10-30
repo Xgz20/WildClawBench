@@ -10,10 +10,38 @@ import zipfile
 from xml.etree import ElementTree as ET
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 
-from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT
+from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT, SCRIPT_PATH, load_module
 
 
 class DatasetRuleCorrectionTests(unittest.TestCase):
+    def test_declared_text_diagnostic_is_not_a_numeric_checkpoint(self):
+        worker = load_module('rule_worker_text_adapter_test', SCRIPT_PATH.with_name('rule_worker.py'))
+        raw = {'C2': 1.0, 'overall_score': 0.75, 'evidence_status': '仅规则组，不冒充正式总分', 'diagnostics': {'checked': True}}
+        policy = {'schema_version': 'wildclawbench.general-e2e-numeric-diagnostics/v1',
+                  'diagnostic_keys': ['diagnostics'], 'diagnostic_text_keys': ['evidence_status']}
+        before = json.loads(json.dumps(raw))
+        self.assertEqual(worker.adapt_rule_result(raw, policy), {'C2': 1.0, 'overall_score': 0.75})
+        self.assertEqual(raw, before)
+        legacy = {k:v for k,v in policy.items() if k != 'diagnostic_text_keys'}
+        self.assertIn('evidence_status', worker.adapt_rule_result(raw, legacy))
+        for value in [0.5, {'status': 'complete'}]:
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, 'must be a string'):
+                worker.adapt_rule_result({**raw, 'evidence_status': value}, policy)
+        with self.assertRaisesRegex(ValueError, 'invalid diagnostic text key'):
+            worker.adapt_rule_result(raw, {**policy, 'diagnostic_text_keys': ['C2']})
+
+    def test_result_adapter_extension_requires_exact_source_and_keeps_original_policy(self):
+        tid = '03_Data_Analysis_task_005_cross_month_returns_regional_sales'
+        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))
+        code = _strip_codeblock(sections['Automated Checks'])
+        policy = {'schema_version': 'wildclawbench.general-e2e-numeric-diagnostics/v1', 'diagnostic_keys': ['diagnostics', '诊断']}
+        before = dict(policy)
+        fn = RUNTIME.dataset_rule_corrections.effective_result_adapter
+        self.assertEqual(fn(tid, code, policy)['diagnostic_text_keys'], ['evidence_status'])
+        self.assertEqual(policy, before)
+        self.assertEqual(fn(tid, code+'\n', policy), policy)
+        self.assertEqual(fn('other', code, policy), policy)
+
     def test_cwm_profile_keeps_business_members_and_rejects_other_changes(self):
         data_dir = Path(RUNTIME.dataset_rule_corrections.__file__).resolve().parents[1] / 'data/public-input-baselines'
         baseline = json.loads((data_dir / 'cross-month-sales-v1.json').read_text())['files'][0]

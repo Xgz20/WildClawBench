@@ -2915,7 +2915,9 @@ def run_rules_attempt(
         runtime_lock_path=runtime_lock_path,
         timeout_seconds=timeout_seconds,
         playwright_browsers_path=playwright_browsers_path,
-        rule_result_adapter=contract.get("rule_result_adapter"),
+        rule_result_adapter=dataset_rule_corrections.effective_result_adapter(
+            manifest["identity"]["task_id"], automated_checks, contract.get("rule_result_adapter")
+        ),
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -5329,6 +5331,11 @@ def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> N
     request = _read_json(root / "worker/request.json", code="RULE_WORKER_REQUEST_INVALID")
     if request.get("automated_checks") != effective:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker source")
+    expected_adapter = dataset_rule_corrections.effective_result_adapter(
+        manifest["identity"]["task_id"], source, contract.get("rule_result_adapter")
+    )
+    if request.get("rule_result_adapter") != expected_adapter:
+        raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker result adapter")
     audit = _read_json(root / "rule-audit.json", code="RULE_AUDIT_INVALID")
     if audit.get("source_correction") != {
         "path": "rule-source-correction.json",
