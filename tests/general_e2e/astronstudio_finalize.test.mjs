@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
-import { spawn } from "node:child_process";
-import { chmod, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
+import { spawn, execFileSync } from "node:child_process";
+import { chmod, cp, mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
@@ -293,6 +293,58 @@ test('a completed label with an unproved running projection cannot finalize', as
     await assert.rejects(finalizeAstronStudioExecution(options(value), { terminateProcesses: async () => successfulCleanup() }),
       /TERMINAL_PROJECTION_PROOF_REQUIRED/);
   } finally { await rm(value.root, { recursive: true, force: true }); }
+});
+
+test('macOS freezes Office bytes before publication and blocks later metadata writes', { skip: process.platform !== 'darwin' }, async () => {
+  const value = await fixture();
+  const frozen = join(value.root, 'evidence/tasks', value.taskId, value.attemptId, 'candidate/workspace/final.docx');
+  try {
+    const content = Buffer.from('synthetic Office byte identity');
+    await writeFile(join(value.workspace, 'final.docx'), content);
+    await finalizeAstronStudioExecution(options(value), { terminateProcesses: async () => successfulCleanup() });
+    assert.ok(Number(execFileSync('/usr/bin/stat', ['-f', '%f', frozen], { encoding: 'utf8' }).trim()) & 2);
+    await assert.rejects(writeFile(frozen, 'host metadata rewrite'), /EPERM|EACCES/);
+    assert.deepEqual(await readFile(frozen), content);
+    assert.equal((await verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId })).status, 'PASS');
+    assert.equal(Number(execFileSync('/usr/bin/stat', ['-f', '%f', join(value.workspace, 'final.docx')], { encoding: 'utf8' }).trim()) & 2, 0);
+  } finally {
+    try { execFileSync('/usr/bin/chflags', ['nouchg', frozen], { stdio: 'ignore' }); } catch {}
+    await rm(value.root, { recursive: true, force: true });
+  }
+});
+
+test('failed Office freeze clears only its own unpublished staging protection', { skip: process.platform !== 'darwin' }, async () => {
+  const value = await fixture();
+  try {
+    await writeFile(join(value.workspace, 'final.docx'), 'synthetic bytes');
+    let checks = 0;
+    await assert.rejects(finalizeAstronStudioExecution(options(value), {
+      terminateProcesses: async () => successfulCleanup(),
+      validateInputs: async () => { if (++checks === 2) throw Error('OWNED_STAGING_FAILURE'); },
+    }), /OWNED_STAGING_FAILURE/);
+    const { readdir } = await import('node:fs/promises');
+    assert.deepEqual((await readdir(join(value.root, 'evidence/tasks', value.taskId))).filter(n => n.includes('.collecting-')), []);
+    assert.equal(Number(execFileSync('/usr/bin/stat', ['-f', '%f', join(value.workspace, 'final.docx')], { encoding: 'utf8' }).trim()) & 2, 0);
+  } finally { await rm(value.root, { recursive: true, force: true }); }
+});
+
+test('a portable collected unit preserves its historical native cwd after relocation', async () => {
+  const value = await fixture();
+  const relocated = await mkdtemp(join(tmpdir(), 'general-collected-relocated-'));
+  try {
+    await finalizeAstronStudioExecution(options(value), { terminateProcesses: async () => successfulCleanup() });
+    await cp(value.root, relocated, { recursive: true });
+    const selected = await verifyAstronStudioCollection({ unitRoot: relocated, taskId: value.taskId });
+    assert.equal(selected.status, 'PASS');
+    const recordPath = join('evidence/tasks', value.taskId, value.attemptId, 'execution-record.json');
+    assert.deepEqual(await readFile(join(relocated, recordPath)), await readFile(join(value.root, recordPath)));
+    const record = JSON.parse(await readFile(join(relocated, recordPath), 'utf8'));
+    assert.equal(record.session.cwd, value.workspace);
+    assert.notEqual(record.session.cwd, join(relocated, 'execution/tasks', value.taskId, 'workspace'));
+  } finally {
+    await rm(value.root, { recursive: true, force: true });
+    await rm(relocated, { recursive: true, force: true });
+  }
 });
 
 test('native log resource production includes binding closure and passes real finalize plus verify-only', async () => {

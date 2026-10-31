@@ -33,6 +33,7 @@ import { createWorkspaceIntegrity } from "../../vendor/e2e-shared/handoff/worksp
 import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resource-supplements/astronstudio-native-provider-log.mjs";
 import { verifyArchivedTerminalFinalRecapture, assertRecaptureDeclaration } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
 import { historicalTerminalProjection, verifyTerminalProjection } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
+import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -469,6 +470,7 @@ async function copyCandidateTree(sourceRoot, destinationRoot, policy) {
       } else if (info.isFile()) {
         await copyFile(sourcePath, destinationPath);
         await chmod(destinationPath, info.mode & 0o777);
+        await sealFrozenOfficeFile(destinationPath);
         const bytes = await readFile(destinationPath);
         entries.push({ path: relativePath, type: "file", sha256: sha256(bytes), size: bytes.length, mode });
       } else throw new Error(`CANDIDATE_SPECIAL_FILE_UNSUPPORTED: ${relativePath}`);
@@ -1148,6 +1150,7 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     if (overrides.validateInputs) await overrides.validateInputs(inputSnapshot);
     await rename(staging, evidenceRoot);
   } catch (error) {
+    await clearOwnedStagingOffice(staging).catch(() => {});
     await rm(staging, { recursive: true, force: true }).catch(() => {});
     throw error;
   }

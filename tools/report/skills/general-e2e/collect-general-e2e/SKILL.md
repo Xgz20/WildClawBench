@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.16` 在 macOS 冻结 Office 副本复制后、首次读取哈希前设置并核验 UF_IMMUTABLE，避免宿主属性写入破坏已发布候选；其他平台沿用原行为。失败只清理本次自建 staging 的标记，不解除已发布制品或源 Workspace 的保护。冻结字节发生变化仍拒绝；无可信原字节时保全坏证据，以获授权的新执行 attempt 重做受影响题，不改旧 SHA、不对同一 attempt 重发。
+
 `0.11.15` 支持 [历史会话投影终态对账](references/astronstudio-terminal-projection.md)：仅在原 state 已按精确 turn 完成、终稿已绑定、原始 SDK 唯一完成事件与 Prompt/会话/终稿/完整标准轨迹一致时收口 running 投影差异。原 state 和 SDK 保留原字节，评分端重新校验证明。多题 unit 的 finalize 在全部题目完成前可返回 receipt_path=null；先收口全组，再按完整回执逐题 verify-only。
 
 `0.11.14` 使用 general-resource-supplements 1.3.5：已绑定 turn 的原 SDK 助手正文紧邻显式 compaction（中间只允许 usage）时，冗余桌面镜像缺失按源记录邻接关系核验，持久化延迟超过一秒另记显式 Profile 和原延迟。完整 SDK 正文不删改；错 turn、缺 ID、非 compaction、内容冲突、逆序时间和插入工具/消息仍拒绝。旧一秒内 Profile 的派生审计保持原结构，冻结原件不重写。
