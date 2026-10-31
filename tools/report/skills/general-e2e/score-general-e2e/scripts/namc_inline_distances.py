@@ -5,7 +5,7 @@ TASK = '02_Office_task_022_namc_interview_schedule'
 CONTRACT_SHA = '851b94f0c68ba3f2460c996ccb226d543742ad0b2b1eed1859911d6697a65b9c'
 SOURCE_SHA = '7f4a4c932ca5e6ff8eae811e158de5d81bf3d1d3a50831bfb3a2fe54d588a86e'
 DATASET = {'id': 'general-custom116-v1', 'digest': '8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01'}
-PROFILE = 'namc-writer-inline-distance-defaults/v1'
+PROFILE = 'namc-writer-inline-distance-defaults/v2'
 
 
 def marker(contract, contract_sha, dataset):
@@ -51,19 +51,13 @@ def _general_e2e_namc_inline_defaults(local, source):
                 package.writestr(member, rewritten if member.filename == 'word/document.xml' else blob)
         local.write_bytes(output.getvalue())
     _general_e2e_namc_inline_audit.append({
-        'profile': 'namc-writer-inline-distance-defaults/v1',
+        'profile': 'namc-writer-inline-distance-defaults/v2',
         'source': str(source), 'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
         'render_copy_before_sha256': hashlib.sha256(before).hexdigest(),
         'render_copy_after_sha256': hashlib.sha256(local.read_bytes()).hexdigest(),
         'changes': changes, 'source_modified': False,
         'image_extents_page_margins_fonts_text_and_score_policy_changed': False})
 
-_general_e2e_namc_original_grade = grade
-def grade(transcript, workspace_path):
-    _general_e2e_namc_inline_audit.clear()
-    result = _general_e2e_namc_original_grade(transcript=transcript, workspace_path=workspace_path)
-    result['diagnostics']['inline_distance_compatibility'] = list(_general_e2e_namc_inline_audit)
-    return result
 '''
 
 
@@ -74,9 +68,14 @@ def effective_source(manifest, original, current, prior):
     expected = marker({'task_id': manifest['identity']['task_id'], 'automated_checks': original},
                       manifest['digests']['contract_sha256'], manifest['dataset'])
     old = "    if lo:\n        profile=work/'profile'"
-    if expected is None or frozen != expected or current.count(old) != 1:
+    grade_start = 'def grade(transcript, workspace_path):'
+    export = '    export_evidence(root,infos,diag)'
+    if (expected is None or frozen != expected or current.count(old) != 1
+            or current.count(grade_start) != 1 or current.count(export) != 1):
         raise ValueError('NAMC_INLINE_DISTANCE_PROFILE_MISMATCH')
-    effective = current.replace(old, "    if lo:\n        _general_e2e_namc_inline_defaults(local, source)\n        profile=work/'profile'") + HELPERS
+    effective = current.replace(old, "    if lo:\n        _general_e2e_namc_inline_defaults(local, source)\n        profile=work/'profile'")
+    effective = effective.replace(grade_start, grade_start + '\n    _general_e2e_namc_inline_audit.clear()')
+    effective = effective.replace(export, export + "\n    diag['inline_distance_compatibility'] = list(_general_e2e_namc_inline_audit)") + HELPERS
     receipt = {'schema_version': 'wildclawbench.general-e2e-rule-source-correction/v1',
                'correction_id': PROFILE, 'task_id': TASK, 'contract_sha256': CONTRACT_SHA,
                'original_source_sha256': SOURCE_SHA,

@@ -44,7 +44,11 @@ class NamcInlineDistanceTests(unittest.TestCase):
         fixed, receipt = RUNTIME._effective_rule_source(manifest, original)
         self.assertEqual(fixed.count('_general_e2e_namc_inline_defaults(local, source)'), 2)  # definition and guarded call
         old = "    if lo:\n        profile=work/'profile'"
-        self.assertEqual(fixed, original.replace(old, "    if lo:\n        _general_e2e_namc_inline_defaults(local, source)\n        profile=work/'profile'") + NAMC.HELPERS)
+        expected = original.replace(old, "    if lo:\n        _general_e2e_namc_inline_defaults(local, source)\n        profile=work/'profile'")
+        expected = expected.replace('def grade(transcript, workspace_path):', 'def grade(transcript, workspace_path):\n    _general_e2e_namc_inline_audit.clear()')
+        expected = expected.replace('    export_evidence(root,infos,diag)', "    export_evidence(root,infos,diag)\n    diag['inline_distance_compatibility'] = list(_general_e2e_namc_inline_audit)")
+        self.assertEqual(fixed, expected + NAMC.HELPERS)
+        self.assertEqual(len([n for n in ast.parse(fixed).body if isinstance(n, ast.FunctionDef) and n.name == 'grade']), 1)
         self.assertFalse(receipt['candidate_rewritten'])
         self.assertFalse(receipt['reference_rewritten'])
         self.assertFalse(receipt['numeric_decisions_assigned'])
