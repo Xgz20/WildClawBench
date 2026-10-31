@@ -59,7 +59,7 @@ class SharedComponentTests(unittest.TestCase):
                 "schema_version": "wildclawbench.general-e2e-adapter-binding/v1",
                 "adapter": "workbuddy",
                 "entrypoint": entrypoint.relative_to(root).as_posix(),
-                "components": {"desktop-runtime": "1.0.0"},
+                "components": {"desktop-runtime": "1.0.1"},
             }
             path = folder / "components.json"
             path.write_text(json.dumps(binding), encoding="utf-8")
@@ -102,7 +102,7 @@ process.stdout.write(JSON.stringify({{
         self.assertEqual(
             payload["components"],
             {
-                "desktop-runtime": "1.0.0",
+                "desktop-runtime": "1.0.1",
                 "desktop-app-discovery": "1.2.0",
                 "resource-metrics": "1.1.0",
                 "workspace-integrity": "1.0.0",

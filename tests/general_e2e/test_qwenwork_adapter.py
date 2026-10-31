@@ -25,10 +25,10 @@ class QwenWorkAdapterLayoutTests(unittest.TestCase):
         self.assertEqual(
             binding["components"],
             {
-                "desktop-runtime": "1.0.0",
+                "desktop-runtime": "1.0.1",
                 "desktop-app-discovery": "1.2.0",
                 "resource-metrics": "1.1.0",
-                "general-contracts": "1.3.0",
+                "general-contracts": "1.3.1",
             },
         )
 

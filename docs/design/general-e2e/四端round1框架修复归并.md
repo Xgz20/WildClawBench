@@ -75,7 +75,7 @@
 
 1. `python -m eval_general_e2e check-layout --json`核对七Skill和共享组件锁。
 2. `node --test tests/general_e2e/*.test.mjs`覆盖四端驱动、队列、采集、归档、指标与恢复边界。
-3. `python -m unittest discover -s tests/general_e2e -p 'test_*.py'`覆盖规则、准入、编排、报告、合约和独立发行。
+3. `python -m unittest discover -s tests/general_e2e -t . -p 'test_*.py'`覆盖规则、准入、编排、报告、合约和独立发行；顶层目录用于统一共享fixture的包导入身份，开发环境须另外具备`jsonschema`和`python-dotenv`，不能向冻结生产runtime补装测试依赖。
 4. 新回归包含：大于64MiB的原始事件、失败turn计时、动态工具、补采漂移拒绝、旧本地影子、远端block去重、辅助生命周期冲突、分页、任务授权、零分/符号链接与ZIP根目录名。
 5. 对既有240条选择做只读复算：执行/评分身份、全部资源值/状态/覆盖及工具分组与既有v8一致。此项是历史原件复算，不是重新发送四端任务，也不替代新版本客户端的现场预检。
 

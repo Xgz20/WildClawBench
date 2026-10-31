@@ -124,7 +124,7 @@ function driver(f, counter, options = {}) {
       assert.equal(await exists(join(f.cfg(ids[1]).candidateWorkspace, 'partial.txt')), false);
     },
     waitForThreadStreamLease: async () => ({ threadId: 'retry-thread', leaseId: 'lease', admittedAt: clock }),
-    ensureSendTargetReady: async () => {},
+    ensureSendTargetReady: async () => ({ ready: true, count: 1 }),
     clickSend: async () => { counter.count += 1; sent = true; return { clicked: true, thread_id: 'retry-thread' }; },
     currentThreadId: async () => 'retry-thread',
     queryFinalResponse: async () => 'Synthetic completed retry.',

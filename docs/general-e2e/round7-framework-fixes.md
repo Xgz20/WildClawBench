@@ -42,8 +42,10 @@ prepare0.3.2、execute0.14.6（driver0.4.12、queue worker0.1.3）、collect0.11
 在依赖已准备的开发环境复现完整回归：
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 PYTHON_DOTENV_DISABLED=1 python -X utf8 -m unittest discover -s tests/general_e2e
+PYTHONDONTWRITEBYTECODE=1 PYTHON_DOTENV_DISABLED=1 python -X utf8 -m unittest discover -s tests/general_e2e -t .
 node --test tests/general_e2e/*.test.mjs
 ```
+
+`-t .`使测试按`tests.general_e2e.*`包名加载，与共享fixture的导入身份一致。省略后会将同一fixture同时按顶层模块名和包名加载，覆盖其动态评分模块注册，导致补丁或异常类型身份失配。独立开发测试环境除冻结评分依赖外还需要`jsonschema`与`python-dotenv`；不要安装到已冻结的生产评分runtime。
 
 涉及runtime锁的测试须使用满足冻结score runtime版本的专用Python与Playwright/browser缓存；不能用控制Python替代或为了测试放宽版本校验。首次失败日志、修正后的完整回归日志及制品只读回放证明留在本轮私有审计目录，不把实际候选/分数或SDK正文提交到代码仓库。
