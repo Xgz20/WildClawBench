@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.35` 为已注册原总分封顶/归因诊断接口失败增加只留证退役；`record-framework-failure` 仅留证已退出的Data010旧复核发现超限，或原生裁判已完成但Office007公开文本基线错误而未发布score的旧attempt。严格核验原输入、失败、进程退出或原生上下文以及全部原评分证据SHA；恢复复放，保留旧thread/组件，不代判、不重试原发送。修复必须建立同冻结执行的新attempt，再显式选择完整范围。
+
 `0.11.34` 仅对精确原task/contract/source登记的包装入口、空errors诊断list、公开文本LF/CRLF校验和原状态等价复核失败，保留真实旧审计为未评分；未启动Worker时明确记录缺失，不造result文件。恢复重验同一原失败与SHA，新评分须从相同冻结执行独立准备，原数值与语义不代判。
 
 `0.11.33` record-unscored-evidence-glob-error只处理已注册通配符被旧读取器当字面路径拒绝的规则收口。须原Worker/audit/component均完成、无Judge/score，新冻结Score读取器完整只读verify实际原件成功；原attempt不重跑、不改写，独立回执锁定原错误与文件SHA，留证旧未评分后另建修复评分。恢复时复放同一验证；未知失败、缺证据、漂移和已有有效成绩不适用。

@@ -26,6 +26,9 @@ import grade_wrapper_normalization
 import typed_rule_diagnostics
 import public_text_profiles
 import escrow_state_review
+import work_order_final_policy
+import domain_details_diagnostics
+import framework_failure_retirement
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
 STATE_REVISION = 6
@@ -2070,17 +2073,20 @@ def _verify_state(
                 or _sha256_file(evidence) != project.get("evidence_sha256")
             ):
                 raise OrchestrationError("PROJECT_REGISTRATION_DRIFT", str(task.get("task_id")))
+        if task.get('framework_failure') is not None:
+            try:framework_failure_retirement.verify(sys.modules[__name__],root,state,task)
+            except ValueError as exc:raise OrchestrationError('FRAMEWORK_FAILURE_PROOF_INVALID',str(exc)) from exc
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
-                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND, generated_evidence_globs.ERROR_KIND, grade_wrapper_normalization.ERROR_KIND, typed_rule_diagnostics.ERROR_KIND, public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND}):
+                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND, generated_evidence_globs.ERROR_KIND, grade_wrapper_normalization.ERROR_KIND, typed_rule_diagnostics.ERROR_KIND, public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND,work_order_final_policy.ERROR_KIND,domain_details_diagnostics.ERROR_KIND}):
                 raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
             keys=('rule_audit',) if scoring_error.get('kind')==grade_wrapper_normalization.ERROR_KIND else ('rule_audit','worker_result')
             for key in keys:
                 path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
                 if not _inside(attempt, path) or _sha256_file(path) != scoring_error[key + "_sha256"]:
                     raise OrchestrationError("RULE_ERROR_DEFERRAL_DRIFT", key)
-            if scoring_error.get('kind') in {grade_wrapper_normalization.ERROR_KIND,typed_rule_diagnostics.ERROR_KIND,public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND}:
+            if scoring_error.get('kind') in {grade_wrapper_normalization.ERROR_KIND,typed_rule_diagnostics.ERROR_KIND,public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND,work_order_final_policy.ERROR_KIND,domain_details_diagnostics.ERROR_KIND}:
                 fm=_read_json(attempt/'attempt-manifest.json');fc=_read_json(attempt/fm['paths']['contract'])
                 fa=_read_json(attempt/'rule-audit.json');wp=attempt/'worker/result.json'
                 if scoring_error['kind']==grade_wrapper_normalization.ERROR_KIND:
@@ -2089,6 +2095,8 @@ def _verify_state(
                     fw=_read_json(wp)
                     if scoring_error['kind']==typed_rule_diagnostics.ERROR_KIND:allowed=typed_rule_diagnostics.original_failure(fm,fc,fa,fw)
                     elif scoring_error['kind']==escrow_state_review.ERROR_KIND:allowed=escrow_state_review.original_failure(fm,fc,fa,fw)
+                    elif scoring_error['kind']==work_order_final_policy.ERROR_KIND:allowed=work_order_final_policy.original_failure(fm,fc,fa,fw)
+                    elif scoring_error['kind']==domain_details_diagnostics.ERROR_KIND:allowed=domain_details_diagnostics.original_failure(fm,fc,fa,fw)
                     else:allowed=public_text_profiles.original_failure(attempt,fm,fc,fa,fw)
                 if not allowed:raise OrchestrationError('RULE_ERROR_DEFERRAL_INVALID','unregistered structural adapter failure')
             if scoring_error.get("kind") == "evaluator-public-context-setup-error/v1":
@@ -2963,13 +2971,17 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     typed_diagnostic_failure=typed_rule_diagnostics.original_failure(manifest,contract,audit,result)
     text_newline_failure=public_text_profiles.original_failure(attempt,manifest,contract,audit,result)
     declared_status_review=escrow_state_review.original_failure(manifest,contract,audit,result)
+    final_policy_failure=work_order_final_policy.original_failure(manifest,contract,audit,result)
+    details_failure=domain_details_diagnostics.original_failure(manifest,contract,audit,result)
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure or typed_diagnostic_failure or text_newline_failure or declared_status_review)
+            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure or typed_diagnostic_failure or text_newline_failure or declared_status_review or final_policy_failure or details_failure)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
     event_time = now or _now()
-    kind = (escrow_state_review.ERROR_KIND if declared_status_review else
+    kind = (work_order_final_policy.ERROR_KIND if final_policy_failure else
+        domain_details_diagnostics.ERROR_KIND if details_failure else
+        escrow_state_review.ERROR_KIND if declared_status_review else
         typed_rule_diagnostics.ERROR_KIND if typed_diagnostic_failure else
         public_text_profiles.ERROR_KIND if text_newline_failure else
         private_reference_guard.ERROR_KIND if private_reference_failure else
@@ -3476,6 +3488,12 @@ def main(argv: list[str] | None = None) -> int:
     unscored_rule.add_argument("--task-id", required=True)
     unscored_rule.add_argument("--reason", required=True)
 
+    framework_failure=subparsers.add_parser('record-framework-failure')
+    _parse_common(framework_failure)
+    framework_failure.add_argument('--task-id',required=True)
+    framework_failure.add_argument('--reason',required=True)
+    framework_failure.add_argument('--sdk-file',type=Path)
+
     unscored_glob=subparsers.add_parser('record-unscored-evidence-glob-error')
     _parse_common(unscored_glob)
     unscored_glob.add_argument('--task-id',required=True)
@@ -3607,6 +3625,9 @@ def main(argv: list[str] | None = None) -> int:
                 verifier_score_skill_dir=args.verifier_score_skill_dir,reason=args.reason)
         elif args.command == "record-unscored-rule-error":
             result = record_unscored_rule_error(args.orchestration_root, task_id=args.task_id, reason=args.reason)
+        elif args.command == 'record-framework-failure':
+            result = framework_failure_retirement.record(sys.modules[__name__],args.orchestration_root,
+                task_id=args.task_id,reason=args.reason,sdk_file=args.sdk_file)
         elif args.command == "run-rule-score":
             result = run_rule_score_task(
                 args.orchestration_root,

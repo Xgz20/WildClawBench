@@ -16,21 +16,24 @@ def matches(contract):
             and hashlib.sha256(contract.get('automated_checks', '').encode('utf-8')).hexdigest() == SOURCE_SHA256)
 
 
-def profile_for(contract, contract_sha=None):
+def profile_for(contract, contract_sha=None, *, frozen_profile=None):
     if matches(contract):
         return PROFILE
     import office001_rule_review
     if office001_rule_review.matches(contract, contract_sha):
         return office001_rule_review.PROFILE
     import escrow_state_review
-    if escrow_state_review.matches(contract,contract_sha):return escrow_state_review.PROFILE
+    if escrow_state_review.matches(contract,contract_sha):
+        if frozen_profile==escrow_state_review.PROFILE:return escrow_state_review.PROFILE
+        import escrow_grouped_review
+        return escrow_grouped_review.PROFILE
     return None
 
 
 def worker_configuration(mode, decisions=None, *, profile=PROFILE):
     if mode not in {'discover','apply'}:
         raise ValueError('RULE_REVIEW_MODE_INVALID')
-    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1'}:
+    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2'}:
         raise ValueError('RULE_REVIEW_PROFILE_MISMATCH')
     return {'schema_version': WORKER_SCHEMA, 'profile': profile, 'mode': mode, 'decisions': decisions or {}}
 

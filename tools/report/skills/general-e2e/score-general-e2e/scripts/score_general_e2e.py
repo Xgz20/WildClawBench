@@ -49,6 +49,10 @@ import work_order_evidence_budget
 import typed_rule_diagnostics
 import grade_wrapper_normalization
 import escrow_state_review
+import work_order_final_policy
+import domain_details_diagnostics
+import escrow_grouped_review
+import release_baseline_text
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1813,7 +1817,7 @@ def prepare_attempt(
                 **({'rule_review_profile':office001_rule_review.PROFILE}
                    if office001_rule_review.matches(contract,_sha256_bytes(contract_bytes))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
-                **({'rule_review_profile':escrow_state_review.PROFILE}
+                **({'rule_review_profile':escrow_grouped_review.PROFILE}
                    if escrow_state_review.matches(contract,_sha256_bytes(contract_bytes))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes))}
@@ -1832,6 +1836,12 @@ def prepare_attempt(
                    if public_text_profiles.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'work_order_evidence_budget_profile':work_order_evidence_budget.marker(contract,_sha256_bytes(contract_bytes))}
                    if work_order_evidence_budget.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'work_order_final_total_policy_profile':work_order_final_policy.marker(contract,_sha256_bytes(contract_bytes))}
+                   if work_order_final_policy.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'domain_details_diagnostics_profile':domain_details_diagnostics.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if domain_details_diagnostics.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'release_baseline_text_profile':release_baseline_text.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if release_baseline_text.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes))}
                    if typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -2096,7 +2106,8 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
                 _generated_evidence_files(root, manifest, contract)
     _verify_rule_input_context(root, manifest)
     contract = _read_json(root / paths['contract'])
-    if manifest.get('runtime',{}).get('typed_rule_diagnostics_profile') and (root/'worker/request.json').exists():
+    adapter_profile=any(manifest.get('runtime',{}).get(k) for k in ['typed_rule_diagnostics_profile','work_order_final_total_policy_profile','domain_details_diagnostics_profile'])
+    if adapter_profile and (root/'worker/request.json').exists():
         request=_read_json(root/'worker/request.json')
         if request.get('rule_result_adapter')!=_effective_worker_adapter(manifest,contract):
             raise ScoringRuntimeError('RULE_RESULT_ADAPTER_PROFILE_DRIFT')
@@ -2710,6 +2721,8 @@ def _effective_rule_source(
         corrected, receipt = work_order_evidence_budget.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = grade_wrapper_normalization.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = escrow_state_review.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = escrow_grouped_review.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = release_baseline_text.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -2943,7 +2956,10 @@ def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
 def _effective_worker_adapter(manifest,contract):
     original=dataset_rule_corrections.effective_result_adapter(manifest['identity']['task_id'],
         contract.get('automated_checks'),contract.get('rule_result_adapter'))
-    try:return typed_rule_diagnostics.effective_adapter(manifest,contract,original)
+    try:
+        original=typed_rule_diagnostics.effective_adapter(manifest,contract,original)
+        original=work_order_final_policy.effective_adapter(manifest,contract,original)
+        return domain_details_diagnostics.effective_adapter(manifest,contract,original)
     except ValueError as exc:raise ScoringRuntimeError('RULE_RESULT_ADAPTER_PROFILE_INVALID',str(exc)) from exc
 
 
@@ -5665,6 +5681,19 @@ def _build_standard_score(
         rules=rules,
         semantics=semantics,
     )
+    if manifest.get('runtime',{}).get('work_order_final_total_policy_profile'):
+        expected=work_order_final_policy.marker(contract,manifest['digests']['contract_sha256'])
+        if expected is None or manifest['runtime']['work_order_final_total_policy_profile']!=expected:
+            raise ScoringRuntimeError('FINAL_TOTAL_POLICY_PROFILE_INVALID')
+        worker=_read_json(root/'worker/result.json');raw=worker.get('raw_result') or {}
+        if final['result']['valid'] or '_score_policy' in raw:
+            try:policy=work_order_final_policy.validate_policy(raw.get('_score_policy'))
+            except ValueError as exc:raise ScoringRuntimeError('FINAL_TOTAL_POLICY_INVALID',str(exc)) from exc
+            uncapped=final['result']['total_score'];final=work_order_final_policy.apply(final,policy)
+            reference=_score_evidence_reference(root/'worker/result.json',root,'rule_worker_result')
+            for item in criteria:
+                item['evidence'].append(dict(reference))
+            criteria[0]['reason']+=f" 原规则最终业务总分封顶政策：合分前={uncapped}，upper_bound={policy['upper_bound']}，原因={policy['reasons']}；最终按min(原合分,原封顶)计算，能力项不重复限分。"
     if independent is not None:
         reference=_score_evidence_reference(root/'capability-evaluation.json',root,'capability_evaluation')
         for criterion in criteria:
@@ -6136,7 +6165,7 @@ def prepare_rescore_attempt(
                 **({'rule_review_profile':office001_rule_review.PROFILE}
                    if office001_rule_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
-                **({'rule_review_profile':escrow_state_review.PROFILE}
+                **({'rule_review_profile':escrow_grouped_review.PROFILE}
                    if escrow_state_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
@@ -6155,6 +6184,12 @@ def prepare_rescore_attempt(
                    if public_text_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'work_order_evidence_budget_profile':work_order_evidence_budget.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if work_order_evidence_budget.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'work_order_final_total_policy_profile':work_order_final_policy.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if work_order_final_policy.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'domain_details_diagnostics_profile':domain_details_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if domain_details_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'release_baseline_text_profile':release_baseline_text.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if release_baseline_text.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}

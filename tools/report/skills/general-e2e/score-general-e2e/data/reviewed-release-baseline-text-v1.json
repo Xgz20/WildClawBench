@@ -1,0 +1,69 @@
+{
+  "schema_version": "general-e2e-reviewed-release-baseline-text/v1",
+  "task_id": "02_Office_task_007_release_phase_gate_progression",
+  "contract_sha256": "7a842731cce76808b60b92a2be3f70ab18cf10e254d1591eca2bf1977463f1d3",
+  "source_sha256": "ec04d3539c64efaf0909e4c0772164e39fa30c835d389eff46d2c5becaa59fe1",
+  "dataset": {
+    "id": "general-custom116-v1",
+    "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01"
+  },
+  "dataset_archive_sha256": "a62d2258fbe901a974470536d4b6cd9a1e3869a47c8dabf3e19aede59515c587",
+  "files": [
+    {
+      "path": "environment/state_diff_manifest.json",
+      "canonical_sha256": "dce1dbfc6f60705d98fbaec6ed3686a75fc0b77942cedb3ed05f56d78072e823",
+      "declared_sha256": "75751855fd19d0c6d970a659ea418748cdd8a16b517bb567d4186c10ca9ac405",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/environment/state_diff_manifest.json",
+      "size": 1790
+    },
+    {
+      "path": "input/workspace/config/release_scope.json",
+      "canonical_sha256": "1ce17edcae30a4714387076747a635818345b1e76d6f237b7e11a48910f57ab3",
+      "declared_sha256": "3c854462ccadbf5a04094f0f25ed61d9cf4dbb8518138aff45a4a72d7a9e0db2",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/config/release_scope.json",
+      "size": 1793
+    },
+    {
+      "path": "input/workspace/logs/local_validation_runs.jsonl",
+      "canonical_sha256": "c9d43f8df0ad5da258b285a2e7a14ceb922011eadb8fb88ceea6822e3f737340",
+      "declared_sha256": "4145e6168fad8d542414fcb81295f16fdf51ec5a88b10f72b8b63f68b6599761",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/logs/local_validation_runs.jsonl",
+      "size": 6086
+    },
+    {
+      "path": "input/workspace/notes/operator_margin_notes.md",
+      "canonical_sha256": "4976534ae66b59f102235b370ad63e2bac66ef1f98a3a842b3cb7925c149b99d",
+      "declared_sha256": "56ca6e00e4a66f45d822a00cafb9660f8e5e5a326f6d036b977c30de47cdded7",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/notes/operator_margin_notes.md",
+      "size": 560
+    },
+    {
+      "path": "input/workspace/runbooks/audit_and_status_sync.md",
+      "canonical_sha256": "220ffdf7e1c57da93e31f8144b165bd5c34aa79368a419db95a25e26b1fdfa88",
+      "declared_sha256": "f2f86bdfdf6cd46d46ed8d860bcfa98cd32175b64336e0349c92dc87d1bff212",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/runbooks/audit_and_status_sync.md",
+      "size": 2731
+    },
+    {
+      "path": "input/workspace/runbooks/local_validation_policy.md",
+      "canonical_sha256": "a38f94c68a3e2b1cad81614acceb0ecff40e25c40b4fed4a468bf35540a96912",
+      "declared_sha256": "f874e1be7fba6feeb25a346ed2aa946217a111b97a548a94800c6b5f893544ca",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/runbooks/local_validation_policy.md",
+      "size": 5598
+    },
+    {
+      "path": "input/workspace/runbooks/phase_gate_policy.md",
+      "canonical_sha256": "89d66ed842c15aa5e2b44509f9113b20d8d60f6279b825accd45dbf939c26b0c",
+      "declared_sha256": "ae7402feaa3ecaa124d5b211c0a0183526c35daae226baa7617e0889df0a36b9",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/runbooks/phase_gate_policy.md",
+      "size": 3493
+    },
+    {
+      "path": "input/workspace/state/local_lookup_records.json",
+      "canonical_sha256": "1774b5f65ca7f000e26c2c6d1bb9c03275cbe881a7e61b091bf44c34a35cbb51",
+      "declared_sha256": "ed2887b39009a28304274e266c2971f2f2c207fa6894889c33da4ea0d433e51e",
+      "dataset_member": "general-custom116-v1/tasks/02_Office_task_007_release_phase_gate_progression/execution/exec/input/workspace/state/local_lookup_records.json",
+      "size": 4443
+    }
+  ]
+}

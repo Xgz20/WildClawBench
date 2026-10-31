@@ -59,6 +59,22 @@ def adapt_rule_result(raw: dict[str, Any], policy: object) -> dict[str, Any]:
         if key in result:
             if result[key] is not None and not isinstance(result[key],str):raise ValueError('nullable diagnostic must be text or null')
             del result[key]
+    policy_key=policy.get('final_total_policy_object_key')
+    if policy_key is not None:
+        if policy_key!='_score_policy' or policy_key not in result:raise ValueError('invalid final-total policy object key')
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('_managed_work_order_final_policy',Path(__file__).with_name('work_order_final_policy.py'))
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        module.validate_policy(result[policy_key])
+        del result[policy_key]
+    details_key=policy.get('domain_details_object_key')
+    if details_key is not None:
+        if details_key!='details' or details_key not in result:raise ValueError('invalid domain details object key')
+        import importlib.util
+        spec=importlib.util.spec_from_file_location('_managed_domain_details',Path(__file__).with_name('domain_details_diagnostics.py'))
+        module=importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module);module.validate_details(result[details_key])
+        del result[details_key]
     if "overall_score" not in result:
         if policy.get("evidence_only") is True and not result:
             # Neutral transport placeholder with a frozen zero scoring weight.
@@ -127,7 +143,7 @@ def execute(request_path: Path, result_path: Path) -> int:
         if review is not None:
             if (not isinstance(review,dict) or review.get('schema_version')!='wildclawbench.general-e2e-rule-review-worker/v1'
                     or review.get('profile') not in {'hr-fields-and-sources-semantic-review/v1',
-                        'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1'}
+                        'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2'}
                     or review.get('mode') not in {'discover','apply'}
                     or not isinstance(review.get('decisions'),dict)
                     or any(not isinstance(k,str) or not isinstance(v,bool) for k,v in review['decisions'].items())):

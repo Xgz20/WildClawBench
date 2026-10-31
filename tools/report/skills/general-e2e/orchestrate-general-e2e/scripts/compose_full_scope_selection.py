@@ -88,11 +88,13 @@ def compose(args, *, frozen):
                         or lineage.get('source_scoring_attempt_id')!=previous['scoring_attempt_id']):
                     raise ValueError('INFRASTRUCTURE_RESCORE_LINEAGE_REQUIRED')
             elif (previous['score_status']!='unscored'
-                    or original.get('scoring_error',{}).get('kind') not in {'dataset-rule-evaluation-error/v1',
+                    or (original.get('framework_failure',{}).get('kind') not in frozen.framework_failure_retirement.KINDS
+                    and original.get('scoring_error',{}).get('kind') not in {'dataset-rule-evaluation-error/v1',
                         'evaluator-public-context-setup-error/v1','office001-declared-numeric-review/v1',
                         frozen.private_reference_guard.ERROR_KIND,frozen.generated_evidence_globs.ERROR_KIND,
                         frozen.grade_wrapper_normalization.ERROR_KIND,frozen.typed_rule_diagnostics.ERROR_KIND,
-                        frozen.public_text_profiles.ERROR_KIND,frozen.escrow_state_review.ERROR_KIND}):
+                        frozen.public_text_profiles.ERROR_KIND,frozen.escrow_state_review.ERROR_KIND,
+                        frozen.work_order_final_policy.ERROR_KIND,frozen.domain_details_diagnostics.ERROR_KIND})):
                 raise ValueError('DECLARED_RULE_INFRASTRUCTURE_FAILURE_REQUIRED')
             if (score['execution']['attempt_id']!=previous['execution_attempt_id']
                     or execution['candidate']['frozen_sha256']!=previous['candidate_sha256']):

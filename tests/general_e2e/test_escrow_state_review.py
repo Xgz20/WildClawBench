@@ -27,6 +27,7 @@ class EscrowStateReviewTests(unittest.TestCase):
             return code,{'schema_version':RUNTIME.RULE_SOURCE_CORRECTION_SCHEMA,'correction_id':REVIEW.PROFILE,
                 'original_source_sha256':hashlib.sha256(source.encode()).hexdigest(),'effective_source_sha256':hashlib.sha256(code.encode()).hexdigest()}
         self.patches=[patch.object(RUNTIME.rule_review,'matches',return_value=False),
+            patch.object(RUNTIME.escrow_grouped_review,'PROFILE',REVIEW.PROFILE),
             patch.object(RUNTIME.office001_rule_review,'matches',return_value=False),patch.object(REVIEW,'matches',return_value=True),
             patch.object(RUNTIME,'_effective_rule_source',side_effect=effective)]
         for p in self.patches:p.start()
