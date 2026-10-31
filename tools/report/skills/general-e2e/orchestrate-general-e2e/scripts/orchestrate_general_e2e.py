@@ -2080,7 +2080,7 @@ def _verify_state(
                 failure = _read_json(root/scoring_error['worker_result_path'], 'RULE_ERROR_DEFERRAL_INVALID')
                 frozen_manifest = _read_json(attempt/'attempt-manifest.json', 'RULE_ERROR_DEFERRAL_INVALID')
                 frozen_contract = _read_json(attempt/frozen_manifest['paths']['contract'], 'RULE_ERROR_DEFERRAL_INVALID')
-                if (not private_reference_guard.matches_old_failure(attempt,frozen_manifest,frozen_contract,failure.get('error',{}))
+                if (not _registered_reference_failure(attempt,frozen_manifest,frozen_contract,failure.get('error',{}))
                         or failure.get('error') != scoring_error.get('error')):
                     raise OrchestrationError('RULE_ERROR_DEFERRAL_INVALID','private reference is not the registered original')
         score = task.get("score")
@@ -2812,6 +2812,24 @@ def _office001_declared_numeric_review(manifest, contract, error):
                 and isinstance(row.get('evidence'), list) for row in rows.values()))
 
 
+def _registered_reference_failure(attempt,manifest,contract,error):
+    if private_reference_guard.matches_old_failure(attempt,manifest,contract,error):return True
+    # Office020 has the same registered original text identity but declares its
+    # checksum failure as RuntimeError. Do not admit other runtime failures.
+    row=private_reference_guard.registered(contract,manifest.get('digests',{}).get('contract_sha256'),manifest.get('dataset',{}))
+    if (row is None or row['task_id']!='02_Office_task_020_research_factor_table_extract'
+            or error.get('type')!='RuntimeError'
+            or error.get('message')!='Evaluator GT changed: research_factor_extract.json'):
+        return False
+    private_reference_guard.marker(contract,row['contract_sha256'],manifest['dataset'],manifest['private_scoring']['workspace_entries'])
+    root=Path(attempt).resolve(strict=True)
+    for ref in row['references']:
+        path=root/manifest['paths']['gt']/ref['path']
+        if (path.is_symlink() or not path.is_file() or not path.resolve().is_relative_to(root)
+                or path.stat().st_size!=ref['size'] or _sha256_file(path)!=ref['canonical_sha256']):return False
+    return True
+
+
 def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason: str, now: datetime | None = None) -> dict[str, Any]:
     root = _state_root(orchestration_root)
     state = _verify_state(root)
@@ -2836,7 +2854,7 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     allowed_error = allowed_error or (dataset_error.get("type") == "RuntimeError" and dataset_error.get("message") ==
         "EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging")
     office_numeric_review = _office001_declared_numeric_review(manifest, contract, dataset_error)
-    private_reference_failure = private_reference_guard.matches_old_failure(attempt, manifest, contract, dataset_error)
+    private_reference_failure = _registered_reference_failure(attempt, manifest, contract, dataset_error)
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
             or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()

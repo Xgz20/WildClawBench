@@ -9,6 +9,7 @@ import tempfile
 import unittest
 
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT
+from tests.general_e2e.test_general_scoring_orchestration import ORCHESTRATOR
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 
 GUARD=RUNTIME.private_reference_guard
@@ -133,6 +134,22 @@ class CanonicalPrivateReferenceTests(unittest.TestCase):
                 self.assertEqual(process.returncode,0,result.get('error'))
                 results.append({k:v for k,v in result['result'].items() if isinstance(v,(int,float)) and not isinstance(v,bool)})
             self.assertTrue(results[0]);self.assertEqual(results[0],results[1])
+
+    def test_office020_declared_runtime_guard_retains_only_proven_original_reference_failure(self):
+        row=next(r for r in GUARD.registry() if 'task_020_' in r['task_id'])
+        manifest=self.manifest(row);manifest['runtime']={};contract=self.contract(row)
+        with tempfile.TemporaryDirectory() as folder:
+            root=Path(folder);(root/'private/gt').mkdir(parents=True)
+            ref=row['references'][0];path=root/'private/gt'/ref['path']
+            source=REPO_ROOT/'workspace/general_e2e/02_Office/task_020_research_factor_table_extract/gt'/ref['path']
+            shutil.copyfile(source,path)
+            error={'type':'RuntimeError','message':'Evaluator GT changed: research_factor_extract.json'}
+            self.assertTrue(ORCHESTRATOR._registered_reference_failure(root,manifest,contract,error))
+            for bad in [dict(error,type='ValueError'),dict(error,message='Evaluator GT missing: research_factor_extract.json'),
+                        dict(error,message='Evaluator reference shape changed')]:
+                self.assertFalse(ORCHESTRATOR._registered_reference_failure(root,manifest,contract,bad))
+            path.write_bytes(path.read_bytes()+b'changed')
+            self.assertFalse(ORCHESTRATOR._registered_reference_failure(root,manifest,contract,error))
 
 
 if __name__=='__main__':unittest.main()
