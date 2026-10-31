@@ -90,7 +90,9 @@ def compose(args, *, frozen):
             elif (previous['score_status']!='unscored'
                     or original.get('scoring_error',{}).get('kind') not in {'dataset-rule-evaluation-error/v1',
                         'evaluator-public-context-setup-error/v1','office001-declared-numeric-review/v1',
-                        frozen.private_reference_guard.ERROR_KIND,frozen.generated_evidence_globs.ERROR_KIND}):
+                        frozen.private_reference_guard.ERROR_KIND,frozen.generated_evidence_globs.ERROR_KIND,
+                        frozen.grade_wrapper_normalization.ERROR_KIND,frozen.typed_rule_diagnostics.ERROR_KIND,
+                        frozen.public_text_profiles.ERROR_KIND,frozen.escrow_state_review.ERROR_KIND}):
                 raise ValueError('DECLARED_RULE_INFRASTRUCTURE_FAILURE_REQUIRED')
             if (score['execution']['attempt_id']!=previous['execution_attempt_id']
                     or execution['candidate']['frozen_sha256']!=previous['candidate_sha256']):

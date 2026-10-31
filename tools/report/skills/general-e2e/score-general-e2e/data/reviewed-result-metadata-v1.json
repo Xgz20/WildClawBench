@@ -1,0 +1,72 @@
+{
+  "schema_version": "general-e2e-reviewed-result-metadata/v1",
+  "profiles": [
+    {
+      "task_id": "03_Data_Analysis_task_006_collaborative_sales_customer_attribution",
+      "contract_sha256": "4aa0f9ae2a43b42bdba3543fb0355ad34ba9101fa25d9eea37b5741a35f7573b",
+      "source_sha256": "3f0d299234cf8d067ef652629b88f160a3baa3a201491af4753a21f0db438ebd",
+      "numeric_keys": [
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "overall_score"
+      ],
+      "diagnostic_list_keys": [
+        "errors"
+      ],
+      "diagnostic_nullable_text_keys": []
+    },
+    {
+      "task_id": "03_Data_Analysis_task_017_service_redesign_stratified_weighting",
+      "contract_sha256": "25458df79797220058f8391d3973928fbaba53ec219db29a1130aa448428dc45",
+      "source_sha256": "b4ed3cfccee5e0f6e62fd033adede110a04b0d3059ed43825929e6f872e1c2c6",
+      "numeric_keys": [
+        "C1_scope",
+        "C2_statistics",
+        "C2_special",
+        "C4_source",
+        "C5_missing",
+        "overall_score"
+      ],
+      "diagnostic_list_keys": [],
+      "diagnostic_nullable_text_keys": [
+        "candidate_read_error"
+      ]
+    },
+    {
+      "task_id": "03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition",
+      "contract_sha256": "0714dea4555d082973551d2490d33703122709616395404dfd7cc24bb7f21ee7",
+      "source_sha256": "ba842030c1e1f6f039aad11b2709ad36dbd09c0156e71f79a97b8eb362569c45",
+      "numeric_keys": [
+        "C1_scope",
+        "C2_statistics",
+        "C2_special",
+        "C4_source",
+        "C5_missing",
+        "overall_score"
+      ],
+      "diagnostic_list_keys": [],
+      "diagnostic_nullable_text_keys": [
+        "candidate_read_error"
+      ]
+    },
+    {
+      "task_id": "03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback",
+      "contract_sha256": "6f09ca95d3dec38e1e6df3c4b789bf99966e023587691d9703b4e4d5732712bf",
+      "source_sha256": "0bf265cb80b78e5f2b1e06ba4aa9b5f50cbacd191628c3503416d00a6d3b00af",
+      "numeric_keys": [
+        "C1_scope",
+        "C2_statistics",
+        "C2_special",
+        "C4_source",
+        "C5_missing",
+        "overall_score"
+      ],
+      "diagnostic_list_keys": [],
+      "diagnostic_nullable_text_keys": [
+        "candidate_read_error"
+      ]
+    }
+  ]
+}

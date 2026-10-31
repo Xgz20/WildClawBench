@@ -150,3 +150,10 @@ Office001新的`office001-original-continuous-semantic-ranges/v1`只把原Rubric
 ### 新闻归档的表头与全列保全
 
 Office003仅在原contract/source SHA匹配的新attempt冻结`news-equivalent-headers-complete-cells/v1`：接受明确等价的主体/别名/片段/位置表头，在分日事件数与显式合计并列时读取现有合计，不从GT推算；来源只对冻结公开清单中唯一匹配的相对文件名或路径后缀归一，歧义和外链不补造。原比较函数、事件/主体/分类分母及权重保持。原六份JSON内附完整物理单元格、原列、坐标、公式与缓存、合并范围，不能把取证端归一视为候选提供了额外信息；4MiB单文件和16MiB总量按UTF-8字节限额，超过仍失败且不截断。原件与旧取证保持，修复需独立新attempt重新运行原规则和语义评分。
+
+
+### 逐行状态等价复核与结构诊断
+
+合同托管新Codex attempt可冻结`escrow-status-equivalence-review/v1`，只发现原规则声明的未知状态词。独立裁判按完整候选/公开口径逐group选择唯一原状态等价项，或明确保留含义不同的原词让原比较失败；含义不清仍unresolved/null。不能因GT采用某词而修正候选事实。query-rule-review须覆盖全部context，record-rule-review严格检查每组唯一选择，之后才首次运行原数值比较；发现过程无数值发布，旧attempt不重跑。
+
+六个已审核业务grade+取证wrapper仅重命名第一声明与原捕获别名，两个函数体均保留。协销errors list只作留证诊断，不是评分key；未知数字不删除，取证预算超限提示仍阻断。工单总取证预算扩至16MiB字节但保留18500字符确定性分片。两个已审核库存公开说明文件只接受已证明的UTF8 LF/CRLF原字节身份，实际SHA独立审计，不改MD或GT JSON。新Profile均绑定精确原契约/源码，旧根、判定、公式和权重保持。

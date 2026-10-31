@@ -97,6 +97,8 @@ def prepare(rt, *, attempt_root, runtime_python, playwright_browsers_path=None):
     instructions='仅复核原规则无法确定的字段等价性/影响关系和补充来源相关性。每项给出passed布尔值和中文证据理由；不直接给规则分、不改变参考要求或候选文件。'
     if profile=='office001-numeric-extraction-semantic-review/v1':
         instructions='仅复核原规则明确无法抽取的任务ID/数值字段。每项根据完整候选、原参考与实际位置判断：原期望数值被明确陈述且全部重复陈述一致为passed=true；可确认遗漏或错误为false；证据不足为unresolved/null。不得把未解析当遗漏，不改分母/权重或已确定比较；控制器不代判。'
+    if profile=='escrow-status-equivalence-review/v1':
+        instructions='只复核原规则声明的逐行状态用语等价性，不把候选错误状态修成GT事实。每个group_id恰一选项true：等价于某个原状态，或保留原词（公开口径下含义明确且不同，供原比较扣分）。含义不明时保留unresolved/null，不猜测、不补值。全部context需实际分页查询并写中文证据理由。'
     request={'schema_version':rule_review.REQUEST_SCHEMA,'profile':profile,
         'identity':manifest['identity'],'judge':manifest['judge'],'input_locks':_locks(manifest),
         'contexts':contexts,'source_correction':correction,
@@ -168,7 +170,12 @@ def _validate_response(rt, root, manifest, request, response, query_log):
             if (not isinstance(locations,list) or (valid_decision and not locations)
                     or any(not isinstance(p,str) or not p.strip() or len(p)>1000 for p in locations)):
                 raise rt.ScoringRuntimeError('RULE_REVIEW_RESPONSE_INVALID','Office001 requires concrete evidence_locations')
-    return {row['context_id']:row['passed'] for row in rows}
+    decisions={row['context_id']:row['passed'] for row in rows}
+    if request['profile']=='escrow-status-equivalence-review/v1':
+        import escrow_state_review
+        try:escrow_state_review.validate_choices(request,decisions)
+        except ValueError as exc:raise rt.ScoringRuntimeError('RULE_REVIEW_RESPONSE_INVALID',str(exc)) from exc
+    return decisions
 
 
 def record(rt, *, attempt_root, response_path):

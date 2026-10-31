@@ -1,0 +1,71 @@
+{
+  "schema_version": "general-e2e-reviewed-grade-wrapper-normalization/v1",
+  "profiles": [
+    {
+      "task_id": "03_Data_Analysis_task_011_new_customer_purchase_funnel_retention",
+      "contract_sha256": "50e3fb1e71018debf5fa997dbe265698f6416b1f0fc95fc18a9915e6340b17da",
+      "source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "first_declaration": "def grade(transcript:list,workspace_path:str)->dict:",
+      "alias_statement": "_grade_business_v1 = grade"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_012_learning_product_activation_retention",
+      "contract_sha256": "e063747f5444ee7c608320f9009addabcf24891a96ba376c173bd3c8dd24caea",
+      "source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "first_declaration": "def grade(transcript:list,workspace_path:str)->dict:",
+      "alias_statement": "_grade_business_v1 = grade"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_013_collaboration_team_activation_seat_retention",
+      "contract_sha256": "81e0e9ec777cf91358476932439d13717674d594fe21a9f691921aa06d696385",
+      "source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "first_declaration": "def grade(transcript:list,workspace_path:str)->dict:",
+      "alias_statement": "_grade_business_v1 = grade"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi",
+      "contract_sha256": "67b32ce66d7c41d56a7ca7adcbd5f2232487f481215f356258eceb40f6dd7a20",
+      "source_sha256": "11aeb5b4a953a0c3d85bd77ff7d0c744c621f33db0782b5671534f3650a12853",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "first_declaration": "def grade(transcript:list,workspace_path:str)->dict:",
+      "alias_statement": "_grade_business_before_tool_patch = grade"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts",
+      "contract_sha256": "091bd036cb90cc65cd4a01a8f85ecdb1ec3f3c856866b1833ecf92b008cbc7f3",
+      "source_sha256": "f52f9a1b6dcc14cb7c84251f55f64cd3fd9fc9153d91dd2a4be0fe9e443ffebb",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "first_declaration": "def grade(transcript:list,workspace_path:str)->dict:",
+      "alias_statement": "_grade_business_before_tool_patch = grade"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability",
+      "contract_sha256": "403c92931dc9df259068ba721d0b226580868ae41fd09c928abe756d06f7c3c8",
+      "source_sha256": "aae6017d35b3207d4afffdf1554d175527729465acbdea35f7c7312e7967f350",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "first_declaration": "def grade(transcript:list,workspace_path:str)->dict:",
+      "alias_statement": "_grade_business_before_tool_patch = grade"
+    }
+  ]
+}

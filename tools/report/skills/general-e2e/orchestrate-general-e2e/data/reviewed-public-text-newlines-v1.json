@@ -1,0 +1,43 @@
+{
+  "schema_version": "general-e2e-reviewed-public-text-newlines/v1",
+  "profiles": [
+    {
+      "task_id": "03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation",
+      "contract_sha256": "a5156678f9a8384df96ca0ed820affb0e67b8c56ed91c583054268b3f1a8aeb0",
+      "source_sha256": "15678e4b398ece75da1b3bf9ce6969771e9329aa934e81df9caf13ec1be783bf",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "files": [
+        {
+          "path": "月末库存与交付口径.md",
+          "canonical_sha256": "56a7b94c237ee26d6517da138531972547cd88a0a68e52f9fa0ce085255840d0",
+          "declared_sha256": "ee28453d4a2c7778339ac6f6397d735b7fba925da5938fc388e42a81c8b430c4",
+          "size": 8286,
+          "dataset_member": "general-custom116-v1/tasks/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/execution/exec/月末库存与交付口径.md"
+        }
+      ],
+      "public_office_hook": true
+    },
+    {
+      "task_id": "03_Data_Analysis_task_003_batch_quality_available_inventory",
+      "contract_sha256": "8b18108b7d3d25de22211eb35c2d83c844f167de679adb09d2ed02c1b44158e5",
+      "source_sha256": "fcb92b69c39d685a7eac1886f3dac1c70a1cab4c50a8d56e02b4e9864036d9f4",
+      "dataset": {
+        "digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+        "id": "general-custom116-v1"
+      },
+      "files": [
+        {
+          "path": "口径与交付说明.md",
+          "canonical_sha256": "1c3af088ac7cb7c3e6781b2dc93640dcaa4c04da72a68ecfb75296ac6639ac59",
+          "declared_sha256": "77584e53d2997535c8664ad06f02f2da9bf56f5d898cab79d1fa78d83d053623",
+          "size": 10091,
+          "dataset_member": "general-custom116-v1/tasks/03_Data_Analysis_task_003_batch_quality_available_inventory/execution/exec/口径与交付说明.md"
+        }
+      ],
+      "public_office_hook": true
+    }
+  ]
+}

@@ -43,6 +43,12 @@ import office001_semantic_ranges
 import private_reference_guard
 import generated_evidence_globs
 import news_workbook_layout
+import procurement_summary_labels
+import public_text_profiles
+import work_order_evidence_budget
+import typed_rule_diagnostics
+import grade_wrapper_normalization
+import escrow_state_review
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1807,6 +1813,9 @@ def prepare_attempt(
                 **({'rule_review_profile':office001_rule_review.PROFILE}
                    if office001_rule_review.matches(contract,_sha256_bytes(contract_bytes))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'rule_review_profile':escrow_state_review.PROFILE}
+                   if escrow_state_review.matches(contract,_sha256_bytes(contract_bytes))
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes))}
                    if office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
@@ -1815,8 +1824,18 @@ def prepare_attempt(
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(contract) else {}),
+                **({'procurement_summary_label_profile':procurement_summary_labels.marker(contract,_sha256_bytes(contract_bytes))}
+                   if procurement_summary_labels.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'public_office_input_profile':public_office_profiles.marker(contract,_sha256_bytes(contract_bytes))}
                    if public_office_profiles.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'public_text_input_profile':public_text_profiles.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if public_text_profiles.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'work_order_evidence_budget_profile':work_order_evidence_budget.marker(contract,_sha256_bytes(contract_bytes))}
+                   if work_order_evidence_budget.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes))}
+                   if typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if grade_wrapper_normalization.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'office001_native_profile':office001_native_profile.marker(contract,_sha256_bytes(contract_bytes))}
                    if office001_native_profile.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'private_reference_guard_profile':private_reference_guard.marker(contract,_sha256_bytes(contract_bytes),dataset,private_gt_entries)}
@@ -2077,6 +2096,10 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
                 _generated_evidence_files(root, manifest, contract)
     _verify_rule_input_context(root, manifest)
     contract = _read_json(root / paths['contract'])
+    if manifest.get('runtime',{}).get('typed_rule_diagnostics_profile') and (root/'worker/request.json').exists():
+        request=_read_json(root/'worker/request.json')
+        if request.get('rule_result_adapter')!=_effective_worker_adapter(manifest,contract):
+            raise ScoringRuntimeError('RULE_RESULT_ADAPTER_PROFILE_DRIFT')
     glob_reader=generated_evidence_globs.descriptor(manifest,contract)
     return {
         "status": "PASS",
@@ -2682,6 +2705,11 @@ def _effective_rule_source(
         corrected, receipt = office001_rule_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = private_reference_guard.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = news_workbook_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = procurement_summary_labels.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = public_text_profiles.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = work_order_evidence_budget.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = grade_wrapper_normalization.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = escrow_state_review.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -2912,6 +2940,13 @@ def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
             raise ScoringRuntimeError("RULE_INPUT_CONTEXT_DRIFT", "completion audit binding")
 
 
+def _effective_worker_adapter(manifest,contract):
+    original=dataset_rule_corrections.effective_result_adapter(manifest['identity']['task_id'],
+        contract.get('automated_checks'),contract.get('rule_result_adapter'))
+    try:return typed_rule_diagnostics.effective_adapter(manifest,contract,original)
+    except ValueError as exc:raise ScoringRuntimeError('RULE_RESULT_ADAPTER_PROFILE_INVALID',str(exc)) from exc
+
+
 def run_rules_attempt(
     *,
     attempt_root: Path,
@@ -2971,9 +3006,7 @@ def run_rules_attempt(
         runtime_lock_path=runtime_lock_path,
         timeout_seconds=timeout_seconds,
         playwright_browsers_path=playwright_browsers_path,
-        rule_result_adapter=dataset_rule_corrections.effective_result_adapter(
-            manifest["identity"]["task_id"], automated_checks, contract.get("rule_result_adapter")
-        ),
+        rule_result_adapter=_effective_worker_adapter(manifest,contract),
         rule_review_configuration=review_configuration,
     )
     run_rules, grading_error_type = _import_grading_core()
@@ -5495,9 +5528,7 @@ def _verify_rule_source_correction(root: Path, manifest: Mapping[str, Any]) -> N
     request = _read_json(root / "worker/request.json", code="RULE_WORKER_REQUEST_INVALID")
     if request.get("automated_checks") != effective:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker source")
-    expected_adapter = dataset_rule_corrections.effective_result_adapter(
-        manifest["identity"]["task_id"], source, contract.get("rule_result_adapter")
-    )
+    expected_adapter = _effective_worker_adapter(manifest,contract)
     if request.get("rule_result_adapter") != expected_adapter:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_INVALID", "worker result adapter")
     expected_review=rule_review_runtime.application_configuration(sys.modules[__name__],root,manifest,contract)
@@ -6105,6 +6136,9 @@ def prepare_rescore_attempt(
                 **({'rule_review_profile':office001_rule_review.PROFILE}
                    if office001_rule_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'rule_review_profile':escrow_state_review.PROFILE}
+                   if escrow_state_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
@@ -6113,8 +6147,18 @@ def prepare_rescore_attempt(
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(_read_json(staging/source_paths['contract'])) else {}),
+                **({'procurement_summary_label_profile':procurement_summary_labels.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if procurement_summary_labels.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'public_office_input_profile':public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'public_text_input_profile':public_text_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if public_text_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'work_order_evidence_budget_profile':work_order_evidence_budget.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if work_order_evidence_budget.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if grade_wrapper_normalization.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'office001_native_profile':office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'private_reference_guard_profile':private_reference_guard.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'],private_gt_entries)}
