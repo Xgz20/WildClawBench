@@ -580,6 +580,38 @@ class RunGeneralE2ETests(unittest.TestCase):
             )
             self.assertTrue(Path(package["archive"]).is_file())
 
+    def test_return_excludes_uncited_judge_node_modules_but_preserves_candidate_dependencies(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root=Path(temp_dir);unit=create_unit(root);orchestration=create_orchestration(root,'judge-dependency')
+            attempt=orchestration/'attempts/orch-001'
+            dependency=attempt/'node_modules';dependency.symlink_to('/unavailable/external/judge/node_modules')
+            review=attempt/'judge-review';review.mkdir();(review/'node_modules').symlink_to('/unavailable/external/judge/node_modules');(review/'review-facts.json').write_text('{"keep":true}')
+            candidate=attempt/'candidate-original/workspace/node_modules';candidate.mkdir();(candidate/'frozen.js').write_text('part of the frozen candidate')
+            package=MODULE.package_return(package_args(unit,orchestration,root/'return'))
+            checked=MODULE.inspect_return_archive(Path(package['archive']),Path(package['receipt']));names=set(checked['members'])
+            self.assertNotIn('scoring/attempts/orch-001/node_modules',names)
+            self.assertNotIn('scoring/attempts/orch-001/judge-review/node_modules',names)
+            self.assertIn('scoring/attempts/orch-001/judge-review/review-facts.json',names)
+            self.assertIn('scoring/attempts/orch-001/candidate-original/workspace/node_modules/frozen.js',names)
+            self.assertIn('scoring/package-exclusions.json',names);self.assertTrue(dependency.is_symlink())
+            self.assertEqual(os.readlink(dependency),'/unavailable/external/judge/node_modules')
+
+    def test_return_rejects_node_modules_when_referenced_by_frozen_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root=Path(temp_dir);unit=create_unit(root);orchestration=create_orchestration(root,'cited-dependency')
+            attempt=orchestration/'attempts/orch-001';(attempt/'node_modules').symlink_to('/unavailable/external/judge/node_modules')
+            catalog=attempt/'semantic/evidence-catalog.json';catalog.parent.mkdir();write_json(catalog,{'entries':[{'path':'node_modules/frozen-evidence.json'}]})
+            with self.assertRaisesRegex(MODULE.FlowError,'JUDGE_DEPENDENCY_IS_FROZEN_EVIDENCE'):
+                MODULE.package_return(package_args(unit,orchestration,root/'return'))
+
+    def test_return_never_excludes_dependencies_under_a_manifest_frozen_input_root(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root=Path(temp_dir);unit=create_unit(root);orchestration=create_orchestration(root,'frozen-review')
+            attempt=orchestration/'attempts/orch-001';review=attempt/'judge-review';review.mkdir();(review/'node_modules').symlink_to('/external/frozen-input')
+            write_json(attempt/'attempt-manifest.json',{'paths':{'candidate_original':'judge-review'}})
+            with self.assertRaisesRegex(MODULE.FlowError,'JUDGE_DEPENDENCY_IS_FROZEN_INPUT'):
+                MODULE.package_return(package_args(unit,orchestration,root/'return'))
+
     def test_nested_attempt_packages_only_exact_attempt_and_excludes_runtime(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

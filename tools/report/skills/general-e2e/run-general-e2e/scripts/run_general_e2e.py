@@ -919,6 +919,7 @@ def walk_tree(
     archive_prefix: PurePosixPath,
     *,
     exclude_runtime: bool = False,
+    excluded_judge_paths: Sequence[str] = (),
 ) -> list[PackageEntry]:
     if source.is_symlink():
         return [package_entry(source, archive_prefix)]
@@ -945,6 +946,8 @@ def walk_tree(
                 continue
             if exclude_runtime and depth == 0 and child.name == "runtime":
                 continue
+            if Path(child.path).relative_to(source).as_posix() in excluded_judge_paths:
+                continue
             child_path = Path(child.path)
             child_prefix = prefix / child.name
             entry = package_entry(child_path, child_prefix)
@@ -954,6 +957,46 @@ def walk_tree(
 
     visit(source, archive_prefix, 0)
     return entries
+
+
+def judge_dependency_exclusions(attempt: Path, relative: PurePosixPath) -> list[dict[str, Any]]:
+    """Exclude only uncited dependencies in the two known judge namespaces."""
+    def referenced(value: Any,prefixes: Sequence[str]) -> bool:
+        if isinstance(value,str):
+            text=value.replace('\\','/')
+            while text.startswith('./'):text=text[2:]
+            return any(text==prefix or text.startswith(prefix+'/') for prefix in prefixes)
+        if isinstance(value,dict):return any(referenced(v,prefixes) for v in value.values())
+        if isinstance(value,list):return any(referenced(v,prefixes) for v in value)
+        return False
+    results=[]
+    for dependency_path in ['node_modules','judge-review/node_modules']:
+        if dependency_path.startswith('judge-review/') and (attempt/'judge-review').is_symlink():
+            continue  # An arbitrary parent link is never treated as disposable.
+        dependency=attempt/dependency_path
+        if not os.path.lexists(dependency):continue
+        manifest_path=attempt/'attempt-manifest.json'
+        if manifest_path.exists():
+            manifest=read_json(manifest_path,code='JUDGE_DEPENDENCY_REFERENCE_INVALID')
+            for frozen_path in (manifest.get('paths') or {}).values():
+                if isinstance(frozen_path,str):
+                    frozen_path=frozen_path.replace('\\','/').removeprefix('./').rstrip('/')
+                    if dependency_path==frozen_path or dependency_path.startswith(frozen_path+'/'):
+                        raise FlowError('JUDGE_DEPENDENCY_IS_FROZEN_INPUT: '+relative.as_posix())
+        prefixes=[dependency_path,str(dependency),dependency.absolute().as_uri()]
+        for name in ['score.json','attempt-manifest.json','semantic/evidence-catalog.json','grader-evidence/manifest.json']:
+            path=attempt/name
+            if path.exists() and referenced(read_json(path,code='JUDGE_DEPENDENCY_REFERENCE_INVALID'),prefixes):
+                raise FlowError('JUDGE_DEPENDENCY_IS_FROZEN_EVIDENCE: '+relative.as_posix())
+        info=dependency.lstat()
+        if not (stat.S_ISDIR(info.st_mode) or stat.S_ISLNK(info.st_mode)):
+            raise FlowError('JUDGE_DEPENDENCY_TYPE_INVALID: '+relative.as_posix())
+        results.append({'path':(PurePosixPath('scoring')/relative/dependency_path).as_posix(),
+             'attempt_relative_path':dependency_path,
+             'kind':'symlink' if stat.S_ISLNK(info.st_mode) else 'directory',
+             'target':os.readlink(dependency) if stat.S_ISLNK(info.st_mode) else None,
+             'reason':'uncited dependency in a known judge runtime namespace; original remains outside return archive'})
+    return results
 
 
 def collect_package_entries(
@@ -990,13 +1033,19 @@ def collect_package_entries(
         ):
             raise FlowError(f"SUBMISSION_SCORE_PATH_INVALID: {relative}")
         attempt_roots.add(relative.parent)
+    dependency_exclusions=[]
     for relative in sorted(attempt_roots, key=lambda item: item.as_posix()):
         source = orchestration_root.joinpath(*relative.parts)
         if not source.is_dir() or source.is_symlink():
             raise FlowError(f"PACKAGE_ATTEMPT_MISSING: {relative}")
-        entries.extend(
-            walk_tree(source, PurePosixPath("scoring") / relative, exclude_runtime=True)
-        )
+        excluded=judge_dependency_exclusions(source,relative)
+        dependency_exclusions.extend(excluded)
+        entries.extend(walk_tree(source, PurePosixPath("scoring") / relative,
+            exclude_runtime=True,excluded_judge_paths=[e['attempt_relative_path'] for e in excluded]))
+    if dependency_exclusions:
+        entries.append(PackageEntry('scoring/package-exclusions.json','file',0o644,
+            pretty_json_bytes({'profile':'uncited-judge-runtime-dependencies/v1','originals_modified':False,
+                               'entries':dependency_exclusions})))
     paths = [entry.path for entry in entries]
     duplicates = sorted(path for path, count in Counter(paths).items() if count > 1)
     if duplicates:
