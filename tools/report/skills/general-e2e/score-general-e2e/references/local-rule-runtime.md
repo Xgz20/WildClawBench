@@ -140,3 +140,13 @@ Windows 的 Python 路径使用 `Scripts/python.exe`。bootstrap 生成的 marke
 新attempt可冻结`canonical-private-reference-guard/v1`。注册表绑定原task/contract/source、dataset digest、原Git版本及ZIP成员SHA；仅修正原脚本的旧校验常量。Office014的公开文本哈希还逐项证明原UTF-8 LF字节转换为CRLF恰等于旧值，GT归档文本副本须与对应公开原件逐字节相同。原GT、输入、候选和全部业务比较不改写，实际候选改动仍由原SNAPSHOT/副本校验识别。缺失或未注册参考、大小/SHA漂移仍失败关闭。旧失败只在实际私有文件仍是已登记原件时留证；修复需独立新attempt，不在原attempt重跑。
 
 Office001新的`office001-original-continuous-semantic-ranges/v1`只把原Rubric明确写有Score (0, 1)的C2/C3/C6/C7交给core的有限[0,1]范围校验。原C1/C4离散锚点和所有权重不变。请求和归档验证重算相同原契约范围；不能将无效分改成0，也不把旧裁判结构化结果原地改写。修复已完成的框架锚点错误时，保留原null，创建独立重评分attempt。
+
+
+### 已审核的取证文件名通配符
+
+`reviewed-generated-file-globs/v1`注册Office011/017/021/023的原contract/source SHA和dataset身份，仅对这些原声明展开固定evaluator_evidence父目录下的文件名。所有匹配项都进入同一个不可变grader-evidence快照和查询目录；零匹配、匹配到目录/链接、原候选预置同名匹配项、任意越界继续失败。精确文件/目录路径以及未注册旧契约保持原解释。只读verify可核对尚未准入的旧规则产物，不改原manifest、Worker、规则分或参考；修复评测仍使用新的attempt。已采用的v1注册表和匹配器须保持，不覆盖成无界通配符。
+
+
+### 新闻归档的表头与全列保全
+
+Office003仅在原contract/source SHA匹配的新attempt冻结`news-equivalent-headers-complete-cells/v1`：接受明确等价的主体/别名/片段/位置表头，在分日事件数与显式合计并列时读取现有合计，不从GT推算；来源只对冻结公开清单中唯一匹配的相对文件名或路径后缀归一，歧义和外链不补造。原比较函数、事件/主体/分类分母及权重保持。原六份JSON内附完整物理单元格、原列、坐标、公式与缓存、合并范围，不能把取证端归一视为候选提供了额外信息；4MiB单文件和16MiB总量按UTF-8字节限额，超过仍失败且不截断。原件与旧取证保持，修复需独立新attempt重新运行原规则和语义评分。

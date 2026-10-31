@@ -46,3 +46,8 @@ python scripts/orchestrate_general_e2e.py init-rescore \
 ```
 
 新 report config 显式指定 Judge protocol、model 和 reasoning effort；API 后端还需 `--api-runtime-config`。新编排冻结源 state、submission、attempt manifest 和 score 哈希，使用新的 attempt ID 和独立路径。源编排、分数与 submission 不会被覆盖；目标已存在或源未锁定时失败关闭。
+
+
+## 规则已完成但旧读取器误解取证通配符
+
+对已注册四题，可显式调用`record-unscored-evidence-glob-error --orchestration-root ABS --task-id ID --verifier-score-skill-dir NEW_FROZEN_SCORE --reason TEXT`。它只接受旧RULE_COMPONENT_VERIFICATION_FAILED中的精确JUDGE_EVIDENCE_MISSING声明、完成的Worker/audit/component、无Judge/score，并让新冻结读取器完整verify旧候选/私有材料/轨迹及实际全部取证文件。原attempt逐字节保留，新的控制回执记录只读验证、旧错误、原文件SHA和新读取器锁；普通恢复复放该校验。此后旧行仍UNSCORED，必须从相同冻结执行建立新的评分attempt，最终用明确的基础设施修复选择纳入完整原范围；不可直接拿旧规则分当正式成绩或缩小分母。

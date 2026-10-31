@@ -41,6 +41,8 @@ import office001_native_profile
 import office001_rule_review
 import office001_semantic_ranges
 import private_reference_guard
+import generated_evidence_globs
+import news_workbook_layout
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1819,6 +1821,8 @@ def prepare_attempt(
                    if office001_native_profile.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'private_reference_guard_profile':private_reference_guard.marker(contract,_sha256_bytes(contract_bytes),dataset,private_gt_entries)}
                    if private_reference_guard.marker(contract,_sha256_bytes(contract_bytes),dataset,private_gt_entries) is not None else {}),
+                **({'news_workbook_layout_profile':news_workbook_layout.marker(contract,_sha256_bytes(contract_bytes))}
+                   if news_workbook_layout.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -2072,11 +2076,14 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
             if _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest):
                 _generated_evidence_files(root, manifest, contract)
     _verify_rule_input_context(root, manifest)
+    contract = _read_json(root / paths['contract'])
+    glob_reader=generated_evidence_globs.descriptor(manifest,contract)
     return {
         "status": "PASS",
         "attempt_root": str(root),
         "candidate_sha256": candidate_sha,
         "entry_count": len(entries),
+        **({'generated_evidence_glob_reader':glob_reader} if glob_reader else {}),
     }
 
 
@@ -2674,6 +2681,7 @@ def _effective_rule_source(
         corrected, receipt = office001_native_profile.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = office001_rule_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = private_reference_guard.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = news_workbook_layout.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -2929,7 +2937,11 @@ def run_rules_attempt(
         attempt_root, manifest["runtime"]["workspace_argument"], "rule_workspace"
     ).resolve(strict=True)
     for relative in _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest):
-        if os.path.lexists(rule_workspace / relative):
+        try:
+            targets=generated_evidence_globs.targets(rule_workspace,relative,manifest,contract)
+        except ValueError as exc:
+            raise ScoringRuntimeError('JUDGE_EVIDENCE_PATH_INVALID',str(exc)) from exc
+        if any(os.path.lexists(target) for target in targets):
             raise ScoringRuntimeError("JUDGE_EVIDENCE_TARGET_COLLISION", relative)
     _, runtime_initial_sha = _inventory_tree(runtime_workspace)
     if runtime_initial_sha != manifest["digests"].get("runtime_initial_sha256"):
@@ -3230,25 +3242,35 @@ def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract:
     if digest != audit.get("runtime_workspace", {}).get("final_sha256"):
         raise ScoringRuntimeError("JUDGE_EVIDENCE_DRIFT", "managed runtime changed after evidence generation")
     workspace = _resolve_within(root, manifest["runtime"]["workspace_argument"], "rule_workspace")
+    glob_policy=generated_evidence_globs.policy(manifest,contract)
+    if glob_policy:
+        suffix=Path(manifest['runtime']['workspace_argument']).relative_to(manifest['paths']['runtime_workspace'])
+        original=root/manifest['paths']['candidate_original']/suffix
     files: list[Path] = []
     for relative in required:
-        target = workspace / relative
-        chain = target.relative_to(workspace).parts
-        current = workspace
-        for part in chain:
-            current = current / part
-            if current.is_symlink():
-                raise ScoringRuntimeError("JUDGE_EVIDENCE_PATH_INVALID", str(relative))
-        if not target.exists():
+        try:
+            if glob_policy and relative in glob_policy['patterns']:
+                if generated_evidence_globs.targets(original,relative,manifest,contract):
+                    raise ScoringRuntimeError('JUDGE_EVIDENCE_TARGET_COLLISION',relative)
+            targets=generated_evidence_globs.targets(workspace,relative,manifest,contract)
+        except ValueError as exc:
+            raise ScoringRuntimeError('JUDGE_EVIDENCE_PATH_INVALID',str(exc)) from exc
+        if not targets:
             raise ScoringRuntimeError("JUDGE_EVIDENCE_MISSING", relative)
-        _resolve_within(workspace, relative, "judge evidence")
-        candidates = [target] if target.is_file() else sorted(target.rglob("*"))
-        if any(path.is_symlink() or (not path.is_file() and not path.is_dir()) for path in candidates):
-            raise ScoringRuntimeError("JUDGE_EVIDENCE_PATH_INVALID", relative)
-        regular = [path for path in candidates if path.is_file()]
-        if not regular:
-            raise ScoringRuntimeError("JUDGE_EVIDENCE_MISSING", relative)
-        files.extend(regular)
+        for target in targets:
+            chain = target.relative_to(workspace).parts
+            current = workspace
+            for part in chain:
+                current = current / part
+                if current.is_symlink():raise ScoringRuntimeError('JUDGE_EVIDENCE_PATH_INVALID',relative)
+            if not target.exists():raise ScoringRuntimeError('JUDGE_EVIDENCE_MISSING',relative)
+            _resolve_within(workspace,target.relative_to(workspace).as_posix(),'judge evidence')
+            candidates = [target] if target.is_file() else sorted(target.rglob('*'))
+            if any(path.is_symlink() or (not path.is_file() and not path.is_dir()) for path in candidates):
+                raise ScoringRuntimeError('JUDGE_EVIDENCE_PATH_INVALID',relative)
+            regular=[path for path in candidates if path.is_file()]
+            if not regular:raise ScoringRuntimeError('JUDGE_EVIDENCE_MISSING',relative)
+            files.extend(regular)
     return sorted(set(files))
 
 
@@ -6097,6 +6119,8 @@ def prepare_rescore_attempt(
                    if office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'private_reference_guard_profile':private_reference_guard.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'],private_gt_entries)}
                    if private_reference_guard.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'],private_gt_entries) is not None else {}),
+                **({'news_workbook_layout_profile':news_workbook_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if news_workbook_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),

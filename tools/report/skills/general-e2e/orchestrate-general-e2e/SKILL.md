@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.33` record-unscored-evidence-glob-error只处理已注册通配符被旧读取器当字面路径拒绝的规则收口。须原Worker/audit/component均完成、无Judge/score，新冻结Score读取器完整只读verify实际原件成功；原attempt不重跑、不改写，独立回执锁定原错误与文件SHA，留证旧未评分后另建修复评分。恢复时复放同一验证；未知失败、缺证据、漂移和已有有效成绩不适用。
+
 `0.11.32` 补齐Office020原规则声明的精确RuntimeError校验失败签名；仅在注册task/contract/source/dataset与实际原私有参考字节全部核验后，留证旧失败并允许独立修复评分纳入完整范围。缺文件、形状改变、其他RuntimeError和任意漂移仍拒绝；冻结Score36及其规则/语义判断保持不变。
 
 `0.11.31` 识别已注册原私有参考的旧校验失败，核对精确task/contract/source/dataset和实际原件后可显式留证旧未评分记录，并将合法新评分纳入完整原范围。未知参考、文件漂移或其他异常不进入该分支；原Prompt、裁判、评分权重与既有有效成绩不改。

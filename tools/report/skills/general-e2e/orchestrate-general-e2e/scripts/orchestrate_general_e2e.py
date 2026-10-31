@@ -21,6 +21,7 @@ import uuid
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import private_reference_guard
+import generated_evidence_globs
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
 STATE_REVISION = 6
@@ -1803,6 +1804,8 @@ def _verify_state(
     root: Path,
     *,
     allow_late_submission_recovery: bool = False,
+    evidence_glob_task_id: str | None = None,
+    evidence_glob_verifier: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     state = _read_json(root / "orchestration-state.json", "ORCHESTRATION_STATE_INVALID")
     if state.get("schema_version") != STATE_SCHEMA or state.get("revision") != STATE_REVISION:
@@ -1987,9 +1990,22 @@ def _verify_state(
             raise OrchestrationError('NATIVE_WRITER_PROMPT_PROFILE_MISMATCH',task['task_id'])
         if task.get('terminal_projection_required',False)!=bool((manifest_document.get('trace_bundle') or {}).get('terminal_projection_profile')):
             raise OrchestrationError('TERMINAL_PROJECTION_PROMPT_PROFILE_MISMATCH',task['task_id'])
-        _run_score_command(
-            state["score_skill"], ["verify", "--attempt-root", str(attempt)]
-        )
+        reader=state['score_skill'];glob_repair=None
+        scoring_failure=task.get('scoring_error') or {}
+        if scoring_failure.get('kind')==generated_evidence_globs.ERROR_KIND:
+            glob_repair=_verified_glob_repair_receipt(root,task,manifest_document)
+            reader=glob_repair['verifier_skill']
+        elif task['task_id']==evidence_glob_task_id and evidence_glob_verifier is not None:
+            _glob_repair_source(root,task,manifest_document,allow_retired=False)
+            reader=evidence_glob_verifier
+        checked=_run_score_command(reader,['verify','--attempt-root',str(attempt)])
+        if reader is not state['score_skill']:
+            contract=_read_json(attempt/manifest_document['paths']['contract'])
+            expected=generated_evidence_globs.descriptor(manifest_document,contract)
+            if expected is None or checked.get('generated_evidence_glob_reader')!=expected:
+                raise OrchestrationError('EVIDENCE_GLOB_REPAIR_VERIFIER_INVALID')
+        if glob_repair is not None and checked!=glob_repair['verification']:
+            raise OrchestrationError('EVIDENCE_GLOB_REPAIR_SOURCE_DRIFT')
         review_request=task.get('rule_review_request')
         if review_request is not None:
             rp=_regular_file(root/review_request['path'],'RULE_REVIEW_REQUEST_INVALID')
@@ -2053,7 +2069,7 @@ def _verify_state(
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
-                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND}):
+                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND, generated_evidence_globs.ERROR_KIND}):
                 raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
             for key in ("rule_audit", "worker_result"):
                 path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
@@ -2830,6 +2846,71 @@ def _registered_reference_failure(attempt,manifest,contract,error):
     return True
 
 
+def _glob_repair_source(root,task,manifest,*,allow_retired):
+    allowed={'UNSCORED'} if allow_retired else {'RULES_NEEDS_ATTENTION'}
+    if task.get('phase') not in allowed or task.get('thread') or task.get('score'):
+        raise OrchestrationError('EVIDENCE_GLOB_REPAIR_NOT_ALLOWED')
+    attempt=root/task['attempt_path'];contract=_read_json(attempt/manifest['paths']['contract'])
+    profile=generated_evidence_globs.descriptor(manifest,contract)
+    audits=[e for e in task['history'] if e.get('event')=='RULE_COMPONENT_VERIFICATION_FAILED']
+    if profile is None or not audits:raise OrchestrationError('EVIDENCE_GLOB_REPAIR_NOT_ALLOWED')
+    event=audits[-1];text=event.get('error','');pattern=None
+    if text.startswith('SCORE_SKILL_COMMAND_FAILED: '):
+        try:
+            error=json.loads(text.split(': ',1)[1])['error']
+            if error.get('code')=='JUDGE_EVIDENCE_MISSING':pattern=error.get('detail')
+        except (ValueError,KeyError,TypeError):pass
+    elif text.startswith('JUDGE_EVIDENCE_MISSING: '):pattern=text.split(': ',1)[1]
+    if pattern not in profile['patterns']:raise OrchestrationError('EVIDENCE_GLOB_REPAIR_NOT_ALLOWED')
+    audit=_read_json(attempt/'rule-audit.json');component=_read_json(attempt/'rule-component.json')
+    worker=_read_json(attempt/'worker/result.json')
+    if (audit.get('status')!='completed' or audit.get('identity')!=manifest['identity']
+            or audit.get('error') is not None or component.get('status')!='completed'
+            or worker.get('ok') is not True or (attempt/'score.json').exists() or (attempt/'semantic').exists()):
+        raise OrchestrationError('EVIDENCE_GLOB_REPAIR_NOT_ALLOWED')
+    names=['attempt-manifest.json',manifest['paths']['contract'],'rule-component.json','rule-audit.json','worker/request.json','worker/result.json']
+    locks={name:_sha256_file(_regular_file(attempt/name,'EVIDENCE_GLOB_REPAIR_SOURCE_INVALID')) for name in names}
+    return {'profile':profile,'failed_verification':event,'source_locks':locks}
+
+
+def _verified_glob_repair_receipt(root,task,manifest):
+    failure=task.get('scoring_error') or {};binding=failure.get('evidence_glob_repair') or {}
+    path=_regular_file(root/str(binding.get('path','')),'EVIDENCE_GLOB_REPAIR_RECEIPT_INVALID')
+    if not _inside(root,path) or _sha256_file(path)!=binding.get('sha256'):
+        raise OrchestrationError('EVIDENCE_GLOB_REPAIR_RECEIPT_INVALID')
+    receipt=_read_json(path);expected=_glob_repair_source(root,task,manifest,allow_retired=True)
+    if (receipt.get('schema_version')!='general-e2e-evidence-glob-repair-retirement/v1'
+            or receipt.get('identity')!=manifest['identity'] or receipt.get('source')!=expected
+            or receipt.get('original_inputs_modified') is not False or not isinstance(receipt.get('verifier_skill'),dict)):
+        raise OrchestrationError('EVIDENCE_GLOB_REPAIR_RECEIPT_INVALID')
+    return receipt
+
+
+def record_unscored_evidence_glob_error(orchestration_root,*,task_id,verifier_score_skill_dir,reason,now=None):
+    root=_state_root(orchestration_root);raw=_read_json(root/'orchestration-state.json')
+    verifier=_score_skill_lock(verifier_score_skill_dir,python_runtime=raw['score_skill'].get('python'))
+    state=_verify_state(root,evidence_glob_task_id=task_id,evidence_glob_verifier=verifier)
+    task=_task_by_id(state,_identifier(task_id,'task_id'));attempt=root/task['attempt_path']
+    manifest=_read_json(attempt/'attempt-manifest.json');source=_glob_repair_source(root,task,manifest,allow_retired=False)
+    checked=_run_score_command(verifier,['verify','--attempt-root',str(attempt)])
+    if checked.get('generated_evidence_glob_reader')!=source['profile']:
+        raise OrchestrationError('EVIDENCE_GLOB_REPAIR_VERIFIER_INVALID')
+    receipt={'schema_version':'general-e2e-evidence-glob-repair-retirement/v1','identity':manifest['identity'],
+        'source':source,'verifier_skill':verifier,'verification':checked,'original_inputs_modified':False,
+        'old_rules_reexecuted':False,'semantic_judging_performed':False}
+    directory=root/'evidence-glob-repair';directory.mkdir(exist_ok=True)
+    path=directory/(task['scoring_attempt_id']+'.json');_write_new_json(path,receipt)
+    task['scoring_error']={'kind':generated_evidence_globs.ERROR_KIND,'reason':_required_string(reason,'reason'),
+        'rule_audit_path':(attempt/'rule-audit.json').relative_to(root).as_posix(),
+        'rule_audit_sha256':_sha256_file(attempt/'rule-audit.json'),
+        'worker_result_path':(attempt/'worker/result.json').relative_to(root).as_posix(),
+        'worker_result_sha256':_sha256_file(attempt/'worker/result.json'),
+        'error':source['failed_verification']['error'],
+        'evidence_glob_repair':{'path':path.relative_to(root).as_posix(),'sha256':_sha256_file(path)}}
+    task['phase']='UNSCORED';task['history'].append({'at':_timestamp(now or _now()),'event':'DECLARED_GLOB_VERIFICATION_RETIRED_FOR_REPAIR',**task['scoring_error']})
+    return _save(root,state,now or _now())
+
+
 def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason: str, now: datetime | None = None) -> dict[str, Any]:
     root = _state_root(orchestration_root)
     state = _verify_state(root)
@@ -3365,6 +3446,12 @@ def main(argv: list[str] | None = None) -> int:
     unscored_rule.add_argument("--task-id", required=True)
     unscored_rule.add_argument("--reason", required=True)
 
+    unscored_glob=subparsers.add_parser('record-unscored-evidence-glob-error')
+    _parse_common(unscored_glob)
+    unscored_glob.add_argument('--task-id',required=True)
+    unscored_glob.add_argument('--verifier-score-skill-dir',type=Path,required=True)
+    unscored_glob.add_argument('--reason',required=True)
+
     rule_score = subparsers.add_parser("run-rule-score")
     _parse_common(rule_score)
     rule_score.add_argument("--task-id", required=True)
@@ -3485,6 +3572,9 @@ def main(argv: list[str] | None = None) -> int:
                 allow_late_completion=args.allow_late_completion,
                 native_response_recovery_proof=args.native_response_recovery_proof,
             )
+        elif args.command == 'record-unscored-evidence-glob-error':
+            result=record_unscored_evidence_glob_error(args.orchestration_root,task_id=args.task_id,
+                verifier_score_skill_dir=args.verifier_score_skill_dir,reason=args.reason)
         elif args.command == "record-unscored-rule-error":
             result = record_unscored_rule_error(args.orchestration_root, task_id=args.task_id, reason=args.reason)
         elif args.command == "run-rule-score":
