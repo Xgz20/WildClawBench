@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.36` 为Office001精确原契约冻结原Rubric明确声明的四项连续[0,1]语义分；仍保留C1/C4离散锚点、原权重、引用与反例门禁，record/archived均从原契约重算，旧attempt不改。另按原提交、版本化manifest和冻结ZIP注册三题原文本校验常量纠正：仅已确认的私有参考旧校验值及Office014逐字节LF/CRLF文本身份，原参考、候选、业务值和计分函数不重写，其他漂移继续拒绝。
+
 `0.10.35` 对精确Office001原contract/source SHA绑定的新Codex attempt，先在受管隔离副本发现原规则明确无法抽取的逐任务数值，再由独立裁判逐项查证、填写布尔复核和具体位置。原字段全集、已确定比较、重复一致性、分母、公共数值接口及60/40权重不变；不改用六态重归一/扣分成绩。未知仍阻断数值发布，旧attempt/HR路径保持原字节。
 
 `0.10.34` 对新 trace 中 bound-sdk-completed-turn-projection-status/v1 证明独立重算原 state SHA、唯一原生 SDK 完成事件、会话/turn/Prompt/终稿及标准轨迹绑定，冻结到 trace handoff 并支持 archived 验证。原 running 投影不改写；证明不完整、取消、内容冲突或来源漂移仍拒绝，不将证明当作能力得分。

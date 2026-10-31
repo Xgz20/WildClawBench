@@ -133,3 +133,10 @@ Windows 的 Python 路径使用 `Scripts/python.exe`。bootstrap 生成的 marke
 仅新Codex attempt可按原contract/source SHA冻结`office001-numeric-extraction-semantic-review/v1`。控制器先运行`prepare-rule-review`，只发现原`uncertain`分支的逐任务/字段上下文，不发布发现阶段数值。裁判完整分页`query-rule-review`并核对全部候选陈述和参考；原数值明确成立且重复陈述一致才填true，可确认遗漏或错误为false，材料不足保留unresolved/null。每项填写中文理由、已查询query_ids及具体`evidence_locations`，再`record-rule-review`，使用request冻结的解释器首次`run-rules`。原已确定比较、字段/分母及公共数值接口均不变，不能将六态`aggregate()`的重归一/扣分结果混入该成绩。
 
 该入口可与已验证的原生Writer Profile组合；发现副本和正式runtime分开，正式规则成功后保留实际正文/两表编辑、保存重开、DOCX原生PDF、候选PDF及双方全页索引，C6仍由裁判逐页查看，C7只认原候选轨迹。旧失败attempt保留，不原地重跑；新attempt从同一冻结执行创建，原始题目/GT/权重不改。
+
+
+### 原文本身份校验与连续语义分
+
+新attempt可冻结`canonical-private-reference-guard/v1`。注册表绑定原task/contract/source、dataset digest、原Git版本及ZIP成员SHA；仅修正原脚本的旧校验常量。Office014的公开文本哈希还逐项证明原UTF-8 LF字节转换为CRLF恰等于旧值，GT归档文本副本须与对应公开原件逐字节相同。原GT、输入、候选和全部业务比较不改写，实际候选改动仍由原SNAPSHOT/副本校验识别。缺失或未注册参考、大小/SHA漂移仍失败关闭。旧失败只在实际私有文件仍是已登记原件时留证；修复需独立新attempt，不在原attempt重跑。
+
+Office001新的`office001-original-continuous-semantic-ranges/v1`只把原Rubric明确写有Score (0, 1)的C2/C3/C6/C7交给core的有限[0,1]范围校验。原C1/C4离散锚点和所有权重不变。请求和归档验证重算相同原契约范围；不能将无效分改成0，也不把旧裁判结构化结果原地改写。修复已完成的框架锚点错误时，保留原null，创建独立重评分attempt。

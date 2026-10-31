@@ -39,6 +39,8 @@ import semantic_aggregation
 import public_office_profiles
 import office001_native_profile
 import office001_rule_review
+import office001_semantic_ranges
+import private_reference_guard
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1803,6 +1805,9 @@ def prepare_attempt(
                 **({'rule_review_profile':office001_rule_review.PROFILE}
                    if office001_rule_review.matches(contract,_sha256_bytes(contract_bytes))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'semantic_score_range_profile':office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes))}
+                   if office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes)) is not None
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'business_capability_profile':business_capability.profile_marker(contract,_sha256_bytes(contract_bytes))}
                    if business_capability.profile_marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
@@ -1812,6 +1817,8 @@ def prepare_attempt(
                    if public_office_profiles.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'office001_native_profile':office001_native_profile.marker(contract,_sha256_bytes(contract_bytes))}
                    if office001_native_profile.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'private_reference_guard_profile':private_reference_guard.marker(contract,_sha256_bytes(contract_bytes),dataset,private_gt_entries)}
+                   if private_reference_guard.marker(contract,_sha256_bytes(contract_bytes),dataset,private_gt_entries) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -2666,6 +2673,7 @@ def _effective_rule_source(
         corrected, receipt = public_office_profiles.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = office001_native_profile.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = office001_rule_review.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = private_reference_guard.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -3645,6 +3653,10 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
         if grading_type == "automated"
         else _parse_semantic_criteria(contract.get("llm_judge_rubric"), weight_scale=contract.get("semantic_weight_scale", 1.0))
     )
+    try:
+        rich_criteria=office001_semantic_ranges.apply(manifest,contract,rich_criteria)
+    except ValueError as exc:
+        raise ScoringRuntimeError('SEMANTIC_RANGE_PROFILE_INVALID',str(exc)) from exc
     if grading_type != "automated" and not rich_criteria:
         raise ScoringRuntimeError("SEMANTIC_RUBRIC_INVALID", "no criteria parsed")
     transcript_relative = manifest["paths"].get("transcript")
@@ -3743,6 +3755,8 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "attempt_id": judge["attempt_id"],
                 },
                 "grading": manifest["grading"],
+                **({'score_range_profile':manifest['runtime']['semantic_score_range_profile']}
+                   if manifest.get('runtime',{}).get('semantic_score_range_profile') else {}),
                 "rubric": {
                     "text": rubric_text,
                     "sha256": _sha256_bytes(rubric_text.encode("utf-8")),
@@ -4905,6 +4919,22 @@ def _queries_cover_complete_transcript(
     return cursor >= total
 
 
+def _verify_semantic_score_ranges(root,manifest,request):
+    frozen=manifest.get('runtime',{}).get('semantic_score_range_profile')
+    if frozen is None:
+        if 'score_range_profile' in request:
+            raise ScoringRuntimeError('SEMANTIC_RANGE_PROFILE_INVALID','unexpected request profile')
+        return
+    contract=_read_json(root/manifest['paths']['contract'])
+    try:
+        expected=office001_semantic_ranges.apply(manifest,contract,
+            _parse_semantic_criteria(contract['llm_judge_rubric'],weight_scale=contract.get('semantic_weight_scale',1.)))
+    except ValueError as exc:
+        raise ScoringRuntimeError('SEMANTIC_RANGE_PROFILE_INVALID',str(exc)) from exc
+    if (request.get('score_range_profile')!=frozen or request.get('rubric',{}).get('criteria')!=expected):
+        raise ScoringRuntimeError('SEMANTIC_RANGE_PROFILE_INVALID','request differs from original rubric')
+
+
 def record_semantics_attempt(
     *, attempt_root: Path, response_path: Path
 ) -> dict[str, Any]:
@@ -4940,6 +4970,7 @@ def record_semantics_attempt(
         parse_error = None
     manifest = _read_json(root / "attempt-manifest.json")
     request = _read_json(paths["request"], code="SEMANTIC_REQUEST_INVALID")
+    _verify_semantic_score_ranges(root,manifest,request)
     catalog = _load_semantic_catalog(root)
     query_log = _read_json(paths["query_log"], code="SEMANTIC_QUERY_LOG_INVALID")
     query_log_sha = _sha256_file(paths["query_log"])
@@ -5485,6 +5516,7 @@ def _verify_semantic_terminal(
         ):
             raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "automated source")
     else:
+        _verify_semantic_score_ranges(root,manifest,_read_json(paths['request']))
         judge = _load_judge_config(root, manifest)
         expected_judge = (
             judge["protocol"],
@@ -6051,6 +6083,9 @@ def prepare_rescore_attempt(
                 **({'rule_review_profile':office001_rule_review.PROFILE}
                    if office001_rule_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'semantic_score_range_profile':office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'business_capability_profile':business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
@@ -6060,6 +6095,8 @@ def prepare_rescore_attempt(
                    if public_office_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'office001_native_profile':office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if office001_native_profile.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'private_reference_guard_profile':private_reference_guard.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'],private_gt_entries)}
+                   if private_reference_guard.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'],private_gt_entries) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),

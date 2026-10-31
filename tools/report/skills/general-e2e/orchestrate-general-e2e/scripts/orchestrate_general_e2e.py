@@ -19,6 +19,8 @@ import sys
 from typing import Any, Mapping, Sequence
 import uuid
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import private_reference_guard
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
 STATE_REVISION = 6
@@ -2051,7 +2053,7 @@ def _verify_state(
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
-                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1"}):
+                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND}):
                 raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
             for key in ("rule_audit", "worker_result"):
                 path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
@@ -2074,6 +2076,13 @@ def _verify_state(
                 if (not _office001_declared_numeric_review(frozen_manifest, frozen_contract, failure.get('error', {}))
                         or failure.get('error') != scoring_error.get('error')):
                     raise OrchestrationError('RULE_ERROR_DEFERRAL_INVALID', 'undeclared Office001 numeric review')
+            if scoring_error.get('kind') == private_reference_guard.ERROR_KIND:
+                failure = _read_json(root/scoring_error['worker_result_path'], 'RULE_ERROR_DEFERRAL_INVALID')
+                frozen_manifest = _read_json(attempt/'attempt-manifest.json', 'RULE_ERROR_DEFERRAL_INVALID')
+                frozen_contract = _read_json(attempt/frozen_manifest['paths']['contract'], 'RULE_ERROR_DEFERRAL_INVALID')
+                if (not private_reference_guard.matches_old_failure(attempt,frozen_manifest,frozen_contract,failure.get('error',{}))
+                        or failure.get('error') != scoring_error.get('error')):
+                    raise OrchestrationError('RULE_ERROR_DEFERRAL_INVALID','private reference is not the registered original')
         score = task.get("score")
         if score is not None:
             score_path = root / str(score.get("path", ""))
@@ -2827,13 +2836,15 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     allowed_error = allowed_error or (dataset_error.get("type") == "RuntimeError" and dataset_error.get("message") ==
         "EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging")
     office_numeric_review = _office001_declared_numeric_review(manifest, contract, dataset_error)
+    private_reference_failure = private_reference_guard.matches_old_failure(attempt, manifest, contract, dataset_error)
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or not (allowed_error or setup_context_error or office_numeric_review)
+            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
     event_time = now or _now()
-    kind = ('office001-declared-numeric-review/v1' if office_numeric_review else
+    kind = (private_reference_guard.ERROR_KIND if private_reference_failure else
+        'office001-declared-numeric-review/v1' if office_numeric_review else
         'evaluator-public-context-setup-error/v1' if setup_context_error else 'dataset-rule-evaluation-error/v1')
     task["scoring_error"] = {"kind": kind, "reason": _required_string(reason, "reason"),
         "rule_audit_path": audit_path.relative_to(root).as_posix(), "rule_audit_sha256": _sha256_file(audit_path),
