@@ -687,6 +687,21 @@ test("fresh execution dispatches exactly once and binds all native identities", 
   }
 });
 
+test('completed bound turn records terminal status separately from a lagging running projection', async () => {
+  const config = await fixture(), counter = { count: 0 };
+  try {
+    const lagging = { ...nativeSession('completed'), status: 'running' };
+    const dependencies = commonDependencies(config, [[], [nativeSession('running')], [lagging]], counter);
+    const state = await executeSingleTask(config, dependencies);
+    assert.equal(state.phase, 'COMPLETED');assert.equal(counter.count, 1);
+    assert.equal(state.session.native_status, 'completed');
+    assert.equal(state.session.projection_native_status, 'running');
+    assert.equal(state.session.native_turn_state, 'completed');
+    assert.equal(state.history.at(-1).native_status, 'running');
+    assert.equal(state.history.at(-1).turn_state, 'completed');
+  } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
+});
+
 test("completed status waits for its bound final without freezing commentary or redispatching", async () => {
   const config=await fixture(), clicks={count:0};
   try {

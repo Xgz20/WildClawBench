@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.29` 仅对新冻结的原生终态投影对账 Profile，在 v8 Prompt 中交接原 state 与 SDK 完成证明，并在恢复时复核相同路由。裁判仍独立按原 Rubric 判断；证明只解决执行终态元数据，不代表答案或能力合格。旧 Prompt 字节不变。
+
 `0.11.28` 仅对新冻结Office001原生Writer API Profile的v8 Prompt追加原生编辑/全页图像取证核验，显式区分评分端材料、候选交付和候选主动验收；状态恢复核对同一marker路由。未启用该Profile的旧Prompt字节与原调度行为不变。
 
 `0.11.27` v8 Prompt可对新注册的独立有效性v2交接动态原权重/能力预算、辅助判定与受管聚合预检。该路由在新attempt和Prompt中显式冻结并核验，不把零业务权重都当作可忽略的能力项；旧v3–v8及未启用v2的Prompt内容不变。

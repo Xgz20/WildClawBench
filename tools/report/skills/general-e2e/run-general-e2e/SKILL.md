@@ -3,6 +3,8 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.10` 的评分与回传校验支持新终态投影对账证明，保留原 state/SDK 字节和相同任务范围。多题正式采集先逐题 finalize，全组回执生成后再统一 verify-only；不要将中间 receipt_path=null 当作失败或手工补回执。
+
 `0.7.9` 支持显式 bound-qwen-native-utf8-redecode/v1 传输补采：原记录、回执、原始快照与 SHA 均保留；原生身份、候选、执行时间、人工介入及资源值不变，只准许字节分块解码造成的 U+FFFD 替换恢复。新回执以显式 --execution-record task=path 选择，评分再次验证原/新闭包；不重发、不重判旧成绩、不修改题目或权重。
 
 `0.7.8` 的 prepare-score 显式透传 --protect-runtime-office-inputs 到同一冻结编排；与 --keep-scoring-external 可同时使用，默认仍为可写 runtime。使用前必须确认冻结规则只读 Office 输入；不改现有编排或评分 attempt，不修改源 Workspace、原件或 SHA。

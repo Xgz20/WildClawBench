@@ -32,6 +32,7 @@ import { fileURLToPath } from "node:url";
 import { createWorkspaceIntegrity } from "../../vendor/e2e-shared/handoff/workspace-integrity.mjs";
 import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resource-supplements/astronstudio-native-provider-log.mjs";
 import { verifyArchivedTerminalFinalRecapture, assertRecaptureDeclaration } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
+import { historicalTerminalProjection, verifyTerminalProjection } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -286,7 +287,7 @@ async function assertUnitAndState(unitRoot, manifestSource, stateSource, profile
   }
   if (state.execution.business_status === "completed") {
     if (state.prompt?.send_status !== "sent" || state.session?.verified !== true
-        || (!profile.generic && state.session?.native_status !== "completed")) {
+        || (!profile.generic && state.session?.native_status !== "completed" && !historicalTerminalProjection(state))) {
       throw new Error("COMPLETED_EXECUTION_IDENTITY_UNVERIFIED");
     }
   }
@@ -341,6 +342,7 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   }
   if (nativeLog) await verifyArchivedNativeLog(index, state, stateBytes, root);
   if (index.terminal_final_recapture_profile) await verifyArchivedTerminalFinalRecapture(index, state, stateBytes, root, { candidateRoot: state.candidate_workspace });
+  if (!profile.generic) verifyTerminalProjection(index, stateBytes, root);
   return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts };
 
 }
@@ -791,6 +793,7 @@ export async function verifyGeneralCollection(options) {
     if (record.harness?.id === 'astronstudio') {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
       assertRecaptureDeclaration(declaredState.value, index);
+      verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
     }
     if (index.native_provider_log_profile) {
       const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));

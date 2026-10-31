@@ -37,10 +37,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
     ),
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.3.5",
+        name="general-resource-supplements", version="1.3.6",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
-        entrypoints=("index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs"),
+        entrypoints=("index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs"),
     ),
     SharedComponentSpec(
         name="qwenwork-native-state", version="1.1.0",
@@ -138,11 +138,11 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="general-contracts",
-        version="1.3.1",
+        version="1.3.2",
         source_root="eval_general_e2e/contracts",
         vendor_root="vendor/e2e-shared/general-contracts",
         entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json",
-                     "collection_validation.py", "schemas/trace-index-v2.schema.json", "utf8_redecode.py"),
+                     "collection_validation.py", "schemas/trace-index-v2.schema.json", "utf8_redecode.py", "astronstudio_terminal_projection.py"),
     ),
 )
 

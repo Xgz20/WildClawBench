@@ -18,6 +18,8 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { ROLLOUT_PATH, readRolloutFile, analyzeRollout, discoverRollout } from "./astronstudio-rollout.mjs";
 import { normalizeRolloutTranscript } from "./astronstudio-rollout-transcript.mjs";
+import { historicalTerminalProjection, deriveTerminalProjection,
+  TERMINAL_PROJECTION_STATE, TERMINAL_PROJECTION_PROOF } from './astronstudio-terminal-projection.mjs';
 import { readTerminalFinalRecapture, assertRecaptureArchiveSources, requiresTerminalFinalRecapture, FINAL_RECAPTURE_PROFILE } from './astronstudio-terminal-final-recapture.mjs';
 import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
 import { readBoundNativeLogBundle } from "./astronstudio-native-provider-log.mjs";
@@ -869,6 +871,13 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     completeness: normalized.completeness,
     calls: normalized.calls,
   };
+  if (historicalTerminalProjection(state)) {
+    if (!rollout || sourcePolicy !== 'bound-native-sdk') throw Error('TERMINAL_PROJECTION_CANONICAL_SDK_REQUIRED');
+    const proof = deriveTerminalProjection(stateBytes, index, rollout.bytes, transcriptBytes);
+    bindingArtifacts.push({ path: TERMINAL_PROJECTION_STATE, bytes: stateBytes },
+      { path: TERMINAL_PROJECTION_PROOF, bytes: prettyJsonBytes(proof) });
+    index.binding_evidence = bindingArtifacts.map(a => artifact(a.path, a.bytes));
+  }
   const indexBytes = prettyJsonBytes(index);
   await mkdir(join(outputDir, "raw"), { recursive: true });
   await rename(native.temporary_raw, rawPath);

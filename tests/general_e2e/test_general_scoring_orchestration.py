@@ -782,6 +782,23 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,'NATIVE_WRITER_PROMPT_PROFILE_MISMATCH'):
             ORCHESTRATOR.status(root,now=self.t0)
 
+    def test_terminal_projection_route_is_frozen_and_keeps_legacy_prompt_bytes(self) -> None:
+        lock=ORCHESTRATOR._score_skill_lock(SCORE_SKILL,python_runtime=ORCHESTRATOR._score_python_lock(Path(sys.executable)))
+        judge={'protocol':'codex-agent-judge-v1','model':'gpt-fixture','reasoning_effort':'high'}
+        regular=ORCHESTRATOR._prompt_text('task','attempt',judge,'hybrid',None,lock)
+        self.assertEqual(regular,ORCHESTRATOR._prompt_text('task','attempt',judge,'hybrid',None,lock,terminal_projection_required=False))
+        profiled=ORCHESTRATOR._prompt_text('task','attempt',judge,'hybrid',None,lock,terminal_projection_required=True)
+        self.assertNotIn('terminal-projection-proof.json',regular)
+        self.assertIn('trace/bindings/terminal-projection-proof.json',profiled)
+        fixture=Fixture(self.root/'terminal-route-drift',task_ids=('task-one',));view=fixture.initialize(now=self.t0)
+        root=Path(view['orchestration_root']);state_path=root/'orchestration-state.json';state=json.loads(state_path.read_text())
+        task=state['tasks'][0];manifest_path=root/task['attempt_path']/'attempt-manifest.json';manifest=json.loads(manifest_path.read_text())
+        manifest['trace_bundle']={'terminal_projection_profile':{'id':'bound-sdk-completed-turn-projection-status/v1'}}
+        manifest_path.write_text(json.dumps(manifest),encoding='utf-8');task['attempt_manifest_sha256']=ORCHESTRATOR._sha256_file(manifest_path)
+        state['queue_digest']=ORCHESTRATOR._queue_digest(state);state_path.write_text(json.dumps(state),encoding='utf-8')
+        with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,'TERMINAL_PROJECTION_PROMPT_PROFILE_MISMATCH'):
+            ORCHESTRATOR.status(root,now=self.t0)
+
     def test_acceptance_marker_mismatch_and_api_backend_fail_closed(self) -> None:
         fixture = Fixture(self.root / "acceptance-mismatch", task_ids=("task-one",))
         view = fixture.initialize(acceptance_id="G4-03", now=self.t0)

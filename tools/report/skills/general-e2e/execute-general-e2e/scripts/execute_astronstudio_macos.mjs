@@ -42,7 +42,7 @@ import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.17";
+export const EXECUTION_DRIVER_VERSION = "0.4.18";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -751,6 +751,14 @@ async function finalize(config, state, session, classification, dependencies) {
     state.evidence.final_response_sha256 = sha256(finalResponseContent);
     state.history.push({ phase: state.phase, at: now, event: "TERMINAL_FINAL_RESPONSE_BOUND",
       message_id: finalBinding.message_id || null, source: finalBinding.source || "test-override" });
+  }
+  if (classification.kind === 'completed' && finalBinding?.ready
+      && session.turn_state === 'completed' && session.status === 'running') {
+    // The bound completed turn is authoritative; retain the lagging session
+    // projection explicitly instead of serializing it as the task terminal.
+    state.session.projection_native_status = session.status;
+    state.session.native_turn_state = session.turn_state;
+    state.session.native_status = 'completed';
   }
   state.execution.business_status = classification.businessStatus;
   state.execution.finished_at = now;

@@ -13,6 +13,8 @@ import { prepareTerminalFinalRecapture, recaptureCandidateTree } from '../../too
 import { archiveAstronStudioTrace } from '../../tools/report/e2e-shared/general-resource-supplements/archive_astronstudio_trace.mjs';
 import { recaptureFixture, writeRecaptureInput } from './fixtures/terminal-final-recapture.mjs';
 import { DatabaseSync } from 'node:sqlite';
+import { deriveTerminalProjection, TERMINAL_PROJECTION_STATE, TERMINAL_PROJECTION_PROOF }
+  from '../../tools/report/skills/general-e2e/collect-general-e2e/vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 
 import {
   finalizeAstronStudioExecution,
@@ -225,6 +227,73 @@ function options(value) {
     processWaitMilliseconds: 0,
   };
 }
+
+test('historical running projection needs an exact SDK proof and survives formal archive verification', async () => {
+  const value = await fixture();
+  try {
+    const state = JSON.parse(await readFile(value.statePath, 'utf8'));
+    state.session.native_status = 'running';
+    state.history = [{ phase: 'RUNNING', event: 'TERMINAL_FINAL_RESPONSE_BOUND',
+      source: 'completed-turn.assistant_message_id', message_id: 'assistant-final' },
+    { phase: 'COMPLETED', event: 'NATIVE_TERMINAL_OBSERVED', native_status: 'running',
+      turn_state: 'completed', at: state.execution.finished_at }];
+    await writeJson(value.statePath, state);
+    const stateBytes = await readFile(value.statePath), prompt = await readFile(state.prompt.path, 'utf8');
+    const row = (type, payload) => ({ type, timestamp: state.execution.finished_at, payload });
+    const sdk = Buffer.from([
+      row('session_meta', { id: state.session.session_id, cwd: state.session.cwd }),
+      row('event_msg', { type: 'task_started', turn_id: state.session.turn_id }),
+      row('turn_context', { turn_id: state.session.turn_id, cwd: state.session.cwd }),
+      row('event_msg', { type: 'user_message', message: prompt }),
+      row('response_item', { type: 'message', role: 'assistant', content: [{ type: 'output_text', text: 'Done.' }] }),
+      row('event_msg', { type: 'task_complete', turn_id: state.session.turn_id, last_agent_message: 'Done.' }),
+    ].map(JSON.stringify).join('\n') + '\n');
+    const normalized = normalizeRolloutTranscript(sdk, state, { events: [], calls: [],
+      completeness: { status: 'partial', omitted_event_count: 0, missing: [] } }, { sourcePolicy: 'bound-native-sdk' });
+    const transcript = Buffer.from(normalized.events.map(JSON.stringify).join('\n') + '\n');
+    const ref = (path, bytes) => ({ path, sha256: digest(bytes), size: bytes.length });
+    const index = { schema_id: 'urn:wildclawbench:schema:general-e2e:trace-index:v1', schema_version: 1,
+      identity: state.identity, session: { thread_id: state.session.thread_id, turn_id: state.session.turn_id,
+        session_id: state.session.session_id, cwd: state.session.cwd, lifecycle_generation: 'life' },
+      adapter: { id: 'astronstudio-provider-runtime-events', version: '0.3.0' },
+      canonical_source_policy: { id: 'bound-native-sdk-canonical/v1' },
+      completeness: normalized.completeness, calls: normalized.calls,
+      transcript: { ...ref('transcript.jsonl', transcript), event_count: normalized.events.length },
+      raw_trace: [ref('raw/astronstudio-provider-events.jsonl', Buffer.alloc(0)), ref('raw/astronstudio-rollout.jsonl', sdk)] };
+    const proof = deriveTerminalProjection(stateBytes, index, sdk, transcript);
+    const proofBytes = Buffer.from(JSON.stringify(proof));
+    index.binding_evidence = [ref(TERMINAL_PROJECTION_STATE, stateBytes), ref(TERMINAL_PROJECTION_PROOF, proofBytes)];
+    const trace = join(value.root, 'fixture-input', 'trace');
+    const blobs = new Map([['transcript.jsonl', transcript], ['raw/astronstudio-provider-events.jsonl', Buffer.alloc(0)],
+      ['raw/astronstudio-rollout.jsonl', sdk], [TERMINAL_PROJECTION_STATE, stateBytes], [TERMINAL_PROJECTION_PROOF, proofBytes]]);
+    for (const [name, bytes] of blobs) {
+      await mkdir(join(trace, name, '..'), { recursive: true });await writeFile(join(trace, name), bytes);
+    }
+    await writeJson(value.indexPath, index);
+    const indexBytes = await readFile(value.indexPath);
+    const metrics = JSON.parse(await readFile(value.metricsPath, 'utf8'));
+    metrics.collection.sources = [ref('execution/automation-state.json', stateBytes), ref('trace/trace-index.json', indexBytes),
+      ...[...index.raw_trace, ...index.binding_evidence].map(r => ({ ...r, path: 'trace/' + r.path }))];
+    await writeJson(value.metricsPath, metrics);
+    const result = await finalizeAstronStudioExecution(options(value), { terminateProcesses: async () => successfulCleanup() });
+    assert.equal(result.status, 'PASS');
+    assert.equal((await verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId })).status, 'PASS');
+    assert.deepEqual(await readFile(value.statePath), stateBytes);
+    const archived = join(value.root, 'evidence/tasks', value.taskId, value.attemptId, 'trace', TERMINAL_PROJECTION_PROOF);
+    await writeFile(archived, '{}');
+    await assert.rejects(verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId }), /EVIDENCE_MANIFEST_SCOPE_MISMATCH/);
+  } finally { await rm(value.root, { recursive: true, force: true }); }
+});
+
+test('a completed label with an unproved running projection cannot finalize', async () => {
+  const value = await fixture();
+  try {
+    const state = JSON.parse(await readFile(value.statePath, 'utf8'));state.session.native_status = 'running';
+    await writeJson(value.statePath, state);
+    await assert.rejects(finalizeAstronStudioExecution(options(value), { terminateProcesses: async () => successfulCleanup() }),
+      /TERMINAL_PROJECTION_PROOF_REQUIRED/);
+  } finally { await rm(value.root, { recursive: true, force: true }); }
+});
 
 test('native log resource production includes binding closure and passes real finalize plus verify-only', async () => {
   const value = await fixture({ includeTrace: false, includeResource: false });

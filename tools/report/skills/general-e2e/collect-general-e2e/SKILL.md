@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.15` 支持 [历史会话投影终态对账](references/astronstudio-terminal-projection.md)：仅在原 state 已按精确 turn 完成、终稿已绑定、原始 SDK 唯一完成事件与 Prompt/会话/终稿/完整标准轨迹一致时收口 running 投影差异。原 state 和 SDK 保留原字节，评分端重新校验证明。多题 unit 的 finalize 在全部题目完成前可返回 receipt_path=null；先收口全组，再按完整回执逐题 verify-only。
+
 `0.11.14` 使用 general-resource-supplements 1.3.5：已绑定 turn 的原 SDK 助手正文紧邻显式 compaction（中间只允许 usage）时，冗余桌面镜像缺失按源记录邻接关系核验，持久化延迟超过一秒另记显式 Profile 和原延迟。完整 SDK 正文不删改；错 turn、缺 ID、非 compaction、内容冲突、逆序时间和插入工具/消息仍拒绝。旧一秒内 Profile 的派生审计保持原结构，冻结原件不重写。
 
 `0.11.13` 支持千问 OpenCode 运行期间的原生工具目录补采。用 `drivers/qwenwork/native-tools.mjs --journal-file ABS --output-dir NEW_DIR` 只读查询属于已绑定应用/SDK进程、同一 cwd、原生 session 及 provider/model 的 GET 元数据，不调用工具、不读取认证配置。正式 collector 可显式传 `--native-tool-catalog-proof ABS/proof.json`，验证原冻结配置/探针、PID启动身份、会话、捕获时间及原响应 SHA，再将四份原件纳入 raw_trace。只声明实际 registry 响应的覆盖；其他 registry/MCP 接口未知时仍不补造定义或能力分。采集在执行期间完成，正式终态收口时校验，不改旧轨迹。

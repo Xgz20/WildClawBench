@@ -1,8 +1,21 @@
 """Freeze a complete per-task trace bundle inside an independent scoring attempt."""
 from pathlib import Path, PurePosixPath
-import hashlib, json, os, shutil, subprocess, sys
+import hashlib, importlib.util, json, os, shutil, subprocess, sys
 
 SCHEMA = 'wildclawbench.scoring-trace-handoff/v1'
+TERMINAL_PROJECTION_PATHS = {'bindings/terminal-projection-original-state.json', 'bindings/terminal-projection-proof.json'}
+
+def terminal_projection(root, index, execution):
+    if not any(r.get('path') in TERMINAL_PROJECTION_PATHS for r in index.get('binding_evidence', [])):
+        return None
+    own=Path(__file__).resolve()
+    paths=[ancestor/'vendor/e2e-shared/general-contracts/astronstudio_terminal_projection.py' for ancestor in own.parents]
+    for module_path in paths:
+        if module_path.is_file() and not module_path.is_symlink():
+            spec = importlib.util.spec_from_file_location('general_e2e_terminal_projection', module_path)
+            module = importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+            return module.verify_index(root, index, execution)
+    raise ValueError('TERMINAL_PROJECTION_IMPLEMENTATION_MISSING')
 
 def sha(path):
     h=hashlib.sha256()
@@ -49,6 +62,7 @@ def freeze(unit_root, execution, attempt_root, *, required=False):
     refs=list(unique.values())
     original_transcript=child(unit_root,execution['evidence']['transcript_path'])
     require(original_transcript==child(index_path.parent,index['transcript']['path']),'TRACE_HANDOFF_TRANSCRIPT_BINDING')
+    terminal_proof=terminal_projection(index_path.parent,index,execution)
     dest=Path(attempt_root)/'trace';require(not dest.exists(),'TRACE_HANDOFF_EXISTS');dest.mkdir()
     artifacts=[]
     for ref in [{'path':'trace-index.json','sha256':sha(index_path),'size':index_path.stat().st_size},*refs]:
@@ -60,8 +74,12 @@ def freeze(unit_root, execution, attempt_root, *, required=False):
     manifest={'schema_version':SCHEMA,'identity':execution['identity'],'trace_index':'trace-index.json',
               'transcript':index['transcript']['path'],'raw_trace':[r['path'] for r in index['raw_trace']],
               'binding_evidence':[r['path'] for r in index.get('binding_evidence',[])],'artifacts':artifacts}
+    if terminal_proof is not None:
+        manifest['terminal_projection_profile']={'id':terminal_proof['profile'],'original_state_sha256':terminal_proof['original_state_sha256']}
     p=dest/'bundle-manifest.json';p.write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')
-    return {'path':'trace/bundle-manifest.json','sha256':sha(p),'schema_version':SCHEMA}
+    ref={'path':'trace/bundle-manifest.json','sha256':sha(p),'schema_version':SCHEMA}
+    if terminal_proof is not None:ref['terminal_projection_profile']=manifest['terminal_projection_profile']
+    return ref
 
 def verify(root, ref, execution):
     p=child(root,ref['path']);require(sha(p)==ref['sha256'],'TRACE_HANDOFF_MANIFEST_DRIFT')
@@ -75,6 +93,10 @@ def verify(root, ref, execution):
     require(set(actual)==set(expected),'TRACE_HANDOFF_MEMBER_SCOPE')
     for name,r in expected.items():require(all(actual[name][k]==r[k] for k in ('sha256','size')),'TRACE_HANDOFF_INDEX_DRIFT')
     require(index['identity']==execution['identity'],'TRACE_HANDOFF_IDENTITY')
+    proof=terminal_projection(p.parent,index,execution)
+    expected=None if proof is None else {'id':proof['profile'],'original_state_sha256':proof['original_state_sha256']}
+    require(m.get('terminal_projection_profile')==expected,'TERMINAL_PROJECTION_MANIFEST_MISMATCH')
+    require(ref.get('terminal_projection_profile')==expected,'TERMINAL_PROJECTION_REFERENCE_MISMATCH')
     return m
 
 def copy_frozen(source, dest, ref, execution):
