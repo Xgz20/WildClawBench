@@ -4,13 +4,21 @@ import subprocess
 import escrow_state_review
 import escrow_grouped_review
 import release_baseline_text
+import declared_public_snapshots
 
-KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND}
+KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
+    if declared_public_snapshots.marker(contract,m['digests']['contract_sha256'],m['dataset']) is not None:
+        audit=rt._read_json(attempt/'rule-audit.json');worker=rt._read_json(attempt/'worker/result.json')
+        if (task.get('thread') is not None or (attempt/'semantic').exists() or audit.get('status')!='completed'
+                or not (attempt/'rule-component.json').is_file()
+                or not declared_public_snapshots.original_failure(attempt,m,contract,worker)):
+            raise ValueError('PUBLIC_SNAPSHOT_ORIGINAL_FAILURE_INVALID')
+        return declared_public_snapshots.ERROR_KIND
     if escrow_state_review.matches(contract,m['digests']['contract_sha256']):
         if (m.get('runtime',{}).get('rule_review_profile')!=escrow_state_review.PROFILE
                 or task.get('thread') is not None):raise ValueError('DISCOVERY_FAILURE_PROFILE_INVALID')
@@ -62,7 +70,7 @@ def verify(rt,root,state,task):
         result=rt._read_json(root/task['attempt_path']/'rule-review/discovery/worker/result.json')
         if (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
-    else:
+    elif proof['kind']==release_baseline_text.ERROR_KIND:
         native=proof.get('native_context',{})
         if (native.get('status')!='PASS' or native.get('unfinished_turns')!=[]
                 or native.get('thread_id')!=task['thread']['thread_id']
@@ -72,8 +80,11 @@ def verify(rt,root,state,task):
 
 def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     root=rt._state_root(orchestration_root);state=rt._verify_state(root);task=rt._task_by_id(state,rt._identifier(task_id,'task_id'))
-    if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
+    if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
+    expected_phase={escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
+        declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT'}[kind]
+    if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
     rt._run_score_command(state['score_skill'],['verify','--attempt-root',str(attempt)])
     proof={'kind':kind,'identity':rt._read_json(attempt/'attempt-manifest.json')['identity'],
         'reason':rt._required_string(reason,'reason'),'thread':task.get('thread'),'locks':locks(rt,root,task),
@@ -84,7 +95,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
         process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
         if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
         proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
-    else:
+    elif kind==release_baseline_text.ERROR_KIND:
         if sdk_file is None:raise ValueError('COMPLETED_NATIVE_SDK_REQUIRED')
         from verify_judge_context import verify_context
         proof['native_context']=verify_context(sdk_file,thread_id=task['thread']['thread_id'],cwd=str(attempt.resolve()),

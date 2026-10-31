@@ -53,6 +53,7 @@ import work_order_final_policy
 import domain_details_diagnostics
 import escrow_grouped_review
 import release_baseline_text
+import declared_public_snapshots
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1842,6 +1843,8 @@ def prepare_attempt(
                    if domain_details_diagnostics.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'release_baseline_text_profile':release_baseline_text.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if release_baseline_text.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'declared_public_snapshot_profile':declared_public_snapshots.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if declared_public_snapshots.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes))}
                    if typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -2723,6 +2726,7 @@ def _effective_rule_source(
         corrected, receipt = escrow_state_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = escrow_grouped_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = release_baseline_text.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = declared_public_snapshots.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -6190,6 +6194,8 @@ def prepare_rescore_attempt(
                    if domain_details_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'release_baseline_text_profile':release_baseline_text.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if release_baseline_text.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'declared_public_snapshot_profile':declared_public_snapshots.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if declared_public_snapshots.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
