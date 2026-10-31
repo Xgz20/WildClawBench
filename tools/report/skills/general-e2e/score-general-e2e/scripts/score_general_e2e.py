@@ -56,6 +56,7 @@ import release_baseline_text
 import declared_public_snapshots
 import public_snapshot_sidecar
 import sterilization_quote_layout
+import namc_inline_distances
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1851,6 +1852,8 @@ def prepare_attempt(
                    if public_snapshot_sidecar.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'namc_inline_distance_profile':namc_inline_distances.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if namc_inline_distances.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes))}
                    if typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -2735,6 +2738,7 @@ def _effective_rule_source(
         corrected, receipt = declared_public_snapshots.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_snapshot_sidecar.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = sterilization_quote_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = namc_inline_distances.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -6214,6 +6218,8 @@ def prepare_rescore_attempt(
                    if public_snapshot_sidecar.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'namc_inline_distance_profile':namc_inline_distances.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if namc_inline_distances.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'grade_wrapper_normalization_profile':grade_wrapper_normalization.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
