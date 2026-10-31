@@ -5,13 +5,20 @@ import escrow_state_review
 import escrow_grouped_review
 import release_baseline_text
 import declared_public_snapshots
+import public_snapshot_sidecar
 
-KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND}
+KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
+    if contract.get('task_id')==public_snapshot_sidecar.TASK and (attempt/'rule-audit.json').exists():
+        audit=rt._read_json(attempt/'rule-audit.json')
+        if audit.get('status')=='failed':
+            if task.get('thread') is not None or (attempt/'semantic').exists() or (attempt/'rule-component.json').exists():raise ValueError('PUBLIC_SNAPSHOT_BUDGET_FAILURE_HAS_JUDGE_OR_COMPONENT')
+            public_snapshot_sidecar.failure_evidence(attempt,m,contract,audit,rt._read_json(attempt/'worker/result.json'))
+            return public_snapshot_sidecar.ERROR_KIND
     if declared_public_snapshots.marker(contract,m['digests']['contract_sha256'],m['dataset']) is not None:
         audit=rt._read_json(attempt/'rule-audit.json');worker=rt._read_json(attempt/'worker/result.json')
         if (task.get('thread') is not None or (attempt/'semantic').exists() or audit.get('status')!='completed'
@@ -48,7 +55,7 @@ def failure_kind(rt,root,state,task):
 
 def locks(rt,root,task):
     attempt=root/task['attempt_path'];paths=[attempt/'attempt-manifest.json',root/task['prompt_path']]
-    for folder in ['worker','semantic','rule-review']:
+    for folder in ['worker','semantic','rule-review','infrastructure-evidence']:
         base=attempt/folder
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
     paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json'] if p.exists())
@@ -80,12 +87,15 @@ def verify(rt,root,state,task):
 
 def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     root=rt._state_root(orchestration_root);state=rt._verify_state(root);task=rt._task_by_id(state,rt._identifier(task_id,'task_id'))
-    if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
+    if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT','RULES_NEEDS_ATTENTION'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
     expected_phase={escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
-        declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT'}[kind]
+        declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
     rt._run_score_command(state['score_skill'],['verify','--attempt-root',str(attempt)])
+    if kind==public_snapshot_sidecar.ERROR_KIND:
+        manifest=rt._read_json(attempt/'attempt-manifest.json');contract=rt._read_json(attempt/manifest['paths']['contract'])
+        public_snapshot_sidecar.preserve_failure(attempt,manifest,contract,rt._read_json(attempt/'rule-audit.json'),rt._read_json(attempt/'worker/result.json'))
     proof={'kind':kind,'identity':rt._read_json(attempt/'attempt-manifest.json')['identity'],
         'reason':rt._required_string(reason,'reason'),'thread':task.get('thread'),'locks':locks(rt,root,task),
         'at':rt._timestamp(now or rt._now()),'original_evidence_unchanged':True,'semantic_judging_performed':False}
