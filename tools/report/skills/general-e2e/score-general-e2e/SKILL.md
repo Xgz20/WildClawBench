@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.42` 仅对精确Office024契约的新attempt增加三项明确英文表头的原字段回退：Est. Total incl. goods (USD)、Estimated Delivery (from order)、Rate Validity。原PATTERNS优先，未知/模糊表头不扩大匹配；原公式求值、时间数值、可见性、分母、60/40和既有真实限分全部不变，独立裁判仍重新判断实际决策问题。旧attempt不原地启用。
+
 `0.10.41` 仅对新Office018精确Profile将适配器新增的公开输入兼容审计移到独立受管sidecar，原业务证据74000总字符、18000单文件及原分页保持不变。sidecar作为显式评分端材料完整冻结、可查询、归档重验，冻结contract不修改，不计候选行为。旧v1快照Profile和旧失败字节保持原行为。
 
 `0.10.40` 为精确Office018/029原契约的新attempt修复公开输入快照比较：只接受原版本化数据集已证明的51份LF/CRLF文本身份及7份Office严格CWM属性变体。原件、实际SHA、业务OPC部件、GT、题目、数值函数及原权重不改，独立兼容审计不得计作候选行为。旧attempt与旧Profile仍按原字节验证。

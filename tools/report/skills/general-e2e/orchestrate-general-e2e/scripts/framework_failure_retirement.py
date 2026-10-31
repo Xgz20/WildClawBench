@@ -6,13 +6,21 @@ import escrow_grouped_review
 import release_baseline_text
 import declared_public_snapshots
 import public_snapshot_sidecar
+import sterilization_quote_layout
 
-KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND}
+KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
+    if contract.get('task_id')==sterilization_quote_layout.TASK:
+        if ((task.get('thread') or {}).get('status')!='COMPLETED' or not (attempt/'semantic/query-log.json').exists()
+                or (attempt/'semantic/semantic-component.json').exists() or not (attempt/'rule-component.json').exists()
+                or rt._read_json(attempt/'rule-audit.json').get('status')!='completed'):
+            raise ValueError('QUOTE_LAYOUT_NATIVE_FAILURE_INVALID')
+        sterilization_quote_layout.validate_blocker(attempt,m,contract,rt._read_json(attempt/'scoring-infrastructure-blocker.json'))
+        return sterilization_quote_layout.ERROR_KIND
     if contract.get('task_id')==public_snapshot_sidecar.TASK and (attempt/'rule-audit.json').exists():
         audit=rt._read_json(attempt/'rule-audit.json')
         if audit.get('status')=='failed':
@@ -59,6 +67,7 @@ def locks(rt,root,task):
         base=attempt/folder
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
     paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json'] if p.exists())
+    if task['task_id']==sterilization_quote_layout.TASK:paths.append(attempt/'scoring-infrastructure-blocker.json')
     result=[]
     for p in sorted(set(paths)):
         if p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):raise ValueError('FRAMEWORK_FAILURE_UNSAFE_EVIDENCE')
@@ -77,7 +86,7 @@ def verify(rt,root,state,task):
         result=rt._read_json(root/task['attempt_path']/'rule-review/discovery/worker/result.json')
         if (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
-    elif proof['kind']==release_baseline_text.ERROR_KIND:
+    elif proof['kind'] in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND}:
         native=proof.get('native_context',{})
         if (native.get('status')!='PASS' or native.get('unfinished_turns')!=[]
                 or native.get('thread_id')!=task['thread']['thread_id']
@@ -90,7 +99,8 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT','RULES_NEEDS_ATTENTION'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
     expected_phase={escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
-        declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION'}[kind]
+        declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION',
+        sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
     rt._run_score_command(state['score_skill'],['verify','--attempt-root',str(attempt)])
     if kind==public_snapshot_sidecar.ERROR_KIND:
@@ -105,7 +115,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
         process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
         if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
         proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
-    elif kind==release_baseline_text.ERROR_KIND:
+    elif kind in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND}:
         if sdk_file is None:raise ValueError('COMPLETED_NATIVE_SDK_REQUIRED')
         from verify_judge_context import verify_context
         proof['native_context']=verify_context(sdk_file,thread_id=task['thread']['thread_id'],cwd=str(attempt.resolve()),
