@@ -104,6 +104,25 @@ class RegisteredIndependentValidityTests(unittest.TestCase):
         worker.write_text(worker.read_text()+' ')
         with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'AGGREGATION_WORKER_DRIFT'):RUNTIME.verify_score_attempt(self.attempt)
 
+    def test_archived_aggregation_replays_frozen_proof_without_runtime_or_new_worker(self):
+        score,record=self.publish(self.response())
+        score_bytes=(self.attempt/'score.json').read_bytes()
+        proof=self.attempt/record['aggregation_review']['proof_path'];proof_bytes=proof.read_bytes()
+        RUNTIME._remove_tree(self.attempt/'runtime')
+        with patch.object(RUNTIME,'_WorkerExecutor',side_effect=AssertionError('Archived verification must not execute a Worker')):
+            self.assertTrue(RUNTIME.verify_score_attempt(self.attempt,archived=True)['score_valid'])
+        self.assertEqual((self.attempt/'score.json').read_bytes(),score_bytes)
+        self.assertEqual(proof.read_bytes(),proof_bytes)
+        worker=proof.parent/'worker/result.json';worker.write_bytes(worker.read_bytes()+b' ')
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'AGGREGATION_WORKER_DRIFT'):
+            RUNTIME.verify_score_attempt(self.attempt,archived=True)
+
+    def test_new_aggregation_check_still_requires_runtime_after_archive(self):
+        self.publish(self.response())
+        response=self.attempt/'native-response.json';RUNTIME._remove_tree(self.attempt/'runtime')
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'PATH_UNAVAILABLE'):
+            RUNTIME.semantic_aggregation.check(RUNTIME,attempt_root=self.attempt,response_path=response,runtime_python=Path(sys.executable))
+
     def test_report_uses_original_m_for_multiple_checkpoints_in_one_dimension(self):
         points={'independent_capability_eligible':True,'independent_capabilities':{
             'profile':'independent-business-capability/v2','criteria':[

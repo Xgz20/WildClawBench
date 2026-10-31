@@ -6,8 +6,8 @@ import sys
 import business_capability
 
 
-def _inputs(rt, root, response_path):
-    rt.verify_attempt(root)
+def _inputs(rt, root, response_path, *, require_runtime=True):
+    rt.verify_attempt(root, require_runtime=require_runtime)
     manifest = rt._read_json(root/'attempt-manifest.json')
     contract = rt._read_json(root/manifest['paths']['contract'])
     policy = business_capability.policy(manifest, contract)
@@ -77,7 +77,9 @@ def check(rt, *, attempt_root, response_path, runtime_python):
 
 
 def verify(rt, *, root, response_path):
-    manifest, policy, arguments, placeholders, source, locks, directory = _inputs(rt, root, response_path)
+    # Validation replays the frozen response/Worker proof; it never executes
+    # rules and must remain portable after disposable runtime removal.
+    manifest, policy, arguments, placeholders, source, locks, directory = _inputs(rt, root, response_path, require_runtime=False)
     proof = rt._read_json(directory/'proof.json', code='SEMANTIC_AGGREGATION_CHECK_REQUIRED')
     if (proof.get('schema') != 'managed-semantic-aggregation-check/v1'
             or proof.get('identity') != manifest['identity'] or proof.get('locks') != locks

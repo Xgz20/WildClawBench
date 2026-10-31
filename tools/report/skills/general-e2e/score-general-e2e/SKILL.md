@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.44` 的语义合分归档校验只重放已冻结响应、输入锁、原函数源码和受管Worker回执，不依赖已剔除的一次性runtime，也不重启Worker。创建新的合分检查仍要求真实runtime；归档中响应/候选/GT/查询或Worker字节漂移继续拒绝。原分数、权重与已冻结回执不改。
+
 `0.10.43` 为新状态复核启用v3侧表索引与选项缓存，不向原候选行插入内部字段，保留原词时逐行返回自身原值；旧v1/v2源码和receipt按冻结Profile原样重建。工单封顶仍仅作用业务总分，前置规则失败且没有Worker结果时可形成原始错误的invalid/null终态，有效分仍强制原policy。原评分、权重和已冻结发行不修改。
 
 `0.10.42` 仅对精确Office024契约的新attempt增加三项明确英文表头的原字段回退：Est. Total incl. goods (USD)、Estimated Delivery (from order)、Rate Validity。原PATTERNS优先，未知/模糊表头不扩大匹配；原公式求值、时间数值、可见性、分母、60/40和既有真实限分全部不变，独立裁判仍重新判断实际决策问题。旧attempt不原地启用。
