@@ -9,8 +9,8 @@ import rule_review
 def _load(rt, root):
     manifest=rt._read_json(root/'attempt-manifest.json')
     contract=rt._read_json(root/manifest['paths']['contract'])
-    if (manifest.get('runtime',{}).get('rule_review_profile')!=rule_review.PROFILE
-            or not rule_review.matches(contract)
+    if (manifest.get('runtime',{}).get('rule_review_profile') is None
+            or manifest['runtime']['rule_review_profile']!=rule_review.profile_for(contract,manifest['digests']['contract_sha256'])
             or manifest.get('judge',{}).get('protocol')!='codex-agent-judge-v1'):
         raise rt.ScoringRuntimeError('RULE_REVIEW_PROFILE_MISMATCH')
     return manifest,contract
@@ -25,7 +25,8 @@ def _checked_request(rt,root,manifest):
     base=root/'rule-review'
     request=rt._read_json(base/'request.json',code='RULE_REVIEW_REQUEST_INVALID')
     audit=rt._read_json(base/'discovery-audit.json',code='RULE_REVIEW_DISCOVERY_INVALID')
-    if (request.get('schema_version')!=rule_review.REQUEST_SCHEMA or request.get('profile')!=rule_review.PROFILE
+    profile=manifest['runtime']['rule_review_profile']
+    if (request.get('schema_version')!=rule_review.REQUEST_SCHEMA or request.get('profile')!=profile
             or request.get('identity')!=manifest['identity'] or request.get('judge')!=manifest['judge']
             or request.get('input_locks')!=_locks(manifest)
             or request.get('public_candidate_root')!=manifest['paths']['candidate_original']
@@ -42,7 +43,7 @@ def _checked_request(rt,root,manifest):
     source,correction=rt._effective_rule_source(manifest,contract['automated_checks'])
     observed=worker_result.get('rule_review',{})
     if (worker_request.get('automated_checks')!=source
-            or worker_request.get('rule_review')!=rule_review.worker_configuration('discover')
+            or worker_request.get('rule_review')!=rule_review.worker_configuration('discover',profile=profile)
             or request.get('source_correction')!=correction
             or observed.get('mode')!='discover' or observed.get('provisional_scores_suppressed') is not True
             or worker_result.get('result')!={} or 'raw_result' in worker_result
@@ -81,7 +82,7 @@ def prepare(rt, *, attempt_root, runtime_python, playwright_browsers_path=None):
         runtime_lock_path=root/manifest['paths']['runtime_lock'],timeout_seconds=120,
         playwright_browsers_path=playwright_browsers_path,
         rule_result_adapter=contract.get('rule_result_adapter'),
-        rule_review_configuration=rule_review.worker_configuration('discover'))
+        rule_review_configuration=rule_review.worker_configuration('discover',profile=manifest['runtime']['rule_review_profile']))
     executor(source,{'dependencies':inspect_rule_dependencies(source),
                      'workspace_path':str(argument),'transcript':transcript})
     raw=rt._read_json(discovery/'worker/result.json')
@@ -92,22 +93,27 @@ def prepare(rt, *, attempt_root, runtime_python, playwright_browsers_path=None):
     contexts=[{'id':key,'context':value} for key,value in sorted(review['contexts'].items())]
     if any(rt._sha256_bytes(json.dumps(item['context'],ensure_ascii=False,sort_keys=True,separators=(',',':')).encode('utf-8'))!=item['id'] for item in contexts):
         raise rt.ScoringRuntimeError('RULE_REVIEW_CONTEXT_DIGEST_INVALID')
-    request={'schema_version':rule_review.REQUEST_SCHEMA,'profile':rule_review.PROFILE,
+    profile=manifest['runtime']['rule_review_profile']
+    instructions='仅复核原规则无法确定的字段等价性/影响关系和补充来源相关性。每项给出passed布尔值和中文证据理由；不直接给规则分、不改变参考要求或候选文件。'
+    if profile=='office001-numeric-extraction-semantic-review/v1':
+        instructions='仅复核原规则明确无法抽取的任务ID/数值字段。每项根据完整候选、原参考与实际位置判断：原期望数值被明确陈述且全部重复陈述一致为passed=true；可确认遗漏或错误为false；证据不足为unresolved/null。不得把未解析当遗漏，不改分母/权重或已确定比较；控制器不代判。'
+    request={'schema_version':rule_review.REQUEST_SCHEMA,'profile':profile,
         'identity':manifest['identity'],'judge':manifest['judge'],'input_locks':_locks(manifest),
         'contexts':contexts,'source_correction':correction,
         'public_candidate_root':manifest['paths']['candidate_original'],
         'private_reference_root':manifest['paths']['gt'],
         'runtime_python':str(runtime_python),'runtime_python_sha256':rt._sha256_file(runtime_python),
         'playwright_browsers_path':str(playwright_browsers_path) if playwright_browsers_path else None,
-        'instructions':'仅复核原规则无法确定的字段等价性/影响关系和补充来源相关性。每项给出passed布尔值和中文证据理由；不直接给规则分、不改变参考要求或候选文件。'}
+        'instructions':instructions}
     rt._write_new_json(target/'request.json',request)
     rt._write_new_json(target/'query-log.json',{'schema_version':'general-e2e-rule-review-query-log/v1','queries':[]})
     rt._write_new_json(target/'response-template.json',{'schema_version':rule_review.RESPONSE_SCHEMA,
         'identity':manifest['identity'],'judge':manifest['judge'],
         'locks':{'request_sha256':rt._sha256_file(target/'request.json'),'input_locks':_locks(manifest)},
-        'decisions':[{'context_id':item['id'],'status':'unresolved','passed':None,'reason':'','query_ids':[]} for item in contexts]})
+        'decisions':[{'context_id':item['id'],'status':'unresolved','passed':None,'reason':'','query_ids':[],
+            **({'evidence_locations':[]} if profile=='office001-numeric-extraction-semantic-review/v1' else {})} for item in contexts]})
     rt._remove_tree(discovery/'runtime')
-    rt._write_new_json(target/'discovery-audit.json',{'profile':rule_review.PROFILE,'identity':manifest['identity'],
+    rt._write_new_json(target/'discovery-audit.json',{'profile':profile,'identity':manifest['identity'],
         'request_sha256':rt._sha256_file(target/'request.json'),'worker_request_sha256':rt._sha256_file(discovery/'worker/request.json'),
         'worker_result_sha256':rt._sha256_file(discovery/'worker/result.json'),'worker':executor.audit,
         'completion':completion,'provisional_scores_published':False,'discovery_runtime_removed':True})
@@ -157,6 +163,11 @@ def _validate_response(rt, root, manifest, request, response, query_log):
                 or any(qid not in queries for qid in ids)
                 or row['context_id'] not in {cid for qid in ids for cid in queries[qid]['context_ids']}):
             raise rt.ScoringRuntimeError('RULE_REVIEW_RESPONSE_INVALID',str(row.get('context_id')))
+        if request['profile']=='office001-numeric-extraction-semantic-review/v1':
+            locations=row.get('evidence_locations')
+            if (not isinstance(locations,list) or (valid_decision and not locations)
+                    or any(not isinstance(p,str) or not p.strip() or len(p)>1000 for p in locations)):
+                raise rt.ScoringRuntimeError('RULE_REVIEW_RESPONSE_INVALID','Office001 requires concrete evidence_locations')
     return {row['context_id']:row['passed'] for row in rows}
 
 
@@ -172,7 +183,7 @@ def record(rt, *, attempt_root, response_path):
     decisions=_validate_response(rt,root,manifest,request,response,log)
     unresolved=[key for key,value in decisions.items() if value is None]
     rt._write_new_json(base/'response.json',response)
-    rt._write_new_json(base/'audit.json',{'schema_version':'general-e2e-rule-review-audit/v1','profile':rule_review.PROFILE,
+    rt._write_new_json(base/'audit.json',{'schema_version':'general-e2e-rule-review-audit/v1','profile':manifest['runtime']['rule_review_profile'],
         'identity':manifest['identity'],'status':'unresolved' if unresolved else 'completed','request_sha256':rt._sha256_file(base/'request.json'),
         'response_sha256':rt._sha256_file(base/'response.json'),'query_log_sha256':rt._sha256_file(base/'query-log.json'),
         'discovery_audit_sha256':rt._sha256_file(base/'discovery-audit.json'),
@@ -202,5 +213,5 @@ def application_configuration(rt,root,manifest,contract):
         if rt._sha256_file(base/'discovery/worker'/name)!=discovery.get(key):
             raise rt.ScoringRuntimeError('RULE_REVIEW_DISCOVERY_DRIFT',name)
     decisions=_validate_response(rt,root,manifest,request,response,log)
-    return {**rule_review.worker_configuration('apply',decisions),
+    return {**rule_review.worker_configuration('apply',decisions,profile=profile),
             'decision_response_sha256':audit['response_sha256'],'decision_audit_sha256':rt._sha256_file(base/'audit.json')}

@@ -1448,6 +1448,19 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertEqual(document["tasks"][0]["score_status"], "unscored")
         self.assertIsNone(document["tasks"][0]["score_path"])
 
+    def test_failed_rule_does_not_hide_ready_work_and_running_worker_keeps_priority(self) -> None:
+        fixture=Fixture(self.root/'rule-priority',task_ids=('task-a','task-b','task-c'),grading_type='automated')
+        view=fixture.initialize(now=self.t0);root=Path(view['orchestration_root'])
+        state=json.loads((root/'orchestration-state.json').read_text())
+        state['tasks'][0]['phase']='RULES_NEEDS_ATTENTION'
+        state['tasks'][1]['phase']='RULES_RUNNING'
+        self.assertEqual(ORCHESTRATOR._recommended_actions(root,state,self.t0)[0]['task_id'],'task-b')
+        state['tasks'][1]['phase']='RULES_NEEDS_ATTENTION'
+        self.assertEqual(ORCHESTRATOR._recommended_actions(root,state,self.t0)[0]['task_id'],'task-c')
+        self.assertEqual(state['tasks'][0]['phase'],'RULES_NEEDS_ATTENTION')
+        state['tasks'][2]['phase']='RULES_NEEDS_ATTENTION'
+        self.assertEqual(ORCHESTRATOR._recommended_actions(root,state,self.t0)[0]['task_id'],'task-a')
+
     def test_only_the_explicit_dataset_evidence_budget_guard_can_be_retained_unscored(self) -> None:
         budget="Required text evidence exceeds collector budget; do not report a valid semantic/capability score"
         limit="EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging"

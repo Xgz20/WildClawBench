@@ -107,7 +107,8 @@ def execute(request_path: Path, result_path: Path) -> int:
         review=request.get('rule_review')
         if review is not None:
             if (not isinstance(review,dict) or review.get('schema_version')!='wildclawbench.general-e2e-rule-review-worker/v1'
-                    or review.get('profile')!='hr-fields-and-sources-semantic-review/v1'
+                    or review.get('profile') not in {'hr-fields-and-sources-semantic-review/v1',
+                        'office001-numeric-extraction-semantic-review/v1'}
                     or review.get('mode') not in {'discover','apply'}
                     or not isinstance(review.get('decisions'),dict)
                     or any(not isinstance(k,str) or not isinstance(v,bool) for k,v in review['decisions'].items())):

@@ -16,10 +16,21 @@ def matches(contract):
             and hashlib.sha256(contract.get('automated_checks', '').encode('utf-8')).hexdigest() == SOURCE_SHA256)
 
 
-def worker_configuration(mode, decisions=None):
+def profile_for(contract, contract_sha=None):
+    if matches(contract):
+        return PROFILE
+    import office001_rule_review
+    if office001_rule_review.matches(contract, contract_sha):
+        return office001_rule_review.PROFILE
+    return None
+
+
+def worker_configuration(mode, decisions=None, *, profile=PROFILE):
     if mode not in {'discover','apply'}:
         raise ValueError('RULE_REVIEW_MODE_INVALID')
-    return {'schema_version': WORKER_SCHEMA, 'profile': PROFILE, 'mode': mode, 'decisions': decisions or {}}
+    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1'}:
+        raise ValueError('RULE_REVIEW_PROFILE_MISMATCH')
+    return {'schema_version': WORKER_SCHEMA, 'profile': profile, 'mode': mode, 'decisions': decisions or {}}
 
 
 WRAPPERS = r'''

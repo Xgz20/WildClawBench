@@ -126,3 +126,10 @@ Windows 的 Python 路径使用 `Scripts/python.exe`。bootstrap 生成的 marke
 - `rule_worker_result`：`worker/result.json#/result/<escaped-result-key>` 中该检查点的原始返回值。
 
 `rule-audit.json.criterion_evidence` 记录证据策略、完整状态和 `zh-CN` 理由语言。最终 `score.json` 的自动规则聚合项逐项列出分数及满分、零分或部分分状态，并引用规则组件、Worker 原始结果和冻结 contract。历史 v1 规则组件仍可由 `verify-score` 只读验证，但新 attempt 不再生成 v1。
+
+
+### Office001 数值抽取的独立复核
+
+仅新Codex attempt可按原contract/source SHA冻结`office001-numeric-extraction-semantic-review/v1`。控制器先运行`prepare-rule-review`，只发现原`uncertain`分支的逐任务/字段上下文，不发布发现阶段数值。裁判完整分页`query-rule-review`并核对全部候选陈述和参考；原数值明确成立且重复陈述一致才填true，可确认遗漏或错误为false，材料不足保留unresolved/null。每项填写中文理由、已查询query_ids及具体`evidence_locations`，再`record-rule-review`，使用request冻结的解释器首次`run-rules`。原已确定比较、字段/分母及公共数值接口均不变，不能将六态`aggregate()`的重归一/扣分结果混入该成绩。
+
+该入口可与已验证的原生Writer Profile组合；发现副本和正式runtime分开，正式规则成功后保留实际正文/两表编辑、保存重开、DOCX原生PDF、候选PDF及双方全页索引，C6仍由裁判逐页查看，C7只认原候选轨迹。旧失败attempt保留，不原地重跑；新attempt从同一冻结执行创建，原始题目/GT/权重不改。

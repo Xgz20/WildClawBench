@@ -38,6 +38,7 @@ import business_capability
 import semantic_aggregation
 import public_office_profiles
 import office001_native_profile
+import office001_rule_review
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1799,6 +1800,9 @@ def prepare_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(contract) and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'rule_review_profile':office001_rule_review.PROFILE}
+                   if office001_rule_review.matches(contract,_sha256_bytes(contract_bytes))
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'business_capability_profile':business_capability.profile_marker(contract,_sha256_bytes(contract_bytes))}
                    if business_capability.profile_marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
@@ -2661,6 +2665,7 @@ def _effective_rule_source(
         )
         corrected, receipt = public_office_profiles.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = office001_native_profile.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = office001_rule_review.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -6042,6 +6047,9 @@ def prepare_rescore_attempt(
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(_read_json(staging/source_paths['contract']))
+                   and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'rule_review_profile':office001_rule_review.PROFILE}
+                   if office001_rule_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'business_capability_profile':business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None

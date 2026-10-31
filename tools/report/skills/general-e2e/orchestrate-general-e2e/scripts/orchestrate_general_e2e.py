@@ -679,11 +679,18 @@ def _prompt_text(
             "raw SDK首行session_meta.dynamic_tools可能含真实inputSchema，须查询已有定义；这不覆盖其它MCP registry，缺定义的能力继续保留未知。"
         )
     if native_writer_evidence_required:
+        if rule_review_required:
+            rule_instruction += (
+                "本题rule-review为Office001原规则明确无法抽取的逐任务数值，须按request.instructions核对完整候选、原参考与全部重复陈述。"
+                "只有原数值被明确支持且无相反陈述才能passed=true；已确认遗漏/错误为false，证据不足仍unresolved/null。"
+                "每项填写具体evidence_locations，不能把解析器未读出当作候选缺失。复核后仍运行原公共数值接口，不能改用六态函数的重新归一/扣分成绩冒充同一数值分。"
+            )
         rule_instruction += (
             "本题的新attempt已显式冻结已实测的原生Writer API编辑性Profile。先查询grader_generated_evidence中的scope.json、原生probe-result.json及rendered-pages.json，核对原生引擎/版本、原件SHA和正文/必需表格保存重开证据。"
             "C6须实际查看DOCX原生导出的完整页图与候选PDF完整页图；根据索引逐页核对，不用XML摘要、生成脚本或只看首页代替。"
             "原生编辑副本、评分端导出PDF/页图均是评测材料，不是候选交付或候选主动验收；C7只能引用同次原始执行轨迹。"
-            "缺候选文件、损坏、渲染不可用与原生环境故障分别保留证据，按原Rubric判断，不能把评测故障当能力零分；不得重跑或改写自动规则。"
+            "缺候选文件、损坏、渲染不可用与原生环境故障分别保留证据，按原Rubric判断，不能把评测故障当能力零分；"
+            + ("依本题复核入口首次运行原规则，完成后不得重复运行或改写。" if rule_review_required else "不得重跑或改写自动规则。")
         )
     if terminal_projection_required:
         if prompt_protocol != PROMPT_PROTOCOL:
@@ -2044,7 +2051,7 @@ def _verify_state(
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
-                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1"}):
+                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1"}):
                 raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
             for key in ("rule_audit", "worker_result"):
                 path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
@@ -2060,6 +2067,13 @@ def _verify_state(
                         or failure.get("error") != scoring_error.get("error")
                         or guard not in str(frozen_contract.get("automated_checks", ""))):
                     raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", "undeclared context guard")
+            if scoring_error.get('kind') == 'office001-declared-numeric-review/v1':
+                failure = _read_json(root / scoring_error['worker_result_path'], 'RULE_ERROR_DEFERRAL_INVALID')
+                frozen_manifest = _read_json(attempt/'attempt-manifest.json', 'RULE_ERROR_DEFERRAL_INVALID')
+                frozen_contract = _read_json(attempt/frozen_manifest['paths']['contract'], 'RULE_ERROR_DEFERRAL_INVALID')
+                if (not _office001_declared_numeric_review(frozen_manifest, frozen_contract, failure.get('error', {}))
+                        or failure.get('error') != scoring_error.get('error')):
+                    raise OrchestrationError('RULE_ERROR_DEFERRAL_INVALID', 'undeclared Office001 numeric review')
         score = task.get("score")
         if score is not None:
             score_path = root / str(score.get("path", ""))
@@ -2135,10 +2149,10 @@ def _state_status(state: Mapping[str, Any]) -> str:
 def _recommended_actions(
     root: Path, state: Mapping[str, Any], now: datetime
 ) -> list[dict[str, Any]]:
-    rule_task = next(
-        (task for task in state.get("tasks", []) if task.get("phase") in RULE_PHASES),
-        None,
-    )
+    # An explicit failed rule remains visible without repeatedly blocking unrelated
+    # ready rules. A genuinely running Worker keeps first priority for recovery.
+    rule_task = next((task for phase in ('RULES_RUNNING', 'RULES_READY', 'RULES_NEEDS_ATTENTION')
+        for task in state.get('tasks', []) if task.get('phase') == phase), None)
     active_tasks = _semantic_active_tasks(state)
     automated_verification_tasks = [
         task
@@ -2768,6 +2782,27 @@ def record_wait(
     return _save(root, state, event_time)
 
 
+def _office001_declared_numeric_review(manifest, contract, error):
+    """Retain only the exact old numeric extraction guard while a new attempt repairs it."""
+    prefix = 'Unresolved rule evidence; use embedded run() for six-state results: '
+    source = contract.get('automated_checks', '')
+    if (manifest.get('identity', {}).get('task_id') != '02_Office_task_001_multi_source_project_report'
+            or manifest.get('digests', {}).get('contract_sha256') != 'f6386914c4ab0208f66feb75dbce2a61eccf7a384c289cc3a138ce61b048d11e'
+            or _sha256_bytes(source.encode('utf-8')) != '98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1'
+            or error.get('type') != 'RuntimeError' or not isinstance(error.get('message'), str)
+            or not error['message'].startswith(prefix)):
+        return False
+    try:
+        rows = json.loads(error['message'][len(prefix):])
+    except (ValueError, TypeError):
+        return False
+    return (isinstance(rows, dict) and bool(rows)
+        and set(rows) == {'automated.c3_numeric_facts'}
+        and all(isinstance(row, dict) and row.get('status') == 'undetermined' and row.get('score') is None
+                and isinstance(row.get('reason'), str) and bool(row['reason'])
+                and isinstance(row.get('evidence'), list) for row in rows.values()))
+
+
 def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason: str, now: datetime | None = None) -> dict[str, Any]:
     root = _state_root(orchestration_root)
     state = _verify_state(root)
@@ -2791,13 +2826,16 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
         "Required text evidence exceeds collector budget; do not report a valid semantic/capability score")
     allowed_error = allowed_error or (dataset_error.get("type") == "RuntimeError" and dataset_error.get("message") ==
         "EVALUATOR_EVIDENCE_LIMIT: no silent truncation; collect complete evidence before judging")
+    office_numeric_review = _office001_declared_numeric_review(manifest, contract, dataset_error)
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or not (allowed_error or setup_context_error)
+            or not (allowed_error or setup_context_error or office_numeric_review)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
     event_time = now or _now()
-    task["scoring_error"] = {"kind": "evaluator-public-context-setup-error/v1" if setup_context_error else "dataset-rule-evaluation-error/v1", "reason": _required_string(reason, "reason"),
+    kind = ('office001-declared-numeric-review/v1' if office_numeric_review else
+        'evaluator-public-context-setup-error/v1' if setup_context_error else 'dataset-rule-evaluation-error/v1')
+    task["scoring_error"] = {"kind": kind, "reason": _required_string(reason, "reason"),
         "rule_audit_path": audit_path.relative_to(root).as_posix(), "rule_audit_sha256": _sha256_file(audit_path),
         "worker_result_path": result_path.relative_to(root).as_posix(), "worker_result_sha256": _sha256_file(result_path),
         "error": result["error"]}

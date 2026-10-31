@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.35` 对精确Office001原contract/source SHA绑定的新Codex attempt，先在受管隔离副本发现原规则明确无法抽取的逐任务数值，再由独立裁判逐项查证、填写布尔复核和具体位置。原字段全集、已确定比较、重复一致性、分母、公共数值接口及60/40权重不变；不改用六态重归一/扣分成绩。未知仍阻断数值发布，旧attempt/HR路径保持原字节。
+
 `0.10.34` 对新 trace 中 bound-sdk-completed-turn-projection-status/v1 证明独立重算原 state SHA、唯一原生 SDK 完成事件、会话/turn/Prompt/终稿及标准轨迹绑定，冻结到 trace handoff 并支持 archived 验证。原 running 投影不改写；证明不完整、取消、内容冲突或来源漂移仍拒绝，不将证明当作能力得分。
 
 `0.10.33` 对齐Office001原探针的候选打开失败分支：只有同一原生应用已打开已知好控制文件、却不能把候选打开为原生文档时，才返回原C5的fail/0；连接、控制文件、后续检查、导出、保存重开、超时或收尾故障仍评测异常。上游结构损坏判定不代替该实际打开检查，旧attempt不重写。
