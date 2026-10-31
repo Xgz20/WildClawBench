@@ -72,6 +72,47 @@ def grade(transcript: list, workspace_path: str) -> dict:
                 {key:value['canonical_choice']==choice for key,value in contexts.items()},profile=GROUP.PROFILE)
             self.assertEqual(namespace['grade']([],'.')['overall_score'],total)
         self.assertFalse(receipt['numeric_decisions_assigned'])
+        distinct=source.replace("'状态':'别称'","'状态':f'别称{i}'").replace('range(11000)','range(3334)')
+        with patch.object(RUNTIME.escrow_state_review,'matches',return_value=True):
+            code,_=GROUP.effective_source(manifest,distinct,distinct,None)
+        namespace={'_GENERAL_E2E_RULE_REVIEW':RUNTIME.rule_review.worker_configuration('discover',profile=GROUP.PROFILE)}
+        exec(compile(code,'<synthetic-grouped-context-limit>','exec'),namespace)
+        with self.assertRaisesRegex(RuntimeError,'RULE_REVIEW_CONTEXT_LIMIT'):
+            namespace['grade']([],'.')
+        self.assertEqual(len(namespace['_GENERAL_E2E_RULE_REVIEW']['observations']),10000)
+
+    def test_grouped_review_keeps_each_literal_and_does_not_add_candidate_evidence_fields(self):
+        source="""STATE_FIELDS={'状态'}
+def normalized(value):return str(value).strip()
+def grade(transcript: list, workspace_path: str) -> dict:
+    expected={'表':[{'状态':'批准'},{'状态':'取消'}]}
+    actual={'表':[dict(row) for row in transcript]}
+    known_states={field:{normalized(row.get(field)) for rows in expected.values() for row in rows if field in row} for field in STATE_FIELDS}
+    diagnostic={'review_required':[]}
+    for rows in actual.values():
+        for row in rows:
+            for field in STATE_FIELDS.intersection(row):
+                value=normalized(row[field])
+                if value and value not in known_states[field]:diagnostic['review_required'].append(f'未识别但可能等价的状态：{field}={value}；需依据公开口径复核')
+    return {'rows':actual['表'],'overall_score':0.}
+"""
+        manifest={'identity':{'task_id':RUNTIME.escrow_state_review.TASK},'digests':{'contract_sha256':'synthetic'},'runtime':{'rule_review_profile':GROUP.PROFILE}}
+        with patch.object(RUNTIME.escrow_state_review,'matches',return_value=True):
+            code,_=GROUP.effective_source(manifest,source,source,None)
+        namespace={'_GENERAL_E2E_RULE_REVIEW':RUNTIME.rule_review.worker_configuration('discover',profile=GROUP.PROFILE)}
+        exec(compile(code,'<synthetic-grouped-preservation>','exec'),namespace)
+        rows=[{'状态':word,'_candidate_location':f'synthetic.xlsx|表|行{i}'} for i,word in enumerate([' 别称','别称 ','别称'],2)]
+        original=deepcopy(rows)
+        # Discovery and literal retention must leave the original evidence rows intact.
+        self.assertEqual(namespace['grade'](rows,'.')['rows'],original)
+        self.assertEqual(rows,original)
+        contexts=namespace['_GENERAL_E2E_RULE_REVIEW']['observations']
+        self.assertEqual(len(contexts),3)
+        self.assertTrue(all(len(item['all_occurrence_locations'])==3 for item in contexts.values()))
+        namespace['_GENERAL_E2E_RULE_REVIEW']=RUNTIME.rule_review.worker_configuration('apply',
+            {key:value['canonical_choice']=='__keep_literal_known_distinct__' for key,value in contexts.items()},profile=GROUP.PROFILE)
+        self.assertEqual(namespace['grade'](rows,'.')['rows'],original)
+        self.assertEqual(len(namespace['_GENERAL_E2E_RULE_REVIEW']['applied']),3)
 
     def test_exact_release_text_hashes_accept_only_registered_original_newlines(self):
         row=RELEASE.registry();task=next((REPO_ROOT/'tasks/general_e2e').rglob(row['task_id']+'.md'));_,sections,_=_parse_task_source(task)

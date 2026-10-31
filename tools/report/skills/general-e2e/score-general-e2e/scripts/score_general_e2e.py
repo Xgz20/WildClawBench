@@ -5701,7 +5701,9 @@ def _build_standard_score(
         expected=work_order_final_policy.marker(contract,manifest['digests']['contract_sha256'])
         if expected is None or manifest['runtime']['work_order_final_total_policy_profile']!=expected:
             raise ScoringRuntimeError('FINAL_TOTAL_POLICY_PROFILE_INVALID')
-        worker=_read_json(root/'worker/result.json');raw=worker.get('raw_result') or {}
+        worker_path=root/'worker/result.json'
+        worker=_read_json(worker_path) if worker_path.exists() else {}
+        raw=worker.get('raw_result') or {}
         if final['result']['valid'] or '_score_policy' in raw:
             try:policy=work_order_final_policy.validate_policy(raw.get('_score_policy'))
             except ValueError as exc:raise ScoringRuntimeError('FINAL_TOTAL_POLICY_INVALID',str(exc)) from exc

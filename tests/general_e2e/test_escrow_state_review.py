@@ -73,6 +73,30 @@ class EscrowStateReviewTests(unittest.TestCase):
 
 
 class ExactEscrowSourceTests(unittest.TestCase):
+    def test_frozen_v1_v2_profiles_reconstruct_identical_sources_and_receipts(self):
+        task=next((REPO_ROOT/'tasks/general_e2e').rglob(REVIEW.TASK+'.md'));_,sections,_=_parse_task_source(task)
+        source=_strip_codeblock(sections['Automated Checks']);contract={'task_id':REVIEW.TASK,'automated_checks':source}
+        # Frozen source and receipt hashes must survive the default profile advancing.
+        frozen={
+            'escrow-status-equivalence-review/v1':('bd6963c1377b219e25e35c37346f18544be6664b3053e2e42508e17c04d66ae7','a1c06537329661d49d38df60bc7496c0909f92e136bac295b4ea2b56371cfc3b'),
+            'escrow-status-equivalence-review/v2':('287309c2c5fe465fc01235c7870ce5988ba99aa357858bf7203ea99aac67513f','8bb7f82f4eb15e26bf452004a85b181b68dc26dc14f57ea491085d7c0524cfb3'),
+        }
+        for profile,(source_sha,receipt_sha) in frozen.items():
+            with self.subTest(profile=profile):
+                manifest={'identity':{'task_id':REVIEW.TASK},'digests':{'contract_sha256':REVIEW.CONTRACT_SHA},'runtime':{'rule_review_profile':profile}}
+                code,receipt=RUNTIME._effective_rule_source(manifest,source)
+                self.assertEqual(hashlib.sha256(code.encode()).hexdigest(),source_sha)
+                self.assertEqual(hashlib.sha256(json.dumps(receipt,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest(),receipt_sha)
+                self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA,frozen_profile=profile),profile)
+        profile=RUNTIME.escrow_grouped_review.PROFILE
+        self.assertEqual(profile,'escrow-status-equivalence-review/v3')
+        self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA),profile)
+        self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA,frozen_profile=profile),profile)
+        manifest['runtime']['rule_review_profile']=profile
+        code,receipt=RUNTIME._effective_rule_source(manifest,source)
+        compile(code,'<exact-escrow-grouped-review-v3>','exec')
+        self.assertEqual(receipt['correction_id'],profile)
+
     def test_real_source_profile_is_exact_and_keeps_normalization_opt_in(self):
         task=next((REPO_ROOT/'tasks/general_e2e').rglob(REVIEW.TASK+'.md'));_,s,_=_parse_task_source(task)
         source=_strip_codeblock(s['Automated Checks']);self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),REVIEW.SOURCE_SHA)

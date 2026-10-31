@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.39` 保留旧v1/v2状态复核的原源码生成与回执校验，新attempt采用v3无行内污染的完整位置复核；工单旧失败退役须精确包含原八个数值键和有效policy，其他破损回执不归为已知适配失败。原分数和旧冻结包不改。
+
 `0.11.38` 仅对原生裁判已完成但未发布score的Office024合理英文布局提取失败扩展record-framework-failure。严格绑定原task/contract/source/dataset、原blocker、三项实际工作簿表头/公式、原抽取null、原查询/规则与SDK上下文；旧组件和错误文件锁定保留，不代判能力分。修复须建立相同冻结执行的新initial评分，其他失败不适用。
 
 `0.11.37` 精确识别Office018适配器新增审计导致的旧取证预算失败：原业务材料必须全部处于74000/18000原预算内，新增审计与原输入逐件绑定；保留旧9份原字节到可移植infrastructure-evidence并锁定SHA，原runtime不删改。无Judge、无组件、无score时才能退役，新attempt以独立sidecar完整交接审计；真实业务证据超限和其他失败不适用。
