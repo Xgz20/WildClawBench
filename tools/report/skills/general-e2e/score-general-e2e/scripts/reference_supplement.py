@@ -78,7 +78,8 @@ def validate(root, attempt):
     semantic = root / 'semantic'
     if semantic.exists():
         catalog = load(safe_file(semantic, 'evidence-catalog.json'))
-        indexed = {entry['reference'].get('path'): entry['reference'].get('sha256') for entry in catalog['entries']}
+        indexed = {entry['reference'].get('path'): entry['reference'].get('sha256')
+                   for entry in catalog['evidence_index']['entries']}
         require(all(indexed.get(path.relative_to(root).as_posix()) == digest(path) for path in files),
                 'REFERENCE_SUPPLEMENT_NOT_IN_FROZEN_CATALOG')
     return files

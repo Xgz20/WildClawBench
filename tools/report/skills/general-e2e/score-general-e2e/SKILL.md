@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.48` 修复参考补证校验对正式目录evidence_index.entries层级的读取，保留原语义目录和补证格式；新增真实prepare-semantics→query-evidence→record-semantics→finalize→移除runtime→verify-score --archived回归。0.10.47已停止且无正式成绩的失败attempt保留，不改其冻结代码或Prompt；从相同原执行和原score谱系建立新rescore。
+
 `0.10.47` 新增`register-reference-supplement`：仅对获授权的新rescore、在语义请求生成前登记独立参考补证层，绑定原score SHA、任务/执行身份、来源URL/获取时间及全部文件SHA。原题/参考/候选/轨迹/权重不改；补证只供裁判核实事实，不能算作Agent检索、阅读或自验行为。补证清单与文件进入正式证据目录及请求锁，晚补、冲突、链接越界与归档漂移失败关闭；未登记补证的旧attempt保持原行为。
 
 `0.10.46` 的行内距离兼容v2保留原唯一同步grade入口，在原证据导出后将完整适配审计挂入原diagnostics；不创建第二个grade，也不占用原业务证据预算。v1未通过规则入口准入的attempt保留失败原件，使用相同冻结执行建立新评分。
