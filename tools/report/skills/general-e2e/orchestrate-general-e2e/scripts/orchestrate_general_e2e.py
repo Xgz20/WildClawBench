@@ -3415,6 +3415,8 @@ def main(argv: list[str] | None = None) -> int:
     complete_scope.add_argument("--score-skill-dir", type=Path, required=True)
     complete_scope.add_argument("--output-root", type=Path, required=True)
     complete_scope.add_argument('--allow-scoring-infrastructure-repair',action='store_true')
+    complete_scope.add_argument('--allow-valid-rescore',action='store_true')
+    complete_scope.add_argument('--valid-rescore-reason')
     complete_scope.add_argument('--infrastructure-repair-reason')
     complete_scope.add_argument('--source-selection-root',type=Path)
 

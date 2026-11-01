@@ -16,6 +16,46 @@ def digest(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def validate_valid_rescore(previous, original_manifest, adopted_manifest, adopted_score):
+    """Bind an explicit valid rescore to the exact currently selected score."""
+    lineage=adopted_manifest.get('lineage',{})
+    if (previous.get('score_status')!='valid' or lineage.get('kind')!='rescore'
+            or lineage.get('source_score_sha256')!=previous.get('score_sha256')
+            or lineage.get('source_scoring_attempt_id')!=previous.get('scoring_attempt_id')
+            or lineage.get('source_candidate_sha256')!=previous.get('candidate_sha256')
+            or lineage.get('source_attempt_manifest_sha256')!=original_manifest['sha256']):
+        raise ValueError('VALID_RESCORE_SELECTED_SOURCE_LINEAGE_MISMATCH')
+    original=original_manifest['document']
+    for key in ('candidate_artifact_sha256','candidate_original_sha256','contract_sha256',
+                'execution_record_sha256','private_gt_workspace_sha256','private_scoring_tree_sha256',
+                'task_sha256','transcript_sha256'):
+        if (key not in original.get('digests',{}) or key not in adopted_manifest.get('digests',{})
+                or original['digests'][key]!=adopted_manifest['digests'][key]
+                or key!='transcript_sha256' and not original['digests'][key]):
+            raise ValueError('VALID_RESCORE_FROZEN_INPUT_CHANGED:'+key)
+    if (adopted_score['execution']['attempt_id']!=previous['execution_attempt_id']
+            or adopted_score['identity']['attempt_id']==previous['scoring_attempt_id']):
+        raise ValueError('VALID_RESCORE_NEW_ATTEMPT_SAME_EXECUTION_REQUIRED')
+
+
+def locked_rescore_owner(root, previous, score_sha, *, frozen, native_required=True):
+    root=root.resolve(strict=True)
+    owners=[parent for parent in root.parents if (parent/'orchestration-state.json').is_file()]
+    if not owners:raise ValueError('VALID_RESCORE_LOCKED_OWNER_REQUIRED')
+    owner=owners[0];state=frozen._verify_state(owner)
+    if state.get('kind')!='rescore' or not state.get('submission'):
+        raise ValueError('VALID_RESCORE_LOCKED_SUBMISSION_REQUIRED')
+    tasks=[t for t in state['tasks'] if (owner/t['attempt_path']).resolve()==root]
+    if len(tasks)!=1:raise ValueError('VALID_RESCORE_OWNER_TASK_MISMATCH')
+    task=tasks[0]
+    if (task.get('phase')!='SCORE_RECORDED' or (task.get('score') or {}).get('sha256')!=score_sha
+            or task.get('source',{}).get('score_sha256')!=previous['score_sha256']
+            or task.get('source',{}).get('scoring_attempt_id')!=previous['scoring_attempt_id']
+            or native_required and (task.get('thread') or {}).get('status')!='COMPLETED'):
+        raise ValueError('VALID_RESCORE_VERIFIED_TERMINAL_REQUIRED')
+    return owner
+
+
 def compose(args, *, frozen):
     source = args.source_orchestration_root.resolve(strict=True)
     state = frozen._verify_state(source)
@@ -50,11 +90,15 @@ def compose(args, *, frozen):
             or partial['dataset']!={k:state['identity']['dataset'][k] for k in ['id','digest']}):
         raise ValueError('SOURCE_SELECTION_IDENTITY_MISMATCH')
     repair=getattr(args,'allow_scoring_infrastructure_repair',False)
+    valid_rescore=getattr(args,'allow_valid_rescore',False)
+    valid_reason=getattr(args,'valid_rescore_reason',None)
+    if valid_rescore and (not isinstance(valid_reason,str) or len(valid_reason.strip())<8):
+        raise ValueError('EXPLICIT_VALID_RESCORE_REASON_REQUIRED')
     reason=getattr(args,'infrastructure_repair_reason',None)
     if repair and (not isinstance(reason,str) or len(reason.strip())<8):
         raise ValueError('EXPLICIT_INFRASTRUCTURE_REPAIR_REASON_REQUIRED')
     if (not set(partial['task_ids'])<=set(expected)
-            or (not repair and not set(partial["task_ids"]) < set(expected))):
+            or (not repair and not valid_rescore and not set(partial["task_ids"]) < set(expected))):
         raise ValueError("STRICT_PARTIAL_SCOPE_REQUIRED")
     skill = frozen._score_skill_lock(args.score_skill_dir, python_runtime=state["score_skill"].get("python"))
     rows = {r["task_id"]: copy.deepcopy(r) for r in partial["tasks"]}
@@ -62,10 +106,10 @@ def compose(args, *, frozen):
              for r in partial["tasks"] if r["score_path"] is not None}
     extra_records = {}
     locks = [{"path": str(p), "sha256": digest(p)} for p in [unit_file, source / "orchestration-state.json", source / "submission.json"]]+extra_locks
-    seen=set();repaired=[];state_tasks={t['task_id']:t for t in state['tasks']}
+    seen=set();repaired=[];rescored=[];state_tasks={t['task_id']:t for t in state['tasks']}
     for selector in args.additional_attempt:
         task, value = selector.split("=", 1)
-        if task not in expected or task in seen or (task in rows and not repair):
+        if task not in expected or task in seen or (task in rows and not repair and not valid_rescore):
             raise ValueError("EXPLICIT_UNIQUE_MISSING_TASK_REQUIRED")
         seen.add(task)
         root = Path(value).resolve(strict=True)
@@ -77,10 +121,21 @@ def compose(args, *, frozen):
         identity = score["identity"]
         previous=copy.deepcopy(rows.get(task))
         if previous is not None:
-            if previous['score_status']=='valid':raise ValueError('VALID_SOURCE_SCORE_REQUIRES_RESCORE_SELECTION')
+            if previous['score_status']=='valid':
+                if not valid_rescore:raise ValueError('VALID_SOURCE_SCORE_REQUIRES_RESCORE_SELECTION')
+                old_manifest=roots[task]/'attempt-manifest.json'
+                validate_valid_rescore(previous,{'sha256':digest(old_manifest),'document':json.loads(old_manifest.read_text())},attempt,score)
+                owner=locked_rescore_owner(root,previous,digest(root/'score.json'),frozen=frozen,
+                    native_required=score['judge'].get('protocol')=='codex-agent-judge-v1')
+                for p in (old_manifest,roots[task]/'score.json',owner/'orchestration-state.json',owner/'submission.json'):
+                    locks.append({'path':str(p),'sha256':digest(p)})
+                rescored.append({'task_id':task,'previous':previous,'replacement_attempt':str(root),
+                                 'replacement_orchestration':str(owner),'reason':valid_reason})
             original=state_tasks.get(task)
-            if original is None:raise ValueError('INFRASTRUCTURE_SOURCE_TASK_MISSING')
-            if previous['score_status']=='evaluation_error':
+            if original is None and previous['score_status']!='valid':raise ValueError('INFRASTRUCTURE_SOURCE_TASK_MISSING')
+            if previous['score_status']=='valid':
+                pass
+            elif previous['score_status']=='evaluation_error':
                 source_score=roots[task]/'score.json'
                 frozen._run_score_command(skill,['verify-score','--attempt-root',str(source_score.parent),'--archived'])
                 lineage=attempt.get('lineage',{})
@@ -120,7 +175,7 @@ def compose(args, *, frozen):
                       "candidate_sha256": execution["candidate"]["frozen_sha256"],
                       "evidence_sha256": digest(catalog) if catalog.exists() else None}
         roots[task] = root
-        if previous is not None:
+        if previous is not None and previous['score_status']!='valid':
             repaired.append({'task_id':task,'previous':previous,'replacement_score_sha256':digest(root/'score.json'),
                              'replacement_attempt':str(root),'reason':reason})
         extra_records[task] = record
@@ -170,6 +225,10 @@ def compose(args, *, frozen):
     if repair:
         lineage.update(infrastructure_correction_profile='explicit-scoring-infrastructure-repair/v1',
                        infrastructure_repair_reason=reason,selected_infrastructure_repairs=repaired)
+    if valid_rescore:
+        lineage.update(rescore_selection_profile='explicit-selected-valid-rescore/v1',
+                       valid_rescore_reason=valid_reason,selected_valid_rescores=rescored,
+                       selection_by_score_value=False)
     for lock in locks:
         if digest(Path(lock["path"])) != lock["sha256"]:
             raise ValueError("SOURCE_CHANGED_DURING_COMPOSITION")

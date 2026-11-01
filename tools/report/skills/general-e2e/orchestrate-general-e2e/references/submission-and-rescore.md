@@ -12,6 +12,14 @@ python scripts/orchestrate_general_e2e.py compose-rescore-selection --source-orc
 
 ## 生成 submission
 
+多来源的有效重评分已经分别完成并锁定submission时，可用正式完整范围入口：
+
+```text
+python scripts/orchestrate_general_e2e.py compose-full-scope-selection --source-orchestration-root ORIGINAL --source-selection-root PREVIOUS_SELECTION --unit-root UNIT --score-skill-dir SCORE --output-root NEW_SELECTION --allow-valid-rescore --valid-rescore-reason REASON --additional-attempt TASK=ABS_ATTEMPT
+```
+
+`--additional-attempt`可重复，选择清单必须由授权及修复范围决定，不比较分值。该标志不放宽输入校验：新manifest必须引用当前选中score和manifest的精确SHA，八项冻结输入摘要一致，新attempt属于有锁定submission、评分已准入且原生线程明确完成的真实rescore编排。不同原始编排来源可以在同一选择中登记，原未替换任务及null状态保持；同题重复、来源不匹配、GT/候选/契约/轨迹变化、未知线程或未锁定结果继续拒绝。旧单一来源compose-rescore-selection路径保持原行为。
+
 只有冻结范围中的所有任务进入终态后才运行：
 
 ```bash
