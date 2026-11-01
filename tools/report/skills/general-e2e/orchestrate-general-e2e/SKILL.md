@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.42` 同步Score0.10.49的新评分传输Profile。修复评分使用同一冻结执行创建新attempt，不覆盖旧分；独立裁判须读取request中的answer_delivery_policy及全部原始证据，不能复制控制器分析作为裁决。对修复前后相同的确定性分数也不按高低择优；完整范围选择显式登记所有替换题目。
+
 `0.11.41` 同步Office022行内距离兼容v2的评分交接：保留唯一原规则入口与原证据预算，失败的v1未启动Worker/裁判，原失败状态和材料保留，新attempt仍按正式独立评分与verify-score准入。
 
 `0.11.40` 为Office022新的独立评分冻结精确原契约的Writer行内图片缺省距离兼容Profile。仅规范原render临时副本，原件/页数标准/权重不改；旧环境失败及旧回传保留，以相同冻结执行的新attempt评分后显式派生完整范围选择。

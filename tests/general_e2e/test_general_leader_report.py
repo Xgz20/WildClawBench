@@ -64,6 +64,19 @@ def comparison_fixture():
 
 
 class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
+    def test_single_unit_does_not_claim_comparison_to_nonexistent_peers(self):
+        source,data,labels=comparison_fixture()
+        source['units']=source['units'][:1]
+        source['presentation']['unit_labels']={'target':labels['target']}
+        data['scope']['unit_count']=1
+        data['comparison_context']=LEADER.comparison_context(source,'target')
+        self.assertEqual(data['comparison_context']['primary_scope'],'single-unit')
+        data['narratives']=LEADER.summaries(data)
+        self.assertNotIn('没有可比较的参照均分',data['narratives']['总览'])
+        text=LEADER.render(data)
+        self.assertNotIn('与参照组合在分类',text)
+        self.assertIn('本报告仅描述',text)
+
     def test_incomparable_valid_subsets_keep_tables_without_automatic_score_ranking(self):
         _, data, _ = comparison_fixture()
         before = copy.deepcopy(data["tables"])

@@ -443,6 +443,7 @@ def scoring_coverage(tasks, labels):
 
 def build_views(data, references):
     import report_case_views
+    import report_display
     mapping5 = references.get("capabilities5", {})
     has5 = any(row["task_id"] in mapping5 for row in data["tasks"])
     has7 = any(row["task_id"] in references["capabilities"] for row in data["tasks"])
@@ -620,7 +621,7 @@ def build_views(data, references):
     order = ["总览", "效率对比", "分类对比", "难度对比", "Agent能力对比", "模态对比", "工具调用对比"]
     if has5 and has7:
         order.insert(5, "Agent五维能力对比")
-    return {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
+    presentation = {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
             **report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES),
             "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
@@ -631,3 +632,4 @@ def build_views(data, references):
             **({"capability_coverage5": caps5} if caps5 else {}),
             "display_overrides": applied_overrides,
             "display_overrides_sha256": hashlib.sha256(json.dumps(overrides, ensure_ascii=False, sort_keys=True).encode()).hexdigest() if overrides else None}
+    return report_display.apply_pending_review(data, presentation)

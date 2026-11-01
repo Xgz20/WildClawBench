@@ -58,6 +58,11 @@ import public_snapshot_sidecar
 import sterilization_quote_layout
 import namc_inline_distances
 import reference_supplement
+import warranty_recovery_layout
+import service_report_layout
+import data_table_representations
+import answer_delivery
+import quadrant_metric_layout
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1853,6 +1858,16 @@ def prepare_attempt(
                    if public_snapshot_sidecar.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'warranty_recovery_layout_profile':warranty_recovery_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if warranty_recovery_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'service_report_layout_profile':service_report_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if service_report_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'data_table_representation_profile':data_table_representations.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if data_table_representations.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'answer_delivery_profile':answer_delivery.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if answer_delivery.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'quadrant_metric_layout_profile':quadrant_metric_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if quadrant_metric_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'namc_inline_distance_profile':namc_inline_distances.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if namc_inline_distances.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(contract,_sha256_bytes(contract_bytes))}
@@ -2743,6 +2758,11 @@ def _effective_rule_source(
         corrected, receipt = declared_public_snapshots.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_snapshot_sidecar.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = sterilization_quote_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = warranty_recovery_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = service_report_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = data_table_representations.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = answer_delivery.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = quadrant_metric_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = namc_inline_distances.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
@@ -2804,10 +2824,10 @@ def _instruction_text(row: Mapping[str, Any]) -> str:
     return ""
 
 
-def _canonical_rule_view(transcript: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _canonical_rule_view(transcript: list[dict[str, Any]], *, preserve_native_channels: bool = False) -> list[dict[str, Any]]:
     view = json.loads(json.dumps(transcript, ensure_ascii=False))
     for row in view:
-        if row.get("type") == "assistant_message" and row.get("role") == "assistant" and row.get("final") is True:
+        if not preserve_native_channels and row.get("type") == "assistant_message" and row.get("role") == "assistant" and row.get("final") is True:
             row.update(channel="final", end_turn=True)
             if isinstance(row.get("message"), dict) and row["message"].get("role") == "assistant":
                 row["message"].update(channel="final", end_turn=True)
@@ -2953,7 +2973,8 @@ def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
     proof_path = root / "rule-input-context.json"
     completion_path = root / "rule-input-completion.json"
     contract = _read_json(root / manifest["paths"]["contract"])
-    transcript = _canonical_rule_view(_read_transcript(root / manifest["paths"]["transcript"])) if manifest["paths"].get("transcript") else []
+    transcript = _canonical_rule_view(_read_transcript(root / manifest["paths"]["transcript"]),
+        preserve_native_channels=manifest.get('runtime',{}).get('answer_delivery_profile') is not None) if manifest["paths"].get("transcript") else []
     transcript, completion = _formal_completion_rule_input(root, manifest, transcript)
     if not request_path.is_file() and not proof_path.is_file() and not completion_path.is_file():
         return
@@ -3062,7 +3083,8 @@ def run_rules_attempt(
     completion_receipt = None
     try:
         if _extended_evaluator_inputs(manifest):
-            transcript, completion_receipt = _formal_completion_rule_input(attempt_root, manifest, _canonical_rule_view(transcript))
+            transcript, completion_receipt = _formal_completion_rule_input(attempt_root, manifest, _canonical_rule_view(transcript,
+                preserve_native_channels=manifest.get('runtime',{}).get('answer_delivery_profile') is not None))
             if completion_receipt:
                 _write_new_json(attempt_root / "rule-input-completion.json", completion_receipt)
             transcript, context_receipt = _native_context_rule_input(attempt_root, manifest, contract, transcript)
@@ -3887,6 +3909,9 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
             independent_policy=business_capability.policy(manifest,contract)
             if independent_policy is not None:
                 request['completion_policy']=independent_policy
+            delivery_policy=answer_delivery.policy(manifest,contract)
+            if delivery_policy is not None:
+                request['answer_delivery_policy']=delivery_policy
             _write_new_json(staging / "request.json", request)
             request_sha = _sha256_file(staging / "request.json")
             response_locks = {
@@ -5197,6 +5222,8 @@ def record_semantics_attempt(
             }
 
         auxiliary=None
+        if request.get('answer_delivery_policy')!=answer_delivery.policy(manifest,contract):
+            raise ScoringRuntimeError('ANSWER_DELIVERY_POLICY_DRIFT')
         if independent_policy is not None:
             if request.get('completion_policy')!=independent_policy:
                 raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_POLICY_DRIFT')
@@ -5537,6 +5564,8 @@ def _verified_independent_capabilities(root,manifest,contract,component):
     expected_policy=business_capability.policy(manifest,contract)
     if expected_policy is None:return None
     paths=_semantic_paths(root);request=_read_json(paths['request']);response=_read_json(paths['response'])
+    if request.get('answer_delivery_policy')!=answer_delivery.policy(manifest,contract):
+        raise ScoringRuntimeError('ANSWER_DELIVERY_POLICY_DRIFT')
     if request.get('completion_policy')!=expected_policy:
         raise ScoringRuntimeError('INDEPENDENT_CAPABILITY_POLICY_DRIFT')
     auxiliary=business_capability.validate_auxiliary(sys.modules[__name__],response,component['criteria'],
@@ -6225,6 +6254,16 @@ def prepare_rescore_attempt(
                    if public_snapshot_sidecar.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'warranty_recovery_layout_profile':warranty_recovery_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if warranty_recovery_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'service_report_layout_profile':service_report_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if service_report_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'data_table_representation_profile':data_table_representations.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if data_table_representations.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'answer_delivery_profile':answer_delivery.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if answer_delivery.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'quadrant_metric_layout_profile':quadrant_metric_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if quadrant_metric_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'namc_inline_distance_profile':namc_inline_distances.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if namc_inline_distances.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'typed_rule_diagnostics_profile':typed_rule_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}

@@ -63,8 +63,8 @@ def comparison_context(data, target_unit_id):
     use_matching = scope == "same-harness-version" and bool(matching)
     primary = matching if use_matching else peers
     labels = data["presentation"]["unit_labels"]
-    return {"requested_scope": scope, "primary_scope": "same-harness-version" if use_matching else "all-combinations",
-            "fallback_reason": "no-same-version-peer" if scope == "same-harness-version" and not matching else None,
+    return {"requested_scope": scope, "primary_scope": "single-unit" if not peers else "same-harness-version" if use_matching else "all-combinations",
+            "fallback_reason": "single-unit" if not peers else "no-same-version-peer" if scope == "same-harness-version" and not matching else None,
             "fixed_harness": harness.get("id") if use_matching else None,
             "fixed_version": harness.get("version") if use_matching else None,
             "fixed_client_label": labels[target_unit_id].rsplit("@", 1)[-1] if use_matching else None,
@@ -159,8 +159,10 @@ def render_efficiency_summary(data, comparison):
     if peers:
         text += "，按当前可核验用量约为" + "、".join(
             f"{peer['peer_label']} 的 {peer['display_ratio']} 倍" for peer in peers) + "。"
-    else:
+    elif data.get('scope', {}).get('unit_count') != 1:
         text += "。本批次没有可用于倍数比较的参照 Token 值。"
+    else:
+        text += '。'
     coverage = comparison["target_coverage"]
     if coverage.get("status") == "complete":
         text += f"目标组覆盖全部 {coverage.get('total_cases', data['scope']['unique_task_count'])} 题。"
@@ -169,7 +171,7 @@ def render_efficiency_summary(data, comparison):
             text += f"目标组 {coverage['complete_cases']} 题完整、{coverage['partial_cases']} 题部分统计；"
         else:
             text += "目标组覆盖不全；"
-        text += "该均值及相对完整参照的倍数是当前可核验消耗下限。"
+        text += "该均值是当前可核验消耗下限。" if data.get('scope', {}).get('unit_count') == 1 else "该均值及相对完整参照的倍数是当前可核验消耗下限。"
     else:
         text += "目标组统计覆盖尚未确认，倍数只比较当前观测值。"
     incomplete_peers = [p["peer_label"] for p in peers if p["peer_coverage"].get("status") != "complete"]
@@ -395,6 +397,9 @@ def extract(workbook, data, target_unit_id):
               "tables": tables, "dimensions": {}, "narratives": {}}
     result["comparison_context"] = comparison_context(data, target_unit_id)
     result["score_coverage"] = deepcopy(data["presentation"].get("score_coverage", {}))
+    result['judge_configurations'] = deepcopy(data.get('overall', {}).get('judge_groups', []))
+    if len(units) == 1:
+        result['report_mode'] = 'single-unit-leadership'
     for name in DIMENSIONS:
         view = tables[name]
         result["dimensions"][name] = {
@@ -431,6 +436,8 @@ def summaries(data):
     overall = [f"相较{r[0]}{compare(Decimal(str(o[1]))-Decimal(str(r[1])))}" for r in peers("总览") if numeric(r[1]) and numeric(o[1])] if same_valid_scope else []
     out = {"总览": prefix + f"{label} 均分为 {num(o[1])}。" + ("；".join(overall)+"。" if overall else "没有可比较的参照均分。") +
            "执行完成情况与有效评分分母分别统计，真实能力零分保留。"}
+    if context.get('primary_scope') == 'single-unit':
+        out['总览'] = f"{label} 有效均分为{num(o[1])}分。执行完成情况与有效评分分母分别统计，真实零分保留；待核验与未评分不补零。"
     if not same_valid_scope:
         out["总览"] = f"{label} 的当前有效评分均分为 {num(o[1])}。各单元有效题目子集不同，本版不据此判定完整冻结题集的优劣；有效评分数与未评分数见表。"
     clean = lambda h: re.sub(r"平均分.*$", "", re.sub(r"^\d+_", "", h))
@@ -453,7 +460,8 @@ def summaries(data):
             chosen = [values[0]] if len(values) == 1 else [values[0], values[-1]]
             descriptions.append(f"相较{peer[0]}，" + "，".join(f"{heading}{compare(delta)}" for heading, delta in chosen))
         if not descriptions:
-            out[name] = f"{label} 的有效维度得分与覆盖范围见表；本批次没有可比较的参照维度分数。"
+            out[name] = (f"{label} 的分层有效成绩与样本覆盖见表。" if context.get('primary_scope') == 'single-unit'
+                         else f"{label} 的有效维度得分与覆盖范围见表；本批次没有可比较的参照维度分数。")
             continue
         out[name] = prefix + f"{label}：" + "；".join(descriptions) + "。"
         if name == "分类对比": out[name] += "表中为模型与客户端的组合对照，不能单独归因于某一因素。"
@@ -516,6 +524,13 @@ def render(data):
              f"> 参评范围：{scope['unit_count']} 个模型与 Harness 组合，每组 {scope['unique_task_count']} 道相同用例", "",
              "各章节保留全部参评组合，文字总结以目标单元为主体。模型与 Harness 同时变化的组合不能作为单因素因果对照。", "",
              "以下结论只基于得分、执行状态和可核验资源，不包含低分用例的模型侧／Harness 侧因果归因。", ""]
+    if scope['unit_count'] == 1:
+        lines = [f'# {label} 通用场景端到端评测报告', '',
+                 f"评测范围：本轮{scope['unique_task_count']}题，单一模型与Harness配置。", '',
+                 '本报告呈现本轮有效成绩、覆盖范围和可核验资源。', '']
+        judges = data.get('judge_configurations', [])
+        if judges:
+            lines += ['独立裁判：' + '；'.join(str(j.get('model')) + ' / ' + str(j.get('reasoning_effort')) for j in judges) + '。', '']
     if data.get("score_coverage", {}).get("note"):
         lines += ["> 评分覆盖：" + data["score_coverage"]["note"], ""]
     titles={"总览":"一、总览","分类对比":"二、分类维度","Agent能力对比":"三、Agent能力","难度对比":"四、难度等级","模态对比":"五、模态对比","效率对比":"六、效率与资源","工具调用对比":"七、工具调用"}
@@ -555,8 +570,9 @@ def render(data):
                 lines += ["### " + t.get("title", "任务耗时对比"), "", *md_table(t["headers"],t["rows"],t["formats"],t.get("cell_annotations")), "", *t["notes"], ""]
                 c = t["coverage_table"]
                 lines += ["任务与模型耗时覆盖：", "", *md_table(c["headers"],c["rows"]), ""]
-    lines += ["## 总结","",
-              f"本轮以 {label} 为目标单元，与参照组合在分类、能力维度和难度分层上的差异已在各章节列明。失败任务的真实产物得分计入均值，完成率单独呈现，不以剔除失败的方式抬高效果指标。",
-              "资源缺口保留覆盖说明；组合对照应结合模型与 Harness 的实际配置解释。所有表格数值均从本版 Excel 提取并与同源 JSON 逐项核对。","",
+    conclusion = (f"本报告仅描述{label}本轮表现；均分仅使用有效成绩并保留真实零分，待核验和未评分保留空值。" if scope['unit_count'] == 1
+                  else f"本轮以 {label} 为目标单元，与参照组合在分类、能力维度和难度分层上的差异已在各章节列明。失败任务的真实产物得分计入均值，完成率单独呈现，不以剔除失败的方式抬高效果指标。")
+    lines += ["## 总结","", conclusion,
+              ("资源缺口保留覆盖说明。所有表格数值均从本版Excel提取并与同源JSON逐项核对。" if scope['unit_count']==1 else "资源缺口保留覆盖说明；组合对照应结合模型与 Harness 的实际配置解释。所有表格数值均从本版 Excel 提取并与同源 JSON 逐项核对。"),"",
               "数据追溯：同目录 `general_e2e_leader_data.json`、`general_e2e_report_data.json` 与审计报告。",""]
     return "\n".join(lines)

@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.49` 为新attempt修复精确冻结来源的评分传输误扣：Office010等价表头与分摊成本优先、Office012主明细/跟进表区分及显式事件附录关联、Office002列表式当前指标与明确预算标签；Data008/011/012/014–016按字段接受已审核的凭证、日期、公开步骤名与归因状态等价表达。Info007按可信完成回合保留完整公开交付，不让后置完成摘要抹去答复；`semantic/request.json.answer_delivery_policy`必须核对，进度/假设/工具结果不算正式交付，后续纠错与未撤回矛盾仍按原Rubric判断。所有变更绑定task/contract/source/dataset，新Profile随manifest冻结并归档复核；不修改原执行、候选、GT、旧attempt、原数值/分母/权重或风险限分。详见[评分传输修复与审计](references/score-fairness-repairs.md)。
+
 `0.10.48` 修复参考补证校验对正式目录evidence_index.entries层级的读取，保留原语义目录和补证格式；新增真实prepare-semantics→query-evidence→record-semantics→finalize→移除runtime→verify-score --archived回归。0.10.47已停止且无正式成绩的失败attempt保留，不改其冻结代码或Prompt；从相同原执行和原score谱系建立新rescore。
 
 `0.10.47` 新增`register-reference-supplement`：仅对获授权的新rescore、在语义请求生成前登记独立参考补证层，绑定原score SHA、任务/执行身份、来源URL/获取时间及全部文件SHA。原题/参考/候选/轨迹/权重不改；补证只供裁判核实事实，不能算作Agent检索、阅读或自验行为。补证清单与文件进入正式证据目录及请求锁，晚补、冲突、链接越界与归档漂移失败关闭；未登记补证的旧attempt保持原行为。
