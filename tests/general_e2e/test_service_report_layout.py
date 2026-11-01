@@ -61,6 +61,24 @@ class ServiceReportLayoutTests(unittest.TestCase):
         with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, 'SERVICE_REPORT_LAYOUT_PROFILE_MISMATCH'):
             RUNTIME._effective_rule_source(bad, original)
 
+    def test_explanatory_headline_counts_are_read_without_inference_or_forecasts(self):
+        ns,original,_,_,manifest=self.namespace()
+        text='''- 记录量：报告日内符合服务台与通道的更新条数＝**50** 条。
+- 工单量：按归一后事项标识（normalized_ticket_key，含 key_aliases 归并）计数＝**19** 件。
+'''
+        _,metrics,_=ns['parse_report'](text)
+        self.assertTrue(metrics['candidate'])
+        self.assertTrue(metrics['unique'])
+        self.assertTrue(all(x['value']==50 for x in metrics['candidate']))
+        self.assertTrue(all(x['value']==19 for x in metrics['unique']))
+        _,bad,_=ns['parse_report']('- 工单量：预计明日计数＝**19** 件。')
+        self.assertFalse(bad.get('unique'))
+        legacy=deepcopy(manifest)
+        legacy['runtime']['service_report_layout_profile']['profile']=LAYOUT.LEGACY_PROFILE
+        fixed,receipt=RUNTIME._effective_rule_source(legacy,original)
+        self.assertNotIn('def _service_headline_counts',fixed)
+        self.assertEqual(receipt['correction_id'],LAYOUT.LEGACY_PROFILE)
+
 
 if __name__ == '__main__':
     unittest.main()
