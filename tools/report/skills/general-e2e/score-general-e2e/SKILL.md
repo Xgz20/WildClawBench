@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.51` 为新Codex评分冻结native-query-reference-transport/v1：只对正式review.query_ids中完全相同的查询引用保序去重，原裁判响应字节、分数、理由、证据和审核布尔值不改。语义audit绑定原响应SHA、有效视图SHA及每处去重数，归档重验重放；未知ID、错类型、未查询证据及缺反例覆盖仍按原门禁拒绝。旧attempt未冻结该Profile时保持原行为，已终态的协议错误必须另建独立rescore，不原地改响应或补分。
+
 `0.10.50` 的Office012表关联v2补齐“记录量：说明＝50条／工单量：说明＝19件”这类明确数量声明的读取。仅接受候选自身的标题数量，不从GT或表行数倒填；未来/目标/预测声明不准入。冻结v1源码和回执仍逐字节重建，新attempt才启用v2，保留原70/30和实际业务错误。
 
 `0.10.49` 为新attempt修复精确冻结来源的评分传输误扣：Office010等价表头与分摊成本优先、Office012主明细/跟进表区分及显式事件附录关联、Office002列表式当前指标与明确预算标签；Data008/011/012/014–016按字段接受已审核的凭证、日期、公开步骤名与归因状态等价表达。Info007按可信完成回合保留完整公开交付，不让后置完成摘要抹去答复；`semantic/request.json.answer_delivery_policy`必须核对，进度/假设/工具结果不算正式交付，后续纠错与未撤回矛盾仍按原Rubric判断。所有变更绑定task/contract/source/dataset，新Profile随manifest冻结并归档复核；不修改原执行、候选、GT、旧attempt、原数值/分母/权重或风险限分。详见[评分传输修复与审计](references/score-fairness-repairs.md)。

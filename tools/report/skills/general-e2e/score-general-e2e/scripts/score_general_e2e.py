@@ -63,6 +63,7 @@ import service_report_layout
 import data_table_representations
 import answer_delivery
 import quadrant_metric_layout
+import native_response_transport
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1822,6 +1823,8 @@ def prepare_attempt(
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                **({'native_response_transport_profile':native_response_transport.PROFILE}
+                   if (judge_config or {}).get('protocol')=='codex-agent-judge-v1' and contract.get('grading_type')!='automated' else {}),
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(contract) and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
                 **({'rule_review_profile':office001_rule_review.PROFILE}
@@ -3912,6 +3915,9 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
             delivery_policy=answer_delivery.policy(manifest,contract)
             if delivery_policy is not None:
                 request['answer_delivery_policy']=delivery_policy
+            transport_policy=native_response_transport.policy(manifest)
+            if transport_policy is not None:
+                request['response_transport_policy']=transport_policy
             _write_new_json(staging / "request.json", request)
             request_sha = _sha256_file(staging / "request.json")
             response_locks = {
@@ -5104,6 +5110,7 @@ def record_semantics_attempt(
     error: dict[str, str] | None = None
     component: dict[str, Any] | None = None
     independent_record=None
+    transport_proof=None
     contract=_read_json(root/manifest['paths']['contract'])
     independent_policy=business_capability.policy(manifest,contract)
     try:
@@ -5123,6 +5130,9 @@ def record_semantics_attempt(
             or response.get("locks") != expected_locks
         ):
             raise ScoringRuntimeError("SEMANTIC_RESPONSE_LOCK_MISMATCH")
+        if request.get('response_transport_policy')!=native_response_transport.policy(manifest):
+            raise ScoringRuntimeError('SEMANTIC_RESPONSE_TRANSPORT_POLICY_DRIFT')
+        response,transport_proof=native_response_transport.normalize(manifest,response,raw_sha)
         rows = response.get("criteria")
         if not isinstance(rows, list):
             raise ScoringRuntimeError("SEMANTIC_RESPONSE_INVALID", "criteria")
@@ -5270,6 +5280,7 @@ def record_semantics_attempt(
         "counterevidence_policy": "per-criterion-declaration-and-query-proof/v1",
         "docker_used": False,
         "error": error,
+        **({'response_transport':transport_proof} if transport_proof is not None else {}),
     }
     terminal_files = {
         paths["response"]: raw_bytes,
@@ -5564,6 +5575,7 @@ def _verified_independent_capabilities(root,manifest,contract,component):
     expected_policy=business_capability.policy(manifest,contract)
     if expected_policy is None:return None
     paths=_semantic_paths(root);request=_read_json(paths['request']);response=_read_json(paths['response'])
+    response,_=native_response_transport.normalize(manifest,response,_sha256_file(paths['response']))
     if request.get('answer_delivery_policy')!=answer_delivery.policy(manifest,contract):
         raise ScoringRuntimeError('ANSWER_DELIVERY_POLICY_DRIFT')
     if request.get('completion_policy')!=expected_policy:
@@ -5660,6 +5672,13 @@ def _verify_semantic_terminal(
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "query_log_sha256")
             if audit.get("api_input_sha256") is not None or audit.get("api_audit_sha256") is not None:
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "unexpected api source")
+            request=_read_json(paths['request'])
+            if request.get('response_transport_policy')!=native_response_transport.policy(manifest):
+                raise ScoringRuntimeError('SEMANTIC_RESPONSE_TRANSPORT_POLICY_DRIFT')
+            if audit.get('status')=='completed' or 'response_transport' in audit:
+                _,expected_transport=native_response_transport.normalize(manifest,_read_json(paths['response']),_sha256_file(paths['response']))
+                if audit.get('response_transport')!=expected_transport:
+                    raise ScoringRuntimeError('SEMANTIC_RESPONSE_TRANSPORT_DRIFT')
         else:
             if audit.get("query_log_sha256") is not None:
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "api query log")
@@ -6217,6 +6236,8 @@ def prepare_rescore_attempt(
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                **({'native_response_transport_profile':native_response_transport.PROFILE}
+                   if (judge_config or {}).get('protocol')=='codex-agent-judge-v1' and source_manifest['grading']['type']!='automated' else {}),
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
                    if rule_review.matches(_read_json(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),

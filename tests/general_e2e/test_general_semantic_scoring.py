@@ -273,6 +273,32 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         RUNTIME._remove_tree(attempt / "runtime")
         self.assertTrue(RUNTIME.verify_score_attempt(attempt, archived=True)["score_valid"])
 
+    def test_duplicate_query_references_are_mechanical_transport_not_an_evaluation_error(self) -> None:
+        attempt=self._hybrid_attempt('duplicate-queries')
+        response,candidate_id,transcript_id=self._prepare_and_query(attempt)
+        for row,score,evidence in zip(response['criteria'],[1.0,.5],[[candidate_id],[transcript_id]]):
+            row.update(status='judged',score=score,reason='本合成用例验证同一查询引用重复不改变裁判判定。',evidence_ids=evidence,
+                review={'query_ids':['query-0001','query-0002','query-0001'],
+                    'supporting_evidence_checked':True,'contradicting_evidence_checked':True,
+                    'absence_claim':False,'complete_event_range_checked':False})
+        source=attempt/'native-duplicate-response.json'
+        source.write_text(json.dumps(response,ensure_ascii=False),encoding='utf-8')
+        raw=source.read_bytes()
+        result=RUNTIME.record_semantics_attempt(attempt_root=attempt,response_path=source)
+        self.assertEqual(result['audit']['response_transport']['removed_query_reference_count'],2)
+        self.assertFalse(result['audit']['response_transport']['decisions_or_evidence_modified'])
+        self.assertEqual((attempt/'semantic/response.json').read_bytes(),raw)
+        RUNTIME.finalize_score_attempt(attempt_root=attempt)
+        RUNTIME._remove_tree(attempt/'runtime')
+        self.assertTrue(RUNTIME.verify_score_attempt(attempt,archived=True)['score_valid'])
+        audit_path=attempt/'semantic/semantic-audit.json'
+        audit=json.loads(audit_path.read_text())
+        audit['response_transport']['effective_response_sha256']='0'*64
+        audit_path.write_text(json.dumps(audit),encoding='utf-8')
+        manifest=json.loads((attempt/'attempt-manifest.json').read_text())
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError,'SEMANTIC_RESPONSE_TRANSPORT_DRIFT'):
+            RUNTIME._verify_semantic_terminal(attempt,manifest)
+
     def test_hybrid_codex_response_is_queried_validated_combined_and_verified(self) -> None:
         attempt = self._hybrid_attempt()
         response, candidate_id, transcript_id = self._prepare_and_query(attempt)
