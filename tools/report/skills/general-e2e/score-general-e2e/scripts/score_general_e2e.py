@@ -57,6 +57,7 @@ import declared_public_snapshots
 import public_snapshot_sidecar
 import sterilization_quote_layout
 import namc_inline_distances
+import reference_supplement
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
 
@@ -1906,6 +1907,10 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
     if manifest.get("schema_version") != ATTEMPT_SCHEMA:
         raise ScoringRuntimeError("ATTEMPT_MANIFEST_INVALID", "schema")
     validation = _verify_validation_marker(manifest.get("validation"))
+    try:
+        reference_supplement.validate(root, manifest)
+    except (ValueError, OSError, TypeError, KeyError) as error:
+        raise ScoringRuntimeError('REFERENCE_SUPPLEMENT_INVALID', str(error)) from error
     paths = manifest.get("paths")
     digests = manifest.get("digests")
     if not isinstance(paths, dict) or not isinstance(digests, dict):
@@ -3429,6 +3434,8 @@ def _semantic_reference_inputs(
     contract = _read_json(attempt_root / manifest["paths"]["contract"], code="SCORING_CONTRACT_INVALID")
     for path in _snapshot_generated_evidence(attempt_root, manifest, contract):
         add_file("grader_generated_evidence", path)
+    for path in reference_supplement.validate(attempt_root, manifest):
+        add_file('grader_generated_evidence', path)
     if manifest.get('runtime',{}).get('rule_review_profile'):
         rule_review_runtime.application_configuration(sys.modules[__name__],attempt_root,manifest,contract)
         for name in ['request.json','response.json','audit.json','query-log.json','discovery-audit.json']:
@@ -6492,6 +6499,11 @@ def main(argv: list[str] | None = None) -> int:
     prepare_rescore.add_argument("--acceptance-id")
     prepare_rescore.add_argument("--protect-runtime-office-inputs", action="store_true")
 
+    supplement = subparsers.add_parser('register-reference-supplement')
+    supplement.add_argument('--attempt-root', required=True, type=Path)
+    supplement.add_argument('--source-manifest', required=True, type=Path)
+    supplement.add_argument('--authorization-reference', required=True)
+
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
 
@@ -6607,6 +6619,12 @@ def main(argv: list[str] | None = None) -> int:
                 acceptance_id=args.acceptance_id,
                 protect_runtime_office_inputs=args.protect_runtime_office_inputs,
             )
+        elif args.command == 'register-reference-supplement':
+            try:
+                result = reference_supplement.register(sys.modules[__name__], attempt_root=args.attempt_root,
+                    source_manifest=args.source_manifest, authorization_reference=args.authorization_reference)
+            except (ValueError, OSError, TypeError, KeyError) as error:
+                raise ScoringRuntimeError('REFERENCE_SUPPLEMENT_INVALID', str(error)) from error
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)
         elif args.command == "run-rules":
