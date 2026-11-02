@@ -2,3 +2,10 @@ tools/e2e-build/** text=auto eol=lf
 tools/report/e2e-shared/** text=auto eol=lf
 tools/report/skills/web-e2e/** text=auto eol=lf
 tools/report/skills/general-e2e/** text=auto eol=lf
+# Historical snapshots are SHA-bound original bytes, including original whitespace.
+eval_general_e2e/datasets/source-snapshots/** -text -whitespace
+# These input/GT pairs use byte-level hashes; checkout must not rewrite EOLs.
+workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/exec/月末库存与交付口径.md -text
+workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json -text
+workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/exec/口径与交付说明.md -text
+workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json -text

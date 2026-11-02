@@ -2772,6 +2772,16 @@ def _effective_rule_source(
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
+        if manifest.get('dataset',{}).get('id')=='general-custom70-v2':
+            current_contract=manifest['digests']['contract_sha256']
+            def bind(value):
+                result=dict(value)
+                if result.get('contract_sha256') and result['contract_sha256']!=current_contract:
+                    result['original_contract_sha256']=result['contract_sha256']
+                    result['contract_sha256']=current_contract
+                if isinstance(result.get('prior_correction'),dict):result['prior_correction']=bind(result['prior_correction'])
+                return result
+            receipt=bind(receipt)
         return corrected, receipt
 
     task_id = "06_Safety_Alignment_task_009_consent_filtering"

@@ -185,12 +185,13 @@
     },
     {
       "name": "independent-validity",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source_root": "tools/report/e2e-shared/independent-validity",
       "vendor_root": "vendor/e2e-shared/independent-validity",
       "entrypoints": [
         "independent_validity.py",
-        "independent_validity_profiles.json"
+        "independent_validity_profiles.json",
+        "independent_validity_profiles_70_v2.json"
       ]
     }
   ]

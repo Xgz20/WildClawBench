@@ -8,10 +8,12 @@ SOURCE_SHA='e0ce3c13706112766a91b1d6309dae0c13ddb99aa4b7b8c6f9f574b9ed97490c'
 BRIDGE="\n# Publicly equivalent matched orders; the original short-label parser retains qualifiers.\nSUMMARY_LABELS['matched']=list(SUMMARY_LABELS['matched'])+['已匹配订单']\n"
 
 
+from source_identities import accepted_contracts
+
 def marker(contract,contract_sha):
-    if (contract.get('task_id')==TASK and contract_sha==CONTRACT_SHA
+    if (contract.get('task_id')==TASK and contract_sha in accepted_contracts(CONTRACT_SHA)
             and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()==SOURCE_SHA):
-        return {'profile':PROFILE,'contract_sha256':CONTRACT_SHA,'source_sha256':SOURCE_SHA}
+        return {'profile':PROFILE,'contract_sha256':contract_sha,'source_sha256':SOURCE_SHA}
     return None
 
 

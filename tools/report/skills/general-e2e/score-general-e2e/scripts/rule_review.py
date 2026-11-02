@@ -1,6 +1,7 @@
 """Declared semantic review inputs for an otherwise deterministic dataset rule."""
 from __future__ import annotations
 import hashlib
+from source_identities import accepted_source_hashes
 
 PROFILE = 'hr-fields-and-sources-semantic-review/v1'
 WORKER_SCHEMA = 'wildclawbench.general-e2e-rule-review-worker/v1'
@@ -13,7 +14,7 @@ ROW_LOCATOR_PROFILE = 'hr-equivalent-row-prefix-locators/v1'
 
 def matches(contract):
     return (contract.get('task_id') == TASK_ID
-            and hashlib.sha256(contract.get('automated_checks', '').encode('utf-8')).hexdigest() == SOURCE_SHA256)
+            and hashlib.sha256(contract.get('automated_checks', '').encode('utf-8')).hexdigest() in accepted_source_hashes(SOURCE_SHA256))
 
 
 def profile_for(contract, contract_sha=None, *, frozen_profile=None):
@@ -96,7 +97,8 @@ def check_source_evidence(table_name,reference_row,expected_refs,actual_refs,con
 
 
 def effective_source(source, *, source_row_aliases=False):
-    if hashlib.sha256(source.encode('utf-8')).hexdigest() != SOURCE_SHA256:
+    observed_source_sha = hashlib.sha256(source.encode('utf-8')).hexdigest()
+    if observed_source_sha not in accepted_source_hashes(SOURCE_SHA256):
         raise ValueError('RULE_REVIEW_SOURCE_MISMATCH')
     parsed_source=source
     if source_row_aliases:
@@ -106,10 +108,10 @@ def effective_source(source, *, source_row_aliases=False):
 '''
         if source.count(anchor)!=1:
             raise ValueError('HR_ROW_LOCATOR_SOURCE_MISMATCH')
-        parsed_source=source.replace(anchor,fallback+anchor)
+        parsed_source=source if fallback in source else source.replace(anchor,fallback+anchor)
     effective=parsed_source+WRAPPERS
     return effective, {'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1',
-        'correction_id':PROFILE,'task_id':TASK_ID,'original_source_sha256':SOURCE_SHA256,
+        'correction_id':PROFILE,'task_id':TASK_ID,'original_source_sha256':observed_source_sha,
         'effective_source_sha256':hashlib.sha256(effective.encode('utf-8')).hexdigest(),
         'reason':'仅将原规则明确标记需语义复核的字段和来源交由独立裁判判断，随后执行原数值计分；原确定性判定、检查点、分母及78/22权重不变。',
         **({'source_locator_profile':ROW_LOCATOR_PROFILE,

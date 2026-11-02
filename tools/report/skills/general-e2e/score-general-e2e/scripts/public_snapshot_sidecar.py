@@ -73,7 +73,7 @@ def failure_evidence(attempt,manifest,contract,audit,worker):
     if (variance is None or not original or not any(p.name=='00_manifest.json' for p in original)
             or any(chars(p)>18000 for p in original) or sum(map(chars,original))>74000
             or sum(map(chars,files))<=74000):raise ValueError('PUBLIC_SNAPSHOT_ORIGINAL_BUDGET_NOT_PROVEN')
-    row=next(r for r in declared_public_snapshots.registry() if r['task_id']==TASK)
+    row=next(r for r in declared_public_snapshots.registry(include_revisions=True) if r['task_id']==TASK and r['contract_sha256']==manifest['digests']['contract_sha256'])
     records=json.loads(variance.read_text(encoding='utf-8'));index={r['path']:r for r in records}
     if len(index)!=len(records) or set(index)!={r['path'] for r in row['files']}:raise ValueError('PUBLIC_SNAPSHOT_VARIANCE_LEDGER_INVALID')
     base=attempt/manifest['paths']['candidate_original']/Path(manifest['runtime']['workspace_argument']).relative_to(manifest['paths']['runtime_workspace'])

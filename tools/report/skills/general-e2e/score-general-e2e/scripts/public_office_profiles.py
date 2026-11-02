@@ -15,16 +15,18 @@ PROFILE = 'canonical-public-office-cwm-only/v2'
 CATALOG_SHA = '567a53a22dc35e198bd72696676cd444e55963b0a72b549b9989c875e8c48313'
 
 
-def registry():
+from source_identities import registry_variants
+
+def registry(*, include_revisions=False):
     path = Path(__file__).resolve().parents[1]/'data/public-input-baselines/general116-office-inputs-v2.json'
     data = path.read_bytes()
     if hashlib.sha256(data).hexdigest()!=CATALOG_SHA:
         raise ValueError('PUBLIC_OFFICE_V2_CATALOG_DRIFT')
-    return json.loads(data)['profiles']
+    return registry_variants(json.loads(data)['profiles']) if include_revisions else json.loads(data)['profiles']
 
 
 def marker(contract, contract_sha256):
-    for row in registry():
+    for row in registry(include_revisions=True):
         if (row['task_id']==contract.get('task_id') and row['contract_sha256']==contract_sha256
                 and row['automated_source_sha256']==hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()):
             return {'profile':PROFILE,'catalog_sha256':CATALOG_SHA,
@@ -86,7 +88,7 @@ def effective_source(manifest, original, current, previous_receipt):
     task_id = manifest.get('identity',{}).get('task_id')
     original_sha = hashlib.sha256(original.encode('utf-8')).hexdigest()
     contract_sha = manifest.get('digests',{}).get('contract_sha256')
-    rows = [r for r in registry() if r['task_id']==task_id and r['contract_sha256']==contract_sha
+    rows = [r for r in registry(include_revisions=True) if r['task_id']==task_id and r['contract_sha256']==contract_sha
             and r['automated_source_sha256']==original_sha]
     expected = {'profile':PROFILE,'catalog_sha256':CATALOG_SHA,
                 'contract_sha256':contract_sha,'source_sha256':original_sha}

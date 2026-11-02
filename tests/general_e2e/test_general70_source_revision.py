@@ -5,6 +5,10 @@ from pathlib import Path
 import shutil
 import tempfile
 import unittest
+import ast
+import re
+from unittest.mock import patch
+import os
 
 from eval_general_e2e.datasets.bundle import (compile_dataset, DEFAULT_DEFINITION, GENERAL116_DEFINITION,
     GENERAL70_V2_DEFINITION, dataset_manifest_path, load_manifest_lock, _parse_task_source, _strip_codeblock)
@@ -40,12 +44,36 @@ class General70SourceRevisionTests(unittest.TestCase):
             self.assertEqual(task['digests']['workspace_exec_sha256'],previous['digests']['workspace_exec_sha256'])
             self.assertEqual(task['grading_weights'],previous['grading_weights'])
 
+    def test_material_repairs_change_only_the_documented_digest_value(self):
+        ledger=json.loads((ROOT/'eval_general_e2e/datasets/audits/general-custom70-v2-source-repairs.json').read_text())
+        from eval_general_e2e.datasets.source_history import FrozenSources
+        frozen=FrozenSources(ROOT,GENERAL116_DEFINITION.frozen_source_index)
+        self.assertEqual(len(ledger['material_repairs']),2)
+        for row in ledger['material_repairs']:
+            p=ROOT/row['path'];original=frozen.read_bytes(p);current=p.read_bytes()
+            self.assertEqual(hashlib.sha256(original).hexdigest(),row['original_file_sha256'])
+            self.assertEqual(hashlib.sha256(current).hexdigest(),row['revised_file_sha256'])
+            self.assertEqual(original.replace(row['declared_text_sha256_before'].encode(),row['canonical_text_sha256_after'].encode()),current)
+
+    def test_reference_workbooks_pass_raw_grading_after_input_digest_repair(self):
+        for token in ['03_Data_Analysis_task_002_','03_Data_Analysis_task_003_']:
+            p=next((ROOT/'tasks/general_e2e').rglob(token+'*.md'));task=parse_task_md(p);scope={}
+            exec(compile(task['automated_checks'],'<reference-source-selfcheck>','exec'),scope)
+            source=Path(task['workspace_path'])
+            with tempfile.TemporaryDirectory() as tmp:
+                work=Path(tmp);shutil.copytree(source/'exec',work,dirs_exist_ok=True);shutil.copytree(source/'gt',work/'gt');(work/'results').mkdir()
+                for name in re.findall(r'results/([^`\s/]+\.xlsx)',task['prompt']):
+                    shutil.copyfile(next((source/'gt').rglob(name)),work/'results'/name)
+                actual=scope['grade']([],str(work))
+                self.assertEqual(actual['overall_score'],1.)
+
     def test_cli_consumes_the_same_materialized_rule_source_as_the_skill(self):
         contracts={m.path:json.loads(m.data) for m in self.members if m.path.endswith('/private-scoring/contract.json')}
         for task in self.manifest['tasks']:
             current=parse_task_md(ROOT/task['source']['task_path'])
             contract=contracts[task['bundle']['scoring_contract_path']]
             self.assertEqual(current['automated_checks'],contract['automated_checks'])
+            self.assertEqual(current['category'],task['category'])
             self.assertEqual(current['judge_evidence']['semantic_status_profile'],'evidence-aware-v1')
             self.assertEqual(current['judge_evidence'],normalize_judge_evidence(contract['judge_evidence']))
             RUNTIME._parse_semantic_criteria(contract['llm_judge_rubric'],weight_scale=contract.get('semantic_weight_scale',1))
@@ -63,6 +91,12 @@ class General70SourceRevisionTests(unittest.TestCase):
         scope={};exec(compile(parse_task_md(p)['automated_checks'],'<materialized-warranty>','exec'),scope)
         for value,key in [('本次金额','current'),('政策责任比例','ratio'),('已追偿','already'),('分摊及合同依据说明','note')]:
             self.assertEqual(scope['header_key'](value),key)
+
+    def test_cli_preserves_authored_continuous_office_scores(self):
+        p=next((ROOT/'tasks/general_e2e').rglob('02_Office_task_001_*.md'))
+        rows={r['key']:r for r in parse_task_md(p)['rubric_criteria']}
+        for key in ['c2_source_links','c3_fidelity','c6_readability','c7_self_verification']:
+            self.assertEqual(rows[key]['allowed_scores'],[])
 
     def test_reference_index_is_real_exported_and_does_not_invent_yang_evidence(self):
         p=next((ROOT/'tasks/general_e2e').rglob(INFO+'.md'));task=parse_task_md(p);scope={}
@@ -105,3 +139,106 @@ class General70SourceRevisionTests(unittest.TestCase):
         for c in contracts:
             if c['task_id'].startswith(tuple('03_Data_Analysis_task_'+n+'_' for n in ['014','015','016'])):
                 self.assertEqual(c['rule_result_adapter']['domain_details_object_key'],'details')
+
+    def test_all_research_answer_extractors_keep_completed_public_delivery(self):
+        count=0
+        for t in self.manifest['tasks']:
+            if t['category']!='01_Information_Search_Organization':continue
+            source=parse_task_md(ROOT/t['source']['task_path'])['automated_checks']
+            nodes=[n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name in {'_visible_text','_final_answer'}]
+            if len(nodes)!=2:continue
+            namespace={'hashlib':hashlib,'re':re}
+            exec(compile(ast.Module(body=nodes,type_ignores=[]),'<research-answer-fixture>','exec'),namespace)
+            trace=[{'type':'task_started'},{'role':'assistant','content':'完整研究结果及来源 https://example.org/paper'},
+                   {'role':'assistant','content':'已完成。'},{'type':'task_complete','last_agent_message':'已完成。'}]
+            answer,_=namespace['_final_answer'](trace)
+            self.assertIn('完整研究结果',answer,t['task_id']);count+=1
+        self.assertEqual(count,18)
+
+    def test_required_native_review_and_validity_admissions_keep_new_identity(self):
+        contracts={json.loads(m.data)['task_id']:json.loads(m.data) for m in self.members if m.path.endswith('/private-scoring/contract.json')}
+        rows={t['task_id']:t for t in self.manifest['tasks']}
+        for token,check in [('001_multi_source',RUNTIME.office001_rule_review.matches),('010_contract',RUNTIME.escrow_state_review.matches)]:
+            tid=next(k for k in contracts if token in k)
+            self.assertTrue(check(contracts[tid],rows[tid]['digests']['scoring_contract_sha256']))
+        tid=next(k for k in contracts if '001_hr' in k)
+        self.assertTrue(RUNTIME.rule_review.matches(contracts[tid]))
+        tid=next(k for k in contracts if '013_spy' in k)
+        self.assertEqual(RUNTIME.business_capability.profile_marker(contracts[tid],rows[tid]['digests']['scoring_contract_sha256']),RUNTIME.business_capability.PROFILE)
+        registered=RUNTIME.business_capability.general_module().REGISTRY_70_V2
+        self.assertEqual(len(registered),15)
+        for tid in registered:
+            self.assertEqual(RUNTIME.business_capability.profile_marker(contracts[tid],rows[tid]['digests']['scoring_contract_sha256']),'independent-business-capability/v2')
+        tid=next(k for k in contracts if '001_multi_source' in k)
+        self.assertEqual(RUNTIME.office001_semantic_ranges.marker(contracts[tid],rows[tid]['digests']['scoring_contract_sha256'])['contract_sha256'],rows[tid]['digests']['scoring_contract_sha256'])
+
+    def test_public_input_admissions_reject_other_contracts_and_keep_legacy_registry(self):
+        contracts={json.loads(m.data)['task_id']:json.loads(m.data) for m in self.members if m.path.endswith('/private-scoring/contract.json')}
+        rows={t['task_id']:t for t in self.manifest['tasks']}
+        old=RUNTIME.public_office_profiles.registry()
+        self.assertEqual(sum(len(r['files']) for r in old),12)
+        for row in old:
+            tid=row['task_id'];sha=rows[tid]['digests']['scoring_contract_sha256']
+            marker=RUNTIME.public_office_profiles.marker(contracts[tid],sha)
+            self.assertIsNotNone(marker,tid)
+            self.assertIsNone(RUNTIME.public_office_profiles.marker(contracts[tid],'0'*64))
+            manifest={'identity':{'task_id':tid},'digests':{'contract_sha256':sha},
+                'dataset':{'id':self.manifest['dataset_id'],'digest':self.manifest['dataset_digest']},
+                'runtime':{'public_office_input_profile':marker}}
+            RUNTIME.public_office_profiles.effective_source(manifest,contracts[tid]['automated_checks'],contracts[tid]['automated_checks'],None)
+
+    def test_explicit_cli_dataset_selects_exactly_70_and_rejects_unknown_id(self):
+        from src.utils.dataset_selection import dataset_task_paths
+        manifest,grouped=dataset_task_paths(ROOT,'general-custom70-v2')
+        self.assertEqual(sum(map(len,grouped.values())),70)
+        self.assertEqual(manifest['dataset_id'],'general-custom70-v2')
+        with self.assertRaisesRegex(ValueError,'UNSUPPORTED_CLI_DATASET'):
+            dataset_task_paths(ROOT,'general-custom116-v2')
+
+    def test_cli_scope_keeps_data_category_and_dataset_identity(self):
+        from eval.run_batch import _task_scope_entry
+        p=next((ROOT/'tasks/general_e2e').rglob('03_Data_Analysis_task_002_*.md'));task=parse_task_md(p)
+        task['dataset']={'id':self.manifest['dataset_id'],'digest':self.manifest['dataset_digest']}
+        row=_task_scope_entry(task)
+        self.assertEqual(row['category'],'data-analysis')
+        self.assertEqual(row['source'],'general_e2e')
+        self.assertEqual(row['dataset'],task['dataset'])
+
+    def test_cli_rejects_cross_version_output_reuse_before_dispatch(self):
+        from src.utils.dataset_selection import require_dataset_output_scope
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);path=root/'evaluation_scope.json'
+            path.write_text(json.dumps({'tasks':[{'task_id':'same-task','dataset':{'id':'general-custom116-v1','digest':'0'*64}}]}))
+            with self.assertRaisesRegex(ValueError,'OUTPUT_SCOPE_CONFLICT'):
+                require_dataset_output_scope(root,self.manifest)
+            path.write_text(json.dumps({'tasks':[{'task_id':'same-task','dataset':{'id':self.manifest['dataset_id'],'digest':self.manifest['dataset_digest']}}]}))
+            require_dataset_output_scope(root,self.manifest)
+
+    def test_cli_dataset_namespace_preserves_legacy_configuration(self):
+        from eval import run_batch
+        from src.utils.cli_args import build_run_batch_parser
+        args=build_run_batch_parser('fixture',3).parse_args(['--dataset','general-custom70-v2','--agent-backend','astroncode'])
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);legacy=root/'astroncode';legacy.mkdir();config=legacy/'run_configuration.json';config.write_text('original legacy configuration')
+            manifest={'dataset_id':'general-custom70-v2','dataset_digest':'1'*64,'task_count':70}
+            with patch.object(run_batch,'OUTPUT_DIR',root),patch.object(run_batch,'parse_run_batch_args',return_value=args),\
+                    patch('src.utils.dataset_selection.dataset_task_paths',return_value=(manifest,{})),\
+                    patch.object(run_batch,'attach_file_logging') as logging,\
+                    patch.object(run_batch,'_build_agent_backend',side_effect=RuntimeError('test-stop-before-model')),\
+                    patch.dict(os.environ,{'WILDCLAW_TIMEOUT_MULTIPLIER':'1','WILDCLAW_TIMEOUT_OVERRIDE':''}):
+                with self.assertRaisesRegex(RuntimeError,'test-stop-before-model'):run_batch.main()
+            self.assertEqual(config.read_text(),'original legacy configuration')
+            logging.assert_called_once_with(legacy/'general-custom70-v2/run.log')
+
+    def test_cli_scope_conflict_stops_before_log_or_configuration_writes(self):
+        from eval import run_batch
+        from src.utils.cli_args import build_run_batch_parser
+        args=build_run_batch_parser('fixture',3).parse_args(['--dataset','general-custom70-v2','--agent-backend','astroncode'])
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);unit=root/'astroncode/general-custom70-v2';unit.mkdir(parents=True)
+            scope=unit/'evaluation_scope.json';scope.write_text(json.dumps({'tasks':[{'dataset':{'id':'older','digest':'0'*64}}]}));original=scope.read_bytes()
+            with patch.object(run_batch,'OUTPUT_DIR',root),patch.object(run_batch,'parse_run_batch_args',return_value=args),\
+                    patch('src.utils.dataset_selection.dataset_task_paths',return_value=({'dataset_id':'general-custom70-v2','dataset_digest':'1'*64},{})),\
+                    patch.object(run_batch,'attach_file_logging') as logging,patch.object(run_batch,'_build_agent_backend') as backend:
+                with self.assertRaisesRegex(ValueError,'OUTPUT_SCOPE_CONFLICT'):run_batch.main()
+            logging.assert_not_called();backend.assert_not_called();self.assertEqual(scope.read_bytes(),original)

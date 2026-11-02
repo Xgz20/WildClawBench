@@ -8,10 +8,12 @@ CONTRACT_SHA='9abde6d34ad22e5fcf142618a7cfd3662c12eb8a0ca0de24930f361dbfda30fc'
 SOURCE_SHA='af8be0f177e7d9e160a03a104562f2e34be9097f5acbbe5e3c30e7c8c00282a5'
 
 
+from source_identities import accepted_contracts
+
 def marker(contract,contract_sha):
-    if (contract.get('task_id')==TASK and contract_sha==CONTRACT_SHA
+    if (contract.get('task_id')==TASK and contract_sha in accepted_contracts(CONTRACT_SHA)
             and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()==SOURCE_SHA):
-        return {'profile':PROFILE,'contract_sha256':CONTRACT_SHA,'source_sha256':SOURCE_SHA,
+        return {'profile':PROFILE,'contract_sha256':contract_sha,'source_sha256':SOURCE_SHA,
             'per_file_bytes':4*1024*1024,'total_bytes':16*1024*1024,'truncation_allowed':False}
     return None
 

@@ -21,6 +21,8 @@ RUNTIME_SOURCE_SHA='ad10b76ad2ba4cdc9b5f295b01b05c86b51e24f04ba0578a542fcf4162ec
 JAVA_SOURCE_SHA='0fad706f4fdd35940659c311d36e5e784a958c08bd435faa1d88623af28b7348'
 
 
+from source_identities import accepted_contracts
+
 def sha(path):return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
@@ -29,7 +31,7 @@ def canonical(value):
 
 
 def marker(contract,contract_sha256):
-    if (sys.platform!='darwin' or contract.get('task_id')!=TASK or contract_sha256!=CONTRACT_SHA
+    if (sys.platform!='darwin' or contract.get('task_id')!=TASK or contract_sha256 not in accepted_contracts(CONTRACT_SHA)
             or hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()!=SOURCE_SHA):
         return None
     envelope=Path(sys.executable).absolute().parent.parent/'general-e2e-native-writer.json'
@@ -53,7 +55,7 @@ def marker(contract,contract_sha256):
             or smoke.get('native_facts',{}).get('body_persisted')!='true'
             or int(smoke.get('native_facts',{}).get('table_edits_persisted','0'))<2):
         raise ValueError('OFFICE001_NATIVE_API_SMOKE_INVALID')
-    return {'profile':PROFILE,'contract_sha256':CONTRACT_SHA,'source_sha256':SOURCE_SHA,
+    return {'profile':PROFILE,'contract_sha256':contract_sha256,'source_sha256':SOURCE_SHA,
             'configuration_file':record['configuration'],'configuration':configuration,
             'configuration_content_sha256':canonical(configuration),'launcher':record['launcher'],
             'validation':record['validation'],'evidence_directory':EVIDENCE}
@@ -63,8 +65,8 @@ def policy(manifest,source=None):
     frozen=manifest.get('runtime',{}).get('office001_native_profile')
     if frozen is None:return None
     if (not isinstance(frozen,dict) or manifest.get('identity',{}).get('task_id')!=TASK
-            or manifest.get('digests',{}).get('contract_sha256')!=CONTRACT_SHA
-            or frozen.get('profile')!=PROFILE or frozen.get('contract_sha256')!=CONTRACT_SHA
+            or manifest.get('digests',{}).get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
+            or frozen.get('profile')!=PROFILE or frozen.get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
             or frozen.get('source_sha256')!=SOURCE_SHA or frozen.get('evidence_directory')!=EVIDENCE
             or not isinstance(frozen.get('configuration'),dict)
             or frozen.get('configuration_content_sha256')!=canonical(frozen.get('configuration'))

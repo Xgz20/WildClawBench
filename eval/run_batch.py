@@ -234,8 +234,8 @@ def _build_run_configuration(
             if name.strip()
         )
 
-    mode = "task" if getattr(args, "task", None) else "category"
-    selection_value = getattr(args, "task", None) or getattr(args, "category", None)
+    mode = "dataset" if getattr(args,'dataset',None) else "task" if getattr(args, "task", None) else "category"
+    selection_value = getattr(args,'dataset',None) or getattr(args, "task", None) or getattr(args, "category", None)
     backend_name = getattr(args, "agent_backend", None)
     if backend_name == "zcode":
         requested_api = getattr(args, "zcode_api", None)
@@ -447,7 +447,8 @@ def _build_agent_backend(args) -> BaseAgent:
 
 
 def _is_extension_task(task: dict) -> bool:
-    """Return whether a parsed task comes from tasks/extension/."""
+    """Return whether a parsed task belongs to a self-built dataset."""
+    if task.get('dataset',{}).get('id')=='general-custom70-v2':return True
     try:
         relative_path = Path(task["file_path"]).resolve().relative_to(
             TASKS_DIR.resolve()
@@ -477,7 +478,8 @@ def _log_pending_task_counts(tasks: list[dict]) -> None:
 
 def _task_provenance_or_unavailable(task: dict) -> dict[str, Any]:
     try:
-        return get_or_build_task_provenance(task)
+        result=get_or_build_task_provenance(task)
+        return {**result,'dataset':task['dataset']} if task.get('dataset') else result
     except (OSError, UnicodeError, ValueError, TypeError) as exc:
         logger.warning(
             "[%s] 无法计算评测契约 hash，评测继续执行: %s",
@@ -499,13 +501,13 @@ def _task_provenance_or_unavailable(task: dict) -> dict[str, Any]:
 
 def _task_scope_entry(task: dict) -> dict[str, Any]:
     path = Path(str(task.get("file_path") or ""))
-    source = "official"
+    source = "general_e2e" if task.get('dataset',{}).get('id')=='general-custom70-v2' else "official"
     category = str(task.get("category") or "").strip()
     try:
         relative = path.resolve().relative_to(TASKS_DIR.resolve())
         if relative.parts and relative.parts[0] in {"extension", "general_e2e"}:
             source = relative.parts[0]
-            if len(relative.parts) > 1:
+            if source == 'extension' and len(relative.parts) > 1:
                 category = relative.parts[1]
         elif relative.parts:
             category = relative.parts[0]
@@ -516,6 +518,7 @@ def _task_scope_entry(task: dict) -> dict[str, Any]:
         "task_id": str(task.get("task_id") or path.stem),
         "source": source,
         "provenance": _task_provenance_or_unavailable(task),
+        **({'dataset':task['dataset']} if task.get('dataset') else {}),
     }
 
 
@@ -1391,6 +1394,14 @@ def main() -> None:
     # 无需 shell `> run.log` 重定向；VS Code 打开干净、可随时 tail、随结果归档。
     # 尽早挂载，使 run.log 从第一行起完整（含下方 timeout 配置日志）。
     output_root = OUTPUT_DIR / args.agent_backend
+    dataset_groups = None
+    if getattr(args, 'dataset', None):
+        from src.utils.dataset_selection import dataset_task_paths, require_dataset_output_scope
+        if args.modality or args.tags or args.exclude_tags:
+            raise ValueError("显式70题数据集不可通过modality/tag过滤缩小冻结范围")
+        output_root = output_root / args.dataset
+        dataset_manifest, dataset_groups = dataset_task_paths(ROOT_DIR,args.dataset)
+        require_dataset_output_scope(output_root,dataset_manifest)
     try:
         output_root.mkdir(parents=True, exist_ok=True)
         run_log_path = output_root / "run.log"
@@ -1532,12 +1543,7 @@ def main() -> None:
             if result.get("error") or (result.get("scores") or {}).get("error"):
                 sys.exit(1)
         return
-    dataset_groups = None
-    if getattr(args, 'dataset', None):
-        from src.utils.dataset_selection import dataset_task_paths
-        if args.modality or args.tags or args.exclude_tags:
-            raise ValueError("显式70题数据集不可通过modality/tag过滤缩小冻结范围")
-        dataset_manifest, dataset_groups = dataset_task_paths(ROOT_DIR, args.dataset)
+    if dataset_groups is not None:
         categories = list(dataset_groups)
         logger.info("Dataset: %s, digest: %s, frozen tasks: %d", args.dataset,
                     dataset_manifest['dataset_digest'], dataset_manifest['task_count'])
@@ -1578,7 +1584,10 @@ def main() -> None:
         tasks = []
         for tf in task_files:
             try:
-                tasks.append(parse_task_md(tf))
+                parsed=parse_task_md(tf)
+                if dataset_groups is not None:
+                    parsed['dataset']={'id':dataset_manifest['dataset_id'],'digest':dataset_manifest['dataset_digest']}
+                tasks.append(parsed)
             except Exception as exc:
                 logger.error("Parse failed %s: %s", tf, exc)
 

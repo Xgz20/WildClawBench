@@ -11,12 +11,14 @@ RUBRIC_SHA='ea0636af04b4a882ee7a250a429a9a012fa6729996367f2ae6318b961cb4c16c'
 KEYS=['c2_source_links','c3_fidelity','c6_readability','c7_self_verification']
 
 
+from source_identities import accepted_contracts
+
 def marker(contract,contract_sha):
-    if (contract.get('task_id')!=TASK or contract_sha!=CONTRACT_SHA
+    if (contract.get('task_id')!=TASK or contract_sha not in accepted_contracts(CONTRACT_SHA)
             or hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()!=SOURCE_SHA
             or hashlib.sha256(contract.get('llm_judge_rubric','').encode('utf-8')).hexdigest()!=RUBRIC_SHA):
         return None
-    return {'profile':PROFILE,'contract_sha256':CONTRACT_SHA,'source_sha256':SOURCE_SHA,
+    return {'profile':PROFILE,'contract_sha256':contract_sha,'source_sha256':SOURCE_SHA,
         'rubric_sha256':RUBRIC_SHA,'continuous_criteria':list(KEYS),'range':[0.,1.]}
 
 

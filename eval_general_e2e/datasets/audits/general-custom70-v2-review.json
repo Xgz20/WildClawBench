@@ -1,0 +1,1075 @@
+{
+  "schema_version": "general-e2e-source-review/v1",
+  "task_count": 70,
+  "repaired_source_tasks": 36,
+  "repaired_GT_tasks": 2,
+  "repaired_unique_tasks": 38,
+  "other_46_tasks_modified": false,
+  "model_or_harness_modified": false,
+  "existing_scores_modified": false,
+  "cases": [
+    {
+      "task_id": "01_Information_Search_Organization_task_001_acl2024_long_context_qa",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_003_batch_normalization_claim_verification",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_005_raptor_migration_monitoring_review",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_007_rice_awd_field_trials",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_008_human_cell_atlas_verification",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_009_global_methane_budget_revision",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_010_perovskite_stability_verification",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_016_balance_of_payments_reconciliation",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_020_treasury_yield_rising_intervals",
+      "confirmed_repairs": [
+        "completed-public-answer-delivery/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_001_multi_source_project_report",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_002_html_report_quadrant_ppt",
+      "confirmed_repairs": [
+        "quadrant-current-metric-labels/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_003_news_event_multifile_extract",
+      "confirmed_repairs": [
+        "canonical-private-reference-guard/v1",
+        "news-equivalent-headers-complete-cells/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_004_xmind_screenshot_template_ppt",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_005_xiaohongshu_psychology_note_pack",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_006_wechat_tech_topic_board",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_007_release_phase_gate_progression",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_008_furniture_refinish_extract",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_009_fund_product_table_normalize",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_010_warranty_recovery_allocation",
+      "confirmed_repairs": [
+        "warranty-recovery-equivalent-headings/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_011_safety_inspection_extract",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_012_service_channel_ticket_daily",
+      "confirmed_repairs": [
+        "service-report-linked-tables/v2"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_013_customer_remediation_pack",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_014_invoice_email_archive_manifest",
+      "confirmed_repairs": [
+        "canonical-private-reference-guard/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_015_procurement_reconciliation",
+      "confirmed_repairs": [
+        "procurement-matrix-formulas/v2 + matched-summary-label/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_016_board_material_update_timeline_excel",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_017_ipad_product_presentation",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_018_targeted_repair_communication_pack",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_019_prd_system_design_breakdown",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_020_research_factor_table_extract",
+      "confirmed_repairs": [
+        "canonical-private-reference-guard/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_021_alphabet_2024q1_presentation",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_022_namc_interview_schedule",
+      "confirmed_repairs": [
+        "namc-writer-inline-distance-defaults/v2"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_023_bridgemind_monthly_report",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_024_sterilization_quote",
+      "confirmed_repairs": [
+        "sterilization-quote-equivalent-headings/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_025_indicator_window_rules",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_026_work_order_labor_reconciliation",
+      "confirmed_repairs": [
+        "work-order-complete-evidence-budget/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_027_channel_period_compare",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_028_inspection_notice_provenance",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_029_monitoring_weekly_docx",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "02_Office_task_030_service_center_consolidation",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "not_applicable_to_excel_reference_selfcheck"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_001_hr_worktime_reconciliation",
+      "confirmed_repairs": [
+        "hr-equivalent-row-prefix-locators/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation",
+      "confirmed_repairs": [
+        "canonical-frozen-public-text-digest/v2"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_003_batch_quality_available_inventory",
+      "confirmed_repairs": [
+        "canonical-frozen-public-text-digest/v2"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_004_inventory_count_aging_obsolescence",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_005_cross_month_returns_regional_sales",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_006_collaborative_sales_customer_attribution",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_007_promotion_discounts_sales_margin",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_008_payment_channel_settlement_reserves",
+      "confirmed_repairs": [
+        "data-table-field-representations/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_009_cross_currency_receipts_bank_fees",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_010_contract_escrow_refund_reconciliation",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_011_new_customer_purchase_funnel_retention",
+      "confirmed_repairs": [
+        "data-table-field-representations/v1",
+        "reviewed-grade-wrapper-normalization/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_012_learning_product_activation_retention",
+      "confirmed_repairs": [
+        "data-table-field-representations/v1",
+        "reviewed-grade-wrapper-normalization/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_013_collaboration_team_activation_seat_retention",
+      "confirmed_repairs": [
+        "reviewed-grade-wrapper-normalization/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi",
+      "confirmed_repairs": [
+        "data-table-field-representations/v1",
+        "reviewed-grade-wrapper-normalization/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts",
+      "confirmed_repairs": [
+        "data-table-field-representations/v1",
+        "reviewed-grade-wrapper-normalization/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability",
+      "confirmed_repairs": [
+        "data-table-field-representations/v1",
+        "reviewed-grade-wrapper-normalization/v1"
+      ],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_017_service_redesign_stratified_weighting",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_020_cross_system_customer_identity_resolution",
+      "confirmed_repairs": [],
+      "scope_checks": [
+        "manifest_and_material_identity",
+        "grading_budget_and_criterion_parse",
+        "CLI_and_Skill_same_rule_source",
+        "single_grade_entrypoint",
+        "published_prompt_and_execution_inputs_unchanged"
+      ],
+      "static_validation": "PASS",
+      "exhaustive_business_truth_or_multimodel_calibration_completed": false,
+      "reference_rule_selfcheck": "PASS"
+    }
+  ],
+  "not_model_evaluation": true
+}

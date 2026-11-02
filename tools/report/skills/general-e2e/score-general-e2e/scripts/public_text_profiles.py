@@ -8,14 +8,16 @@ CATALOG_SHA='9fd7c0679cf52111b0535535b3e47bd72eb3cdf19a36c957080f65ca4c3a56ed'
 ERROR_KIND='declared-public-text-newline-repair/v1'
 
 
-def registry():
+from source_identities import registry_variants
+
+def registry(*, include_revisions=False):
     raw=(Path(__file__).resolve().parents[1]/'data/reviewed-public-text-newlines-v1.json').read_bytes()
     if hashlib.sha256(raw).hexdigest()!=CATALOG_SHA:raise ValueError('PUBLIC_TEXT_CATALOG_DRIFT')
-    return json.loads(raw)['profiles']
+    return registry_variants(json.loads(raw)['profiles']) if include_revisions else json.loads(raw)['profiles']
 
 
 def marker(contract,contract_sha,dataset):
-    for row in registry():
+    for row in registry(include_revisions=True):
         if (row['task_id']==contract.get('task_id') and row['contract_sha256']==contract_sha
                 and row['dataset']=={k:dataset.get(k) for k in ['id','digest']}
                 and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==row['source_sha256']):
@@ -65,7 +67,7 @@ def effective_source(manifest,original,current,prior):
     expected=marker({'task_id':manifest['identity']['task_id'],'automated_checks':original},manifest['digests']['contract_sha256'],manifest['dataset'])
     if expected is None or frozen!=expected or current.count('def _ge2e_public_office_matches(')!=1:
         raise ValueError('PUBLIC_TEXT_FROZEN_PROFILE_MISMATCH')
-    row=next(r for r in registry() if r['task_id']==manifest['identity']['task_id'])
+    row=next(r for r in registry(include_revisions=True) if r['task_id']==manifest['identity']['task_id'] and r['contract_sha256']==manifest['digests']['contract_sha256'])
     effective=current+'\nimport hashlib as _ge2e_text_hashlib\n_GE2E_TEXT_FILES='+repr(row['files'])+'\n'+BRIDGE
     receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':PROFILE,
         'task_id':row['task_id'],'contract_sha256':row['contract_sha256'],'original_source_sha256':row['source_sha256'],
@@ -80,7 +82,7 @@ def original_failure(attempt,manifest,contract,audit,worker):
     error=worker.get('error') or {};message=error.get('message','')
     if (audit.get('status')!='failed' or audit.get('error',{}).get('code')!='RULE_WORKER_FAILED'
             or worker.get('ok') is not False or error.get('type') not in {'RuntimeError','EvaluationDataError'}):return False
-    row=next(r for r in registry() if r['task_id']==contract['task_id'])
+    row=next(r for r in registry(include_revisions=True) if r['task_id']==contract['task_id'])
     suffix=Path(manifest['runtime']['workspace_argument']).relative_to(manifest['paths']['runtime_workspace'])
     original=Path(attempt)/manifest['paths']['candidate_original']/suffix
     for ref in row['files']:

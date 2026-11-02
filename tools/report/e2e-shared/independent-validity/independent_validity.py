@@ -16,6 +16,7 @@ SCHEMA = 'wildclawbench.general-e2e-independent-capabilities/v2'
 AVAILABLE = {'pass', 'partial', 'fail'}
 UNAVAILABLE = {'evidence_insufficient', 'blocked_external', 'not_observed', 'evaluator_error'}
 REGISTRY = json.loads(Path(__file__).with_name('independent_validity_profiles.json').read_text(encoding='utf-8'))['profiles']
+REGISTRY_70_V2 = json.loads(Path(__file__).with_name('independent_validity_profiles_70_v2.json').read_text(encoding='utf-8'))['profiles']
 
 
 def complete_transcript(queries, query_ids, total):
@@ -98,7 +99,7 @@ def validate_auxiliary(response, criteria, catalog, queries, policy):
 
 
 def registered(contract, contract_sha256=None):
-    spec = REGISTRY.get(contract.get('task_id'))
+    spec = (REGISTRY_70_V2 if contract.get('judge_evidence',{}).get('semantic_status_profile')=='evidence-aware-v1' else REGISTRY).get(contract.get('task_id'))
     if (spec is None or hashlib.sha256(contract.get('automated_checks', '').encode('utf-8')).hexdigest() != spec['automated_source_sha256']
             or contract.get('grading_weights') != {'automated': 0, 'llm_judge': 1}
             or contract_sha256 is not None and contract_sha256 != spec['contract_sha256']):

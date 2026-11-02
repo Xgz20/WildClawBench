@@ -3,7 +3,7 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
-修订后的70题使用独立 `general-custom70-v2` bundle（检索20、Office30、数据分析001—020），
+`0.7.12` 修订后的70题使用独立 `general-custom70-v2` bundle（检索20、Office30、数据分析001—020），
 不把其余46题加入本轮。旧60及历史116-v1 bundle继续按原身份消费，禁止用新题源替换历史冻结输入。
 
 `0.7.11` 回传仅排除评分attempt顶层或judge-review命名空间中、未被冻结输入/评分/取证索引引用的node_modules运行依赖，原目录/绝对链接不删除；排除项以scoring/package-exclusions.json显式留证。candidate-original、private及正式执行证据中的同名依赖完整保留；任何冻结证据引用顶层依赖仍失败关闭，其他绝对链接不放宽。

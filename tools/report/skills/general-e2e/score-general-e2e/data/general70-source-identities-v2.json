@@ -1,0 +1,776 @@
+{
+  "dataset": "general-custom70-v2",
+  "profiles": {
+    "0714dea4555d082973551d2490d33703122709616395404dfd7cc24bb7f21ee7": {
+      "automated_source_sha256": "ba842030c1e1f6f039aad11b2709ad36dbd09c0156e71f79a97b8eb362569c45",
+      "contract_sha256": "1c43711b049839381b6e66cb5da2778d2cd82769a0520ffe1020ec15bd1e53b1",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "ba842030c1e1f6f039aad11b2709ad36dbd09c0156e71f79a97b8eb362569c45",
+      "original_execution_inputs_sha256": "bf095b5f78ec2ad1147ceae03e395cab66e0a302209d6747b6c3379af4acc0d3",
+      "task_id": "03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition"
+    },
+    "091bd036cb90cc65cd4a01a8f85ecdb1ec3f3c856866b1833ecf92b008cbc7f3": {
+      "automated_source_sha256": "17b799d1c1d376794f1ff781f2757778cacc5a55e5396a6f4174b87831fd7729",
+      "contract_sha256": "e26b0ae5369b98893a7753ef179be26b7965a8ff346d0a57c16e945337832562",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "f52f9a1b6dcc14cb7c84251f55f64cd3fd9fc9153d91dd2a4be0fe9e443ffebb",
+      "original_execution_inputs_sha256": "4a2c554708238325eb9681a2025a1ec2e2b8a547b9de229e6247ffef9aa57ac1",
+      "task_id": "03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts"
+    },
+    "0d2855742065eeedcb29be9debeef2b685011d4e3ea3acd011fa65b8acbbe4ae": {
+      "automated_source_sha256": "122f8dd3d9216da7a0163039f79f0703acd872f5b6a4fa4c7cd76f22d62d9888",
+      "contract_sha256": "577f8a3c684046c627b041201bf456dcf98b388e95c38aa81e4dafa842ea2a2d",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "5dad4904247f31e2cb1b741f345ea7bb59172840f0a11fdcf854240a5eff42d7",
+      "original_execution_inputs_sha256": "6fce2b9e88be9d72b0674af1ec90cf39a3fe7c0525bfea5b6472551f338e7dd9",
+      "task_id": "01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening"
+    },
+    "0e77dc9774d1d7aa394c22c4ebd575c8b964d337a21582da20805ebaf7b09f23": {
+      "automated_source_sha256": "a19e61eadba7a12fc76e012eb9a6d1b68f8cf601f461febef350a9d6e3334eff",
+      "contract_sha256": "fddbebd961c87568dbc5324aa722d1ed08fbe90569871ffcc97c881d99191904",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "93218f3f59c9110424fed2d3a0e2a77411631dc18ae35e992b60b3bdf7f6c33d",
+      "original_execution_inputs_sha256": "a924e0c2e95e2c632f7295fb22607be0e7c2b45b1a7aa27d132c8814e017c007",
+      "task_id": "01_Information_Search_Organization_task_010_perovskite_stability_verification"
+    },
+    "0f20761cc4b6a181e555cae3cb912e70029683585eb5316319b636551f52c6bc": {
+      "automated_source_sha256": "725c85c852be69c28208d4ee0e68d38a74e03ad51d1ab136719888a0b3fbe3df",
+      "contract_sha256": "e2970f01dc0b11cd54350b6013ccbe5689c6adf8fedb84d4e4cee497ef526880",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "725c85c852be69c28208d4ee0e68d38a74e03ad51d1ab136719888a0b3fbe3df",
+      "original_execution_inputs_sha256": "e1a9b7a92697f101112bba6e006409942348fe29335def25bb88f7604cba3acc",
+      "task_id": "02_Office_task_009_fund_product_table_normalize"
+    },
+    "10f6890d5ad02f12aecb4adde71f37f823c2665fb544870b9f2f4c45da6e68d6": {
+      "automated_source_sha256": "2f76b0a7b81832b460ed55b554d4ff1ed97b578499b6645536ef86dfbf694f76",
+      "contract_sha256": "858178cd90fa2076ddf5d8e38ecff2394f1528da83fa300b7bbe603fb3e982cc",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "80580565ec2789a5d8dc61b0a7a77562bd9eaea61d7a57adbf3213929f4523c1",
+      "original_execution_inputs_sha256": "9591e945677a95401428593fefdfb06c59558dc26f4d732e9208621492502134",
+      "task_id": "01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison"
+    },
+    "13d42d527966b2f850465e5cb0102855f65e22d9c924cff52df2cfa3ee68ea89": {
+      "automated_source_sha256": "fac3fb4701c90f48df918f5c51c42313fd85f08a165e83ec0be74253b12ae8d9",
+      "contract_sha256": "f514de7c4392ed28d7394a8484e637e7e9f776da0f2008c46634d09263c1be02",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "fac3fb4701c90f48df918f5c51c42313fd85f08a165e83ec0be74253b12ae8d9",
+      "original_execution_inputs_sha256": "0afc76100af80667690e0302868042436a28fc0e5ec5c8a425584674d66a38cd",
+      "task_id": "02_Office_task_006_wechat_tech_topic_board"
+    },
+    "169ecf44c68bf70ca28359c30fe90b333613175427b1ab38a687dcff0e7579bb": {
+      "automated_source_sha256": "2941168c166ce3a6cf44ff13fc21db88ebf46d13b7064566910b05f212246edb",
+      "contract_sha256": "ff82298365a13f7aa99d8c5a2aaad11704451aefee7b4c29ab258b5b41f0ba70",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "a621d6fd563d2b4da7b6eb5c6620238c93ba61940e72bfbe7fe8aa4fee0bc5ec",
+      "original_execution_inputs_sha256": "b5eda0da2e4f0b0b090b226e2086e84569e3407694dee3f5b32bc05bb43c92d2",
+      "task_id": "01_Information_Search_Organization_task_005_raptor_migration_monitoring_review"
+    },
+    "1a8f0723640bbf2b5f179daf2c936fc16950bbae21ccecb31209dcff1861c5f3": {
+      "automated_source_sha256": "0b39141c2aa8cdc12fd861a8588d046367d80b675b00d1025ce1e955759fec32",
+      "contract_sha256": "f2a2cd2b53f406972d78b5bc2c5b812e977f77d01846e14b729c1b251ef72fab",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "0b39141c2aa8cdc12fd861a8588d046367d80b675b00d1025ce1e955759fec32",
+      "original_execution_inputs_sha256": "d4566104770e00bf601b245d28d6f2345a3ce0d51b0c3414687b0ebc15e95345",
+      "task_id": "02_Office_task_004_xmind_screenshot_template_ppt"
+    },
+    "1b8d2908e23986fca18eb211341f22027289c5873378887c52630401c160b474": {
+      "automated_source_sha256": "77b01c826e8656ec366ee7fe532f34b60b725dea98569cac2c0131e05bfc055e",
+      "contract_sha256": "c39b1fb6f20d775443d93480d6dad18cef90183a3235246e582652daa505e116",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "77b01c826e8656ec366ee7fe532f34b60b725dea98569cac2c0131e05bfc055e",
+      "original_execution_inputs_sha256": "fe0949566468c31492e00cbb8818aa785544a7585f872f6c8e6e69a681890759",
+      "task_id": "02_Office_task_005_xiaohongshu_psychology_note_pack"
+    },
+    "205f1c00544abe28579d67f428a0ad7e238ddd0e27852951d53430b46f9f7da7": {
+      "automated_source_sha256": "f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378",
+      "contract_sha256": "1cf27d0d5844d40d08824e606bc92e1efb9514bc0d780051793d85b270d586cc",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378",
+      "original_execution_inputs_sha256": "de5c9ebff4f2f641695a94141cca1f161c998263f3bac6380fe9b5476c0bdd01",
+      "task_id": "02_Office_task_030_service_center_consolidation"
+    },
+    "25458df79797220058f8391d3973928fbaba53ec219db29a1130aa448428dc45": {
+      "automated_source_sha256": "b4ed3cfccee5e0f6e62fd033adede110a04b0d3059ed43825929e6f872e1c2c6",
+      "contract_sha256": "241c3f829415d4faf19bcd3436068c43350ae8ac30fcdfa3e196bbdcf15ba0e8",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "b4ed3cfccee5e0f6e62fd033adede110a04b0d3059ed43825929e6f872e1c2c6",
+      "original_execution_inputs_sha256": "1ec9a33cb32a90c356dc0bb67f1e43d820ba7057503561067660c637364df6b2",
+      "task_id": "03_Data_Analysis_task_017_service_redesign_stratified_weighting"
+    },
+    "2b48f19bcd2a92dc584362b7dc7892fcb0a2a19a34ee003495e46bd82958ed34": {
+      "automated_source_sha256": "a372f9d9884c4fdf6ae4f400e4a194118d9608e26f2b91adc07da5ef9fc19d3b",
+      "contract_sha256": "6812a16405e9b151613cb3085e4fe76e4918cf1bde88c62b22a32018717e2177",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "a372f9d9884c4fdf6ae4f400e4a194118d9608e26f2b91adc07da5ef9fc19d3b",
+      "original_execution_inputs_sha256": "ee19ee04d06137c0c70fd2fd27fb5a36c72ac47bde3c4497cf8a7e3731d28079",
+      "task_id": "03_Data_Analysis_task_020_cross_system_customer_identity_resolution"
+    },
+    "35ab0270776e1c8e5d4d7094022197251778b53aed483034962e0485eb218274": {
+      "automated_source_sha256": "57ecb29d36514ee3d48a140dc3aa80d5f760c494df65a5ad283bea109f202f70",
+      "contract_sha256": "6f48e57201716da96e999278e866c8509d6fd4e97e6f9ee6f47b7074043f8534",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "0d102b933522cc3e191a0bbf58834850fc5e84e3eaac04cb002bf854704e563c",
+      "original_execution_inputs_sha256": "5950ccbcdcb028191a17032e26b4f0e46c35eb17834a452450fa77cce04f7d66",
+      "task_id": "01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison"
+    },
+    "3812c0e862b91aff92f13900bba09c21c76308e7f004560109c17cd911876e87": {
+      "automated_source_sha256": "b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe",
+      "contract_sha256": "e9917777a34520b691e3d9ef8cc23887c712a11a3baca8e7108df3d2ec7aadfe",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe",
+      "original_execution_inputs_sha256": "a711fd9bce35c384dc683da287e5b37e2df5fe41999ea18d0a3b1b245eb35fca",
+      "task_id": "01_Information_Search_Organization_task_001_acl2024_long_context_qa"
+    },
+    "3acb3898030661f3bed5a02e62f689cde662d39e30a9acc3cf15bfac9037187e": {
+      "automated_source_sha256": "07928b5aaf640eb0f55173fbe1c3d2fec0530b5b7011e74295f526d08bd1fedd",
+      "contract_sha256": "1456ac158137b43c87b83f975a6f54912febfeeeb18831103ca44b6e571be65f",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "07928b5aaf640eb0f55173fbe1c3d2fec0530b5b7011e74295f526d08bd1fedd",
+      "original_execution_inputs_sha256": "318d5992f6f9400677201a0e9338f206cec84dad1e6294328bc88ac2d3e24f98",
+      "task_id": "03_Data_Analysis_task_009_cross_currency_receipts_bank_fees"
+    },
+    "403c92931dc9df259068ba721d0b226580868ae41fd09c928abe756d06f7c3c8": {
+      "automated_source_sha256": "599238fdb99100b0643bb57da985eb1c996454324514bcfc8427aa60dfd28724",
+      "contract_sha256": "af84380c3ca8254e803ba3a4fed9b60232b5b498a81ec4d53189be55bf33b067",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "aae6017d35b3207d4afffdf1554d175527729465acbdea35f7c7312e7967f350",
+      "original_execution_inputs_sha256": "93cf21bb5da53e622f41c23680e8a30e746ef2555b27a0aa731ecbddf8ce4487",
+      "task_id": "03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability"
+    },
+    "40d185a0f2261364dcf5b16ad49f675757e565bc77422a5de57291ed0bf5d661": {
+      "automated_source_sha256": "3a95ad18bd352380241234b8a641536ff5b87b2f61e347a9edb1aedb0201da6a",
+      "contract_sha256": "5070a56c5dcf4dc302cdec4a9ac5bc2ca31eb0c09908220531ca88b5a79fb376",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "34482414d200065795ccb168971c9c9c25ae80999be0cd926b2e0aa3bef48c1b",
+      "original_execution_inputs_sha256": "562a89da34c5544989ab65e02bcbb0ff9df8c3bdfc82dc1572432bbe62967975",
+      "task_id": "02_Office_task_010_warranty_recovery_allocation"
+    },
+    "4830af49c78832dea2570daa3d44e4297577955c0fa930026efcccd20c87776c": {
+      "automated_source_sha256": "eae3a6ded7ea293d0319b85c64744b8fc42f478251e458fd4898a9a50a32c97f",
+      "contract_sha256": "54e97d256173f7da5c1523dd95ca906fec42840a96d7190004842dfbde07e72f",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "abc05e251abdf503fc76e99fe7a8cdba7c9a6e044969139b7f176787eb976df8",
+      "original_execution_inputs_sha256": "964defc2c85bb92318c3e4868a29b4196ecfc821bd5fd6f6bbb2381c7ea3db05",
+      "task_id": "01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening"
+    },
+    "4a8f2374c86b713fb7d25469176df613e9fc781300a438ad3899e185c9da0a02": {
+      "automated_source_sha256": "c253d90b6c0e1653a1b94e6587be572d6158ec3acacf5ea1307196a9ae8617dd",
+      "contract_sha256": "34470d2c802bd05af42abe62bd85bfd1f368710a059e5f9ac84cbb2829ed5299",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "e105ee4485e19056ff8bdfade41d481a48873090199d208c020f254fe1834e88",
+      "original_execution_inputs_sha256": "956d7d373a432a14e4efe4e181c0736358bdad0e22acc36df97258f913801e09",
+      "task_id": "01_Information_Search_Organization_task_007_rice_awd_field_trials"
+    },
+    "4aa0f9ae2a43b42bdba3543fb0355ad34ba9101fa25d9eea37b5741a35f7573b": {
+      "automated_source_sha256": "3f0d299234cf8d067ef652629b88f160a3baa3a201491af4753a21f0db438ebd",
+      "contract_sha256": "727f5d92e60c08995031f00c916b1b339b391ca53a8711bd9d1583925251fe89",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "3f0d299234cf8d067ef652629b88f160a3baa3a201491af4753a21f0db438ebd",
+      "original_execution_inputs_sha256": "a10ac55921549a3ffac19d647e7139ad368e3e2b8bbeb08aa4164d61697d8a07",
+      "task_id": "03_Data_Analysis_task_006_collaborative_sales_customer_attribution"
+    },
+    "4e04ffb528f6b17e7270ebbb8a5618bc28667653f1abece4a065617fded37e08": {
+      "automated_source_sha256": "a60005f7ba3f35aa75f5f3ab4d857ec3de7ea9d3622318913fdbfe8e14e222d1",
+      "contract_sha256": "396fcc2996a34ae0cc5963e4acef048320852419bb9162f0aa2fda999d79f8f0",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "a60005f7ba3f35aa75f5f3ab4d857ec3de7ea9d3622318913fdbfe8e14e222d1",
+      "original_execution_inputs_sha256": "a1e59c56f6ed8022a39db2e588d16939ead8692a209a2e3483f495b203af8ffa",
+      "task_id": "02_Office_task_011_safety_inspection_extract"
+    },
+    "5010ed9e46102a2ba95bd0e1eba1c68aee85c1d2444d23115e78a336e126e29e": {
+      "automated_source_sha256": "d2e1e3adf18ce595499464db66e3bc1a728ccabc64bc887d02ef70356eac17bf",
+      "contract_sha256": "303328777610178aab42baa175aa2e3c65dd0ccf868b5200d200a0597704e107",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "d2e1e3adf18ce595499464db66e3bc1a728ccabc64bc887d02ef70356eac17bf",
+      "original_execution_inputs_sha256": "4a3c8e2a604772ed0f1fae59a86c0c399d82e2e01989ae703c23974d9beae33c",
+      "task_id": "02_Office_task_018_targeted_repair_communication_pack"
+    },
+    "50be4d8b742d049ee96d33712d318bb025e06b5129978962bee12febb07a1f67": {
+      "automated_source_sha256": "7e495656b307fb167bd894c25c3c52f0ae9f35e9319cc5eae5948e5357058cee",
+      "contract_sha256": "22c83bf794e7c8388b387134fb70e440655b3a98e5a2f04bef65bb531cb55f3f",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "7e495656b307fb167bd894c25c3c52f0ae9f35e9319cc5eae5948e5357058cee",
+      "original_execution_inputs_sha256": "7a4121a8c15203600209c5b7ed928a505979dae43b7c2c78860bfd4bb0108cd3",
+      "task_id": "02_Office_task_021_alphabet_2024q1_presentation"
+    },
+    "50e3fb1e71018debf5fa997dbe265698f6416b1f0fc95fc18a9915e6340b17da": {
+      "automated_source_sha256": "d4455f3f8d8c480a22b2c1f5444d9b1f9338da85baa5ae90fe231a34c7210cec",
+      "contract_sha256": "2860256ab1a069c06d740a3fe41d0613682d56ba3ad07fd38119a4055ace3cdf",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "original_execution_inputs_sha256": "a61a487ff4f2a1df706e3338d18b297421942aaefc8cbac818f0001f14dbfd0e",
+      "task_id": "03_Data_Analysis_task_011_new_customer_purchase_funnel_retention"
+    },
+    "544a145a3c532d3f3059233abd75c3c7ad12ef9000d03742ca3c6139459e5dd6": {
+      "automated_source_sha256": "12fac49ec3702ed6fa46321b8c7746fb51ee0ec3d4ba24f6326071946ea7dd33",
+      "contract_sha256": "a0a735db791432be079b355692019382f6185c4252adda9f280d3a6f5d1edb40",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "d2f94148256b518831705ce44fc5d8dde3fe430e3ab91ae1d67c826295b25307",
+      "original_execution_inputs_sha256": "3cf9bef7f882d72e2b9f6f6eebda93f334818446372446762f431c0a004881f1",
+      "task_id": "01_Information_Search_Organization_task_020_treasury_yield_rising_intervals"
+    },
+    "5eaf7096fc47189a9f7588afb59048bb002b6452d844dbc9841f5ffadaae2bc1": {
+      "automated_source_sha256": "72b3b431266c343e782736efe2b433c85c3595f5ff7ff2d37e3f784443ae9dcb",
+      "contract_sha256": "76aa00cb066778eaf57b43babf379d2577a552e98ea3e6a0c57b17ca4afd1bba",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "1c3fc91f81c18f3deee584f4741761676e55f78ba52b890bd464deca9e17f712",
+      "original_execution_inputs_sha256": "0564bc82af11f575677eb00ad22051caf136637061a9df9187a89f66f69ca480",
+      "task_id": "01_Information_Search_Organization_task_003_batch_normalization_claim_verification"
+    },
+    "61ae824719e600bbc3a8f1c027881ebe378e57f6cb29c3abd928bc3d9c606ace": {
+      "automated_source_sha256": "fb529c42c7a68e5f238e9c80ec71118da3afa875b7deaf5804a943b1403d4904",
+      "contract_sha256": "57bb5c1230b380da2fb3b70d18542a530779cbca687e2dffc1685e59d132c9fe",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "fb529c42c7a68e5f238e9c80ec71118da3afa875b7deaf5804a943b1403d4904",
+      "original_execution_inputs_sha256": "edff798658097f625e5b8d91f8cf0ab860eccb5816dd4f151bad94e44d7ed275",
+      "task_id": "03_Data_Analysis_task_005_cross_month_returns_regional_sales"
+    },
+    "633672a6f997b7ed74b6e2f8c69b88c380b0ad97a7cd8b62b6c608273cdec26e": {
+      "automated_source_sha256": "e2143d3977f9e0a9812134e6e891101b39471a806bacffc08e17ec947b0b5a3b",
+      "contract_sha256": "4107edd42f39b08d5b6002771862c8b95e5aa92a64e9f21edeb6d2a48ad6c769",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "e2143d3977f9e0a9812134e6e891101b39471a806bacffc08e17ec947b0b5a3b",
+      "original_execution_inputs_sha256": "f899134d56d48cf0ca0d8ab6bce752466fbfa2c463edacfb3711b7778eac2d1a",
+      "task_id": "02_Office_task_025_indicator_window_rules"
+    },
+    "678466623939a8f901ea40d5038c5b3c0009960dec805fd4e0c96de51822c9ce": {
+      "automated_source_sha256": "13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a",
+      "contract_sha256": "853ffd362d034b56e142c8102a02a4664bebd304a6228f4e1bb4ee04a869364e",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "f98e97479b61249f5421b652816d74d39f4d9d3c9b98a6ba4f14fa40b5d2a6d5",
+      "original_execution_inputs_sha256": "406dd38b49bebb5f1785e5844af84d553b3f94fcea2a93a5a3f8aefe94083699",
+      "task_id": "03_Data_Analysis_task_001_hr_worktime_reconciliation"
+    },
+    "67b32ce66d7c41d56a7ca7adcbd5f2232487f481215f356258eceb40f6dd7a20": {
+      "automated_source_sha256": "5e3f63b0a85ca4153b35151fb98a32893c6184113d68e2cf7f49ae3c24b7aae2",
+      "contract_sha256": "eb08f8be062aca4f62695407cd2a88e514e4054334910a835ab8c5437398f82b",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "11aeb5b4a953a0c3d85bd77ff7d0c744c621f33db0782b5671534f3650a12853",
+      "original_execution_inputs_sha256": "6d8875ef34c00f627ce051a71fe1183cab5241a2cede15f16996b53d1f1866a9",
+      "task_id": "03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi"
+    },
+    "6f09ca95d3dec38e1e6df3c4b789bf99966e023587691d9703b4e4d5732712bf": {
+      "automated_source_sha256": "0bf265cb80b78e5f2b1e06ba4aa9b5f50cbacd191628c3503416d00a6d3b00af",
+      "contract_sha256": "fccef64e9ebebba3d2ff7ac89683892275827f4f3c9bb2eadacfe326b749bb19",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "0bf265cb80b78e5f2b1e06ba4aa9b5f50cbacd191628c3503416d00a6d3b00af",
+      "original_execution_inputs_sha256": "ccfd16a5347a7a3a310d73130b29834627287356b7a6f91ce779b2b9246e1da1",
+      "task_id": "03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback"
+    },
+    "7500a0ecb8e3071b25880b74b0464b2fbe5c805fc730caa8f9ce2e1d4df1fad3": {
+      "automated_source_sha256": "6c4d8a2d9605fc847d69cc9b9fd370cdb886f32a32c6ddf9dd26e3fb8cff27bb",
+      "contract_sha256": "f5a28c132488c6cb37724700db420d54ba0dbf6e68be086cfcdf0eebc277e9bb",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "9be11b175636ff50b7d2a1b588665c4f2c0c4e9a787d4d2a4ebee81846cec958",
+      "original_execution_inputs_sha256": "f33ba9c99ad1c446f9d553d20e2716a8e69a1b1577be2943ea0183eb656c667b",
+      "task_id": "02_Office_task_002_html_report_quadrant_ppt"
+    },
+    "7a842731cce76808b60b92a2be3f70ab18cf10e254d1591eca2bf1977463f1d3": {
+      "automated_source_sha256": "ec04d3539c64efaf0909e4c0772164e39fa30c835d389eff46d2c5becaa59fe1",
+      "contract_sha256": "57338e91bd87b3cff8f034d5da7340fa95d19dbeae701db8a3a57afa95252c45",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "ec04d3539c64efaf0909e4c0772164e39fa30c835d389eff46d2c5becaa59fe1",
+      "original_execution_inputs_sha256": "401d5ddebc7c18cb1532a59015e18b2064e8a92dd1ea3b0bbcf3f908c2b0f0dc",
+      "task_id": "02_Office_task_007_release_phase_gate_progression"
+    },
+    "7b8e014d5d21cf444455314d5bdc14a174d10203d194ba385cce33adfd2e00a1": {
+      "automated_source_sha256": "ae14e444c8c08a49f2131b398ba15e020f2a2f40651c98228d6f61e10afd91a9",
+      "contract_sha256": "261966e2bf41c6a9a02ea411fac91b8f92d407572e9ddd638a6a8694b64e90b6",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "d94b071c9ab22fe4fe50bb1247a7cfbe86be6f809357cb743a493185e28bb21f",
+      "original_execution_inputs_sha256": "a924e0c2e95e2c632f7295fb22607be0e7c2b45b1a7aa27d132c8814e017c007",
+      "task_id": "01_Information_Search_Organization_task_009_global_methane_budget_revision"
+    },
+    "7d07be027dde957019600c2ed3f2b5cee6b08592c31c375269e5e6faefb82b90": {
+      "automated_source_sha256": "5bf823a8e7c79d6ab2ded5ef6f280d95f4c6206d711dd78ad143042a0aa969aa",
+      "contract_sha256": "9e1b2579bb59d7713f7da9e02527ef2df67399d0994d1a9f7578ed746f73c634",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "5bf823a8e7c79d6ab2ded5ef6f280d95f4c6206d711dd78ad143042a0aa969aa",
+      "original_execution_inputs_sha256": "95700d5375c2bef43b97c95de049ba983c440f5825fdcaa9cdcf65a44cfddd6c",
+      "task_id": "02_Office_task_016_board_material_update_timeline_excel"
+    },
+    "808dce46890576b6f97f1d2364389ae2bff19bf81dc8a11096618e178146b127": {
+      "automated_source_sha256": "84df260f1948f86c0c7da4f651ac1bbf5e8d3ac220e8ad6a115b33af44d22f6c",
+      "contract_sha256": "46b90a5bee7b2a90fbad93b5f36f04fa3730d2f3f27e54ca6e830cb691301e4b",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "e0ce3c13706112766a91b1d6309dae0c13ddb99aa4b7b8c6f9f574b9ed97490c",
+      "original_execution_inputs_sha256": "1181ab9aff510b2d004b186e47c266ff4799f982aac81072170cde1056a6b185",
+      "task_id": "02_Office_task_015_procurement_reconciliation"
+    },
+    "81e0e9ec777cf91358476932439d13717674d594fe21a9f691921aa06d696385": {
+      "automated_source_sha256": "5cc07cf2819400ef9ceac1f79e32d5d3ef61a1abc34eaad217c2c861feb2832c",
+      "contract_sha256": "3e9ccc94a6d751dccdbbc44473a94ab4265468f76e25471b0da614fbcb679798",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "original_execution_inputs_sha256": "b25b10523ef1b7fa14bc91601660c2d16ad868b143d34ddba6c07c1b051e4568",
+      "task_id": "03_Data_Analysis_task_013_collaboration_team_activation_seat_retention"
+    },
+    "851b94f0c68ba3f2460c996ccb226d543742ad0b2b1eed1859911d6697a65b9c": {
+      "automated_source_sha256": "c7d4f88bc8ded76ce98ae42a15f24186d77289bb60e3026b9358ca4a97c3b3b8",
+      "contract_sha256": "feee1486b6848b1667bc658017161dc86a77d4c54091ca3a96324a283056f91e",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "7f4a4c932ca5e6ff8eae811e158de5d81bf3d1d3a50831bfb3a2fe54d588a86e",
+      "original_execution_inputs_sha256": "5e189d515a18c7162410ef264543b73db7ab1d0d21913890ec881d14176ee84b",
+      "task_id": "02_Office_task_022_namc_interview_schedule"
+    },
+    "8b18108b7d3d25de22211eb35c2d83c844f167de679adb09d2ed02c1b44158e5": {
+      "automated_source_sha256": "fcb92b69c39d685a7eac1886f3dac1c70a1cab4c50a8d56e02b4e9864036d9f4",
+      "contract_sha256": "1f2cfaa6dd7c19118384376f20520f661417c2dc6c1b03160bbbb4d99c26af55",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "fcb92b69c39d685a7eac1886f3dac1c70a1cab4c50a8d56e02b4e9864036d9f4",
+      "original_execution_inputs_sha256": "fa4c2b65e1709574515201e1a93867ba3e92b8a29b26439b4f9abcc6e1f62646",
+      "task_id": "03_Data_Analysis_task_003_batch_quality_available_inventory"
+    },
+    "939b80b68b78b7a1e073d6b5dbacd2fef3d31f55a2059b11f5ac4a4e4c47080b": {
+      "automated_source_sha256": "dd79629bb4d44c6a5725dd4e18c481eed609a34af72b06d6bfd891cce60aa3f3",
+      "contract_sha256": "8aea5c62dd3ddc302c58acf34b2340a67a1635ff42c5bfffe6881b542c476344",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "8d1a0a8be83233fd099478a491c329e27d67ca2752d36c76eeb720aedcd7a9e6",
+      "original_execution_inputs_sha256": "6fce2b9e88be9d72b0674af1ec90cf39a3fe7c0525bfea5b6472551f338e7dd9",
+      "task_id": "01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison"
+    },
+    "990a587e68b9e285de2f73732affc3928da51de839cd3bcddf5d701a43e32e2c": {
+      "automated_source_sha256": "5b8c6df7be90b99d4d52fcc3121813ae60ae377a1fbf008eaea81a2d52a89e8d",
+      "contract_sha256": "041d4d6617138ca005a1c8af25cd31f26658f22695f0e038cbd877adf38eff3f",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "5b8c6df7be90b99d4d52fcc3121813ae60ae377a1fbf008eaea81a2d52a89e8d",
+      "original_execution_inputs_sha256": "7fcb00add27965ab273b6adc362ba8b7d94dbd27eb1676e4354aab105ee64b57",
+      "task_id": "03_Data_Analysis_task_004_inventory_count_aging_obsolescence"
+    },
+    "9abde6d34ad22e5fcf142618a7cfd3662c12eb8a0ca0de24930f361dbfda30fc": {
+      "automated_source_sha256": "e7500c47aec4d700e217546cb9efcbc25b06fa360586eaa79b0b191d68826dd5",
+      "contract_sha256": "aa0729866b2e01eed5afded886a72633140bbe0478335969b37e088b687296a2",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "af8be0f177e7d9e160a03a104562f2e34be9097f5acbbe5e3c30e7c8c00282a5",
+      "original_execution_inputs_sha256": "259aed5f0cb5eca97a688e71bb6458b85e6623140b1033ef5b93c88d2f26beb8",
+      "task_id": "02_Office_task_003_news_event_multifile_extract"
+    },
+    "9e08a7cedb63bc972f9955b1dd197f556c32607354f445250a2235bbb583da33": {
+      "automated_source_sha256": "4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035",
+      "contract_sha256": "2a473675b08481052bc5808a5387e85fa0152bdcf4ed5448e922e9023a4097d5",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035",
+      "original_execution_inputs_sha256": "cbd5939827bc2834d214dfa2bf1c68259944aa6e6583ed24a064cee93690741c",
+      "task_id": "02_Office_task_019_prd_system_design_breakdown"
+    },
+    "9fc0302144b31890ea2a0c7678fef1b98e9bb8d2805f36d74fcd10dde7707f2e": {
+      "automated_source_sha256": "75da415722fd6574a7398fb254fce0745220f0f2c79d05eb4fa8ba1fdd7ce2c9",
+      "contract_sha256": "9c1e0dd0a669e2d2da4be06b1587063612567df10e9ccbe63aabda4d42868e37",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4513bd6b4fdac7a8faa84109301c569cd9bb30d1f8bf734c5a2a7392ae860d38",
+      "original_execution_inputs_sha256": "3cf9bef7f882d72e2b9f6f6eebda93f334818446372446762f431c0a004881f1",
+      "task_id": "01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint"
+    },
+    "a021b3a0dc1b3e356097a9e862818d5c2527fdfef846ccf2e76659c962a149bc": {
+      "automated_source_sha256": "b07de671ee37090df73d6276f8819ecc5048f00595d8717ca48bdee682e7ebb6",
+      "contract_sha256": "fe19c1c4928b57a897a319b8aafdb8e1f549b020571707b587f8d298837c1bc2",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "b07de671ee37090df73d6276f8819ecc5048f00595d8717ca48bdee682e7ebb6",
+      "original_execution_inputs_sha256": "1696ea282f68c923527336a97688d64e0e8d6b2a9ca285fc96b79e09f1ae9918",
+      "task_id": "02_Office_task_028_inspection_notice_provenance"
+    },
+    "a24e919e5575630ab591e4ee5d2111c31560becec4739d3c0b12b83399db73dc": {
+      "automated_source_sha256": "541ee4e4b61031c8b0886fcb7ccf8cae6f7a1aa43f2f233fb9f5a85ace397049",
+      "contract_sha256": "f9373295e5018c4e00ead9de1a069a42484c969e8e86f6769dfa9579920a8f1e",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4642a8df52c25b515ee985d89658b9965daa86de89b0a18fe8ed3289580b74e2",
+      "original_execution_inputs_sha256": "9591e945677a95401428593fefdfb06c59558dc26f4d732e9208621492502134",
+      "task_id": "01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison"
+    },
+    "a2e5a1f91bdd4c55eecf49ffceaa7fa0f47781a50c46724800152113c4185063": {
+      "automated_source_sha256": "977204c2de288fad01298ced86b9cde18845855b6b337ead7cb0dce6face4dcb",
+      "contract_sha256": "73fabe21d72056a41e02670ecea5a8ee92241eaff4a1815231dc3862f30d0f80",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "977204c2de288fad01298ced86b9cde18845855b6b337ead7cb0dce6face4dcb",
+      "original_execution_inputs_sha256": "d44e3a9a7b537f59d74dc11c2729f3c6bbe621ddf942843b2b28dfa9fa684969",
+      "task_id": "02_Office_task_008_furniture_refinish_extract"
+    },
+    "a5156678f9a8384df96ca0ed820affb0e67b8c56ed91c583054268b3f1a8aeb0": {
+      "automated_source_sha256": "15678e4b398ece75da1b3bf9ce6969771e9329aa934e81df9caf13ec1be783bf",
+      "contract_sha256": "6551d152b86eabdc30f3d6e6f027d74271710b53ff4c902343d77bfd0c1f2b50",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "15678e4b398ece75da1b3bf9ce6969771e9329aa934e81df9caf13ec1be783bf",
+      "original_execution_inputs_sha256": "4e3987afd304f79edb7d4dbca328b473fdc25844b5cb200f62ea4c9d59efa32b",
+      "task_id": "03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation"
+    },
+    "a745acbe0362406a063c757f88e3411f93ed63faa3f1121c17655e16ad6207d9": {
+      "automated_source_sha256": "e7acfb0524259bd5b417a139b9b6d75c3a15059aec42dfa6026324e2ad712f94",
+      "contract_sha256": "0476d38d070442c9270a374fd6c24f44866bffeb1674b12d06f4362b3310a124",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "e7acfb0524259bd5b417a139b9b6d75c3a15059aec42dfa6026324e2ad712f94",
+      "original_execution_inputs_sha256": "c7ba8e2e84ecdca3846ba7e15a15e6c95d59865204a3dc03dfa33c604bf2b93e",
+      "task_id": "01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography"
+    },
+    "ad8a76c9c2718233b048920825ce912c5fd6a5eeaada256acf36bd327ea63b77": {
+      "automated_source_sha256": "88aaf1d47325b6155f510c8e254f1d0d49e3207a67f8d3a89d2c28d2492a2038",
+      "contract_sha256": "ddc7ef18bf0b02e74c00addb72efb4d219f91fd17000c75df0e66c6793f10e13",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "88aaf1d47325b6155f510c8e254f1d0d49e3207a67f8d3a89d2c28d2492a2038",
+      "original_execution_inputs_sha256": "4775fd0dba33a867c69a2db03044191e2507104eccf7e5a5a7121420fab5a243",
+      "task_id": "02_Office_task_023_bridgemind_monthly_report"
+    },
+    "c079fea6c0d02ba0dc89d82a504c3a0b04adf40a1a54218bc0cdcdfa238b8904": {
+      "automated_source_sha256": "8a5f3b2564d041a5995e8363743f896edbda8bcb0cd66ea5545291de4c56d796",
+      "contract_sha256": "641cb4895e06be9770ae841b8a8aea169e40ca1ea1b9aaaf44f556383b544b5c",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "e73d92ef09af6612afca2fee33d29887e7906ba1d1ae61df804ab2f654d05253",
+      "original_execution_inputs_sha256": "091bf7a794bca855d55b615f171428b4df11ae61eabf4c1c49ff0c2326673fb3",
+      "task_id": "02_Office_task_020_research_factor_table_extract"
+    },
+    "c44c983d8373f7075baeee65e327cf886ed2931368b8a59dcd8dae5d484d6cc1": {
+      "automated_source_sha256": "fc8e2651f671b067faf87528bf508ff559454cefda43bb9ae6a08e1010587ac9",
+      "contract_sha256": "b5016c9afb626a69a114f943b24d5a2172317ff37a1e8a6ef58c921d1ead60b2",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "fab46597d51de9869feeef882eaa222b9ced1ecc8809ad10c7a8fa1be697bfac",
+      "original_execution_inputs_sha256": "d01d1ad41eae47c37642a5899746fc9c432ee0012196bd324b60a6fb20d3b9cb",
+      "task_id": "02_Office_task_026_work_order_labor_reconciliation"
+    },
+    "c4d02aeb30d8d8dbb95fe5aa95b3f0b1768f61e531251a609b9ba5206590c270": {
+      "automated_source_sha256": "9c14df3a26853623d241b27bcee17b81d3703211264f9e3b001bb09909bcbc2d",
+      "contract_sha256": "dcc8e145eb25cbf1b2fe9604ff273f0a2239884a81ecd27f2537b54edf8659d4",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4568359beb832e31afbb2e47a957e615740f52df7ca700500eb8747697394fb2",
+      "original_execution_inputs_sha256": "a924e0c2e95e2c632f7295fb22607be0e7c2b45b1a7aa27d132c8814e017c007",
+      "task_id": "01_Information_Search_Organization_task_008_human_cell_atlas_verification"
+    },
+    "c5bddc74d5505210efde3bd3610719fbf2547ba0fc71264ceeaa898965d25c0c": {
+      "automated_source_sha256": "b0e0cabf28c9edba2e8ac6eee88f8b8b0f528fa75cbab843c8ab98a8b1962a88",
+      "contract_sha256": "d9dc7cbb2f558326a419ccc40318761b83f50e45b8c91fec3e97077562cd336b",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "b0e0cabf28c9edba2e8ac6eee88f8b8b0f528fa75cbab843c8ab98a8b1962a88",
+      "original_execution_inputs_sha256": "8863edaf463b649110c7e0715fc40cab0b261e9fc1afd746f7b5660b1342e5dd",
+      "task_id": "03_Data_Analysis_task_007_promotion_discounts_sales_margin"
+    },
+    "c8184c1a9fe2de6645ce5ca32372f167e068507e1bd3c19108852ce806f1d0d6": {
+      "automated_source_sha256": "93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309",
+      "contract_sha256": "967f54a181a67fe91b7513b6d81d61a6badd7d7def1c6fcc1033d5d69fae762a",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309",
+      "original_execution_inputs_sha256": "99db15ed0d9dc8daf98c580657f1f42c2ea71426b1fef9de4b27bc153e8aea92",
+      "task_id": "02_Office_task_029_monitoring_weekly_docx"
+    },
+    "c82ee731605dc1cb7647eabf5469317cdf1b7f206891fe351a4e2e2011b39f23": {
+      "automated_source_sha256": "d80646a2b945576bddbf9fd956d9a34e01c69c2b0462e22bebde0f498dd22659",
+      "contract_sha256": "6969496620a6b427855e4ac838f38ddd26b6b1ba9622c4fd55998763d8f5656e",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "44b71af114799169329153453eedfe697a2f3db58acb471bfedd1ba185c250a8",
+      "original_execution_inputs_sha256": "9edf579769f9b774dd3fc274d45c073cd8bd165ab1f4680bc6748af64be1d9e8",
+      "task_id": "02_Office_task_014_invoice_email_archive_manifest"
+    },
+    "c87a3be3ce975462196df041715406e8a701d4143d3c48a89842d138889698d6": {
+      "automated_source_sha256": "830c1b83cd4a24718148401d134fa7a03aff7838997558a5357c47263a4d63be",
+      "contract_sha256": "c0e3ede6d806c132c7221c30f77f2f9b1fa5b3fe2b90eaf8a95880d58f304b57",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "78fe935d60dde60a8874a398d1c8cd61c0a0425f18c28510fd184f38730a0d47",
+      "original_execution_inputs_sha256": "3c9dc627a9064e089699d3e0c65bbc19ca54e6574feb1aff6853bb44c33d99e8",
+      "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison"
+    },
+    "cc964ab311a1ccf7acf2878dca5301a88c461d1e5d3d1f9cc9e4b897a67ceb4c": {
+      "automated_source_sha256": "d3a3629fcf87dd43f6111eb4e60e06cace697bc2d7ac4893023f6638c419409e",
+      "contract_sha256": "9bf8c8065d0250ca63cd0b6270c96dfb9c872bbfb90cd397e5844653c015cfa8",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "d3a3629fcf87dd43f6111eb4e60e06cace697bc2d7ac4893023f6638c419409e",
+      "original_execution_inputs_sha256": "056f527b6ae597a238150891eda6af7fa26e65c9a5b8a5db43524a6365ba1e3d",
+      "task_id": "02_Office_task_027_channel_period_compare"
+    },
+    "d21deed67280f24bdab7b10699484c8c10661cf781ceca71365111c1621afe65": {
+      "automated_source_sha256": "75479ef53c0c0319131fb308a598e116be67070195f6940a780d7184233f7ae0",
+      "contract_sha256": "8c9a63a085116274096333af6c0b7091739ce2d0f998eb496a4df3634bf3ad0e",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "cc564202c233feacf3f11e930f363411c9c02c18c08b185cf5f7f91a2fd817cf",
+      "original_execution_inputs_sha256": "a924e0c2e95e2c632f7295fb22607be0e7c2b45b1a7aa27d132c8814e017c007",
+      "task_id": "01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison"
+    },
+    "d24c2f9152a4d3a4ba182c6f2321f46563343aeafa05b2365250b5334d2ad119": {
+      "automated_source_sha256": "9741775d2323f8bfa08303fc54e75b4b1e6c0f797dd8a47af8bda99ae50e0f0e",
+      "contract_sha256": "6ae1e8f5c854c5061dd8b6582325b7ef7de3d100b82af84b5147d9becd8afbe1",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "8792b29a8de3c4d0421e9307a70ada938b71b5ee71d57d4d20015fe18cbfce0e",
+      "original_execution_inputs_sha256": "e5111d2d13986faf9e2aa08da36b710826d2f64dfbf5e506197dc9ff1fa36851",
+      "task_id": "03_Data_Analysis_task_008_payment_channel_settlement_reserves"
+    },
+    "e063747f5444ee7c608320f9009addabcf24891a96ba376c173bd3c8dd24caea": {
+      "automated_source_sha256": "a7d33513b3b2ce4795ede1877332f8e84efc12916f02f3a829dd583e94bbc901",
+      "contract_sha256": "20cc871fd1fefff2b3cb667d66a6f309b166e2a330b5fe7d9bcb20dc9a20d29d",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "original_execution_inputs_sha256": "a428810f4607248db0ac8adc2c9350580ddacb725691387039694588aeaa171e",
+      "task_id": "03_Data_Analysis_task_012_learning_product_activation_retention"
+    },
+    "e3e4856e48484138e21f084e910cd1810ec4d5f7bdf2f6277fedbf66b3719021": {
+      "automated_source_sha256": "e5adf69e0aab55fa54d995879aec8650cf0abd9b768922f37c7e24102b5e2ae1",
+      "contract_sha256": "2c5ada8095ab55bbea3f1bdbfd9971c12e549cc9beacbe2c29262d752d35e109",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "df348eea68b4d3894706979dbbbe0cfefd5c30cd92f817c1d3f46b3401a2706e",
+      "original_execution_inputs_sha256": "455611ea7147482eec2cfa68078534cae7825d38fdb7ee001144387f35f3121e",
+      "task_id": "01_Information_Search_Organization_task_016_balance_of_payments_reconciliation"
+    },
+    "e50503ba707ce00523bde18460ed2519f642a858ac8619939325e626f924edc0": {
+      "automated_source_sha256": "1b1db22b6427ab8cfe4fe3472e7af62e32adf2a0e72484345805af963221fc46",
+      "contract_sha256": "ef714863523034a7c467a51e6768bf0dda607cd550537b5491fda52c85853943",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "1b1db22b6427ab8cfe4fe3472e7af62e32adf2a0e72484345805af963221fc46",
+      "original_execution_inputs_sha256": "2c78048390f6415434d49773ae081e455cb2571ff22c0fe5f42f16836ca10f53",
+      "task_id": "02_Office_task_017_ipad_product_presentation"
+    },
+    "eae7056236c4ef5c18771d2d66a1ca01e9f0268df1b4ba16040087f798c76adf": {
+      "automated_source_sha256": "3cc8ca96c44618391fad974313fc84ac83e15532c525acff4d1d20fd8cc97955",
+      "contract_sha256": "af1f136e9c417075c20e6e694af74eadbe14fd24f623356f08960af17b8da5e3",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "3cc8ca96c44618391fad974313fc84ac83e15532c525acff4d1d20fd8cc97955",
+      "original_execution_inputs_sha256": "e4c3cde9e1c1a3256c9f68551548192028d607ea4496d06c547f6a21184fd239",
+      "task_id": "02_Office_task_013_customer_remediation_pack"
+    },
+    "f1b41a26025eaa55ee0d4d0a5e5169d3d54e46f8e3d6d0968e4e36c7dcf861d8": {
+      "automated_source_sha256": "59af17043c8a6969b3d52d2f6c6f2d7c4e46d5569107f16de1197ec6cd58f58a",
+      "contract_sha256": "ea6fb702f0f31e34c6aafbe3ccb2ac54ebd27d0a412269f002ecff85cadfe113",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "4eb6f066090585450e2a015690f6df72d7f3fd659b0aabf32d4f8cc566eac60a",
+      "original_execution_inputs_sha256": "956d7d373a432a14e4efe4e181c0736358bdad0e22acc36df97258f913801e09",
+      "task_id": "01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials"
+    },
+    "f6386914c4ab0208f66feb75dbce2a61eccf7a384c289cc3a138ce61b048d11e": {
+      "automated_source_sha256": "98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1",
+      "contract_sha256": "e9a5af34ea74f642f1f8966bdb25a42ff179fae6b23f16b17d085164b1601902",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1",
+      "original_execution_inputs_sha256": "7d4364329c30c8b7616d0deb9dab6648db15fc66297e91e944153a4e7366004f",
+      "task_id": "02_Office_task_001_multi_source_project_report"
+    },
+    "f69a2a0698d8f023ef76ece7337bb631a51f1fe912b64e084b98fe682bed5439": {
+      "automated_source_sha256": "785e6831505ba1d0fdc341bc36bfc716e2931ab173888ef3dcd4f2617f94d2c8",
+      "contract_sha256": "e9bc066864701efbba218bb1b3adf2547471d5ee17f95a7b84dbe4b32f69c83c",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "d15a0df8c0357524b09168bf8d1d9dd5b90642a22366ffa6d24c0eeca64c9b9e",
+      "original_execution_inputs_sha256": "64e6244a52b86766497d2eb52023ddb5c6af77398dcbb478d5dcbaba88da3259",
+      "task_id": "02_Office_task_024_sterilization_quote"
+    },
+    "f83880ffb8709bb48b676214e0abf8b8a941bfa974960241bf3e328828f0ddab": {
+      "automated_source_sha256": "64ac633a83d579fa4f099aca687c3aa1bde8477273e0e93ad31cf28b043a9956",
+      "contract_sha256": "b440485348ee72c7ab58b6f212a05cbc16691d8e6ece9a286661f981fa13358a",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "f1acab4a1b024ba786f6a2abdbbc23936a6a051dfafdccac0c0c36cc9b331d5b",
+      "original_execution_inputs_sha256": "5204a34aecbef5e88c942d8c12fc5f622215faa759aeab2a1476a2471185f3bf",
+      "task_id": "02_Office_task_012_service_channel_ticket_daily"
+    },
+    "faa1141cd2c5e8dc3e31e4ef0f94744f520f10e85243f84d8898cef4d8b5a3da": {
+      "automated_source_sha256": "a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d",
+      "contract_sha256": "c93e50e83a8ac8eb9d6ba9e02510a762952b4011e8495c763073029a42bfff75",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "original_automated_source_sha256": "a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d",
+      "original_execution_inputs_sha256": "0701eccbdbead962ee44086e556b5f98d139d39a38e26cd5de6d950d1cfec6e1",
+      "task_id": "03_Data_Analysis_task_010_contract_escrow_refund_reconciliation"
+    }
+  },
+  "schema_version": "general-e2e-reviewed-source-identities/v1"
+}

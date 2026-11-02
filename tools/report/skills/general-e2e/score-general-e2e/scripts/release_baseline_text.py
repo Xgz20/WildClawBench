@@ -7,13 +7,16 @@ PROFILE='release-protected-original-text-identities/v1'
 ERROR_KIND='release-protected-text-baseline-repair/v1'
 CATALOG_SHA='f1a1bcb18b3ae18defef018ba180c02b7620c21cfd208ed7730dcc726456a6c4'
 
-def registry():
+def registry(contract_sha=None):
     raw=(Path(__file__).resolve().parents[1]/'data/reviewed-release-baseline-text-v1.json').read_bytes()
     if hashlib.sha256(raw).hexdigest()!=CATALOG_SHA:raise ValueError('RELEASE_TEXT_CATALOG_DRIFT')
-    return json.loads(raw)
+    row=json.loads(raw)
+    if contract_sha is None or contract_sha==row['contract_sha256']:return row
+    from source_identities import registry_variants
+    return next((r for r in registry_variants([row]) if r['contract_sha256']==contract_sha),row)
 
 def marker(contract,contract_sha,dataset):
-    row=registry()
+    row=registry(contract_sha)
     if (contract.get('task_id')==row['task_id'] and contract_sha==row['contract_sha256']
             and {k:dataset.get(k) for k in ['id','digest']}==row['dataset']
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==row['source_sha256']):

@@ -13,10 +13,12 @@ SOURCE_SHA = '98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1'
 CONTRACT_SHA = 'f6386914c4ab0208f66feb75dbce2a61eccf7a384c289cc3a138ce61b048d11e'
 
 
+from source_identities import accepted_contracts
+
 def matches(contract, contract_sha=None):
     return (contract.get('task_id') == TASK
         and hashlib.sha256(contract.get('automated_checks', '').encode('utf-8')).hexdigest() == SOURCE_SHA
-        and (contract_sha is None or contract_sha == CONTRACT_SHA))
+        and (contract_sha is None or contract_sha in accepted_contracts(CONTRACT_SHA)))
 
 
 def effective_source(manifest, source, current, prior):

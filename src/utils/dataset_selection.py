@@ -1,5 +1,16 @@
 """Explicit CLI dataset selection; legacy category discovery is unchanged."""
 from pathlib import Path
+import json
+
+
+def require_dataset_output_scope(output_root: Path, manifest):
+    """Reject cross-version reuse before any model prompt is dispatched."""
+    scope=output_root/'evaluation_scope.json'
+    if not scope.exists():return
+    data=json.loads(scope.read_text(encoding='utf-8'))
+    identity={'id':manifest['dataset_id'],'digest':manifest['dataset_digest']}
+    if any(row.get('dataset')!=identity for row in data.get('tasks',[])):
+        raise ValueError('CLI_DATASET_OUTPUT_SCOPE_CONFLICT: 请使用独立输出目录，不能覆盖或混用历史评测结果')
 
 
 def dataset_task_paths(repo: Path, dataset_id: str):

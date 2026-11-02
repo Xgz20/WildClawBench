@@ -6,10 +6,12 @@ TASK='02_Office_task_026_work_order_labor_reconciliation'
 CONTRACT_SHA='c44c983d8373f7075baeee65e327cf886ed2931368b8a59dcd8dae5d484d6cc1'
 SOURCE_SHA='fab46597d51de9869feeef882eaa222b9ced1ecc8809ad10c7a8fa1be697bfac'
 
+from source_identities import accepted_contracts
+
 def marker(contract,contract_sha):
-    if (contract.get('task_id')==TASK and contract_sha==CONTRACT_SHA
+    if (contract.get('task_id')==TASK and contract_sha in accepted_contracts(CONTRACT_SHA)
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE_SHA):
-        return {'profile':PROFILE,'contract_sha256':CONTRACT_SHA,'source_sha256':SOURCE_SHA,'total_utf8_bytes':16777216,'truncation_allowed':False}
+        return {'profile':PROFILE,'contract_sha256':contract_sha,'source_sha256':SOURCE_SHA,'total_utf8_bytes':16777216,'truncation_allowed':False}
     return None
 
 def effective_source(manifest,original,current,prior):

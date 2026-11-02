@@ -20,6 +20,8 @@ AVAILABLE={'pass','partial','fail'}
 UNAVAILABLE={'evidence_insufficient','blocked_external','not_observed','evaluator_error'}
 
 
+from source_identities import accepted_contracts, accepted_source_hashes
+
 def general_module():
     vendor=Path(__file__).resolve().parents[1]/'vendor/e2e-shared/independent-validity'
     if str(vendor) not in sys.path:sys.path.insert(0,str(vendor))
@@ -38,14 +40,14 @@ def general_module():
 
 
 def profile_marker(contract,contract_sha256):
-    if matches(contract) and contract_sha256==CONTRACT_SHA:return PROFILE
+    if matches(contract) and contract_sha256 in accepted_contracts(CONTRACT_SHA):return PROFILE
     general=general_module()
     return general.PROFILE if general.registered(contract,contract_sha256) is not None else None
 
 
 def matches(contract):
     return (contract.get('task_id')==TASK
-        and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()==SOURCE_SHA
+        and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest() in accepted_source_hashes(SOURCE_SHA)
         and contract.get('grading_weights')=={'automated':0,'llm_judge':1})
 
 
@@ -54,7 +56,7 @@ def policy(manifest,contract):
     if marker is None:return None
     if marker=='independent-business-capability/v2':
         return general_module().completion_policy(manifest,contract)
-    if (marker!=PROFILE or not matches(contract) or manifest['digests']['contract_sha256']!=CONTRACT_SHA
+    if (marker!=PROFILE or not matches(contract) or manifest['digests']['contract_sha256'] not in accepted_contracts(CONTRACT_SHA)
             or manifest.get('judge',{}).get('protocol')!='codex-agent-judge-v1'):
         raise ValueError('INDEPENDENT_CAPABILITY_PROFILE_MISMATCH')
     return {'profile':PROFILE,'business_criteria':list(BUSINESS),'capability_criteria':list(ABILITY),

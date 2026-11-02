@@ -925,7 +925,7 @@ def _validate_rubric_scores(
 
 def _align_rubric_scores(
     task_id: str, raw: dict, rubric_criteria: list[dict],
-) -> tuple[float | None, dict, str]:
+) -> tuple[float, dict, str]:
     """Compute the weighted result after strict rubric-contract validation."""
     return align_legacy_rubric_scores(raw, rubric_criteria)
 
@@ -1035,7 +1035,7 @@ def _grade_llm_rubric(
     output_dir: Path | None = None,
     evidence_mode: str = "source_semantic",
     judge_evidence: dict | None = None,
-) -> tuple[float, dict, str]:
+) -> tuple[float | None, dict, str]:
     """Run the declarative LLM rubric in-container and enforce its score contract.
 
     Returns (llm_score, breakdown_by_canonical_key, notes). llm_score is the

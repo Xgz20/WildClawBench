@@ -8,13 +8,15 @@ PROFILE='declared-public-snapshot-variance/v1'
 ERROR_KIND='declared-public-snapshot-baseline-repair/v1'
 CATALOG_SHA='42b5cd2f1efd09138c61eb2f3be75d3e2de08a69070dba8c93eaf8a92911a563'
 
-def registry():
+from source_identities import registry_variants
+
+def registry(*, include_revisions=False):
     raw=(Path(__file__).resolve().parents[1]/'data/declared-public-snapshot-variance-v1.json').read_bytes()
     if hashlib.sha256(raw).hexdigest()!=CATALOG_SHA:raise ValueError('PUBLIC_SNAPSHOT_CATALOG_DRIFT')
-    return json.loads(raw)['profiles']
+    return registry_variants(json.loads(raw)['profiles']) if include_revisions else json.loads(raw)['profiles']
 
 def marker(contract,contract_sha,dataset):
-    for row in registry():
+    for row in registry(include_revisions=True):
         if (row['task_id']==contract.get('task_id') and row['contract_sha256']==contract_sha
                 and row['dataset']=={k:dataset.get(k) for k in ['id','digest']}
                 and row['source_sha256']==hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()):
@@ -68,7 +70,7 @@ def effective_source(manifest,original,current,prior):
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest['identity']['task_id'],'automated_checks':original},manifest['digests']['contract_sha256'],manifest['dataset'])
     if expected is None or frozen!=expected:raise ValueError('PUBLIC_SNAPSHOT_PROFILE_MISMATCH')
-    row=next(r for r in registry() if r['task_id']==manifest['identity']['task_id'])
+    row=next(r for r in registry(include_revisions=True) if r['task_id']==manifest['identity']['task_id'] and r['contract_sha256']==manifest['digests']['contract_sha256'])
     replacements={
         '02_Office_task_018_targeted_repair_communication_pack':(
             'if not _safe(path,root) or not path.is_file() or _digest(path)!=expected: changed.append(rel)',
@@ -91,7 +93,7 @@ def effective_source(manifest,original,current,prior):
 
 def original_failure(attempt,manifest,contract,worker):
     if marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is None:return False
-    row=next(r for r in registry() if r['task_id']==contract['task_id']);raw=worker.get('raw_result',{})
+    row=next(r for r in registry(include_revisions=True) if r['task_id']==contract['task_id']);raw=worker.get('raw_result',{})
     if (worker.get('ok') is not True or sorted(raw.get('diagnostics',{}).get('changed_inputs',[]))!=sorted(r['path'] for r in row['files'])):return False
     base=Path(attempt)/manifest['paths']['candidate_original']/Path(manifest['runtime']['workspace_argument']).relative_to(manifest['paths']['runtime_workspace'])
     for ref in row['files']:

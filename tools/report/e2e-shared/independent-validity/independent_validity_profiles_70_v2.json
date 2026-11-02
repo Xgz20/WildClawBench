@@ -1,0 +1,1547 @@
+{
+  "dataset_id": "general-custom70-v2",
+  "profiles": {
+    "01_Information_Search_Organization_task_005_raptor_migration_monitoring_review": {
+      "ability_map": {
+        "ability_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "ability_comparison_inference": [
+          "reasoning_and_decision_making",
+          10
+        ],
+        "ability_completion_calibration": [
+          "result_evaluation",
+          10
+        ],
+        "process_evidence_mapping": [
+          "state_awareness",
+          20
+        ],
+        "process_search_planning": [
+          "reasoning_and_decision_making",
+          5
+        ],
+        "process_tool_semantics": [
+          "intent_understanding",
+          20
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "process_error_ledger",
+        "critical_inference_error"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "2941168c166ce3a6cf44ff13fc21db88ebf46d13b7064566910b05f212246edb",
+      "business_dependencies": [
+        "result_topic",
+        "result_scope",
+        "result_facts",
+        "result_comparison",
+        "result_usability",
+        "result_cap",
+        "result_final"
+      ],
+      "business_weights": {
+        "result_final": 1.0
+      },
+      "capability_budget": 75,
+      "constants": {
+        "ABILITY_MAP": {
+          "ability_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "ability_comparison_inference": [
+            "reasoning_and_decision_making",
+            10
+          ],
+          "ability_completion_calibration": [
+            "result_evaluation",
+            10
+          ],
+          "process_evidence_mapping": [
+            "state_awareness",
+            20
+          ],
+          "process_search_planning": [
+            "reasoning_and_decision_making",
+            5
+          ],
+          "process_tool_semantics": [
+            "intent_understanding",
+            20
+          ]
+        },
+        "COGNITIVE_WEIGHTS": {
+          "process_result_understanding": 10,
+          "process_search_planning": 15,
+          "process_synthesis": 15,
+          "process_task_decomposition": 20,
+          "process_tool_intent": 20,
+          "process_tool_semantics": 20
+        },
+        "RESULT_WEIGHTS": {
+          "result_comparison": 25,
+          "result_facts": 30,
+          "result_scope": 20,
+          "result_topic": 15,
+          "result_usability": 10
+        },
+        "TOOLCHAIN_WEIGHTS": {
+          "process_citation_validation": 20,
+          "process_context_management": 15,
+          "process_evidence_mapping": 20,
+          "process_fallback": 20,
+          "process_search_orchestration": 15,
+          "process_tool_chain": 10,
+          "process_tool_routing": 20
+        }
+      },
+      "contract_sha256": "ff82298365a13f7aa99d8c5a2aaad11704451aefee7b4c29ab258b5b41f0ba70",
+      "criterion_keys": [
+        "result_final",
+        "result_topic",
+        "result_scope",
+        "result_facts",
+        "result_comparison",
+        "result_usability",
+        "result_cap",
+        "process_tool_semantics",
+        "process_tool_intent",
+        "process_task_decomposition",
+        "process_search_planning",
+        "process_result_understanding",
+        "process_synthesis",
+        "process_tool_chain",
+        "process_tool_routing",
+        "process_search_orchestration",
+        "process_context_management",
+        "process_evidence_mapping",
+        "process_citation_validation",
+        "process_fallback",
+        "ability_call_contract",
+        "ability_completion_calibration",
+        "ability_comparison_inference"
+      ],
+      "exempt_business_capability_keys": [],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": false,
+      "helper_has_separate_ability_statuses": false,
+      "helper_result_key": "result_final",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials": {
+      "ability_map": {
+        "source_binding": [
+          "state_awareness",
+          10
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          10
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "59af17043c8a6969b3d52d2f6c6f2d7c4e46d5569107f16de1197ec6cd58f58a",
+      "business_dependencies": [
+        "core_accuracy",
+        "source_binding"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.9,
+        "source_binding": 0.1
+      },
+      "capability_budget": 30,
+      "constants": {
+        "ABILITY_MAP": {
+          "source_binding": [
+            "state_awareness",
+            10
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            10
+          ]
+        },
+        "CORE_GROUPS": {
+          "bp_targets": [
+            9,
+            3
+          ],
+          "early_termination": [
+            6,
+            3
+          ],
+          "intervention_duration": [
+            6,
+            3
+          ],
+          "primary_definition_time": [
+            24,
+            12
+          ],
+          "primary_denominators": [
+            21,
+            6
+          ],
+          "randomized_population": [
+            18,
+            3
+          ],
+          "registration": [
+            6,
+            3
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 90,
+          "source_binding": 10
+        }
+      },
+      "contract_sha256": "ea6fb702f0f31e34c6aafbe3ccb2ac54ebd27d0a412269f002ecff85cadfe113",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_007_rice_awd_field_trials": {
+      "ability_map": {
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "c253d90b6c0e1653a1b94e6587be572d6158ec3acacf5ea1307196a9ae8617dd",
+      "business_dependencies": [
+        "core_accuracy"
+      ],
+      "business_weights": {
+        "core_accuracy": 1.0
+      },
+      "capability_budget": 45,
+      "constants": {
+        "ABILITY_MAP": {
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "california_gwp": [
+            20,
+            6
+          ],
+          "california_season_scope": [
+            15,
+            3
+          ],
+          "california_yield": [
+            20,
+            6
+          ],
+          "gwp_methods": [
+            15,
+            2
+          ],
+          "italy_water_n": [
+            15,
+            4
+          ],
+          "italy_yield": [
+            15,
+            4
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 100
+        }
+      },
+      "contract_sha256": "34470d2c802bd05af42abe62bd85bfd1f368710a059e5f9ac84cbb2829ed5299",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_008_human_cell_atlas_verification": {
+      "ability_map": {
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "9c14df3a26853623d241b27bcee17b81d3703211264f9e3b001bb09909bcbc2d",
+      "business_dependencies": [
+        "core_accuracy"
+      ],
+      "business_weights": {
+        "core_accuracy": 1.0
+      },
+      "capability_budget": 45,
+      "constants": {
+        "ABILITY_MAP": {
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "extraction_protocols": [
+            25,
+            3
+          ],
+          "gtex_dataset": [
+            20,
+            4
+          ],
+          "protocol_comparison": [
+            20,
+            3
+          ],
+          "sample_dominance": [
+            15,
+            2
+          ],
+          "sapiens_dataset": [
+            20,
+            4
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 100
+        }
+      },
+      "contract_sha256": "dcc8e145eb25cbf1b2fe9604ff273f0a2239884a81ecd27f2537b54edf8659d4",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_009_global_methane_budget_revision": {
+      "ability_map": {
+        "rule_application": [
+          "reasoning_and_decision_making",
+          10
+        ],
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors",
+        "rule_units",
+        "rule_critical_error"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "ae14e444c8c08a49f2131b398ba15e020f2a2f40651c98228d6f61e10afd91a9",
+      "business_dependencies": [
+        "core_accuracy",
+        "rule_application"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.8,
+        "rule_application": 0.2
+      },
+      "capability_budget": 55,
+      "constants": {
+        "ABILITY_MAP": {
+          "rule_application": [
+            "reasoning_and_decision_making",
+            10
+          ],
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "conflict_provenance": [
+            20,
+            4
+          ],
+          "new_table": [
+            20,
+            4
+          ],
+          "old_table": [
+            20,
+            4
+          ],
+          "overlap_correction": [
+            20,
+            3
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 80,
+          "rule_application": 20
+        }
+      },
+      "contract_sha256": "261966e2bf41c6a9a02ea411fac91b8f92d407572e9ddd638a6a8694b64e90b6",
+      "criterion_keys": [
+        "core_accuracy",
+        "rule_application",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "rule_application"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_010_perovskite_stability_verification": {
+      "ability_map": {
+        "source_binding": [
+          "state_awareness",
+          5
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "a19e61eadba7a12fc76e012eb9a6d1b68f8cf601f461febef350a9d6e3334eff",
+      "business_dependencies": [
+        "core_accuracy",
+        "source_binding"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.85,
+        "source_binding": 0.15
+      },
+      "capability_budget": 20,
+      "constants": {
+        "ABILITY_MAP": {
+          "source_binding": [
+            "state_awareness",
+            5
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "a_mpp_conditions": [
+            13,
+            5
+          ],
+          "a_storage_conditions": [
+            12,
+            5
+          ],
+          "b_hot_conditions": [
+            15,
+            5
+          ],
+          "b_room_conditions": [
+            15,
+            5
+          ],
+          "endpoints": [
+            30,
+            5
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 85,
+          "source_binding": 15
+        }
+      },
+      "contract_sha256": "fddbebd961c87568dbc5324aa722d1ed08fbe90569871ffcc97c881d99191904",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening": {
+      "ability_map": {
+        "calc_all_years": [
+          "reasoning_and_decision_making",
+          2
+        ],
+        "calc_thresholds": [
+          "reasoning_and_decision_making",
+          2
+        ],
+        "completion_calibration": [
+          "result_evaluation",
+          5
+        ],
+        "decision_consistency": [
+          "reasoning_and_decision_making",
+          6
+        ],
+        "scope_and_version": [
+          "intent_understanding",
+          5
+        ],
+        "source_binding": [
+          "state_awareness",
+          5
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ]
+      },
+      "aggregation_auxiliary_keys": [],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "eae3a6ded7ea293d0319b85c64744b8fc42f478251e458fd4898a9a50a32c97f",
+      "business_dependencies": [
+        "facts_identity",
+        "facts_revenue",
+        "facts_profit",
+        "facts_roe",
+        "facts_cashflow",
+        "facts_balance",
+        "scope_and_version",
+        "calc_growth",
+        "calc_fcf",
+        "calc_leverage",
+        "calc_thresholds",
+        "calc_all_years",
+        "metric_definitions",
+        "conclusion",
+        "disqualifications",
+        "source_authority",
+        "source_binding",
+        "completeness"
+      ],
+      "business_weights": {
+        "calc_all_years": 0.02,
+        "calc_fcf": 0.02,
+        "calc_growth": 0.02,
+        "calc_leverage": 0.02,
+        "calc_thresholds": 0.02,
+        "completeness": 0.05,
+        "conclusion": 0.1,
+        "disqualifications": 0.1,
+        "facts_balance": 0.04,
+        "facts_cashflow": 0.08,
+        "facts_identity": 0.1,
+        "facts_profit": 0.06,
+        "facts_revenue": 0.06,
+        "facts_roe": 0.06,
+        "metric_definitions": 0.05,
+        "scope_and_version": 0.05,
+        "source_authority": 0.05,
+        "source_binding": 0.1
+      },
+      "capability_budget": 35,
+      "constants": {
+        "ABILITY_MAP": {
+          "calc_all_years": [
+            "reasoning_and_decision_making",
+            2
+          ],
+          "calc_thresholds": [
+            "reasoning_and_decision_making",
+            2
+          ],
+          "completion_calibration": [
+            "result_evaluation",
+            5
+          ],
+          "decision_consistency": [
+            "reasoning_and_decision_making",
+            6
+          ],
+          "scope_and_version": [
+            "intent_understanding",
+            5
+          ],
+          "source_binding": [
+            "state_awareness",
+            5
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "calc_all_years": 2,
+          "calc_fcf": 2,
+          "calc_growth": 2,
+          "calc_leverage": 2,
+          "calc_thresholds": 2,
+          "completeness": 5,
+          "conclusion": 10,
+          "disqualifications": 10,
+          "facts_balance": 4,
+          "facts_cashflow": 8,
+          "facts_identity": 10,
+          "facts_profit": 6,
+          "facts_revenue": 6,
+          "facts_roe": 6,
+          "metric_definitions": 5,
+          "scope_and_version": 5,
+          "source_authority": 5,
+          "source_binding": 10
+        }
+      },
+      "contract_sha256": "54e97d256173f7da5c1523dd95ca906fec42840a96d7190004842dfbde07e72f",
+      "criterion_keys": [
+        "facts_identity",
+        "facts_revenue",
+        "facts_profit",
+        "facts_roe",
+        "facts_cashflow",
+        "facts_balance",
+        "scope_and_version",
+        "calc_growth",
+        "calc_fcf",
+        "calc_leverage",
+        "calc_thresholds",
+        "calc_all_years",
+        "metric_definitions",
+        "conclusion",
+        "disqualifications",
+        "source_authority",
+        "source_binding",
+        "completeness",
+        "tool_call_contract",
+        "completion_calibration",
+        "decision_consistency"
+      ],
+      "exempt_business_capability_keys": [
+        "calc_all_years",
+        "calc_thresholds",
+        "scope_and_version",
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison": {
+      "ability_map": {
+        "rule_application": [
+          "reasoning_and_decision_making",
+          20
+        ],
+        "source_binding": [
+          "state_awareness",
+          5
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "75479ef53c0c0319131fb308a598e116be67070195f6940a780d7184233f7ae0",
+      "business_dependencies": [
+        "core_accuracy",
+        "source_binding"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.85,
+        "source_binding": 0.15
+      },
+      "capability_budget": 40,
+      "constants": {
+        "ABILITY_MAP": {
+          "rule_application": [
+            "reasoning_and_decision_making",
+            20
+          ],
+          "source_binding": [
+            "state_awareness",
+            5
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "eu_order": [
+            15,
+            2
+          ],
+          "finma_basis": [
+            25,
+            4
+          ],
+          "instrument_treatment": [
+            15,
+            2
+          ],
+          "shareholder_consideration": [
+            15,
+            4
+          ],
+          "uk_order": [
+            15,
+            2
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 85,
+          "source_binding": 15
+        }
+      },
+      "contract_sha256": "8c9a63a085116274096333af6c0b7091739ce2d0f998eb496a4df3634bf3ad0e",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "rule_application",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison": {
+      "ability_map": {
+        "rule_application": [
+          "reasoning_and_decision_making",
+          20
+        ],
+        "source_binding": [
+          "state_awareness",
+          10
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "2f76b0a7b81832b460ed55b554d4ff1ed97b578499b6645536ef86dfbf694f76",
+      "business_dependencies": [
+        "core_accuracy",
+        "source_binding"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.85,
+        "source_binding": 0.15
+      },
+      "capability_budget": 45,
+      "constants": {
+        "ABILITY_MAP": {
+          "rule_application": [
+            "reasoning_and_decision_making",
+            20
+          ],
+          "source_binding": [
+            "state_awareness",
+            10
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "new_coverage": [
+            20,
+            4
+          ],
+          "new_deductibles": [
+            20,
+            4
+          ],
+          "old_coverage": [
+            20,
+            4
+          ],
+          "old_deductibles": [
+            25,
+            4
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 85,
+          "source_binding": 15
+        }
+      },
+      "contract_sha256": "858178cd90fa2076ddf5d8e38ecff2394f1528da83fa300b7bbe603fb3e982cc",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "rule_application",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison": {
+      "ability_map": {
+        "rule_application": [
+          "reasoning_and_decision_making",
+          20
+        ],
+        "source_binding": [
+          "state_awareness",
+          10
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "541ee4e4b61031c8b0886fcb7ccf8cae6f7a1aa43f2f233fb9f5a85ace397049",
+      "business_dependencies": [
+        "core_accuracy",
+        "source_binding"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.85,
+        "source_binding": 0.15
+      },
+      "capability_budget": 45,
+      "constants": {
+        "ABILITY_MAP": {
+          "rule_application": [
+            "reasoning_and_decision_making",
+            20
+          ],
+          "source_binding": [
+            "state_awareness",
+            10
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "batch_adjustment": [
+            20,
+            4
+          ],
+          "historical_lpr": [
+            20,
+            4
+          ],
+          "rate_calculation": [
+            20,
+            4
+          ],
+          "repricing_timeline": [
+            25,
+            4
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 85,
+          "source_binding": 15
+        }
+      },
+      "contract_sha256": "f9373295e5018c4e00ead9de1a069a42484c969e8e86f6769dfa9579920a8f1e",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "rule_application",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_016_balance_of_payments_reconciliation": {
+      "ability_map": {
+        "calculation_inference": [
+          "reasoning_and_decision_making",
+          10
+        ],
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors",
+        "processing_units",
+        "processing_critical_error"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "e5adf69e0aab55fa54d995879aec8650cf0abd9b768922f37c7e24102b5e2ae1",
+      "business_dependencies": [
+        "core_accuracy",
+        "calculation_inference"
+      ],
+      "business_weights": {
+        "calculation_inference": 0.2,
+        "core_accuracy": 0.8
+      },
+      "capability_budget": 55,
+      "constants": {
+        "ABILITY_MAP": {
+          "calculation_inference": [
+            "reasoning_and_decision_making",
+            10
+          ],
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "preliminary_balances": [
+            25,
+            5
+          ],
+          "report_balances": [
+            25,
+            5
+          ],
+          "table_notes": [
+            30,
+            4
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "calculation_inference": 20,
+          "core_accuracy": 80
+        }
+      },
+      "contract_sha256": "2c5ada8095ab55bbea3f1bdbfd9971c12e549cc9beacbe2c29262d752d35e109",
+      "criterion_keys": [
+        "core_accuracy",
+        "calculation_inference",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": true,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint": {
+      "ability_map": {
+        "calculation_inference": [
+          "reasoning_and_decision_making",
+          10
+        ],
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors",
+        "processing_units",
+        "processing_critical_error"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "75da415722fd6574a7398fb254fce0745220f0f2c79d05eb4fa8ba1fdd7ce2c9",
+      "business_dependencies": [
+        "core_accuracy",
+        "calculation_inference"
+      ],
+      "business_weights": {
+        "calculation_inference": 0.2,
+        "core_accuracy": 0.8
+      },
+      "capability_budget": 55,
+      "constants": {
+        "ABILITY_MAP": {
+          "calculation_inference": [
+            "reasoning_and_decision_making",
+            10
+          ],
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "february_original": [
+            20,
+            1
+          ],
+          "market_notices": [
+            20,
+            2
+          ],
+          "monthly_originals": [
+            40,
+            11
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "calculation_inference": 20,
+          "core_accuracy": 80
+        }
+      },
+      "contract_sha256": "9c1e0dd0a669e2d2da4be06b1587063612567df10e9ccbe63aabda4d42868e37",
+      "criterion_keys": [
+        "core_accuracy",
+        "calculation_inference",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "calculation_inference"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening": {
+      "ability_map": {
+        "calculation_inference": [
+          "reasoning_and_decision_making",
+          10
+        ],
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors",
+        "processing_units",
+        "processing_critical_error"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "122f8dd3d9216da7a0163039f79f0703acd872f5b6a4fa4c7cd76f22d62d9888",
+      "business_dependencies": [
+        "core_accuracy",
+        "calculation_inference"
+      ],
+      "business_weights": {
+        "calculation_inference": 0.2,
+        "core_accuracy": 0.8
+      },
+      "capability_budget": 55,
+      "constants": {
+        "ABILITY_MAP": {
+          "calculation_inference": [
+            "reasoning_and_decision_making",
+            10
+          ],
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "method_originals": [
+            20,
+            3
+          ],
+          "paired_values": [
+            30,
+            16
+          ],
+          "quarter_counterexample": [
+            15,
+            6
+          ],
+          "remaining_period_originals": [
+            15,
+            1
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "calculation_inference": 20,
+          "core_accuracy": 80
+        }
+      },
+      "contract_sha256": "577f8a3c684046c627b041201bf456dcf98b388e95c38aa81e4dafa842ea2a2d",
+      "criterion_keys": [
+        "core_accuracy",
+        "calculation_inference",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": true,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    },
+    "01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison": {
+      "ability_map": {
+        "calculation_inference": [
+          "reasoning_and_decision_making",
+          15
+        ],
+        "scope_execution": [
+          "intent_understanding",
+          5
+        ],
+        "source_binding": [
+          "state_awareness",
+          10
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          10
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "57ecb29d36514ee3d48a140dc3aa80d5f760c494df65a5ad283bea109f202f70",
+      "business_dependencies": [
+        "core_accuracy",
+        "source_binding"
+      ],
+      "business_weights": {
+        "core_accuracy": 0.85,
+        "source_binding": 0.15
+      },
+      "capability_budget": 45,
+      "constants": {
+        "ABILITY_MAP": {
+          "calculation_inference": [
+            "reasoning_and_decision_making",
+            15
+          ],
+          "scope_execution": [
+            "intent_understanding",
+            5
+          ],
+          "source_binding": [
+            "state_awareness",
+            10
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            10
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "contract_inputs": [
+            30,
+            8
+          ],
+          "hedging_margin": [
+            15,
+            1
+          ],
+          "highest_contract": [
+            20,
+            1
+          ],
+          "notional_values": [
+            20,
+            4
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "core_accuracy": 85,
+          "source_binding": 15
+        }
+      },
+      "contract_sha256": "6f48e57201716da96e999278e866c8509d6fd4e97e6f9ee6f47b7074043f8534",
+      "criterion_keys": [
+        "core_accuracy",
+        "source_binding",
+        "scope_execution",
+        "calculation_inference",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "source_binding"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": true,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": [
+        "source_binding"
+      ]
+    },
+    "01_Information_Search_Organization_task_020_treasury_yield_rising_intervals": {
+      "ability_map": {
+        "calculation_inference": [
+          "reasoning_and_decision_making",
+          10
+        ],
+        "source_binding": [
+          "state_awareness",
+          20
+        ],
+        "tool_call_contract": [
+          "tool_invocation",
+          20
+        ],
+        "verification_calibration": [
+          "result_evaluation",
+          5
+        ]
+      },
+      "aggregation_auxiliary_keys": [
+        "core_groups",
+        "critical_error",
+        "parameter_errors",
+        "processing_units",
+        "processing_critical_error"
+      ],
+      "aggregation_helper": "aggregate_review",
+      "automated_source_sha256": "12fac49ec3702ed6fa46321b8c7746fb51ee0ec3d4ba24f6326071946ea7dd33",
+      "business_dependencies": [
+        "core_accuracy",
+        "calculation_inference"
+      ],
+      "business_weights": {
+        "calculation_inference": 0.2,
+        "core_accuracy": 0.8
+      },
+      "capability_budget": 55,
+      "constants": {
+        "ABILITY_MAP": {
+          "calculation_inference": [
+            "reasoning_and_decision_making",
+            10
+          ],
+          "source_binding": [
+            "state_awareness",
+            20
+          ],
+          "tool_call_contract": [
+            "tool_invocation",
+            20
+          ],
+          "verification_calibration": [
+            "result_evaluation",
+            5
+          ]
+        },
+        "CORE_GROUPS": {
+          "curve_metadata": [
+            10,
+            1
+          ],
+          "holiday_original": [
+            15,
+            1
+          ],
+          "monthly_originals": [
+            45,
+            3
+          ],
+          "window_prior": [
+            10,
+            1
+          ]
+        },
+        "RESULT_WEIGHTS": {
+          "calculation_inference": 20,
+          "core_accuracy": 80
+        }
+      },
+      "contract_sha256": "a0a735db791432be079b355692019382f6185c4252adda9f280d3a6f5d1edb40",
+      "criterion_keys": [
+        "core_accuracy",
+        "calculation_inference",
+        "source_binding",
+        "tool_call_contract",
+        "verification_calibration"
+      ],
+      "exempt_business_capability_keys": [
+        "calculation_inference"
+      ],
+      "helper_capability_total_key": "capability_total",
+      "helper_has_ability_scores": false,
+      "helper_has_run_status": true,
+      "helper_has_separate_ability_statuses": true,
+      "helper_result_key": "llm_result_score",
+      "helper_score_scale": 100,
+      "independent_ability_score_keys": []
+    }
+  },
+  "schema_version": 1
+}

@@ -7,8 +7,10 @@ TASK='03_Data_Analysis_task_010_contract_escrow_refund_reconciliation'
 CONTRACT_SHA='faa1141cd2c5e8dc3e31e4ef0f94744f520f10e85243f84d8898cef4d8b5a3da'
 SOURCE_SHA='a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'
 
+from source_identities import accepted_contracts
+
 def matches(contract,contract_sha=None):
-    return (contract.get('task_id')==TASK and (contract_sha is None or contract_sha==CONTRACT_SHA)
+    return (contract.get('task_id')==TASK and (contract_sha is None or contract_sha in accepted_contracts(CONTRACT_SHA))
         and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE_SHA)
 
 WRAPPERS=r'''
