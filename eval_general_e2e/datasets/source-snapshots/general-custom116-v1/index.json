@@ -286,6 +286,14 @@
     "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
       "snapshot": "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md",
       "sha256": "f8147c864b19f5601a038e44aa718405f5594eb61bc4cc5f0117ef85a4c4c209"
+    },
+    "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json": {
+      "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json",
+      "sha256": "bb87b076e1af2cf1e2feaa5b93bc0790d64fffdf0d3b60823c2030ebef33223c"
+    },
+    "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json": {
+      "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json",
+      "sha256": "6cfce8873a004659fd96bf3e9dc0ef2cc5aa2c5f075ecf1005a5bb45a3a01e15"
     }
   },
   "excluded_paths": [

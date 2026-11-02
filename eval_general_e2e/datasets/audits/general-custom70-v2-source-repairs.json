@@ -467,5 +467,33 @@
       "weights_changed": false,
       "candidate_changed": false
     }
+  ],
+  "material_repairs": [
+    {
+      "task_id": "03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation",
+      "profile": "canonical-frozen-public-text-digest/v2",
+      "path": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json",
+      "original_file_sha256": "bb87b076e1af2cf1e2feaa5b93bc0790d64fffdf0d3b60823c2030ebef33223c",
+      "revised_file_sha256": "8cf51f2ae28145687cf0768b8c4097467f4177f5b1bbc7e1a72271f886551493",
+      "declared_text_sha256_before": "ee28453d4a2c7778339ac6f6397d735b7fba925da5938fc388e42a81c8b430c4",
+      "canonical_text_sha256_after": "56a7b94c237ee26d6517da138531972547cd88a0a68e52f9fa0ce085255840d0",
+      "replacement_count": 1,
+      "public_input_rewritten": false,
+      "business_truth_or_weights_changed": false,
+      "reason": "仅将GT校验清单中的CRLF摘要修正为冻结LF原输入的真实摘要。"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_003_batch_quality_available_inventory",
+      "profile": "canonical-frozen-public-text-digest/v2",
+      "path": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json",
+      "original_file_sha256": "6cfce8873a004659fd96bf3e9dc0ef2cc5aa2c5f075ecf1005a5bb45a3a01e15",
+      "revised_file_sha256": "0b6b9ab4ee74c7fc93ef92c2f07c871b40bcdb4ac94fc9b5af55c65ef34d479d",
+      "declared_text_sha256_before": "77584e53d2997535c8664ad06f02f2da9bf56f5d898cab79d1fa78d83d053623",
+      "canonical_text_sha256_after": "1c3af088ac7cb7c3e6781b2dc93640dcaa4c04da72a68ecfb75296ac6639ac59",
+      "replacement_count": 1,
+      "public_input_rewritten": false,
+      "business_truth_or_weights_changed": false,
+      "reason": "仅将GT校验清单中的CRLF摘要修正为冻结LF原输入的真实摘要。"
+    }
   ]
 }
