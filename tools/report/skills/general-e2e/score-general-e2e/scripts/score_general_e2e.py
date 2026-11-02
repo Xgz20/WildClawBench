@@ -1823,6 +1823,8 @@ def prepare_attempt(
                 "path_resolution": path_resolution,
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                **({'preserve_native_channels': True}
+                   if contract.get('judge_evidence', {}).get('preserve_native_channels') is True else {}),
                 **({'native_response_transport_profile':native_response_transport.PROFILE}
                    if (judge_config or {}).get('protocol')=='codex-agent-judge-v1' and contract.get('grading_type')!='automated' else {}),
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}
@@ -2977,7 +2979,8 @@ def _verify_rule_input_context(root: Path, manifest: Mapping[str, Any]) -> None:
     completion_path = root / "rule-input-completion.json"
     contract = _read_json(root / manifest["paths"]["contract"])
     transcript = _canonical_rule_view(_read_transcript(root / manifest["paths"]["transcript"]),
-        preserve_native_channels=manifest.get('runtime',{}).get('answer_delivery_profile') is not None) if manifest["paths"].get("transcript") else []
+        preserve_native_channels=(manifest.get('runtime',{}).get('answer_delivery_profile') is not None
+            or manifest.get('runtime',{}).get('preserve_native_channels') is True)) if manifest["paths"].get("transcript") else []
     transcript, completion = _formal_completion_rule_input(root, manifest, transcript)
     if not request_path.is_file() and not proof_path.is_file() and not completion_path.is_file():
         return
@@ -3087,7 +3090,8 @@ def run_rules_attempt(
     try:
         if _extended_evaluator_inputs(manifest):
             transcript, completion_receipt = _formal_completion_rule_input(attempt_root, manifest, _canonical_rule_view(transcript,
-                preserve_native_channels=manifest.get('runtime',{}).get('answer_delivery_profile') is not None))
+                preserve_native_channels=(manifest.get('runtime',{}).get('answer_delivery_profile') is not None
+                    or manifest.get('runtime',{}).get('preserve_native_channels') is True)))
             if completion_receipt:
                 _write_new_json(attempt_root / "rule-input-completion.json", completion_receipt)
             transcript, context_receipt = _native_context_rule_input(attempt_root, manifest, contract, transcript)
@@ -3645,6 +3649,10 @@ def _build_api_input(
     response_contract = _api_response_contract(
         request_document["rubric"]["criteria"]
     )
+    if request_document.get('claim_review_policy'):
+        response_contract['claim_reviews']={key:[{'unit':1, 'claim_id':'unique', 'claim':'实质命题',
+            'status':'supported|contradicted|evaluator_reference_unavailable',
+            'evidence_refs':['evidence-0001']}] for key in request_document['claim_review_policy']['criterion_keys']}
     source_rows = _api_evidence_sources(root, catalog, transcript)
     packet_entries = [row for row, _, _ in source_rows]
     user_document: dict[str, Any] = {
@@ -3918,6 +3926,10 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
             transport_policy=native_response_transport.policy(manifest)
             if transport_policy is not None:
                 request['response_transport_policy']=transport_policy
+            claim_keys=contract.get('judge_evidence', {}).get('claim_review_keys', [])
+            if claim_keys:
+                request['claim_review_policy']={'profile':'evidence-aware-v1', 'criterion_keys':claim_keys,
+                    'units':[1,2], 'unavailable_score':None, 'cite_queried_frozen_evidence':True}
             _write_new_json(staging / "request.json", request)
             request_sha = _sha256_file(staging / "request.json")
             response_locks = {
@@ -3953,6 +3965,8 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                 }
                 if independent_policy is not None:
                     template.update(business_capability.template_fields(independent_policy))
+                if claim_keys:
+                    template['claim_reviews']={key:[] for key in claim_keys}
                 query_log = {
                     "schema_version": SEMANTIC_QUERY_LOG_SCHEMA,
                     "identity": manifest["identity"],
@@ -4334,7 +4348,10 @@ def _validate_api_candidate(
     catalog: Mapping[str, Any],
     allowed_evidence_ids: Sequence[str],
 ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    if set(candidate) != {"criteria", "notes"} or not isinstance(candidate.get("notes"), str):
+    top_keys={"criteria", "notes"}
+    if request_document.get('claim_review_policy'):
+        top_keys.add('claim_reviews')
+    if set(candidate) != top_keys or not isinstance(candidate.get("notes"), str):
         raise ApiJudgeAttemptError(
             "API_JUDGE_RESPONSE_CONTRACT_INVALID", "top-level keys", retryable=True
         )
@@ -4436,6 +4453,12 @@ def _validate_api_candidate(
                 "evidence": [evidence_by_id[item] for item in evidence_ids],
             }
         )
+    if request_document.get('claim_review_policy'):
+        keys=request_document['claim_review_policy']['criterion_keys']
+        try:
+            _validate_declared_claim_reviews({'judge_evidence':{'claim_review_keys':keys}},request_document,candidate)
+        except ScoringRuntimeError as exc:
+            raise ApiJudgeAttemptError('CLAIM_REVIEW_INVALID',str(exc),retryable=True) from exc
     return normalized, {"criteria": backend_rows, "notes": candidate["notes"]}
 
 
@@ -4589,6 +4612,8 @@ def run_api_judge_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     },
                     "criteria": normalized_rows,
                     "notes": backend["notes"],
+                    **({'claim_reviews':candidate['claim_reviews']}
+                       if request_document.get('claim_review_policy') else {}),
                 }
                 _write_new_json(attempt_dir / "parsed.json", parsed_artifact)
                 attempt_row.update(
@@ -5064,6 +5089,33 @@ def _verify_semantic_score_ranges(root,manifest,request):
         raise ScoringRuntimeError('SEMANTIC_RANGE_PROFILE_INVALID','request differs from original rubric')
 
 
+def _validate_declared_claim_reviews(contract, request, response):
+    keys=contract.get('judge_evidence', {}).get('claim_review_keys', [])
+    if not keys:
+        return
+    _import_semantic_grading_core()
+    from wildclawbench_grading_core.criterion_states import validate_semantic_response
+    expected={'profile':'evidence-aware-v1', 'criterion_keys':keys, 'units':[1,2],
+              'unavailable_score':None, 'cite_queried_frozen_evidence':True}
+    if request.get('claim_review_policy')!=expected:
+        raise ScoringRuntimeError('CLAIM_REVIEW_POLICY_DRIFT')
+    rows=response.get('criteria', [])
+    states={row['key']:{'status':('evaluator_reference_unavailable' if row.get('status')=='unresolved'
+        else 'pass' if row.get('score')==1 else 'fail' if row.get('score')==0 else 'partial'),
+        'reason':row.get('reason')} for row in rows}
+    view={'scores':{row['key']:row.get('score') for row in rows}, 'criterion_statuses':states,
+          'claim_reviews':response.get('claim_reviews', {}), 'notes':response.get('notes', '')}
+    try:
+        validate_semantic_response(view,request['rubric']['criteria'],claim_review_keys=keys)
+        by_key={row['key']:row for row in rows}
+        for key in keys:
+            for claim in view['claim_reviews'][key]:
+                if not set(claim.get('evidence_refs') or []).issubset(set(by_key[key].get('evidence_ids', []))):
+                    raise ValueError('CLAIM_REFERENCE_OUTSIDE_CRITERION: '+key)
+    except (ValueError, KeyError, TypeError) as exc:
+        raise ScoringRuntimeError('CLAIM_REVIEW_INVALID',str(exc)) from exc
+
+
 def record_semantics_attempt(
     *, attempt_root: Path, response_path: Path
 ) -> dict[str, Any]:
@@ -5215,6 +5267,7 @@ def record_semantics_attempt(
                 }
             )
 
+        _validate_declared_claim_reviews(contract,request,response)
         core_criteria = [
             {
                 "key": item["key"],
@@ -5667,6 +5720,9 @@ def _verify_semantic_terminal(
         for key, path_key in common_sources:
             if audit.get(key) != _sha256_file(paths[path_key]):
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", key)
+        if audit.get('status')=='completed':
+            _validate_declared_claim_reviews(_read_json(root/manifest['paths']['contract']),
+                _read_json(paths['request']),_read_json(paths['response']))
         if judge["protocol"] == "codex-agent-judge-v1":
             if audit.get("query_log_sha256") != _sha256_file(paths["query_log"]):
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "query_log_sha256")
@@ -5756,10 +5812,12 @@ def _build_standard_score(
         rules=rules,
         semantics=semantics,
     )
-    if manifest.get('runtime',{}).get('work_order_final_total_policy_profile'):
-        expected=work_order_final_policy.marker(contract,manifest['digests']['contract_sha256'])
-        if expected is None or manifest['runtime']['work_order_final_total_policy_profile']!=expected:
-            raise ScoringRuntimeError('FINAL_TOTAL_POLICY_PROFILE_INVALID')
+    if (manifest.get('runtime',{}).get('work_order_final_total_policy_profile')
+            or contract.get('rule_result_adapter',{}).get('final_total_policy_object_key')=='_score_policy'):
+        if manifest.get('runtime',{}).get('work_order_final_total_policy_profile'):
+            expected=work_order_final_policy.marker(contract,manifest['digests']['contract_sha256'])
+            if expected is None or manifest['runtime']['work_order_final_total_policy_profile']!=expected:
+                raise ScoringRuntimeError('FINAL_TOTAL_POLICY_PROFILE_INVALID')
         worker_path=root/'worker/result.json'
         worker=_read_json(worker_path) if worker_path.exists() else {}
         raw=worker.get('raw_result') or {}
@@ -6236,6 +6294,8 @@ def prepare_rescore_attempt(
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
                 "evaluator_input_profile": EVALUATOR_INPUT_PROFILE,
+                **({'preserve_native_channels':True}
+                   if source_manifest.get('runtime',{}).get('preserve_native_channels') is True else {}),
                 **({'native_response_transport_profile':native_response_transport.PROFILE}
                    if (judge_config or {}).get('protocol')=='codex-agent-judge-v1' and source_manifest['grading']['type']!='automated' else {}),
                 **({"rule_review_profile":rule_review.PROFILE,"hr_source_locator_profile":rule_review.ROW_LOCATOR_PROFILE}

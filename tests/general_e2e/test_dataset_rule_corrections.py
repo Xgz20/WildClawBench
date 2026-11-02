@@ -8,7 +8,8 @@ import re
 import unittest
 import zipfile
 from xml.etree import ElementTree as ET
-from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
+from eval_general_e2e.datasets.bundle import _strip_codeblock
+from tests.general_e2e.frozen_sources import parse_frozen_task_source as _parse_task_source
 
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT, SCRIPT_PATH, load_module
 

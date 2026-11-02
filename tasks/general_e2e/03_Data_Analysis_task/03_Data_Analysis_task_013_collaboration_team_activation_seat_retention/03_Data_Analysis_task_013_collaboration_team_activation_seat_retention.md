@@ -14,6 +14,7 @@ tags:
   - general_e2e
   - business
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: 评分证据/指标与分析.json
       role: grader_generated_evidence
@@ -78,7 +79,7 @@ def eq(a,b):
     synonyms={'待确认':'未知','未成熟':'观察不足','N/A':'不适用'}
     return synonyms.get(norm(a),norm(a))==norm(b)
 
-def grade(transcript:list,workspace_path:str)->dict:
+def _ge2e_original_business_grade(transcript:list,workspace_path:str)->dict:
     root=Path(workspace_path)
     # Missing/corrupt private oracle is an evaluation failure, never a candidate zero.
     reference=json.loads((root/'gt'/'标准答案.json').read_text(encoding='utf-8'))
@@ -329,7 +330,7 @@ def collect_tool_patch_evidence(workspace_path):
     return evidence
 
 
-_grade_business_v1 = grade
+_grade_business_v1 = _ge2e_original_business_grade
 
 def grade(transcript: list, workspace_path: str) -> dict:
     result = _grade_business_v1(transcript, workspace_path)

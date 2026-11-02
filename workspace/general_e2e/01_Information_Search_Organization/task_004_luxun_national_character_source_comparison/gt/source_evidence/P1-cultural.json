@@ -1,0 +1,21 @@
+{
+  "source_id": "P1-cultural",
+  "role": "evaluator_reference_not_candidate_output",
+  "url": "https://www.chinawriter.com.cn/n1/2021/0908/c440988-32221801.html",
+  "title": "鲁迅《文化偏至论》",
+  "retrieved_on": "2026-11-02",
+  "original_response_sha256": "8aeefca23dce703646f4795046062597de5a28bf6f38b7aa0bcf031057aba596",
+  "coverage": "primary_public_domain_excerpt",
+  "excerpt": "人既发扬踔厉矣，则邦国亦以兴起。",
+  "reviewer_summary": "原始作品的这一句可以支持个人与国家关系的文本分析；数字转载上传日期不是初刊年，其他史实另需年代来源。",
+  "reviewer_summary_is_not_original_text": true,
+  "fulltext_included": false,
+  "locator": "正文中“掊物质而张灵明，任个人而排众数”后的句子",
+  "supports": [
+    "原文将人的发扬与邦国兴起关联"
+  ],
+  "does_not_establish": [
+    "全文全部主张",
+    "杨联芬对该文本的解释"
+  ]
+}

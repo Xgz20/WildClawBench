@@ -13,9 +13,12 @@ tags:
   -general_task_e2e
   -Office
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/
       role: grader_generated_evidence
+rule_result_adapter:
+  final_total_policy_object_key: _score_policy
 ---
 
 ## Prompt

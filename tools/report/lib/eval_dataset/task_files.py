@@ -133,7 +133,21 @@ def ast_grade_info(code: str) -> tuple[bool, list[str], str]:
     if not grades:
         return False, [], "Automated Checks 未定义 grade()"
     keys: list[str] = []
-    for node in ast.walk(grades[0]):
+    functions={n.name:n for n in tree.body if isinstance(n,(ast.FunctionDef,ast.AsyncFunctionDef))}
+    aliases={n.targets[0].id:n.value.id for n in tree.body if isinstance(n,ast.Assign)
+             and len(n.targets)==1 and isinstance(n.targets[0],ast.Name) and isinstance(n.value,ast.Name)}
+    pending=[grades[0]];visited=set();reachable=[]
+    while pending:
+        function=pending.pop()
+        if function.name in visited:continue
+        visited.add(function.name);reachable.extend(ast.walk(function))
+        for node in ast.walk(function):
+            if isinstance(node,ast.Call) and isinstance(node.func,ast.Name):
+                name=node.func.id;seen=set()
+                while name in aliases and name not in seen:
+                    seen.add(name);name=aliases[name]
+                if name in functions:pending.append(functions[name])
+    for node in reachable:
         if isinstance(node, ast.Constant) and isinstance(node.value, str):
             if re.fullmatch(r"[A-Za-z][A-Za-z0-9_\-]*", node.value) and node.value not in keys:
                 keys.append(node.value)

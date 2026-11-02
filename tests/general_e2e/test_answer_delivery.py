@@ -2,7 +2,8 @@ import hashlib
 import unittest
 
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT
-from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
+from eval_general_e2e.datasets.bundle import _strip_codeblock
+from tests.general_e2e.frozen_sources import parse_frozen_task_source as _parse_task_source
 
 DELIVERY = RUNTIME.answer_delivery
 

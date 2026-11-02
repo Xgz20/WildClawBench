@@ -14,11 +14,14 @@ tags:
 - general_e2e
 - marketing
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
   - path: 评分证据/营销分析.json
     role: grader_generated_evidence
   - path: 评分证据/汇总回填.json
     role: grader_generated_evidence
+rule_result_adapter:
+  domain_details_object_key: details
 ---
 
 ## Prompt
@@ -66,6 +69,8 @@ import openpyxl
 KEYS={'归因明细':['对象编号'],'渠道指标':['活动','渠道','分层'],'费用分摊':['费用编号','分层'],'来源索引':['来源定位'],'版本校核':['活动','渠道','分层'],'标准化比较':['活动','渠道']}
 
 def equal(a,b,field=''):
+    represented=_ge2e_field_representation(a,b,field)
+    if represented is not None:return represented
     if field.endswith('编号集合'):
         return set(str(a).split('|'))==set(str(b).split('|'))
     if isinstance(b,(int,float)):
@@ -76,7 +81,7 @@ def equal(a,b,field=''):
     aliases={'待确认':'未知','N/A':'不适用','未成熟':'观察不足'}
     return aliases.get(str(a).strip(),str(a).strip())==str(b).strip()
 
-def grade(transcript:list,workspace_path:str)->dict:
+def _ge2e_original_business_grade(transcript:list,workspace_path:str)->dict:
     root=Path(workspace_path)
     reference=json.loads((root/'gt'/'标准答案.json').read_text(encoding='utf-8'))
     contract=json.loads((root/'gt'/'评分配置.json').read_text(encoding='utf-8'))
@@ -331,13 +336,39 @@ def collect_summary_patch_evidence(workspace_path):
     return evidence
 
 
-_grade_business_before_tool_patch = grade
+_grade_business_before_tool_patch = _ge2e_original_business_grade
 
 
 def grade(transcript: list, workspace_path: str) -> dict:
     result = _grade_business_before_tool_patch(transcript, workspace_path)
     collect_summary_patch_evidence(workspace_path)
     return result
+import re
+_GE2E_REPRESENTATION_KIND = 'attribution'
+
+
+def _ge2e_field_representation(a,b,field):
+    if _GE2E_REPRESENTATION_KIND=='learning_steps' and field=='步骤名称':
+        aliases={'有效学习':'学习','测验通过':'测验'}
+        if str(a).strip() in aliases:return aliases[str(a).strip()]==str(b).strip()
+    if _GE2E_REPRESENTATION_KIND=='voucher' and field=='凭证状态' and str(a).strip()=='已核凭证':
+        return str(b).strip()=='已提供'
+    if _GE2E_REPRESENTATION_KIND=='date' and field=='起点日期':
+        from datetime import date,datetime,timedelta
+        if not isinstance(b,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',b):return None
+        try:
+            value=a if isinstance(a,(date,datetime)) else datetime.fromisoformat(str(a).strip())
+            if isinstance(value,datetime):
+                if value.tzinfo is not None and value.utcoffset()!=timedelta(hours=8):return None
+                value=value.date()
+            return value.isoformat()==b
+        except (TypeError,ValueError):return None
+    if field=='归因状态' and _GE2E_REPRESENTATION_KIND in {'attribution','redemption'}:
+        aliases={'已归因':'触点归因'}
+        if _GE2E_REPRESENTATION_KIND=='redemption':aliases['核销渠道']='核销码优先'
+        if str(a).strip() in aliases:return aliases[str(a).strip()]==str(b).strip()
+    return None
+
 
 ```
 

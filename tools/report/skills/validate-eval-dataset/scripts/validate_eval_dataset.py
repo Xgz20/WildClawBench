@@ -4,11 +4,13 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import os
 import re
 import shlex
 import sys
 import tempfile
+import zipfile
 from pathlib import Path
 from typing import Any
 
@@ -42,17 +44,54 @@ def _issue(code: str, message: str, doc: TaskDocument, *, severity: str = FAIL, 
 
 
 def _workspace_refs(doc: TaskDocument, workspace: Path) -> list[Path]:
-    refs: set[Path] = set()
-    text = doc.raw
-    # Explicit relative resource paths in task prose/checks. Avoid treating
-    # output paths as required inputs unless they are exec/gt/attachment files.
-    for match in re.finditer(r"(?<![A-Za-z0-9_])((?:exec|gt|attachments?|fixtures?|inputs?)/[A-Za-z0-9_./-]+)", text):
-        value = match.group(1).rstrip(".,:;`)")
-        refs.add((workspace / value).resolve())
-    for match in re.finditer(r"(?:workspace\s*/\s*[\"'])([^\"']+)", text):
+    values: set[str] = set()
+    prefix = re.compile(r"^(?:exec|gt|attachments?|fixtures?|inputs?)/")
+    prose = re.sub(r"```[^\n]*\n.*?```", "", doc.raw, flags=re.S)
+    for match in re.finditer(r"`([^`\n]+)`", prose):
         value = match.group(1)
-        if any(part in value.lower() for part in ("exec", "gt", "attachment", "fixture", "input")):
-            refs.add((workspace / value).resolve())
+        if not prefix.match(value):
+            continue
+        line = prose[prose.rfind("\n", 0, match.start()) + 1:match.start()]
+        if re.search(r"(?:无|不依赖|无需|no|does not require)\s*$", line, re.I):
+            continue
+        values.add(value)
+    # Parse complete Python string literals. Regexes over code mistake Path
+    # division (gt/name), diagnostic phrases and path suffixes for inputs.
+    for block in re.findall(r"```python\s*\n(.*?)```", doc.raw, re.S):
+        try:
+            nodes = ast.walk(ast.parse(block))
+        except SyntaxError:
+            continue  # grade AST validation reports the actual syntax error.
+        for node in nodes:
+            if not isinstance(node, ast.Constant) or not isinstance(node.value, str):
+                continue
+            value = node.value
+            if prefix.match(value) and "\n" not in value and (Path(value).suffix or value.endswith("/")):
+                values.add(value)
+    # Relative attachment references in mail metadata resolve in the context of
+    # their full input path, already present as a literal in the same contract.
+    values = {v for v in values if not v.startswith(("attachment/", "attachments/"))
+              or not any(other != v and other.endswith("/" + v) for other in values)}
+    archive_members = set()
+    for value in values:
+        if Path(value).suffix.lower() not in {'.xmind', '.zip'}:
+            continue
+        container=workspace/value if value.startswith(('exec/','gt/')) else workspace/'exec'/value
+        if container.is_file() and path_within(container.resolve(),workspace):
+            try:
+                with zipfile.ZipFile(container) as archive:
+                    archive_members.update(archive.namelist())
+            except (OSError,zipfile.BadZipFile):
+                pass  # A malformed container remains an explicit required path.
+    values={v for v in values if not v.startswith(('attachment/','attachments/')) or v not in archive_members}
+    refs = set()
+    for value in values:
+        direct = workspace / value
+        mapped = workspace / "exec" / value
+        # Preparation overlays exec/ into the candidate workspace. gt/ remains
+        # private; do not map it into the public execution tree.
+        candidate = direct if value.startswith(("exec/", "gt/")) else mapped if (workspace / "exec").is_dir() else direct
+        refs.add(candidate.resolve())
     return sorted(refs)
 
 
@@ -119,8 +158,18 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
         issues.append(_issue("WORKSPACE_NOT_FOUND", f"Workspace Path 不存在: {workspace}", doc))
     elif virtual_workspace and not workspace.exists():
         issues.append(_issue("WORKSPACE_VIRTUAL", "使用评测容器虚拟 Workspace，宿主机未创建目录", doc, severity=REVIEW, evidence={"workspace": str(workspace)}))
+    expected_missing = metadata.get("expected_missing_inputs", [])
+    if not isinstance(expected_missing, list) or not all(isinstance(v, str) and v.startswith("input/") and ".." not in Path(v).parts for v in expected_missing):
+        issues.append(_issue("EXPECTED_MISSING_INPUT_CONTRACT_INVALID", "设计缺失输入须显式声明安全的input/相对路径", doc))
+        expected_missing = []
+    excluded = {(workspace / "exec" / p).resolve() for p in expected_missing}
     for ref in _workspace_refs(doc, workspace):
-        if not ref.exists():
+        if not path_within(ref, workspace):
+            issues.append(_issue("WORKSPACE_RESOURCE_ESCAPE", f"Workspace引用越界: {ref}", doc))
+        elif ref in excluded:
+            if ref.exists():
+                issues.append(_issue("EXPECTED_MISSING_INPUT_PRESENT", f"本应缺失的负例输入实际存在: {ref}", doc))
+        elif not ref.exists():
             issues.append(_issue("WORKSPACE_RESOURCE_MISSING", f"任务引用的 Workspace 文件不存在: {ref}", doc))
 
     skill_names = extract_skill_names(doc.section("Skills"))

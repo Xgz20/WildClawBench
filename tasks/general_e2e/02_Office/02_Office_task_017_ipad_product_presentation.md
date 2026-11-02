@@ -13,6 +13,7 @@ tags:
   -general_task_e2e
   -Office
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/00_status.json
       role: grader_status

@@ -14,6 +14,7 @@ tags:
   - general_e2e
   - business
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: 评分证据/指标与分析.json
       role: grader_generated_evidence
@@ -68,7 +69,9 @@ def norm(v):
     if isinstance(v,str):return v.strip()
     return v
 
-def eq(a,b):
+def eq(a,b,field=''):
+    represented=_ge2e_field_representation(a,b,field)
+    if represented is not None:return represented
     if isinstance(b,(float,int)) and not isinstance(b,bool):
         try:
             if isinstance(a,bool):return False
@@ -78,7 +81,7 @@ def eq(a,b):
     synonyms={'待确认':'未知','未成熟':'观察不足','N/A':'不适用'}
     return synonyms.get(norm(a),norm(a))==norm(b)
 
-def grade(transcript:list,workspace_path:str)->dict:
+def _ge2e_original_business_grade(transcript:list,workspace_path:str)->dict:
     root=Path(workspace_path)
     # Missing/corrupt private oracle is an evaluation failure, never a candidate zero.
     reference=json.loads((root/'gt'/'标准答案.json').read_text(encoding='utf-8'))
@@ -115,7 +118,7 @@ def grade(transcript:list,workspace_path:str)->dict:
     def correct(name,fields,predicate=lambda r:True):
         expected=[r for r in reference[name] if predicate(r)]
         if not exact[name]:return False
-        return all(all(eq(actual[name][tuple(norm(r[k]) for k in KEYS[name])][0].get(f),r[f]) for f in fields) for r in expected)
+        return all(all(eq(actual[name][tuple(norm(r[k]) for k in KEYS[name])][0].get(f),r[f],f) for f in fields) for r in expected)
     def band(*parts):return 1.0 if all(parts) else (0.5 if any(parts) else 0.0)
     scores={}
     scores['C1_scope']=1.0 if all(exact.values()) else (0.5 if all(any(k in refs[n] for k in actual[n]) for n in KEYS) else 0.0)
@@ -132,7 +135,7 @@ def grade(transcript:list,workspace_path:str)->dict:
     matched=[]
     for r in reference['旧表校核']:
         rr=actual['旧表校核'].get(tuple(r[k] for k in KEYS['旧表校核']),[])
-        matched.append(len(rr)==1 and all(eq(rr[0].get(f),r[f]) for f in ['原值','修正值','差额']))
+        matched.append(len(rr)==1 and all(eq(rr[0].get(f),r[f],f) for f in ['原值','修正值','差额']))
     scores['C5_revision']=1.0 if exact['旧表校核'] and all(matched) else (0.5 if any(matched) else 0.0)
     evidence={'输出存在':p.exists(),'读取失败':failure,'对象集合精确':exact,'规则得分':scores,'汇总与修订':{n:candidate[n] for n in ['漏斗汇总','留存汇总','旧表校核']},'来源索引样例':candidate['来源索引'][:12],'说明':'样例不代表全量过程；实际范围与验收须结合真实轨迹。完整源文件可回查。'}
     narrative=root/'results'/'分析与验收.md'
@@ -329,12 +332,38 @@ def collect_tool_patch_evidence(workspace_path):
     return evidence
 
 
-_grade_business_v1 = grade
+_grade_business_v1 = _ge2e_original_business_grade
 
 def grade(transcript: list, workspace_path: str) -> dict:
     result = _grade_business_v1(transcript, workspace_path)
     collect_tool_patch_evidence(workspace_path)
     return result
+import re
+_GE2E_REPRESENTATION_KIND = 'date'
+
+
+def _ge2e_field_representation(a,b,field):
+    if _GE2E_REPRESENTATION_KIND=='learning_steps' and field=='步骤名称':
+        aliases={'有效学习':'学习','测验通过':'测验'}
+        if str(a).strip() in aliases:return aliases[str(a).strip()]==str(b).strip()
+    if _GE2E_REPRESENTATION_KIND=='voucher' and field=='凭证状态' and str(a).strip()=='已核凭证':
+        return str(b).strip()=='已提供'
+    if _GE2E_REPRESENTATION_KIND=='date' and field=='起点日期':
+        from datetime import date,datetime,timedelta
+        if not isinstance(b,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',b):return None
+        try:
+            value=a if isinstance(a,(date,datetime)) else datetime.fromisoformat(str(a).strip())
+            if isinstance(value,datetime):
+                if value.tzinfo is not None and value.utcoffset()!=timedelta(hours=8):return None
+                value=value.date()
+            return value.isoformat()==b
+        except (TypeError,ValueError):return None
+    if field=='归因状态' and _GE2E_REPRESENTATION_KIND in {'attribution','redemption'}:
+        aliases={'已归因':'触点归因'}
+        if _GE2E_REPRESENTATION_KIND=='redemption':aliases['核销渠道']='核销码优先'
+        if str(a).strip() in aliases:return aliases[str(a).strip()]==str(b).strip()
+    return None
+
 
 ```
 

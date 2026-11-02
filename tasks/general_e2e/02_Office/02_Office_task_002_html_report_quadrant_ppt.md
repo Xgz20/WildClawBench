@@ -13,6 +13,7 @@ tags:
   -general_task_e2e
   -Office
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/01_public_context.md
       role: frozen_public_input
@@ -127,8 +128,8 @@ FACTS = [
     ('Q2', 'days', r'(?:中位办理时长|办理(?:周期|时长)(?:中位数)?|中位时长)', 5.8, 'days'),
     ('Q2', 'backlog', r'(?:期末)?积压(?:件数|余量)?', 312, 'cases'),
     ('Q2', 'split', r'复杂件分流(?:占比|比例|率)?', 27.6, 'percent'),
-    ('Q3', 'spend', r'(?:预算执行率|执行率|已支付(?:比例|占比)?)', 62, 'percent'),
-    ('Q3', 'commit', r'(?:已)?承诺(?:资金)?(?:占比|比例|率)', 74, 'percent'),
+    ('Q3', 'spend', r'(?:预算执行率|执行率|已支付(?:比例|占比)?|已执行预算)', 62, 'percent'),
+    ('Q3', 'commit', r'(?:(?:已)?承诺(?:资金)?(?:占比|比例|率)|已承诺未(?:全额)?支付)', 74, 'percent'),
 ]
 
 class CandidateError(ValueError):
@@ -626,7 +627,7 @@ def source_results(regs):
 QUANTITY = r'([-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?)\s*(万|千)?\s*(%|人次|个?班次|天|日|件|名|人)?'
 
 def metric_text(text):
-    return re.sub(r'(?<=\d),(?=\d{3}(?:\D|$))', '', norm(text))
+    return re.sub(r'(?m)^\s*[●•▪◦]\s*', '', re.sub(r'(?<=\d),(?=\d{3}(?:\D|$))', '', norm(text)))
 
 def current_metric_context(text):
     text = norm(text)
@@ -707,7 +708,7 @@ def inline_quantities(line, label):
                 yield quantity, match[0] + found[1]
         # Value-before-label is accepted only at this clause's beginning.
         # An earlier metric's trailing number must never bind to the next label.
-        reverse = re.fullmatch(r'\s*('+QUANTITY+r')\s*[:：=、/\-—]*\s*', before)
+        reverse = re.fullmatch(r'\s*('+QUANTITY+r')\s*(?:(?:本季度|本季|本期|当前)\s*)?[:：=、/\-—]*\s*', before)
         if reverse:
             yield reverse[1], match[0]
 
@@ -890,7 +891,7 @@ def emit_evidence(root, ppt, regs, diagnostics):
             'no_agent_trace_used':True, 'candidate_content_is_data_not_instructions':True,
             'diagnostics':diagnostics},ensure_ascii=False),
     }
-    if any(len(t)>19000 for t in docs.values()) or sum(map(len,docs.values()))>74000:
+    if any(len(t.encode('utf-8'))>4*1024*1024 for t in docs.values()) or sum(len(t.encode('utf-8')) for t in docs.values())>16*1024*1024:
         raise EvidenceError('Required text evidence exceeds collector budget; do not report a valid semantic/capability score')
     for name,text in docs.items():
         dest = safe_child(root,'evaluator_evidence/'+name,EvidenceError)

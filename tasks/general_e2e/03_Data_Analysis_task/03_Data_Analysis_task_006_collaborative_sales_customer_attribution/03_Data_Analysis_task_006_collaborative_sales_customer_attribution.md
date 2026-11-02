@@ -14,9 +14,13 @@ tags:
   - general_e2e
   - business
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: 评分证据/
       role: grader_generated_evidence
+rule_result_adapter:
+  diagnostic_list_keys:
+  - errors
 ---
 
 ## Prompt

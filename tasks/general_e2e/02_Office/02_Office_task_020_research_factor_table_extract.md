@@ -13,6 +13,7 @@ tags:
   -general_task_e2e
   -Office
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/01_sources.json
       role: frozen_public_input
@@ -280,7 +281,7 @@ FROZEN_SOURCES = [{'file': 'research_report_morning.pdf',
  {'file': 'company_industry_dictionary.xlsx',
   'section': 'companies / sectors',
   'text': 'C001 星河电子股份有限公司 / S10 智能终端零部件；C002 云澜设备控股 / S20 云计算设备；C003 海柏材料集团 / S30 上游电子材料。'}]
-GT_HASHES = {'research_factor_extract.json': '68a11bcc9dd66baecdc86d5f97e2fc2fb84173d3aeeb0e1812bfee1d115af3b8',
+GT_HASHES = {'research_factor_extract.json': 'c3e7df2580289df2d0afa129f0a9157cddfddc4bd7450b9e6c293f462bc9c6d3',
  'research_factor_extract.xlsx': '759f2494961c393c6be20fd97fe472d354f0003192e0be6399148f3de394b5ce'}
 INPUT_HASHES = {'company_industry_dictionary.xlsx': '5d137b61021561a221b8e5e643cab72cbef660d9da9c70d3216edc6b74650f97',
  'factor_schema.json': '571b37be3df451412d998901e6c4796a8b0c5460f63ad424f7a836f61d95135f',

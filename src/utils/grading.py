@@ -13,6 +13,11 @@ from .judge_audit import write_attempt, write_summary
 from .judge_shim import parse_json_candidate
 from .ppt_evidence import build_ppt_evidence_code
 from .website_evidence import build_website_evidence_code
+from src.wildclawbench_grading_core.criterion_states import (
+    PROFILE as EVIDENCE_STATUS_PROFILE, EvidenceAwareScores,
+    validate_semantic_response, finalize_cli_score,
+)
+from src.wildclawbench_grading_core.original_policies import validate_original_work_order_policy
 from src.wildclawbench_grading_core.compat import (
     align_legacy_rubric_scores,
     combine_legacy_v2_scores,
@@ -920,7 +925,7 @@ def _validate_rubric_scores(
 
 def _align_rubric_scores(
     task_id: str, raw: dict, rubric_criteria: list[dict],
-) -> tuple[float, dict, str]:
+) -> tuple[float | None, dict, str]:
     """Compute the weighted result after strict rubric-contract validation."""
     return align_legacy_rubric_scores(raw, rubric_criteria)
 
@@ -1056,8 +1061,29 @@ def _grade_llm_rubric(
         metric_profile=metric_profile,
         evidence_mode=evidence_mode,
     )
+    evidence_aware = (judge_evidence or {}).get("semantic_status_profile") == EVIDENCE_STATUS_PROFILE
+    if evidence_aware:
+        prompt += (
+            "\n\n本题使用evidence-aware-v1，以下结构化状态约定优先于旧数字输出示例。"
+            "返回JSON对象：scores（原criterion键到分值或null）、criterion_statuses"
+            "（相同键到{status,reason}）、claim_reviews、notes。"
+            "已判定状态为pass/partial/fail；缺证、参考不可访问或评测异常分别使用"
+            "evidence_insufficient/evaluator_reference_unavailable/evaluator_error，分值必须null。"
+            "不能把裁判拿不到全文等同于候选错误；准确摘要或相关段落足以支持的主张可判。"
+            "已证实未交付可判fail/0。未知不得补零、自动给满分或删项归一。"
+        )
+        keys = (judge_evidence or {}).get("claim_review_keys", [])
+        if keys:
+            prompt += ("\nclaim_reviews必须包含这些检查点：" + json.dumps(keys) +
+                "；每项列出全部实质研究主张的两原固定单元台账，记录"
+                "{unit:1或2,claim_id,claim,status,evidence_refs:[来源ID及原文位置]}。"
+                "状态只能supported/contradicted/evaluator_reference_unavailable。"
+                "每个单元有已证实反例则失败；否则仍有缺证则未知；否则通过。"
+                "同一根因只归一个最直接单元；两个单元均确定时取均值，其他情况null。")
     judge_model = os.environ.get("JUDGE_MODEL", "openai/gpt-5.4")
     judge_max_tokens = _judge_max_tokens()
+    if evidence_aware and not os.environ.get("JUDGE_MAX_TOKENS", "").strip():
+        judge_max_tokens = max(judge_max_tokens, 8192)
     judge_transcript_max_chars = _judge_transcript_max_chars()
 
     is_website_profile = metric_profile == WEBSITE_METRIC_PROFILE
@@ -1161,7 +1187,8 @@ def _grade_llm_rubric(
                 "\n\nYour previous response was invalid."
                 + error_detail
                 + " Return ONLY one valid JSON object "
-                "with keys scores and notes. Do not use Markdown, prose, or tool-call text."
+                + ("with keys scores, criterion_statuses, claim_reviews and notes. " if evidence_aware else "with keys scores and notes. ")
+                + "Do not use Markdown, prose, or tool-call text."
             )
             attempt_code = runner_code.replace(
                 "_prompt = " + json.dumps(prompt),
@@ -1190,9 +1217,15 @@ def _grade_llm_rubric(
         validated_scores = None
         validation_error = ""
         if isinstance(parsed, dict):
-            validated_scores, validation_error = _validate_rubric_scores(
-                parsed, rubric_criteria
-            )
+            if evidence_aware:
+                try:
+                    semantic_result = validate_semantic_response(parsed, rubric_criteria,
+                        claim_review_keys=(judge_evidence or {}).get("claim_review_keys", []))
+                    validated_scores = semantic_result[1]
+                except ValueError as exc:
+                    validation_error = str(exc)
+            else:
+                validated_scores, validation_error = _validate_rubric_scores(parsed, rubric_criteria)
         attempt_error = (
             validation_error
             or err
@@ -1230,9 +1263,8 @@ def _grade_llm_rubric(
             )
         if isinstance(parsed, dict) and validated_scores is not None:
             canonical = {**parsed, "scores": validated_scores}
-            score, breakdown, notes = _align_rubric_scores(
-                task_id, canonical, rubric_criteria
-            )
+            score, breakdown, notes = (semantic_result if evidence_aware else
+                _align_rubric_scores(task_id, canonical, rubric_criteria))
             if judge_dir:
                 _finalize_judge_summary(
                     judge_dir,
@@ -1255,6 +1287,8 @@ def _grade_llm_rubric(
             error=last_error,
         )
     logger.error("[%s] LLM rubric judge failed: %s", task_id, last_error)
+    if evidence_aware:
+        return None, {}, f"judge failed: {last_error}"
     return 0.0, {c["key"]: 0.0 for c in rubric_criteria}, f"judge failed: {last_error}"
 
 
@@ -1317,6 +1351,10 @@ def _run_grading_v2(
         )
         if err:
             logger.error("[%s] v2 rule grading failed: %s", task_id, err)
+            if (judge_evidence or {}).get("semantic_status_profile") == EVIDENCE_STATUS_PROFILE:
+                scores = finalize_cli_score(None, {}, {}, grading_weights, error="RULE_EVALUATOR_ERROR: " + err)
+                _write_score(output_dir, task_id, scores)
+                return scores
             return _grading_error(output_dir, task_id, err, write_error_score)
         auto_breakdown = {k: v for k, v in raw.items()
                           if isinstance(v, (int, float)) and k != "overall_score"}
@@ -1365,6 +1403,22 @@ def _run_grading_v2(
     )
 
     # ---- combine ----
+    if (judge_evidence or {}).get("semantic_status_profile") == EVIDENCE_STATUS_PROFILE:
+        scores = finalize_cli_score(auto_score if has_rules else None, auto_breakdown,
+            llm_breakdown, grading_weights,
+            error=llm_notes if not isinstance(llm_breakdown, EvidenceAwareScores) else None)
+        scores["_grading"]["llm_notes"] = llm_notes
+        if has_rules and '_score_policy' in raw:
+            try:
+                policy=validate_original_work_order_policy(raw['_score_policy'])
+            except ValueError as exc:
+                scores=finalize_cli_score(auto_score,auto_breakdown,llm_breakdown,grading_weights,error=str(exc))
+            else:
+                scores['_grading']['final_total_policy']=policy
+                if scores['overall_score'] is not None:
+                    scores['overall_score']=min(scores['overall_score'],policy['upper_bound'])
+        _write_score(output_dir, task_id, scores)
+        return scores
     scores = _combine_v2(
         auto_score if has_rules else None, auto_breakdown,
         llm_score, llm_breakdown, llm_notes, grading_weights, rubric_criteria,
@@ -1403,6 +1457,9 @@ def print_summary(results: list[dict], category: str, output_dir: Path, model_na
                 print(f"  ✗ {task_id}: {r['error']}")
             else:
                 print(f"  - {task_id}: No scores")
+            continue
+        if scores.get("_grading", {}).get("mode") == EVIDENCE_STATUS_PROFILE and scores.get("overall_score") is None:
+            print(f"  ! {task_id}: 评测证据不足或评测异常，分数保留空值")
             continue
         numeric_dict = {k: v for k, v in scores.items() if isinstance(v, (int, float))}
         
@@ -1541,6 +1598,7 @@ def print_global_summary(
     valid_scored_tasks = 0
     validity_failure_runs = 0
     validity_failure_tasks: set[str] = set()
+    unresolved_score_tasks: set[str] = set()
 
     # 多轮统计（runs > 1 时）
     per_task_stats: dict[str, dict] = {}
@@ -1552,6 +1610,8 @@ def print_global_summary(
         valid_scores_list = []
         for r in runs:
             scores = r.get("scores", {})
+            if scores.get("_grading", {}).get("mode") == EVIDENCE_STATUS_PROFILE and scores.get("overall_score") is None:
+                continue
             numeric = {
                 k: v
                 for k, v in scores.items()
@@ -1580,6 +1640,9 @@ def print_global_summary(
 
         if not scores_list:
             missing_score_tasks += 1
+            if any((r.get('scores') or {}).get('_grading',{}).get('mode') == EVIDENCE_STATUS_PROFILE
+                   and (r.get('scores') or {}).get('overall_score') is None for r in runs):
+                unresolved_score_tasks.add(tid_ori)
             continue
 
         # 单轮/多轮分支
@@ -1600,9 +1663,9 @@ def print_global_summary(
                 valid_total_score += valid_scores_list[0]
                 valid_scored_tasks += 1
 
-    global_avg = 0.0
-    if total_tasks > 0:
-        global_avg = total_score / total_tasks
+    global_denominator = total_tasks - len(unresolved_score_tasks)
+    global_avg = total_score / global_denominator if global_denominator else None
+    if global_avg is not None:
         bar = "█" * int(global_avg * 10) + "░" * (10 - int(global_avg * 10))
         print(f"\n  Completed tasks: {scored_tasks} / {total_tasks}")
         print(f"  Tasks without a valid score.json: {missing_score_tasks}")
@@ -1655,6 +1718,8 @@ def print_global_summary(
         "task_count": total_tasks,
         "scored_task_count": scored_tasks,
         "missing_score_task_count": missing_score_tasks,
+        "unresolved_score_task_count": len(unresolved_score_tasks),
+        "global_avg_denominator": global_denominator,
         "valid_scored_task_count": valid_scored_tasks,
         "validity_failure_run_count": validity_failure_runs,
         "validity_failure_task_count": len(validity_failure_tasks),

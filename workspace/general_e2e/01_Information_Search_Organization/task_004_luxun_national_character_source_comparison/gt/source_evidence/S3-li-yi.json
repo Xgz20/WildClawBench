@@ -1,0 +1,21 @@
+{
+  "source_id": "S3-li-yi",
+  "role": "evaluator_reference_not_candidate_output",
+  "url": "https://sdsdwkxb.cnu.edu.cn/gkll/2019n/2021d1q_4a9a406f51f84ba2801de4c032c169e0/8baddc0ccf254de4bfe196aa427259fe.htm",
+  "title": "“立人”与现代民族复兴问题——鲁迅留日时期的思考和警觉",
+  "retrieved_on": "2026-11-02",
+  "original_response_sha256": "1c8f207ca0ecd092eac3166a7818a5e5247aa12ec0ede1977a07769b1500ccfc",
+  "coverage": "primary_short_excerpt",
+  "excerpt": "只有“立人”之后，“沙聚之邦”才可能转为“人国”",
+  "reviewer_summary": "摘要把人的自我建设置于民族文化建设之前，比较鲁迅与当时国家整体利益导向的复兴理想。仅冻结这一摘要命题，不据此宣称已取得纸本或任意正文细节。",
+  "reviewer_summary_is_not_original_text": true,
+  "fulltext_included": false,
+  "locator": "摘要中段，含“沙聚之邦”的句子",
+  "supports": [
+    "以人的自我建设为民族文化建设的前提"
+  ],
+  "does_not_establish": [
+    "杨联芬论文的具体归属",
+    "所有留日事件的精确日期"
+  ]
+}

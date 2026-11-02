@@ -9,7 +9,8 @@ import unittest
 from unittest.mock import patch
 
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME,Fixture,REPO_ROOT
-from eval_general_e2e.datasets.bundle import _parse_task_source,_strip_codeblock
+from eval_general_e2e.datasets.bundle import _strip_codeblock
+from tests.general_e2e.frozen_sources import parse_frozen_task_source as _parse_task_source
 from tests.general_e2e import test_general_scoring_orchestration as orchtests
 
 GROUP=RUNTIME.escrow_grouped_review

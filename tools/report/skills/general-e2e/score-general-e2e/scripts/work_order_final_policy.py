@@ -23,16 +23,18 @@ def marker(contract,contract_sha):
     return None
 
 def validate_policy(value):
-    if (not isinstance(value,dict) or set(value)!={'mode','upper_bound','reasons','version'}
-            or value.get('mode')!='final_total_cap' or value.get('version')!=VERSION
-            or isinstance(value.get('upper_bound'),bool) or not isinstance(value.get('upper_bound'),(int,float))
-            or not math.isfinite(value['upper_bound']) or not 0<=value['upper_bound']<=1
-            or not isinstance(value.get('reasons'),list) or any(not isinstance(r,str) for r in value['reasons'])):
-        raise ValueError('WORK_ORDER_FINAL_POLICY_INVALID')
-    if (len(value['reasons'])!=len(set(value['reasons'])) or any(r not in REASON_CAPS for r in value['reasons'])
-            or value['upper_bound']!=min([1.]+[REASON_CAPS[r] for r in value['reasons']])):
-        raise ValueError('WORK_ORDER_FINAL_POLICY_REASONS_MISMATCH')
-    return deepcopy(value)
+    # The distributed worker resolves the same core implementation as the CLI.
+    import sys
+    from pathlib import Path
+    vendor=Path(__file__).resolve().parents[1]/'vendor/e2e-shared'
+    if vendor.is_dir() and str(vendor) not in sys.path:sys.path.insert(0,str(vendor))
+    if not vendor.is_dir():
+        source=Path(__file__).resolve().parents[6]/'src'
+        if (source/'wildclawbench_grading_core/original_policies.py').is_file():
+            sys.path.insert(0,str(source))
+    from wildclawbench_grading_core.original_policies import validate_original_work_order_policy
+    return validate_original_work_order_policy(value)
+
 
 def effective_adapter(manifest,contract,original):
     frozen=manifest.get('runtime',{}).get('work_order_final_total_policy_profile')

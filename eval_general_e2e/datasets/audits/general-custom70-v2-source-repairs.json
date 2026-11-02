@@ -1,0 +1,287 @@
+{
+  "schema_version": "general-e2e-materialized-source-repairs/v1",
+  "historical_dataset_id": "general-custom116-v1",
+  "historical_dataset_digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+  "new_dataset_id": "general-custom70-v2",
+  "repairs": [
+    {
+      "task_id": "01_Information_Search_Organization_task_007_rice_awd_field_trials",
+      "original_source_sha256": "e105ee4485e19056ff8bdfade41d481a48873090199d208c020f254fe1834e88",
+      "effective_source_sha256": "c253d90b6c0e1653a1b94e6587be572d6158ec3acacf5ea1307196a9ae8617dd",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "completed-public-answer-delivery/v1",
+        "task_id": "01_Information_Search_Organization_task_007_rice_awd_field_trials",
+        "contract_sha256": "4a8f2374c86b713fb7d25469176df613e9fc781300a438ad3899e185c9da0a02",
+        "original_source_sha256": "e105ee4485e19056ff8bdfade41d481a48873090199d208c020f254fe1834e88",
+        "effective_source_sha256": "c253d90b6c0e1653a1b94e6587be572d6158ec3acacf5ea1307196a9ae8617dd",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "answer_delivery_policy": {
+          "profile": "completed-public-answer-delivery/v1",
+          "candidate_answer_scope": "同一已完成用户回合的完整公开答复窗口；显式final/end_turn仍按最后显式终稿处理。",
+          "judgment": "按原子事实评价最终保留的交付：明确后续纠错覆盖旧说法；未撤回的矛盾按原Rubric处理。进度说明、待验证假设、工具返回和隐藏思考不当作正式答案，不任意择优挑选中间草稿。末尾仅更新计划或完成摘要不抹去此前实际向用户交付的完整答复。",
+          "original_transcript_and_terminal_receipt_preserved": true,
+          "fact_or_acquisition_credit_assigned_by_adapter": false
+        },
+        "reason": "只修复对已完成会话公开交付的抽取边界，完整保留窗口与终态绑定、后续纠错和矛盾；不以最后一条收尾摘要抹掉已交付答复，不选择最长或最高分消息。原25个事实/取证联合单元、原分档、关键错误上限及100分权重不变，事实与取证仍由独立裁判逐项判断。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_002_html_report_quadrant_ppt",
+      "original_source_sha256": "9be11b175636ff50b7d2a1b588665c4f2c0c4e9a787d4d2a4ebee81846cec958",
+      "effective_source_sha256": "6c4d8a2d9605fc847d69cc9b9fd370cdb886f32a32c6ddf9dd26e3fb8cff27bb",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "quadrant-current-metric-labels/v1",
+        "task_id": "02_Office_task_002_html_report_quadrant_ppt",
+        "contract_sha256": "7500a0ecb8e3071b25880b74b0464b2fbe5c805fc730caa8f9ce2e1d4df1fad3",
+        "original_source_sha256": "9be11b175636ff50b7d2a1b588665c4f2c0c4e9a787d4d2a4ebee81846cec958",
+        "effective_source_sha256": "6c4d8a2d9605fc847d69cc9b9fd370cdb886f32a32c6ddf9dd26e3fb8cff27bb",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅去除行首圆点列表符号，接受数值与指标间的本季/本期等当前限定和已执行预算、已承诺未支付等明确标签；原局部数值绑定、上期/目标/预测排除、单位/时期、可见性、真实数值、区域分配与权重均不变。",
+        "prior_correction": {
+          "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+          "correction_id": "complete-paged-grader-evidence/v1",
+          "task_id": "02_Office_task_002_html_report_quadrant_ppt",
+          "original_source_sha256": "9be11b175636ff50b7d2a1b588665c4f2c0c4e9a787d4d2a4ebee81846cec958",
+          "effective_source_sha256": "d8fd19aeff7af2e373314cf2419294cf98ece4611d667756b0aef5c97b6168db",
+          "reason": "评分取证完整落盘并通过既有分页接口查询；调整传输资源上限，不截断证据，不改变题面、检查点、权重或分值锚点。",
+          "evidence_policy": {
+            "truncation_allowed": false,
+            "page_query_required": true,
+            "max_file_bytes": 4194304,
+            "max_total_bytes": 16777216
+          }
+        }
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_010_warranty_recovery_allocation",
+      "original_source_sha256": "34482414d200065795ccb168971c9c9c25ae80999be0cd926b2e0aa3bef48c1b",
+      "effective_source_sha256": "3a95ad18bd352380241234b8a641536ff5b87b2f61e347a9edb1aedb0201da6a",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "warranty-recovery-equivalent-headings/v1",
+        "task_id": "02_Office_task_010_warranty_recovery_allocation",
+        "contract_sha256": "40d185a0f2261364dcf5b16ad49f675757e565bc77422a5de57291ed0bf5d661",
+        "original_source_sha256": "34482414d200065795ccb168971c9c9c25ae80999be0cd926b2e0aa3bef48c1b",
+        "effective_source_sha256": "caf23029dc75f496735c7ff0876725eab8ddff36fd8b9e7855e3c7771e14490c",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "识别公开允许的本次金额、政策责任比例、已追偿及完整依据表头；同表同时含维修原成本和明确分摊成本时优先读取分摊成本。保留原公式求值、对象范围、责任资格、金额、汇总比较、分母、严重错误限分及87/13权重，不代填任何业务值。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false,
+      "runtime_profile_source_sha256": "caf23029dc75f496735c7ff0876725eab8ddff36fd8b9e7855e3c7771e14490c",
+      "source_transport_normalization": "strip_outer_whitespace"
+    },
+    {
+      "task_id": "02_Office_task_012_service_channel_ticket_daily",
+      "original_source_sha256": "f1acab4a1b024ba786f6a2abdbbc23936a6a051dfafdccac0c0c36cc9b331d5b",
+      "effective_source_sha256": "64ac633a83d579fa4f099aca687c3aa1bde8477273e0e93ad31cf28b043a9956",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "service-report-linked-tables/v2",
+        "task_id": "02_Office_task_012_service_channel_ticket_daily",
+        "contract_sha256": "f83880ffb8709bb48b676214e0abf8b8a941bfa974960241bf3e328828f0ddab",
+        "original_source_sha256": "f1acab4a1b024ba786f6a2abdbbc23936a6a051dfafdccac0c0c36cc9b331d5b",
+        "effective_source_sha256": "447476b3de8ad5b013512d45d05a9ec9b5d1fdb2f278c0c5969ddbd8d4003dd7",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "在v1表角色与显式附录关联修复上，识别记录量/工单量中带说明及等号的明确数量声明。不从GT或明细行数推算标题数量，目标/预测/次日数量不准入；原范围、状态、金额、分母和70/30权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false,
+      "runtime_profile_source_sha256": "447476b3de8ad5b013512d45d05a9ec9b5d1fdb2f278c0c5969ddbd8d4003dd7",
+      "source_transport_normalization": "strip_outer_whitespace"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_008_payment_channel_settlement_reserves",
+      "original_source_sha256": "8792b29a8de3c4d0421e9307a70ada938b71b5ee71d57d4d20015fe18cbfce0e",
+      "effective_source_sha256": "9741775d2323f8bfa08303fc54e75b4b1e6c0f797dd8a47af8bda99ae50e0f0e",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "data-table-field-representations/v1",
+        "task_id": "03_Data_Analysis_task_008_payment_channel_settlement_reserves",
+        "contract_sha256": "d24c2f9152a4d3a4ba182c6f2321f46563343aeafa05b2365250b5334d2ad119",
+        "original_source_sha256": "8792b29a8de3c4d0421e9307a70ada938b71b5ee71d57d4d20015fe18cbfce0e",
+        "effective_source_sha256": "3cb0a17f4837c99ee0ab64207f5c43acf32c085fdb35fb214334c88bcdfb293d",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅在起点日期列接受同一北京时间日期的有效日期/时间表示；学习题步骤名称接受公开口径的有效学习、测验通过；仅在归因状态列识别已归因=触点归因及核销渠道=核销码优先；仅在凭证状态列识别已核凭证=已提供。未知归因不与缺客户编号/无合格触点合并，达成不与完整观察合并；原范围、逐行比较、数值精度、缺口、原分档及权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false,
+      "runtime_profile_source_sha256": "3cb0a17f4837c99ee0ab64207f5c43acf32c085fdb35fb214334c88bcdfb293d",
+      "source_transport_normalization": "strip_outer_whitespace"
+    },
+    {
+      "task_id": "03_Data_Analysis_task_011_new_customer_purchase_funnel_retention",
+      "original_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "effective_source_sha256": "fb84e0138cc409fb0fc4e9b36e8e9227a00cbfe2d5134f256052b51c3a7d6ef9",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "data-table-field-representations/v1",
+        "task_id": "03_Data_Analysis_task_011_new_customer_purchase_funnel_retention",
+        "contract_sha256": "50e3fb1e71018debf5fa997dbe265698f6416b1f0fc95fc18a9915e6340b17da",
+        "original_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+        "effective_source_sha256": "fb84e0138cc409fb0fc4e9b36e8e9227a00cbfe2d5134f256052b51c3a7d6ef9",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅在起点日期列接受同一北京时间日期的有效日期/时间表示；学习题步骤名称接受公开口径的有效学习、测验通过；仅在归因状态列识别已归因=触点归因及核销渠道=核销码优先；仅在凭证状态列识别已核凭证=已提供。未知归因不与缺客户编号/无合格触点合并，达成不与完整观察合并；原范围、逐行比较、数值精度、缺口、原分档及权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_012_learning_product_activation_retention",
+      "original_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "effective_source_sha256": "473d1c4415e9c17cd585beb1f95b09905a3c17ccc16519f5801d65a9122abd3c",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "data-table-field-representations/v1",
+        "task_id": "03_Data_Analysis_task_012_learning_product_activation_retention",
+        "contract_sha256": "e063747f5444ee7c608320f9009addabcf24891a96ba376c173bd3c8dd24caea",
+        "original_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+        "effective_source_sha256": "473d1c4415e9c17cd585beb1f95b09905a3c17ccc16519f5801d65a9122abd3c",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅在起点日期列接受同一北京时间日期的有效日期/时间表示；学习题步骤名称接受公开口径的有效学习、测验通过；仅在归因状态列识别已归因=触点归因及核销渠道=核销码优先；仅在凭证状态列识别已核凭证=已提供。未知归因不与缺客户编号/无合格触点合并，达成不与完整观察合并；原范围、逐行比较、数值精度、缺口、原分档及权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi",
+      "original_source_sha256": "11aeb5b4a953a0c3d85bd77ff7d0c744c621f33db0782b5671534f3650a12853",
+      "effective_source_sha256": "04f1e53caff875e2550a7f77f01be762ab9bcc3a134736ef46aa731d66b5d99a",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "data-table-field-representations/v1",
+        "task_id": "03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi",
+        "contract_sha256": "67b32ce66d7c41d56a7ca7adcbd5f2232487f481215f356258eceb40f6dd7a20",
+        "original_source_sha256": "11aeb5b4a953a0c3d85bd77ff7d0c744c621f33db0782b5671534f3650a12853",
+        "effective_source_sha256": "04f1e53caff875e2550a7f77f01be762ab9bcc3a134736ef46aa731d66b5d99a",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅在起点日期列接受同一北京时间日期的有效日期/时间表示；学习题步骤名称接受公开口径的有效学习、测验通过；仅在归因状态列识别已归因=触点归因及核销渠道=核销码优先；仅在凭证状态列识别已核凭证=已提供。未知归因不与缺客户编号/无合格触点合并，达成不与完整观察合并；原范围、逐行比较、数值精度、缺口、原分档及权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts",
+      "original_source_sha256": "f52f9a1b6dcc14cb7c84251f55f64cd3fd9fc9153d91dd2a4be0fe9e443ffebb",
+      "effective_source_sha256": "937c2e9e673644bdb5c3671828b2889bb91f16c79c06a20b42f68f9aadcbf0cd",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "data-table-field-representations/v1",
+        "task_id": "03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts",
+        "contract_sha256": "091bd036cb90cc65cd4a01a8f85ecdb1ec3f3c856866b1833ecf92b008cbc7f3",
+        "original_source_sha256": "f52f9a1b6dcc14cb7c84251f55f64cd3fd9fc9153d91dd2a4be0fe9e443ffebb",
+        "effective_source_sha256": "937c2e9e673644bdb5c3671828b2889bb91f16c79c06a20b42f68f9aadcbf0cd",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅在起点日期列接受同一北京时间日期的有效日期/时间表示；学习题步骤名称接受公开口径的有效学习、测验通过；仅在归因状态列识别已归因=触点归因及核销渠道=核销码优先；仅在凭证状态列识别已核凭证=已提供。未知归因不与缺客户编号/无合格触点合并，达成不与完整观察合并；原范围、逐行比较、数值精度、缺口、原分档及权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability",
+      "original_source_sha256": "aae6017d35b3207d4afffdf1554d175527729465acbdea35f7c7312e7967f350",
+      "effective_source_sha256": "d5563aabd6fd4eec7cbdcd085ae936507557b1020f75ddcd2ce527b97314723e",
+      "correction_receipt": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "data-table-field-representations/v1",
+        "task_id": "03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability",
+        "contract_sha256": "403c92931dc9df259068ba721d0b226580868ae41fd09c928abe756d06f7c3c8",
+        "original_source_sha256": "aae6017d35b3207d4afffdf1554d175527729465acbdea35f7c7312e7967f350",
+        "effective_source_sha256": "d5563aabd6fd4eec7cbdcd085ae936507557b1020f75ddcd2ce527b97314723e",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅在起点日期列接受同一北京时间日期的有效日期/时间表示；学习题步骤名称接受公开口径的有效学习、测验通过；仅在归因状态列识别已归因=触点归因及核销渠道=核销码优先；仅在凭证状态列识别已核凭证=已提供。未知归因不与缺客户编号/无合格触点合并，达成不与完整观察合并；原范围、逐行比较、数值精度、缺口、原分档及权重不变。"
+      },
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_011_new_customer_purchase_funnel_retention",
+      "profile": "reviewed-grade-wrapper-normalization/v1",
+      "original_source_sha256": "5e1ce4a00515821cf9e9ef688976e9b7506d89813ed60765bdf9f6e48d6d3452",
+      "effective_source_sha256": "d4455f3f8d8c480a22b2c1f5444d9b1f9338da85baa5ae90fe231a34c7210cec",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_012_learning_product_activation_retention",
+      "profile": "reviewed-grade-wrapper-normalization/v1",
+      "original_source_sha256": "381f326cdc93685f5592cb98862726f4d9f72cf04bb1da68f35850e2d4e03cd8",
+      "effective_source_sha256": "a7d33513b3b2ce4795ede1877332f8e84efc12916f02f3a829dd583e94bbc901",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_013_collaboration_team_activation_seat_retention",
+      "profile": "reviewed-grade-wrapper-normalization/v1",
+      "original_source_sha256": "4b3597be18542b845df74d74fc35894c757986a6f6ba31ad25140b5dd519731c",
+      "effective_source_sha256": "5cc07cf2819400ef9ceac1f79e32d5d3ef61a1abc34eaad217c2c861feb2832c",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi",
+      "profile": "reviewed-grade-wrapper-normalization/v1",
+      "original_source_sha256": "a03162226c33d155924fe39509b20992dbb9148257d2ac150e1f52636d41d7b8",
+      "effective_source_sha256": "5e3f63b0a85ca4153b35151fb98a32893c6184113d68e2cf7f49ae3c24b7aae2",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts",
+      "profile": "reviewed-grade-wrapper-normalization/v1",
+      "original_source_sha256": "2063315196b7de84c2477cf69a6ad7b1acd844e74d43751bff0df1dfd6f581ed",
+      "effective_source_sha256": "17b799d1c1d376794f1ff781f2757778cacc5a55e5396a6f4174b87831fd7729",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability",
+      "profile": "reviewed-grade-wrapper-normalization/v1",
+      "original_source_sha256": "29785c10d5235c55526885b895612a2c49e9de485e38c376b66859ec139afbb9",
+      "effective_source_sha256": "599238fdb99100b0643bb57da985eb1c996454324514bcfc8427aa60dfd28724",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_003_news_event_multifile_extract",
+      "profile": "canonical-private-reference-guard/v1",
+      "original_source_sha256": "af8be0f177e7d9e160a03a104562f2e34be9097f5acbbe5e3c30e7c8c00282a5",
+      "effective_source_sha256": "0497b8dc1822d3d2ccba65f70f5a76c4376dc2a79142ce7560e3bc091eb2f72f",
+      "weights_changed": false,
+      "reference_rewritten": false
+    },
+    {
+      "task_id": "02_Office_task_014_invoice_email_archive_manifest",
+      "profile": "canonical-private-reference-guard/v1",
+      "original_source_sha256": "44b71af114799169329153453eedfe697a2f3db58acb471bfedd1ba185c250a8",
+      "effective_source_sha256": "d80646a2b945576bddbf9fd956d9a34e01c69c2b0462e22bebde0f498dd22659",
+      "weights_changed": false,
+      "reference_rewritten": false
+    },
+    {
+      "task_id": "02_Office_task_020_research_factor_table_extract",
+      "profile": "canonical-private-reference-guard/v1",
+      "original_source_sha256": "e73d92ef09af6612afca2fee33d29887e7906ba1d1ae61df804ab2f654d05253",
+      "effective_source_sha256": "8a5f3b2564d041a5995e8363743f896edbda8bcb0cd66ea5545291de4c56d796",
+      "weights_changed": false,
+      "reference_rewritten": false
+    }
+  ]
+}

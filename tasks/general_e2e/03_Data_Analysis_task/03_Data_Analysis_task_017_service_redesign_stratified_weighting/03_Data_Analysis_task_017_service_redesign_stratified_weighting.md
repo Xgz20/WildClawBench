@@ -14,6 +14,7 @@ tags:
   - general_e2e
   - business
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: 评分证据/公开反馈.json
       role: grader_generated_evidence
@@ -21,6 +22,9 @@ judge_evidence:
       role: grader_generated_evidence
     - path: 评分证据/统计与说明.json
       role: grader_generated_evidence
+rule_result_adapter:
+  diagnostic_nullable_text_keys:
+  - candidate_read_error
 ---
 
 ## Prompt

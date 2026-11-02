@@ -10,6 +10,7 @@ grading_weights:
   automated: 0.0
   llm_judge: 1.0
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/reference_answer.md
       role: evaluator_reference_not_agent_output
@@ -50,7 +51,7 @@ tags:
 
 若某映射项因上游未找到对象、仅有待核关联、参考争议或记录缺失而不可判定，保留该状态，不把它等同于已证实能力失败，不删除后重归一，也不输出正式能力总分。接口只能返回数值时，按 Rubric 返回占位 0，并在 notes 标明受影响 key、状态及原因；占位不是有效能力得分。完整回答证实错误时，才属于可判定失败。
 
-这些是本题数据集的五能力映射约定，沿用 `checkpoint_capability_map7.yaml` 存储；不表示现有七维报告器已实现上述五能力公式。缺证或争议状态也需评测端复核，不能仅依据原生数值文件发布正式结论。
+这些是本题数据集的五能力映射约定，沿用 `checkpoint_capability_map5.yaml` 存储；由新数据集独立五维报告路径解释，不替换旧60题七维映射。缺证或争议状态也需评测端复核，不能仅依据原生数值文件发布正式结论。
 
 ## Automated Checks
 

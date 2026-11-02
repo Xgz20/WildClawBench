@@ -14,6 +14,7 @@ tags:
   - general_e2e
   - finance
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: 评分证据/汇总与差异.json
       role: grader_generated_evidence

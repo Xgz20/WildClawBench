@@ -1,11 +1,30 @@
 # General E2E 数据集包
 
-当前支持两个独立的冻结数据集，使用同一套七阶段 Skill：
+当前支持三个独立的冻结数据集，使用同一套七阶段 Skill：
 
 | dataset ID | 任务来源 | 题量 | 能力映射 |
 | --- | --- | ---: | --- |
 | `general-custom60-v1`（默认） | `tasks/extension` | 60 | 原七维，原 manifest 和映射内容保持不变 |
 | `general-custom116-v1` | `tasks/general_e2e`（递归扫描） | 116 | 独立五维，检索 20、Office 30、数据分析 66 |
+| `general-custom70-v2` | 当前题源，按独立定义显式选择 | 70 | 独立五维；检索20、Office30、数据分析001—020 |
+
+`general-custom70-v2` 将已验证的解析修复直接写入题内 Python、参考材料和公开评分契约，
+CLI 与 Skill 读取同一份代码。Info004 增加分级参考证据及SHA索引；裁判缺证保留null，
+不能扣模型分或删项归一。旧60题入口和七维映射不变；其他46题没有修改。
+
+```bash
+python -m eval_general_e2e.datasets.bundle build --dataset general-custom70-v2
+python eval/run_batch.py --dataset general-custom70-v2 --parallel 3 --model <已配置模型>
+```
+
+CLI显式70题入口先核验当前源码与manifest一致，拒绝通过tag/modality过滤缩小冻结范围。
+语义裁判使用结构化criterion状态，未知项不参与平均；零权重能力诊断缺证不冒充业务失败，
+有业务预算的未知项使正式总分保留空值。原最终总分封顶在两入口一致应用。
+
+历史116-v1的原题源及Info004原参考保存在 `source-snapshots/general-custom116-v1/`，
+逐文件SHA绑定；编译v1显式读取该快照，并只排除v2新增的Info004证据文件。
+未登记的素材仍按原manifest检测漂移。v1 manifest与已发行包、执行、评分和报告不覆盖。
+当前目录下的70题是修复后的源版本；重现v1必须选择v1 bundle或快照，不能把当前源题冒称v1。
 
 旧命令仍默认构建 60 题。新数据集使用显式选择：
 

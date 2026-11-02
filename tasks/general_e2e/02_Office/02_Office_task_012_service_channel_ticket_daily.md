@@ -13,6 +13,7 @@ tags:
   -general_task_e2e
   -Office
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/task012/report_1.json
       role: grader_generated_evidence
@@ -112,10 +113,10 @@ def norm(value):
 
 FIELD_NAMES = {
  'ticket':['工单编号','工单标识','工单id','工单','ticket_id','ticket id','受理编号'],
- 'key':['事项标识','normalized_ticket_key','规范工单键','归一标识','去重键','去重主键','canonical_key'],
+ 'key':['归一事项标识','事项标识','normalized_ticket_key','规范工单键','归一标识','去重键','去重主键','canonical_key'],
  'category':['分类','category','工单分类','类别'],
  'priority':['优先级','priority'],
- 'status':['当前状态','状态','status','current_status','当日状态','日末状态'],
+ 'status':['日报状态','当前状态','状态','status','current_status','当日状态','日末状态'],
  'progress':['进展','进度','progress_pct','progress','进展百分比','进度百分比','进展%'],
  'latest':['采用的更新时间及记录','latest_eligible_update','末次有效更新','末次有效更新时间','最新合格更新','最后合格更新','最后有效更新','采用的更新时间','最新更新时间','更新时间','最后更新','末次更新时间','采用更新时间'],
  'latest_record':['latest_record_id','末次记录','末次记录id','最新记录','最新record_id'],
@@ -314,7 +315,9 @@ def parse_report(text,include_audit=False):
         is_event_table=({'records','sources'}<=set(cmap)
                         and 'latest' not in cmap
                         and any(norm(h) in event_headers for h in head))
-        is_detail=bool(not is_event_table and ('ticket' in cmap or 'key' in cmap) and set(cmap)&{'status','progress','latest','records','combined_state'})
+        action_headers={norm(x) for x in ['下一步动作','下一步行动','跟进建议','要核实的结果','核实结果']}
+        is_action_table=(any(norm(h) in action_headers for h in head) and 'latest' not in cmap and 'records' not in cmap)
+        is_detail=bool(not is_event_table and not is_action_table and ('ticket' in cmap or 'key' in cmap) and set(cmap)&{'status','progress','latest','records','combined_state'})
         i+=2
         while i<len(lines) and '|' in lines[i] and lines[i].strip():
             cells=split_cells(lines[i]);consumed.add(i)
@@ -360,6 +363,7 @@ def parse_report(text,include_audit=False):
                 for m in re.finditer(pattern,line):
                     if metric_key(m.group(1))==key:
                         metrics[key].append({'value':integer(m.group(2)),'line':j+1,'raw':m.group(0)})
+    _service_headline_counts(lines,metrics)
     counters={family:defaultdict(list) for family in ('category','status','progress','priority')}
     category_names={r['category'] for r in csv.DictReader(io.StringIO(FROZEN_CSV))}
     for label,value,line,kind in pairs:
@@ -490,6 +494,7 @@ def grade(transcript,workspace_path):
         write_evidence(root,text,rows,expected,diagnostics,scores)
         return dict(scores,overall_score=0.0,diagnostics=diagnostics)
     detail,metrics,counters,audit=parse_report(text,include_audit=True)
+    diagnostics['linked_event_appendix']=_service_bind_event_appendix(detail,audit,amap,ticket_to_key)
     diagnostics['observed_metrics']=dict(metrics)
     def values_ok(values,wanted,required=True):
         return (bool(values) or not required) and all(x['value']==wanted for x in values)
@@ -736,6 +741,48 @@ def grade(transcript,workspace_path):
     diagnostics['coverage_units']={'scope':[sum(scope_units),len(scope_units)],'identity':[sum(identity_units),len(identity_units)],'state':[sum(state_units),len(state_units)],'reconciliation':[sum(reconcile),len(reconcile)]}
     write_evidence(root,text,rows,expected,diagnostics,scores)
     return dict(scores,overall_score=sum(WEIGHTS[k]*scores[k] for k in WEIGHTS)/70,diagnostics=diagnostics)
+
+def _service_bind_event_appendix(detail,audit,amap,ticket_to_key):
+    # Copy only the candidate's explicit foreign-key relationships. Never fill
+    # missing IDs, states, timestamps, or source rows from the reference data.
+    def canonical(row):
+        raw=row.get('key','').strip(' `*')
+        declared=tickets(row.get('ticket','')+' '+raw)
+        key=amap.get(raw,raw) if raw else ''
+        if key not in set(ticket_to_key.values()):
+            key=ticket_to_key.get(declared[0],key) if declared else key
+        return key
+    mains=defaultdict(list)
+    for row in detail:mains[canonical(row)].append(row)
+    links=[]
+    for event in audit:
+        if not event.get('is_event_table'):continue
+        rids=ids(event.get('records',''),'records')
+        sources=ids(event.get('sources',''),'sources')
+        key=canonical(event)
+        # Missing/ambiguous main objects and one-to-many event cells do not get
+        # rescued. Original audit checks still reject wrong/swapped source links.
+        if len(rids)!=1 or len(sources)!=1 or not key or len(mains.get(key,[]))!=1:continue
+        main=mains[key][0]
+        existing=ids(main.get('records',''),'records')
+        prior_sources=ids(main.get('sources',''),'sources')
+        main['records']=' '.join(dict.fromkeys(existing+rids))
+        main['sources']=' '.join(dict.fromkeys(prior_sources+sources))
+        links.append({'main_line':main['line'],'event_line':event['line'],'canonical':key,
+                      'record_id':rids[0],'source_row':sources[0]})
+    return links
+
+
+def _service_headline_counts(lines,metrics):
+    # The report itself must declare the scalar. Do not infer it from GT or the
+    # number of rows, and do not borrow a target/forecast/next-day quantity.
+    pattern=r'^\s*[-*]?\s*(记录量|工单量)\s*[:：]\s*(?:([^=＝\n]*)[=＝]\s*)?[*`]*([0-9]+)[*`]*\s*(?:条|件|个|单)?[。.]?\s*$'
+    for index,line in enumerate(lines):
+        match=re.fullmatch(pattern,line)
+        if not match or re.search(r'预计|预测|目标|次日|明日|上日|上期',match[2] or ''):continue
+        name='candidate' if match[1]=='记录量' else 'unique'
+        metrics[name].append({'value':int(match[3]),'line':index+1,'raw':line})
+
 ```
 
 ## LLM Judge Rubric

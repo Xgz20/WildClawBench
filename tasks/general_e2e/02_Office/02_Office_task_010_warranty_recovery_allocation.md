@@ -13,6 +13,7 @@ tags:
   -general_task_e2e
   -Office
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/task010/overview.json
       role: grader_generated_evidence
@@ -112,12 +113,12 @@ ALIASES = {
  'policy':['policy_version','政策版本','适用政策'],
  'exception':['contract_exception','合同例外','合同例外类型','合同调整'],
  'share':['分摊比例','分摊份额','allocation_share','supplier_share','effective_share'],
- 'ratio':['责任比例','政策比例','policy_ratio','追偿比例'],
+ 'ratio':['政策责任比例','责任比例','政策比例','policy_ratio','追偿比例'],
  'cost':['维修成本','分摊维修成本','分摊成本','repair_cost','供应商维修成本'],
  'cap':['封顶金额','合同上限','cap_amount'],
- 'already':['已追偿金额','already_recovered','历史已追偿','已入账金额'],
- 'current':['本次可追偿金额','本次可追偿','current_recovery','recoverable_amount','本次追偿金额'],
- 'note':['分摊说明','allocation_note','核算说明','分摊依据','说明'],
+ 'already':['已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
+ 'current':['本次金额','本次可追偿金额','本次可追偿','current_recovery','recoverable_amount','本次追偿金额'],
+ 'note':['分摊及合同依据说明','分摊说明','allocation_note','核算说明','分摊依据','说明'],
  'source':['依据位置','来源','证据位置','source_ref','依据','来源位置'],
  'reason':['原因类型','reason_type','异常类型','review_reason','原因'],
  'rule':['触发规则','trigger_rule','规则'],
@@ -133,7 +134,7 @@ def header_key(value):
     return LOOKUP.get(key) or LOOKUP.get(re.sub(r'(?:人民币元|元|百分比|%)$', '',key))
 SHEET_ALIASES={
  'detail':['可追偿明细','追偿明细','recoverable_detail','recovery_detail'],
- 'review':['不可追偿或待核查','不可追偿及待核查','不可追偿/待核查','待核查明细','review_detail','needs_review'],
+ 'review':['待核查事项','不可追偿或待核查','不可追偿及待核查','不可追偿/待核查','待核查明细','review_detail','needs_review'],
  'summary':['供应商追偿汇总','供应商汇总','supplier_recovery_summary','summary'],
 }
 
@@ -258,7 +259,7 @@ def read_tables(path):
             cols={}
             for c in range(1,ws.max_column+1):
                 raw=cells.cell(ws.title,ws.cell(ri,c).coordinate);key=header_key(raw)
-                if key and key not in cols:cols[key]=c
+                if key and (key not in cols or (key=='cost' and _warranty_allocated_cost_header(raw) and not _warranty_allocated_cost_header(cells.cell(ws.title,ws.cell(ri,cols[key]).coordinate)))):cols[key]=c
             inferred='summary' if {'supplier','count','gross'}<=cols.keys() else 'review' if 'claim' in cols and ('reason' in cols or 'action' in cols) else 'detail' if {'claim','supplier','current'}<=cols.keys() else None
             kind=named or inferred
             if not inferred or not kind:continue
@@ -423,6 +424,13 @@ def grade(transcript,workspace_path):
     scores['overall_score']=sum(WEIGHTS[k]*scores[k] for k in WEIGHTS)/87
     scores['diagnostics']=diagnostics
     return scores
+
+def _warranty_allocated_cost_header(value):
+    # Raw repair cost and allocated supplier cost may coexist. Only an explicit
+    # allocated heading takes precedence; never substitute a private oracle value.
+    name=re.sub(r'(?:人民币元|元)$', '', norm(value))
+    return name in {'分摊维修成本','分摊成本','供应商维修成本'}
+
 
 ```
 

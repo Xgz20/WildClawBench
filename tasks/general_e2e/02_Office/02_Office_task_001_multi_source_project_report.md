@@ -13,6 +13,8 @@ tags:
  -general_task_e2e
  -Office
  -project
+judge_evidence:
+  semantic_status_profile: evidence-aware-v1
 ---
 
 # 星桥客服平台升级项目阶段工作报告

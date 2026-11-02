@@ -1,0 +1,21 @@
+{
+  "source_id": "S2-yang-jingjian",
+  "role": "evaluator_reference_not_candidate_output",
+  "url": "https://njucml.nju.edu.cn/5e/d2/c22609a351954/page.htm",
+  "title": "以“立人”为旨归的“别立新宗”——鲁迅世界的文化创设",
+  "retrieved_on": "2026-11-02",
+  "original_response_sha256": "8873e1c11c5fe1d929456b91feac9b289e8f90962e2e570b96729f9f9c9a3718",
+  "coverage": "primary_short_excerpt",
+  "excerpt": "“立人”是鲁迅始终如一的文化理念和价值立场",
+  "reviewer_summary": "摘要及第一节把立人作为持续的价值立场。该短句不能独自证明文中所有思想资源及阶段比较；其他命题须按相关段落另核。",
+  "reviewer_summary_is_not_original_text": true,
+  "fulltext_included": false,
+  "locator": "内容摘要第一句；第一节首段",
+  "supports": [
+    "立人被作者视为持续的价值立场"
+  ],
+  "does_not_establish": [
+    "另一研究者的具体论证",
+    "论文全部语境与全部引文"
+  ]
+}

@@ -133,7 +133,7 @@ def normalize_judge_evidence(raw: Any) -> dict:
         return {}
     if not isinstance(raw, dict):
         raise ValueError("judge_evidence must be a mapping")
-    unknown = sorted(set(raw) - {"required", "references"})
+    unknown = sorted(set(raw) - {"required", "references", "semantic_status_profile", "claim_review_keys", "preserve_native_channels"})
     if unknown:
         raise ValueError(f"judge_evidence contains unsupported keys: {unknown}")
     required = _normalize_judge_evidence_items(
@@ -142,10 +142,24 @@ def normalize_judge_evidence(raw: Any) -> dict:
     references = _normalize_judge_evidence_items(
         raw.get("references"), default_role="reference"
     )
-    return {
+    result = {
         "required": required,
         "references": references,
     }
+    if "semantic_status_profile" in raw:
+        if raw["semantic_status_profile"] != "evidence-aware-v1":
+            raise ValueError("unknown semantic_status_profile")
+        result["semantic_status_profile"] = raw["semantic_status_profile"]
+    if "claim_review_keys" in raw:
+        values = raw["claim_review_keys"]
+        if not isinstance(values, list) or not all(isinstance(v, str) and v for v in values) or len(set(values)) != len(values):
+            raise ValueError("invalid claim_review_keys")
+        result["claim_review_keys"] = values
+    if "preserve_native_channels" in raw:
+        if not isinstance(raw["preserve_native_channels"], bool):
+            raise ValueError("preserve_native_channels must be boolean")
+        result["preserve_native_channels"] = raw["preserve_native_channels"]
+    return result
 
 
 def parse_rubric_criteria(rubric_text: str) -> list[dict]:

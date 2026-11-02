@@ -5,6 +5,11 @@ description: 校验 WildClawBench 评测任务的 Markdown/frontmatter、评分�
 
 # Validate Eval Dataset
 
+资源检查按执行时的exec覆盖层解析路径，保留中文和空格，并核对ZIP/XMind内部附件。
+题内Python使用AST读取完整路径常量及可静态追踪的grade辅助函数，不执行任务代码。
+设计中的缺失输入须通过 `expected_missing_inputs` 显式声明；若该负例文件意外出现则报错，
+不能为消除告警补造缺失内容。
+
 使用仓库内脚本做确定性静态校验。默认扫描 `<repo>/tasks`（包含 `tasks/extension`，排除仅供阅读的 `tasks/cn` 副本），也可重复指定 `--task-dir`、`--task-path`、`--task-id`；`--task-id @file` 按行读取 ID 清单。需要专门检查中文副本时显式加 `--include-doc-copies`。
 
 ```bash

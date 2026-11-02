@@ -454,7 +454,7 @@ def _is_extension_task(task: dict) -> bool:
         )
     except (KeyError, TypeError, ValueError):
         return False
-    return bool(relative_path.parts) and relative_path.parts[0] == "extension"
+    return bool(relative_path.parts) and relative_path.parts[0] in {"extension", "general_e2e"}
 
 
 def _pending_task_counts(tasks: list[dict]) -> tuple[int, int]:
@@ -465,10 +465,12 @@ def _pending_task_counts(tasks: list[dict]) -> tuple[int, int]:
 
 def _log_pending_task_counts(tasks: list[dict]) -> None:
     official_count, extension_count = _pending_task_counts(tasks)
+    label = "tasks/general_e2e" if any("general_e2e" in Path(str(t.get('file_path', ''))).parts for t in tasks) else "tasks/extension"
     logger.info(
-        "待执行用例数: %d（开源评测集: %d，自建评测集 tasks/extension: %d）",
+        "待执行用例数: %d（开源评测集: %d，自建评测集 %s: %d）",
         len(tasks),
         official_count,
+        label,
         extension_count,
     )
 
@@ -501,8 +503,8 @@ def _task_scope_entry(task: dict) -> dict[str, Any]:
     category = str(task.get("category") or "").strip()
     try:
         relative = path.resolve().relative_to(TASKS_DIR.resolve())
-        if relative.parts and relative.parts[0] == "extension":
-            source = "extension"
+        if relative.parts and relative.parts[0] in {"extension", "general_e2e"}:
+            source = relative.parts[0]
             if len(relative.parts) > 1:
                 category = relative.parts[1]
         elif relative.parts:
@@ -1530,7 +1532,16 @@ def main() -> None:
             if result.get("error") or (result.get("scores") or {}).get("error"):
                 sys.exit(1)
         return
-    if args.category.lower() == "all":
+    dataset_groups = None
+    if getattr(args, 'dataset', None):
+        from src.utils.dataset_selection import dataset_task_paths
+        if args.modality or args.tags or args.exclude_tags:
+            raise ValueError("显式70题数据集不可通过modality/tag过滤缩小冻结范围")
+        dataset_manifest, dataset_groups = dataset_task_paths(ROOT_DIR, args.dataset)
+        categories = list(dataset_groups)
+        logger.info("Dataset: %s, digest: %s, frozen tasks: %d", args.dataset,
+                    dataset_manifest['dataset_digest'], dataset_manifest['task_count'])
+    elif args.category.lower() == "all":
         categories = ALL_CATEGORIES
     else:
         categories = [args.category]
@@ -1549,9 +1560,11 @@ def main() -> None:
         extension_dir = TASKS_DIR / "extension" / category
 
         task_files = []
-        if category_dir.exists():
+        if dataset_groups is not None:
+            task_files = dataset_groups[category]
+        elif category_dir.exists():
             task_files.extend(sorted(category_dir.glob("*task_*.md")))
-        if extension_dir.exists():
+        if dataset_groups is None and extension_dir.exists():
             task_files.extend(sorted(extension_dir.glob("*task_*.md")))
 
         if not task_files:

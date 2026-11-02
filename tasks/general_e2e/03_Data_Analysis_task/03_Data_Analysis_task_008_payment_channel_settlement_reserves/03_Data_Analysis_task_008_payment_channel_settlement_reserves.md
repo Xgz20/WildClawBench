@@ -14,6 +14,7 @@ tags:
   - general_e2e
   - finance
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: 评分证据/分析与核对.json
       role: grader_generated_evidence
@@ -222,7 +223,8 @@ def grade(transcript:list, workspace_path:str)->dict:
                 for field in fields:
                     if not condition(er[field]):continue
                     total+=1
-                    ok=field in ar and cmp(ar.get(field),er[field])
+                    represented=_ge2e_field_representation(ar.get(field),er[field],field) if cmp is same else None
+                    ok=field in ar and (represented if represented is not None else cmp(ar.get(field),er[field]))
                     passed+=ok
                     if not ok and len(examples)<4:examples.append({'表':t,'对象':str(key),'字段':field,'期望':er[field],'实际':ar.get(field)})
         raw=passed/total if total else 0
@@ -332,6 +334,32 @@ def grade(transcript:list, workspace_path:str)->dict:
         raise RuntimeError('评测方需复核后才能合分：'+ '; '.join(diag['review_required'][:5]))
     result['overall_score']=sum(WEIGHTS[k]*result[k] for k in WEIGHTS)/80
     return result
+import re
+_GE2E_REPRESENTATION_KIND = 'voucher'
+
+
+def _ge2e_field_representation(a,b,field):
+    if _GE2E_REPRESENTATION_KIND=='learning_steps' and field=='步骤名称':
+        aliases={'有效学习':'学习','测验通过':'测验'}
+        if str(a).strip() in aliases:return aliases[str(a).strip()]==str(b).strip()
+    if _GE2E_REPRESENTATION_KIND=='voucher' and field=='凭证状态' and str(a).strip()=='已核凭证':
+        return str(b).strip()=='已提供'
+    if _GE2E_REPRESENTATION_KIND=='date' and field=='起点日期':
+        from datetime import date,datetime,timedelta
+        if not isinstance(b,str) or not re.fullmatch(r'\d{4}-\d{2}-\d{2}',b):return None
+        try:
+            value=a if isinstance(a,(date,datetime)) else datetime.fromisoformat(str(a).strip())
+            if isinstance(value,datetime):
+                if value.tzinfo is not None and value.utcoffset()!=timedelta(hours=8):return None
+                value=value.date()
+            return value.isoformat()==b
+        except (TypeError,ValueError):return None
+    if field=='归因状态' and _GE2E_REPRESENTATION_KIND in {'attribution','redemption'}:
+        aliases={'已归因':'触点归因'}
+        if _GE2E_REPRESENTATION_KIND=='redemption':aliases['核销渠道']='核销码优先'
+        if str(a).strip() in aliases:return aliases[str(a).strip()]==str(b).strip()
+    return None
+
 
 ```
 

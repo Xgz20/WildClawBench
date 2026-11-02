@@ -10,6 +10,7 @@ grading_weights:
   automated: 0.0
   llm_judge: 1.0
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/reference_answer.md
       role: evaluator_reference_not_agent_output

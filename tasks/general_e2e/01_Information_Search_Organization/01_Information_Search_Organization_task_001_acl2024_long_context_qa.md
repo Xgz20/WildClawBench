@@ -10,6 +10,7 @@ grading_weights:
   automated: 0.22
   llm_judge: 0.78
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
   required:
     - path: evaluator_evidence/
       role: grader_generated_evidence

@@ -14,9 +14,10 @@ import stat
 import subprocess
 import zipfile
 from collections import Counter
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Sequence
+from .source_history import FrozenSources
 
 from eval_general_e2e.shared.dataset_bundle.verify import (
     BUNDLE_PROTOCOL,
@@ -55,6 +56,8 @@ class DatasetDefinition:
     task_glob: str = "*/*_task_*.md"
     category_directories: tuple[tuple[str, str], ...] = ()
     source_revision: Optional[str] = None
+    frozen_source_index: Optional[str] = None
+    task_ids: tuple[str, ...] = ()
 
 
 DEFAULT_DEFINITION = DatasetDefinition(
@@ -96,13 +99,25 @@ GENERAL116_DEFINITION = DatasetDefinition(
     workspace_root="workspace/general_e2e",
     task_glob="**/*_task_*.md",
     source_revision="9bee3a1260676446880ed125f25b1026d1cca9ce",
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-custom116-v1/index.json",
     category_directories=(
         ("01_Information_Search_Organization", "01_Information_Search_Organization"),
         ("02_Office", "02_Office"),
         ("03_Data_Analysis_task", "data-analysis"),
     ),
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION)}
+_GENERAL70 = json.loads((Path(__file__).parent / "definitions/general-custom70-v2.json").read_text(encoding="utf-8"))
+_GENERAL70_STATS = _GENERAL70["expected_statistics"]
+GENERAL70_V2_DEFINITION = replace(
+    GENERAL116_DEFINITION, dataset_id="general-custom70-v2",
+    created_at=_GENERAL70["created_at"], source_revision=None, frozen_source_index=None,
+    task_ids=tuple(_GENERAL70["task_ids"]), expected_task_count=70,
+    expected_category_counts=_GENERAL70_STATS["category_counts"],
+    expected_grading_type_counts=_GENERAL70_STATS["grading_type_counts"],
+    expected_difficulty_counts=_GENERAL70_STATS["difficulty_counts"],
+    expected_timeout_counts=_GENERAL70_STATS["timeout_counts"],
+)
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -186,8 +201,8 @@ def _strip_codeblock(raw: str) -> str:
     return re.sub(r"\n?```$", "", value).strip()
 
 
-def _parse_task_source(path: Path) -> tuple[dict[str, Any], dict[str, str], bytes]:
-    raw = path.read_bytes()
+def _parse_task_source(path: Path, *, raw: bytes | None = None) -> tuple[dict[str, Any], dict[str, str], bytes]:
+    raw = path.read_bytes() if raw is None else raw
     text = raw.decode("utf-8")
     match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)", text, re.DOTALL)
     if not match:
@@ -220,7 +235,7 @@ def _normalized_mode(path: Path, kind: str) -> int:
     return 0o755 if stat.S_IMODE(path.lstat().st_mode) & 0o111 else 0o644
 
 
-def _tree_materials(root: Path, bundle_root: str) -> tuple[dict[str, Any], list[BundleMember]]:
+def _tree_materials(root: Path, bundle_root: str, *, sources: FrozenSources | None = None) -> tuple[dict[str, Any], list[BundleMember]]:
     if not root.is_dir():
         raise ValueError(f"required material directory is missing: {root}")
     entries: list[dict[str, Any]] = []
@@ -228,6 +243,8 @@ def _tree_materials(root: Path, bundle_root: str) -> tuple[dict[str, Any], list[
 
     def visit(directory: Path) -> None:
         for child in sorted(directory.iterdir(), key=lambda item: item.name):
+            if sources is not None and sources.excludes(child):
+                continue
             # Interpreter/test caches are host-generated, not dataset materials.
             # Filter before traversal so ignored cache trees are never read.
             if child.name == "__pycache__" or child.suffix == ".pyc":
@@ -273,7 +290,7 @@ def _tree_materials(root: Path, bundle_root: str) -> tuple[dict[str, Any], list[
                 ))
                 visit(child)
             elif child.is_file():
-                data = child.read_bytes()
+                data = sources.read_bytes(child) if sources is not None else child.read_bytes()
                 mode = _normalized_mode(child, "file")
                 entries.append({
                     "kind": "file",
@@ -337,6 +354,8 @@ def _task_contracts(
         "judge_evidence": metadata.get("judge_evidence") or {},
         "private_scoring_sha256": scoring_tree["sha256"],
     }
+    if metadata.get("rule_result_adapter") is not None:
+        scoring["rule_result_adapter"] = metadata["rule_result_adapter"]
     return execution, scoring
 
 
@@ -351,12 +370,16 @@ def _adapt_imported_contract(contract: dict[str, Any]) -> None:
         if not weights or abs(total - budget) > 1e-6 or total <= 0:
             raise ValueError(f"semantic point weights do not match group budget: {contract['task_id']}")
         contract["semantic_weight_scale"] = total
+    declared_adapter = contract.get("rule_result_adapter") or {}
+    if not isinstance(declared_adapter, dict):
+        raise ValueError("rule_result_adapter must be an object")
     contract["rule_result_adapter"] = {
         "schema_version": "wildclawbench.general-e2e-numeric-diagnostics/v1",
         "diagnostic_keys": ["diagnostics", "诊断"],
         "evidence_only": float(contract["grading_weights"].get("automated", 0)) == 0,
         # This source explicitly defines its numeric v2 interface as an equal mean.
         "default_overall": "mean" if contract["task_id"] == "02_Office_task_001_multi_source_project_report" else None,
+        **declared_adapter,
     }
 
 
@@ -408,6 +431,7 @@ def compile_dataset(
 ) -> tuple[dict[str, Any], list[BundleMember]]:
     """Compile source tasks into a manifest plus deterministic archive members."""
     repo_root = repo_root.resolve()
+    sources = FrozenSources(repo_root, definition.frozen_source_index)
     tasks_root = repo_root / definition.task_root
     registry_path = tasks_root / "task_sources.yaml"
     schema_path = default_schema_path()
@@ -429,9 +453,10 @@ def compile_dataset(
     exclude = set(definition.exclude_tags)
     parsed: list[tuple[Path, dict[str, Any], dict[str, str], bytes]] = []
     for task_path in sorted(tasks_root.glob(definition.task_glob)):
-        metadata, sections, raw = _parse_task_source(task_path)
+        metadata, sections, raw = _parse_task_source(task_path, raw=sources.read_bytes(task_path))
         tags = set(_normalized_tags(metadata.get("tags")))
-        if include.issubset(tags) and not tags.intersection(exclude):
+        if (include.issubset(tags) and not tags.intersection(exclude)
+                and (not definition.task_ids or metadata.get("id") in definition.task_ids)):
             parsed.append((task_path, metadata, sections, raw))
 
     task_ids = [str(item[1].get("id") or "") for item in parsed]
@@ -468,15 +493,15 @@ def compile_dataset(
 
         task_root = f"tasks/{task_id}"
         execution_tree, execution_members = _tree_materials(
-            workspace_root / "exec", f"{task_root}/execution/exec"
+            workspace_root / "exec", f"{task_root}/execution/exec", sources=sources
         )
         scoring_tree, scoring_members = _tree_materials(
-            workspace_root / "gt", f"{task_root}/private-scoring/gt"
+            workspace_root / "gt", f"{task_root}/private-scoring/gt", sources=sources
         )
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id == GENERAL116_DEFINITION.dataset_id:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

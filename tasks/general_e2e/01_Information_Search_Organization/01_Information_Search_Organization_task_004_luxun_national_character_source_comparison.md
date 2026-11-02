@@ -10,7 +10,13 @@ grading_weights:
   automated: 0.02
   llm_judge: 0.98
 judge_evidence:
+  semantic_status_profile: evidence-aware-v1
+  claim_review_keys: [scholar_claim_binding]
   required:
+    - path: evaluator_evidence/reference_sources.json
+      role: evaluator_reference_not_agent_output
+    - path: evaluator_evidence/source_evidence/
+      role: evaluator_reference_not_agent_output
     - path: evaluator_evidence/reference_answer.md
       role: evaluator_reference_not_agent_output
     - path: evaluator_evidence/candidate_answer.md
@@ -39,7 +45,7 @@ tags: [custom, academic, general_task_e2e]
 
 ## Grading Criteria
 
-评分版本：2026-10-16.1；参考答案版本：2026-10-13.2。共23个检查点：1个确定性规则项2分，22个LLM项98分。规则只核查来源链接的结构存在；事实、史料关系、分析、调用落实及核验声明由LLM按明确单元判分。难度L3是设计标注，需真实测评校准。
+评分版本：2026-11-02.1；参考答案版本：2026-11-02.1。共23个检查点：1个确定性规则项2分，22个LLM项98分。规则只核查来源链接的结构存在；事实、史料关系、分析、调用落实及核验声明由LLM按明确单元判分。难度L3是设计标注，需真实测评校准。
 
 | 完整输出key | 类型 | 题目分值 | 检查对象 | 主能力 |
 |---|---|---:|---|---|
@@ -75,7 +81,7 @@ tags: [custom, academic, general_task_e2e]
 
 来源传递是条件性题目合规项：完整轨迹确认已执行实质外部检索且N=0时明确免扣，Score=1、计2分，记录`handoff_observed=false`、`credit_basis=not_triggered_exempt`，不是实测传递满分。N>0继续按实际传递单元计分。该项在所有运行中统一不纳入能力映射，实际触发时仍展示N与得分；不按各模型是否触发动态删项或重归一。缺轨迹不能当N=0，仍不发布受影响的题目总分。
 
-其他必要映射项缺证据或不可判定时，不把占位0当有效能力分。只有某维所属项全部有效才能发布该维正式分；全部映射项有效才能发布正式能力总分，否则展示确定明细和状态。新增目录项基于公开调用、回执及实际生效路径评价执行上下文，不推断内部意图。现有七维报告器不自动实现本题五维公式；本题只在现有checkpoint_capability_map7.yaml登记，不修改框架。
+其他必要映射项缺证据或不可判定时，不把占位0当有效能力分。只有某维所属项全部有效才能发布该维正式分；全部映射项有效才能发布正式能力总分，否则展示确定明细和状态。新增目录项基于公开调用、回执及实际生效路径评价执行上下文，不推断内部意图。本题使用独立的checkpoint_capability_map5.yaml登记五维映射；旧60题继续使用独立的七维映射，互不替换或折算。
 
 运行有效性单独判定，不作为额外扣分项：完整记录确认实际取得其他候选回答、历史同题答案、GT或私有评分材料内容时，标`invalid_contaminated`，不发布正式业务总分、能力分或排名，仅保留注明无效的诊断明细。实际读取来源不明的共享文件须先核实内容；不能仅凭路径把普通系统文件判为答案污染，无法核实则标`evidence_insufficient`并暂停正式发布。ENOENT、被阻止且未返回内容的请求只按隔离项计分，不使运行失效；本次自己新建的临时文件只按临时目录项计分。确认内容污染与越界尝试是不同结果，不能把污染简化成扣2分后照常排名。
 
@@ -96,7 +102,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 
-EXPECTED_REFERENCE_SHA256 = "f8147c864b19f5601a038e44aa718405f5594eb61bc4cc5f0117ef85a4c4c209"
+EXPECTED_REFERENCE_SHA256 = "b3c5c0644af6f959b88ba343b010d9ad51251d864b829f74f4a089de84e543e8"
+EXPECTED_SOURCE_INDEX_SHA256 = "0fde1f0d6559379f9b64030003fe943bb2bc08de049fce4f9759495121950c68"
 
 
 def _visible_text(message):
@@ -248,6 +255,30 @@ def grade(transcript: list, workspace_path: str) -> dict:
         path.write_text(content, encoding="utf-8")
         if path.read_text(encoding="utf-8") != content:
             raise ValueError("EVALUATOR_ERROR: evidence export verification failed")
+    index_path = reference.parent / "reference_sources.json"
+    if index_path.is_symlink() or hashlib.sha256(index_path.read_bytes()).hexdigest() != EXPECTED_SOURCE_INDEX_SHA256:
+        raise ValueError("EVALUATOR_ERROR: reference source index mismatch")
+    source_index = json.loads(index_path.read_text(encoding="utf-8"))
+    source_output = evidence / "source_evidence"
+    if source_output.is_symlink():
+        raise ValueError("EVALUATOR_ERROR: reference output symlink")
+    source_output.mkdir(exist_ok=True)
+    for item in source_index["sources"]:
+        relative = Path(item["path"])
+        if relative.is_absolute() or relative.parts[0] != "source_evidence" or len(relative.parts) != 2 or ".." in relative.parts:
+            raise ValueError("EVALUATOR_ERROR: unsafe reference source path")
+        origin = reference.parent / relative
+        target = evidence / relative
+        if origin.is_symlink() or origin.parent.is_symlink() or target.is_symlink():
+            raise ValueError("EVALUATOR_ERROR: reference source symlink")
+        data = origin.read_bytes()
+        if hashlib.sha256(data).hexdigest() != item["sha256"]:
+            raise ValueError("EVALUATOR_ERROR: reference source bytes mismatch")
+        target.write_bytes(data)
+    index_output = evidence / "reference_sources.json"
+    if index_output.is_symlink():
+        raise ValueError("EVALUATOR_ERROR: reference index output symlink")
+    index_output.write_bytes(index_path.read_bytes())
     return {"source_link_present": score, "overall_score": score, "diagnostics": diagnostics}
 ```
 
@@ -396,6 +427,10 @@ def grade(transcript: list, workspace_path: str) -> dict:
 ### Criterion 13: 学术解释的来源归属 (key: scholar_claim_binding, weight: 4)
 
 两个固定单元：①该组实际使用研究的主要解释均对应到正确研究作品及作者，不把候选自拟概括冒充作者结论；②转述与所引研究实际论证范围相符，摘要支持总论时不虚构摘要外的具体论证。可用全文、准确摘要或学术著作相关章节，只要支持所声称的内容；未取得其他段落并不自动判转述错误。这里判研究实际说什么，两个解释之间怎样比较另计。
+
+逐主张列出处、原文定位及两个固定单元台账，状态仅为supported、contradicted、evaluator_reference_unavailable。取得准确摘要或相关段落即可核定其支持范围，不强制下载全文。每个单元有独立的已证实反例则不通过；没有反例但仍有实质主张无法核定，则该单元为未知；全部实质主张获支持才通过。未决不作0或1，不删项重归一；不得挑选最有利的两项研究以忽略其他实质错误。一个根因只归最直接单元。裁判拿不到全文、网页403、书目之外无正文或GT目录未收录，均不能独自证明候选观点错误。
+
+结构化CLI输出在claim_reviews.scholar_claim_binding记录unit、claim_id、claim、status和evidence_refs。General E2E使用同一台账，引用已查询冻结evidence_id及具体位置；未知项在criteria中为unresolved/null。只有两个原固定单元都可判定才按原分档合分，否则整题正式总分保持null。
 
 **Score 1**: 2个单元通过。
 **Score 0.5**: 1个单元通过。
