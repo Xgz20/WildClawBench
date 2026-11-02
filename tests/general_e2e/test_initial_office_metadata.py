@@ -17,12 +17,14 @@ SPEC.loader.exec_module(MODULE)
 sha = lambda data: hashlib.sha256(data).hexdigest()
 
 
-def office(marker=False, changed=False):
+def office(marker=False, changed=False, unqualified=False):
     output = BytesIO()
     with zipfile.ZipFile(output, 'w') as z:
         extra = '<Override PartName="/docProps/custom.xml" ContentType="%s"/>' % MODULE.CUSTOM_TYPE if marker else ''
+        if unqualified: extra = extra.replace('<Override ', '<Override xmlns="" ')
         z.writestr('[Content_Types].xml', '<Types xmlns="%s">%s</Types>' % (MODULE.CT, extra))
         extra = '<Relationship Id="cwm" Type="%s" Target="docProps/custom.xml"/>' % MODULE.CUSTOM_REL if marker else ''
+        if unqualified: extra = extra.replace('<Relationship ', '<Relationship xmlns="" ')
         z.writestr('_rels/.rels', '<Relationships xmlns="%s">%s</Relationships>' % (MODULE.REL, extra))
         z.writestr('xl/workbook.xml', b'changed-business' if changed else b'original-business')
         if marker:
@@ -81,3 +83,9 @@ class InitialOfficeMetadataTests(unittest.TestCase):
         with self.archive.open('ab') as stream: stream.write(b'drift')
         with self.assertRaisesRegex(ValueError, 'original execution ZIP drift'):
             MODULE.audit(self.unit, 'task', self.unit / '.general-e2e/queue-repairs/test/audit')
+
+    def test_registered_unqualified_custom_metadata_nodes_keep_all_business_parts_exact(self):
+        delta = MODULE.office_delta(office(), office(marker=True, unqualified=True))
+        self.assertTrue(delta['business_members_unchanged'])
+        with self.assertRaisesRegex(ValueError, 'business Office member changed'):
+            MODULE.office_delta(office(), office(marker=True, changed=True, unqualified=True))

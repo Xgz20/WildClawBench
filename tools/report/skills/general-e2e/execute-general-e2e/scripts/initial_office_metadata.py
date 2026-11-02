@@ -50,14 +50,14 @@ def metadata_view(data, path):
         if node.tag != f"{{{CT}}}Types": raise ValueError("content types namespace")
         for child in list(node):
             if child.attrib.get("PartName") == "/docProps/custom.xml":
-                if child.tag != f"{{{CT}}}Override" or child.attrib != {"PartName":"/docProps/custom.xml", "ContentType":CUSTOM_TYPE}:
+                if child.tag not in {f"{{{CT}}}Override", "Override"} or child.attrib != {"PartName":"/docProps/custom.xml", "ContentType":CUSTOM_TYPE}:
                     raise ValueError("unknown custom content type")
                 node.remove(child)
     else:
         if node.tag != f"{{{REL}}}Relationships": raise ValueError("relationships namespace")
         for child in list(node):
             if child.attrib.get("Type") == CUSTOM_REL:
-                if child.tag != f"{{{REL}}}Relationship" or set(child.attrib) != {"Id","Type","Target"} or child.attrib["Target"] != "docProps/custom.xml":
+                if child.tag not in {f"{{{REL}}}Relationship", "Relationship"} or set(child.attrib) != {"Id","Type","Target"} or child.attrib["Target"] != "docProps/custom.xml":
                     raise ValueError("unknown custom relationship")
                 node.remove(child)
     return structure(node)
@@ -167,7 +167,7 @@ def audit(unit, task_id, output):
     for file, expected in snapshots:
         if sha(regular_bytes(file)) != expected: raise ValueError('initial Workspace still changing')
     proof = {'schema_version': 'wildclawbench.workbuddy-initial-office-metadata/v1',
-             'status': 'PASS_CWM_ONLY', 'profile': 'canonical-cwm-only-initial-input/v1',
+             'status': 'PASS_CWM_ONLY', 'profile': 'canonical-cwm-only-initial-input/v2',
              'created_at': datetime.now(timezone.utc).isoformat(),
              'identity': {'batch_id': manifest['batch_id'], 'unit_id': manifest['unit_id'], 'task_id': task_id},
              'execution_manifest_sha256': sha(manifest_bytes), 'execution_package_sha256': lock['execution_sha256'],
