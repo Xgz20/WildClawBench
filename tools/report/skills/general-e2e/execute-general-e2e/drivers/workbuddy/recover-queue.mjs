@@ -2,6 +2,8 @@
 // Explicit, audited recovery of a dead owner's zero-send preparation failures.
 // It never sends a Prompt, edits a Workspace, or retries an accepted attempt.
 import { createHash, randomUUID } from "node:crypto";
+import { execFile as execFileCallback } from "node:child_process";
+import { promisify } from "node:util";
 import { link, lstat, mkdir, open, readFile, realpath, rename, unlink, writeFile } from "node:fs/promises";
 import { hostname } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
@@ -12,6 +14,7 @@ import { inspectWorkBuddyMacos, parseArgs as parseProbeArgs } from "./probe.mjs"
 import { assertWorkBuddyUiIdle, discoverWorkBuddyMainTarget, readWorkBuddyUi, WorkBuddyCdpClient } from "./ui.mjs";
 
 const SCHEMA = "wildclawbench.workbuddy-zero-send-queue-repair/v1";
+const execFile = promisify(execFileCallback);
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const json = value => Buffer.from(JSON.stringify(value, null, 2) + "\n");
 const readJson = async path => JSON.parse(await readFile(path, "utf8"));
@@ -51,7 +54,7 @@ async function moveVerified(source, destination, expected) {
     await unlink(source);
   }
 }
-async function initialWorkspace(config) {
+async function initialWorkspace(config, variants = []) {
   const expected = new Map(config.task.workspace.entries.map(e => [e.path.normalize("NFC"), e]));
   const found = new Set();
   async function walk(directory, prefix = "") {
@@ -65,7 +68,11 @@ async function initialWorkspace(config) {
       else {
         requireOk(want.kind === "file" && entry.isFile(), "INITIAL_WORKSPACE_TYPE_DRIFT");
         const value = await plain(path);
-        requireOk(value.sha256 === want.sha256 && value.size === want.size, "INITIAL_WORKSPACE_BYTES_DRIFT");
+        const same = value.sha256 === want.sha256 && value.size === want.size;
+        const variant = variants.find(v => v.path.normalize("NFC") === key);
+        requireOk(same || (variant && variant.expected_sha256 === want.sha256 && variant.expected_size === want.size
+          && variant.actual_sha256 === value.sha256 && variant.actual_size === value.size
+          && variant.office_delta?.business_members_unchanged === true), "INITIAL_WORKSPACE_BYTES_DRIFT");
       }
     }
   }
@@ -160,7 +167,9 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
         if (row.phase === "PENDING") {
           requireOk(row.dispatch_attempt_count === 0 && !row.conversation_id && !row.request_id, "PENDING_SEND_UNKNOWN");
           requireOk(!await optional(config.journalFile) && !await optional(config.stateFile) && !await optional(config.bindingFile), "PENDING_ATTEMPT_ALREADY_EXISTS");
-          await initialWorkspace(config); continue;
+          // Recovery does not change unrelated, never-started workspaces.
+          // Re-reading all of them also provokes host Office watermarks.
+          continue;
         }
         if (row.phase === "FAILED" && row.dispatch_attempt_count === 0) {
           const journalSource = await plain(config.journalFile), journal = JSON.parse(journalSource.bytes);
@@ -181,17 +190,40 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
             && journal.verified_ui == null && journal.execution?.error?.code === "WORKBUDDY_PRE_SEND_DRIVER_ERROR"
             && ["WorkBuddy 新建任务按钮数量异常：0", "WORKBUDDY_UI_ERROR_BOUNDARY: native error page requires verified idle recovery"].includes(journal.execution.error.message), "NOT_REGISTERED_ZERO_SEND_FAILURE");
           requireOk(!await optional(config.stateFile) && !await optional(config.bindingFile), "UNEXPECTED_ATTEMPT_ARTIFACT");
-          await initialWorkspace(config);
+          let officeAuditSources = [];
+          try { await initialWorkspace(config); }
+          catch (error) {
+            if (error.message !== "WORKBUDDY_RECOVERY_INITIAL_WORKSPACE_BYTES_DRIFT") throw error;
+            const script = fileURLToPath(new URL("../../scripts/initial_office_metadata.py", import.meta.url));
+            const auditRoot = join(output, "initial-office", row.task_id + "-" + randomUUID());
+            const response = await execFile(manifest.initial_office_python || "/usr/bin/python3", [script,
+              "--unit-root", root, "--task-id", row.task_id, "--output-root", auditRoot],
+              { timeout: 60000, maxBuffer: 4 * 1024 * 1024, env: { ...process.env, PYTHONIOENCODING: "utf-8" } });
+            const audit = JSON.parse(response.stdout), proof = await readJson(audit.proof);
+            requireOk(audit.status === "PASS_CWM_ONLY" && proof.schema_version === "wildclawbench.workbuddy-initial-office-metadata/v1"
+              && proof.identity?.task_id === row.task_id && proof.identity?.batch_id === frozen.batch_id
+              && proof.identity?.unit_id === frozen.unit_id && proof.execution_manifest_sha256 === frozen.manifest_sha256
+              && proof.validator_sha256 === sha(await readFile(script)) && proof.workspace_modified === false, "INITIAL_OFFICE_AUDIT_INVALID");
+            for (const item of audit.artifacts) {
+              const path = resolve(root, item.path);
+              requireOk(relative(auditRoot, path) && !relative(auditRoot, path).startsWith("..") && !isAbsolute(relative(auditRoot, path)), "INITIAL_OFFICE_AUDIT_PATH_INVALID");
+              const saved = await plain(path);
+              requireOk(saved.sha256 === item.sha256 && saved.size === item.size, "INITIAL_OFFICE_AUDIT_DRIFT");
+            }
+            await initialWorkspace(config, proof.variants);
+            officeAuditSources = audit.artifacts;
+          }
           let priorRecovery = null;
           if (config.zeroSendRecovery) {
             const path = join(config.controlRoot, "zero-send-recovery.json"), original = await plain(path);
             priorRecovery = { path, destination: join(output, "original-case-recovery", row.task_id, "zero-send-recovery.json"),
               ...original, bytes: undefined,
-              prior_sources: [config.zeroSendRecovery.proof.original_journal, ...(config.zeroSendRecovery.proof.prior_sources || [])] };
+              prior_sources: [config.zeroSendRecovery.proof.original_journal, ...(config.zeroSendRecovery.proof.prior_sources || []),
+                ...(config.zeroSendRecovery.proof.audit_sources || [])] };
           }
           retries.push({ task_id: row.task_id, attempt_id: row.attempt_id, path: config.journalFile,
             destination: join(output, "original-attempts", row.task_id, "dispatch-journal.json"),
-            ...journalSource, bytes: undefined, prior_recovery: priorRecovery });
+            ...journalSource, bytes: undefined, prior_recovery: priorRecovery, office_audit_sources: officeAuditSources });
         } else {
           requireOk(row.dispatch_attempt_count === 1 && row.conversation_id && row.request_id, "UNKNOWN_OR_ACCEPTED_FAILURE");
           await synchronizeRow(root, row);
@@ -258,6 +290,10 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
       await moveVerified(retry.path, retry.destination, retry);
       await dependencies.afterArchive?.({ task_id: retry.task_id, destination: retry.destination });
       const originalJournal = await ref(retry.destination);
+      for (const item of retry.office_audit_sources || []) {
+        const saved = await ref(join(root, item.path));
+        requireOk(saved.sha256 === item.sha256 && saved.size === item.size, "INITIAL_OFFICE_AUDIT_DRIFT");
+      }
       const proofPath = join(dirname(retry.path), "zero-send-recovery.json");
       let priorSources = [];
       if (retry.prior_recovery) {
@@ -293,7 +329,8 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
         prompt_sha256: configs.find(c => c.task.task_id === retry.task_id).promptSha256,
         original_journal: originalJournal, original_queue_sha256: transaction.queue_sha256,
         recovery_manifest_sha256: transaction.manifest_sha256, operation_id: transaction.operation_id,
-        ...(priorSources.length ? { prior_sources: priorSources } : {}) };
+        ...(priorSources.length ? { prior_sources: priorSources } : {}),
+        ...(retry.office_audit_sources?.length ? { audit_sources: retry.office_audit_sources } : {}) };
       if (await optional(proofPath)) requireOk((await plain(proofPath)).bytes.equals(json(proof)), "CASE_RECOVERY_PROOF_DRIFT");
       else await writeFile(proofPath, json(proof), { flag: "wx", mode: 0o600 });
       const caseProof = await ref(proofPath);

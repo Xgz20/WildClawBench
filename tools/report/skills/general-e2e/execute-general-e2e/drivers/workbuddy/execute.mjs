@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.4";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.5";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -362,7 +362,7 @@ export async function resolveExecutionConfig(parsed) {
         || original.native?.request_id != null || original.native?.baseline != null) {
       throw new Error("WORKBUDDY_ZERO_SEND_RECOVERY_ORIGINAL_INVALID");
     }
-    const priorSources = proof.prior_sources || [];
+    const priorSources = [...(proof.prior_sources || []), ...(proof.audit_sources || [])];
     if (!Array.isArray(priorSources)) throw new Error("WORKBUDDY_ZERO_SEND_RECOVERY_PRIOR_INVALID");
     for (const ref of priorSources) {
       const priorPath = resolveManifestRelativePath(unitRoot, ref.path, "prior zero-send proof");

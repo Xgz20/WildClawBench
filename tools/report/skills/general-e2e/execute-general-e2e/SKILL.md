@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.25` 零发送恢复只复核实际恢复题目的初始Workspace，避免反复读取无关待执行Office素材而触发宿主水印。待恢复题目仅有严格CWM属性差异时，从round-unit锁定的原execution ZIP逐字节核对参考、比较全部OPC业务部件并保存原/现不可变审计；不改Workspace或旧SHA，非Office/业务变化仍拒绝。审计纳入恢复与正式绑定证据链；可用initial_office_python显式指定管理员Python。
+
 `0.14.24` 连续的已核验零发送准备恢复会归档上一份逐题恢复证明，并显式记录路径迁移及完整先前证据链，不覆盖旧证明；只有始终未armed/未受理的同attempt可再次准备。正式执行绑定携带全链SHA，旧队列和已发送结果保持原件。
 
 `0.14.23` WorkBuddy队列模块由stdin/eval导入时不再把“-”误当脚本路径；实际CLI仍按realpath核对入口，保留符号链接入口兼容性，不触发导入副作用或发送Prompt。
