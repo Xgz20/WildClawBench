@@ -507,7 +507,7 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
   }
 }
 
-if (process.argv[1] && await realpath(resolve(process.argv[1])) === await realpath(fileURLToPath(import.meta.url))) {
+if (process.argv[1] && await realpath(resolve(process.argv[1])).catch(() => null) === await realpath(fileURLToPath(import.meta.url))) {
   if (process.argv.includes("--help")) {
     console.log("WorkBuddy macOS 队列：node drivers/workbuddy/batch.mjs --unit-root PATH --queue-id ID --endpoint http://127.0.0.1:9229 --expected-permission default-sandbox [--run-slots 1-8] [--resume|--status]。UI 单槽，后台默认三路并按可信终态动态补位。");
   } else {

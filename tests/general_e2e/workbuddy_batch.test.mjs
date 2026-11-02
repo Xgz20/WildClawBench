@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import { spawnSync } from "node:child_process";
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { hostname, tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -13,6 +14,15 @@ import {
 import { recoverWorkBuddyQueue } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/recover-queue.mjs";
 
 const digest = value => createHash("sha256").update(value).digest("hex");
+
+test("WorkBuddy batch API imports from stdin without interpreting '-' as an executable path", () => {
+  const target = new URL("../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/batch.mjs", import.meta.url).href;
+  const child = spawnSync(process.execPath, ["--input-type=module", "-"], {
+    input: `import {resolveWorkBuddyBatchInvocation} from ${JSON.stringify(target)};console.log(typeof resolveWorkBuddyBatchInvocation);`, encoding: "utf8",
+  });
+  assert.equal(child.status, 0, child.stderr);
+  assert.equal(child.stdout.trim(), "function");
+});
 
 async function fixture(task_ids = ["one", "two", "three"]) {
   const root = await realpath(await mkdtemp(join(tmpdir(), "workbuddy-queue-")));

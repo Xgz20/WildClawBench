@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.23` WorkBuddy队列模块由stdin/eval导入时不再把“-”误当脚本路径；实际CLI仍按realpath核对入口，保留符号链接入口兼容性，不触发导入副作用或发送Prompt。
+
 `0.14.22` WorkBuddy恢复工具通过同一探针参数解析器补齐日志/历史目录等默认项，避免部分API参数导致路径预检异常；原冻结发行、队列及Prompt不改，恢复入口仍须完整身份、空闲与零发送证明。
 
 `0.14.21` WorkBuddy零发送准备失败立即停止补位，并继续观察已受理任务，避免连续把剩余题目标成能力失败。原生错误边界不再当作空闲编辑器；仅在全部本地原生任务空闲、原owner已退出、无未知锁时，才允许一次公开“刷新页面”恢复。`recover-queue.mjs`显式校验旧/新源码、原队列SHA、原件Workspace与零发送证明，保留旧队列/owner/journal并接续相同题序、槽位及attempt；已发送或不确定发送不重试。详见[WorkBuddy零发送恢复](references/workbuddy-zero-send-recovery.md)。
