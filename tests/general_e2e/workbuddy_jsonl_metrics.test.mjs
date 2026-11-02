@@ -49,6 +49,83 @@ function fixture(workspace = "/fixture/workspace") {
   return { rows, options, bytes, base, identity, snapshot, session };
 }
 
+function orphanFixture() {
+  const f = fixture(); f.snapshot.request.conversationRequestId = f.session.turn_id;
+  for (const row of f.rows.filter(x => x.providerData?.messageId)) {
+    row.providerData.conversationRequestId = f.session.turn_id; row.providerData.traceId = f.snapshot.request.traceId;
+  }
+  const response = "response-orphan";
+  const tool = { type: "tool", sessionUpdate: "tool_call_update", toolCallId: "call-orphan", title: "present", status: "cancelled",
+    rawInput: { files: "[]" }, _meta: { toolCancelReason: "orphan_pending_history", "codebuddy.ai/toolName": "present",
+      "codebuddy.ai/requestId": f.session.turn_id, "codebuddy.ai/conversationRequestId": f.session.turn_id,
+      "codebuddy.ai/llmMessageId": response, "codebuddy.ai/modelRequestId": response,
+      "codebuddy.ai/traceId": f.snapshot.request.traceId, "codebuddy.ai/responseModelId": "fixture-model" } };
+  f.snapshot.request.assistantMessage.content.splice(2, 0, tool);
+  const row = { type: "model-usage", id: "usage-record", parentId: "model-parent", timestamp: 100, cwd: f.session.cwd,
+    _meta: { baggage: `codebuddy.session_id=${f.session.session_id},codebuddy.conversation_request_id=${f.session.turn_id}` },
+    providerData: { conversationRequestId: f.session.turn_id, messageId: response, traceId: f.snapshot.request.traceId, model: "fixture-model",
+      usage: { requests: 1, inputTokens: 50, outputTokens: 5, totalTokens: 55,
+        inputTokensDetails: [{ cached_tokens: 40 }], outputTokensDetails: [{ reasoning_tokens: 0 }] },
+      rawUsage: { prompt_tokens: 50, completion_tokens: 5, total_tokens: 55, prompt_tokens_details: { cached_tokens: 40 } } } };
+  f.rows.push(row);
+  const error = { type: "message", role: "assistant", id: "admission-error", parentId: "model-parent", timestamp: 101,
+    sessionId: f.session.session_id, cwd: f.session.cwd,
+    content: [{ type: "output_text", text: 'Tool "present" does not exist in the current tool set.' }],
+    providerData: { skipRun: true, agent: "cli", conversationRequestId: f.session.turn_id,
+      error: { message: 'Tool "present" does not exist in the current tool set.', isNetworkError: false, isStreamTimeout: false, isRetryable: true } } };
+  f.rows.push(error);
+  return { ...f, orphan: tool, usageOnly: row, admissionError: error };
+}
+
+test("bound cancelled orphan and usage-only metadata preserve content and unknown invocation total", () => {
+  const f = orphanFixture(), bytes = f.bytes();
+  const parsed = parseBoundJsonl(bytes, f.options);
+  assert.equal(parsed.usage.request_count, 3);
+  assert.equal(parsed.usage.total_tokens, 405);
+  assert.equal(parsed.tools.call_count, null);
+  assert.equal(parsed.collection.known_subtotals.call_count, 2);
+  assert.deepEqual(parsed.collection.field_coverage.call_count, { known: 2, total: 3, unit: "tool_call" });
+  assert.deepEqual(bytes, f.bytes());
+  const metrics = applyJsonlMetrics(f.base, parsed, artifact("native.jsonl", bytes));
+  assert.equal(metrics.metrics.tools.call_count.status, "partial");
+  assert.equal(metrics.metrics.tools.call_count.value, null);
+  assert.deepEqual(metrics.collection.coverage.call_count, { known: 2, total: 3, unit: "tool_call" });
+  assert.equal(metrics.collection.known_subtotals.call_count, 2);
+  assert.ok(f.base.collection.metric_sources.call_count.every(ref => metrics.collection.metric_sources.call_count.includes(ref)));
+  assert.ok(metrics.collection.metric_sources.call_count.includes("native.jsonl"));
+});
+
+test("legacy usage-only records with explicit session and exact trace binding retain their counters", () => {
+  const f = fixture(), usage = orphanFixture().usageOnly;
+  usage.sessionId = f.session.session_id; usage.cwd = f.session.cwd; delete usage._meta;
+  usage.providerData.conversationRequestId = f.snapshot.request.traceId;
+  f.rows.push(usage);
+  const result = parseBoundJsonl(f.bytes(), f.options);
+  assert.equal(result.usage.total_tokens, 405);
+  assert.equal(result.usage.request_count, 3);
+  assert.equal(result.tools.call_count, 2);
+  assert.equal(result.collection.warnings.some(x => x.startsWith("WORKBUDDY_CANCELLED_ORPHAN_TOOL")), false);
+});
+
+test("orphan compatibility cannot hide active tools, fabricated results, foreign usage or conflicting tokens", () => {
+  for (const mutate of [
+    f => { f.orphan.status = "in_progress"; },
+    f => { f.orphan._meta.toolCancelReason = "unknown"; },
+    f => { f.orphan._meta["codebuddy.ai/modelRequestId"] = "other"; },
+    f => { f.orphan.rawOutput = "fabricated output"; },
+    f => { f.usageOnly.cwd = "/foreign"; },
+    f => { f.usageOnly.providerData.conversationRequestId = "foreign"; },
+    f => { f.usageOnly._meta.baggage = "codebuddy.session_id=foreign,codebuddy.conversation_request_id=request-fixture"; },
+    f => { f.usageOnly.providerData.rawUsage.total_tokens++; },
+    f => { f.admissionError.parentId = "foreign-parent"; },
+    f => { f.admissionError.providerData.skipRun = false; },
+    f => { f.admissionError.providerData.error.isNetworkError = true; },
+  ]) {
+    const f = orphanFixture(); mutate(f);
+    assert.throws(() => parseBoundJsonl(f.bytes(), f.options));
+  }
+});
+
 test("WorkBuddy JSONL counts model responses once across multiple tools and mirrored usage fields", () => {
   const f = fixture(); f.rows.splice(2, 0, structuredClone(f.rows[1]));
   const parsed = parseBoundJsonl(f.bytes(), f.options);

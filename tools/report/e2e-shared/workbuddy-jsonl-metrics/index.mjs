@@ -77,6 +77,28 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   if (rows.some(x => (x.sessionId && x.sessionId !== session.session_id) || (x.cwd && x.cwd !== session.cwd))) fail("IDENTITY_MISMATCH");
   const events = rows.filter(x => ["message", "function_call", "function_call_result"].includes(x.type));
   if (!events.length || events.some(x => x.sessionId !== session.session_id || x.cwd !== session.cwd)) fail("IDENTITY_MISMATCH");
+  const usageOnly = rows.filter(x => x.type === "model-usage");
+  const usageLegacyScope = snapshot.request.traceId || snapshot.request.conversationRequestId;
+  const verifiedUsageLegacyScope = Boolean(usageLegacyScope)
+    && events.filter(x => x.providerData?.messageId).every(x => x.providerData.conversationRequestId === usageLegacyScope);
+  for (const row of usageOnly) {
+    const baggage = new Map();
+    for (const field of (row._meta?.baggage ? String(row._meta.baggage).split(",") : [])) {
+      const at = field.indexOf("="); if (at < 0) fail("MODEL_USAGE_BINDING_MISSING");
+      const key = field.slice(0, at).trim(), value = decodeURIComponent(field.slice(at + 1).trim());
+      if (baggage.has(key)) fail("MODEL_USAGE_BINDING_DUPLICATE"); baggage.set(key, value);
+    }
+    const baggagePresent = baggage.has("codebuddy.session_id") || baggage.has("codebuddy.conversation_request_id");
+    const baggageBound = baggage.get("codebuddy.session_id") === session.session_id
+      && baggage.get("codebuddy.conversation_request_id") === session.turn_id;
+    if (row.cwd !== session.cwd || (row.sessionId != null && row.sessionId !== session.session_id)
+        || (baggagePresent && !baggageBound) || (row.sessionId == null && !baggageBound)
+        || !(row.providerData?.conversationRequestId === snapshot.request.id
+          || (verifiedUsageLegacyScope && row.providerData?.conversationRequestId === usageLegacyScope))
+        || typeof row.providerData?.messageId !== "string" || !row.providerData.messageId
+        || !row.providerData.usage || !row.providerData.rawUsage
+        || (row.providerData.traceId != null && row.providerData.traceId !== snapshot.request.traceId)) fail("MODEL_USAGE_BINDING_MISMATCH");
+  }
   const internalUsers = new Set();
   for (const row of events.filter(x => x.type === "message" && x.role === "user" && x.providerData?.isCompactInternal === true)) {
     const pd = row.providerData;
@@ -109,17 +131,52 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
         || (x.providerData.traceId != null && x.providerData.traceId !== snapshot.request.traceId))) fail("REQUEST_SCOPE_MISMATCH");
     separateRequestIdentity = true;
   }
-  const runtimeCalls = new Set((snapshot.request.assistantMessage?.content || [])
-    .filter(x => x.type === "tool" || x.sessionUpdate === "tool_call_update").map(x => x.toolCallId));
+  const runtimeTools = (snapshot.request.assistantMessage?.content || [])
+    .filter(x => x.type === "tool" || x.sessionUpdate === "tool_call_update");
+  const runtimeCalls = new Set(runtimeTools.map(x => x.toolCallId));
   const nativeCalls = new Set(events.filter(x => x.type === "function_call").map(x => x.callId));
-  if (!equal([...runtimeCalls].sort(), [...nativeCalls].sort())) fail("TOOL_COVERAGE_MISMATCH");
+  const cancelledOrphans = new Set();
+  for (const tool of runtimeTools.filter(x => !nativeCalls.has(x.toolCallId))) {
+    const meta = tool._meta || {}, responseId = meta["codebuddy.ai/llmMessageId"];
+    const usage = usageOnly.filter(row => row.providerData.messageId === responseId);
+    if (tool.status !== "cancelled" || meta.toolCancelReason !== "orphan_pending_history"
+        || typeof tool.toolCallId !== "string" || !tool.toolCallId || !tool.title
+        || meta["codebuddy.ai/toolName"] !== tool.title
+        || meta["codebuddy.ai/requestId"] !== snapshot.request.id
+        || meta["codebuddy.ai/conversationRequestId"] !== snapshot.request.id
+        || meta["codebuddy.ai/modelRequestId"] !== responseId || !usage.length
+        || meta["codebuddy.ai/traceId"] !== snapshot.request.traceId
+        || usage.some(row => row.providerData.model !== meta["codebuddy.ai/responseModelId"])
+        || ["output", "rawOutput", "content"].some(key => tool[key] != null)) fail("TOOL_COVERAGE_MISMATCH");
+    cancelledOrphans.add(tool.toolCallId);
+  }
+  if (!equal([...runtimeCalls].filter(id => !cancelledOrphans.has(id)).sort(), [...nativeCalls].sort())) fail("TOOL_COVERAGE_MISMATCH");
+  const admissionErrors = new Set();
+  for (const tool of runtimeTools.filter(x => cancelledOrphans.has(x.toolCallId))) {
+    const responseId = tool._meta["codebuddy.ai/llmMessageId"];
+    const expected = `Tool "${tool.title}" does not exist in the current tool set.`;
+    const matches = events.filter(row => {
+      const pd = row.providerData || {}, error = pd.error, previous = rows[rows.indexOf(row) - 1];
+      return row.type === "message" && row.role === "assistant" && pd.skipRun === true && pd.agent === "cli"
+        && pd.conversationRequestId === snapshot.request.id && pd.messageId == null
+        && error?.message === expected && textOf(row.content) === expected
+        && error.isNetworkError === false && error.isStreamTimeout === false && error.isRetryable === true
+        && previous?.type === "model-usage" && previous.providerData.messageId === responseId
+        && typeof row.parentId === "string" && row.parentId === previous.parentId
+        && Number.isFinite(row.timestamp) && row.timestamp >= previous.timestamp;
+    });
+    if (matches.length !== 1 || admissionErrors.has(matches[0])) fail("TOOL_ADMISSION_ERROR_BINDING_MISMATCH");
+    admissionErrors.add(matches[0]);
+  }
   const finals = [...new Map(events.filter(x => x.type === "message" && x.role === "assistant")
     .map(x => [JSON.stringify([x.id, x.content]), x])).values()];
+  const publicFinals = finals.filter(row => !admissionErrors.has(row));
   const runtimeFinal = textOf(snapshot.request.assistantMessage?.content);
-  if (!finals.length || !runtimeFinal || finals.map(x => textOf(x.content)).join("") !== runtimeFinal) fail("FINAL_RESPONSE_MISMATCH");
+  if (!publicFinals.length || !runtimeFinal || publicFinals.map(x => textOf(x.content)).join("") !== runtimeFinal) fail("FINAL_RESPONSE_MISMATCH");
   const rawById = new Map();
+  const allRawById = new Map();
   const unverifiedUsageIds = new Set();
-  for (const row of events) {
+  for (const row of [...events, ...usageOnly]) {
     const pd = row.providerData || {}, raw = pd.rawUsage, usage = pd.usage;
     if (raw && usage) {
       if (normalizedZeroMirror(raw, usage)) {
@@ -131,8 +188,11 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
         if (raw.prompt_tokens_details?.cached_tokens != null
             && raw.prompt_tokens_details.cached_tokens !== usage.inputTokensDetails?.reduce((s, x) => s + x.cached_tokens, 0)) fail("CACHE_USAGE_MISMATCH");
       }
-      if (rawById.has(pd.messageId) && !equal(rawById.get(pd.messageId), raw)) fail("CONFLICTING_RAW_USAGE");
-      rawById.set(pd.messageId, raw);
+      if (allRawById.has(pd.messageId) && !equal(allRawById.get(pd.messageId), raw)) fail("CONFLICTING_RAW_USAGE");
+      allRawById.set(pd.messageId, raw);
+      // Retain the legacy reasoning-coverage policy; do not backfill old
+      // unavailable reasoning metrics from newly recognized metadata rows.
+      if (row.type !== "model-usage") rawById.set(pd.messageId, raw);
     }
   }
   for (const row of events) {
@@ -150,6 +210,16 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
     } } : row;
   }) : rows;
   const parsed = parser(metricRows);
+  if (cancelledOrphans.size) {
+    const knownCalls = parsed.tools.call_count;
+    parsed.tools.call_count = null;
+    parsed.collection.metrics.call_count = { status: "partial", basis: "Persisted native calls are known; cancelled orphan projection has no persisted invocation record" };
+    parsed.collection.known_subtotals ??= {}; parsed.collection.known_subtotals.call_count = knownCalls;
+    parsed.collection.warnings.push(`WORKBUDDY_CANCELLED_ORPHAN_TOOL_V1: ${JSON.stringify([...cancelledOrphans])}; runtime cancellation and bound model-usage retained; invocation total remains unknown`);
+    for (const row of admissionErrors) parsed.collection.warnings.push(
+      `WORKBUDDY_TOOL_ADMISSION_ERROR_V1: native skipRun error ${row.id} retained separately from authored assistant replies: ${row.providerData.error.message}`,
+    );
+  }
   if (internalUsers.size) parsed.collection.warnings.push(
     `WORKBUDDY_COMPACTION_INTERNAL_USER_V1: native isCompactInternal metadata binds ${internalUsers.size} internal messages to the same request; original user Prompt and all raw bytes retained`,
   );
@@ -168,6 +238,10 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
       : [...usages.values()].filter(u => Number.isSafeInteger(read(u, field)) && read(u, field) >= 0).length,
     total: parsed.collection.response_coverage.total, unit: "model_response",
   }]));
+  if (cancelledOrphans.size) parsed.collection.field_coverage.call_count = {
+    known: parsed.collection.known_subtotals.call_count,
+    total: parsed.collection.known_subtotals.call_count + cancelledOrphans.size, unit: "tool_call",
+  };
   // Some client builds fill a missing reasoning detail with zero. Only claim
   // a measured reasoning value when the provider's raw usage exposes it.
   if ([...rawById.values()].some(x => x.completion_tokens_details?.reasoning_tokens == null)
@@ -190,14 +264,17 @@ export function applyJsonlMetrics(base, parsed, source, collectedAt = base.colle
     for (const field of Object.keys(fields)) {
       const value = groups[group][field] ?? null;
       const meta = parsed.collection.metrics[field];
-      const coverage = { ...(parsed.collection.field_coverage[field] || parsed.collection.response_coverage), unit: "model_response" };
-      if (field === "call_count") Object.assign(coverage, { known: value, total: value, unit: "tool_call" });
+      const coverage = { ...(parsed.collection.field_coverage[field] || parsed.collection.response_coverage),
+        unit: parsed.collection.field_coverage[field]?.unit || "model_response" };
+      if (field === "call_count" && !parsed.collection.field_coverage[field]) Object.assign(coverage, { known: value, total: value, unit: "tool_call" });
       if (value === null) coverage.known = meta.status === "partial" ? coverage.known : 0;
       fields[field] = { value, status: meta.status, basis: `WorkBuddy session JSONL: ${meta.basis}` };
       result.collection.coverage[field] = coverage;
       if (parsed.collection.known_subtotals?.[field] != null) result.collection.known_subtotals[field] = parsed.collection.known_subtotals[field];
       else delete result.collection.known_subtotals[field];
-      result.collection.metric_sources[field] = [source.path];
+      result.collection.metric_sources[field] = field === "call_count"
+        && parsed.collection.warnings.some(w => w.startsWith("WORKBUDDY_CANCELLED_ORPHAN_TOOL_V1"))
+        ? [...new Set([...(result.collection.metric_sources[field] || []), source.path])] : [source.path];
     }
   }
   result.collection.collector = "workbuddy-jsonl-resource-adapter";

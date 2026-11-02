@@ -384,3 +384,33 @@ test("a normally released queue owner is recovered from its frozen queue identit
     await assert.rejects(readFile(f.ownerPath), { code: "ENOENT" });
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
+
+test("repeated zero-send preparation recovery preserves and relocates the complete prior proof chain", async () => {
+  const f = await recoveryFixture();
+  try {
+    await recoverWorkBuddyQueue(f.recoveryPath, f.dependencies);
+    const proofPath = join(f.root, ".general-e2e/execution/broken/workbuddy/zero-send-recovery.json");
+    const firstProofBytes = await readFile(proofPath), firstProof = JSON.parse(firstProofBytes);
+    const oldJournal = JSON.parse(await readFile(join(f.root, firstProof.original_journal.path)));
+    oldJournal.execution.error.message = "WORKBUDDY_UI_ERROR_BOUNDARY: native error page requires verified idle recovery";
+    oldJournal.pre_send_recovery = firstProof;
+    await writeFile(join(f.root, ".general-e2e/execution/broken/workbuddy/dispatch-journal.json"), JSON.stringify(oldJournal));
+    const q = JSON.parse(await readFile(f.queuePath)); q.phase = "NEEDS_ATTENTION"; q.tasks[1].phase = "FAILED";
+    q.tasks[1].error = oldJournal.execution.error; await writeFile(f.queuePath, JSON.stringify(q));
+    const second = { ...f.recovery, queue_sha256: digest(await readFile(f.queuePath)),
+      output_root: join(f.root, ".general-e2e/queue-repairs/test-second") };
+    const secondPath = join(f.root, "recovery-second.json"); await writeFile(secondPath, JSON.stringify(second));
+    const result = await recoverWorkBuddyQueue(secondPath, f.dependencies);
+    assert.equal(result.status, "RECOVERED"); assert.equal(result.new_prompts_sent, 0);
+    const archive = join(second.output_root, "original-case-recovery/broken/zero-send-recovery.json");
+    assert.deepEqual(await readFile(archive), firstProofBytes);
+    const nextProof = JSON.parse(await readFile(proofPath));
+    assert.equal(nextProof.prior_sources.length, 2);
+    const config = await resolveWorkBuddyBatchInvocation(f.args);
+    const broken = config.configs.find(c => c.task.task_id === "broken");
+    assert.equal(broken.zeroSendRecovery.sources.length, 4);
+    const resumed = await runWorkBuddyBatch([...f.args, "--resume"], { execute: f.execute });
+    assert.equal(resumed.phase, "COMPLETED");
+    assert.deepEqual(f.calls.map(c => c.task), ["sent", "broken", "pending"]);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});

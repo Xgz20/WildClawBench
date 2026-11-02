@@ -140,6 +140,7 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
       requireOk(queueSource.sha256 === manifest.queue_sha256 && state.frozen_sha256 === sha(JSON.stringify(state.frozen)), "ORIGINAL_QUEUE_DRIFT");
       requireOk(JSON.stringify(state.tasks.map(t => t.task_id)) === JSON.stringify(cfg.taskIds)
         && new Set(state.tasks.map(t => t.attempt_id)).size === state.tasks.length, "TASK_SCOPE_OR_ATTEMPT_DRIFT");
+      await verifyWorkBuddyQueueRepairs(root, state);
       const oldScope = { ...state.frozen }, newScope = { ...frozen };
       for (const key of ["driver_sha256", "batch_sha256", "ui_sha256"]) { delete oldScope[key]; delete newScope[key]; }
       requireOk(JSON.stringify(oldScope) === JSON.stringify(newScope) && state.frozen.driver_sha256 === originalDriver.sha256, "FROZEN_SCOPE_OR_DRIVER_DRIFT");
@@ -181,8 +182,16 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
             && ["WorkBuddy 新建任务按钮数量异常：0", "WORKBUDDY_UI_ERROR_BOUNDARY: native error page requires verified idle recovery"].includes(journal.execution.error.message), "NOT_REGISTERED_ZERO_SEND_FAILURE");
           requireOk(!await optional(config.stateFile) && !await optional(config.bindingFile), "UNEXPECTED_ATTEMPT_ARTIFACT");
           await initialWorkspace(config);
+          let priorRecovery = null;
+          if (config.zeroSendRecovery) {
+            const path = join(config.controlRoot, "zero-send-recovery.json"), original = await plain(path);
+            priorRecovery = { path, destination: join(output, "original-case-recovery", row.task_id, "zero-send-recovery.json"),
+              ...original, bytes: undefined,
+              prior_sources: [config.zeroSendRecovery.proof.original_journal, ...(config.zeroSendRecovery.proof.prior_sources || [])] };
+          }
           retries.push({ task_id: row.task_id, attempt_id: row.attempt_id, path: config.journalFile,
-            destination: join(output, "original-attempts", row.task_id, "dispatch-journal.json"), ...journalSource, bytes: undefined });
+            destination: join(output, "original-attempts", row.task_id, "dispatch-journal.json"),
+            ...journalSource, bytes: undefined, prior_recovery: priorRecovery });
         } else {
           requireOk(row.dispatch_attempt_count === 1 && row.conversation_id && row.request_id, "UNKNOWN_OR_ACCEPTED_FAILURE");
           await synchronizeRow(root, row);
@@ -239,7 +248,7 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
     const finalProof = await (dependencies.verifyIdle || verifyIdle)(configs[0], new Set(transaction.zero_workspaces));
     requireOk(finalProof?.verified === true, "FINAL_IDLE_REQUIRED");
     requireOk(JSON.stringify(finalProof.process) === JSON.stringify(firstIdle.process), "PROCESS_CHANGED_DURING_RECOVERY");
-    const artifacts = [];
+    const artifacts = [], relocations = [];
     const ref = async path => { const value = await plain(path); const item = { path: relative(root, path).split("\\").join("/"), sha256: value.sha256, size: value.size }; artifacts.push(item); return item; };
     const finalIdlePath = join(output, "final-idle-" + randomUUID() + ".json");
     await writeFile(finalIdlePath, json(finalProof), { flag: "wx", mode: 0o600 });
@@ -250,11 +259,41 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
       await dependencies.afterArchive?.({ task_id: retry.task_id, destination: retry.destination });
       const originalJournal = await ref(retry.destination);
       const proofPath = join(dirname(retry.path), "zero-send-recovery.json");
+      let priorSources = [];
+      if (retry.prior_recovery) {
+        const prior = retry.prior_recovery;
+        // A previous zero-send proof is part of the audit chain, not a file
+        // that may be overwritten by the next preparation recovery.
+        const current = await optional(prior.path);
+        if (current && (await plain(prior.path)).sha256 !== prior.sha256) {
+          // Only a partially committed new proof from this exact transaction
+          // may occupy the active path on resume.
+          const value = await readJson(prior.path);
+          requireOk(resume && value.operation_id === transaction.operation_id, "PRIOR_RECOVERY_ACTIVE_PATH_CHANGED");
+          requireOk((await plain(prior.destination)).sha256 === prior.sha256, "PRIOR_RECOVERY_ARCHIVE_DRIFT");
+        } else await moveVerified(prior.path, prior.destination, prior);
+        const archivedProof = await ref(prior.destination);
+        const oldPath = relative(root, prior.path).split("\\").join("/");
+        relocations.push({ original_path: oldPath, relocated: archivedProof });
+        for (const oldRepair of transaction.state.source_repairs || []) {
+          oldRepair.artifacts = oldRepair.artifacts.map(item => {
+            if (item.path !== oldPath) return item;
+            requireOk(item.sha256 === prior.sha256 && item.size === prior.size, "PRIOR_REPAIR_REFERENCE_DRIFT");
+            return archivedProof;
+          });
+        }
+        priorSources = [archivedProof, ...prior.prior_sources];
+        for (const item of prior.prior_sources) {
+          const saved = await plain(join(root, item.path));
+          requireOk(saved.sha256 === item.sha256 && saved.size === item.size, "PRIOR_SOURCE_DRIFT");
+        }
+      }
       const proof = { schema_version: "wildclawbench.workbuddy-zero-send-case-recovery/v1",
         identity: { batch_id: frozen.batch_id, unit_id: frozen.unit_id, task_id: retry.task_id, attempt_id: retry.attempt_id },
         prompt_sha256: configs.find(c => c.task.task_id === retry.task_id).promptSha256,
         original_journal: originalJournal, original_queue_sha256: transaction.queue_sha256,
-        recovery_manifest_sha256: transaction.manifest_sha256, operation_id: transaction.operation_id };
+        recovery_manifest_sha256: transaction.manifest_sha256, operation_id: transaction.operation_id,
+        ...(priorSources.length ? { prior_sources: priorSources } : {}) };
       if (await optional(proofPath)) requireOk((await plain(proofPath)).bytes.equals(json(proof)), "CASE_RECOVERY_PROOF_DRIFT");
       else await writeFile(proofPath, json(proof), { flag: "wx", mode: 0o600 });
       const caseProof = await ref(proofPath);
@@ -273,7 +312,7 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
     state.last_owner = owner;
     state.phase = "PENDING"; state.active_task_ids = [];
     state.source_repairs = [...(state.source_repairs || []), { schema_version: SCHEMA, artifacts,
-      original_queue_sha256: transaction.queue_sha256, operation_id: transaction.operation_id }];
+      original_queue_sha256: transaction.queue_sha256, operation_id: transaction.operation_id, relocations }];
     state.events.push({ event: "ZERO_SEND_PREPARATION_RECOVERY", at: new Date().toISOString(),
       operation_id: transaction.operation_id, retry_task_ids: transaction.retries.map(r => r.task_id), reason: manifest.reason });
     requireOk((await plain(queuePath)).sha256 === transaction.queue_sha256, "QUEUE_CHANGED_BEFORE_COMMIT");
