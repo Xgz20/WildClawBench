@@ -68,7 +68,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="workbuddy-jsonl-metrics",
-        version="0.2.3",
+        version="0.2.4",
         source_root="tools/report/e2e-shared/workbuddy-jsonl-metrics",
         vendor_root="vendor/e2e-shared/workbuddy-jsonl-metrics",
         entrypoints=("index.mjs", "timing.mjs"),

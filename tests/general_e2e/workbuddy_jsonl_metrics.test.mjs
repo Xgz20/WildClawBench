@@ -139,6 +139,22 @@ test("WorkBuddy fresh collector archives JSONL and passes the formal finalizer w
     const withoutJsonl = JSON.parse(await readFile(missing.resource_metrics));
     assert.equal(withoutJsonl.metrics.requests.request_count.value, null);
     assert.equal(withoutJsonl.metrics.timing.agent_duration_seconds.value, 4);
+    const mirror = fixture(cwd);
+    mirror.rows[3].providerData.rawUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0,
+      inputTokensDetails: { cached_tokens: 0 }, outputTokensDetails: { reasoning_tokens: 0 } };
+    mirror.rows[3].providerData.usage = { requests: 1, inputTokens: 0, outputTokens: 0, totalTokens: 0,
+      inputTokensDetails: [{ cached_tokens: 0 }], outputTokensDetails: [{ reasoning_tokens: 0 }] };
+    const mirrorRoot = join(unit, "native-mirror");
+    await mkdir(join(mirrorRoot, "w"), { recursive: true });
+    await writeFile(join(mirrorRoot, "w", f.session.session_id + ".jsonl"), mirror.bytes());
+    const mirrored = await collectWorkBuddyEvidence({ unitRoot: unit, journalFile: journalPath, stateFile: statePath,
+      nativeProjectsRoot: mirrorRoot, outputRoot: join(unit, ".general-e2e/collection/normalized-mirror") });
+    assert.equal(mirrored.status, "PASS");
+    const mirrorMetrics = JSON.parse(await readFile(mirrored.resource_metrics));
+    assert.equal(mirrorMetrics.metrics.usage.total_tokens.value, null);
+    assert.equal(mirrorMetrics.metrics.usage.total_tokens.status, "partial");
+    assert.equal(mirrorMetrics.collection.known_subtotals.total_tokens, 120);
+    assert.deepEqual(await readFile(join(mirrored.output_root, "trace/raw/workbuddy-session.jsonl")), mirror.bytes());
   } finally { await rm(root, { recursive: true, force: true }); }
 });
 
@@ -155,6 +171,66 @@ test("WorkBuddy JSONL preserves unknown coverage and observed zero without inven
   const explicit = fixture();
   for (const row of explicit.rows.filter(x => x.providerData?.rawUsage)) row.providerData.rawUsage.completion_tokens_details = { reasoning_tokens: 0 };
   assert.equal(parseBoundJsonl(explicit.bytes(), explicit.options).usage.reasoning_output_tokens, 0);
+});
+
+test("normalized-only zero usage keeps complete content and partial measured token coverage", () => {
+  const f = fixture();
+  const pd = f.rows[3].providerData;
+  pd.rawUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0,
+    inputTokensDetails: { cached_tokens: 0 }, outputTokensDetails: { reasoning_tokens: 0 } };
+  pd.usage = { requests: 1, inputTokens: 0, outputTokens: 0, totalTokens: 0,
+    inputTokensDetails: [{ cached_tokens: 0 }], outputTokensDetails: [{ reasoning_tokens: 0 }] };
+  const original = f.bytes();
+  const parsed = parseBoundJsonl(original, f.options);
+  assert.deepEqual(f.bytes(), original);
+  assert.equal(parsed.usage.request_count, 2);
+  assert.equal(parsed.tools.call_count, 2);
+  assert.equal(parsed.usage.total_tokens, null);
+  assert.equal(parsed.collection.known_subtotals.total_tokens, 120);
+  assert.deepEqual(parsed.collection.field_coverage.total_tokens,
+    { known: 1, total: 2, unit: "model_response" });
+  assert.ok(parsed.collection.warnings.some(x => x.startsWith("WORKBUDDY_NORMALIZED_ZERO_USAGE_UNVERIFIED_V1")));
+  const result = applyJsonlMetrics(f.base, parsed, artifact("native.jsonl", original));
+  assert.equal(result.metrics.usage.total_tokens.status, "partial");
+  assert.equal(result.metrics.usage.total_tokens.value, null);
+  assert.equal(result.collection.known_subtotals.total_tokens, 120);
+  assert.deepEqual(result.collection.coverage.request_count, { known: 2, total: 2, unit: "model_response" });
+  f.rows.push({ ...structuredClone(f.rows[3]), providerData: { ...pd, rawUsage: undefined,
+    usage: { ...pd.usage, inputTokens: 1 } } });
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /CONFLICTING_NORMALIZED_USAGE/u);
+});
+
+test("provider-native measured zero remains observed rather than normalized-only unknown", () => {
+  const f = fixture();
+  for (const row of f.rows.filter(x => x.providerData?.usage)) {
+    row.providerData.rawUsage = { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0,
+      prompt_tokens_details: { cached_tokens: 0 }, completion_tokens_details: { reasoning_tokens: 0 } };
+    row.providerData.usage = { requests: 1, inputTokens: 0, outputTokens: 0, totalTokens: 0,
+      inputTokensDetails: [{ cached_tokens: 0 }], outputTokensDetails: [{ reasoning_tokens: 0 }] };
+  }
+  const parsed = parseBoundJsonl(f.bytes(), f.options);
+  assert.equal(parsed.usage.total_tokens, 0);
+  assert.equal(parsed.collection.metrics.total_tokens.status, "observed");
+  assert.equal(parsed.usage.reasoning_output_tokens, 0);
+  assert.equal(parsed.collection.warnings.some(x => x.startsWith("WORKBUDDY_NORMALIZED_ZERO_USAGE_UNVERIFIED_V1")), false);
+});
+
+test("normalized-only zero compatibility rejects altered counters and unknown raw shapes", () => {
+  for (const change of [
+    pd => { pd.rawUsage.inputTokens = 1; },
+    pd => { pd.usage.totalTokens = 1; },
+    pd => { pd.rawUsage.extra = 0; },
+    pd => { pd.rawUsage.inputTokensDetails.cached_tokens = 1; },
+    pd => { pd.usage.outputTokensDetails = []; },
+  ]) {
+    const f = fixture(), pd = f.rows[3].providerData;
+    pd.rawUsage = { inputTokens: 0, outputTokens: 0, totalTokens: 0,
+      inputTokensDetails: { cached_tokens: 0 }, outputTokensDetails: { reasoning_tokens: 0 } };
+    pd.usage = { requests: 1, inputTokens: 0, outputTokens: 0, totalTokens: 0,
+      inputTokensDetails: [{ cached_tokens: 0 }], outputTokensDetails: [{ reasoning_tokens: 0 }] };
+    change(pd);
+    assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /RAW_USAGE_MISMATCH/u);
+  }
 });
 
 test("WorkBuddy JSONL rejects wrong session, workspace, Prompt, request, tool coverage, final text and usage conflicts", () => {

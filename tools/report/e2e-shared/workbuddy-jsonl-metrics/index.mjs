@@ -55,6 +55,19 @@ const parser = createNativeResourceMetricParsers({
 const textOf = content => typeof content === "string" ? content
   : Array.isArray(content) ? content.filter(x => ["text", "input_text", "output_text"].includes(x.type)).map(x => x.text || "").join("") : "";
 
+// Some persisted responses contain only this normalized zero mirror, without
+// provider-native token counters. Preserve its bytes but do not claim that the
+// provider measured zero tokens. All other unknown or conflicting shapes fail.
+function normalizedZeroMirror(raw, usage) {
+  return equal(raw, {
+    inputTokens: 0, outputTokens: 0, totalTokens: 0,
+    inputTokensDetails: { cached_tokens: 0 }, outputTokensDetails: { reasoning_tokens: 0 },
+  }) && equal(usage, {
+    requests: 1, inputTokens: 0, outputTokens: 0, totalTokens: 0,
+    inputTokensDetails: [{ cached_tokens: 0 }], outputTokensDetails: [{ reasoning_tokens: 0 }],
+  });
+}
+
 export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   if (snapshot?.conversation?.id !== session.session_id || snapshot?.request?.id !== session.turn_id
       || snapshot?.conversation?.space?.cwd !== session.cwd) fail("RUNTIME_IDENTITY_MISMATCH");
@@ -97,22 +110,42 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   const runtimeFinal = textOf(snapshot.request.assistantMessage?.content);
   if (!finals.length || !runtimeFinal || finals.map(x => textOf(x.content)).join("") !== runtimeFinal) fail("FINAL_RESPONSE_MISMATCH");
   const rawById = new Map();
+  const unverifiedUsageIds = new Set();
   for (const row of events) {
     const pd = row.providerData || {}, raw = pd.rawUsage, usage = pd.usage;
     if (raw && usage) {
-      if (raw.prompt_tokens !== usage.inputTokens || raw.completion_tokens !== usage.outputTokens
-          || raw.total_tokens !== usage.totalTokens) fail("RAW_USAGE_MISMATCH");
-      if (raw.prompt_tokens_details?.cached_tokens != null
-          && raw.prompt_tokens_details.cached_tokens !== usage.inputTokensDetails?.reduce((s, x) => s + x.cached_tokens, 0)) fail("CACHE_USAGE_MISMATCH");
+      if (normalizedZeroMirror(raw, usage)) {
+        if (typeof pd.messageId !== "string" || !pd.messageId) fail("RAW_USAGE_ID_MISSING");
+        unverifiedUsageIds.add(pd.messageId);
+      } else {
+        if (raw.prompt_tokens !== usage.inputTokens || raw.completion_tokens !== usage.outputTokens
+            || raw.total_tokens !== usage.totalTokens) fail("RAW_USAGE_MISMATCH");
+        if (raw.prompt_tokens_details?.cached_tokens != null
+            && raw.prompt_tokens_details.cached_tokens !== usage.inputTokensDetails?.reduce((s, x) => s + x.cached_tokens, 0)) fail("CACHE_USAGE_MISMATCH");
+      }
       if (rawById.has(pd.messageId) && !equal(rawById.get(pd.messageId), raw)) fail("CONFLICTING_RAW_USAGE");
       rawById.set(pd.messageId, raw);
     }
   }
-  const parsed = parser(rows);
+  for (const row of events) {
+    const pd = row.providerData || {};
+    if (unverifiedUsageIds.has(pd.messageId) && pd.usage
+        && !normalizedZeroMirror(rawById.get(pd.messageId), pd.usage)) fail("CONFLICTING_NORMALIZED_USAGE");
+  }
+  // Only the derived metrics view omits unverified usage. Response identities,
+  // content, tools, raw JSONL and all frozen execution evidence stay unchanged.
+  const metricRows = unverifiedUsageIds.size ? rows.map(row => (
+    unverifiedUsageIds.has(row.providerData?.messageId)
+      ? { ...row, providerData: { ...row.providerData, usage: undefined } } : row
+  )) : rows;
+  const parsed = parser(metricRows);
+  if (unverifiedUsageIds.size) parsed.collection.warnings.push(
+    `WORKBUDDY_NORMALIZED_ZERO_USAGE_UNVERIFIED_V1: no provider-native counters for ${JSON.stringify([...unverifiedUsageIds])}; token totals remain unavailable with verified subtotals`,
+  );
   if (separateRequestIdentity) parsed.collection.warnings.push(
     "WORKBUDDY_REQUEST_SCOPE_BINDING_V2: explicit conversationRequestId equals runtime request.id; native request IDs and any distributed trace IDs verified separately",
   );
-  const usages = new Map(events.filter(x => x.providerData?.usage).map(x => [x.providerData.messageId, x.providerData.usage]));
+  const usages = new Map(metricRows.filter(x => x.providerData?.usage).map(x => [x.providerData.messageId, x.providerData.usage]));
   const read = (u, field) => ({ input_tokens: u.inputTokens, output_tokens: u.outputTokens, total_tokens: u.totalTokens,
     cache_read_input_tokens: u.inputTokensDetails?.reduce((sum, x) => sum + x.cached_tokens, 0),
     reasoning_output_tokens: u.outputTokensDetails?.reduce((sum, x) => sum + x.reasoning_tokens, 0) })[field];
