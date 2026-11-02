@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.5";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.6";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -716,6 +716,11 @@ async function buildAndPersistPublicState(config, journal, binding, bindingEvide
     history: binding.history,
     bindingEvidence,
     observedAt: journal.native.last_observed_at,
+    nativePendingInteractions: (binding.runtime_snapshot?.request?.assistantMessage?.content || [])
+      .filter(item => item.kind === "permission" && ["pending", "in_progress"].includes(item.status))
+      .map(item => ({ tool_call_id: item.toolCallId, title: item.title, status: item.status,
+        conversation_request_id: item._meta?.["codebuddy.ai/conversationRequestId"] || null,
+        sandbox: item.metadata?.sandbox || null, input: item.rawInput || null })),
   });
   state.extensions.client = {
     version: journal.runtime.client_version,

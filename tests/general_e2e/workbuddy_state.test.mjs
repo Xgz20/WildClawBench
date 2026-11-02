@@ -29,6 +29,23 @@ function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+test("native in-progress permission is attention rather than silent running or completion", () => {
+  const promptSha = sha256("frozen");
+  const state = buildWorkBuddyExecutionState({ identity: IDENTITY, dataset: DATASET,
+    taskRoot: "/unit/task", candidateWorkspace: "/unit/task/workspace",
+    prompt: { path: "/unit/task/PROMPT.md", sha256: promptSha, send_status: "sent", sent_at: "2026-11-02T10:00:00Z" },
+    send: { dispatch_attempt_count: 1 }, sessionSnapshot: { conversation_id: "session", cwd: "/unit/task/workspace", status: "pending" },
+    history: { binding: { conversation_id: "session", request_id: "request", request_state: { raw: "streaming" }, source_kind: "workbuddy-runtime-api" },
+      prompt: { sha256: promptSha }, completeness: { status: "partial" } },
+    bindingEvidence: [{ path: "native.json", sha256: "a".repeat(64), size: 1 }],
+    nativePendingInteractions: [{ tool_call_id: "permission", title: "ToolCallLoop", input: { file_path: "input.pdf" } }],
+  });
+  assert.equal(state.phase, "NEEDS_ATTENTION");
+  assert.equal(state.execution.error.code, "WORKBUDDY_NATIVE_PENDING_PERMISSION");
+  assert.equal(state.execution.finished_at, null);
+  assert.equal(state.extensions.workbuddy.native_pending_interactions[0].tool_call_id, "permission");
+});
+
 async function createUnitFixture() {
   let root = await mkdtemp(join(tmpdir(), "workbuddy-state-test-"));
   root = await realpath(root);

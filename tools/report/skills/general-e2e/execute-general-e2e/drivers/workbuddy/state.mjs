@@ -3,7 +3,7 @@ import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resourc
 
 export const WORKBUDDY_EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-execution-state/v1";
 export const WORKBUDDY_DRIVER_ID = "workbuddy-macos-general";
-export const WORKBUDDY_DRIVER_VERSION = "0.3.1";
+export const WORKBUDDY_DRIVER_VERSION = "0.3.2";
 
 const SUCCESS_STATES = new Set(["complete", "completed", "success", "succeeded"]);
 const FAILURE_STATES = new Set(["failed", "failure", "error", "errored"]);
@@ -63,6 +63,7 @@ export function buildWorkBuddyExecutionState({
   bindingEvidence,
   observedAt = null,
   cancellationConfirmed = false,
+  nativePendingInteractions = [],
   humanAssistance = { mode: "automatic", operation_count: 0, semantic_intervention_count: 0 },
 }) {
   if (!/^macos(?:-[a-z0-9-]+)?$/u.test(platform)) throw new Error("WORKBUDDY_PLATFORM_UNSUPPORTED");
@@ -79,6 +80,7 @@ export function buildWorkBuddyExecutionState({
   if (history.binding?.conversation_id !== conversationId) {
     throw new Error("WORKBUDDY_CONVERSATION_ID_MISMATCH");
   }
+
   const requestId = assertString(history.binding?.request_id, "history.binding.request_id");
   if (prompt.sha256 !== history.prompt?.sha256) throw new Error("WORKBUDDY_PROMPT_HASH_MISMATCH");
   if (prompt.send_status !== "sent" || send.dispatch_attempt_count !== 1 || !prompt.sent_at) {
@@ -140,6 +142,11 @@ export function buildWorkBuddyExecutionState({
     };
   }
 
+  if (phase === "RUNNING" && nativePendingInteractions.length) {
+    phase = "NEEDS_ATTENTION";
+    error = { code: "WORKBUDDY_NATIVE_PENDING_PERMISSION",
+      message: "Bound native permission requires an explicit policy or user decision; do not resend the Prompt" };
+  }
   const startedAt = observedAt ? isoTimestamp(prompt.sent_at) : isoFromEpoch(history.request?.startedAt ?? history.request?.timestamp)
     || isoTimestamp(prompt.sent_at);
   const finishedAt = new Set(["COMPLETED", "FAILED"]).has(phase)
@@ -190,6 +197,7 @@ export function buildWorkBuddyExecutionState({
     extensions: {
       ...(observedAt ? { timing: { profile: FLOW_TIMING_PROFILE } } : {}),
       workbuddy: {
+        ...(nativePendingInteractions.length ? { native_pending_interactions: nativePendingInteractions } : {}),
         identity_mapping: {
           thread_id: null,
           turn_id_source: history.binding?.source_kind === "workbuddy-runtime-api"

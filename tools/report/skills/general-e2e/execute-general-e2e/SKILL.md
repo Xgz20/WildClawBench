@@ -3,7 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
-`0.14.27` 对已发送但取消来源未明的WorkBuddy请求，可用park-terminal-review仅登记“原生终态待复核”：必须同Prompt/会话/Workspace、SQL取消态、Runtime关闭请求及SDK精确中断边界全部匹配。保留原journal/state/SDK，不改完成状态、不判分、不重发；其他独立题目可继续，完整范围最终停在AWAITING_TERMINAL_REVIEW，不发布虚假全批完成回执。继续未知取消或重执行仍须另有明确决定。
+`0.14.28` 原生permission块尚在进行时立即记录NEEDS_ATTENTION及绑定请求，避免把等授权误报成持续计算；不自动批准防循环或其他未知保护。终态复核保留SQL的completed会话投影，但只有Runtime取消请求与SDK中断边界能证明该题原生取消，绝不把会话completed当作作答成功。
+
+`0.14.27` 对已发送但取消来源未明的WorkBuddy请求，可用park-terminal-review仅登记“原生终态待复核”：必须同Prompt/会话/Workspace、SQL已结束的会话投影、Runtime关闭请求及SDK精确中断边界全部匹配。保留原journal/state/SDK，不改完成状态、不判分、不重发；其他独立题目可继续，完整范围最终停在AWAITING_TERMINAL_REVIEW，不发布虚假全批完成回执。继续未知取消或重执行仍须另有明确决定。
 
 `0.14.26` 初始CWM审计v2兼容已核验的无命名空间custom属性登记子节点；仍要求正确的包元数据根、精确Type/Target及CWM属性，全部业务部件保持逐字节相同。原件与旧审计不改写，其他命名空间、属性或业务变化不准入。
 

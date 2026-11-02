@@ -75,7 +75,8 @@ export async function parkTerminalReview(manifestPath) {
     const report = await inspectWorkBuddyMacos({ ...probeArgs([]), appPath: config.appPath, sessionDb: config.sessionDb,
       extensionDataRoot: config.dataRoot, endpoint: config.endpoint, timeoutMs: 10000 });
     assertWorkBuddyExecutionReadiness(report, config.endpoint);
-    requireOk(report.native_sources.session_index.sessions.some(s => s.conversation_id === row.conversation_id && s.cwd === row.cwd && s.status === "cancelled"), "SQL_TERMINAL_MISSING");
+    const sqlRow = report.native_sources.session_index.sessions.find(s => s.conversation_id === row.conversation_id && s.cwd === row.cwd);
+    requireOk(sqlRow && ["completed", "cancelled"].includes(sqlRow.status), "SQL_TERMINAL_MISSING");
     const target = await discoverWorkBuddyMainTarget(config.endpoint, 10000), client = await WorkBuddyCdpClient.connect(target.webSocketDebuggerUrl, 10000);
     let loaded; try { loaded = await getWorkBuddyRuntimeConversation(client, row.conversation_id); } finally { client.close(); }
     const journalBytes = await plain(config.journalFile), stateBytes = await plain(config.stateFile), native = await discoverJsonl(manifest.native_projects_root, row.conversation_id);
@@ -86,6 +87,8 @@ export async function parkTerminalReview(manifestPath) {
       "ORIGINAL_DATASET_IDENTITY_INVALID");
     const proof = validateCancelledReview({ row, journal: JSON.parse(journalBytes), state: JSON.parse(stateBytes), loaded,
       sdkRows: native.bytes.toString("utf8").trim().split(/\r?\n/u).map(JSON.parse), promptSha256: config.promptSha256 });
+    proof.sql_session_projection_status = sqlRow.status;
+    proof.note = "Session completed is only an idle projection; Runtime request cancellation and SDK interruption establish terminality, not successful task completion.";
     const output = resolve(manifest.output_root), outputRelative = relative(root, output);
     requireOk(outputRelative.startsWith(".general-e2e/terminal-reviews/") && !outputRelative.split("/").includes(".."), "OUTPUT_INVALID");
     let directory = root;
