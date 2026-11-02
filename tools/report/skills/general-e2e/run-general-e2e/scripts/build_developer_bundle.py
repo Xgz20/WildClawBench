@@ -115,7 +115,12 @@ def copy_verified(source_root, target_root, row):
             subprocess.run(["/bin/cp", "-c", str(source), str(target)], check=True)
         else:
             shutil.copy2(source, target)
-        target.chmod(int(row["mode"], 8))
+        desired_mode = int(row["mode"], 8)
+        # APFS clones inherit the source's user-immutable flag. A redundant
+        # chmod on an already correct read-only clone fails with EPERM. Keep
+        # both original and clone protection intact; never unlock the source.
+        if stat.S_IMODE(target.stat().st_mode) != desired_mode:
+            target.chmod(desired_mode)
         assert sha(target) == row["sha256"], target
         return
     payload = entry_bytes(source, row["kind"])

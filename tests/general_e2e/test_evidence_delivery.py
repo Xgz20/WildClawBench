@@ -4,6 +4,8 @@ import copy
 import importlib.util
 import io
 import json
+import os
+import stat
 import subprocess
 import sys
 import tempfile
@@ -130,6 +132,21 @@ class EvidenceDeliveryTests(unittest.TestCase):
         with self.assertRaisesRegex(AssertionError,'SELECTED_PACKAGE_ID_MISMATCH'):BUNDLE.single_package_imports(index,selected)
         index['imports']['u']['packages'].append({**package,'package_id':'p2'})
         with self.assertRaisesRegex(AssertionError,'MULTI_PACKAGE_UNIT'):BUNDLE.single_package_imports(index,selected)
+
+    @unittest.skipUnless(sys.platform=='darwin','APFS user-immutable clone semantics')
+    def test_readonly_immutable_source_exports_without_chmod_or_unlock(self):
+        source=self.root/'immutable-source';source.mkdir();file=source/'reference.xlsx';file.write_bytes(b'frozen reference')
+        file.chmod(0o444);os.chflags(file,stat.UF_IMMUTABLE);original=file.stat().st_flags
+        target=self.root/'immutable-export';copy=target/'reference.xlsx'
+        try:
+            BUNDLE.copy_verified(source,target,{'path':'reference.xlsx','kind':'file','mode':'0444',
+                'size':file.stat().st_size,'sha256':sha256(file)})
+            self.assertEqual(copy.read_bytes(),file.read_bytes());self.assertEqual(stat.S_IMODE(copy.stat().st_mode),0o444)
+            self.assertEqual(file.stat().st_flags,original);self.assertTrue(copy.stat().st_flags&stat.UF_IMMUTABLE)
+        finally:
+            # Only fixture files created by this test are made disposable.
+            for own in [file,copy]:
+                if own.exists():os.chflags(own,own.stat().st_flags&~stat.UF_IMMUTABLE)
 
     def test_seal_rejects_preexisting_drift_and_bad_members_without_editing_sources(self):
         report = self.report();sealed = seal_report(report, self.root / 'seals')
