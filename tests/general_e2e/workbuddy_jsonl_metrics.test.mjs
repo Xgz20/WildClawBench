@@ -95,6 +95,29 @@ test("legacy trace-ID bindings retain identical metrics even when snapshots carr
   assert.equal(retained.collection.warnings.some(x => x.startsWith("WORKBUDDY_REQUEST_SCOPE_BINDING_V2")), false);
 });
 
+test("bound native compaction internal messages do not become extra human prompts", () => {
+  const f = fixture();
+  f.rows.splice(3, 0, ...["summary", "continuation"].map(id => ({
+    type: "message", role: "user", id, sessionId: f.session.session_id, cwd: f.session.cwd,
+    content: [{ type: "input_text", text: "Internal compaction content" }],
+    providerData: { isCompactInternal: true, skipRun: false, agent: "cli", conversationRequestId: f.session.turn_id },
+  })));
+  const original = f.bytes();
+  const p = parseBoundJsonl(original, f.options);
+  assert.equal(p.usage.request_count, 2);
+  assert.equal(p.usage.total_tokens, 350);
+  assert.deepEqual(f.bytes(), original);
+  assert.ok(p.collection.warnings.some(x => x.startsWith("WORKBUDDY_COMPACTION_INTERNAL_USER_V1")));
+  f.rows[3].providerData.startsNewUserRequest = true;
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /COMPACTION_USER_BINDING_MISMATCH/u);
+  delete f.rows[3].providerData.startsNewUserRequest;
+  f.rows[3].providerData.conversationRequestId = "foreign-request";
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /COMPACTION_USER_BINDING_MISMATCH/u);
+  f.rows[3].providerData.conversationRequestId = f.session.turn_id;
+  delete f.rows[3].providerData.isCompactInternal;
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /USER_TURN_MISMATCH/u);
+});
+
 test("WorkBuddy fresh collector archives JSONL and passes the formal finalizer with corrected counters", async () => {
   const root = await mkdtemp(join(tmpdir(), "wb-jsonl-collect-"));
   try {

@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.21` WorkBuddy零发送准备失败立即停止补位，并继续观察已受理任务，避免连续把剩余题目标成能力失败。原生错误边界不再当作空闲编辑器；仅在全部本地原生任务空闲、原owner已退出、无未知锁时，才允许一次公开“刷新页面”恢复。`recover-queue.mjs`显式校验旧/新源码、原队列SHA、原件Workspace与零发送证明，保留旧队列/owner/journal并接续相同题序、槽位及attempt；已发送或不确定发送不重试。详见[WorkBuddy零发送恢复](references/workbuddy-zero-send-recovery.md)。
+
 `0.14.20` 在精确绑定的 turn 已 completed 且终稿绑定就绪时，将新 state 的 native_status 记为 turn 终态；滞后的 running 会话投影另存 projection_native_status，原始终态观察历史保留。旧 state 不重写、不重发；历史差异由 collect 的原始 SDK 完成证明收口。
 
 `0.14.19` 在目标UI路由和绝对路径出现后，继续只读等待同一路由的原生项目/Workspace精确同步；每轮重新检查空编辑器、路径、路由、弹窗/活动状态及未使用证据。错误/缺失绑定不放行，歧义、已使用线程或期间变化立即拒绝；超时保存实际原生记录与期望身份，不点击发送、不刷新活动客户端。旧零发送失败保留后按原队列恢复，已受理任务不重发。

@@ -30,6 +30,12 @@ function sha256(value) {
   return createHash("sha256").update(value).digest("hex");
 }
 
+test("native renderer error boundary is never considered an idle or available Prompt surface", () => {
+  const ui = { app_error_boundary: true, editor_count: 0, editor_nonempty_count: 0, busy_control_count: 0 };
+  assert.throws(() => assertWorkBuddyUiIdle(ui), /WORKBUDDY_UI_ERROR_BOUNDARY/u);
+  assert.throws(() => assertWorkBuddyUiAvailable(ui, { active_sessions: [{ conversation_id: "known" }] }), /WORKBUDDY_UI_ERROR_BOUNDARY/u);
+});
+
 test("modern native session index permits runtime collection without legacy history, with identity gates intact", () => {
   const endpoint = "http://127.0.0.1:9229";
   const report = { status: "PARTIAL", application: { identity_verified: true }, process: { running: true },

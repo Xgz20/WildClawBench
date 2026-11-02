@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.2";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.3";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -338,6 +338,35 @@ export async function resolveExecutionConfig(parsed) {
   await assertNoSymlinkPath(unitRoot, controlRoot, "WorkBuddy control root");
   await mkdir(controlRoot, { recursive: true });
   await assertNoSymlinkPath(unitRoot, controlRoot, "WorkBuddy control root");
+  let zeroSendRecovery = null;
+  const recoveryPath = join(controlRoot, "zero-send-recovery.json");
+  const recoveryInfo = await lstat(recoveryPath).catch(error => { if (error.code === "ENOENT") return null; throw error; });
+  if (recoveryInfo) {
+    await assertNoSymlinkPath(unitRoot, recoveryPath, "WorkBuddy zero-send recovery");
+    const bytes = await readFile(recoveryPath);
+    const proof = JSON.parse(bytes);
+    if (proof.schema_version !== "wildclawbench.workbuddy-zero-send-case-recovery/v1"
+        || proof.identity?.task_id !== taskId || proof.identity?.batch_id !== manifest.batch_id
+        || proof.identity?.unit_id !== manifest.unit_id || proof.prompt_sha256 !== promptSha256) {
+      throw new Error("WORKBUDDY_ZERO_SEND_RECOVERY_PROOF_INVALID");
+    }
+    const oldPath = resolveManifestRelativePath(unitRoot, proof.original_journal?.path, "recovered journal");
+    await assertNoSymlinkPath(unitRoot, oldPath, "recovered journal");
+    const oldBytes = await readFile(oldPath), original = JSON.parse(oldBytes);
+    if (sha256(oldBytes) !== proof.original_journal.sha256 || oldBytes.length !== proof.original_journal.size
+        || original.identity?.task_id !== taskId || original.identity?.batch_id !== manifest.batch_id || original.identity?.unit_id !== manifest.unit_id
+        || original.identity?.attempt_id !== proof.identity.attempt_id
+        || original.prompt?.sha256 !== promptSha256 || original.prompt?.send_status !== "not_sent"
+        || original.send?.dispatch_attempt_count !== 0 || original.send?.dispatch_armed_at != null
+        || original.send?.dispatch_returned_at != null || original.native?.conversation_id != null
+        || original.native?.request_id != null || original.native?.baseline != null) {
+      throw new Error("WORKBUDDY_ZERO_SEND_RECOVERY_ORIGINAL_INVALID");
+    }
+    zeroSendRecovery = { proof, original_history: original.history || [], sources: [
+      { path: relative(unitRoot, recoveryPath).split("\\").join("/"), sha256: sha256(bytes), size: bytes.length },
+      proof.original_journal,
+    ] };
+  }
   return {
     ...parsed,
     unitRoot,
@@ -348,6 +377,7 @@ export async function resolveExecutionConfig(parsed) {
     promptPath,
     prompt,
     promptSha256,
+    zeroSendRecovery,
     expectedModel,
     expectedPermission: parsed.expectedPermission,
     nativeProjectPath,
@@ -364,6 +394,9 @@ export async function resolveExecutionConfig(parsed) {
 }
 
 function createJournal(config, runtime, nativeIdleEvidence, now) {
+  if (config.zeroSendRecovery && config.zeroSendRecovery.proof.identity.attempt_id !== config.attemptId) {
+    throw new Error("WORKBUDDY_ZERO_SEND_RECOVERY_ATTEMPT_MISMATCH");
+  }
   return {
     schema_version: WORKBUDDY_EXECUTION_JOURNAL_SCHEMA,
     driver: { id: "workbuddy-macos-general", version: WORKBUDDY_EXECUTION_DRIVER_VERSION },
@@ -429,7 +462,9 @@ function createJournal(config, runtime, nativeIdleEvidence, now) {
       deadline_at: null,
       error: null,
     },
-    history: [{ phase: "PENDING", event: "ATTEMPT_CREATED", at: now }],
+    ...(config.zeroSendRecovery ? { pre_send_recovery: config.zeroSendRecovery.proof } : {}),
+    history: [...(config.zeroSendRecovery?.original_history || []),
+      { phase: "PENDING", event: config.zeroSendRecovery ? "ZERO_SEND_PREPARATION_RECOVERED" : "ATTEMPT_CREATED", at: now }],
   };
 }
 
@@ -612,6 +647,7 @@ async function defaultPrepareUi(config) {
 }
 
 export function assertWorkBuddyUiAvailable(ui, queueContext) {
+  if (ui.app_error_boundary) throw new Error("WORKBUDDY_UI_ERROR_BOUNDARY: native error page requires verified idle recovery");
   if (!queueContext?.active_sessions?.length) return assertWorkBuddyUiIdle(ui);
   const allowed = new Set(queueContext.active_sessions.map((session) => session.conversation_id));
   const knownBusy = ui.busy_control_count === 1 && allowed.has(ui.selected_conversation_id);
@@ -655,7 +691,7 @@ async function writeBindingEvidence(config, journal, binding) {
     path: relative(config.unitRoot, config.bindingFile).split("\\").join("/"),
     sha256: sha256(bytes),
     size: bytes.length,
-  }];
+  }, ...(config.zeroSendRecovery?.sources || [])];
 }
 
 async function buildAndPersistPublicState(config, journal, binding, bindingEvidence) {

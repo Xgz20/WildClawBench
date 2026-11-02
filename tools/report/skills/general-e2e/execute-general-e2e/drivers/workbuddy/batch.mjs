@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { main as execute, parseArgs, resolveExecutionConfig } from "./execute.mjs";
 
 export const WORKBUDDY_QUEUE_SCHEMA = "wildclawbench.general-e2e-workbuddy-execution-queue/v3";
-export const WORKBUDDY_QUEUE_VERSION = "0.3.1";
+export const WORKBUDDY_QUEUE_VERSION = "0.3.2";
 export const DEFAULT_RUN_SLOTS = 3;
 export const MAX_RUN_SLOTS = 8;
 const TERMINAL_PHASES = new Set(["COMPLETED", "FAILED"]);
@@ -94,7 +94,7 @@ function terminalAt(journal, publicState) {
     || null;
 }
 
-async function synchronizeRow(root, row) {
+export async function synchronizeRow(root, row) {
   const paths = executionPaths(root, row.task_id);
   for (const name of ["dispatch-journal.json", "execution-state.json", "native-binding.json"]) {
     await assertPlainPath(root, [".general-e2e", "execution", row.task_id, "workbuddy", name]);
@@ -245,7 +245,19 @@ async function persistState(statePath, receiptPath, state) {
   }
 }
 
-export async function runWorkBuddyBatch(argv, dependencies = {}) {
+export async function verifyWorkBuddyQueueRepairs(root, state) {
+  for (const repair of state.source_repairs || []) {
+    if (repair.schema_version !== "wildclawbench.workbuddy-zero-send-queue-repair/v1") throw new Error("WORKBUDDY_QUEUE_REPAIR_SCHEMA_INVALID");
+    for (const ref of repair.artifacts || []) {
+      if (typeof ref.path !== "string" || ref.path.split("/").some(part => !part || part === "." || part === "..")) throw new Error("WORKBUDDY_QUEUE_REPAIR_PATH_INVALID");
+      await assertPlainPath(root, ref.path.split("/"));
+      const bytes = await readFile(join(root, ref.path));
+      if (bytes.length !== ref.size || hash(bytes) !== ref.sha256) throw new Error("WORKBUDDY_QUEUE_REPAIR_ARTIFACT_DRIFT");
+    }
+  }
+}
+
+export async function resolveWorkBuddyBatchInvocation(argv) {
   const batch = parseBatchArgs(argv);
   const parsed = parseArgs([...batch.args, "--task-id", "queue-config"]);
   const root = await realpath(resolve(parsed.unitRoot));
@@ -275,8 +287,15 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
     ui_slots: 1,
     run_slots: batch.runSlots,
     driver_sha256: hash(await readFile(new URL("./execute.mjs", import.meta.url))),
+    batch_sha256: hash(await readFile(new URL("./batch.mjs", import.meta.url))),
+    ui_sha256: hash(await readFile(new URL("./ui.mjs", import.meta.url))),
   };
   const digest = hash(JSON.stringify(frozen));
+  return { batch, parsed, root, manifest, taskIds, configs, frozen, digest };
+}
+
+export async function runWorkBuddyBatch(argv, dependencies = {}) {
+  const { batch, parsed, root, manifest, taskIds, configs, frozen, digest } = await resolveWorkBuddyBatchInvocation(argv);
   const queueRoot = join(root, ".general-e2e", "queues", "workbuddy");
   const statePath = join(queueRoot, `${batch.queueId}.json`);
   const receiptPath = join(queueRoot, `${batch.queueId}-receipt.json`);
@@ -289,6 +308,7 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
     if (state.schema_version !== WORKBUDDY_QUEUE_SCHEMA || state.frozen_sha256 !== digest) {
       throw new Error("WORKBUDDY_QUEUE_CONFIG_DRIFT");
     }
+    await verifyWorkBuddyQueueRepairs(root, state);
     return { ...state, state_file: statePath, receipt_file: receiptPath };
   }
   await assertPlainPath(root, [".general-e2e", "queues", "workbuddy", "owner-lock.json"]);
@@ -301,12 +321,14 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
   const sleep = dependencies.sleep || ((milliseconds) => new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds)));
   const now = dependencies.now || (() => new Date().toISOString());
   try {
-    await lock.writeFile(JSON.stringify({ pid: process.pid, host: hostname(), started_at: now(), queue_id: batch.queueId }));
+    const ownerRecord = { pid: process.pid, host: hostname(), started_at: now(), queue_id: batch.queueId };
+    await lock.writeFile(JSON.stringify(ownerRecord));
     if (state && !batch.resume) throw new Error("WORKBUDDY_QUEUE_EXISTS: 使用 --resume，禁止重建队列");
     if (!state && batch.resume) throw new Error("WORKBUDDY_QUEUE_MISSING");
     if (state && (state.schema_version !== WORKBUDDY_QUEUE_SCHEMA || state.frozen_sha256 !== digest)) {
       throw new Error("WORKBUDDY_QUEUE_CONFIG_DRIFT");
     }
+    if (state) await verifyWorkBuddyQueueRepairs(root, state);
     if (!state) {
       for (const config of configs) {
         if (await optionalJson(config.journalFile)) throw new Error("WORKBUDDY_QUEUE_ATTEMPT_ALREADY_EXISTS: " + config.task.task_id);
@@ -344,6 +366,7 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
       return { ...state, state_file: statePath, receipt_file: receiptPath };
     }
     state.phase = "RUNNING";
+    state.last_owner = ownerRecord;
     state.events.push({ event: batch.resume ? "QUEUE_RESUMED" : "QUEUE_STARTED", at: now() });
     await persistState(statePath, receiptPath, state);
     const recoveredAttention = new Set();
@@ -384,7 +407,11 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
         await persistState(statePath, receiptPath, state);
         return { ...state, state_file: statePath, receipt_file: receiptPath };
       }
-      while (running.length < batch.runSlots) {
+      // A preparation error must not fan out through the rest of the suite.
+      // Observe already accepted sessions to terminal, leaving unsent rows for
+      // explicit zero-send recovery rather than publishing capability failures.
+      const preparationFailed = () => state.tasks.some(row => row.phase === "FAILED" && row.dispatch_attempt_count === 0);
+      while (!preparationFailed() && running.length < batch.runSlots) {
         const pending = state.tasks.find((row) => row.phase === "PENDING");
         if (!pending) break;
         if (running.some((row) => !row.conversation_id || !row.cwd)) break;
@@ -430,6 +457,13 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
 
       running = state.tasks.filter((row) => row.phase === "RUNNING");
       const pending = state.tasks.filter((row) => row.phase === "PENDING");
+      if (preparationFailed() && !running.length) {
+        state.phase = "NEEDS_ATTENTION";
+        state.active_task_ids = [];
+        state.events.push({ event: "ZERO_SEND_PREPARATION_BLOCKED", at: now() });
+        await persistState(statePath, receiptPath, state);
+        return { ...state, state_file: statePath, receipt_file: receiptPath };
+      }
       if (!running.length && !pending.length) {
         const failed = state.tasks.filter((row) => row.phase === "FAILED");
         state.phase = failed.length ? "COMPLETED_WITH_FAILURES" : "COMPLETED";

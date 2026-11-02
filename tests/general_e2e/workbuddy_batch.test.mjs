@@ -1,13 +1,18 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { hostname, tmpdir } from "node:os";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import test from "node:test";
 import {
   parseBatchArgs,
   runWorkBuddyBatch,
+  resolveWorkBuddyBatchInvocation,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/batch.mjs";
+import { recoverWorkBuddyQueue } from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/recover-queue.mjs";
+
+const digest = value => createHash("sha256").update(value).digest("hex");
 
 async function fixture(task_ids = ["one", "two", "three"]) {
   const root = await realpath(await mkdtemp(join(tmpdir(), "workbuddy-queue-")));
@@ -220,5 +225,152 @@ test("WorkBuddy queue freezes run slots and rejects a changed concurrency on res
       /CONFIG_DRIFT/u,
     );
     assert.throws(() => parseBatchArgs([...f.args, "--run-slots", "9"]), /1–8/u);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("zero-send preparation failure stops refill while accepted tasks drain to terminal", async () => {
+  const f = await fixture(["one", "two", "broken", "never"]);
+  try {
+    const execute = async argv => {
+      const task = argv[argv.indexOf("--task-id") + 1], attempt = argv[argv.indexOf("--attempt-id") + 1];
+      f.calls.push({ task, resume: argv.includes("--resume") });
+      if (task === "broken") {
+        await writeFile(join(f.root, ".general-e2e/execution/broken/workbuddy/dispatch-journal.json"), JSON.stringify({
+          identity: { task_id: task, attempt_id: attempt }, phase: "FAILED", send: { dispatch_attempt_count: 0 },
+          native: {}, execution: { error: { code: "WORKBUDDY_PRE_SEND_DRIVER_ERROR" } },
+        }));
+        return 2;
+      }
+      await f.writeAttempt(task, attempt, argv.includes("--resume") ? "COMPLETED" : "RUNNING");
+      return argv.includes("--resume") ? 0 : 4;
+    };
+    const result = await runWorkBuddyBatch(f.args, { execute, sleep: async () => {} });
+    assert.equal(result.phase, "NEEDS_ATTENTION");
+    assert.deepEqual(result.tasks.map(t => t.phase), ["COMPLETED", "COMPLETED", "FAILED", "PENDING"]);
+    assert.equal(f.calls.filter(c => c.task === "broken").length, 1);
+    assert.equal(f.calls.some(c => c.task === "never"), false);
+    await assert.rejects(readFile(result.receipt_file), { code: "ENOENT" });
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+async function recoveryFixture() {
+  const f = await fixture(["sent", "broken", "pending"]);
+  const manifestPath = join(f.root, "manifest.json"), unit = JSON.parse(await readFile(manifestPath));
+  for (const task of unit.tasks) task.workspace.entries = [];
+  await writeFile(manifestPath, JSON.stringify(unit));
+  const execute = async argv => {
+    const task = argv[argv.indexOf("--task-id") + 1], attempt = argv[argv.indexOf("--attempt-id") + 1];
+    if (task !== "broken") return f.execute(argv);
+    const root = join(f.root, "execution/tasks", task), workspace = join(root, "workspace");
+    const j = { schema_version: "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1",
+      identity: { batch_id: "b", unit_id: "u", task_id: task, attempt_id: attempt }, dataset: unit.dataset,
+      phase: "FAILED", task_root: root, candidate_workspace: workspace,
+      prompt: { path: join(root, "PROMPT.md"), sha256: digest("fixture"), send_status: "not_sent", sent_at: null },
+      send: { dispatch_attempt_count: 0, dispatch_armed_at: null, dispatch_returned_at: null }, native: { baseline: null },
+      expected_ui: { workspace, model: "fixture", permission: "default-sandbox" }, runtime: { endpoint: "http://127.0.0.1:9229" },
+      verified_ui: null, execution: { error: { code: "WORKBUDDY_PRE_SEND_DRIVER_ERROR", message: "WorkBuddy 新建任务按钮数量异常：0" } },
+      history: [{ event: "PRE_SEND_DRIVER_ERROR", phase: "FAILED" }] };
+    await writeFile(join(f.root, ".general-e2e/execution/broken/workbuddy/dispatch-journal.json"), JSON.stringify(j));
+    return 2;
+  };
+  const first = await runWorkBuddyBatch(f.args, { execute });
+  const queuePath = first.state_file, queue = JSON.parse(await readFile(queuePath));
+  delete queue.frozen.batch_sha256; delete queue.frozen.ui_sha256;
+  queue.frozen_sha256 = digest(JSON.stringify(queue.frozen));
+  await writeFile(queuePath, JSON.stringify(queue));
+  const ownerPath = join(dirname(queuePath), "owner-lock.json");
+  await writeFile(ownerPath, JSON.stringify({ pid: 999999, host: hostname(), queue_id: "serial", started_at: "fixture" }));
+  const entry = fileURLToPath(new URL("../../tools/report/skills/general-e2e/execute-general-e2e/drivers/workbuddy/batch.mjs", import.meta.url));
+  const config = await resolveWorkBuddyBatchInvocation(f.args);
+  const recovery = { schema_version: "wildclawbench.workbuddy-zero-send-queue-repair/v1", reason: "Repair native UI preparation only",
+    original_argv: [process.execPath, entry, ...f.args], original_batch_sha256: digest(await readFile(entry)),
+    queue_sha256: digest(await readFile(queuePath)), expected_owner_pid: 999999, retry_task_ids: ["broken"],
+    replacement_sources: Object.fromEntries(["driver_sha256", "batch_sha256", "ui_sha256"].map(k => [k, config.frozen[k]])),
+    output_root: join(f.root, ".general-e2e/queue-repairs/test") };
+  const recoveryPath = join(f.root, "recovery.json"); await writeFile(recoveryPath, JSON.stringify(recovery));
+  return { ...f, queuePath, ownerPath, recoveryPath, recovery, first,
+    dependencies: { inspectOwner: async () => ({ exited: true }), verifyIdle: async () => ({ verified: true, process: { pid: 123, started_at: "fixed" } }) } };
+}
+
+test("explicit dead-owner zero-send recovery preserves accepted attempts and original evidence", async () => {
+  const f = await recoveryFixture();
+  try {
+    const sent = await readFile(join(f.root, ".general-e2e/execution/sent/workbuddy/dispatch-journal.json"));
+    const originalQueue = await readFile(f.queuePath);
+    const result = await recoverWorkBuddyQueue(f.recoveryPath, f.dependencies);
+    assert.equal(result.status, "RECOVERED"); assert.equal(result.new_prompts_sent, 0);
+    const queue = JSON.parse(await readFile(f.queuePath));
+    assert.deepEqual(queue.tasks.map(t => t.phase), ["COMPLETED", "PENDING", "PENDING"]);
+    assert.deepEqual(await readFile(join(f.recovery.output_root, "original-queue.json")), originalQueue);
+    assert.deepEqual(await readFile(join(f.root, ".general-e2e/execution/sent/workbuddy/dispatch-journal.json")), sent);
+    assert.equal((await recoverWorkBuddyQueue(f.recoveryPath, { ...f.dependencies, resume: true })).idempotent, true);
+    const resumed = await runWorkBuddyBatch([...f.args, "--resume"], { execute: f.execute });
+    assert.equal(resumed.phase, "COMPLETED");
+    assert.deepEqual(f.calls.map(c => c.task), ["sent", "broken", "pending"]);
+    const original = queue.source_repairs[0].artifacts.find(x => x.path.endsWith("broken/dispatch-journal.json"));
+    await writeFile(join(f.root, original.path), "changed");
+    await assert.rejects(runWorkBuddyBatch([...f.args, "--resume"], { execute: f.execute }), /RECOVERY_ORIGINAL_INVALID|REPAIR_ARTIFACT_DRIFT|Unexpected token/u);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("queue recovery refuses active owners, unverified native idle and armed sends", async () => {
+  for (const scenario of ["active", "busy", "armed"]) {
+    const f = await recoveryFixture();
+    try {
+      const queue = await readFile(f.queuePath), owner = await readFile(f.ownerPath);
+      const deps = { ...f.dependencies };
+      if (scenario === "active") deps.inspectOwner = async () => ({ exited: false });
+      if (scenario === "busy") deps.verifyIdle = async () => ({ verified: false });
+      if (scenario === "armed") {
+        const path = join(f.root, ".general-e2e/execution/broken/workbuddy/dispatch-journal.json");
+        const j = JSON.parse(await readFile(path)); j.send.dispatch_armed_at = "armed"; await writeFile(path, JSON.stringify(j));
+      }
+      await assert.rejects(recoverWorkBuddyQueue(f.recoveryPath, deps), /OWNER_EXIT_UNVERIFIED|FRESH_IDLE_REQUIRED|NOT_REGISTERED_ZERO_SEND_FAILURE/u);
+      assert.deepEqual(await readFile(f.queuePath), queue); assert.deepEqual(await readFile(f.ownerPath), owner);
+    } finally { await rm(f.root, { recursive: true, force: true }); }
+  }
+});
+
+test("interrupted journal archival resumes the same recovery without restoring or resending old attempts", async () => {
+  const f = await recoveryFixture();
+  try {
+    const before = await readFile(f.queuePath);
+    await assert.rejects(recoverWorkBuddyQueue(f.recoveryPath, { ...f.dependencies,
+      afterArchive: async () => { throw new Error("injected archival interruption"); } }), /injected archival interruption/u);
+    assert.deepEqual(await readFile(f.queuePath), before);
+    await assert.rejects(readFile(join(f.root, ".general-e2e/execution/broken/workbuddy/dispatch-journal.json")), { code: "ENOENT" });
+    const saved = await readFile(join(f.recovery.output_root, "original-attempts/broken/dispatch-journal.json"));
+    const result = await recoverWorkBuddyQueue(f.recoveryPath, { ...f.dependencies, resume: true });
+    assert.equal(result.status, "RECOVERED"); assert.equal(result.new_prompts_sent, 0);
+    assert.deepEqual(await readFile(join(f.recovery.output_root, "original-attempts/broken/dispatch-journal.json")), saved);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("a recovery interrupted after queue commit only finishes its receipt", async () => {
+  const f = await recoveryFixture();
+  try {
+    await assert.rejects(recoverWorkBuddyQueue(f.recoveryPath, { ...f.dependencies,
+      afterQueueCommit: async () => { throw new Error("injected postcommit interruption"); } }), /injected postcommit interruption/u);
+    const committed = await readFile(f.queuePath);
+    const result = await recoverWorkBuddyQueue(f.recoveryPath, { ...f.dependencies, resume: true });
+    assert.equal(result.status, "RECOVERED"); assert.equal(result.new_prompts_sent, 0);
+    assert.deepEqual(await readFile(f.queuePath), committed);
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});
+
+test("a normally released queue owner is recovered from its frozen queue identity without fabricating a lock", async () => {
+  const f = await recoveryFixture();
+  try {
+    const owner = JSON.parse(await readFile(f.ownerPath));
+    await rm(f.ownerPath);
+    const q = JSON.parse(await readFile(f.queuePath)); q.last_owner = owner;
+    await writeFile(f.queuePath, JSON.stringify(q));
+    const m = JSON.parse(await readFile(f.recoveryPath)); m.queue_sha256 = digest(await readFile(f.queuePath));
+    await writeFile(f.recoveryPath, JSON.stringify(m));
+    const result = await recoverWorkBuddyQueue(f.recoveryPath, f.dependencies);
+    assert.equal(result.status, "RECOVERED");
+    assert.deepEqual(JSON.parse(await readFile(join(f.recovery.output_root, "owner-record.from-queue.json"))), owner);
+    await assert.rejects(readFile(join(f.recovery.output_root, "owner-lock.original.json")), { code: "ENOENT" });
+    await assert.rejects(readFile(f.ownerPath), { code: "ENOENT" });
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });

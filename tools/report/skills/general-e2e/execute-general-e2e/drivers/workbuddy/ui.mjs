@@ -212,6 +212,10 @@ export async function readWorkBuddyUi(client) {
       : null;
     const permissionClass = permissions.length === 1 ? String(permissions[0].className || '') : '';
     return {
+      app_error_boundary: editors.length === 0 && models.length === 0 && pickers.length === 0
+        && visibleAll('button').some(button => text(button) === '刷新页面')
+        && visibleAll('summary').some(summary => text(summary) === '点击查看错误详情')
+        && /出错了/u.test(document.body.innerText || ''),
       workspace_picker_count: pickers.length,
       workspace_provider_count: workspaceProviderCount,
       workspace_path: workspacePath,
@@ -230,6 +234,7 @@ export async function readWorkBuddyUi(client) {
 }
 
 export function assertWorkBuddyUiIdle(ui) {
+  if (ui.app_error_boundary) throw new Error("WORKBUDDY_UI_ERROR_BOUNDARY: native error page requires verified idle recovery");
   const evidence = {
     verified: ui.editor_count <= 1
       && ui.editor_nonempty_count === 0

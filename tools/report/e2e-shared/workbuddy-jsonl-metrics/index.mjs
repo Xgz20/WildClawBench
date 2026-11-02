@@ -77,7 +77,15 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   if (rows.some(x => (x.sessionId && x.sessionId !== session.session_id) || (x.cwd && x.cwd !== session.cwd))) fail("IDENTITY_MISMATCH");
   const events = rows.filter(x => ["message", "function_call", "function_call_result"].includes(x.type));
   if (!events.length || events.some(x => x.sessionId !== session.session_id || x.cwd !== session.cwd)) fail("IDENTITY_MISMATCH");
-  const users = events.filter(x => x.type === "message" && x.role === "user" && !x.providerData?.isMeta);
+  const internalUsers = new Set();
+  for (const row of events.filter(x => x.type === "message" && x.role === "user" && x.providerData?.isCompactInternal === true)) {
+    const pd = row.providerData;
+    if (typeof row.id !== "string" || !row.id || pd.agent !== "cli" || pd.skipRun !== false
+        || pd.startsNewUserRequest === true || pd.conversationRequestId !== snapshot.request.id
+        || (pd.rootRequestId != null && pd.rootRequestId !== snapshot.request.id)) fail("COMPACTION_USER_BINDING_MISMATCH");
+    internalUsers.add(row);
+  }
+  const users = events.filter(x => x.type === "message" && x.role === "user" && !x.providerData?.isMeta && !internalUsers.has(x));
   if (users.length !== 1) fail("USER_TURN_MISMATCH");
   const nativePrompt = textOf(users[0].content);
   // WorkBuddy adds context before the exact user_query. Require one terminal
@@ -134,11 +142,17 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   }
   // Only the derived metrics view omits unverified usage. Response identities,
   // content, tools, raw JSONL and all frozen execution evidence stay unchanged.
-  const metricRows = unverifiedUsageIds.size ? rows.map(row => (
-    unverifiedUsageIds.has(row.providerData?.messageId)
-      ? { ...row, providerData: { ...row.providerData, usage: undefined } } : row
-  )) : rows;
+  const metricRows = unverifiedUsageIds.size || internalUsers.size ? rows.map(row => {
+    const unverifiedUsage = unverifiedUsageIds.has(row.providerData?.messageId);
+    const compactUser = internalUsers.has(row);
+    return unverifiedUsage || compactUser ? { ...row, providerData: { ...row.providerData,
+      ...(unverifiedUsage ? { usage: undefined } : {}), ...(compactUser ? { isMeta: true } : {}),
+    } } : row;
+  }) : rows;
   const parsed = parser(metricRows);
+  if (internalUsers.size) parsed.collection.warnings.push(
+    `WORKBUDDY_COMPACTION_INTERNAL_USER_V1: native isCompactInternal metadata binds ${internalUsers.size} internal messages to the same request; original user Prompt and all raw bytes retained`,
+  );
   if (unverifiedUsageIds.size) parsed.collection.warnings.push(
     `WORKBUDDY_NORMALIZED_ZERO_USAGE_UNVERIFIED_V1: no provider-native counters for ${JSON.stringify([...unverifiedUsageIds])}; token totals remain unavailable with verified subtotals`,
   );

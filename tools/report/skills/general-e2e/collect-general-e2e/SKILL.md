@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.18` 识别同一原生请求内、明确标记isCompactInternal/skipRun=false/agent=cli的压缩内部用户消息，保留原始JSONL和全文，不将其误判为第二次人工发送。仍须唯一原始Prompt及相同session/cwd/request；额外真实用户、冲突的新请求声明与跨请求标记继续拒绝。
+
 `0.11.17` 对精确的camelCase全零rawUsage镜像保留原始JSONL与完整内容绑定；该形状没有provider原生Token计数证明，相关Token保持null/partial及已验证小计，不把镜像零值当实测零。原生snake_case实测零继续保留0，未知形状、冲突及身份/工具/终稿差异仍拒绝。已发布候选、回执和旧发行不改写。
 
 `0.11.16` 在 macOS 冻结 Office 副本复制后、首次读取哈希前设置并核验 UF_IMMUTABLE，避免宿主属性写入破坏已发布候选；其他平台沿用原行为。失败只清理本次自建 staging 的标记，不解除已发布制品或源 Workspace 的保护。冻结字节发生变化仍拒绝；无可信原字节时保全坏证据，以获授权的新执行 attempt 重做受影响题，不改旧 SHA、不对同一 attempt 重发。
