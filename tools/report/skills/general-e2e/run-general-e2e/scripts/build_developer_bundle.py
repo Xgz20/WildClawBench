@@ -43,6 +43,30 @@ def write_json(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 
+def single_package_imports(index, selected):
+    """Read both index shapes; preserve the original source bytes and SHA.
+
+    This exporter has one directory per unit. Never choose the first of several
+    packages: that would omit evidence or mix different attempts silently.
+    """
+    result = {}
+    for uid, item in index['imports'].items():
+        if 'packages' in item:
+            packages = item['packages']
+            assert isinstance(packages, list) and len(packages) == 1, 'MULTI_PACKAGE_UNIT_REQUIRES_EXPLICIT_LAYOUT: ' + uid
+            assert 'target' not in item, 'SOURCE_INDEX_SHAPE_CONFLICT: ' + uid
+            chosen = packages[0]
+            rows = [r for r in selected['selected_tasks'] if r['unit_id'] == uid]
+            assert rows and all(r.get('source_package_id') == chosen['package_id'] for r in rows), 'SELECTED_PACKAGE_ID_MISMATCH: ' + uid
+        else:
+            chosen = item
+            assert all(r.get('source_package_id', chosen['package_id']) == chosen['package_id']
+                       for r in selected['selected_tasks'] if r['unit_id'] == uid), 'SELECTED_PACKAGE_ID_MISMATCH: ' + uid
+        assert all(k in chosen for k in ('target', 'package_id', 'package_manifest_sha256')), 'SOURCE_INDEX_INCOMPLETE: ' + uid
+        result[uid] = dict(chosen)
+    return result
+
+
 def canonical_report_files(archive):
     """Validate sealed report members; never normalize a host-modified XLSX."""
     with zipfile.ZipFile(archive) as z:
@@ -314,6 +338,7 @@ def main(argv=None):
         assert sealed[1]['general_e2e_report_data.json']['sha256']==receipt['source_json_sha256']
         assert sealed[1][SOURCE_INDEX.name]['sha256']==sha(SOURCE_INDEX) and sealed[1][TASK_INDEX.name]['sha256']==sha(TASK_INDEX)
     assert receipt["composite_import_index_sha256"] == sha(SOURCE_INDEX)
+    index = {**index, 'imports': single_package_imports(index, selected)}
     assert set(index["imports"]) == set(UNITS) and len(selected["selected_tasks"]) == report["scope"]["task_run_count"]
     reports = {x["run_id"]: x for x in report["tasks"]}
     ordinal = {tid:i+1 for i,tid in enumerate(report["scope"]["task_ids"])}
