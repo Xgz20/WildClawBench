@@ -8,7 +8,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveWorkBuddyBatchInvocation, synchronizeRow, verifyWorkBuddyQueueRepairs, WORKBUDDY_QUEUE_VERSION } from "./batch.mjs";
 import { assertWorkBuddyExecutionReadiness, assertWorkBuddyNativeIdle } from "./execute.mjs";
-import { inspectWorkBuddyMacos } from "./probe.mjs";
+import { inspectWorkBuddyMacos, parseArgs as parseProbeArgs } from "./probe.mjs";
 import { assertWorkBuddyUiIdle, discoverWorkBuddyMainTarget, readWorkBuddyUi, WorkBuddyCdpClient } from "./ui.mjs";
 
 const SCHEMA = "wildclawbench.workbuddy-zero-send-queue-repair/v1";
@@ -73,7 +73,7 @@ async function initialWorkspace(config) {
   requireOk(found.size === expected.size, "INITIAL_WORKSPACE_MISSING");
 }
 async function verifyIdle(config, zeroWorkspaces) {
-  const report = await inspectWorkBuddyMacos({ appPath: config.appPath, sessionDb: config.sessionDb,
+  const report = await inspectWorkBuddyMacos({ ...parseProbeArgs([]), appPath: config.appPath, sessionDb: config.sessionDb,
     extensionDataRoot: config.dataRoot, endpoint: config.endpoint, timeoutMs: 10000 });
   assertWorkBuddyExecutionReadiness(report, config.endpoint);
   requireOk(!config.manifest.unit.harness.version || report.application.version === config.manifest.unit.harness.version, "APPLICATION_VERSION_DRIFT");

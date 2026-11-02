@@ -7,14 +7,14 @@ import { join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { resolveWorkBuddyBatchInvocation } from "./batch.mjs";
 import { assertWorkBuddyExecutionReadiness, assertWorkBuddyNativeIdle } from "./execute.mjs";
-import { inspectWorkBuddyMacos } from "./probe.mjs";
+import { inspectWorkBuddyMacos, parseArgs as parseProbeArgs } from "./probe.mjs";
 import { discoverWorkBuddyMainTarget, readWorkBuddyUi, WorkBuddyCdpClient } from "./ui.mjs";
 
 const hash = value => createHash("sha256").update(value).digest("hex");
 const json = value => JSON.stringify(value, null, 2) + "\n";
 const fail = message => { throw new Error(`WORKBUDDY_UI_RECOVERY_${message}`); };
 async function nativeIdle(config) {
-  const report = await inspectWorkBuddyMacos({ appPath: config.appPath, sessionDb: config.sessionDb,
+  const report = await inspectWorkBuddyMacos({ ...parseProbeArgs([]), appPath: config.appPath, sessionDb: config.sessionDb,
     extensionDataRoot: config.dataRoot, endpoint: config.endpoint, timeoutMs: 10000 });
   assertWorkBuddyExecutionReadiness(report, config.endpoint); const idle = assertWorkBuddyNativeIdle(report);
   if (config.manifest.unit.harness.version && report.application.version !== config.manifest.unit.harness.version) fail("VERSION_DRIFT");
