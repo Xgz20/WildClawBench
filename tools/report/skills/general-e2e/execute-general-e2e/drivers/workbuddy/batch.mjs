@@ -255,6 +255,26 @@ export async function verifyWorkBuddyQueueRepairs(root, state) {
       if (bytes.length !== ref.size || hash(bytes) !== ref.sha256) throw new Error("WORKBUDDY_QUEUE_REPAIR_ARTIFACT_DRIFT");
     }
   }
+  for (const review of state.terminal_reviews || []) {
+    const row = state.tasks.find(t => t.task_id === review.task_id);
+    if (!row || row.attempt_id !== review.attempt_id || row.phase !== "NEEDS_ATTENTION"
+        || row.dispatch_attempt_count !== 1) throw new Error("WORKBUDDY_TERMINAL_REVIEW_SCOPE_DRIFT");
+    for (const ref of review.artifacts) {
+      if (ref.path.split("/").some(x => !x || x === "." || x === "..")) throw new Error("WORKBUDDY_TERMINAL_REVIEW_PATH_INVALID");
+      await assertPlainPath(root, ref.path.split("/"));
+      const bytes = await readFile(join(root, ref.path));
+      if (hash(bytes) !== ref.sha256 || bytes.length !== ref.size) throw new Error("WORKBUDDY_TERMINAL_REVIEW_EVIDENCE_DRIFT");
+    }
+    const proofRef = review.artifacts.find(ref => ref.path.endsWith("/review.json"));
+    if (!proofRef) throw new Error("WORKBUDDY_TERMINAL_REVIEW_PROOF_MISSING");
+    const proof = await readJson(join(root, proofRef.path));
+    if (proof.profile !== "workbuddy-native-cancelled-terminal-review/v1" || proof.native_terminal_observed !== true
+        || proof.execution_completed !== false || proof.score_admitted !== false
+        || proof.identity?.task_id !== row.task_id || proof.identity?.attempt_id !== row.attempt_id
+        || proof.identity?.conversation_id !== row.conversation_id || proof.identity?.request_id !== row.request_id) {
+      throw new Error("WORKBUDDY_TERMINAL_REVIEW_PROOF_INVALID");
+    }
+  }
 }
 
 export async function resolveWorkBuddyBatchInvocation(argv) {
@@ -380,7 +400,8 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
         return { ...state, state_file: statePath, receipt_file: receiptPath };
       }
       let running = state.tasks.filter((row) => row.phase === "RUNNING");
-      let attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
+      const parkedReview = row => (state.terminal_reviews || []).some(r => r.task_id === row.task_id && r.attempt_id === row.attempt_id);
+      let attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION" && !parkedReview(row));
       if (batch.resume) {
         for (const row of attention.filter((item) => !recoveredAttention.has(item.task_id))) {
           recoveredAttention.add(row.task_id);
@@ -399,7 +420,7 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
           await persistState(statePath, receiptPath, state);
         }
         running = state.tasks.filter((row) => row.phase === "RUNNING");
-        attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION");
+        attention = state.tasks.filter((row) => row.phase === "NEEDS_ATTENTION" && !parkedReview(row));
       }
       if (attention.length) {
         state.phase = "NEEDS_ATTENTION";
@@ -465,6 +486,12 @@ export async function runWorkBuddyBatch(argv, dependencies = {}) {
         return { ...state, state_file: statePath, receipt_file: receiptPath };
       }
       if (!running.length && !pending.length) {
+        if ((state.terminal_reviews || []).length) {
+          state.phase = "AWAITING_TERMINAL_REVIEW"; state.active_task_ids = [];
+          state.events.push({ event: "QUEUE_OTHER_TASKS_TERMINAL_REVIEW_PENDING", at: now() });
+          await persistState(statePath, receiptPath, state);
+          return { ...state, state_file: statePath, receipt_file: receiptPath };
+        }
         const failed = state.tasks.filter((row) => row.phase === "FAILED");
         state.phase = failed.length ? "COMPLETED_WITH_FAILURES" : "COMPLETED";
         state.active_task_ids = [];

@@ -224,6 +224,10 @@ export async function recoverWorkBuddyQueue(manifestPath, { resume = false, ...d
           retries.push({ task_id: row.task_id, attempt_id: row.attempt_id, path: config.journalFile,
             destination: join(output, "original-attempts", row.task_id, "dispatch-journal.json"),
             ...journalSource, bytes: undefined, prior_recovery: priorRecovery, office_audit_sources: officeAuditSources });
+        } else if (row.phase === "NEEDS_ATTENTION" && (state.terminal_reviews || []).some(r => r.task_id === row.task_id && r.attempt_id === row.attempt_id)) {
+          // Its native terminality has a separate immutable review proof.
+          // Keep the unresolved outcome intact; never retry or score it here.
+          continue;
         } else {
           requireOk(row.dispatch_attempt_count === 1 && row.conversation_id && row.request_id, "UNKNOWN_OR_ACCEPTED_FAILURE");
           await synchronizeRow(root, row);

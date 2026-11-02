@@ -414,3 +414,27 @@ test("repeated zero-send preparation recovery preserves and relocates the comple
     assert.deepEqual(f.calls.map(c => c.task), ["sent", "broken", "pending"]);
   } finally { await rm(f.root, { recursive: true, force: true }); }
 });
+
+test("a proven terminal review may stay unresolved while independent pending tasks run", async () => {
+  const f = await fixture();
+  try {
+    const first = await runWorkBuddyBatch(f.args, { execute: async argv => {
+      const task = argv[argv.indexOf("--task-id") + 1], attempt = argv[argv.indexOf("--attempt-id") + 1];
+      await f.writeAttempt(task, attempt, "NEEDS_ATTENTION"); return 3;
+    } });
+    const state = JSON.parse(await readFile(first.state_file)), row = state.tasks[0];
+    const directory = join(f.root, ".general-e2e/terminal-reviews/test"); await mkdir(directory, { recursive: true });
+    const proof = { profile: "workbuddy-native-cancelled-terminal-review/v1", native_terminal_observed: true,
+      execution_completed: false, score_admitted: false, identity: { task_id: row.task_id, attempt_id: row.attempt_id,
+        conversation_id: row.conversation_id, request_id: row.request_id } };
+    const data = Buffer.from(JSON.stringify(proof)); await writeFile(join(directory, "review.json"), data);
+    state.terminal_reviews = [{ task_id: row.task_id, attempt_id: row.attempt_id,
+      artifacts: [{ path: ".general-e2e/terminal-reviews/test/review.json", sha256: digest(data), size: data.length }] }];
+    await writeFile(first.state_file, JSON.stringify(state));
+    const resumed = await runWorkBuddyBatch([...f.args, "--resume"], { execute: f.execute });
+    assert.equal(resumed.phase, "AWAITING_TERMINAL_REVIEW");
+    assert.deepEqual(resumed.tasks.map(t => t.phase), ["NEEDS_ATTENTION", "COMPLETED", "COMPLETED"]);
+    assert.deepEqual(f.calls.map(c => c.task), ["two", "three"]);
+    await assert.rejects(readFile(resumed.receipt_file), { code: "ENOENT" });
+  } finally { await rm(f.root, { recursive: true, force: true }); }
+});

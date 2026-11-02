@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.27` 对已发送但取消来源未明的WorkBuddy请求，可用park-terminal-review仅登记“原生终态待复核”：必须同Prompt/会话/Workspace、SQL取消态、Runtime关闭请求及SDK精确中断边界全部匹配。保留原journal/state/SDK，不改完成状态、不判分、不重发；其他独立题目可继续，完整范围最终停在AWAITING_TERMINAL_REVIEW，不发布虚假全批完成回执。继续未知取消或重执行仍须另有明确决定。
+
 `0.14.26` 初始CWM审计v2兼容已核验的无命名空间custom属性登记子节点；仍要求正确的包元数据根、精确Type/Target及CWM属性，全部业务部件保持逐字节相同。原件与旧审计不改写，其他命名空间、属性或业务变化不准入。
 
 `0.14.25` 零发送恢复只复核实际恢复题目的初始Workspace，避免反复读取无关待执行Office素材而触发宿主水印。待恢复题目仅有严格CWM属性差异时，从round-unit锁定的原execution ZIP逐字节核对参考、比较全部OPC业务部件并保存原/现不可变审计；不改Workspace或旧SHA，非Office/业务变化仍拒绝。审计纳入恢复与正式绑定证据链；可用initial_office_python显式指定管理员Python。
