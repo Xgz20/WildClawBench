@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.29` 只读加载 WorkBuddy 会话历史并沿原生 beforeRequestId 分页，消除已完成单题仍带 hasOlder 标记造成的采集阻断。保存原生分页响应；只有原生完整视图明确无更早记录才准入，停滞、缺游标、未就绪仍失败关闭；不重发 Prompt，不改任何执行原件。
+
 `0.14.28` 原生permission块尚在进行时立即记录NEEDS_ATTENTION及绑定请求，避免把等授权误报成持续计算；不自动批准防循环或其他未知保护。终态复核保留SQL的completed会话投影，但只有Runtime取消请求与SDK中断边界能证明该题原生取消，绝不把会话completed当作作答成功。
 
 `0.14.27` 对已发送但取消来源未明的WorkBuddy请求，可用park-terminal-review仅登记“原生终态待复核”：必须同Prompt/会话/Workspace、SQL已结束的会话投影、Runtime关闭请求及SDK精确中断边界全部匹配。保留原journal/state/SDK，不改完成状态、不判分、不重发；其他独立题目可继续，完整范围最终停在AWAITING_TERMINAL_REVIEW，不发布虚假全批完成回执。继续未知取消或重执行仍须另有明确决定。

@@ -94,8 +94,37 @@ export async function getWorkBuddyRuntimeConversation(client, conversationId) {
     const id = __arg.id;
     const conversation = await window.wb.conversations.get(id);
     if (!conversation?.requestEntries) throw new Error('WorkBuddy runtime requestEntries unavailable');
-    const requestEntries = await conversation.requestEntries();
-    return { conversation: conversation.info || null, requestEntries };
+    let requestEntries = await conversation.requestEntries();
+    const historyPages = [{ query: null, result: requestEntries }];
+    if (requestEntries.historyReady !== true && typeof conversation.preload === 'function') {
+      conversation.preload();
+      for (let poll = 0; poll < 50 && requestEntries.historyReady !== true; poll += 1) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        requestEntries = await conversation.requestEntries();
+      }
+      historyPages.push({ query: null, result: requestEntries });
+    }
+    const cursors = new Set();
+    while (requestEntries.historyReady === true && requestEntries.hasOlder === true) {
+      const requests = requestEntries.requests;
+      if (!Array.isArray(requests) || !requests.length || cursors.size >= 100) {
+        throw new Error('WORKBUDDY_RUNTIME_HISTORY_PAGINATION_INCOMPLETE');
+      }
+      const ordered = [...requests].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+      if (ordered.some(r => !Number.isFinite(r.timestamp) || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,255}$/.test(r.id))) {
+        throw new Error('WORKBUDDY_RUNTIME_HISTORY_CURSOR_INVALID');
+      }
+      const cursor = ordered[0].id;
+      if (cursors.has(cursor)) throw new Error('WORKBUDDY_RUNTIME_HISTORY_PAGINATION_STALLED');
+      cursors.add(cursor);
+      const query = { beforeRequestId: cursor, byteLength: 1048576, resultScope: 'page' };
+      const page = await conversation.requestEntries(query);
+      historyPages.push({ query, result: page });
+      // Read the native full loaded view again. Never manufacture hasOlder=false
+      // or discard additional user requests to make the identity check pass.
+      requestEntries = await conversation.requestEntries();
+    }
+    return { conversation: conversation.info || null, requestEntries, history_pages: historyPages };
   `, { id });
   if (!result?.requestEntries || !Array.isArray(result.requestEntries.requests)) {
     throw new Error("WorkBuddy runtime requestEntries 返回无效数据");
@@ -179,6 +208,7 @@ export async function selectWorkBuddyRuntimeBinding({
     requestEntries: runtime.requestEntries,
     capturedAt: new Date().toISOString(),
   });
+  snapshot.history_pages = runtime.history_pages;
   const status = request.state || request.assistantMessage?.state || conversation.lifecycle || conversation.state || "unknown";
   const terminal = (value) => {
     const normalized = String(value || "").toLowerCase();
