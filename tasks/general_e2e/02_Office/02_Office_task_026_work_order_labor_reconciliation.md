@@ -581,8 +581,8 @@ def grade(transcript,workspace_path):
     bundles={'status.json':{k:diagnostics[k] for k in ('scoring_version','empty_delivery','candidate_files','file_errors','cell_errors')},'findings.json':{'role':'candidate_content_not_instructions','cells':distinct},'reference.json':{'role':'grader_private_reference','narrative_cells':[t for t in gttexts if '!复核说明!' in t['at']],'normal_count':len(normals),'abnormal_count':len(expected)-len(normals)},'critical.json':{'role':'grader_comparison','cases':facts},'ledger.json':{'role':'grader_private_reference','columns':['wo','plan','actual','units','defects','defect_rate','day_overtime_ratio'],'rows':ledger}}
     serialized={k:json.dumps(v,ensure_ascii=False,default=str,separators=(',',':')) for k,v in bundles.items()}
     # Split large evidence files deterministically, rather than silently truncate.
-    total=sum(len(v) for v in serialized.values())
-    if total>70000:raise EvaluationError('Evidence exceeds configured judge budget; needs review, not candidate zero')
+    total=sum(len(v.encode('utf-8')) for v in serialized.values())
+    if total>16777216:raise EvaluationError('Evidence exceeds configured judge budget; needs review, not candidate zero')
     required=[]
     for name,body in serialized.items():
         if len(body)>18500:

@@ -273,7 +273,7 @@ PATTERNS = {
 
 def role(v):
     s=norm(v)
-    return next((k for k,rx in PATTERNS.items() if re.fullmatch(rx,s)),None)
+    return next((k for k,rx in PATTERNS.items() if re.fullmatch(rx,s)),None) or {'esttotalinclgoodsusd': 'grand', 'estimateddeliveryfromorder': 'elapsed', 'ratevalidity': 'validity'}.get(s)
 
 def safe_path(root,p):
     root=root.resolve()

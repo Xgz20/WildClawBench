@@ -11,6 +11,7 @@ grading_weights:
   llm_judge: 1.0
 judge_evidence:
   semantic_status_profile: evidence-aware-v1
+  preserve_native_channels: true
   required:
     - path: evaluator_evidence/reference_answer.md
       role: evaluator_reference_not_agent_output
@@ -98,47 +99,45 @@ def _visible_text(message):
 
 
 def _final_answer(transcript):
-    if not isinstance(transcript, list) or not transcript:
-        raise ValueError("EVALUATOR_EVIDENCE_MISSING: nonempty transcript required")
-    rows = []
-    for index, outer in enumerate(transcript):
-        if not isinstance(outer, dict):
-            continue
-        row = outer
-        for key in ("payload", "message"):
-            if isinstance(row.get(key), dict):
-                row = row[key]
-        rows.append((index, row))
-    starts = [i for i, row in rows if row.get("type") == "task_started" or row.get("role") == "user"]
-    start = max(starts, default=0)
-    current = [(i, row) for i, row in rows if i >= start]
-    complete = [(i, row) for i, row in current if row.get("type") == "task_complete"]
-    if complete:
-        end, terminal = complete[-1]
-        current = [(i, row) for i, row in current if i <= end]
-        if "last_agent_message" in terminal:
-            answer = terminal["last_agent_message"]
-            if answer is None or answer == "":
-                return "", {"status": "completed_without_answer", "event_index": end}
-            if not isinstance(answer, str):
-                raise ValueError("EVALUATOR_EVIDENCE_MISSING: malformed final-answer receipt")
-            return _visible_text({"content": answer}), {"status": "terminal_receipt", "event_index": end}
-    messages = [(i, row) for i, row in current if row.get("role") == "assistant" and _visible_text(row)]
-    explicit = [(i, row) for i, row in current
-                if row.get("role") == "assistant"
-                and (row.get("channel") == "final"
-                     or (row.get("channel") in {None, ""} and row.get("end_turn") is True))]
+    if not isinstance(transcript,list) or not transcript:
+        raise ValueError('EVALUATOR_EVIDENCE_MISSING: nonempty transcript required')
+    rows=[]
+    for index,outer in enumerate(transcript):
+        if not isinstance(outer,dict):continue
+        row=outer
+        for key in ('payload','message'):
+            if isinstance(row.get(key),dict):row=row[key]
+        rows.append((index,row))
+    starts=[i for i,row in rows if row.get('type')=='task_started' or row.get('role')=='user']
+    start=max(starts,default=0)
+    current=[(i,row) for i,row in rows if i>=start]
+    completed=[(i,row) for i,row in current if row.get('type')=='task_complete']
+    if completed:current=[(i,row) for i,row in current if i<=completed[-1][0]]
+    explicit=[(i,row) for i,row in current if row.get('role')=='assistant'
+              and (row.get('channel')=='final' or row.get('channel') in (None,'') and row.get('end_turn') is True)]
     if explicit:
-        index, message = explicit[-1]
-        return _visible_text(message), {"status": "explicit_final", "event_index": index}
-    if complete and messages:
-        index, message = messages[-1]
-        if message.get("channel") not in {"commentary", "analysis", "reasoning"}:
-            return _visible_text(message), {"status": "last_assistant_before_completion", "event_index": index}
-    if complete and not messages:
-        return "", {"status": "completed_without_answer", "event_index": complete[-1][0]}
-    # A trailing plan or partial assistant message without a completion marker is not a final answer.
-    raise ValueError("EVALUATOR_EVIDENCE_MISSING: final answer cannot be determined")
+        index,message=explicit[-1]
+        return _visible_text(message),{'status':'explicit_final','event_index':index,'delivery_profile':'completed-public-answer-delivery/v1'}
+    if not completed:
+        raise ValueError('EVALUATOR_EVIDENCE_MISSING: final answer cannot be determined')
+    end,terminal=completed[-1]
+    current=[(i,row) for i,row in current if i<=end]
+    messages=[(i,row,_visible_text(row)) for i,row in current
+              if row.get('role')=='assistant' and row.get('channel') not in ('commentary','analysis','reasoning') and _visible_text(row)]
+    receipt=terminal.get('last_agent_message')
+    if receipt is not None and not isinstance(receipt,str):
+        raise ValueError('EVALUATOR_EVIDENCE_MISSING: malformed final-answer receipt')
+    if not messages:
+        if receipt:
+            raise ValueError('EVALUATOR_EVIDENCE_MISSING: completed answer missing from public messages')
+        return '',{'status':'completed_without_answer','event_index':end,'delivery_profile':'completed-public-answer-delivery/v1'}
+    if 'last_agent_message' in terminal and _visible_text({'content':receipt or ''})!=messages[-1][2]:
+        raise ValueError('EVALUATOR_EVIDENCE_MISSING: terminal/public-answer mismatch')
+    answer='\n\n'.join('### 公开助手答复（原事件序号 '+str(i)+'）\n\n'+text for i,row,text in messages)
+    return answer,{'status':'completed_public_delivery_window','event_index':end,'start_index':start,
+                  'message_event_indices':[i for i,row,text in messages],
+                  'delivery_profile':'completed-public-answer-delivery/v1',
+                  'terminal_last_message_sha256':hashlib.sha256((receipt or '').encode()).hexdigest()}
 
 
 

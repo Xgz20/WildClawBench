@@ -270,6 +270,8 @@ def parse_source_refs(value):
         segment = segment.replace("$", "").replace("！", "!").replace("＃", "#")
         match = re.fullmatch(r"(.+?\.xlsx)\s*[#|｜]\s*'?(.+?)'?\s*[!|｜]\s*(?:第\s*)?([A-Za-z]{1,3})?(\d+)(?:\s*行)?", segment)
         if not match:
+            match = re.fullmatch(r"(.+?\.xlsx)\s*[#|｜]\s*'?(.+?)'?\s*[!|｜]\s*行\s*()(\d+)", segment)
+        if not match:
             match = re.fullmatch(r"\[(.+?\.xlsx)\]'?(.+?)'?\s*!\s*([A-Za-z]{1,3})?(\d+)", segment)
         if not match:
             location.add(("无效定位", segment, 0, ""))

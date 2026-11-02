@@ -322,6 +322,10 @@ def parse_task_md(task_file: Path) -> dict:
     if not isinstance(grading_weights, dict):
         grading_weights = {}
     judge_evidence = normalize_judge_evidence(metadata.get("judge_evidence"))
+    if judge_evidence.get('semantic_status_profile') == 'evidence-aware-v1':
+        for criterion in rubric_criteria:
+            if re.search(r'\*\*Score\s*\(0,\s*1\)\*\*\s*:',criterion['rubric']):
+                criterion['allowed_scores'] = []  # Authored continuous interval, not a new score band.
 
     task_id         = metadata.get("id",             task_file.stem)
     timeout_seconds = int(metadata.get("timeout_seconds", 120))
@@ -347,7 +351,9 @@ def parse_task_md(task_file: Path) -> dict:
         "warmup":           warmup,
         "timeout_seconds":  timeout_seconds,
         "file_path":        str(task_file.resolve()),
-        "category":         task_file.parent.name,
+        "category":         (str(metadata.get('category') or task_file.parent.name)
+                             if judge_evidence.get('semantic_status_profile') == 'evidence-aware-v1'
+                             else task_file.parent.name),
         "modality":         str(metadata.get("modality", "")).strip(),
         "tags":             tags,
         "metric_profile":   metric_profile,

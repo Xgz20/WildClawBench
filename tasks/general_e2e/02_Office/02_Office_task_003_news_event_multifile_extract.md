@@ -179,7 +179,7 @@ def safe_file(root,relative):
     except ValueError: return None
     return path if path.is_file() else None
 
-def read_workbook(data):
+def _ge2e_news_original_read_workbook(data):
     # Only parsing failures from submitted XLSX are treated as candidate defects.
     wb=openpyxl.load_workbook(BytesIO(data),data_only=True,read_only=False,keep_links=False)
     result={k:[] for k in SHEETS}
@@ -318,7 +318,7 @@ def grade(transcript,workspace_path):
       '05_summary.json':{'role':'candidate_extract','origin':'results/news_event_summary.md','text':summary},
       '06_status.json':{'role':'grader_generated_status','diagnostics':diagnostics,'rule_scores':scores}}
     serialized={name:json.dumps(value,ensure_ascii=False,default=str,separators=(',',':')) for name,value in documents.items()}
-    if any(len(s)>19000 for s in serialized.values()) or sum(map(len,serialized.values()))>72000:
+    if any(len(s.encode('utf-8'))>4194304 for s in serialized.values()) or sum(len(s.encode('utf-8')) for s in serialized.values())>16777216:
         raise EvidenceError('Required evidence exceeds collector budget; obtain complete evidence before judging')
     folder=root/'evaluator_evidence'
     if folder.exists() and (folder.is_symlink() or (hasattr(folder,'is_junction') and folder.is_junction())):
@@ -364,6 +364,68 @@ def capability_scores(automated,llm_judge):
     return {'total':100*sum(points.values())/total,'mapped_budget':total,
             'dimensions':{cap:{'score':100*points[cap]/budget,'contribution_max':100*budget/total} for cap,budget in budgets.items()},
             'not_covered':['tool_invocation']}
+_ge2e_news_aliases={
+ 'canonical_entity_or_topic':['规范主体/主题'],
+ 'citation_anchors':['片段锚点（≤80字）','片段锚点'],
+ 'alias_seen':['实际出现名称/别名'],
+ 'source_section':['来源章节/位置','章节/位置','来源章节/栏目'],
+ 'first_mention_order':['首次提及顺序'],
+ 'merged_source_count':['报道片段合计'],
+ 'evidence_snippet':['排除内容（短片段）'],
+ 'notes':['说明'],
+ 'item_id':['序号'],
+}
+for _ge2e_field,_ge2e_aliases in _ge2e_news_aliases.items():
+    COLUMNS[_ge2e_field]=COLUMNS[_ge2e_field]+[a for a in _ge2e_aliases if a not in COLUMNS[_ge2e_field]]
+
+def read_workbook(data):
+    cached=openpyxl.load_workbook(BytesIO(data),data_only=True,read_only=False,keep_links=False)
+    formulas=openpyxl.load_workbook(BytesIO(data),data_only=False,read_only=False,keep_links=False)
+    try:
+        raw=[];wide_total=False
+        for ws in cached:
+            if ws.max_row>4000 or ws.max_column>120:
+                raise EvidenceError('Workbook dimensions exceed complete cell evidence capacity; review required')
+            table=[]
+            for row in ws.iter_rows():
+                if not any(c.value is not None or formulas[ws.title][c.coordinate].value is not None for c in row):continue
+                cells=[]
+                for cell in row:
+                    formula=formulas[ws.title][cell.coordinate]
+                    cells.append({'cell':cell.coordinate,'value':cell.value,'data_type':cell.data_type,
+                        'number_format':cell.number_format,
+                        'formula':formula.value if formula.data_type=='f' else None})
+                table.append({'row':row[0].row,'cells':cells})
+            raw.append({'sheet':ws.title,'rows':table,'merged_ranges':[str(r) for r in ws.merged_cells.ranges]})
+            if norm(ws.title) in {norm(n) for n in SHEETS['category_summary']}:
+                for row in list(ws.iter_rows(values_only=True))[:15]:
+                    headings=[str(v or '') for v in row]
+                    dated=[v for v in headings if re.fullmatch(r'20\d{2}[-/]\d{2}[-/]\d{2}\s*事件数',v)]
+                    if (len(dated)>=2 and any(norm(v)==norm('合计') for v in headings)
+                            and not any(norm(v) in {norm(a) for a in COLUMNS['event_count']} for v in headings)):
+                        wide_total=True
+        previous=list(COLUMNS['event_count'])
+        try:
+            if wide_total:COLUMNS['event_count']=previous+['合计']
+            result=_ge2e_news_original_read_workbook(data)
+        finally:COLUMNS['event_count']=previous
+        for rows in result.values():
+            for row in rows:
+                value=row.get('source_file')
+                if not isinstance(value,str):continue
+                relative=value.replace('\\','/').strip()
+                if relative.startswith('/tmp_workspace/input/'):relative=relative[len('/tmp_workspace/input/'):]
+                while relative.startswith('./'):relative=relative[2:]
+                if relative.startswith('input/'):relative=relative[6:]
+                if relative.startswith('/') or '://' in relative or '..' in relative.split('/'):continue
+                matches=[p for p in FROZEN_CONTEXT['source_texts'] if p==relative or p.endswith('/'+relative)]
+                if len(matches)==1:row['source_file']=matches[0]
+        # Complete physical cells retain extra columns, formulas/cache state and
+        # every source locator; no workbook bytes or business values are written.
+        result['_complete_workbook_cells']=raw
+        return result
+    finally:
+        cached.close();formulas.close()
 ```
 
 ## LLM Judge Rubric

@@ -213,6 +213,7 @@ def render(source,work):
     pdf=work/'document.pdf'
     lo=shutil.which('soffice') or shutil.which('libreoffice')
     if lo:
+        _general_e2e_namc_inline_defaults(local, source)
         profile=work/'profile'
         args=[lo,'-env:UserInstallation='+profile.resolve().as_uri(),'--headless','--convert-to','pdf:writer_pdf_Export','--outdir',str(work),str(local)]
     elif os.name=='nt' and shutil.which('powershell'):
@@ -396,6 +397,7 @@ def export_evidence(root,infos,diagnostics):
     if total>70000: raise EvaluationError('EVIDENCE_BUDGET_REVIEW_REQUIRED: characters='+str(total))
 
 def grade(transcript, workspace_path):
+    _general_e2e_namc_inline_audit.clear()
     root=Path(workspace_path).resolve()
     if not root.is_dir(): raise EvaluationError('WORKSPACE_MISSING')
     for module in ('PIL','numpy'):
@@ -471,9 +473,48 @@ def grade(transcript, workspace_path):
     diag['candidate_files']=[{'file':x['relative'],'role':x['role'],'sha256':x['sha256'],'valid':x['valid'],'error':x.get('error')} for x in infos]
     diag['rule_scores']=dict(scores)
     export_evidence(root,infos,diag)
+    diag['inline_distance_compatibility'] = list(_general_e2e_namc_inline_audit)
     scores['overall_score']=sum(AUTO_WEIGHTS[k]*scores[k] for k in AUTO_WEIGHTS)/34
     scores['diagnostics']=diag
     return scores
+_general_e2e_namc_inline_audit = []
+
+def _general_e2e_namc_inline_defaults(local, source):
+    import io, zipfile, hashlib
+    from lxml import etree as _inline_xml
+    before = local.read_bytes()
+    with zipfile.ZipFile(io.BytesIO(before)) as package:
+        members = package.infolist()
+        if len({m.filename for m in members}) != len(members):
+            raise CandidateRenderError('DOCX_INLINE_COMPATIBILITY_DUPLICATE_MEMBER')
+        parts = [(m, package.read(m)) for m in members]
+    document = next((blob for member, blob in parts if member.filename == 'word/document.xml'), None)
+    if document is None:
+        raise CandidateRenderError('DOCX_INLINE_COMPATIBILITY_DOCUMENT_MISSING')
+    parser = _inline_xml.XMLParser(resolve_entities=False, no_network=True)
+    tree = _inline_xml.fromstring(document, parser)
+    if tree.getroottree().docinfo.doctype:
+        raise CandidateRenderError('DOCX_INLINE_COMPATIBILITY_DTD_UNSUPPORTED')
+    changes = []
+    for index, element in enumerate(tree.iter('{http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing}inline')):
+        for attribute in ('distL', 'distR'):
+            if element.get(attribute) is None:
+                element.set(attribute, '0')
+                changes.append({'inline_index': index, 'attribute': attribute, 'before': None, 'after': '0'})
+    if changes:
+        rewritten = _inline_xml.tostring(tree, encoding='UTF-8', xml_declaration=True, standalone=True)
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, 'w') as package:
+            for member, blob in parts:
+                package.writestr(member, rewritten if member.filename == 'word/document.xml' else blob)
+        local.write_bytes(output.getvalue())
+    _general_e2e_namc_inline_audit.append({
+        'profile': 'namc-writer-inline-distance-defaults/v2',
+        'source': str(source), 'source_sha256': hashlib.sha256(source.read_bytes()).hexdigest(),
+        'render_copy_before_sha256': hashlib.sha256(before).hexdigest(),
+        'render_copy_after_sha256': hashlib.sha256(local.read_bytes()).hexdigest(),
+        'changes': changes, 'source_modified': False,
+        'image_extents_page_margins_fonts_text_and_score_policy_changed': False})
 
 ```
 

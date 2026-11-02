@@ -282,6 +282,190 @@
       "effective_source_sha256": "8a5f3b2564d041a5995e8363743f896edbda8bcb0cd66ea5545291de4c56d796",
       "weights_changed": false,
       "reference_rewritten": false
+    },
+    {
+      "task_id": "02_Office_task_022_namc_interview_schedule",
+      "profile": "namc-writer-inline-distance-defaults/v2",
+      "original_source_sha256": "7f4a4c932ca5e6ff8eae811e158de5d81bf3d1d3a50831bfb3a2fe54d588a86e",
+      "effective_source_sha256": "c7d4f88bc8ded76ce98ae42a15f24186d77289bb60e3026b9358ca4a97c3b3b8",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_024_sterilization_quote",
+      "profile": "sterilization-quote-equivalent-headings/v1",
+      "original_source_sha256": "d15a0df8c0357524b09168bf8d1d9dd5b90642a22366ffa6d24c0eeca64c9b9e",
+      "effective_source_sha256": "785e6831505ba1d0fdc341bc36bfc716e2931ab173888ef3dcd4f2617f94d2c8",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_003_news_event_multifile_extract",
+      "profile": "news-equivalent-headers-complete-cells/v1",
+      "original_source_sha256": "0497b8dc1822d3d2ccba65f70f5a76c4376dc2a79142ce7560e3bc091eb2f72f",
+      "effective_source_sha256": "e7500c47aec4d700e217546cb9efcbc25b06fa360586eaa79b0b191d68826dd5",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_026_work_order_labor_reconciliation",
+      "profile": "work-order-complete-evidence-budget/v1",
+      "original_source_sha256": "fab46597d51de9869feeef882eaa222b9ced1ecc8809ad10c7a8fa1be697bfac",
+      "effective_source_sha256": "fc8e2651f671b067faf87528bf508ff559454cefda43bb9ae6a08e1010587ac9",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "02_Office_task_015_procurement_reconciliation",
+      "profile": "procurement-matrix-formulas/v2 + matched-summary-label/v1",
+      "original_source_sha256": "e0ce3c13706112766a91b1d6309dae0c13ddb99aa4b7b8c6f9f574b9ed97490c",
+      "effective_source_sha256": "84df260f1948f86c0c7da4f651ac1bbf5e8d3ac220e8ad6a115b33af44d22f6c",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "03_Data_Analysis_task_001_hr_worktime_reconciliation",
+      "profile": "hr-equivalent-row-prefix-locators/v1",
+      "original_source_sha256": "f98e97479b61249f5421b652816d74d39f4d9d3c9b98a6ba4f14fa40b5d2a6d5",
+      "effective_source_sha256": "13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_003_batch_normalization_claim_verification",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "1c3fc91f81c18f3deee584f4741761676e55f78ba52b890bd464deca9e17f712",
+      "effective_source_sha256": "72b3b431266c343e782736efe2b433c85c3595f5ff7ff2d37e3f784443ae9dcb",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "4392351e31bd5ead702cdd9a3c0d5cad6cb05a295e208a9b9ede18196906ee2a",
+      "effective_source_sha256": "830c1b83cd4a24718148401d134fa7a03aff7838997558a5357c47263a4d63be",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_005_raptor_migration_monitoring_review",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "a621d6fd563d2b4da7b6eb5c6620238c93ba61940e72bfbe7fe8aa4fee0bc5ec",
+      "effective_source_sha256": "2941168c166ce3a6cf44ff13fc21db88ebf46d13b7064566910b05f212246edb",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "4eb6f066090585450e2a015690f6df72d7f3fd659b0aabf32d4f8cc566eac60a",
+      "effective_source_sha256": "59af17043c8a6969b3d52d2f6c6f2d7c4e46d5569107f16de1197ec6cd58f58a",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_008_human_cell_atlas_verification",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "4568359beb832e31afbb2e47a957e615740f52df7ca700500eb8747697394fb2",
+      "effective_source_sha256": "9c14df3a26853623d241b27bcee17b81d3703211264f9e3b001bb09909bcbc2d",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_009_global_methane_budget_revision",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "d94b071c9ab22fe4fe50bb1247a7cfbe86be6f809357cb743a493185e28bb21f",
+      "effective_source_sha256": "ae14e444c8c08a49f2131b398ba15e020f2a2f40651c98228d6f61e10afd91a9",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_010_perovskite_stability_verification",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "93218f3f59c9110424fed2d3a0e2a77411631dc18ae35e992b60b3bdf7f6c33d",
+      "effective_source_sha256": "a19e61eadba7a12fc76e012eb9a6d1b68f8cf601f461febef350a9d6e3334eff",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "abc05e251abdf503fc76e99fe7a8cdba7c9a6e044969139b7f176787eb976df8",
+      "effective_source_sha256": "eae3a6ded7ea293d0319b85c64744b8fc42f478251e458fd4898a9a50a32c97f",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "cc564202c233feacf3f11e930f363411c9c02c18c08b185cf5f7f91a2fd817cf",
+      "effective_source_sha256": "75479ef53c0c0319131fb308a598e116be67070195f6940a780d7184233f7ae0",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "8d1a0a8be83233fd099478a491c329e27d67ca2752d36c76eeb720aedcd7a9e6",
+      "effective_source_sha256": "dd79629bb4d44c6a5725dd4e18c481eed609a34af72b06d6bfd891cce60aa3f3",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "80580565ec2789a5d8dc61b0a7a77562bd9eaea61d7a57adbf3213929f4523c1",
+      "effective_source_sha256": "2f76b0a7b81832b460ed55b554d4ff1ed97b578499b6645536ef86dfbf694f76",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "4642a8df52c25b515ee985d89658b9965daa86de89b0a18fe8ed3289580b74e2",
+      "effective_source_sha256": "541ee4e4b61031c8b0886fcb7ccf8cae6f7a1aa43f2f233fb9f5a85ace397049",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_016_balance_of_payments_reconciliation",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "df348eea68b4d3894706979dbbbe0cfefd5c30cd92f817c1d3f46b3401a2706e",
+      "effective_source_sha256": "e5adf69e0aab55fa54d995879aec8650cf0abd9b768922f37c7e24102b5e2ae1",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "4513bd6b4fdac7a8faa84109301c569cd9bb30d1f8bf734c5a2a7392ae860d38",
+      "effective_source_sha256": "75da415722fd6574a7398fb254fce0745220f0f2c79d05eb4fa8ba1fdd7ce2c9",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "5dad4904247f31e2cb1b741f345ea7bb59172840f0a11fdcf854240a5eff42d7",
+      "effective_source_sha256": "122f8dd3d9216da7a0163039f79f0703acd872f5b6a4fa4c7cd76f22d62d9888",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "0d102b933522cc3e191a0bbf58834850fc5e84e3eaac04cb002bf854704e563c",
+      "effective_source_sha256": "57ecb29d36514ee3d48a140dc3aa80d5f760c494df65a5ad283bea109f202f70",
+      "weights_changed": false,
+      "candidate_changed": false
+    },
+    {
+      "task_id": "01_Information_Search_Organization_task_020_treasury_yield_rising_intervals",
+      "profile": "completed-public-answer-delivery/v1",
+      "original_source_sha256": "d2f94148256b518831705ce44fc5d8dde3fe430e3ab91ae1d67c826295b25307",
+      "effective_source_sha256": "12fac49ec3702ed6fa46321b8c7746fb51ee0ec3d4ba24f6326071946ea7dd33",
+      "weights_changed": false,
+      "candidate_changed": false
     }
   ]
 }
