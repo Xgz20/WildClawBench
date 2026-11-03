@@ -9,6 +9,15 @@ import communication_evidence_failure as FAILURE
 B=RUNTIME.work_order_evidence_budget
 
 class CommunicationEvidenceBudgetTests(unittest.TestCase):
+    def test_weekly_and_consolidation_profiles_only_change_total_resource_guard(self):
+        for task,(sha,source_sha,_,limit) in B.EXTRA.items():
+            source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{task}.md')['automated_checks']
+            self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),source_sha)
+            marker=B.marker({'task_id':task,'automated_checks':source},sha)
+            m={'identity':{'task_id':task},'digests':{'contract_sha256':sha},'runtime':{'work_order_evidence_budget_profile':marker}}
+            fixed,receipt=B.effective_source(m,source,source,None)
+            expected=source.replace("    total=sum(len(p.read_text(encoding='utf-8')) for p in evidence.iterdir())\n    if total>"+str(limit)+':',"    total=sum(p.stat().st_size for p in evidence.iterdir())\n    if total>16777216:")
+            self.assertEqual(fixed,expected);self.assertFalse(receipt['candidate_rewritten'])
     def test_prd_budget_has_exact_identity_and_does_not_modify_other_functions(self):
         source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{B.PRD_TASK}.md')['automated_checks']
         self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),B.PRD_SOURCE)

@@ -9,6 +9,33 @@ PRESERVED='infrastructure-evidence/complete-business-evidence-budget'
 PRD_TASK='02_Office_task_019_prd_system_design_breakdown'
 PRD_CONTRACT='2a473675b08481052bc5808a5387e85fa0152bdcf4ed5448e922e9023a4097d5'
 PRD_SOURCE='4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035'
+EXTRA={
+ '02_Office_task_029_monitoring_weekly_docx':('967f54a181a67fe91b7513b6d81d61a6badd7d7def1c6fcc1033d5d69fae762a','93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309',55000,'evidence_error: exported evidence exceeds reserved 55000 characters; expand collection/review manually, not a candidate zero'),
+ '02_Office_task_030_service_center_consolidation':('1cf27d0d5844d40d08824e606bc92e1efb9514bc0d780051793d85b270d586cc','f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378',74000,'evaluator_error: complete evidence exceeds 74000 reserved characters; collect supplement before semantic scoring, never candidate zero'),
+}
+def extra_files(attempt,manifest,contract,audit,worker):
+    row=EXTRA.get(contract.get('task_id'));error=worker.get('error',{})
+    if (not row or manifest['digests']['contract_sha256']!=row[0] or hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()!=row[1]
+        or audit.get('status')!='failed' or worker.get('ok') is not False or worker.get('result') is not None
+        or error.get('type')!='RuntimeError' or error.get('message')!=row[3]):return None
+    folder=Path(attempt)/'infrastructure-evidence/complete-extra-evidence-budget'
+    if not folder.exists():folder=Path(attempt)/manifest['runtime']['workspace_argument']/'evaluator_evidence'
+    if folder.is_symlink() or not folder.is_dir() or not folder.resolve().is_relative_to(Path(attempt).resolve()):raise ValueError('EXTRA_COLLECTION_UNSAFE')
+    paths=sorted(folder.iterdir());total=0
+    for path in paths:
+        if path.is_symlink() or not path.is_file() or path.suffix!='.json':raise ValueError('EXTRA_COLLECTION_SCOPE')
+        text=path.read_text(encoding='utf-8');data=json.loads(text)
+        if isinstance(data,dict) and data.get('truncated') is True:raise ValueError('EXTRA_COLLECTION_TRUNCATED')
+        total+=len(text)
+    if not paths or total<=row[2]:raise ValueError('EXTRA_COLLECTION_OVERFLOW_NOT_PROVEN')
+    return paths
+def preserve_extra(rt,attempt,manifest,contract,audit,worker):
+    paths=extra_files(attempt,manifest,contract,audit,worker);target=Path(attempt)/'infrastructure-evidence/complete-extra-evidence-budget';target.mkdir(parents=True,exist_ok=False)
+    for path in paths:shutil.copyfile(path,target/path.name)
+    return [{'path':p.relative_to(attempt).as_posix(),'sha256':rt._sha256_file(p)} for p in extra_files(attempt,manifest,contract,audit,worker)]
+def verify_extra(rt,attempt,manifest,contract,audit,worker,records):
+    actual=[{'path':p.relative_to(attempt).as_posix(),'sha256':rt._sha256_file(p)} for p in extra_files(attempt,manifest,contract,audit,worker)]
+    if actual!=records:raise ValueError('EXTRA_COLLECTION_PROOF_DRIFT')
 def prd_failure(manifest,contract,audit,worker):
     error=worker.get('error',{})
     match=re.fullmatch(r'EVALUATOR_EVIDENCE_BUDGET: (\d+) characters require larger collection budget; do not truncate or score a partial plan',error.get('message',''))

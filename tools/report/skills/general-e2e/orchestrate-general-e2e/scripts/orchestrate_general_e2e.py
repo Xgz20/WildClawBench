@@ -2126,6 +2126,9 @@ def _verify_state(
             if scoring_error.get('prd_evidence_resource_failure'):
                 fm=_read_json(attempt/'attempt-manifest.json');fc=_read_json(attempt/fm['paths']['contract'])
                 if not communication_evidence_failure.prd_failure(fm,fc,_read_json(attempt/'rule-audit.json'),_read_json(attempt/'worker/result.json')):raise OrchestrationError('PRD_EVIDENCE_FAILURE_DRIFT')
+            if scoring_error.get('extra_collection_resource_failure'):
+                fm=_read_json(attempt/'attempt-manifest.json');fc=_read_json(attempt/fm['paths']['contract'])
+                communication_evidence_failure.verify_extra(sys.modules[__name__],attempt,fm,fc,_read_json(attempt/'rule-audit.json'),_read_json(attempt/'worker/result.json'),scoring_error['extra_collection_resource_failure'])
             if scoring_error.get('kind') in {grade_wrapper_normalization.ERROR_KIND,typed_rule_diagnostics.ERROR_KIND,public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND,work_order_final_policy.ERROR_KIND,domain_details_diagnostics.ERROR_KIND}:
                 fm=_read_json(attempt/'attempt-manifest.json');fc=_read_json(attempt/fm['paths']['contract'])
                 fa=_read_json(attempt/'rule-audit.json');wp=attempt/'worker/result.json'
@@ -3015,8 +3018,9 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     details_failure=domain_details_diagnostics.original_failure(manifest,contract,audit,result)
     complete_evidence_failure=communication_evidence_failure.files(attempt,manifest,contract,audit,result)
     prd_evidence_failure=communication_evidence_failure.prd_failure(manifest,contract,audit,result)
+    extra_evidence_failure=communication_evidence_failure.extra_files(attempt,manifest,contract,audit,result)
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure or typed_diagnostic_failure or text_newline_failure or declared_status_review or final_policy_failure or details_failure or complete_evidence_failure or prd_evidence_failure)
+            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure or typed_diagnostic_failure or text_newline_failure or declared_status_review or final_policy_failure or details_failure or complete_evidence_failure or prd_evidence_failure or extra_evidence_failure)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
@@ -3036,6 +3040,7 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     if complete_evidence_failure:
         task['scoring_error']['complete_evidence_resource_failure']=communication_evidence_failure.preserve(sys.modules[__name__],attempt,manifest,contract,audit,result)
     if prd_evidence_failure:task['scoring_error']['prd_evidence_resource_failure']=True
+    if extra_evidence_failure:task['scoring_error']['extra_collection_resource_failure']=communication_evidence_failure.preserve_extra(sys.modules[__name__],attempt,manifest,contract,audit,result)
     task["phase"] = "UNSCORED"
     task["history"].append({"at": _timestamp(event_time), "event": "EVALUATOR_SETUP_DEFERRED_UNSCORED" if setup_context_error else "DATASET_RULE_ERROR_DEFERRED_UNSCORED", **task["scoring_error"]})
     return _save(root, state, event_time)
