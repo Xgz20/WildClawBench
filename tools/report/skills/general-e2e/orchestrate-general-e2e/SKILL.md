@@ -3,6 +3,9 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.44` 全批恢复校验以最多3个只读子进程执行原冻结Score的verify，完整重算全部原SHA，不使用跨操作缓存；错误仍按原题序收口。规则、语义裁判与状态修改保持原路径，历史特殊修复验证保留原顺序。减少大批次项目登记与补位的串行验证开销。
+
+
 `0.11.43` 的compose-full-scope-selection新增显式`--allow-valid-rescore --valid-rescore-reason`，支持在已有完整来源选择中合入多个原生重评分来源。每项必须绑定当前选中score/attempt manifest/candidate SHA及原执行、题面、契约、GT和轨迹，来自有锁定submission和SCORE_RECORDED终态的真实rescore编排；不按高分选择。默认仍拒绝覆盖有效分，基础设施补齐标志不能替代此授权。原分、源编排和完整范围不改写，选择谱系记录逐项替换、来源锁与理由。
 
 `0.11.42` 同步Score0.10.49的新评分传输Profile。修复评分使用同一冻结执行创建新attempt，不覆盖旧分；独立裁判须读取request中的answer_delivery_policy及全部原始证据，不能复制控制器分析作为裁决。对修复前后相同的确定性分数也不按高低择优；完整范围选择显式登记所有替换题目。

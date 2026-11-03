@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 from copy import deepcopy
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 import hashlib
 import importlib.util
@@ -1807,6 +1808,33 @@ def _verify_submission_replacements(
         raise OrchestrationError("SUBMISSION_REPLACEMENT_AUDIT_INVALID")
 
 
+def _preverify_normal_attempts(root, state, evidence_glob_task_id=None):
+    """Run the exact frozen read-only CLI checks concurrently, without a cache.
+
+    Mutable scoring/rule commands never enter this pool. Unsafe or special
+    historical repair routes retain their original sequential validation.
+    Results/errors are consumed in the original task order below.
+    """
+    candidates = {}
+    for task in state['tasks']:
+        relative = task.get('attempt_path')
+        if not isinstance(relative, str) or task['task_id'] == evidence_glob_task_id or (task.get('scoring_error') or {}).get('kind') == generated_evidence_globs.ERROR_KIND:
+            continue
+        attempt = root / relative; manifest = attempt / 'attempt-manifest.json'
+        if (not _inside(root, attempt.resolve()) or attempt.is_symlink() or manifest.is_symlink()
+            or not manifest.is_file() or _sha256_file(manifest) != task.get('attempt_manifest_sha256')):
+            continue
+        candidates[task['task_id']] = attempt
+    def check(item):
+        task_id, attempt = item
+        try:
+            return task_id, (_run_score_command(state['score_skill'], ['verify','--attempt-root',str(attempt)]), None)
+        except Exception as error:
+            return task_id, (None, error)
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        return dict(pool.map(check, candidates.items()))
+
+
 def _verify_state(
     root: Path,
     *,
@@ -1869,6 +1897,7 @@ def _verify_state(
     )
     if current_skill != state.get("score_skill"):
         raise OrchestrationError("SCORE_SKILL_DRIFT")
+    preverified = _preverify_normal_attempts(root, state, evidence_glob_task_id)
     for task in tasks:
         record_value = task.get("execution_record_path")
         record = root / str(record_value)
@@ -2005,7 +2034,11 @@ def _verify_state(
         elif task['task_id']==evidence_glob_task_id and evidence_glob_verifier is not None:
             _glob_repair_source(root,task,manifest_document,allow_retired=False)
             reader=evidence_glob_verifier
-        checked=_run_score_command(reader,['verify','--attempt-root',str(attempt)])
+        if reader is state['score_skill'] and task['task_id'] in preverified:
+            checked, verification_error = preverified[task['task_id']]
+            if verification_error is not None: raise verification_error
+        else:
+            checked=_run_score_command(reader,['verify','--attempt-root',str(attempt)])
         if reader is not state['score_skill']:
             contract=_read_json(attempt/manifest_document['paths']['contract'])
             expected=generated_evidence_globs.descriptor(manifest_document,contract)
