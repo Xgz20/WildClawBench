@@ -39,6 +39,10 @@ class WarrantyReasonReviewTests(unittest.TestCase):
             else:bad['judge']['protocol']='api-judge-v1'
             with self.assertRaises(RUNTIME.ScoringRuntimeError):RUNTIME._effective_rule_source(bad,source)
         self.assertEqual(RUNTIME._effective_rule_source({},source),(source,None))
+        contract={'task_id':REVIEW.TASK,'automated_checks':source}
+        self.assertEqual(RUNTIME._new_native_rule_review_profile(contract,REVIEW.CONTRACT,{'protocol':'codex-agent-judge-v1'}),REVIEW.PROFILE)
+        self.assertIsNone(RUNTIME._new_native_rule_review_profile(contract,REVIEW.CONTRACT,{'protocol':'api-judge-v1'}))
+        self.assertIsNone(RUNTIME._new_native_rule_review_profile(contract,'0'*64,{'protocol':'codex-agent-judge-v1'}))
     def test_equivalent_columns_raw_evidence_and_explicit_non_initiation(self):
         _,fixed,_,_=self.corrected();scope={};exec(compile(fixed,'<synthetic-warranty>','exec'),scope)
         for label,key in [('追偿供应商','supplier'),('实际分摊比例','share'),('CAP上限(元)','cap'),('原因说明','reason'),('处理动作','action'),('已追偿汇总(元)','already')]:

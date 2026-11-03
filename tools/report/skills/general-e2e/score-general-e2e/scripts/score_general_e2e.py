@@ -494,6 +494,11 @@ def _mode_string(path: Path) -> str:
     return f"{stat.S_IMODE(path.lstat().st_mode):04o}"
 
 
+def _new_native_rule_review_profile(contract, contract_sha, judge):
+    if (judge or {}).get('protocol')!='codex-agent-judge-v1':return None
+    return rule_review.profile_for(contract,contract_sha)
+
+
 def _inventory_tree(root: Path) -> tuple[list[dict[str, Any]], str]:
     if not root.is_dir() or root.is_symlink():
         raise ScoringRuntimeError("WORKSPACE_INVALID", str(root))
@@ -1838,6 +1843,8 @@ def prepare_attempt(
                 **({'rule_review_profile':escrow_grouped_review.PROFILE}
                    if escrow_state_review.matches(contract,_sha256_bytes(contract_bytes))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'rule_review_profile':_new_native_rule_review_profile(contract,_sha256_bytes(contract_bytes),judge_config)}
+                   if _new_native_rule_review_profile(contract,_sha256_bytes(contract_bytes),judge_config) is not None else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes))}
                    if office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
@@ -6326,6 +6333,8 @@ def prepare_rescore_attempt(
                 **({'rule_review_profile':escrow_grouped_review.PROFILE}
                    if escrow_state_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'rule_review_profile':_new_native_rule_review_profile(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),judge_config)}
+                   if _new_native_rule_review_profile(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),judge_config) is not None else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
