@@ -46,6 +46,7 @@ import news_workbook_layout
 import procurement_summary_labels
 import public_text_profiles
 import work_order_evidence_budget
+import work_order_table_roles
 import typed_rule_diagnostics
 import grade_wrapper_normalization
 import escrow_state_review
@@ -1851,6 +1852,8 @@ def prepare_attempt(
                    if public_text_profiles.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'work_order_evidence_budget_profile':work_order_evidence_budget.marker(contract,_sha256_bytes(contract_bytes))}
                    if work_order_evidence_budget.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'work_order_table_role_profile':work_order_table_roles.marker(contract,_sha256_bytes(contract_bytes))}
+                   if work_order_table_roles.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'work_order_final_total_policy_profile':work_order_final_policy.marker(contract,_sha256_bytes(contract_bytes))}
                    if work_order_final_policy.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'domain_details_diagnostics_profile':domain_details_diagnostics.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -2756,6 +2759,7 @@ def _effective_rule_source(
         corrected, receipt = procurement_summary_labels.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_text_profiles.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = work_order_evidence_budget.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = work_order_table_roles.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = grade_wrapper_normalization.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = escrow_state_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = escrow_grouped_review.effective_source(manifest,source,corrected,receipt)
@@ -6333,6 +6337,8 @@ def prepare_rescore_attempt(
                    if public_text_profiles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'work_order_evidence_budget_profile':work_order_evidence_budget.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if work_order_evidence_budget.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'work_order_table_role_profile':work_order_table_roles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if work_order_table_roles.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'work_order_final_total_policy_profile':work_order_final_policy.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if work_order_final_policy.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'domain_details_diagnostics_profile':domain_details_diagnostics.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
