@@ -152,6 +152,7 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
   }
   if (!equal([...runtimeCalls].filter(id => !cancelledOrphans.has(id)).sort(), [...nativeCalls].sort())) fail("TOOL_COVERAGE_MISMATCH");
   const admissionErrors = new Set();
+  const admissionPairs = new Map();
   for (const tool of runtimeTools.filter(x => cancelledOrphans.has(x.toolCallId))) {
     const responseId = tool._meta["codebuddy.ai/llmMessageId"];
     const expected = `Tool "${tool.title}" does not exist in the current tool set.`;
@@ -167,11 +168,43 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
     });
     if (matches.length !== 1 || admissionErrors.has(matches[0])) fail("TOOL_ADMISSION_ERROR_BINDING_MISMATCH");
     admissionErrors.add(matches[0]);
+    const usage = rows[rows.indexOf(matches[0]) - 1];
+    admissionPairs.set(tool.toolCallId, { usage, error: matches[0], beforeUsage: rows[rows.indexOf(usage) - 1] });
   }
   const finals = [...new Map(events.filter(x => x.type === "message" && x.role === "assistant")
     .map(x => [JSON.stringify([x.id, x.content]), x])).values()];
   const publicFinals = finals.filter(row => !admissionErrors.has(row));
-  const runtimeFinal = textOf(snapshot.request.assistantMessage?.content);
+  const runtimeContent = snapshot.request.assistantMessage?.content || [];
+  const runtimeOnlyComments = new Set(), commentEvidence = [];
+  // A rejected response can persist its usage and synthetic error in the SDK
+  // while its intermediate authored comment survives only in the native API.
+  // Keep that comment in the primary runtime trace. Exclude it solely from the
+  // cross-source text comparison, with exact adjacent tool/result anchors.
+  const sdkIds = new Set(rows.map(row => row.id));
+  const lastRuntimeText = runtimeContent.filter(x => x.type === "text" && x.text).at(-1);
+  const usedOrphans = new Set();
+  for (let i = 0; i < runtimeContent.length; i += 1) {
+    const block = runtimeContent[i];
+    if (block.type !== "text" || !block.text || publicFinals.some(row => row.id === block.messageId)) continue;
+    const previous = runtimeContent[i - 1], next = runtimeContent[i + 1];
+    const pair = admissionPairs.get(next?.toolCallId);
+    if (!pair) continue; // The unchanged strict comparison rejects other gaps.
+    const prior = pair.beforeUsage;
+    if (block === lastRuntimeText || typeof block.messageId !== "string" || !block.messageId
+        || runtimeContent.filter(x => x.messageId === block.messageId).length !== 1
+        || sdkIds.has(block.messageId) || usedOrphans.has(next.toolCallId)
+        || prior?.type !== "function_call_result" || prior.status !== "completed"
+        || prior.id !== pair.usage.parentId || previous?.toolCallId !== prior.callId
+        || previous.status !== "completed"
+        || !publicFinals.some(row => row.id === lastRuntimeText?.messageId
+          && rows.indexOf(row) > rows.indexOf(pair.error)
+          && textOf(row.content) === lastRuntimeText.text)) fail("RUNTIME_ONLY_COMMENT_BINDING_MISMATCH");
+    runtimeOnlyComments.add(block); usedOrphans.add(next.toolCallId);
+    commentEvidence.push({ runtime_message_id: block.messageId, text_sha256: sha(block.text),
+      rejected_tool_call_id: next.toolCallId, model_response_id: pair.usage.providerData.messageId,
+      preceding_result_id: prior.id, source: "bound-native-runtime-api", sdk_text_present: false });
+  }
+  const runtimeFinal = textOf(runtimeContent.filter(block => !runtimeOnlyComments.has(block)));
   if (!publicFinals.length || !runtimeFinal || publicFinals.map(x => textOf(x.content)).join("") !== runtimeFinal) fail("FINAL_RESPONSE_MISMATCH");
   const rawById = new Map();
   const allRawById = new Map();
@@ -210,6 +243,9 @@ export function parseBoundJsonl(bytes, { snapshot, session, promptSha256 }) {
     } } : row;
   }) : rows;
   const parsed = parser(metricRows);
+  if (commentEvidence.length) parsed.collection.warnings.push(
+    `WORKBUDDY_RUNTIME_ONLY_ADMISSION_COMMENT_V1: ${JSON.stringify(commentEvidence)}; original runtime comment and SDK bytes retained; no SDK message fabricated`,
+  );
   if (cancelledOrphans.size) {
     const knownCalls = parsed.tools.call_count;
     parsed.tools.call_count = null;

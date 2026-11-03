@@ -77,6 +77,50 @@ function orphanFixture() {
   return { ...f, orphan: tool, usageOnly: row, admissionError: error };
 }
 
+function runtimeCommentFixture() {
+  const f = orphanFixture();
+  const final = f.rows.splice(f.rows.findIndex(r => r.id === "response2"), 1)[0];
+  f.rows.splice(f.rows.indexOf(f.usageOnly), 0, { type: "function_call_result", id: "model-parent",
+    callId: "call-2", name: "Read", status: "completed", output: { type: "text", text: "ok" },
+    sessionId: f.session.session_id, cwd: f.session.cwd });
+  f.rows.push(final);
+  const comment = { type: "text", messageId: "runtime-only-comment", text: "现在提交结果。" };
+  const content = f.snapshot.request.assistantMessage.content;
+  content.splice(content.indexOf(f.orphan), 0, comment);
+  content.at(-1).messageId = "response2";
+  return { ...f, comment };
+}
+
+test("bound rejected response keeps runtime-only intermediate comment and original SDK bytes", () => {
+  const f = runtimeCommentFixture(), before = f.bytes();
+  const result = parseBoundJsonl(before, f.options);
+  assert.ok(result.collection.warnings.some(w => w.startsWith("WORKBUDDY_RUNTIME_ONLY_ADMISSION_COMMENT_V1:")));
+  assert.equal(f.snapshot.request.assistantMessage.content.includes(f.comment), true);
+  assert.equal(f.comment.text, "现在提交结果。");
+  assert.equal(result.usage.total_tokens, 405);
+  assert.equal(result.tools.call_count, null);
+  assert.deepEqual(before, f.bytes());
+});
+
+test("runtime-only comment cannot hide missing final text, wrong result anchors or foreign SDK IDs", () => {
+  for (const mutate of [
+    f => { f.snapshot.request.assistantMessage.content.at(-1).text = "changed final"; },
+    f => { f.snapshot.request.assistantMessage.content.at(-1).messageId = "foreign-final"; },
+    f => { f.rows.find(r => r.id === "model-parent").callId = "foreign-call"; },
+    f => { f.rows.find(r => r.id === "model-parent").status = "failed"; },
+    f => { f.comment.messageId = "user"; },
+    f => { f.snapshot.request.assistantMessage.content.splice(0, 0, f.comment); },
+  ]) {
+    const f = runtimeCommentFixture(); mutate(f);
+    assert.throws(() => parseBoundJsonl(f.bytes(), f.options));
+  }
+});
+
+test("an unbound additional runtime statement remains a strict response mismatch", () => {
+  const f = fixture(); f.snapshot.request.assistantMessage.content.unshift({ type: "text", text: "unbound extra text" });
+  assert.throws(() => parseBoundJsonl(f.bytes(), f.options), /FINAL_RESPONSE_MISMATCH/);
+});
+
 test("bound cancelled orphan and usage-only metadata preserve content and unknown invocation total", () => {
   const f = orphanFixture(), bytes = f.bytes();
   const parsed = parseBoundJsonl(bytes, f.options);

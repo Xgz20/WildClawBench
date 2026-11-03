@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.20` 对同请求被拒绝工具的中间说明，仅在原生API前置已完成工具、SDK同parent结果/用量/准入错误及后续SDK终稿精确绑定后，允许SDK未持久化该说明。标准轨迹保留原生说明，SDK原件不改，不伪造消息；真实终稿/来源漂移继续拒绝，缺口显式警告。
+
 `0.11.19` 对同请求的model-usage原生行验证cwd、baggage会话/请求及原始用量；对明确orphan_pending_history取消项，只有同模型响应、相邻同parent的skipRun工具准入错误完整对账时才接收来源差异。原SDK、取消项和错误反馈全部保留，客户端准入错误不冒充模型撰写的答复；工具总量保留null/partial和实测小计，不造调用或成功结果。WorkBuddy共享editor_sdk持有可写句柄时，先保存逐题原生证据，全部执行终态后停止已核验的客户端及其共享进程，再做候选正式收口与完整复验，不能中途杀共享宿主或把原生快照当正式采集完成。参见[共享文档宿主收口](references/workbuddy-shared-writers.md)。
 
 `0.11.18` 识别同一原生请求内、明确标记isCompactInternal/skipRun=false/agent=cli的压缩内部用户消息，保留原始JSONL和全文，不将其误判为第二次人工发送。仍须唯一原始Prompt及相同session/cwd/request；额外真实用户、冲突的新请求声明与跨请求标记继续拒绝。

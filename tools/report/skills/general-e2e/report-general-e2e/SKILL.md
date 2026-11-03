@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.22` 同步共享WorkBuddy证据核验组件0.2.7，保留被拒绝响应的原生API说明来源及SDK缺口警告；报告分数、权重和已有封存原件不变。
+
 `0.8.21` 将单一配置领导版和待核验展示纳入正式入口。`--display-config`支持`pending_review: [{task_id, unit_id?, reason}]`；只允许已完成执行且`score_status=evaluation_error / total_score=null`的显式题目，不能隐藏有效低分、真实零分或未评分。原任务状态、分母和分数不改，JSON另记展示别名；MD与Excel总览、用例比较及评分明细同步显示待核验。单一配置不再虚构参照组合，部分资源仍保持覆盖与下限说明。
 
 `0.8.20` 的只读评分校验同时核验历史会话 running 投影与原始 SDK completed 的显式证明；新旧评分、真实零分、评测异常和资源缺失仍按原身份与 SHA 汇总，不改原执行状态或补零。
