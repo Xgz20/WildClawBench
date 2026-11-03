@@ -14,11 +14,15 @@ def marker(contract,contract_sha):
     if (contract.get('task_id')==TASK and contract_sha in accepted_contracts(CONTRACT_SHA)
             and hashlib.sha256(contract.get('automated_checks','').encode('utf-8')).hexdigest()==SOURCE_SHA):
         return {'profile':PROFILE,'contract_sha256':contract_sha,'source_sha256':SOURCE_SHA}
-    return None
+    import procurement_orphan_id_header
+    return procurement_orphan_id_header.marker(contract,contract_sha)
 
 
 def effective_source(manifest,original,current,prior):
+    import procurement_orphan_id_header
     frozen=manifest.get('runtime',{}).get('procurement_summary_label_profile')
+    if (frozen or {}).get('profile')==procurement_orphan_id_header.PROFILE:
+        return procurement_orphan_id_header.effective_source(manifest,original,current,prior)
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest.get('identity',{}).get('task_id'),'automated_checks':original},
         manifest.get('digests',{}).get('contract_sha256'))
