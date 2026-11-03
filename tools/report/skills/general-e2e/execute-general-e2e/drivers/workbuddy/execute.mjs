@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.8";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.9";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -376,6 +376,22 @@ export async function resolveExecutionConfig(parsed) {
       ...priorSources,
     ] };
   }
+  let authorizedRetry = null;
+  const retryPath = join(controlRoot, "authorized-retry.json");
+  const retryPointer = await readJsonIfPresent(retryPath, unitRoot);
+  if (retryPointer) {
+    if (retryPointer.schema_version !== "wildclawbench.workbuddy-authorized-retry-case/v1"
+        || retryPointer.task_id !== taskId || (parsed.attemptId && retryPointer.new_attempt_id !== parsed.attemptId)
+        || !Array.isArray(retryPointer.sources)) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_IDENTITY_INVALID");
+    for (const ref of retryPointer.sources) {
+      const path = resolveManifestRelativePath(unitRoot, ref.path, "authorized retry proof");
+      await assertNoSymlinkPath(unitRoot, path, "authorized retry proof");
+      const bytes = await readFile(path);
+      if (sha256(bytes) !== ref.sha256 || bytes.length !== ref.size) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_EVIDENCE_DRIFT");
+    }
+    const bytes = await readFile(retryPath);
+    authorizedRetry = { ...retryPointer, sources: [{ path: relative(unitRoot, retryPath), sha256: sha256(bytes), size: bytes.length }, ...retryPointer.sources] };
+  }
   return {
     ...parsed,
     unitRoot,
@@ -387,6 +403,7 @@ export async function resolveExecutionConfig(parsed) {
     prompt,
     promptSha256,
     zeroSendRecovery,
+    authorizedRetry,
     expectedModel,
     expectedPermission: parsed.expectedPermission,
     nativeProjectPath,
@@ -706,7 +723,7 @@ async function writeBindingEvidence(config, journal, binding) {
     path: relative(config.unitRoot, config.bindingFile).split("\\").join("/"),
     sha256: sha256(bytes),
     size: bytes.length,
-  }, ...(config.zeroSendRecovery?.sources || []), ...(journal.mechanical_interventions || [])];
+  }, ...(config.zeroSendRecovery?.sources || []), ...(config.authorizedRetry?.sources || []), ...(journal.mechanical_interventions || [])];
 }
 
 async function buildAndPersistPublicState(config, journal, binding, bindingEvidence) {

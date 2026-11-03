@@ -246,6 +246,23 @@ async function persistState(statePath, receiptPath, state) {
 }
 
 export async function verifyWorkBuddyQueueRepairs(root, state) {
+  for (const retry of state.authorized_retries || []) {
+    const row = state.tasks.find(t => t.task_id === retry.task_id);
+    if (!row || row.attempt_id !== retry.new_attempt_id || retry.old_attempt_id === retry.new_attempt_id) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_SCOPE_DRIFT");
+    for (const ref of retry.artifacts || []) {
+      if (ref.path.split("/").some(p => !p || p === "." || p === "..")) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_PATH_INVALID");
+      await assertPlainPath(root, ref.path.split("/"));
+      const bytes = await readFile(join(root, ref.path));
+      if (hash(bytes) !== ref.sha256 || bytes.length !== ref.size) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_EVIDENCE_DRIFT");
+    }
+    const ref = retry.artifacts.find(r => r.path.endsWith("/retry-proof.json"));
+    if (!ref) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_PROOF_MISSING");
+    const proof = await readJson(join(root, ref.path));
+    if (proof.schema_version !== "wildclawbench.workbuddy-authorized-terminal-retry-proof/v1"
+        || proof.task_id !== retry.task_id || proof.old_attempt_id !== retry.old_attempt_id
+        || proof.new_attempt_id !== retry.new_attempt_id || !proof.user_authorization?.trim()
+        || proof.original_attempt_preserved !== true || proof.new_prompts_sent !== 0) throw new Error("WORKBUDDY_AUTHORIZED_RETRY_PROOF_INVALID");
+  }
   for (const repair of state.source_repairs || []) {
     if (repair.schema_version !== "wildclawbench.workbuddy-zero-send-queue-repair/v1") throw new Error("WORKBUDDY_QUEUE_REPAIR_SCHEMA_INVALID");
     for (const ref of repair.artifacts || []) {

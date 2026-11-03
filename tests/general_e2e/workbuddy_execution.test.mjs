@@ -487,6 +487,8 @@ test("WorkBuddy P2 resume observes the same attempt without redispatch", async (
       dependencies(fixture.config, firstCounters, () => binding(fixture.config, "running"), clock),
     );
     const attemptId = first.journal.identity.attempt_id;
+    first.journal.human_assistance = { mode: "human_assisted", operation_count: 1, semantic_intervention_count: 0 };
+    await writeFile(fixture.config.journalFile, JSON.stringify(first.journal));
     fixture.config.manifest.unit.harness.platform = "macos-x86-64";
     const resumedConfig = { ...fixture.config, resume: true, detachAfterSubmit: false, observeOnce: true };
     const resumedCounters = { prepare: 0, fill: 0, dispatch: 0, close: 0 };
@@ -501,6 +503,7 @@ test("WorkBuddy P2 resume observes the same attempt without redispatch", async (
     assert.equal(resumed.state.phase, "COMPLETED");
     assert.equal(resumed.state.driver.platform, "macos-x86-64");
     assert.equal(resumed.journal.send.dispatch_attempt_count, 1);
+    assert.deepEqual(resumed.state.human_assistance, { mode: "human_assisted", operation_count: 1, semantic_intervention_count: 0 });
     const validation = spawnSync(
       process.env.PYTHON || "python3",
       [
