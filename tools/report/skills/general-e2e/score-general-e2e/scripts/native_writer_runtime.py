@@ -103,6 +103,33 @@ def validate_configuration(config):
             raise ValueError('NATIVE_WRITER_CLASS_DRIFT')
 
 
+def completed_receipt_before_cleanup(receipt, client, inputs, saved, pdf):
+    """A stop is cleanup only after the native edit/save/reopen proof exists."""
+    if client is None or client.poll() != 0 or not receipt.is_file(): return None
+    try: facts = properties(receipt)
+    except (OSError, ValueError, UnicodeError): return None
+    if (facts.get('status') != 'pass' or facts.get('control_opened') != 'true'
+        or facts.get('opened') != 'true' or facts.get('phase') != 'native_reopen'
+        or facts.get('body_persisted') != 'true'
+        or not facts.get('required_tables','').isdigit()
+        or int(facts['required_tables']) < 2
+        or facts.get('table_edits_persisted') != facts['required_tables']
+        or not saved.is_file() or not pdf.is_file()
+        or not all(sha(item['path']) == item['sha256'] for item in inputs)):
+        return None
+    return {'profile':'bound-native-post-completion-cleanup/v1',
+            'observed_at':datetime.now(timezone.utc).isoformat(),
+            'receipt_sha256':sha(receipt), 'saved_sha256':sha(saved), 'pdf_sha256':sha(pdf)}
+
+
+def verified_post_completion_stop(completion, facts, receipt, actions, native_identity, server_code):
+    return bool(completion and facts.get('status') == 'pass'
+        and completion['receipt_sha256'] == sha(receipt)
+        and native_identity and actions
+        and all(a == {'pid':native_identity['pid'],'signal':'SIGTERM'} for a in actions)
+        and server_code in (255, -signal.SIGTERM, 128+signal.SIGTERM))
+
+
 def run_probe(*, config_path, source, control, output_root, timeout_seconds=180):
     config_path = Path(config_path).absolute()
     config = json.loads(config_path.read_text(encoding='utf-8'))
@@ -136,7 +163,7 @@ def run_probe(*, config_path, source, control, output_root, timeout_seconds=180)
                  'NativeDocxEditProbe', 'uno:socket,host=127.0.0.1,port='+str(port)+';urp;StarOffice.ComponentContext',
                  control.as_uri(),source.as_uri(),copy.as_uri(),saved.as_uri(),pdf.as_uri(),str(receipt)]
     env = environment(config['python']['path'])
-    actions=[];server_identity=None;java_identity=None;native_identity=None;client=None;startup_error=None
+    actions=[];server_identity=None;java_identity=None;native_identity=None;client=None;startup_error=None;completion=None
     def capture_native_identity():
         nonlocal native_identity
         if native_identity is None and pid_file.is_file():
@@ -166,6 +193,7 @@ def run_probe(*, config_path, source, control, output_root, timeout_seconds=180)
             try:server.wait(timeout=5)
             except subprocess.TimeoutExpired:
                 capture_native_identity()
+                completion = completed_receipt_before_cleanup(receipt,client,inputs,saved,pdf)
                 stop_bound(native_identity,actions)
                 try:server.wait(timeout=3)
                 except subprocess.TimeoutExpired:
@@ -189,7 +217,8 @@ def run_probe(*, config_path, source, control, output_root, timeout_seconds=180)
         facts={'status':'evaluator_error','reason':'native receipt invalid'}
     unchanged = all(sha(item['path'])==item['sha256'] for item in inputs)
     status = facts.get('status')
-    if timed_out or startup_error or residual or not unchanged or server.returncode!=0 or client is None or client.returncode not in (0,) or status not in {'pass','candidate_not_editable','candidate_not_openable'}:
+    owned_stop = verified_post_completion_stop(completion,facts,receipt,actions,native_identity,server.returncode)
+    if timed_out or startup_error or residual or not unchanged or (server.returncode!=0 and not owned_stop) or client is None or client.returncode not in (0,) or status not in {'pass','candidate_not_editable','candidate_not_openable'}:
         status = 'evaluator_error'
     profile_archive = None
     if status!='evaluator_error' and profile.is_dir():
@@ -220,6 +249,7 @@ def run_probe(*, config_path, source, control, output_root, timeout_seconds=180)
               'environment_keys':sorted(env),'process_identities':[item for item in [server_identity,java_identity,native_identity] if item],
               'cleanup_actions':actions,'cleanup_residual':residual,'artifacts':artifacts,
               'native_profile_archive':profile_archive.name if profile_archive else None,
+              'post_completion_cleanup':completion if owned_stop else None,
               'candidate_rewritten':False,'grader_evidence_not_agent_action':True}
     write_new(output/'probe-result.json',result)
     return result

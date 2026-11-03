@@ -13,11 +13,13 @@ import sys
 import native_writer_runtime
 
 PROFILE='office001-validated-native-writer-api/v1'
+PROFILE_V2='office001-validated-native-writer-api/v2'
 TASK='02_Office_task_001_multi_source_project_report'
 CONTRACT_SHA='f6386914c4ab0208f66feb75dbce2a61eccf7a384c289cc3a138ce61b048d11e'
 SOURCE_SHA='98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1'
 EVIDENCE='evaluator_evidence/office001-native'
 RUNTIME_SOURCE_SHA='ad10b76ad2ba4cdc9b5f295b01b05c86b51e24f04ba0578a542fcf4162ec906d'
+RUNTIME_SOURCE_SHA_V2='86b2af4182f0a974b94df84dd099e2e3c485e5c0eb66c5b2533654e3e0114698'
 JAVA_SOURCE_SHA='0fad706f4fdd35940659c311d36e5e784a958c08bd435faa1d88623af28b7348'
 
 
@@ -46,16 +48,16 @@ def marker(contract,contract_sha256):
     native_writer_runtime.validate_configuration(configuration)
     source=Path(native_writer_runtime.__file__).parent/'native_writer/NativeDocxEditProbe.java'
     if (configuration['java_source']['sha256']!=sha(source) or sha(source)!=JAVA_SOURCE_SHA
-            or configuration['runner']['sha256']!=RUNTIME_SOURCE_SHA
+            or configuration['runner']['sha256']!=RUNTIME_SOURCE_SHA_V2
             or configuration['jar']['sha256']!=native_writer_runtime.JAR_SHA256):
         raise ValueError('OFFICE001_NATIVE_IMPLEMENTATION_MISMATCH')
     smoke=json.loads(Path(record['validation']['path']).read_text(encoding='utf-8'))
     if (smoke.get('status')!='pass' or smoke.get('input_bytes_unchanged') is not True
-            or smoke.get('cleanup_residual') or smoke.get('server_exit_code')!=0 or smoke.get('java_exit_code')!=0
+            or smoke.get('cleanup_residual') or not shutdown_valid(smoke,Path(record['validation']['path']).parent) or smoke.get('java_exit_code')!=0
             or smoke.get('native_facts',{}).get('body_persisted')!='true'
             or int(smoke.get('native_facts',{}).get('table_edits_persisted','0'))<2):
         raise ValueError('OFFICE001_NATIVE_API_SMOKE_INVALID')
-    return {'profile':PROFILE,'contract_sha256':contract_sha256,'source_sha256':SOURCE_SHA,
+    return {'profile':PROFILE_V2,'contract_sha256':contract_sha256,'source_sha256':SOURCE_SHA,
             'configuration_file':record['configuration'],'configuration':configuration,
             'configuration_content_sha256':canonical(configuration),'launcher':record['launcher'],
             'validation':record['validation'],'evidence_directory':EVIDENCE}
@@ -66,14 +68,15 @@ def policy(manifest,source=None):
     if frozen is None:return None
     if (not isinstance(frozen,dict) or manifest.get('identity',{}).get('task_id')!=TASK
             or manifest.get('digests',{}).get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
-            or frozen.get('profile')!=PROFILE or frozen.get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
+            or frozen.get('profile') not in {PROFILE,PROFILE_V2} or frozen.get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
             or frozen.get('source_sha256')!=SOURCE_SHA or frozen.get('evidence_directory')!=EVIDENCE
             or not isinstance(frozen.get('configuration'),dict)
             or frozen.get('configuration_content_sha256')!=canonical(frozen.get('configuration'))
             or (source is not None and hashlib.sha256(source.encode('utf-8')).hexdigest()!=SOURCE_SHA)):
         raise ValueError('OFFICE001_NATIVE_FROZEN_PROFILE_MISMATCH')
     config=frozen['configuration']
-    if (config.get('runner',{}).get('sha256')!=RUNTIME_SOURCE_SHA
+    expected_runner=RUNTIME_SOURCE_SHA if frozen['profile']==PROFILE else RUNTIME_SOURCE_SHA_V2
+    if (config.get('runner',{}).get('sha256')!=expected_runner
             or config.get('java_source',{}).get('sha256')!=JAVA_SOURCE_SHA
             or config.get('jar',{}).get('sha256')!=native_writer_runtime.JAR_SHA256):
         raise ValueError('OFFICE001_NATIVE_FROZEN_IMPLEMENTATION_MISMATCH')
@@ -155,6 +158,40 @@ def grade(transcript,workspace_path):
     return values
 '''
 
+# Kept as source text so the managed Worker runs this same small, read-only
+# evidence check without importing a mutable controller module. v1 is unchanged.
+SHUTDOWN_VALIDATOR = '''
+def _ge2e_shutdown_valid(receipt,root):
+    if receipt.get('server_exit_code')==0:return True
+    proof=receipt.get('post_completion_cleanup') or {}
+    facts=receipt.get('native_facts') or {}
+    actions=receipt.get('cleanup_actions') or []
+    if (proof.get('profile')!='bound-native-post-completion-cleanup/v1'
+        or receipt.get('server_exit_code') not in [255,-15,143]
+        or receipt.get('timed_out') is not False or receipt.get('startup_error') is not None
+        or receipt.get('cleanup_residual') or receipt.get('java_exit_code')!=0
+        or receipt.get('input_bytes_unchanged') is not True or facts.get('status')!='pass'
+        or facts.get('control_opened')!='true' or facts.get('opened')!='true'
+        or facts.get('phase')!='native_reopen' or facts.get('body_persisted')!='true'
+        or not facts.get('required_tables','').isdigit() or int(facts['required_tables'])<2
+        or facts.get('table_edits_persisted')!=facts['required_tables']
+        or len(actions)!=1 or actions[0].get('signal')!='SIGTERM'
+        or not any(p.get('pid')==actions[0].get('pid') and p.get('command_sha256')
+                   and '-env:UserInstallation=' in p.get('command','')
+                   for p in receipt.get('process_identities',[]))):return False
+    for key,name in [('receipt_sha256','native-receipt.properties'),('saved_sha256','native-saved.docx'),('pdf_sha256','candidate-native.pdf')]:
+        path=_ge2e_native_Path(root)/name
+        if path.is_symlink() or not path.is_file() or _ge2e_native_file_sha(path)!=proof.get(key):return False
+    return True
+'''
+
+def shutdown_valid(receipt,root):
+    namespace={'_ge2e_native_Path':Path,'_ge2e_native_file_sha':sha}
+    exec(SHUTDOWN_VALIDATOR,namespace)
+    return namespace['_ge2e_shutdown_valid'](receipt,root)
+
+BRIDGE_V2=SHUTDOWN_VALIDATOR+BRIDGE.replace("receipt.get('server_exit_code')!=0", "not _ge2e_shutdown_valid(receipt,evidence/'probe')")
+
 
 def effective_source(manifest,source,current,previous_receipt):
     frozen=policy(manifest,source)
@@ -168,8 +205,9 @@ def effective_source(manifest,source,current,previous_receipt):
         if current.count(old)!=1:raise ValueError('OFFICE001_NATIVE_SOURCE_DECLARATION_MISMATCH')
         current=current.replace(old,new)
     imports='\nimport json as _ge2e_native_json\nimport hashlib as _ge2e_native_hashlib\nimport subprocess as _ge2e_native_subprocess\nimport sys as _ge2e_native_sys\nfrom pathlib import Path as _ge2e_native_Path\n'
-    effective=current+imports+'\n_GE2E_OFFICE_NATIVE = '+repr(frozen)+'\n'+BRIDGE
-    receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':PROFILE,
+    bridge=BRIDGE if frozen['profile']==PROFILE else BRIDGE_V2
+    effective=current+imports+'\n_GE2E_OFFICE_NATIVE = '+repr(frozen)+'\n'+bridge
+    receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':frozen['profile'],
              'task_id':TASK,'contract_sha256':CONTRACT_SHA,'original_source_sha256':SOURCE_SHA,
              'effective_source_sha256':hashlib.sha256(effective.encode('utf-8')).hexdigest(),
              'native_configuration_sha256':frozen['configuration_file']['sha256'],
