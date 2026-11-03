@@ -488,6 +488,7 @@ test("WorkBuddy P2 resume observes the same attempt without redispatch", async (
     );
     const attemptId = first.journal.identity.attempt_id;
     first.journal.human_assistance = { mode: "human_assisted", operation_count: 1, semantic_intervention_count: 0 };
+    first.journal.execution.error = { code: "WORKBUDDY_PROMPT_SEND_UNCERTAIN", message: "historical binding delay" };
     await writeFile(fixture.config.journalFile, JSON.stringify(first.journal));
     fixture.config.manifest.unit.harness.platform = "macos-x86-64";
     const resumedConfig = { ...fixture.config, resume: true, detachAfterSubmit: false, observeOnce: true };
@@ -504,6 +505,8 @@ test("WorkBuddy P2 resume observes the same attempt without redispatch", async (
     assert.equal(resumed.state.driver.platform, "macos-x86-64");
     assert.equal(resumed.journal.send.dispatch_attempt_count, 1);
     assert.deepEqual(resumed.state.human_assistance, { mode: "human_assisted", operation_count: 1, semantic_intervention_count: 0 });
+    assert.equal(resumed.journal.execution.error, null);
+    assert.equal(resumed.journal.history.find(e => e.event === "NATIVE_BINDING_ERROR_RESOLVED").original_error.code, "WORKBUDDY_PROMPT_SEND_UNCERTAIN");
     const validation = spawnSync(
       process.env.PYTHON || "python3",
       [

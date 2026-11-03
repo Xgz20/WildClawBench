@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.9";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.10";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -810,6 +810,12 @@ async function bindAndObserve(config, journal, dependencies, runtimeClient = nul
   journal.native.request_id = binding.history.binding.request_id;
   journal.native.cwd = binding.session_snapshot.cwd;
   journal.native.last_observed_at = dependencies.now();
+  if (journal.execution.error?.code === "WORKBUDDY_PROMPT_SEND_UNCERTAIN") {
+    journal.history.push({ event: "NATIVE_BINDING_ERROR_RESOLVED", at: dependencies.now(),
+      original_error: journal.execution.error, conversation_id: journal.native.conversation_id,
+      request_id: journal.native.request_id });
+    journal.execution.error = null;
+  }
   journal.prompt.send_status = "sent";
   journal.prompt.sent_at ||= journal.send.dispatch_armed_at || journal.send.dispatch_returned_at;
   let evidence = await writeBindingEvidence(config, journal, binding);

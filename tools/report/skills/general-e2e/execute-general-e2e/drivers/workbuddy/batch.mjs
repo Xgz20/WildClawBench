@@ -144,7 +144,12 @@ export async function synchronizeRow(root, row) {
       throw new Error("WORKBUDDY_QUEUE_NATIVE_TIME_REVERSED");
     }
   }
-  row.error = journal.execution?.error || publicState?.execution?.error || null;
+  // A matching current public state supersedes a historical transient binding
+  // error. Keep that history in the journal; never report a valid terminal as
+  // an unresolved uncertain send after its exact native identity was proved.
+  row.error = publicState?.phase === journal.phase
+    ? publicState.execution?.error || null
+    : journal.execution?.error || publicState?.execution?.error || null;
   return row;
 }
 

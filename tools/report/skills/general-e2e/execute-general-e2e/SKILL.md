@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.32` 已按原 Prompt/会话/request 严格恢复绑定后，将暂时的发送不确定错误转存为历史解决事件；队列优先使用同阶段的正式状态错误，避免把已完成题目持续显示为未知发送。旧原件不重写，未恢复绑定的真实不确定发送继续阻断。
+
 `0.14.31` `retry-terminal-review.mjs --manifest ABS [--resume]` 仅对用户明确授权的新 attempt 重跑已登记原生取消的单题：再次核对完整取消证据和全局原生空闲，保留原 Workspace/控制记录与 SHA，从原冻结执行 ZIP 逐文件校验并恢复全新 Workspace，迁移队列源码需保持完整题序、模型与并发。旧 attempt 不重发、不覆盖，恢复事务及正式绑定保留旧/新身份和授权原件。
 
 `0.14.30` WorkBuddy 的 `respond-pending.mjs --manifest ABS` 仅消费用户明确授权的单次原生 ImageGen 或防循环 Read：绑定原 attempt、完整 Prompt、会话、request、当前 pending ID 与原参数 SHA，只调用一次 allow，保留调用前意图及前后原件并计为机械介入。失效、漂移、未知选项拒绝，永不 Always Allow、补充答案或重发 Prompt；恢复观察持续保留介入计数和证据。
