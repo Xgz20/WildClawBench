@@ -23,6 +23,8 @@ def profile_for(contract, contract_sha=None, *, frozen_profile=None):
     import office001_rule_review
     if office001_rule_review.matches(contract, contract_sha):
         return office001_rule_review.PROFILE
+    import warranty_recovery_review
+    if warranty_recovery_review.matches(contract,contract_sha):return warranty_recovery_review.PROFILE
     import escrow_state_review
     if escrow_state_review.matches(contract,contract_sha):
         import escrow_grouped_review
@@ -36,7 +38,7 @@ def profile_for(contract, contract_sha=None, *, frozen_profile=None):
 def worker_configuration(mode, decisions=None, *, profile=PROFILE):
     if mode not in {'discover','apply'}:
         raise ValueError('RULE_REVIEW_MODE_INVALID')
-    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3'}:
+    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','warranty-recovery-reason-semantic-review/v1'}:
         raise ValueError('RULE_REVIEW_PROFILE_MISMATCH')
     return {'schema_version': WORKER_SCHEMA, 'profile': profile, 'mode': mode, 'decisions': decisions or {}}
 

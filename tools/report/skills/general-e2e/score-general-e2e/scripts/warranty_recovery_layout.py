@@ -33,11 +33,15 @@ def marker(contract, contract_sha, dataset):
             and {key: dataset.get(key) for key in DATASET} == DATASET
             and hashlib.sha256(contract.get('automated_checks', '').encode()).hexdigest() == SOURCE_SHA):
         return {'profile': PROFILE, 'contract_sha256': CONTRACT_SHA, 'source_sha256': SOURCE_SHA}
-    return None
+    import warranty_recovery_review
+    return warranty_recovery_review.marker(contract,contract_sha,dataset)
 
 
 def effective_source(manifest, original, current, prior):
+    import warranty_recovery_review
     frozen = manifest.get('runtime', {}).get('warranty_recovery_layout_profile')
+    if (frozen or {}).get('profile')==warranty_recovery_review.LAYOUT_PROFILE or manifest.get('runtime',{}).get('rule_review_profile')==warranty_recovery_review.PROFILE:
+        return warranty_recovery_review.effective_source(manifest,original,current,prior)
     if frozen is None:
         return current, prior
     expected = marker({'task_id': manifest['identity']['task_id'], 'automated_checks': original},
