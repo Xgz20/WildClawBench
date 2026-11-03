@@ -21,7 +21,7 @@ def marker(contract,contract_sha):
 def effective_source(manifest,original,current,prior):
     import procurement_orphan_id_header
     frozen=manifest.get('runtime',{}).get('procurement_summary_label_profile')
-    if (frozen or {}).get('profile') in {procurement_orphan_id_header.PROFILE,procurement_orphan_id_header.PROFILE_V2}:
+    if (frozen or {}).get('profile') in {procurement_orphan_id_header.PROFILE,procurement_orphan_id_header.PROFILE_V2,procurement_orphan_id_header.PROFILE_V3}:
         return procurement_orphan_id_header.effective_source(manifest,original,current,prior)
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest.get('identity',{}).get('task_id'),'automated_checks':original},

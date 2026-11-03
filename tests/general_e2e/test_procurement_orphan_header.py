@@ -34,8 +34,8 @@ class ProcurementOrphanHeaderTests(unittest.TestCase):
             tables,_=new['scan_workbook'](path);self.assertEqual(tables[0]['records'][0]['id'],'PO-2099-9999')
             self.assertEqual(tables[0]['records'][0]['values']['ra'],100)
     def test_v2_matrix_headers_and_explicit_dual_count_are_fully_exposed(self):
-        source=self.source();m={'identity':{'task_id':P.TASK},'digests':{'contract_sha256':P.CONTRACT},
-            'runtime':{'procurement_summary_label_profile':P.marker({'task_id':P.TASK,'automated_checks':source},P.CONTRACT)}}
+        source=self.source();marker=P.marker({'task_id':P.TASK,'automated_checks':source},P.CONTRACT);marker['profile']=P.PROFILE_V2
+        m={'identity':{'task_id':P.TASK},'digests':{'contract_sha256':P.CONTRACT},'runtime':{'procurement_summary_label_profile':marker}}
         fixed,receipt=RUNTIME._effective_rule_source(m,source);scope={};exec(compile(fixed,'<matrix>','exec'),scope)
         self.assertEqual(receipt['correction_id'],P.PROFILE_V2)
         records={k:[] for k in ['qty','amount','missing','orphan']};truth={k:[] for k in records}
@@ -50,3 +50,15 @@ class ProcurementOrphanHeaderTests(unittest.TestCase):
         self.assertEqual(values['匹配且数量金额均一致订单数'],2)
         self.assertEqual(values['订单金额合计'],100);self.assertEqual(values['入库金额合计'],80)
         self.assertTrue(projections);self.assertTrue(locations)
+    def test_v3_closes_totalled_matrix_before_following_narrative(self):
+        source=self.source();marker=P.marker({'task_id':P.TASK,'automated_checks':source},P.CONTRACT)
+        m={'identity':{'task_id':P.TASK},'digests':{'contract_sha256':P.CONTRACT},'runtime':{'procurement_summary_label_profile':marker}}
+        fixed,_=RUNTIME._effective_rule_source(m,source);scope={};exec(compile(fixed,'<matrix-boundary>','exec'),scope)
+        records={k:[] for k in ['qty','amount','missing','orphan']};tables=[{'sheet':'summary','kind':'summary','rows':[
+            {'row':1,'values':['类别','笔数','订单金额合计(元)','入库金额合计(元)','金额差额(元)']},
+            {'row':2,'values':['数量差异',0,0,0,0]},
+            {'row':3,'values':['合计','采购订单0笔 / 入库关联0个订单',0,0,0]},
+            {'row':4,'values':['2. 数量差异','仅解释口径，没有新的数值声明']},]}]
+        converted,*_=scope['_pl_matrix_view'](tables,records,{'orders_amount':0,'receipts_amount':0},{'categories':{'amount':{'direction':-1}}},records,scope['norm'],scope['summary_key'],scope['number'])
+        self.assertEqual(converted[0]['rows'][-1]['row'],4)
+        self.assertEqual(converted[0]['rows'][-1]['values'][1],'仅解释口径，没有新的数值声明')
