@@ -6,6 +6,16 @@ CONTRACT='303328777610178aab42baa175aa2e3c65dd0ccf868b5200d200a0597704e107'
 SOURCE='d2e1e3adf18ce595499464db66e3bc1a728ccabc64bc887d02ef70356eac17bf'
 ERROR='evaluator_error: complete evidence exceeds 74000 characters; supplementary collection required, never candidate zero'
 PRESERVED='infrastructure-evidence/complete-business-evidence-budget'
+PRD_TASK='02_Office_task_019_prd_system_design_breakdown'
+PRD_CONTRACT='2a473675b08481052bc5808a5387e85fa0152bdcf4ed5448e922e9023a4097d5'
+PRD_SOURCE='4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035'
+def prd_failure(manifest,contract,audit,worker):
+    error=worker.get('error',{})
+    match=re.fullmatch(r'EVALUATOR_EVIDENCE_BUDGET: (\d+) characters require larger collection budget; do not truncate or score a partial plan',error.get('message',''))
+    return (contract.get('task_id')==PRD_TASK and manifest['digests']['contract_sha256']==PRD_CONTRACT
+        and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==PRD_SOURCE
+        and audit.get('status')=='failed' and worker.get('ok') is False and worker.get('result') is None
+        and error.get('type')=='RuntimeError' and match is not None and int(match.group(1))>72000)
 def files(attempt,manifest,contract,audit,worker):
     error=worker.get('error',{})
     if (contract.get('task_id')!=TASK or manifest['digests']['contract_sha256']!=CONTRACT

@@ -9,6 +9,22 @@ import communication_evidence_failure as FAILURE
 B=RUNTIME.work_order_evidence_budget
 
 class CommunicationEvidenceBudgetTests(unittest.TestCase):
+    def test_prd_budget_has_exact_identity_and_does_not_modify_other_functions(self):
+        source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{B.PRD_TASK}.md')['automated_checks']
+        self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),B.PRD_SOURCE)
+        marker=B.marker({'task_id':B.PRD_TASK,'automated_checks':source},B.PRD_CONTRACT)
+        m={'identity':{'task_id':B.PRD_TASK},'digests':{'contract_sha256':B.PRD_CONTRACT},'runtime':{'work_order_evidence_budget_profile':marker}}
+        fixed,receipt=B.effective_source(m,source,source,None)
+        self.assertIn("sum(len(v.encode('utf-8')) for v in serialized)",fixed)
+        self.assertIn('if total>16777216:',fixed);self.assertFalse(receipt['candidate_rewritten'])
+        for node in ast.parse(source).body:
+            if isinstance(node,(ast.FunctionDef,ast.ClassDef)) and node.name!='grade':
+                other=next(n for n in ast.parse(fixed).body if isinstance(n,type(node)) and n.name==node.name)
+                self.assertEqual(ast.dump(node),ast.dump(other))
+        error={'ok':False,'result':None,'error':{'type':'RuntimeError','message':'EVALUATOR_EVIDENCE_BUDGET: 85080 characters require larger collection budget; do not truncate or score a partial plan'}}
+        contract={'task_id':B.PRD_TASK,'automated_checks':source};audit={'status':'failed'}
+        self.assertTrue(FAILURE.prd_failure(m,contract,audit,error))
+        error['error']['message']='unrelated failure';self.assertFalse(FAILURE.prd_failure(m,contract,audit,error))
     def test_only_total_resource_guard_changes_and_original_chunker_stays_exact(self):
         source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{B.PACK_TASK}.md')['automated_checks']
         self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),B.PACK_SOURCE)
