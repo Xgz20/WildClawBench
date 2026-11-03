@@ -35,7 +35,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.7";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.8";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -684,6 +684,12 @@ export async function closeWorkBuddyUiHandle(handle) {
 }
 
 async function writeBindingEvidence(config, journal, binding) {
+  for (const item of journal.mechanical_interventions || []) {
+    const path = resolve(config.unitRoot, item.path);
+    if (!isInside(config.unitRoot, path) || await realpath(path) !== path) throw new Error("WORKBUDDY_INTERVENTION_PATH_INVALID");
+    const bytes = await readFile(path);
+    if (sha256(bytes) !== item.sha256 || bytes.length !== item.size) throw new Error("WORKBUDDY_INTERVENTION_EVIDENCE_DRIFT");
+  }
   const evidence = {
     schema_version: "wildclawbench.general-e2e-workbuddy-native-binding/v2",
     source_kind: binding.source_kind || "workbuddy-native-history",
@@ -700,7 +706,7 @@ async function writeBindingEvidence(config, journal, binding) {
     path: relative(config.unitRoot, config.bindingFile).split("\\").join("/"),
     sha256: sha256(bytes),
     size: bytes.length,
-  }, ...(config.zeroSendRecovery?.sources || [])];
+  }, ...(config.zeroSendRecovery?.sources || []), ...(journal.mechanical_interventions || [])];
 }
 
 async function buildAndPersistPublicState(config, journal, binding, bindingEvidence) {
@@ -716,6 +722,7 @@ async function buildAndPersistPublicState(config, journal, binding, bindingEvide
     history: binding.history,
     bindingEvidence,
     observedAt: journal.native.last_observed_at,
+    humanAssistance: journal.human_assistance,
     nativePendingInteractions: (binding.runtime_snapshot?.request?.assistantMessage?.content || [])
       .filter(item => item.kind === "permission" && ["pending", "in_progress"].includes(item.status))
       .map(item => ({ tool_call_id: item.toolCallId, title: item.title, status: item.status,
