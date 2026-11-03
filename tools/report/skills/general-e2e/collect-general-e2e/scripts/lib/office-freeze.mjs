@@ -5,7 +5,9 @@ import { lstat, readdir } from 'node:fs/promises';
 import { extname, join } from 'node:path';
 
 const run = promisify(execFile);
-const OFFICE = new Set(['.docx', '.xlsx', '.pptx', '.docm', '.xlsm', '.pptm']);
+// The initial Office metadata audit stores original/observed Office bytes as
+// .bin. Opaque audit copies need the same protection as named Office files.
+const OFFICE = new Set(['.docx', '.xlsx', '.pptx', '.docm', '.xlsm', '.pptm', '.bin']);
 export async function sealFrozenOfficeFile(path) {
   if (process.platform !== 'darwin' || !OFFICE.has(extname(path).toLowerCase())) return;
   const info = await lstat(path);

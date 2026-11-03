@@ -1072,6 +1072,7 @@ export async function finalizeExecution(options, profile, overrides = {}) {
         await mkdir(join(staging, "trace", dirname(item.relative)), { recursive: true });
         const destination = join(staging, "trace", item.relative);
         await copyFile(item.source.absolute, destination, fsConstants.COPYFILE_EXCL | fsConstants.COPYFILE_FICLONE);
+        await sealFrozenOfficeFile(destination);
         assertArtifact(await hashRegularFile(destination), item.source, "copied trace artifact");
       }
     }

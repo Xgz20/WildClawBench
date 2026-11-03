@@ -1,6 +1,6 @@
 """Freeze a complete per-task trace bundle inside an independent scoring attempt."""
 from pathlib import Path, PurePosixPath
-import hashlib, importlib.util, json, os, shutil, subprocess, sys
+import hashlib, importlib.util, json, os, shutil, stat, subprocess, sys
 
 SCHEMA = 'wildclawbench.scoring-trace-handoff/v1'
 TERMINAL_PROJECTION_PATHS = {'bindings/terminal-projection-original-state.json', 'bindings/terminal-projection-proof.json'}
@@ -40,6 +40,10 @@ def copy_file(src,dst):
     if sys.platform=='darwin':
         subprocess.run(['/bin/cp','-c',str(src),str(dst)],check=True,capture_output=True)
     else:shutil.copy2(src,dst)
+    # Initial Office audit originals use an opaque .bin suffix. Protect those
+    # copies too: an extension change does not stop host metadata writers.
+    if dst.suffix.lower() in {'.bin', '.docx', '.xlsx', '.pptx', '.docm', '.xlsm', '.pptm'} and sys.platform=='darwin':
+        os.chflags(dst, dst.stat().st_flags | stat.UF_IMMUTABLE, follow_symlinks=False)
     return str(dst)
 
 def freeze(unit_root, execution, attempt_root, *, required=False):
@@ -86,7 +90,7 @@ def verify(root, ref, execution):
     m=json.loads(p.read_text());require(m['schema_version']==SCHEMA and m['identity']==execution['identity'],'TRACE_HANDOFF_IDENTITY')
     require(len({r['path'] for r in m['artifacts']})==len(m['artifacts']),'TRACE_HANDOFF_DUPLICATE')
     for r in m['artifacts']:
-        f=child(p.parent,r['path']);require(f.stat().st_size==r['size'] and sha(f)==r['sha256'],'TRACE_HANDOFF_ARTIFACT_DRIFT')
+        f=child(p.parent,r['path']);require(f.stat().st_size==r['size'] and sha(f)==r['sha256'],'TRACE_HANDOFF_ARTIFACT_DRIFT: '+str(f))
     index=json.loads(child(p.parent,m['trace_index']).read_text())
     expected={r['path']:r for r in [index['transcript'],*index['raw_trace'],*index.get('binding_evidence',[])]}
     actual={r['path']:r for r in m['artifacts'] if r['path']!=m['trace_index']}

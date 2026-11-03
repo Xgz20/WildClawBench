@@ -15,6 +15,7 @@ import {
 import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { homedir } from "node:os";
+import { sealFrozenOfficeFile, clearOwnedStagingOffice } from "../../scripts/lib/office-freeze.mjs";
 import { discoverJsonl, parseBoundJsonl, applyJsonlMetrics, withoutModelResponseCount } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/index.mjs";
 import { applyWorkBuddyTiming } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/timing.mjs";
 
@@ -344,6 +345,7 @@ export async function collectWorkBuddyEvidence(options) {
       writeResourceMetrics: false,
       collectedAt: options.collectedAt || new Date().toISOString(),
     });
+    for (const item of evidence.binding_evidence) await sealFrozenOfficeFile(join(stage, "trace", item.path));
     let resource = rebaseResourceMetrics(evidence.resource_metrics, { bytes: collectedStateBytes }, evidence);
     resource = withoutModelResponseCount(resource);
     if (runtimeEvidence) {
@@ -372,6 +374,7 @@ export async function collectWorkBuddyEvidence(options) {
     await writeFile(join(stage, "resource-metrics.json"), jsonBytes(resource), { flag: "wx", mode: 0o600 });
     await rename(stage, outputRoot);
   } catch (error) {
+    await clearOwnedStagingOffice(stage).catch(() => {});
     await rm(stage, { recursive: true, force: true }).catch(() => {});
     throw error;
   }
