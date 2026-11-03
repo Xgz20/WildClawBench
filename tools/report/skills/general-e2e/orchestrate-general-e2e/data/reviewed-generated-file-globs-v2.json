@@ -1,0 +1,55 @@
+{
+  "schema_version": "general-e2e-reviewed-generated-file-globs/v2",
+  "profiles": [
+    {
+      "task_id": "02_Office_task_011_safety_inspection_extract",
+      "contract_sha256": "396fcc2996a34ae0cc5963e4acef048320852419bb9162f0aa2fda999d79f8f0",
+      "source_sha256": "a60005f7ba3f35aa75f5f3ab4d857ec3de7ea9d3622318913fdbfe8e14e222d1",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "patterns": [
+        "evaluator_evidence/source_*.txt"
+      ]
+    },
+    {
+      "task_id": "02_Office_task_017_ipad_product_presentation",
+      "contract_sha256": "ef714863523034a7c467a51e6768bf0dda607cd550537b5491fda52c85853943",
+      "source_sha256": "1b1db22b6427ab8cfe4fe3472e7af62e32adf2a0e72484345805af963221fc46",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "patterns": [
+        "evaluator_evidence/02_candidate_*.json"
+      ]
+    },
+    {
+      "task_id": "02_Office_task_021_alphabet_2024q1_presentation",
+      "contract_sha256": "22c83bf794e7c8388b387134fb70e440655b3a98e5a2f04bef65bb531cb55f3f",
+      "source_sha256": "7e495656b307fb167bd894c25c3c52f0ae9f35e9319cc5eae5948e5357058cee",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "patterns": [
+        "evaluator_evidence/01_reference_*.json",
+        "evaluator_evidence/02_candidate_*.json"
+      ]
+    },
+    {
+      "task_id": "02_Office_task_023_bridgemind_monthly_report",
+      "contract_sha256": "ddc7ef18bf0b02e74c00addb72efb4d219f91fd17000c75df0e66c6793f10e13",
+      "source_sha256": "88aaf1d47325b6155f510c8e254f1d0d49e3207a67f8d3a89d2c28d2492a2038",
+      "dataset": {
+        "digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+        "id": "general-custom70-v2"
+      },
+      "patterns": [
+        "evaluator_evidence/01_reference_*.json",
+        "evaluator_evidence/02_candidate_*.json"
+      ]
+    }
+  ]
+}

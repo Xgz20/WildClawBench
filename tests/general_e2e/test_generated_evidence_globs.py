@@ -39,7 +39,7 @@ class GeneratedEvidenceGlobTests(unittest.TestCase):
 
     def test_both_standalone_skills_have_identical_exact_contract_catalog_and_helper(self):
         skills=REPO_ROOT/'tools/report/skills/general-e2e'
-        for file in ['scripts/generated_evidence_globs.py','data/reviewed-generated-file-globs-v1.json']:
+        for file in ['scripts/generated_evidence_globs.py','data/reviewed-generated-file-globs-v1.json','data/reviewed-generated-file-globs-v2.json']:
             self.assertEqual((skills/'score-general-e2e'/file).read_bytes(),(skills/'orchestrate-general-e2e'/file).read_bytes())
         dataset=json.loads((REPO_ROOT/'eval_general_e2e/datasets/manifests/general-custom116-v1.json').read_text())
         self.assertEqual(len(GLOBS.registry()),4)
@@ -47,6 +47,25 @@ class GeneratedEvidenceGlobTests(unittest.TestCase):
             task=next(t for t in dataset['tasks'] if t['task_id']==row['task_id'])
             self.assertEqual(task['digests']['scoring_contract_sha256'],row['contract_sha256'])
         self.assertIsNone(GLOBS.policy({'identity':{'task_id':'other'}},{'automated_checks':None}))
+
+    def test_revised70_globs_bind_new_contracts_without_changing_old_catalog_or_rules(self):
+        from src.utils.task_parser import parse_task_md
+        dataset=json.loads((REPO_ROOT/'eval_general_e2e/datasets/manifests/general-custom70-v2.json').read_text())
+        previous={r['task_id']:r for r in GLOBS.registry()}
+        rows=GLOBS.registry('general-custom70-v2');self.assertEqual(len(rows),4)
+        for row in rows:
+            task=next(t for t in dataset['tasks'] if t['task_id']==row['task_id'])
+            self.assertEqual(row['contract_sha256'],task['digests']['scoring_contract_sha256'])
+            self.assertEqual(row['dataset'],{'id':dataset['dataset_id'],'digest':dataset['dataset_digest']})
+            self.assertEqual(row['patterns'],previous[row['task_id']]['patterns'])
+            self.assertEqual(row['source_sha256'],previous[row['task_id']]['source_sha256'])
+            parsed=parse_task_md(REPO_ROOT/task['source']['task_path'])
+            contract={'task_id':row['task_id'],'automated_checks':parsed['automated_checks'],'judge_evidence':parsed['judge_evidence']}
+            manifest={'identity':{'task_id':row['task_id']},'digests':{'contract_sha256':row['contract_sha256']},'dataset':row['dataset']}
+            self.assertEqual(GLOBS.policy(manifest,contract),row)
+            self.assertEqual(GLOBS.descriptor(manifest,contract)['catalog_sha256'],GLOBS.CATALOG_V2_SHA)
+            contract['automated_checks']+='\n# drift'
+            self.assertIsNone(GLOBS.policy(manifest,contract))
 
     def test_managed_producer_collects_every_match_and_archived_score_stays_verifiable(self):
         fixture=Fixture(self.root/'fixture',rule=RULE,contract_overrides={'judge_evidence':DECLARATIONS})
