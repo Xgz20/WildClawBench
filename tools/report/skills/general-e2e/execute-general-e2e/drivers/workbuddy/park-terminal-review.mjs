@@ -51,6 +51,44 @@ export function validateCancelledReview({ row, journal, state, loaded, sdkRows, 
     identity: { task_id: row.task_id, attempt_id: row.attempt_id, conversation_id: row.conversation_id, request_id: row.request_id },
     sdk_terminal_message_id: last.id, native_finish_timestamp: r.finishTimestamp };
 }
+export function validateServiceErrorReview({ row, journal, state, loaded, sdkRows, promptSha256 }) {
+  requireOk(row.phase === "NEEDS_ATTENTION" && row.dispatch_attempt_count === 1
+    && journal.phase === "NEEDS_ATTENTION" && state.phase === "NEEDS_ATTENTION"
+    && journal.identity?.attempt_id === row.attempt_id && state.identity?.attempt_id === row.attempt_id
+    && journal.identity?.task_id === row.task_id && state.identity?.task_id === row.task_id
+    && journal.send?.dispatch_attempt_count === 1 && journal.prompt?.send_status === "sent"
+    && journal.prompt.sha256 === promptSha256, "ORIGINAL_ATTEMPT_INVALID");
+  const c = loaded.conversation, requests = loaded.requestEntries?.requests;
+  requireOk(c?.id === row.conversation_id && c.space?.cwd === row.cwd && c.state === "error"
+    && loaded.requestEntries.historyReady === true && loaded.requestEntries.hasOlder !== true
+    && Array.isArray(requests) && requests.length === 1, "SERVICE_RUNTIME_SCOPE_INVALID");
+  const r = requests[0], error = r.terminalError;
+  requireOk(r.id === row.request_id && r.state === "error" && r.userMessage?.state === "completed"
+    && r.assistantMessage?.state === "error" && sha(textOf(r.userMessage.content)) === promptSha256
+    && error?.statusCode === 503 && error.bizCode === 10310 && error.category === "network"
+    && error.requestId === row.request_id && error.traceId === r.traceId, "SERVICE_RUNTIME_ERROR_INVALID");
+  const events = sdkRows.filter(e => ["message", "function_call", "function_call_result"].includes(e.type));
+  requireOk(events.length && events.every(e => e.sessionId === row.conversation_id && e.cwd === row.cwd), "SDK_IDENTITY_INVALID");
+  const users = events.filter(e => e.type === "message" && e.role === "user" && !e.providerData?.isMeta && !e.providerData?.isCompactInternal);
+  const expected = textOf(r.userMessage.content), actual = textOf(users[0]?.content);
+  requireOk(users.length === 1 && (actual === expected || ([`<user_query>${expected}</user_query>`, `<user_query>\n${expected}\n</user_query>`].some(s => actual.endsWith(s))
+    && actual.split("<user_query>").length === 2)), "SDK_PROMPT_INVALID");
+  const last = events.at(-1), pd = last.providerData || {}, sdkError = pd.error;
+  requireOk(last.type === "message" && last.role === "assistant" && pd.skipRun === true && pd.agent === "cli"
+    && pd.conversationRequestId === row.request_id && sdkError?.status === 503 && sdkError.code === 10310
+    && sdkError.isNetworkError === false && sdkError.isStreamTimeout === false && sdkError.isRetryable === false
+    && textOf(last.content) === sdkError.message && error.details === sdkError.message
+    && sdkError.message.startsWith("503 The system is busy, please try again later. (")
+    && sdkError.message.endsWith("/" + row.conversation_id + ")")
+    && Number.isFinite(last.timestamp) && Number.isFinite(r.finishTimestamp) && last.timestamp >= r.finishTimestamp,
+    "SDK_SERVICE_ERROR_BOUNDARY_INVALID");
+  return { profile: "workbuddy-native-service-error-503-terminal-review/v1", native_terminal_observed: true,
+    execution_completed: false, score_admitted: false, prompt_replayed: false, retry_authorized: false,
+    identity: { task_id: row.task_id, attempt_id: row.attempt_id, conversation_id: row.conversation_id, request_id: row.request_id },
+    service_error: { status: 503, code: 10310, message: sdkError.message }, sdk_terminal_message_id: last.id,
+    runtime_finish_timestamp: r.finishTimestamp, sdk_terminal_timestamp: last.timestamp,
+    note: "The native projection finish can predate its later SDK service error. Neither timestamp is rewritten." };
+}
 export async function parkTerminalReview(manifestPath) {
   const manifestBytes = await plain(resolve(manifestPath)), manifest = JSON.parse(manifestBytes);
   requireOk(manifest.schema_version === "wildclawbench.workbuddy-terminal-review-request/v1", "MANIFEST_INVALID");
@@ -70,13 +108,14 @@ export async function parkTerminalReview(manifestPath) {
   try {
     await lock.writeFile(json({ pid: process.pid, host: hostname(), queue_id: cfg.batch.queueId, type: "terminal-review-registration" }));
     const row = queue.tasks.find(r => r.task_id === manifest.task_id), config = cfg.configs.find(c => c.task.task_id === manifest.task_id);
+    const serviceReview = manifest.review_kind === "native-service-error-503";
     requireOk(row && config && row.cwd === config.candidateWorkspace
-      && row.error?.code === "WORKBUDDY_CANCELLATION_UNCONFIRMED", "NOT_REGISTERED_ATTENTION");
+      && row.error?.code === (serviceReview ? "WORKBUDDY_TERMINAL_STATE_CONFLICT" : "WORKBUDDY_CANCELLATION_UNCONFIRMED"), "NOT_REGISTERED_ATTENTION");
     const report = await inspectWorkBuddyMacos({ ...probeArgs([]), appPath: config.appPath, sessionDb: config.sessionDb,
       extensionDataRoot: config.dataRoot, endpoint: config.endpoint, timeoutMs: 10000 });
     assertWorkBuddyExecutionReadiness(report, config.endpoint);
     const sqlRow = report.native_sources.session_index.sessions.find(s => s.conversation_id === row.conversation_id && s.cwd === row.cwd);
-    requireOk(sqlRow && ["completed", "cancelled"].includes(sqlRow.status), "SQL_TERMINAL_MISSING");
+    requireOk(sqlRow && (serviceReview ? sqlRow.status === "error" : ["completed", "cancelled"].includes(sqlRow.status)), "SQL_TERMINAL_MISSING");
     const target = await discoverWorkBuddyMainTarget(config.endpoint, 10000), client = await WorkBuddyCdpClient.connect(target.webSocketDebuggerUrl, 10000);
     let loaded; try { loaded = await getWorkBuddyRuntimeConversation(client, row.conversation_id); } finally { client.close(); }
     const journalBytes = await plain(config.journalFile), stateBytes = await plain(config.stateFile), native = await discoverJsonl(manifest.native_projects_root, row.conversation_id);
@@ -85,10 +124,10 @@ export async function parkTerminalReview(manifestPath) {
       value.identity?.batch_id === cfg.manifest.batch_id && value.identity?.unit_id === cfg.manifest.unit_id
       && value.dataset?.id === cfg.manifest.dataset.id && value.dataset?.digest === cfg.manifest.dataset.digest,
       "ORIGINAL_DATASET_IDENTITY_INVALID");
-    const proof = validateCancelledReview({ row, journal: JSON.parse(journalBytes), state: JSON.parse(stateBytes), loaded,
+    const proof = (serviceReview ? validateServiceErrorReview : validateCancelledReview)({ row, journal: JSON.parse(journalBytes), state: JSON.parse(stateBytes), loaded,
       sdkRows: native.bytes.toString("utf8").trim().split(/\r?\n/u).map(JSON.parse), promptSha256: config.promptSha256 });
     proof.sql_session_projection_status = sqlRow.status;
-    proof.note = "Session completed is only an idle projection; Runtime request cancellation and SDK interruption establish terminality, not successful task completion.";
+    if (!serviceReview) proof.note = "Session completed is only an idle projection; Runtime request cancellation and SDK interruption establish terminality, not successful task completion.";
     const output = resolve(manifest.output_root), outputRelative = relative(root, output);
     requireOk(outputRelative.startsWith(".general-e2e/terminal-reviews/") && !outputRelative.split("/").includes(".."), "OUTPUT_INVALID");
     let directory = root;
@@ -111,10 +150,10 @@ export async function parkTerminalReview(manifestPath) {
     requireOk(sha(await plain(queuePath)) === manifest.queue_sha256, "QUEUE_CHANGED_BEFORE_COMMIT");
     queue.frozen = cfg.frozen; queue.frozen_sha256 = cfg.digest;
     queue.terminal_reviews = [...(queue.terminal_reviews || []), { task_id: row.task_id, attempt_id: row.attempt_id,
-      profile: proof.profile, artifacts, native_terminal_observed: true, origin_unresolved: true }];
+      profile: proof.profile, artifacts, native_terminal_observed: true, origin_unresolved: !serviceReview }];
     queue.phase = "PENDING";
     queue.events.push({ event: "NATIVE_TERMINAL_PARKED_FOR_REVIEW", at: new Date().toISOString(), task_id: row.task_id,
-      attempt_id: row.attempt_id, native_status: "cancelled", score_admitted: false, prompt_replayed: false });
+      attempt_id: row.attempt_id, native_status: serviceReview ? "error-503" : "cancelled", score_admitted: false, prompt_replayed: false });
     const temporary = queuePath + "." + randomUUID() + ".tmp";
     await writeFile(temporary, json(queue), { flag: "wx", mode: 0o600 }); await rename(temporary, queuePath);
     return { status: "PARKED_FOR_REVIEW_OTHER_TASKS_MAY_CONTINUE", task_id: row.task_id, proof_root: output,

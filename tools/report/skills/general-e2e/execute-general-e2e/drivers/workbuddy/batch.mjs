@@ -290,11 +290,16 @@ export async function verifyWorkBuddyQueueRepairs(root, state) {
     const proofRef = review.artifacts.find(ref => ref.path.endsWith("/review.json"));
     if (!proofRef) throw new Error("WORKBUDDY_TERMINAL_REVIEW_PROOF_MISSING");
     const proof = await readJson(join(root, proofRef.path));
-    if (proof.profile !== "workbuddy-native-cancelled-terminal-review/v1" || proof.native_terminal_observed !== true
+    if (!["workbuddy-native-cancelled-terminal-review/v1", "workbuddy-native-service-error-503-terminal-review/v1"].includes(proof.profile)
+        || proof.profile !== (review.profile || "workbuddy-native-cancelled-terminal-review/v1") || proof.native_terminal_observed !== true
         || proof.execution_completed !== false || proof.score_admitted !== false
         || proof.identity?.task_id !== row.task_id || proof.identity?.attempt_id !== row.attempt_id
         || proof.identity?.conversation_id !== row.conversation_id || proof.identity?.request_id !== row.request_id) {
       throw new Error("WORKBUDDY_TERMINAL_REVIEW_PROOF_INVALID");
+    }
+    if (proof.profile === "workbuddy-native-service-error-503-terminal-review/v1"
+        && (proof.service_error?.status !== 503 || proof.service_error?.code !== 10310 || proof.retry_authorized !== false)) {
+      throw new Error("WORKBUDDY_TERMINAL_SERVICE_REVIEW_PROOF_INVALID");
     }
   }
 }

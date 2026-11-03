@@ -11,7 +11,7 @@ import {resolveWorkBuddyBatchInvocation,verifyWorkBuddyQueueRepairs} from "./bat
 import {assertWorkBuddyExecutionReadiness,assertWorkBuddyNativeIdle} from "./execute.mjs";
 import {inspectWorkBuddyMacos,parseArgs as probeArgs} from "./probe.mjs";
 import {getWorkBuddyRuntimeConversation} from "./runtime-binding.mjs";
-import {validateCancelledReview} from "./park-terminal-review.mjs";
+import {validateCancelledReview,validateServiceErrorReview} from "./park-terminal-review.mjs";
 import {discoverWorkBuddyMainTarget,WorkBuddyCdpClient} from "./ui.mjs";
 const execFile=promisify(callbackExec),sha=b=>createHash("sha256").update(b).digest("hex"),json=v=>Buffer.from(JSON.stringify(v,null,2)+"\n");
 const requireOk=(x,c)=>{if(!x)throw Error("WORKBUDDY_AUTHORIZED_RETRY_"+c)};
@@ -50,7 +50,8 @@ export async function retryTerminalReview(manifestPath,{resume=false}={}){
       const target=await discoverWorkBuddyMainTarget(config.endpoint,10000);client=await WorkBuddyCdpClient.connect(target.webSocketDebuggerUrl,10000);
       const loaded=await getWorkBuddyRuntimeConversation(client,row.conversation_id);
       const sdkRef=review.artifacts.find(r=>r.path.endsWith("/native.jsonl")),sdk=await plain(join(root,sdkRef.path));requireOk(sha(sdk)===sdkRef.sha256,"SDK_DRIFT");
-      const proof=validateCancelledReview({row,journal,state,loaded,sdkRows:sdk.toString().trim().split(/\r?\n/u).map(JSON.parse),promptSha256:config.promptSha256});
+      const validate=review.profile==="workbuddy-native-service-error-503-terminal-review/v1"?validateServiceErrorReview:validateCancelledReview;
+      const proof=validate({row,journal,state,loaded,sdkRows:sdk.toString().trim().split(/\r?\n/u).map(JSON.parse),promptSha256:config.promptSha256});
       await mkdir(dirname(output),{recursive:true});requireOk(await realpath(dirname(output))===dirname(output),"OUTPUT_ALIAS");await mkdir(output);
       const ws=await inventory(config.candidateWorkspace),control=await inventory(config.controlRoot);
       tx={status:"PREPARED",manifest_sha256:sha(mb),original_queue_sha256:sha(qb),old_attempt_id:m.old_attempt_id,new_attempt_id:m.new_attempt_id,
