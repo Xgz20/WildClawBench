@@ -124,6 +124,8 @@ Same 60 tasks, same grading, four different agent scaffolds. Time and cost are p
 
 To create new tasks, see the annotated template at [`tasks/task0_template.md`](tasks/task0_template.md).
 
+自建通用场景的基础回归集、真实工作集和挑战集，其名称、定位、冻结版本及仓库位置统一维护在[通用场景自建评测集说明](docs/guides/general-e2e/通用场景自建评测集说明.md)。
+
 ### Judge 审计与 PPT 评测
 
 带有 `ppt` 标签且使用 v2 LLM Rubric 的任务会先在评分容器中把

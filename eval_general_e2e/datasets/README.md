@@ -2,6 +2,8 @@
 
 `general-custom60-v1` 是首版冻结通用自建评测集。仓库提交 manifest lock，ZIP 作为构建制品输出到被忽略的 `report-workspace/`；General release catalog 锁定阶段 Skill，prepare 生成的批次 manifest 同时冻结 dataset、suite 和 Skill SHA。
 
+三套自建通用场景集合的名称、定位、版本、仓库位置与跨分支可用状态，统一见[通用场景自建评测集说明](../../docs/guides/general-e2e/通用场景自建评测集说明.md)。本文维护数据集构建、校验和分发操作。
+
 更新 manifest lock 是显式变更，只能在任务、exec 或私有评分素材经过审核后执行：
 
 ```bash
