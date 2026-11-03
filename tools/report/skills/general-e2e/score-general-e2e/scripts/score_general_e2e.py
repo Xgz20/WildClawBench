@@ -47,6 +47,7 @@ import procurement_summary_labels
 import public_text_profiles
 import work_order_evidence_budget
 import work_order_table_roles
+import runtime_office_guard
 import typed_rule_diagnostics
 import grade_wrapper_normalization
 import escrow_state_review
@@ -1819,6 +1820,7 @@ def prepare_attempt(
             },
             "runtime": {
                 "kind": "local-managed-python-worker",
+                **({'post_rule_office_guard_profile':'completed-runtime-office-byte-guard/v1'} if sys.platform=='darwin' else {}),
                 "logical_workspace_root": "/tmp_workspace",
                 "workspace_argument": path_resolution["workspace_argument"],
                 "path_resolution": path_resolution,
@@ -3178,6 +3180,8 @@ def run_rules_attempt(
     _write_new_json(attempt_root / "rule-audit.json", audit)
     if error is not None:
         raise ScoringRuntimeError(error.get("code", "RULE_EXECUTION_FAILED"), str(error))
+    if manifest.get('runtime',{}).get('post_rule_office_guard_profile')=='completed-runtime-office-byte-guard/v1':
+        runtime_office_guard.guard(sys.modules[__name__],attempt_root,attempt_root/'infrastructure-evidence/post-rule-runtime-office-guard.json')
     return {
         "status": "PASS",
         "attempt_root": str(attempt_root),
@@ -6304,6 +6308,7 @@ def prepare_rescore_attempt(
             },
             "runtime": {
                 "kind": "local-managed-python-worker",
+                **({'post_rule_office_guard_profile':'completed-runtime-office-byte-guard/v1'} if sys.platform=='darwin' else {}),
                 "logical_workspace_root": "/tmp_workspace",
                 "workspace_argument": "runtime/workspace",
                 "gt_injected_after_execution": True,
