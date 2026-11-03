@@ -20,10 +20,13 @@ def marker(contract,contract_sha,dataset):
             and {k:dataset.get(k) for k in DATASET}==DATASET
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE_SHA):
         return {'profile':PROFILE,'contract_sha256':CONTRACT_SHA,'source_sha256':SOURCE_SHA,'headings':HEADINGS}
-    return None
+    import sterilization_quote_domain
+    return sterilization_quote_domain.marker(contract,contract_sha,dataset)
 
 def effective_source(manifest,original,current,prior):
+    import sterilization_quote_domain
     frozen=manifest.get('runtime',{}).get('sterilization_quote_layout_profile')
+    if (frozen or {}).get('profile')==sterilization_quote_domain.PROFILE:return sterilization_quote_domain.effective_source(manifest,original,current,prior)
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest['identity']['task_id'],'automated_checks':original},manifest['digests']['contract_sha256'],manifest['dataset'])
     old='    return next((k for k,rx in PATTERNS.items() if re.fullmatch(rx,s)),None)'
@@ -39,6 +42,9 @@ def effective_source(manifest,original,current,prior):
     return effective,receipt
 
 def validate_blocker(attempt,manifest,contract,blocker):
+    import sterilization_quote_domain
+    if sterilization_quote_domain.marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is not None:
+        return sterilization_quote_domain.validate_blocker(attempt,manifest,contract,blocker)
     if marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is None:raise ValueError('QUOTE_LAYOUT_FAILURE_UNREGISTERED')
     identity=manifest['identity'];expected={'task_id':TASK,'scoring_attempt_id':identity['scoring_attempt_id'],
         'execution_attempt_id':identity['execution_attempt_id'],'batch_id':identity['batch_id'],'unit_id':identity['unit_id']}
