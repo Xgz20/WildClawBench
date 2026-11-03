@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.35` 兼容503原生错误重新加载后的已验证投影：仅当category缺省、code为0且raw内10310/503及原错误文本逐项相同，再结合原SDK及完整身份核验准入；不补写缺省category，不接受改成其他分类或冲突错误。
+
 `0.14.34` 原生503服务繁忙可按精确Runtime terminalError与SDK最后错误、原Prompt/会话/请求和SQL终态登记待复核，保留全部失败原件且不计能力零分；其余独立题目可继续。重跑仍必须另有用户明确授权，并创建新attempt；不把服务错误当原生用户取消或擅自重发旧Prompt。
 
 `0.14.33` 同步共享WorkBuddy原生证据组件0.2.7：只对已逐项核验的被拒绝响应接收原生API独有中间说明，保留SDK缺口警告；发送与恢复门禁不变。

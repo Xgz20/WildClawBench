@@ -63,9 +63,17 @@ export function validateServiceErrorReview({ row, journal, state, loaded, sdkRow
     && loaded.requestEntries.historyReady === true && loaded.requestEntries.hasOlder !== true
     && Array.isArray(requests) && requests.length === 1, "SERVICE_RUNTIME_SCOPE_INVALID");
   const r = requests[0], error = r.terminalError;
+  let persistedServiceProjection = false;
+  if (error?.category == null && error?.code === 0 && typeof error.raw === "string") {
+    try {
+      const raw = JSON.parse(error.raw);
+      persistedServiceProjection = raw.code === 0 && raw.data?.code === 10310 && raw.data.statusCode === 503
+        && raw.message === error.message && raw.data.details === error.details && error.message === error.details;
+    } catch { /* Unknown or incomplete error projections remain refused. */ }
+  }
   requireOk(r.id === row.request_id && r.state === "error" && r.userMessage?.state === "completed"
     && r.assistantMessage?.state === "error" && sha(textOf(r.userMessage.content)) === promptSha256
-    && error?.statusCode === 503 && error.bizCode === 10310 && error.category === "network"
+    && error?.statusCode === 503 && error.bizCode === 10310 && (error.category === "network" || persistedServiceProjection)
     && error.requestId === row.request_id && error.traceId === r.traceId, "SERVICE_RUNTIME_ERROR_INVALID");
   const events = sdkRows.filter(e => ["message", "function_call", "function_call_result"].includes(e.type));
   requireOk(events.length && events.every(e => e.sessionId === row.conversation_id && e.cwd === row.cwd), "SDK_IDENTITY_INVALID");

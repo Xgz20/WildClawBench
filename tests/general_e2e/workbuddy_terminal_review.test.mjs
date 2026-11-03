@@ -63,3 +63,15 @@ test("service review refuses running requests, quota errors, changed messages an
     f => { f.sdkRows.at(-1).content[0].text = "fabricated"; },
   ]) { const f = serviceFixture(); change(f); assert.throws(() => validateServiceErrorReview(f)); }
 });
+test("rehydrated 503 errors require exact persisted code, status and message without inventing category", () => {
+  const f = serviceFixture(), error = f.loaded.requestEntries.requests[0].terminalError;
+  delete error.category; error.code = 0; error.message = error.details;
+  error.raw = JSON.stringify({ code: 0, message: error.message,
+    data: { code: 10310, statusCode: 503, details: error.details } });
+  assert.equal(validateServiceErrorReview(f).service_error.status, 503);
+  assert.equal(error.category, undefined);
+  const wrong = structuredClone(f); wrong.loaded.requestEntries.requests[0].terminalError.raw = JSON.stringify({ code: 0, data: { code: 402, statusCode: 503 } });
+  assert.throws(() => validateServiceErrorReview(wrong), /SERVICE_RUNTIME_ERROR_INVALID/);
+  const foreign = structuredClone(f); foreign.loaded.requestEntries.requests[0].terminalError.category = "policy";
+  assert.throws(() => validateServiceErrorReview(foreign), /SERVICE_RUNTIME_ERROR_INVALID/);
+});
