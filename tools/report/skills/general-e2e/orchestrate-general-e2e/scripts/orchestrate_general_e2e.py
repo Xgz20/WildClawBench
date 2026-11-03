@@ -30,6 +30,7 @@ import escrow_state_review
 import work_order_final_policy
 import domain_details_diagnostics
 import framework_failure_retirement
+import communication_evidence_failure
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
 STATE_REVISION = 6
@@ -2119,6 +2120,9 @@ def _verify_state(
                 path = _regular_file(root / scoring_error[key + "_path"], "RULE_ERROR_DEFERRAL_INVALID")
                 if not _inside(attempt, path) or _sha256_file(path) != scoring_error[key + "_sha256"]:
                     raise OrchestrationError("RULE_ERROR_DEFERRAL_DRIFT", key)
+            if scoring_error.get('complete_evidence_resource_failure'):
+                fm=_read_json(attempt/'attempt-manifest.json');fc=_read_json(attempt/fm['paths']['contract'])
+                communication_evidence_failure.verify(sys.modules[__name__],attempt,fm,fc,_read_json(attempt/'rule-audit.json'),_read_json(attempt/'worker/result.json'),scoring_error['complete_evidence_resource_failure'])
             if scoring_error.get('kind') in {grade_wrapper_normalization.ERROR_KIND,typed_rule_diagnostics.ERROR_KIND,public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND,work_order_final_policy.ERROR_KIND,domain_details_diagnostics.ERROR_KIND}:
                 fm=_read_json(attempt/'attempt-manifest.json');fc=_read_json(attempt/fm['paths']['contract'])
                 fa=_read_json(attempt/'rule-audit.json');wp=attempt/'worker/result.json'
@@ -3006,8 +3010,9 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
     declared_status_review=escrow_state_review.original_failure(manifest,contract,audit,result)
     final_policy_failure=work_order_final_policy.original_failure(manifest,contract,audit,result)
     details_failure=domain_details_diagnostics.original_failure(manifest,contract,audit,result)
+    complete_evidence_failure=communication_evidence_failure.files(attempt,manifest,contract,audit,result)
     if (audit.get("status") != "failed" or audit.get("identity") != manifest.get("identity")
-            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure or typed_diagnostic_failure or text_newline_failure or declared_status_review or final_policy_failure or details_failure)
+            or not (allowed_error or setup_context_error or office_numeric_review or private_reference_failure or typed_diagnostic_failure or text_newline_failure or declared_status_review or final_policy_failure or details_failure or complete_evidence_failure)
             or (attempt / "score.json").exists() or (attempt / "rule-component.json").exists()
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
@@ -3024,6 +3029,8 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
         "rule_audit_path": audit_path.relative_to(root).as_posix(), "rule_audit_sha256": _sha256_file(audit_path),
         "worker_result_path": result_path.relative_to(root).as_posix(), "worker_result_sha256": _sha256_file(result_path),
         "error": result.get('error') or audit.get('error')}
+    if complete_evidence_failure:
+        task['scoring_error']['complete_evidence_resource_failure']=communication_evidence_failure.preserve(sys.modules[__name__],attempt,manifest,contract,audit,result)
     task["phase"] = "UNSCORED"
     task["history"].append({"at": _timestamp(event_time), "event": "EVALUATOR_SETUP_DEFERRED_UNSCORED" if setup_context_error else "DATASET_RULE_ERROR_DEFERRED_UNSCORED", **task["scoring_error"]})
     return _save(root, state, event_time)

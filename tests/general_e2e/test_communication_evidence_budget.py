@@ -1,0 +1,47 @@
+import ast,hashlib,json,sys,tempfile,unittest
+from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
+from tests.general_e2e.test_local_scoring_runtime import RUNTIME,REPO_ROOT
+from src.utils.task_parser import parse_task_md
+sys.path.insert(0,str(REPO_ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts'))
+import communication_evidence_failure as FAILURE
+B=RUNTIME.work_order_evidence_budget
+
+class CommunicationEvidenceBudgetTests(unittest.TestCase):
+    def test_only_total_resource_guard_changes_and_original_chunker_stays_exact(self):
+        source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{B.PACK_TASK}.md')['automated_checks']
+        self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),B.PACK_SOURCE)
+        marker=B.marker({'task_id':B.PACK_TASK,'automated_checks':source},B.PACK_CONTRACT)
+        m={'identity':{'task_id':B.PACK_TASK},'digests':{'contract_sha256':B.PACK_CONTRACT},'runtime':{'work_order_evidence_budget_profile':marker}}
+        fixed,receipt=B.effective_source(m,source,source,None)
+        self.assertEqual(receipt['correction_id'],B.PACK_PROFILE);self.assertFalse(receipt['candidate_rewritten'])
+        before,after=ast.parse(source),ast.parse(fixed)
+        for node in before.body:
+            if isinstance(node,(ast.FunctionDef,ast.ClassDef)) and node.name!='grade':
+                other=next(n for n in after.body if isinstance(n,type(node)) and n.name==node.name)
+                self.assertEqual(ast.dump(node),ast.dump(other))
+        self.assertIn('if size>16777216:',fixed);self.assertIn('if len(text)>18000:',fixed)
+        self.assertIsNone(B.marker({'task_id':B.PACK_TASK,'automated_checks':source+'\n'},B.PACK_CONTRACT))
+    def fixture(self,root):
+        source='synthetic source'
+        m={'digests':{'contract_sha256':FAILURE.CONTRACT},'runtime':{'workspace_argument':'runtime/workspace'}}
+        contract={'task_id':FAILURE.TASK,'automated_checks':source};audit={'status':'failed'}
+        worker={'ok':False,'result':None,'error':{'type':'EvidenceError','message':FAILURE.ERROR}}
+        folder=root/'runtime/workspace/evaluator_evidence_018';folder.mkdir(parents=True)
+        for i in range(6):
+            name='00_manifest.json' if i==0 else f'10_candidate_001_{i:03d}.json'
+            (folder/name).write_text(json.dumps({'truncated':False,'text':'x'*14000}))
+        return m,contract,audit,worker
+    def test_retains_every_old_file_and_rejects_changed_or_truncated_evidence(self):
+        with tempfile.TemporaryDirectory() as d,patch.object(FAILURE,'SOURCE',hashlib.sha256(b'synthetic source').hexdigest()):
+            root=Path(d).resolve();m,c,a,w=self.fixture(root)
+            rt=SimpleNamespace(_sha256_file=lambda p:hashlib.sha256(p.read_bytes()).hexdigest(),_read_json=lambda p:json.loads(p.read_text()),
+                _write_new_json=lambda p,v:p.write_text(json.dumps(v)))
+            originals=FAILURE.files(root,m,c,a,w);before={p.name:p.read_bytes() for p in originals}
+            binding=FAILURE.preserve(rt,root,m,c,a,w);FAILURE.verify(rt,root,m,c,a,w,binding)
+            self.assertEqual(before,{p.name:p.read_bytes() for p in originals})
+            copied=root/FAILURE.PRESERVED/'10_candidate_001_001.json';copied.write_text(json.dumps({'truncated':True}))
+            with self.assertRaises(ValueError):FAILURE.verify(rt,root,m,c,a,w,binding)
+            wrong=dict(w,error={'type':'RuntimeError','message':'unrelated'})
+            self.assertIsNone(FAILURE.files(root,m,c,a,wrong))
