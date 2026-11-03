@@ -1558,6 +1558,29 @@ def load_import_index(batch_root: Path, batch_manifest: Mapping[str, Any]) -> di
     return index
 
 
+def _seal_imported_office_copy(path: Path, expected_bytes: bytes) -> None:
+    if sys.platform != "darwin" or path.suffix.lower() not in {".docx", ".xlsx", ".pptx", ".docm", ".xlsm", ".pptm", ".bin"}:
+        return
+    os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE, follow_symlinks=False)
+    if path.read_bytes() != expected_bytes:
+        raise FlowError(f"IMPORTED_OFFICE_COPY_DRIFT: {path}")
+
+
+def _remove_import_staging(staging: Path) -> None:
+    # Only this importer's unpublished, uniquely named staging tree is owned.
+    if staging.is_symlink() or not staging.name.startswith(".") or ".pending-" not in staging.name:
+        raise FlowError("IMPORT_STAGING_NOT_OWNED")
+    for directory, dirs, files in os.walk(staging, followlinks=False):
+        os.chmod(directory, Path(directory).stat().st_mode | stat.S_IWUSR | stat.S_IXUSR)
+        dirs[:] = [name for name in dirs if not (Path(directory) / name).is_symlink()]
+        for name in files:
+            path = Path(directory) / name
+            if path.is_symlink(): continue
+            if sys.platform == "darwin":
+                os.chflags(path, path.stat().st_flags & ~stat.UF_IMMUTABLE, follow_symlinks=False)
+    shutil.rmtree(staging)
+
+
 def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> None:
     members = verified["members"]
     rows = {item["path"]: item for item in verified["manifest"]["entries"]}
@@ -1594,6 +1617,7 @@ def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> N
             with target_path.open("xb") as handle:
                 handle.write(data)
             os.chmod(target_path, stat.S_IMODE(info.external_attr >> 16))
+            _seal_imported_office_copy(target_path, data)
     for relative in sorted(rows):
         row = rows[relative]
         if row["kind"] != "symlink":
@@ -1726,7 +1750,7 @@ def import_return(args: argparse.Namespace) -> dict[str, Any]:
             os.replace(staging, target)
         except BaseException:
             if staging.exists():
-                shutil.rmtree(staging)
+                _remove_import_staging(staging)
             raise
     entry = {
         "package_id": package_id,

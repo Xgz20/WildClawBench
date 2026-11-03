@@ -77,6 +77,10 @@ python scripts/run_general_e2e.py import-return \
 
 导入器不使用 `extractall`，而是先验证完整成员集合、类型、路径、链接、SHA、package receipt、submission 及批次 unit scope，再写入暂存目录并原子发布。相同 archive SHA 再次导入返回 `idempotent=true`。
 
+macOS 新导入的 Office 和 opaque `.bin` 审计副本设置 user immutable，并在设置后再验原字节。
+权限、包成员 SHA、评分与原始 ZIP 不改；失败只清理本次未发布 `.pending-` 暂存树，
+不会解除源证据、符号链接目标或既有导入的保护。
+
 同一逻辑 unit 的新内容不会覆盖既有目录。它会形成新的 `returns/<unit-id>/<package-id>/`，导入索引把该 unit 标为冲突并清空选择，批次阶段进入 `NEEDS_ATTENTION`。审核两个 attempt 后显式选择：
 
 ```bash
