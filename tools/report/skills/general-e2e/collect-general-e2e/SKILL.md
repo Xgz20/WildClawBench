@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.22` 为QwenWork SDK子任务取消目录外清理增加独立审计Profile。仍要求本次直接用户决定、精确目标、原会话和Agent父调用、点击前SDK前缀及点击后的逐目标PATH_NOT_AUTHORIZED拒绝；只记录1次机械介入，不批准删除、不重发题目，不把SDK记录伪装成旧OpenCode SQL证据。旧Profile保持原门禁。
+
 `0.11.21` 保护 Office 审计的 opaque .bin 副本，并提供严格锁定原执行 ZIP、保留变体的未评分轨迹副本维护入口；详见 [受控恢复](references/trace-office-canonical-recovery.md)。
 
 

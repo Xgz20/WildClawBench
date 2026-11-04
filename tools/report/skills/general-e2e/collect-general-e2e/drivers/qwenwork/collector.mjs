@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { collectQwenEngineEvidence } from "./engine-collector.mjs";
+import { SDK_CLEANUP_PROFILE, validateQwenSdkCleanupCancellation } from "./sdk-human-interaction.mjs";
 import { createHash } from "node:crypto";
 import { realpathSync } from "node:fs";
 import {
@@ -568,7 +569,6 @@ export async function collectQwenWorkEvidence(options) {
     }
     return collectQwenEngineEvidence({state,bindingSources,journalSource,configSource,unitRoot,outputRoot,manualSources,nativeToolCatalogProof:options.nativeToolCatalogProof,redacted:options.redacted===true});
   }
-  if(options.humanInteractionSupplement)throw Error('QWENWORK_HUMAN_INTERACTION_PROFILE_UNSUPPORTED');
   if(options.nativeToolCatalogProof)throw Error('QWENWORK_NATIVE_TOOL_CATALOG_PROFILE_UNSUPPORTED');
   const sessionId = requireString(state.session.session_id, "state.session.session_id");
   const transcriptSource = await discoverTranscript(journalSource.value, clientTraceRoot, sessionId);
@@ -599,6 +599,33 @@ export async function collectQwenWorkEvidence(options) {
   }
   assertTranscriptBinding(transcriptRows, state);
   assertSegmentBinding(segmentRows, state);
+  if (options.humanInteractionSupplement) {
+    const receipt = await readJson(options.humanInteractionSupplement);
+    if (!unitRelative(unitRoot, receipt.absolute, 'HUMAN_INTERACTION').startsWith('.general-e2e/native-interactions/')
+        || receipt.value.profile !== SDK_CLEANUP_PROFILE || authorizationSources.length) {
+      throw Error('QWENWORK_HUMAN_INTERACTION_PROFILE_UNSUPPORTED');
+    }
+    const base = dirname(receipt.absolute);
+    const before = await readJson(join(base, 'before-native-pending.json'));
+    const agent = before.value.agent_id;
+    if (typeof agent !== 'string' || !/^[A-Za-z0-9-]+$/u.test(agent)) throw Error('QWEN_SDK_CANCEL_AGENT_INVALID');
+    const childPath = join(dirname(transcriptSource.absolute), sessionId, 'subagents', `agent-${agent}.jsonl`);
+    const sources = { receipt, before,
+      authorization: await readJson(join(base, 'authorization.json')),
+      invocation: await readJson(join(base, 'invocation.json')),
+      beforeRoot: await readRegularFile(join(base, 'before-sdk-root.jsonl')),
+      beforeChild: await readRegularFile(join(base, 'before-sdk-child.jsonl')),
+      beforeMeta: await readJson(join(base, 'before-sdk-child.meta.json')),
+      nativeRoot: transcriptSource,
+      nativeChild: await readRegularFile(childPath),
+      nativeMeta: await readRegularFile(childPath.replace(/\.jsonl$/u, '.meta.json')),
+      state };
+    state.human_assistance = validateQwenSdkCleanupCancellation(sources);
+    state.extensions.qwenwork.cleanup_cancellation = { profile: SDK_CLEANUP_PROFILE,
+      receipt_sha256: receipt.sha256, native_call_id: receipt.value.native_call_id };
+    authorizationSources.push(...Object.entries(sources)
+      .filter(([key]) => !['state', 'nativeRoot'].includes(key)).map(([, source]) => source));
+  }
   let nativeSnapshotBytes = null, nativeSnapshot = null;
   if (["interrupted", "failed"].includes(state.extensions.qwenwork.native_status)) {
     const config = (await readJson(join(dirname(journalSource.absolute), "config.json"))).value;
