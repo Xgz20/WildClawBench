@@ -3,7 +3,13 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME,REPO_ROOT
-from src.utils.task_parser import parse_task_md
+from src.utils.task_parser import parse_task_md as _parse_task_md
+from eval_general_e2e.datasets.source_history import frozen_v2_task_path
+
+def parse_task_md(path):
+    # These regressions exercise the immutable v2 correction profiles.
+    return _parse_task_md(frozen_v2_task_path(path))
+
 sys.path.insert(0,str(REPO_ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts'))
 import communication_evidence_failure as FAILURE
 B=RUNTIME.work_order_evidence_budget

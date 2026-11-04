@@ -273,7 +273,7 @@ PATTERNS = {
 
 def role(v):
     s=norm(v)
-    return next((k for k,rx in PATTERNS.items() if re.fullmatch(rx,s)),None) or {'esttotalinclgoodsusd': 'grand', 'estimateddeliveryfromorder': 'elapsed', 'ratevalidity': 'validity'}.get(s)
+    return next((k for k,rx in PATTERNS.items() if re.fullmatch(rx,s)),None) or {'esttotalinclgoodsusd': 'grand', 'estimateddeliveryfromorder': 'elapsed', 'ratevalidity': 'validity'}.get(s) or {'estimatedtransittime': 'transit', 'esttotaldeliverytime': 'elapsed', 'validityofrate': 'validity'}.get(s)
 
 def safe_path(root,p):
     root=root.resolve()
@@ -643,11 +643,7 @@ def grade(transcript, workspace_path):
     incoterm=book.kv(r'^(incoterm|incoterms|贸易术语|贸易条款)$')
     payment=book.kv(r'^(paymentcondition|paymentterms|付款条件|付款条款|支付条件)$')
     offer=book.kv(r'^(offervalidity|productoffervalidity|报价有效期|产品报价有效期)$')
-    destination=book.kv(r'^(destinationcountry|destination|目的地国家|目的国|目的地)$')
-    if not destination:
-        for r in visible:
-            if re.fullmatch(r'(destinationcountry|destination|目的地国家|目的国|目的地)',norm(r['value'])):
-                destination += [c for c in book.rows.get((r['sheet'],r['row']+1),[]) if c['col']==r['col']]
+    destination=_ge2e_quote_country_values(book)
     seller_ok=any(norm(r['value']) in ('danishwholesaleco','danishwholesaleandco') for r in visible)
     destination_ok=bool(destination) and all(norm(val(r)) in ('lebanon','黎巴嫩','beirutlebanon','贝鲁特黎巴嫩') for r in destination)
     termchecks=[bool(currency) and all(norm(val(x)) in ('usd','usdollars','美元','美金') for x in currency),
@@ -679,6 +675,26 @@ def grade(transcript, workspace_path):
               'candidate_fields':{'quantity':q,'unit_price':u,'exw':ex,'lead_days':lead}}
     write_evidence(root,overview,reference,book.records)
     return {**scores,'overall_score':awarded/60.0,'diagnostics':diagnostics}
+def _ge2e_quote_country_values(book):
+    # Prefer a field which explicitly declares its domain, never a country value
+    # selected for matching GT. All explicit country statements remain compared.
+    explicit=[];labels=[]
+    for row in book.rows.values():
+        for i,label in enumerate(row):
+            if norm(label['value']) in {'destinationcountry','countryofdestination','目的地国家','目的国'}:
+                labels.append(label)
+                right=[c for c in row[i+1:] if c['value'] is not None]
+                if right and norm(right[0]['value']) in {'destinationcountry','countryofdestination','目的地国家','目的国'}:right=[]
+                explicit += right[:1] if right else [c for c in book.rows.get((label['sheet'],label['row']+1),[]) if c['col']==label['col']]
+    if labels:return explicit
+    result=book.kv(r'^(destination|目的地)$')
+    if not result:
+        for row in book.rows.values():
+            for label in row:
+                if norm(label['value']) in {'destination','目的地'}:
+                    result += [c for c in book.rows.get((label['sheet'],label['row']+1),[]) if c['col']==label['col']]
+    return result
+
 ```
 
 ## LLM Judge Rubric

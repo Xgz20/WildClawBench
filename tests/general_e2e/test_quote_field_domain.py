@@ -2,7 +2,13 @@ import ast,hashlib,json,tempfile,unittest
 from pathlib import Path
 import openpyxl
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME,REPO_ROOT
-from src.utils.task_parser import parse_task_md
+from src.utils.task_parser import parse_task_md as _parse_task_md
+from eval_general_e2e.datasets.source_history import frozen_v2_task_path
+
+def parse_task_md(path):
+    # These regressions exercise the immutable v2 correction profiles.
+    return _parse_task_md(frozen_v2_task_path(path))
+
 import sterilization_quote_domain as P
 
 class QuoteFieldDomainTests(unittest.TestCase):

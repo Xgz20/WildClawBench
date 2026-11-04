@@ -3,7 +3,13 @@ from pathlib import Path
 import ast,hashlib,json,subprocess,sys,tempfile,unittest
 import openpyxl
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME,REPO_ROOT
-from src.utils.task_parser import parse_task_md
+from src.utils.task_parser import parse_task_md as _parse_task_md
+from eval_general_e2e.datasets.source_history import frozen_v2_task_path
+
+def parse_task_md(path):
+    # These regressions exercise the immutable v2 correction profiles.
+    return _parse_task_md(frozen_v2_task_path(path))
+
 
 sys.path.insert(0,str(REPO_ROOT/'tools/report/skills/general-e2e/score-general-e2e/scripts'))
 import warranty_recovery_review as REVIEW

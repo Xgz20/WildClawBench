@@ -50,8 +50,8 @@ def outputs(repo):
     identity_file=skills/'data/general70-source-identities-v2.json'
     identity_bytes=encoded({'schema_version':'general-e2e-reviewed-source-identities/v1','dataset':new['dataset_id'],'profiles':identities})
     helper=skills/'scripts/source_identities.py'
-    helper_bytes=re.sub(r'CATALOG_SHA = "[a-f0-9]{64}"',
-        'CATALOG_SHA = "'+hashlib.sha256(identity_bytes).hexdigest()+'"',helper.read_text()).encode()
+    helper_bytes=re.sub(r'^CATALOG_SHA = "[a-f0-9]{64}"',
+        'CATALOG_SHA = "'+hashlib.sha256(identity_bytes).hexdigest()+'"',helper.read_text(),flags=re.MULTILINE).encode()
     folder=repo/'tools/report/e2e-shared/independent-validity'
     legacy=json.loads((folder/'independent_validity_profiles.json').read_text())['profiles'];variants={}
     for tid,spec in legacy.items():

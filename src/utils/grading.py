@@ -601,6 +601,7 @@ def _exec_container_grade(
     extra_env: str,
     lobster_env: list[str] | None,
     transcript_container_path: str,
+    *, rule_review_configuration: dict | None = None,
 ) -> tuple[dict | None, str]:
     """Run a task's rule-only grade() inside its container.
 
@@ -613,9 +614,31 @@ def _exec_container_grade(
         return None, f"transcript loader module not found: {loader_src}"
     shim_src = Path(__file__).with_name("judge_shim.py")
 
+    review_setup = []
+    if rule_review_configuration is not None:
+        review_setup = [
+            'import hashlib as _rr_input_hashlib',
+            f'_GENERAL_E2E_RULE_REVIEW = {rule_review_configuration!r}',
+            'def _rr_input_snapshot():',
+            '    root=_Path('+repr(TMP_WORKSPACE)+')',
+            '    rows={}',
+            '    for path in sorted(root.rglob("*")):',
+            '        relative=path.relative_to(root)',
+            '        if relative.parts[0] in {"evaluator_evidence",".grading"}:continue',
+            '        if path.is_symlink():raise ValueError("RULE_REVIEW_INPUT_SYMLINK")',
+            '        if path.is_file():',
+            '            value=_rr_input_hashlib.sha256()',
+            '            with path.open("rb") as handle:',
+            '                for chunk in iter(lambda:handle.read(1048576),b""):value.update(chunk)',
+            '            rows[relative.as_posix()]=value.hexdigest()',
+            '    return rows',
+            '_rr_inputs=_rr_input_snapshot()',
+            'if _GENERAL_E2E_RULE_REVIEW.get("expected_input_snapshot",_rr_inputs)!=_rr_inputs:raise ValueError("RULE_REVIEW_INPUT_DRIFT")',
+        ]
     runner_code = "\n".join([
         "import json",
         "import os",
+        "from pathlib import Path as _Path",
         "try:",
         "    _judge_model = os.environ.get('JUDGE_MODEL', '')",
         "    if _judge_model.startswith('anthropic/'):",
@@ -625,9 +648,12 @@ def _exec_container_grade(
         "from _transcript_loader import load_transcript",
         f"_transcript = load_transcript({json.dumps(transcript_container_path)})",
         "",
+        *review_setup,
         automated_checks,
         "",
         f'result = grade(transcript=_transcript, workspace_path="{TMP_WORKSPACE}")',
+        *(["if _GENERAL_E2E_RULE_REVIEW['mode']=='discover':",
+           "    result={'profile':_GENERAL_E2E_RULE_REVIEW['profile'],'contexts':_GENERAL_E2E_RULE_REVIEW.get('observations',{}),'input_snapshot':_rr_inputs,'provisional_scores_published':False}"] if rule_review_configuration is not None else []),
         "print(json.dumps(result))",
     ]) + "\n"
 
@@ -1345,10 +1371,17 @@ def _run_grading_v2(
     auto_score, auto_breakdown = 0.0, {}
     has_rules = bool(automated_checks.strip())
     if has_rules:
-        raw, err = _exec_container_grade(
-            task_id, automated_checks, extra_env, lobster_env,
-            transcript_container_path,
-        )
+        from . import declared_rule_review
+        if declared_rule_review.profile_for(task_id, automated_checks):
+            raw, err = declared_rule_review.run(task_id,automated_checks,extra_env,lobster_env,
+                transcript_container_path,output_dir=output_dir,grade=_exec_container_grade,
+                judge=_exec_container_python,model=os.environ.get('JUDGE_MODEL','openai/gpt-5.4'),
+                max_tokens=_judge_max_tokens() if os.environ.get('JUDGE_MAX_TOKENS','').strip() else 8192)
+        else:
+            raw, err = _exec_container_grade(
+                task_id, automated_checks, extra_env, lobster_env,
+                transcript_container_path,
+            )
         if err:
             logger.error("[%s] v2 rule grading failed: %s", task_id, err)
             if (judge_evidence or {}).get("semantic_status_profile") == EVIDENCE_STATUS_PROFILE:

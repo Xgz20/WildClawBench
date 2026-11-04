@@ -11,7 +11,7 @@ def build_run_batch_parser(default_model: str, default_parallel: int) -> argpars
 
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument("--task", "-t", help="Path to a single task.md file")
-    mode.add_argument("--dataset", choices=["general-custom70-v2"],
+    mode.add_argument("--dataset", choices=["general-custom70-v2", "general-custom70-v3"],
                       help="Run exactly the versioned 70-task general suite; validates its manifest before dispatch")
     mode.add_argument(
         "--category",

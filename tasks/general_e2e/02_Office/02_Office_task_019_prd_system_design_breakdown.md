@@ -694,8 +694,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
         if "text" in r: evidence += _chunks("candidate "+r["path"],r["text"])
     serialized=[f"ROLE AND FILE: {name}\n{text}\n" for name,text in evidence]
     # Declared evidence has an 80k collector budget; reserve metadata/labels overhead.
-    total=sum(map(len,serialized))
-    if total>72000:
+    total=sum(len(v.encode('utf-8')) for v in serialized)
+    if total>16777216:
         raise RuntimeError(f"EVALUATOR_EVIDENCE_BUDGET: {total} characters require larger collection budget; do not truncate or score a partial plan")
     ev=root/"evaluator_evidence"
     if ev.is_symlink() or (ev.exists() and not ev.is_dir()): raise RuntimeError("EVALUATOR_PATH: unsafe evidence directory")

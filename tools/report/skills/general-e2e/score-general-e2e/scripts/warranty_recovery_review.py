@@ -12,7 +12,9 @@ PROFILE='warranty-recovery-reason-semantic-review/v1'
 LAYOUT_PROFILE='warranty-recovery-row-evidence/v2'
 
 def matches(contract,contract_sha=None):
-    return contract.get('task_id')==TASK and contract_sha==CONTRACT and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE
+    from source_identities import materialized_rule_review_profile
+    return (contract.get('task_id')==TASK and contract_sha==CONTRACT and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE
+        or materialized_rule_review_profile(contract,contract_sha)==PROFILE)
 
 def marker(contract,contract_sha,dataset):
     if matches(contract,contract_sha) and {k:dataset.get(k) for k in DATASET}==DATASET:
@@ -52,6 +54,12 @@ REPLACEMENTS=(
 )
 
 def effective_source(manifest,original,current,prior):
+    from source_identities import materialized_rule_review_profile
+    if materialized_rule_review_profile({'task_id':manifest.get('identity',{}).get('task_id'),'automated_checks':original},
+            manifest.get('digests',{}).get('contract_sha256'))==PROFILE:
+        if manifest.get('runtime',{}).get('rule_review_profile')!=PROFILE:
+            raise ValueError('MATERIALIZED_WARRANTY_REVIEW_REQUIRED')
+        return current,prior
     frozen=manifest.get('runtime',{}).get('warranty_recovery_layout_profile')
     if (frozen or {}).get('profile')!=LAYOUT_PROFILE:
         if manifest.get('runtime',{}).get('rule_review_profile')==PROFILE:raise ValueError('WARRANTY_REVIEW_LAYOUT_REQUIRED')

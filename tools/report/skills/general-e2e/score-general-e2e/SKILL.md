@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.67` 支持题源修订集general-custom70-v3：8道Office题的已验证实现修复直接随题源和CLI分发，不重复应用历史运行时替换。Office010沿用同一发现、独立原因复核、原数值规则流程；原生E2E按精确新契约与源码登记，CLI使用配置的独立API裁判，未知/缺证不补零。旧60、116-v1、70-v2源码及manifest保持原摘要；历史评分与原件不重写。
+
 `0.10.66` 初次准备与prepare-rescore统一读取正式rule_review.profile_for注册，避免新定性复核Profile只在部分入口漏挂。新Office010必须同时冻结行级取证和原因复核两项Profile；旧漏挂且Worker/裁判未启动的attempt保留，新attempt重新准备，不能修改旧manifest。
 
 `0.10.65` 采购汇总v3在合计行结束当前矩阵表域，后续口径说明仍交原普通声明读取，避免被误认成重复数值类别。原v1/v2冻结实现不改，不忽略数值声明，不修改业务ID、金额、可见性、分母、限分及80/20。

@@ -1,0 +1,197 @@
+{
+  "schema_version": "general-e2e-source-materialization/v1",
+  "dataset_id": "general-custom70-v3",
+  "parent_dataset_id": "general-custom70-v2",
+  "parent_dataset_digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+  "task_count": 70,
+  "changed_task_count": 8,
+  "public_prompt_input_rubric_weights_changed": false,
+  "candidate_outputs_modified": false,
+  "repairs": [
+    {
+      "task_id": "02_Office_task_010_warranty_recovery_allocation",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md",
+      "source_before_sha256": "3a95ad18bd352380241234b8a641536ff5b87b2f61e347a9edb1aedb0201da6a",
+      "source_after_sha256": "8a865af23f131731f1508cfc8e9d07585056ca9a7c8e6ddb71491aa437a445b7",
+      "task_before_sha256": "916b13574f2720efb793c9a1fa98f5057e136ae26f529db798cbe9392f7f10b2",
+      "task_after_sha256": "ba76045b950d232074428ebcf5df5325e9f7c144c96693513ec5419097bd36ed",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "warranty-recovery-row-evidence/v2",
+        "task_id": "02_Office_task_010_warranty_recovery_allocation",
+        "contract_sha256": "5070a56c5dcf4dc302cdec4a9ac5bc2ca31eb0c09908220531ca88b5a79fb376",
+        "original_source_sha256": "3a95ad18bd352380241234b8a641536ff5b87b2f61e347a9edb1aedb0201da6a",
+        "effective_source_sha256": "e54323d6a3e7283b7e1d755a13db7e56ff97a750fad3f3e95e12e935ec3128d7",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "review_profile": "warranty-recovery-reason-semantic-review/v1",
+        "discovery_provisional_scores_publishable": false,
+        "reason": "仅识别等价表头、保留原行全部值及表头、按明确不发起且零金额区分同表逻辑行；不把零金额本身当合格。原6个不发起组合的原因类别由独立裁判复核原文及明确共享说明，缺失/错误不猜补。原对象、金额、分母、封顶、87/13与两项语义Rubric不改。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_015_procurement_reconciliation",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md",
+      "source_before_sha256": "84df260f1948f86c0c7da4f651ac1bbf5e8d3ac220e8ad6a115b33af44d22f6c",
+      "source_after_sha256": "746a3d28ed20244eec3fc150d26e4b5aaba45722db9c34973ceda36abbf9a137",
+      "task_before_sha256": "1b078f727460d029f0f76ec7725096201fa8628c72f310d71ef96edb08ed1398",
+      "task_after_sha256": "005ba76a7a24ef3b557a7008350a739db23d5bfbc1408beb3eda840ed7080193",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "procurement-summary-table-boundary/v3",
+        "task_id": "02_Office_task_015_procurement_reconciliation",
+        "contract_sha256": "46b90a5bee7b2a90fbad93b5f36f04fa3730d2f3f27e54ca6e830cb691301e4b",
+        "original_source_sha256": "84df260f1948f86c0c7da4f651ac1bbf5e8d3ac220e8ad6a115b33af44d22f6c",
+        "effective_source_sha256": "746a3d28ed20244eec3fc150d26e4b5aaba45722db9c34973ceda36abbf9a137",
+        "candidate_rewritten": false,
+        "numeric_claims_invented": false,
+        "reason": "矩阵合计行结束后关闭该表域，后续口径说明交原普通声明读取，不作为重复矩阵类别；保留原编号和数值、全部可见性/比较/分母/限分及80/20。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_018_targeted_repair_communication_pack",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md",
+      "source_before_sha256": "d2e1e3adf18ce595499464db66e3bc1a728ccabc64bc887d02ef70356eac17bf",
+      "source_after_sha256": "47eb18dedf67d9076437889e1b97040285c075bad3224628336014cc24d081d2",
+      "task_before_sha256": "d3a9f9b59a733317b0361978b6f19af1465597d788da411f92f2a15c9d1bb932",
+      "task_after_sha256": "fbf52ece4789e740fece684163c9cc2221152871e227283f4309bf59a337772f",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "communication-pack-complete-evidence-budget/v1",
+        "task_id": "02_Office_task_018_targeted_repair_communication_pack",
+        "contract_sha256": "303328777610178aab42baa175aa2e3c65dd0ccf868b5200d200a0597704e107",
+        "original_source_sha256": "d2e1e3adf18ce595499464db66e3bc1a728ccabc64bc887d02ef70356eac17bf",
+        "effective_source_sha256": "47eb18dedf67d9076437889e1b97040285c075bad3224628336014cc24d081d2",
+        "evidence_budget": {
+          "profile": "communication-pack-complete-evidence-budget/v1",
+          "contract_sha256": "303328777610178aab42baa175aa2e3c65dd0ccf868b5200d200a0597704e107",
+          "source_sha256": "d2e1e3adf18ce595499464db66e3bc1a728ccabc64bc887d02ef70356eac17bf",
+          "total_utf8_bytes": 16777216,
+          "truncation_allowed": false
+        },
+        "candidate_rewritten": false,
+        "reason": "只为完整业务取证登记16MiB UTF8资源上限，保留原18000字符文件上限与确定性分页；不改变候选、规则分值、Rubric、权重、原格式安全限额，超限继续异常且不截断。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_019_prd_system_design_breakdown",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md",
+      "source_before_sha256": "4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035",
+      "source_after_sha256": "3b99b8842edba655b8b53d51f2d9263373119ec7f56236c3344cdedbaec54ca6",
+      "task_before_sha256": "de2350b5bf09af239689fbc2c2e0903605c038e14bf2c74ffef7d3d66a539368",
+      "task_after_sha256": "96baa7ede8a51853bdb3df1729a0d0ba2b0e5e44aec44103e921b95aa6334381",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "prd-plan-complete-evidence-budget/v1",
+        "task_id": "02_Office_task_019_prd_system_design_breakdown",
+        "contract_sha256": "2a473675b08481052bc5808a5387e85fa0152bdcf4ed5448e922e9023a4097d5",
+        "original_source_sha256": "4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035",
+        "effective_source_sha256": "3b99b8842edba655b8b53d51f2d9263373119ec7f56236c3344cdedbaec54ca6",
+        "evidence_budget": {
+          "profile": "prd-plan-complete-evidence-budget/v1",
+          "contract_sha256": "2a473675b08481052bc5808a5387e85fa0152bdcf4ed5448e922e9023a4097d5",
+          "source_sha256": "4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035",
+          "total_utf8_bytes": 16777216,
+          "truncation_allowed": false
+        },
+        "candidate_rewritten": false,
+        "reason": "只为完整业务取证登记16MiB UTF8资源上限，保留原确定性分页、单文件与格式安全限额；不改变候选、规则分值、Rubric、权重，超限继续异常且不截断。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_024_sterilization_quote",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md",
+      "source_before_sha256": "785e6831505ba1d0fdc341bc36bfc716e2931ab173888ef3dcd4f2617f94d2c8",
+      "source_after_sha256": "534fd675618d6f93a6daee49b0ffe26ba18005442f03d90001872a7c30190d28",
+      "task_before_sha256": "85e128a34c736d50d72e545d254b53ed9c4d6840abb9d66e047b67741b40e701",
+      "task_after_sha256": "4cb3be95ebb1be6d0182b66edf55882fe7969e039dc7190a433e1bd15859d27f",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "sterilization-quote-field-domain/v2",
+        "task_id": "02_Office_task_024_sterilization_quote",
+        "contract_sha256": "e9bc066864701efbba218bb1b3adf2547471d5ee17f95a7b84dbe4b32f69c83c",
+        "original_source_sha256": "785e6831505ba1d0fdc341bc36bfc716e2931ab173888ef3dcd4f2617f94d2c8",
+        "effective_source_sha256": "534fd675618d6f93a6daee49b0ffe26ba18005442f03d90001872a7c30190d28",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "equivalent_headings": {
+          "Estimated transit time": "transit",
+          "Est. total delivery time*": "elapsed",
+          "Validity of rate": "validity"
+        },
+        "reason": "识别三项明确等价表头；目的国优先读取显式国家域的横向/下方值，保留所有国家声明，不按值是否正确择优。泛运输端点不覆盖显式国家。原金额、时间、有效期比较、全部重大事件限分及60/40不变。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_026_work_order_labor_reconciliation",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md",
+      "source_before_sha256": "fc8e2651f671b067faf87528bf508ff559454cefda43bb9ae6a08e1010587ac9",
+      "source_after_sha256": "2598e3e51cdd9e12ccfc3c71a4516f5f32e6249119d374d0418207cc1960c257",
+      "task_before_sha256": "f8adfdf222dd6bddc01947cade65b500c4ba87e6f04de97fa2a3099870becd5e",
+      "task_after_sha256": "a961efa58db227500e33ca324c9ad82a82e9c277354607261088323334527120",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "work-order-explicit-column-roles/v1",
+        "task_id": "02_Office_task_026_work_order_labor_reconciliation",
+        "contract_sha256": "b5016c9afb626a69a114f943b24d5a2172317ff37a1e8a6ef58c921d1ead60b2",
+        "original_source_sha256": "fc8e2651f671b067faf87528bf508ff559454cefda43bb9ae6a08e1010587ac9",
+        "effective_source_sha256": "2598e3e51cdd9e12ccfc3c71a4516f5f32e6249119d374d0418207cc1960c257",
+        "candidate_rewritten": false,
+        "numeric_decisions_assigned": false,
+        "reason": "仅按明确表头区分工单分摊工时、产线日总量和非生产事件明细。日投影不携带工单数值/工单异常；事件原行完整保留供取证。单独旧可分摊列保持原行为；不比较数值择优，不改任何单元格、原金额/工时公式、对象、异常判据、分母、封顶或90/10。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_029_monitoring_weekly_docx",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md",
+      "source_before_sha256": "93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309",
+      "source_after_sha256": "2876d02cc41615a301257fc986eddd180795d78d05132150ee8da5b41339203c",
+      "task_before_sha256": "f8ede090472f6e6c9a40ef1eca361777443c38166482df19c58f4c62a319c186",
+      "task_after_sha256": "64cc61898403f999e3e6309f4fd85a8829decc282d2d195fa68ab3001f6b34e1",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "office-complete-collection-resource/v1",
+        "task_id": "02_Office_task_029_monitoring_weekly_docx",
+        "contract_sha256": "967f54a181a67fe91b7513b6d81d61a6badd7d7def1c6fcc1033d5d69fae762a",
+        "original_source_sha256": "93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309",
+        "effective_source_sha256": "2876d02cc41615a301257fc986eddd180795d78d05132150ee8da5b41339203c",
+        "evidence_budget": {
+          "profile": "office-complete-collection-resource/v1",
+          "contract_sha256": "967f54a181a67fe91b7513b6d81d61a6badd7d7def1c6fcc1033d5d69fae762a",
+          "source_sha256": "93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309",
+          "total_utf8_bytes": 16777216,
+          "truncation_allowed": false,
+          "original_total_chars": 55000
+        },
+        "candidate_rewritten": false,
+        "reason": "只为完整业务取证登记16MiB UTF8资源上限，保留原确定性分页、单文件与格式安全限额；不改变候选、规则分值、Rubric、权重，超限继续异常且不截断。"
+      }
+    },
+    {
+      "task_id": "02_Office_task_030_service_center_consolidation",
+      "task_path": "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md",
+      "source_before_sha256": "f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378",
+      "source_after_sha256": "a478da511bd71ecf71a38b8e6307c24ad099f97c310af94bc58e2c448f7f11a7",
+      "task_before_sha256": "929af279eac7d24f1247f4561efd1d71d2749007eb3f5dc407865bad3998ec34",
+      "task_after_sha256": "4ac58495cc0421e12a9d652c755ccfa5f25eb4f60e804b710d3eb8fb4efd6a51",
+      "verified_runtime_correction": {
+        "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
+        "correction_id": "office-complete-collection-resource/v1",
+        "task_id": "02_Office_task_030_service_center_consolidation",
+        "contract_sha256": "1cf27d0d5844d40d08824e606bc92e1efb9514bc0d780051793d85b270d586cc",
+        "original_source_sha256": "f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378",
+        "effective_source_sha256": "a478da511bd71ecf71a38b8e6307c24ad099f97c310af94bc58e2c448f7f11a7",
+        "evidence_budget": {
+          "profile": "office-complete-collection-resource/v1",
+          "contract_sha256": "1cf27d0d5844d40d08824e606bc92e1efb9514bc0d780051793d85b270d586cc",
+          "source_sha256": "f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378",
+          "total_utf8_bytes": 16777216,
+          "truncation_allowed": false,
+          "original_total_chars": 74000
+        },
+        "candidate_rewritten": false,
+        "reason": "只为完整业务取证登记16MiB UTF8资源上限，保留原确定性分页、单文件与格式安全限额；不改变候选、规则分值、Rubric、权重，超限继续异常且不截断。"
+      }
+    }
+  ]
+}

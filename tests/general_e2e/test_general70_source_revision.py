@@ -12,7 +12,12 @@ import os
 
 from eval_general_e2e.datasets.bundle import (compile_dataset, DEFAULT_DEFINITION, GENERAL116_DEFINITION,
     GENERAL70_V2_DEFINITION, dataset_manifest_path, load_manifest_lock, _parse_task_source, _strip_codeblock)
-from src.utils.task_parser import parse_task_md, normalize_judge_evidence
+from src.utils.task_parser import parse_task_md as _parse_task_md, normalize_judge_evidence
+from eval_general_e2e.datasets.source_history import frozen_v2_task_path
+
+def parse_task_md(path):
+    # These regressions exercise the immutable v2 correction profiles.
+    return _parse_task_md(frozen_v2_task_path(path))
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME
 
 ROOT=Path(__file__).resolve().parents[2]

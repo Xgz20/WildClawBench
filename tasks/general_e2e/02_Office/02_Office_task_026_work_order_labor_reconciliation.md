@@ -335,6 +335,7 @@ def extract(path):
             if is_header:
                 headers=vals;order_table='wo' in basic.values()
                 mapping={i:column_field(v,order_table) for i,v in enumerate(vals) if column_field(v,order_table)}
+                mapping=_ge2e_work_order_mapping(vals,order_table,mapping)
                 continue
             if mapping:
                 rec={};flags=[]
@@ -356,7 +357,11 @@ def extract(path):
                     rec['_note_only']=not any(k in rec for k in ('plan','actual','qty','std','units'))
                     if rec['_note_only'] and rec.get('notes') and not rec.get('flags'):rec['flags']=rec['notes']
                     orders.append(rec)
-                elif rec.get('date') and rec.get('dept') and any(k in rec for k in ('labor','nonprod','available')):days.append(rec)
+                    projected=_ge2e_order_day_projection(rec,headers,vals)
+                    if projected is not None:days.append(projected)
+                elif rec.get('date') and rec.get('dept') and any(k in rec for k in ('labor','nonprod','available')):
+                    if _ge2e_work_order_event_table(headers):texts.append({'at':rec['_loc'],'text':json.dumps({'role':'candidate_event_detail','headers':headers,'values':vals},ensure_ascii=False,default=str)})
+                    else:days.append(rec)
             if not mapping:
                 ids=re.findall(r'WO-\d{4}-\d{2}-\d{2}R?', ' '.join(str(v or '') for v in vals))
                 desc='；'.join(str(v) for v in vals if isinstance(v,str) and not re.search(r'WO-\d{4}',v))
@@ -440,7 +445,8 @@ def grade(transcript,workspace_path):
         orders+=o;days+=da;texts+=tx;cell_errors+=er
     actual,dup,conflicts=merge_records(orders,'order')
     # Department/day values can be in a separate summary or repeated on order rows.
-    days+= [r for r in orders if any(k in r for k in ('labor','available','nonprod'))]
+    # Order/day display fields were projected by extract; never merge order-level values into day totals.
+    days+= []
     adays,_,day_conflicts=merge_records(days,'day')
     # Accept omitted helper columns when the stated results uniquely establish the same facts.
     for wo,a in actual.items():
@@ -598,6 +604,33 @@ def grade(transcript,workspace_path):
             fn=name.replace('.json',f'_{part}.json');(evidence/fn).write_text(json.dumps(chunk_payload(chunk),ensure_ascii=False,default=str),encoding='utf-8');required.append(fn)
         else:(evidence/name).write_text(body,encoding='utf-8');required.append(name)
     return scores
+LOOKUP.update({norm(header):key for header,key in [
+    ('出勤总人时','labor'),('检验数合计','units'),('缺陷数合计','defects'),
+    ('排期工时偏差','deviation'),('缺陷率超限','flags'),('问题与待核清项','issue'),('问题描述','issue')]})
+
+def _ge2e_work_order_mapping(values,order_table,mapping):
+    explicit={norm(v) for v in ['分摊工时','工单实际工时','分摊实际工时','工单分摊人时','实际分摊人时','allocatedhours','actualhours']}
+    available={norm(v) for v in ['可分摊生产工时','可分摊工时','可分摊h','可分摊人时']}
+    if order_table and any(norm(v) in explicit for v in values):
+        return {i:('available' if key=='actual' and norm(values[i]) in available else key) for i,key in mapping.items()}
+    return mapping
+
+def _ge2e_work_order_event_table(headers):
+    names={norm(v) for v in headers}
+    return bool(names & {norm(v) for v in ['事件ID','非生产事件ID','事件编号']}) and not any(field(v) in {'wo','labor','available','allocated_total','plan_total'} for v in headers)
+
+def _ge2e_order_day_projection(record,headers,values):
+    if not any(k in record for k in ['labor','available','nonprod']):return None
+    fields={'date','dept','labor','ot','headcount','nonprod','available','plan_total','allocated_total','ot_rate','_loc'}
+    day={k:v for k,v in record.items() if k in fields}
+    flags=[]
+    for header,value in zip(headers,values):
+        if norm(header) in {norm(v) for v in ['加班超限','加班工时超限','产线日状态','线日状态']}:
+            label=flag_value(value,header)
+            if label:flags.append(label)
+    if flags:day['flags']='；'.join(dict.fromkeys(flags))
+    return day
+
 
 ```
 

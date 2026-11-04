@@ -149,6 +149,7 @@ def number(value):
 
 def matched_header(value, kind=None):
     text = norm(value)
+    if kind=='orphan' and text in {norm(v) for v in ['入库单号/订单号','入库单号/采购订单号','入库编号/订单编号','入库对应订单号']}:return 'receipt'
     # Parenthesized unit/direction suffixes do not change the column's role.
     short = norm(re.split(r'[（(\[]', str(value or ''), maxsplit=1)[0])
     for key, aliases in ALIASES.items():
@@ -637,15 +638,15 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,norm,summary_key,number
         headers=None;rows=[];matrix_values={};matrix_locs={};matrix_visible={};net_present=False;seen=set()
         for row in table['rows']:
             vals=row['values'];names=[plain(v) for v in vals]
-            cats=[i for i,v in enumerate(names) if v in {'对账类别','差异类型','异常类别'}]
+            cats=[i for i,v in enumerate(names) if v in {'类别','对账类别','差异类型','异常类别'}]
             counts=[i for i,v in enumerate(names) if v in {'笔数','记录数','订单笔数'}]
             if len(cats)==1 and len(counts)==1:
                 headers={'category':cats[0],'count':counts[0]}
                 headers_hidden=set(row.get('hidden_columns',[]))
                 sequence={i for i,n in enumerate(names) if n in {'序号','编号'}}
                 for i,n in enumerate(names):
-                    if n in {'采购订单金额','订单金额','采购金额','订单总额'}:headers['order']=i
-                    elif n in {'入库记录金额','入库金额','实收金额'}:headers['receipt']=i
+                    if n in {'订单金额合计','采购订单金额','订单金额','采购金额','订单总额'}:headers['order']=i
+                    elif n in {'入库金额合计','入库记录金额','入库金额','实收金额'}:headers['receipt']=i
                     elif n in {'金额差额','金额差额合计','金额差异合计','金额差额净额'}:headers['net']=i
                 continue
             category=summary_key(vals[headers['category']]) if headers and headers['category']<len(vals) else None
@@ -664,7 +665,7 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,norm,summary_key,number
                 if number(value) is None:return
                 label={'qty':'数量差异订单数','amount':'金额差异订单数','missing':'未入库订单数',
                        'orphan':'无对应订单入库单数','clean':'匹配且数量金额均一致订单数','price_only':'纯单价差异',
-                       'orders':'总采购订单数','orders_amount':'订单金额合计','receipts_amount':'入库金额合计',
+                       'orders':'总采购订单数','receipts':'入库记录总数','orders_amount':'订单金额合计','receipts_amount':'入库金额合计',
                        'net_amount':'金额差异净额合计','missing_amount':'未入库订单金额合计','orphan_amount':'孤立入库金额合计'}.get(key,key)
                 hidden=[i for i,source in [(0,headers['category']),(1,col)]
                         if source in set(row.get('hidden_columns',[]))|headers_hidden]
@@ -676,7 +677,11 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,norm,summary_key,number
                 matrix_values[key]=number(value);matrix_locs[key]=location
                 matrix_visible[key]=not hidden
                 if key=='net_amount':net_present=True
-            emit('orders' if is_total else kind,headers['count'])
+            combined=re.fullmatch(r'采购订单\s*(\d+)\s*(?:笔|条|单)\s*[/／,，;；]\s*入库(?:关联|记录)?\s*(\d+)\s*(?:个订单|笔|条|单)',str(vals[headers['count']]).strip()) if is_total else None
+            if combined:
+                emit('orders',headers['count'],int(combined.group(1)))
+                emit('receipts',headers['count'],int(combined.group(2)))
+            else:emit('orders' if is_total else kind,headers['count'])
             for field in ['order','receipt','net']:
                 if field not in headers:continue
                 key=f'matrix_{kind}_{field}'
@@ -692,6 +697,7 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,norm,summary_key,number
                         # An unlabeled signed/unmatched amount needs semantic extraction review.
                         raise ValueError('Unrecognized signed unmatched summary amount; extraction review required')
                 emit(key,headers[field])
+            if is_total:headers=None
         if (not net_present and {'matrix_qty_net','matrix_price_only_net'}<=set(matrix_values)
                 and sets['qty']<=sets['amount'] and complete):
             # Explicit quantity-linked + price-only partitions cover matched differences once.
@@ -732,6 +738,8 @@ _pl_install_summary_view()
 
 # Publicly equivalent matched orders; the original short-label parser retains qualifiers.
 SUMMARY_LABELS['matched']=list(SUMMARY_LABELS['matched'])+['已匹配订单']
+SUMMARY_LABELS['clean']=list(SUMMARY_LABELS['clean'])+['完全匹配']
+
 ```
 
 ## LLM Judge Rubric

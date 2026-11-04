@@ -12,12 +12,13 @@ from pathlib import Path, PurePosixPath
 PROFILE='reviewed-generated-file-globs/v1'
 CATALOG_SHA='edb3f823f536d9d0ab25fd3f0147582e95cbb1dc42af8723623501e455f0dac4'
 CATALOG_V2_SHA='7bb0e0d8a5877c2406ffd575d42adacbbdf31223e9dc5b894eaaa3851f76054b'
+CATALOG_V3_SHA='6da42b9db7b71b4373cc6cfa3be5fa28a10e471ec544243bae0bc2274a3980c6'
 ERROR_KIND='declared-evidence-glob-implementation-repair/v1'
 
 
 def registry(dataset_id=None):
-    version='v2' if dataset_id=='general-custom70-v2' else 'v1'
-    expected=CATALOG_V2_SHA if version=='v2' else CATALOG_SHA
+    version={'general-custom70-v2':'v2','general-custom70-v3':'v3'}.get(dataset_id,'v1')
+    expected={'v1':CATALOG_SHA,'v2':CATALOG_V2_SHA,'v3':CATALOG_V3_SHA}[version]
     raw=(Path(__file__).resolve().parents[1]/('data/reviewed-generated-file-globs-'+version+'.json')).read_bytes()
     if hashlib.sha256(raw).hexdigest()!=expected:raise ValueError('EVIDENCE_GLOB_CATALOG_DRIFT')
     return json.loads(raw)['profiles']
@@ -39,7 +40,7 @@ def policy(manifest,contract):
 
 def descriptor(manifest,contract):
     row=policy(manifest,contract)
-    catalog_sha=CATALOG_V2_SHA if manifest.get('dataset',{}).get('id')=='general-custom70-v2' else CATALOG_SHA
+    catalog_sha={'general-custom70-v2':CATALOG_V2_SHA,'general-custom70-v3':CATALOG_V3_SHA}.get(manifest.get('dataset',{}).get('id'),CATALOG_SHA)
     return None if row is None else {'profile':PROFILE,'catalog_sha256':catalog_sha,
         'contract_sha256':row['contract_sha256'],'source_sha256':row['source_sha256'],'patterns':row['patterns']}
 

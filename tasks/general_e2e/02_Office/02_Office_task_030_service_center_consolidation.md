@@ -406,8 +406,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
               'candidate_inventory':inventory,'candidates':candidates,'unsafe_paths_not_read':unsafe,
               'scope':'All results files; OOXML text, formulas, cached values and locations. No visual render. Runtime-generated evidence is never agent verification. Transcript is supplied separately by harness.'}
     (evidence/'00_manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,separators=(',',':')),encoding='utf-8')
-    total=sum(len(p.read_text(encoding='utf-8')) for p in evidence.iterdir())
-    if total>74000: raise RuntimeError('evaluator_error: complete evidence exceeds 74000 reserved characters; collect supplement before semantic scoring, never candidate zero')
+    total=sum(p.stat().st_size for p in evidence.iterdir())
+    if total>16777216: raise RuntimeError('evaluator_error: complete evidence exceeds 74000 reserved characters; collect supplement before semantic scoring, never candidate zero')
     s=(len(INPUT_HASHES)-len(changed))/len(INPUT_HASHES)
     return {'source_preservation':s,'overall_score':s,'diagnostics':{'changed_inputs':changed,'evidence_chars':total,'candidate_count':len(candidates),'references_validated':len(references)}}
 

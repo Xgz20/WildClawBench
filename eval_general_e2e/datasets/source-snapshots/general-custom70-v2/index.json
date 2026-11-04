@@ -1,0 +1,40 @@
+{
+  "schema_version": "general-e2e-frozen-source-index/v1",
+  "dataset_id": "general-custom70-v2",
+  "dataset_digest": "001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e",
+  "files": {
+    "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md",
+      "sha256": "916b13574f2720efb793c9a1fa98f5057e136ae26f529db798cbe9392f7f10b2"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md",
+      "sha256": "1b078f727460d029f0f76ec7725096201fa8628c72f310d71ef96edb08ed1398"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md",
+      "sha256": "d3a9f9b59a733317b0361978b6f19af1465597d788da411f92f2a15c9d1bb932"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md",
+      "sha256": "de2350b5bf09af239689fbc2c2e0903605c038e14bf2c74ffef7d3d66a539368"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md",
+      "sha256": "85e128a34c736d50d72e545d254b53ed9c4d6840abb9d66e047b67741b40e701"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md",
+      "sha256": "f8adfdf222dd6bddc01947cade65b500c4ba87e6f04de97fa2a3099870becd5e"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md",
+      "sha256": "f8ede090472f6e6c9a40ef1eca361777443c38166482df19c58f4c62a319c186"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md": {
+      "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md",
+      "sha256": "929af279eac7d24f1247f4561efd1d71d2749007eb3f5dc407865bad3998ec34"
+    }
+  },
+  "excluded_paths": []
+}

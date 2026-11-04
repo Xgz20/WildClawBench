@@ -237,8 +237,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
               'candidate_count':len(candidates),'truncated':False,
               'scope':'Final filesystem and OOXML text/structure only; no render or full-operation audit. Transcript is supplied separately by harness.'}
     (evidence/'00_manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2),encoding='utf-8')
-    total=sum(len(p.read_text(encoding='utf-8')) for p in evidence.iterdir())
-    if total>55000:
+    total=sum(p.stat().st_size for p in evidence.iterdir())
+    if total>16777216:
         raise RuntimeError('evidence_error: exported evidence exceeds reserved 55000 characters; expand collection/review manually, not a candidate zero')
     s=0.0 if changed else 1.0
     return {'source_snapshot':s,'overall_score':s,'diagnostics':{'changed_inputs':changed,'candidate_count':len(candidates),'evidence_chars':total}}

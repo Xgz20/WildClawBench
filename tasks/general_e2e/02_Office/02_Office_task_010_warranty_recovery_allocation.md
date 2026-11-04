@@ -109,21 +109,21 @@ def norm(x):
 ALIASES = {
  'claim':['claim_id','索赔单号','索赔编号','索赔申请号'],
  'chain':['event_chain_id','事件链ID','事件链编号'],
- 'supplier':['supplier','供应商','供应商名称','vendor'],
+ 'supplier':['追偿供应商','supplier','供应商','供应商名称','vendor'],
  'policy':['policy_version','政策版本','适用政策'],
  'exception':['contract_exception','合同例外','合同例外类型','合同调整'],
- 'share':['分摊比例','分摊份额','allocation_share','supplier_share','effective_share'],
+ 'share':['实际分摊比例','分摊比例','分摊份额','allocation_share','supplier_share','effective_share'],
  'ratio':['政策责任比例','责任比例','政策比例','policy_ratio','追偿比例'],
  'cost':['维修成本','分摊维修成本','分摊成本','repair_cost','供应商维修成本'],
- 'cap':['封顶金额','合同上限','cap_amount'],
- 'already':['已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
+ 'cap':['CAP上限','封顶金额','合同上限','cap_amount'],
+ 'already':['已追偿汇总','已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
  'current':['本次金额','本次可追偿金额','本次可追偿','current_recovery','recoverable_amount','本次追偿金额'],
  'note':['分摊及合同依据说明','分摊说明','allocation_note','核算说明','分摊依据','说明'],
  'source':['依据位置','来源','证据位置','source_ref','依据','来源位置'],
- 'reason':['原因类型','reason_type','异常类型','review_reason','原因'],
+ 'reason':['原因说明','原因类型','reason_type','异常类型','review_reason','原因'],
  'rule':['触发规则','trigger_rule','规则'],
  'missing':['缺失证据','missing_evidence','证据缺口','待核查事项'],
- 'action':['next_action','下一步','建议处理','处理建议','后续处理建议'],
+ 'action':['处理动作','next_action','下一步','建议处理','处理建议','后续处理建议'],
  'count':['claim_count','涉及索赔数','索赔数','单数'],
  'gross':['gross_repair_cost','维修成本暴露','维修成本合计','分摊维修成本合计'],
  'pending':['待核查金额','review_amount','needs_review_amount'],
@@ -266,6 +266,7 @@ def read_tables(path):
             if kind in found:raise CandidateError('同类业务表重复且无法唯一确定')
             found[kind]=ws.title
             header_row=ri
+            found['_context'].append({'role':'grader_header_location','location':f'{ws.title}!row{ri}','values':[cells.cell(ws.title,ws.cell(ri,c).coordinate) for c in range(1,ws.max_column+1)]})
             for r in range(ri+1,ws.max_row+1):
                 item={k:cells.cell(ws.title,ws.cell(r,c).coordinate) for k,c in cols.items()}
                 anchor=item.get('supplier') if kind=='summary' else item.get('claim')
@@ -273,12 +274,17 @@ def read_tables(path):
                 if not any(v is not None and str(v).strip() for v in item.values()):continue
                 # Ignore free commentary beneath a table; monetary or identified rows are substantive.
                 if not anchor and not any(number(item.get(k)) is not None for k in ('current','cost','already','gross','pending')):continue
-                item['_location']=f'{ws.title}!row{r}';out[kind].append(item)
+                item['_location']=f'{ws.title}!row{r}'
+                item['_raw_values']=[cells.cell(ws.title,ws.cell(r,c).coordinate) for c in range(1,ws.max_column+1)]
+                row_kind='review' if kind=='detail' and _warranty_no_initiation(item) else kind
+                out[row_kind].append(item)
             break
         context_rows=range(1,header_row) if header_row else range(1,ws.max_row+1)
         for r in context_rows:
             values=[cells.cell(ws.title,ws.cell(r,c).coordinate) for c in range(1,ws.max_column+1)]
             if any(v is not None for v in values):found['_context'].append({'location':f'{ws.title}!row{r}','values':values})
+    for logical_kind,rows in out.items():
+        if rows and logical_kind not in found:found[logical_kind]='explicit candidate non-initiation rows'
     return out,found
 
 def safe_path(root,relative):
@@ -335,7 +341,7 @@ def grade(transcript,workspace_path):
         if len(rows)>1:unsafe.append({'key':k,'error':'重复发起行'})
         if k in ar:unsafe.append({'key':k,'error':'同一供应商索赔同时列在发起及暂缓表'})
         if k in facts and any(r.get('chain') and str(r['chain']).strip()!=facts[k]['event_chain_id'] for r in rows):unsafe.append({'key':k,'error':'事件链关联错误'})
-    review_ok=sum(len(ar[k])==1 and reason_class(ar[k][0].get('reason'))==facts[k]['decision'] for k in er)
+    review_ok=sum(len(ar[k])==1 and _warranty_reason_matches(k,ar[k][0],facts[k],found.get('_context',[])) for k in er)
     if substantive and not unsafe:scores['recovery_eligibility']=review_ok/len(er)
     diagnostics['unsafe_recovery']=unsafe;diagnostics['review_classification']={'correct':review_ok,'denominator':len(er)}
     errors=[];row_correct=0;absolute_error=0.0;major=False
@@ -430,6 +436,57 @@ def _warranty_allocated_cost_header(value):
     # allocated heading takes precedence; never substitute a private oracle value.
     name=re.sub(r'(?:人民币元|元)$', '', norm(value))
     return name in {'分摊维修成本','分摊成本','供应商维修成本'}
+
+import hashlib as _rr_hashlib
+import json as _rr_json
+
+def _rr_normalize(value):
+    if isinstance(value, dict):
+        return {str(k):_rr_normalize(v) for k,v in sorted(value.items(),key=lambda p:str(p[0]))}
+    if isinstance(value,(list,tuple)):
+        return [_rr_normalize(v) for v in value]
+    if isinstance(value,(set,frozenset)):
+        return sorted((_rr_normalize(v) for v in value),key=lambda v:_rr_json.dumps(v,ensure_ascii=False,sort_keys=True))
+    if value is None or isinstance(value,(str,bool,int,float)):
+        return value
+    return str(value)
+
+def _rr_decide(context):
+    state=globals().get('_GENERAL_E2E_RULE_REVIEW')
+    if not isinstance(state,dict) or state.get('profile')!='warranty-recovery-reason-semantic-review/v1':
+        raise RuntimeError('RULE_REVIEW_NOT_PREPARED')
+    context=_rr_normalize(context)
+    digest=_rr_hashlib.sha256(_rr_json.dumps(context,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode('utf-8')).hexdigest()
+    observations=state.setdefault('observations',{})
+    if len(observations)>=10000 and digest not in observations:
+        raise RuntimeError('RULE_REVIEW_CONTEXT_LIMIT')
+    observations[digest]=context
+    if state['mode']=='discover':
+        return False  # Discovery only: the Worker suppresses every provisional score.
+    decision=state.get('decisions',{}).get(digest)
+    if not isinstance(decision,bool):
+        raise RuntimeError('RULE_REVIEW_DECISION_MISSING:'+digest)
+    state.setdefault('applied',[]).append(digest)
+    return decision
+
+
+def _warranty_no_initiation(row):
+    # Zero alone remains a clean recovery row under the original unsafe test.
+    # Only an explicit candidate declaration plus zero changes its logical role.
+    action=re.sub(r'\s+','',str(row.get('action') or ''))
+    return number(row.get('current'))==0 and bool(re.fullmatch(
+        r'(?:不再发起|本次不发起|不予追偿|本次不予追偿|暂缓追偿|待核查暂不发起)(?:[（(][^()（）]*[）)])?',action))
+
+def _warranty_reason_matches(key,row,fact,context):
+    return _rr_decide({'kind':'warranty-non-initiation-reason-category',
+        'unit':list(key),'candidate_row':row,'candidate_shared_context':context,
+        'expected_category':fact['decision'],
+        'category_definitions':{'covered':'Historical booked recoveries already cover the policy entitlement; no new recovery is initiated.',
+            'review':'An initiation condition or required adopted evidence is incomplete; hold or investigate, without inventing a missing business voucher.'},
+        'instruction':'Judge only whether the actual candidate reason/note/action and explicitly applicable shared explanation express this original category for this same claim/supplier. Do not infer a candidate statement from the expected category or repair a wrong statement. Missing/clearly wrong is false; insufficient evidence is unresolved. Never decide amounts, assign a rule score, or change the denominator.'})
+
+RULE_REVIEW_PROFILE = 'warranty-recovery-reason-semantic-review/v1'
+
 
 
 ```

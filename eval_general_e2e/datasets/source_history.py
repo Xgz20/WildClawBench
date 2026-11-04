@@ -48,6 +48,23 @@ class FrozenSources:
         return any(relative == excluded or excluded in relative.parents for excluded in self.excluded)
 
 
+def dataset_task_path(repo: Path, relative: str, index: str | None = None) -> Path:
+    """Expose the exact archived task to CLI consumers without rewriting it."""
+    frozen = FrozenSources(repo, index)
+    _relative(relative)
+    if relative not in frozen.overrides:
+        return repo / relative
+    target = repo / _relative(index)
+    row = json.loads(target.read_text(encoding='utf-8'))['files'][relative]
+    return target.parent / _relative(row['snapshot'])
+
+
+def frozen_v2_task_path(path: Path) -> Path:
+    repo = Path(__file__).resolve().parents[2]
+    return dataset_task_path(repo, path.resolve().relative_to(repo).as_posix(),
+        'eval_general_e2e/datasets/source-snapshots/general-custom70-v2/index.json')
+
+
 def frozen_task_path(path: Path) -> Path:
     """Explicit v1 fixture path for tests of historical correction profiles."""
     repo = Path(__file__).resolve().parents[2]

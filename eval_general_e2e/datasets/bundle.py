@@ -110,14 +110,20 @@ _GENERAL70 = json.loads((Path(__file__).parent / "definitions/general-custom70-v
 _GENERAL70_STATS = _GENERAL70["expected_statistics"]
 GENERAL70_V2_DEFINITION = replace(
     GENERAL116_DEFINITION, dataset_id="general-custom70-v2",
-    created_at=_GENERAL70["created_at"], source_revision=None, frozen_source_index=None,
+    created_at=_GENERAL70["created_at"], source_revision=None,
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-custom70-v2/index.json",
     task_ids=tuple(_GENERAL70["task_ids"]), expected_task_count=70,
     expected_category_counts=_GENERAL70_STATS["category_counts"],
     expected_grading_type_counts=_GENERAL70_STATS["grading_type_counts"],
     expected_difficulty_counts=_GENERAL70_STATS["difficulty_counts"],
     expected_timeout_counts=_GENERAL70_STATS["timeout_counts"],
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION)}
+_GENERAL70_V3 = json.loads((Path(__file__).parent / "definitions/general-custom70-v3.json").read_text(encoding="utf-8"))
+GENERAL70_V3_DEFINITION = replace(
+    GENERAL70_V2_DEFINITION, dataset_id="general-custom70-v3",
+    created_at=_GENERAL70_V3["created_at"], frozen_source_index=None,
+)
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -501,7 +507,7 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id}:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

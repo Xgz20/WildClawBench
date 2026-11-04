@@ -1,12 +1,18 @@
 # General E2E 数据集包
 
-当前支持三个独立的冻结数据集，使用同一套七阶段 Skill：
+当前支持四个独立的冻结数据集，使用同一套七阶段 Skill：
 
 | dataset ID | 任务来源 | 题量 | 能力映射 |
 | --- | --- | ---: | --- |
 | `general-custom60-v1`（默认） | `tasks/extension` | 60 | 原七维，原 manifest 和映射内容保持不变 |
 | `general-custom116-v1` | `tasks/general_e2e`（递归扫描） | 116 | 独立五维，检索 20、Office 30、数据分析 66 |
-| `general-custom70-v2` | 当前题源，按独立定义显式选择 | 70 | 独立五维；检索20、Office30、数据分析001—020 |
+| `general-custom70-v2` | 归档题源，按独立定义显式选择 | 70 | 独立五维；检索20、Office30、数据分析001—020 |
+| `general-custom70-v3` | 当前题源，回灌后续8道Office规则修复 | 70 | 同一70题范围及独立五维；公开输入、GT、Rubric和权重不变 |
+
+新评测使用`general-custom70-v3`。题内规则、CLI独立原因复核、E2E精确版本登记及
+历史影响审计见[2026-11-04同步说明](../../../docs/general-e2e/general70-source-sync-20261104.md)。
+v2已评分轮次所需的8份原题源保存在`source-snapshots/general-custom70-v2/`；
+旧v2 manifest、bundle及已完成评分保持原摘要，不原地升级。
 
 `general-custom70-v2` 将已验证的解析修复直接写入题内 Python、参考材料和公开评分契约，
 CLI 与 Skill 读取同一份代码。Info004 增加分级参考证据及SHA索引；裁判缺证保留null，
@@ -15,6 +21,8 @@ CLI 与 Skill 读取同一份代码。Info004 增加分级参考证据及SHA索�
 ```bash
 python -m eval_general_e2e.datasets.bundle build --dataset general-custom70-v2
 python eval/run_batch.py --dataset general-custom70-v2 --parallel 3 --model <已配置模型>
+python -m eval_general_e2e.datasets.bundle build --dataset general-custom70-v3
+python eval/run_batch.py --dataset general-custom70-v3 --parallel 3 --model <已配置模型>
 ```
 
 CLI显式70题入口先核验当前源码与manifest一致，拒绝通过tag/modality过滤缩小冻结范围。

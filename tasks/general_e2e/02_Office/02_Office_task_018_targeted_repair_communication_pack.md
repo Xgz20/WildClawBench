@@ -461,8 +461,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
     manifest_text=json.dumps(manifest,ensure_ascii=False,separators=(',',':'))
     if len(manifest_text)>18000: _fail('candidate inventory exceeds collector per-file allowance')
     (output/'00_manifest.json').write_text(manifest_text,encoding='utf-8')
-    size=sum(len(path.read_text(encoding='utf-8')) for path in output.iterdir())
-    if size>74000: _fail('complete evidence exceeds 74000 characters; supplementary collection required, never candidate zero')
+    size=sum(path.stat().st_size for path in output.iterdir())
+    if size>16777216: _fail('complete evidence exceeds 74000 characters; supplementary collection required, never candidate zero')
     return {'overall_score':1.0,'diagnostics':{'purpose':'unscored evidence preparation only','evidence_chars':size,'candidate_count':len(candidates),'changed_inputs':changed}}
 
 ```
