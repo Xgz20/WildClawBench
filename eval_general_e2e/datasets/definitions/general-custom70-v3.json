@@ -99,5 +99,6 @@
     }
   },
   "source_dataset_id": "general-custom116-v1",
-  "source_dataset_digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01"
+  "source_dataset_digest": "8a066c60dfb1b45403b5b792f9cd6264a5ee639e9cd263b8dc0acfc2031dcb01",
+  "source_revision": "557fff5b118ec3e3f604f313141dfd3618d8db69"
 }

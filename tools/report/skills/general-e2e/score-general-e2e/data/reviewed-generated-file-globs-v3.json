@@ -3,7 +3,7 @@
     {
       "contract_sha256": "396fcc2996a34ae0cc5963e4acef048320852419bb9162f0aa2fda999d79f8f0",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "patterns": [
@@ -15,7 +15,7 @@
     {
       "contract_sha256": "ef714863523034a7c467a51e6768bf0dda607cd550537b5491fda52c85853943",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "patterns": [
@@ -27,7 +27,7 @@
     {
       "contract_sha256": "22c83bf794e7c8388b387134fb70e440655b3a98e5a2f04bef65bb531cb55f3f",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "patterns": [
@@ -40,7 +40,7 @@
     {
       "contract_sha256": "ddc7ef18bf0b02e74c00addb72efb4d219f91fd17000c75df0e66c6793f10e13",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "patterns": [

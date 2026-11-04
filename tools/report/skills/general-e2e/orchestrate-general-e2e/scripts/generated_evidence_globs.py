@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 PROFILE='reviewed-generated-file-globs/v1'
 CATALOG_SHA='edb3f823f536d9d0ab25fd3f0147582e95cbb1dc42af8723623501e455f0dac4'
 CATALOG_V2_SHA='7bb0e0d8a5877c2406ffd575d42adacbbdf31223e9dc5b894eaaa3851f76054b'
-CATALOG_V3_SHA='6da42b9db7b71b4373cc6cfa3be5fa28a10e471ec544243bae0bc2274a3980c6'
+CATALOG_V3_SHA='7cb950bb8610663cf22d85f9fc62bdbbbeab0bbaee04149bc48ea3e1711fc8c1'
 ERROR_KIND='declared-evidence-glob-implementation-repair/v1'
 
 

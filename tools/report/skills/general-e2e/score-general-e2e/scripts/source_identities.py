@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 
 CATALOG_SHA = "1c78f388a4a476e43141fa08426b21381acfa3335d7ea3e58b90e0d5b163c449"
-V3_CATALOG_SHA = "10cbcb4e20102385e84e2f76fd6d6e7412790fd62296439a3793298407d93f1d"
+V3_CATALOG_SHA = "276294a05a2fe85774dac7c917b916bab771ad1dbdfe5ecfd6647b966518060f"
 
 def registry():
     data=(Path(__file__).resolve().parents[1]/'data/general70-source-identities-v2.json').read_bytes()

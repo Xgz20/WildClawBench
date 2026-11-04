@@ -23,7 +23,7 @@ CLI新增`src/utils/declared_rule_review.py`，支持Office010题内声明的原
 未知、缺少决定、非布尔值、输入变化或裁判输出不完整均保留错误/null，不补零。
 原6个组合、87/13预算及严重错误封顶不变。
 
-E2E使用Score0.10.67、Orchestrate0.11.52，继续采用独立单题原生Codex裁判。
+E2E使用Score0.10.68、Orchestrate0.11.53，继续采用独立单题原生Codex裁判。
 新Office010按精确新契约/源码登记原因复核，已写入题源的修复不重复套用旧替换。
 4题声明的文件名通配符有独立v3目录，v1/v2目录不变。
 
@@ -38,12 +38,19 @@ Office010/015/024/026两端共8份工作簿的新旧业务字段抽取一致。
 - AStudio Office026的订单/日字段不发生新增重映射。
 - AStudio Office018/019/029/030原Worker已完整完成并有锁定取证快照；提高纯资源上限不改变已交接业务材料。
 
-本次未发现这批新增修复要求改判AStudio原产物的证据，因此未重评这些有效成绩。
+在最终跨端验收中，另修正了候选版对单金额混合汇总表的过度矩阵识别。
+最终版只让有明确订单金额及入库金额列的表进入双金额矩阵；单金额表保留全部原声明。
+使用原GT字节核对两端采购工作簿，完整汇总规则与原正式Worker一致。
+早期候选v3包未用于正式评测，保留其字节及源码提交，不将它当作最终发行。
+最终题源修订号固定为`557fff5b118ec3e3f604f313141dfd3618d8db69`，避免后续Git提交改变历史数据集摘要。
+
+本次未发现最终修复要求改判AStudio原产物的证据，因此未重评这些有效成绩。
 原WorkBuddy受影响12题已在上一轮修复后独立重评分，本次也不重复评分。
 这是新增修复影响审计，不是全部业务真值、难度或区分度验收。
 
 本轮原始回执位于调试轮次`.general-e2e/validation/`：
-`frozen-office-parser-impact-20261104.json`、`astudio-resource-budget-impact-20261104.json`。
+`frozen-office-parser-impact-final-20261104.json`、`procurement-complete-summary-impact-final-20261104.json`、
+`astudio-resource-budget-impact-20261104.json`。
 两端历史评分按各自原题源解释，不将不同版本直接当作严格同版本对照。
 
 ## WorkBuddy Info004：原生终止证据
@@ -102,9 +109,10 @@ HTTP200，保存100767字节，SHA256为`99ce332b719251eb7b741b243f09e5781b6498f
 ## 验证与复现
 
 - 70题静态校验PASS，0告警；CLI与E2E全部70题规则源码逐项一致。
-- General E2E全套625项通过；末次新增分支另有专项回归；CLI/legacy聚焦45项通过。
+- General E2E全套628项通过；末次新增分支另有专项回归；CLI/legacy聚焦45项通过。
 - 旧60、历史116-v1、70-v2的manifest均按原摘要重建，旧七维映射不变。
-- v3 digest：`c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90`。
+- 最终Score0.10.68只读核验两端140份历史评分全部通过，原score与submission SHA不变。
+- v3 digest：`2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7`。
 - v3 bundle已构建验证。CLI复核流程使用隔离模拟API后端，没有运行新的真实模型样本。
 
 ```bash

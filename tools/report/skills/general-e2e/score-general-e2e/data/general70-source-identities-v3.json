@@ -5,7 +5,7 @@
       "automated_source_sha256": "a478da511bd71ecf71a38b8e6307c24ad099f97c310af94bc58e2c448f7f11a7",
       "contract_sha256": "7f478a26cb806036505b2ddd1c7698469a4f2a37a0598fdbfbaa5ba68b76de1e",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_030_service_center_consolidation"
@@ -14,7 +14,7 @@
       "automated_source_sha256": "3b99b8842edba655b8b53d51f2d9263373119ec7f56236c3344cdedbaec54ca6",
       "contract_sha256": "0d128a2b8f8bef0a45d62b00eafa2b69058414327185e0cc71f8a9e22d3dda78",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_019_prd_system_design_breakdown"
@@ -23,16 +23,16 @@
       "automated_source_sha256": "47eb18dedf67d9076437889e1b97040285c075bad3224628336014cc24d081d2",
       "contract_sha256": "cbb58729970ff819b3dc88eb71d03c852852bbce2a1d9fdc8d9293dc0da8edd7",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_018_targeted_repair_communication_pack"
     },
     "46b90a5bee7b2a90fbad93b5f36f04fa3730d2f3f27e54ca6e830cb691301e4b": {
-      "automated_source_sha256": "522744fe8909f2e8e71130ca15be97338fe4b64373825d0d4880430a0b7da0ca",
-      "contract_sha256": "fb8f9b9220f026e881bef78fd673215ed8b0bfb04858f275b075b96fac88d11e",
+      "automated_source_sha256": "7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b",
+      "contract_sha256": "64ba6743b737870353efc5aebec923ae82f018b6d8bf36583709b142d5515a34",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_015_procurement_reconciliation"
@@ -41,7 +41,7 @@
       "automated_source_sha256": "5b734e764fc73422f656b579feed386d41c9bd49ec4437568a8e37e4363bb810",
       "contract_sha256": "6d5fe2fc821cfa1cbf9e1a686ec05e8f9b696b7e4b80def75ecbe934743446aa",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "rule_review_profile": "warranty-recovery-reason-semantic-review/v1",
@@ -51,7 +51,7 @@
       "automated_source_sha256": "2876d02cc41615a301257fc986eddd180795d78d05132150ee8da5b41339203c",
       "contract_sha256": "42a7af5c304bce4c8ecac2d97f6b10f169cbc6daf957a68bfd10bc503530638e",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_029_monitoring_weekly_docx"
@@ -60,7 +60,7 @@
       "automated_source_sha256": "0df6363a8bb5cc0f1f27fc30e6c62f02a84212e67cc43351eee5767ec6dc87c7",
       "contract_sha256": "da305783b6cd1427d8e5f59922310896bdf55c4520093da1aaea34240c24bcf2",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_026_work_order_labor_reconciliation"
@@ -69,7 +69,7 @@
       "automated_source_sha256": "9db04e9b4d6dd9abbfbe990454b84022847355ca37093c52109770674ba4a5ee",
       "contract_sha256": "35838d318be427d0d292b7ae866761c4a66f0ada24c977e69ea4e15d9607fb13",
       "dataset": {
-        "digest": "c18b9b1076a5145da52b6b58eb5657728be95216d97b19f2bfdbd75e05931d90",
+        "digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
         "id": "general-custom70-v3"
       },
       "task_id": "02_Office_task_024_sterilization_quote"
