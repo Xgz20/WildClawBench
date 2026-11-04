@@ -1,7 +1,12 @@
 import { basename, resolve } from "node:path";
 import { createHash } from "node:crypto";
 
-export const QWEN_MODEL_SELECTOR = ".new-task-model-selector button";
+// QwenWork 1.4 removes the legacy wrapper. Scope its observed model labels to
+// the unique new-task composer; never match project/sidebar text globally.
+export const QWEN_MODEL_SELECTOR = [
+  ".new-task-model-selector button",
+  '[data-chat-input-surface="new-task"] button[aria-haspopup="menu"]:not([aria-label]):is(:text-is("标准"), :text-is("高级"), :text-is("Qwen3.8-Max"))',
+].join(", ");
 export const QWEN_PERMISSION_SELECTOR = 'button[aria-label="选择权限模式"]';
 export const QWEN_PROJECT_SELECTOR = '.new-task-chat-input button';
 export const QWEN_PROMPT_SELECTOR = '[data-voice-input-target="chat-input"]';
