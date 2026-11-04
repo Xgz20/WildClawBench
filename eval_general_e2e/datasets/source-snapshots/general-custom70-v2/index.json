@@ -38,6 +38,22 @@
     "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
       "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
       "sha256": "b1cb44d62a07d84d021c9e50822fc3a25b408f820f30895274a9eda31bf2eeee"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md",
+      "sha256": "b3c5c0644af6f959b88ba343b010d9ad51251d864b829f74f4a089de84e543e8"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json",
+      "sha256": "0fde1f0d6559379f9b64030003fe943bb2bc08de049fce4f9759495121950c68"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.json": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.json",
+      "sha256": "3d6cbc3b125f14816c31b224d15965a223d88d3e9ba42fef75a02d55a1bceedc"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1-dong-bingyue.json": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1-dong-bingyue.json",
+      "sha256": "418d3efb949fab875bf58647047bcfbbed08b6388bb88e2c2c7f44a7d3a820de"
     }
   },
   "excluded_paths": []

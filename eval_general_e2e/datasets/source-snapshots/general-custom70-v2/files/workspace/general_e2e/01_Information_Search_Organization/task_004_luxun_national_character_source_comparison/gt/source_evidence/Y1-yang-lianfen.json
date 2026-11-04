@@ -1,0 +1,25 @@
+{
+  "source_id": "Y1-yang-lianfen",
+  "role": "evaluator_reference_not_candidate_output",
+  "url": "https://lxyj.cbpt.cnki.net/portal/journal/portal/client/paper/0e74b482f92af4130394be98e74de9f0",
+  "title": "晚清与五四文学的国民性焦虑（三）——鲁迅国民性话语的矛盾与超越",
+  "retrieved_on": "2026-11-02",
+  "original_response_sha256": null,
+  "coverage": "metadata_and_secondary_context_only",
+  "excerpt": "",
+  "reviewer_summary": "原冻结补证确认作者、题名、2003年第12期及29—38页；2009年述评只支持其中一般概括。尚未取得目标论文相关论证段落，不能核定下列两个特定归属，也不能判其为错。",
+  "reviewer_summary_is_not_original_text": true,
+  "fulltext_included": false,
+  "locator": "原冻结补证的官方期刊页与2009研究述评第68页及文献[20]",
+  "supports": [
+    "来源身份"
+  ],
+  "does_not_establish": [
+    "以随感录三十八论爱国话语收编危险",
+    "将超越解释为包含自身的内部自我反思"
+  ],
+  "unavailable_claims": [
+    "Y1-C1",
+    "Y1-C2"
+  ]
+}
