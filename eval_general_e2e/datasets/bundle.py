@@ -110,7 +110,7 @@ _GENERAL70 = json.loads((Path(__file__).parent / "definitions/general-custom70-v
 _GENERAL70_STATS = _GENERAL70["expected_statistics"]
 GENERAL70_V2_DEFINITION = replace(
     GENERAL116_DEFINITION, dataset_id="general-custom70-v2",
-    created_at=_GENERAL70["created_at"], source_revision=None,
+    created_at=_GENERAL70["created_at"], source_revision="c72afc7a892725373010f38519d7340e8cd34c9e",
     frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-custom70-v2/index.json",
     task_ids=tuple(_GENERAL70["task_ids"]), expected_task_count=70,
     expected_category_counts=_GENERAL70_STATS["category_counts"],
@@ -121,7 +121,7 @@ GENERAL70_V2_DEFINITION = replace(
 _GENERAL70_V3 = json.loads((Path(__file__).parent / "definitions/general-custom70-v3.json").read_text(encoding="utf-8"))
 GENERAL70_V3_DEFINITION = replace(
     GENERAL70_V2_DEFINITION, dataset_id="general-custom70-v3",
-    created_at=_GENERAL70_V3["created_at"], frozen_source_index=None,
+    created_at=_GENERAL70_V3["created_at"], source_revision=_GENERAL70_V3.get('source_revision'), frozen_source_index=None,
 )
 DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION)}
 

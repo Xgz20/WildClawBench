@@ -648,6 +648,9 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,norm,summary_key,number
                     if n in {'订单金额合计','采购订单金额','订单金额','采购金额','订单总额'}:headers['order']=i
                     elif n in {'入库金额合计','入库记录金额','入库金额','实收金额'}:headers['receipt']=i
                     elif n in {'金额差额','金额差额合计','金额差异合计','金额差额净额'}:headers['net']=i
+                if not {'order','receipt'}.issubset(headers):
+                    # A mixed legacy summary with one generic money column is not a dual-domain matrix.
+                    headers=None;rows.append(row)
                 continue
             category=summary_key(vals[headers['category']]) if headers and headers['category']<len(vals) else None
             is_total=headers is not None and any(norm(v) in {'合计','总计','total'} for v in vals[:headers['category']+1])

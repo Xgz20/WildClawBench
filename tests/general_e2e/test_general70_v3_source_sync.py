@@ -79,6 +79,17 @@ class General70V3SourceSyncTests(unittest.TestCase):
             if m.path.endswith('/private-scoring/contract.json') and json.loads(m.data)['task_id']==tid)
         grade=lambda source:ast.dump(next(n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name=='grade'))
         self.assertEqual(grade(old),grade(self.contracts[tid]['automated_checks']))
+    def test_procurement_mixed_single_money_summary_retains_all_original_claims(self):
+        tid=next(t for t in self.contracts if '_015_procurement' in t)
+        scope={};exec(compile(self.contracts[tid]['automated_checks'],'<v3-mixed-summary>','exec'),scope)
+        records={k:[] for k in ['qty','amount','missing','orphan']}
+        table={'sheet':'汇总','kind':'summary','rows':[
+            {'row':1,'values':['类别','笔数','金额口径','金额合计(元)','金额差额净额(元)','金额差额绝对值(元)']},
+            {'row':2,'values':['数量差异',15,'数量差额',None,0,298]},
+            {'row':3,'values':['金额差异',25,'金额差额',None,-1349.13,16388.85]}]}
+        converted,*_=scope['_pl_matrix_view']([table],records,{'orders_amount':100,'receipts_amount':80},
+            {'categories':{'amount':{'direction':-1}}},records,scope['norm'],scope['summary_key'],scope['number'])
+        self.assertEqual(converted[0]['rows'],table['rows'])
 
 class DeclaredCLIReviewWorkflowTests(unittest.TestCase):
     @classmethod

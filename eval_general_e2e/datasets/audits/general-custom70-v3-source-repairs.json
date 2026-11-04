@@ -33,9 +33,9 @@
       "task_id": "02_Office_task_015_procurement_reconciliation",
       "task_path": "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md",
       "source_before_sha256": "84df260f1948f86c0c7da4f651ac1bbf5e8d3ac220e8ad6a115b33af44d22f6c",
-      "source_after_sha256": "746a3d28ed20244eec3fc150d26e4b5aaba45722db9c34973ceda36abbf9a137",
+      "source_after_sha256": "7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b",
       "task_before_sha256": "1b078f727460d029f0f76ec7725096201fa8628c72f310d71ef96edb08ed1398",
-      "task_after_sha256": "005ba76a7a24ef3b557a7008350a739db23d5bfbc1408beb3eda840ed7080193",
+      "task_after_sha256": "bff01b1cd354fdc11a1de3650123de2d0ea19ea7121a995bf05edfaafa78b38d",
       "verified_runtime_correction": {
         "schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
         "correction_id": "procurement-summary-table-boundary/v3",
@@ -46,6 +46,12 @@
         "candidate_rewritten": false,
         "numeric_claims_invented": false,
         "reason": "矩阵合计行结束后关闭该表域，后续口径说明交原普通声明读取，不作为重复矩阵类别；保留原编号和数值、全部可见性/比较/分母/限分及80/20。"
+      },
+      "cross_harness_review": {
+        "mixed_single_money_summary": "retain original generic summary reader",
+        "matrix_admission": "explicit order and receipt amount columns required",
+        "numeric_claims_discarded": false,
+        "production_history_modified": false
       }
     },
     {
