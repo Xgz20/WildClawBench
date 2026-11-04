@@ -126,7 +126,7 @@ GENERAL70_V3_DEFINITION = replace(
 )
 INFO004_STABLE_DEFINITION = replace(
     GENERAL70_V3_DEFINITION, dataset_id="general-info004-stable-v1", created_at="2026-11-04T00:00:00+08:00",
-    source_revision=None, frozen_source_index=None,
+    source_revision="61091c1309967c4e57c219f08a57f636b6886f2c", frozen_source_index=None,
     task_ids=('01_Information_Search_Organization_task_004_luxun_national_character_source_comparison',),
     expected_task_count=1, expected_category_counts={'01_Information_Search_Organization':1},
     expected_grading_type_counts={'hybrid':1}, expected_difficulty_counts={'L3':1},
