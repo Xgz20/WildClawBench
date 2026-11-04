@@ -1,0 +1,32 @@
+{
+  "author": "鲁迅",
+  "dates": {
+    "collection_first_publication_year": 1923,
+    "preface_written_on": "1922-12-03"
+  },
+  "material_id": "M5",
+  "material_role": "later_recollection",
+  "paragraphs": [
+    {
+      "id": "p1",
+      "sha256": "3859e7e730762aaee5ea89a75691701b0c0d1716e0f48ab6c6b9e2f6b054aab6",
+      "text": "這一學年沒有完畢，我已經到了東京了，因爲從那一回以後，我便覺得醫學並非一件緊要事，凡是愚弱的國民，卽使體格如何健全，如何茁壯，也只能做毫無意義的示衆的材料和看客，病死多少是不必以爲不幸的。所以我們的第一要著，是在改變他們的精神，而善于改變精神的是，我那時以爲當然要推文藝，于是想提倡文藝運動了。在東京的留​學生很有學法政理化以至警察工業的，但沒有人治文學和美術；可是在冷淡的空氣中，也幸而尋到幾個同志了，此外又邀集了必須的幾個人，商量之後，第一步當然是出雜誌，名目是取『新的生命』的意思，因爲我們那時大抵帶些復古的傾向，所以只謂之新生。"
+    },
+    {
+      "id": "p2",
+      "sha256": "7ac5f80e80cd26e5420c017a8c1e820401ad5e8abc8dfad13812482877091fba",
+      "text": "一九二二年十二月三日，魯迅記于北京。"
+    }
+  ],
+  "schema_version": "info004-fixed-material/v1",
+  "scope_note": "只据所给段落及明确年代卡作分析；简繁体、异体字及合理意译不构成错误。M5所述留日事件的具体年/月不能仅凭该节选反推，不作必评确年。",
+  "source": {
+    "carrier": "维基文库公开数字转录",
+    "locator": "所给作品的唯一段落首句；作品页所列年代",
+    "original_response_sha256": "d53195080907ee1c2f3c4107bdb61780fd9a9beff0adb8be32005cd70a123425",
+    "resolved_url": "https://zh.wikisource.org/wiki/%E5%90%B6%E5%96%8A",
+    "retrieved_on": "2026-11-04",
+    "url": "https://zh.wikisource.org/wiki/吶喊"
+  },
+  "title": "呐喊·自序"
+}

@@ -1,0 +1,32 @@
+{
+  "author": "鲁迅",
+  "dates": {
+    "first_publication_year": 1925,
+    "writing_year": 1925
+  },
+  "material_id": "M4",
+  "material_role": "may_fourth_essay",
+  "paragraphs": [
+    {
+      "id": "p1",
+      "sha256": "7b3ded606664591b45f79c3b5eccdb0539d97c942672592989c479bf26a394cd",
+      "text": "但我當一包現銀塞在懷中，沈墊墊地覺得安心，喜歡的時候，卻突然起了另一思想，就是：我們極容易變成奴隸，而且變了之後，還萬分喜歡。"
+    },
+    {
+      "id": "p2",
+      "sha256": "a267f2e08f4c103fe35eec2d2aeee24bf9919e99e9e92becd4757d94cfc7c687",
+      "text": "但實際上，中國人嚮來就沒有爭到過「人」的價格，至多不過是奴隸，到現在還如此，然而下于奴隸的時候，卻是數見不鮮的。中國的百姓是中立的，戰時連自己也不知道屬於那一面，但又屬于無論那一面。強盜來了，就屬於官，當然該被殺掠；官兵既到，該是自家人了罷，但仍然要被殺掠，彷彿又屬於強盜似的。這時候，百姓就希望有一個一定的主子，拿他們去做百姓，——不敢，是拿他們去做牛馬，情願自己尋草喫，只求他決定他們怎樣跑。"
+    }
+  ],
+  "schema_version": "info004-fixed-material/v1",
+  "scope_note": "只据所给段落及明确年代卡作分析；简繁体、异体字及合理意译不构成错误。M5所述留日事件的具体年/月不能仅凭该节选反推，不作必评确年。",
+  "source": {
+    "carrier": "维基文库公开数字转录",
+    "locator": "所给作品的唯一段落首句；作品页所列年代",
+    "original_response_sha256": "331414723fdc98d690628b13b9650390c6c25261eadc5be48d6fabffdee4d730",
+    "resolved_url": "https://zh.wikisource.org/wiki/%E7%87%88%E4%B8%8B%E6%BC%AB%E7%AD%86",
+    "retrieved_on": "2026-11-04",
+    "url": "https://zh.wikisource.org/wiki/燈下漫筆"
+  },
+  "title": "灯下漫笔"
+}

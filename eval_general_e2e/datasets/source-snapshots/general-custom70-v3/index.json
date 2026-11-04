@@ -1,0 +1,12 @@
+{
+  "schema_version": "general-e2e-frozen-source-index/v1",
+  "dataset_id": "general-custom70-v3",
+  "dataset_digest": "2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7",
+  "files": {
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
+      "sha256": "b1cb44d62a07d84d021c9e50822fc3a25b408f820f30895274a9eda31bf2eeee"
+    }
+  },
+  "excluded_paths": []
+}

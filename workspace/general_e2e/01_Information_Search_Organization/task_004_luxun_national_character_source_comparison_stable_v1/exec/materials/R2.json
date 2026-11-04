@@ -1,0 +1,27 @@
+{
+  "author": "李怡",
+  "dates": {
+    "original_journal_date_required": false,
+    "public_webpage_section_year": 2019
+  },
+  "material_id": "R2",
+  "material_role": "research_excerpt",
+  "paragraphs": [
+    {
+      "id": "p1",
+      "sha256": "f7567322224588b6432f3f5134141cb978a676c7285c5435d358fb5757c04e47",
+      "text": "鲁迅为文化的建设设定了一个重要的前提，这就是“人”的自我建设"
+    }
+  ],
+  "schema_version": "info004-fixed-material/v1",
+  "scope_note": "仅提供本文件列出的节选；不代表已提供或要求读取作品/论文全文，不能冒称原刊影印。研究日期不是本题必评事实。",
+  "source": {
+    "carrier": "高校或期刊官方公开网页",
+    "locator": "中文摘要中有关文化建设前提的句子",
+    "original_response_sha256": "1c8f207ca0ecd092eac3166a7818a5e5247aa12ec0ede1977a07769b1500ccfc",
+    "resolved_url": "https://sdsdwkxb.cnu.edu.cn/gkll/2019n/2021d1q_4a9a406f51f84ba2801de4c032c169e0/8baddc0ccf254de4bfe196aa427259fe.htm",
+    "retrieved_on": "2026-11-04",
+    "url": "https://sdsdwkxb.cnu.edu.cn/gkll/2019n/2021d1q_4a9a406f51f84ba2801de4c032c169e0/8baddc0ccf254de4bfe196aa427259fe.htm"
+  },
+  "title": "“立人”与现代民族复兴问题——鲁迅留日时期的思考和警觉"
+}

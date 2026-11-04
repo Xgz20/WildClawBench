@@ -1,0 +1,77 @@
+{
+  "claim_review_units": {
+    "1": "R1作者作品与给定观点范围",
+    "2": "R2作者作品与给定观点范围"
+  },
+  "evaluation_mode": "fixed_material_comparison",
+  "files": [
+    {
+      "material_id": "M1",
+      "path": "M1.json",
+      "sha256": "e0e6e85cde8aaae67c32da64834a04de313919ebdb5b846df03e53c89a2a96f7",
+      "size": 2302
+    },
+    {
+      "material_id": "M2",
+      "path": "M2.json",
+      "sha256": "7a53ce22e7189f2187993a6042684c74ba0b03271735d553683730db87ba27e0",
+      "size": 2324
+    },
+    {
+      "material_id": "M3",
+      "path": "M3.json",
+      "sha256": "0ffcb9a74fb13314132dc96ae2703fff73ebf74665284b3caef2d9403aaa3480",
+      "size": 1823
+    },
+    {
+      "material_id": "M4",
+      "path": "M4.json",
+      "sha256": "6a9978905f77a7ec532353f33830d662a02ee28b29d1c0f8f64a1ed11cd5dc08",
+      "size": 1946
+    },
+    {
+      "material_id": "M5",
+      "path": "M5.json",
+      "sha256": "846c833f9962550bd72e9a67f788cf3db42dacd976f83598fb0ba6d85e0d1005",
+      "size": 2026
+    },
+    {
+      "material_id": "R1",
+      "path": "R1.json",
+      "sha256": "c6cc4e49b9862868bebf73d19e0ccfe2a789fede7af5051fa95ae6745d1a3da1",
+      "size": 1122
+    },
+    {
+      "material_id": "R2",
+      "path": "R2.json",
+      "sha256": "a56fd7780663b362713f317d6caeb4e806031a847bb21e258b74a7900b00568f",
+      "size": 1298
+    },
+    {
+      "path": "README.md",
+      "sha256": "77ec44bd2ed8e22d507d8c47bf03c0b8a361eb7ea8fb62d34f1bc60005a857e0",
+      "size": 1426
+    }
+  ],
+  "network_required": false,
+  "original_event_year_precision": "M5所述事件仅能定位留日阶段，不以未提供的确年/月判分",
+  "points_per_research_unit": 2,
+  "required_material_ids": [
+    "M1",
+    "M2",
+    "M3",
+    "M4",
+    "M5",
+    "R1",
+    "R2"
+  ],
+  "schema_version": "info004-fixed-material-packet/v1",
+  "scope": "只依据本包必评材料；公开URL仅供溯源，不要求现场访问。",
+  "selected_research_ids": [
+    "R1",
+    "R2"
+  ],
+  "source_count": 7,
+  "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
+  "version": "2026-11-04.1"
+}

@@ -34,6 +34,10 @@
     "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md": {
       "snapshot": "files/tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md",
       "sha256": "929af279eac7d24f1247f4561efd1d71d2749007eb3f5dc407865bad3998ec34"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
+      "sha256": "b1cb44d62a07d84d021c9e50822fc3a25b408f820f30895274a9eda31bf2eeee"
     }
   },
   "excluded_paths": []

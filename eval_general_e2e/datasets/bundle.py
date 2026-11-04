@@ -121,9 +121,18 @@ GENERAL70_V2_DEFINITION = replace(
 _GENERAL70_V3 = json.loads((Path(__file__).parent / "definitions/general-custom70-v3.json").read_text(encoding="utf-8"))
 GENERAL70_V3_DEFINITION = replace(
     GENERAL70_V2_DEFINITION, dataset_id="general-custom70-v3",
-    created_at=_GENERAL70_V3["created_at"], source_revision=_GENERAL70_V3.get('source_revision'), frozen_source_index=None,
+    created_at=_GENERAL70_V3["created_at"], source_revision=_GENERAL70_V3.get('source_revision'),
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-custom70-v3/index.json",
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION)}
+INFO004_STABLE_DEFINITION = replace(
+    GENERAL70_V3_DEFINITION, dataset_id="general-info004-stable-v1", created_at="2026-11-04T00:00:00+08:00",
+    source_revision=None, frozen_source_index=None,
+    task_ids=('01_Information_Search_Organization_task_004_luxun_national_character_source_comparison',),
+    expected_task_count=1, expected_category_counts={'01_Information_Search_Organization':1},
+    expected_grading_type_counts={'hybrid':1}, expected_difficulty_counts={'L3':1},
+    expected_timeout_counts={'3600':1},
+)
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_STABLE_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -507,7 +516,7 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id}:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, INFO004_STABLE_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)
