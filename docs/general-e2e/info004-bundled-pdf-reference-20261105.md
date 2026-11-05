@@ -46,4 +46,11 @@ CLI直接使用当前题源时也会携带同一GT。旧冻结70题包、open-v1
 四种Harness的验证只准备与核对包，不执行模型、不产生新分数。
 既有AStudio87分及WorkBuddy38分、旧null和历史报告均保持原样。
 
+实际使用独立分发的prepare Skill生成并验证AStudio、WorkBuddy、QwenWork、DoubaoWork四对包：
+四份scoring ZIP均携带相同原PDF SHA与15505字符分页全文，四份execution ZIP均无该私有参考。
+另用合成输入运行受管规则、语义请求准备及真实query-evidence读取：从冻结grader-evidence快照
+完整返回863行、has_more=false、无截断，PDF SHA一致；未启动语义裁判、未生成score.json。
+只读验证回执位于`report-workspace/general-e2e/info004-reference-bundle-20261105/`下
+的`four-harness-portability.json`及`native-reader-portability.json`。
+
 这次完整内置解决的是杨联芬论文的既知缺证路径；其他来源若确实缺证，原null、不补零规则继续适用。
