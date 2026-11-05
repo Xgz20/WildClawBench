@@ -533,7 +533,7 @@ def export_evidence(root,status,tables,truth,metrics,diagnostics,unresolved,arti
     chunks=[[],[]]
     for table in tables:
         item={k:table[k] for k in ('sheet','kind','state','header_row','columns','rows')}
-        chunks[min(range(2),key=lambda i:len(json.dumps(chunks[i],ensure_ascii=False)))].append(item)
+        chunks[min(range(2),key=lambda i:len(json.dumps(chunks[i],ensure_ascii=False,default=str)))].append(item)
     files={'overview.json':{'role':'grader_generated_evidence','rubric_revision':'2026-10-12-v2','artifact_status':status,'evidence_valid':status!='evaluator_error','truncated':False,'artifact':artifact,'diagnostics':diagnostics,'unresolved_formulas':unresolved},
       'reference.json':{'role':'private_reference_extraction','truncated':False,'columns':{'qty':['order_id','receipt_id','order_qty','recv_qty','delta','supplier','item','source_lines','also_amount'],'amount':['order_id','receipt_id','order_amount','recv_amount','delta','supplier','item','source_lines','order_qty','recv_qty'],'missing':['order_id','supplier','item','qty','amount','source','status'],'orphan':['receipt_id','supplier','item','qty','amount','source','status']},'rows':{k:list(v.values()) for k,v in truth.items()},'source_totals':metrics},
       'tables_a.json':{'role':'candidate_workbook_extraction','truncated':False,'tables':chunks[0]},'tables_b.json':{'role':'candidate_workbook_extraction','truncated':False,'tables':chunks[1]}}

@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
 import native_moa_assistant_view
+import shared_source_repairs
 import dataset_rule_corrections
 import rule_review
 import rule_review_runtime
@@ -1876,6 +1877,8 @@ def prepare_attempt(
                    if public_snapshot_sidecar.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'shared_rule_source_repair': shared_source_repairs.marker(contract)}
+                   if shared_source_repairs.marker(contract) is not None else {}),
                 **({'warranty_recovery_layout_profile':warranty_recovery_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if warranty_recovery_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'service_report_layout_profile':service_report_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -2787,6 +2790,7 @@ def _effective_rule_source(
         corrected, receipt = answer_delivery.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = quadrant_metric_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = namc_inline_distances.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = shared_source_repairs.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -6375,6 +6379,8 @@ def prepare_rescore_attempt(
                    if public_snapshot_sidecar.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'shared_rule_source_repair': shared_source_repairs.marker(_read_json(staging/source_paths['contract']))}
+                   if shared_source_repairs.marker(_read_json(staging/source_paths['contract'])) is not None else {}),
                 **({'warranty_recovery_layout_profile':warranty_recovery_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if warranty_recovery_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'service_report_layout_profile':service_report_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}

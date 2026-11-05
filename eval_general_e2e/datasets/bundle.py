@@ -128,7 +128,7 @@ _GENERAL70_V4 = json.loads((Path(__file__).parent / "definitions/general-custom7
 GENERAL70_V4_DEFINITION = replace(
     GENERAL70_V3_DEFINITION, dataset_id="general-custom70-v4",
     created_at=_GENERAL70_V4["created_at"], source_revision=_GENERAL70_V4["source_revision"],
-    frozen_source_index=None,
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json",
 )
 INFO004_OPEN_DEFINITION = replace(
     GENERAL70_V3_DEFINITION, dataset_id="general-info004-open-v1", created_at="2026-11-04T00:00:00+08:00",

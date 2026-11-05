@@ -22,6 +22,18 @@
     "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1-dong-bingyue.json": {
       "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1-dong-bingyue.json",
       "sha256": "418d3efb949fab875bf58647047bcfbbed08b6388bb88e2c2c7f44a7d3a820de"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md": {
+      "snapshot": "tasks/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md",
+      "sha256": "92fb7989b735b84f5aefff3e69620ba9a8793bad5cf77f9e25357f9f4d6fbf37"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md": {
+      "snapshot": "tasks/02_Office_task_010_warranty_recovery_allocation.md",
+      "sha256": "ba76045b950d232074428ebcf5df5325e9f7c144c96693513ec5419097bd36ed"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md": {
+      "snapshot": "tasks/02_Office_task_015_procurement_reconciliation.md",
+      "sha256": "bff01b1cd354fdc11a1de3650123de2d0ea19ea7121a995bf05edfaafa78b38d"
     }
   },
   "excluded_paths": [

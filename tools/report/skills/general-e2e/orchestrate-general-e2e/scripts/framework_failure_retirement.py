@@ -8,13 +8,17 @@ import declared_public_snapshots
 import public_snapshot_sidecar
 import sterilization_quote_layout
 import native_writer_cleanup_failure
+import registered_rule_source_failures as source_failures
 
-KINDS={escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
+KINDS={source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
+    if contract.get('task_id') in source_failures.ROWS:
+        source_failures.evidence(rt,attempt,m,contract,task)
+        return source_failures.ERROR_KIND
     if contract.get('task_id')==native_writer_cleanup_failure.TASK:
         if (task.get('thread') or {}).get('status')!='COMPLETED':raise ValueError('NATIVE_CLEANUP_FAILURE_NOT_COMPLETED')
         native_writer_cleanup_failure.evidence(rt,attempt,m,contract)
@@ -90,8 +94,10 @@ def verify(rt,root,state,task):
             or proof.get('identity')!=rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['identity']
             or proof.get('thread')!=task.get('thread') or proof.get('locks')!=locks(rt,root,task)
             or proof.get('original_evidence_unchanged') is not True):raise ValueError('FRAMEWORK_FAILURE_PROOF_DRIFT')
-    if proof['kind']==escrow_grouped_review.ERROR_KIND:
-        result=rt._read_json(root/task['attempt_path']/'rule-review/discovery/worker/result.json')
+    if proof['kind'] in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
+        result=(source_failures.evidence(rt,root/task['attempt_path'],rt._read_json(root/task['attempt_path']/'attempt-manifest.json'),
+            rt._read_json(root/task['attempt_path']/rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['paths']['contract']),task)
+            if proof['kind']==source_failures.ERROR_KIND else rt._read_json(root/task['attempt_path']/'rule-review/discovery/worker/result.json'))
         if (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
     elif proof['kind'] in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}:
@@ -106,7 +112,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     root=rt._state_root(orchestration_root);state=rt._verify_state(root);task=rt._task_by_id(state,rt._identifier(task_id,'task_id'))
     if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT','RULES_NEEDS_ATTENTION'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
-    expected_phase={escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
+    expected_phase={source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if task_id in source_failures.ROWS else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
         declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION',
         sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING',native_writer_cleanup_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
@@ -117,8 +123,11 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     proof={'kind':kind,'identity':rt._read_json(attempt/'attempt-manifest.json')['identity'],
         'reason':rt._required_string(reason,'reason'),'thread':task.get('thread'),'locks':locks(rt,root,task),
         'at':rt._timestamp(now or rt._now()),'original_evidence_unchanged':True,'semantic_judging_performed':False}
-    if kind==escrow_grouped_review.ERROR_KIND:
-        result=rt._read_json(attempt/'rule-review/discovery/worker/result.json');pid=result.get('worker',{}).get('pid')
+    if kind in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
+        manifest=rt._read_json(attempt/'attempt-manifest.json')
+        result=(source_failures.evidence(rt,attempt,manifest,rt._read_json(attempt/manifest['paths']['contract']),task)
+            if kind==source_failures.ERROR_KIND else rt._read_json(attempt/'rule-review/discovery/worker/result.json'))
+        pid=result.get('worker',{}).get('pid')
         if isinstance(pid,bool) or not isinstance(pid,int) or pid<=0:raise ValueError('DISCOVERY_OWNER_PID_INVALID')
         process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
         if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')

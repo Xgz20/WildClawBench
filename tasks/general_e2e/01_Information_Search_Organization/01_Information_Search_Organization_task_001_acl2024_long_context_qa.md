@@ -598,6 +598,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
             with fitz.open(path) as document:
                 if document.needs_pass or len(document) == 0:
                     raise ValueError("encrypted or empty PDF")
+                record["requires_pdf_repair"] = bool(document.is_repaired)
                 page_texts = [page.get_text("text") for page in document]
                 page_count = len(document)
             record["pages"] = page_count
@@ -630,6 +631,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
                 if matched:
                     pdf_pass.add(matched)
                     record.update(status="verified_content_geometry_images", paper_id=matched)
+                elif identified and record.get("requires_pdf_repair"):
+                    record.update(status="non_equivalent_repaired_pdf", possible_paper_ids=identified)
                 elif identified:
                     record.update(status="pending_version_review", possible_paper_ids=identified)
                     pending_versions.append(relative)
