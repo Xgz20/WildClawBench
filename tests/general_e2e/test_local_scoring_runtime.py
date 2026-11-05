@@ -636,7 +636,9 @@ class LocalScoringRuntimeTests(unittest.TestCase):
             RUNTIME.run_rules_attempt(
                 attempt_root=attempt,
                 runtime_python=self.runtime_python,
-                timeout_seconds=0.2,
+                # A busy evaluation host can spend >200ms starting Python.
+                # Let the fixture create its child before testing tree cleanup.
+                timeout_seconds=2,
             )
         child_pid = int(
             (attempt / "runtime/workspace/child.pid").read_text(encoding="utf-8")

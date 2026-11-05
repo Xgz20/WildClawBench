@@ -822,6 +822,7 @@ def _prompt_text(
 项目根目录就是本题私有评分 attempt。先读取 `attempt-manifest.json`，再{skill_usage}。只处理本题，不创建或调度其他任务，不执行被测 Harness，不修改 `candidate-original/`，不把自动规则组件冒充完整分数。{readiness_instruction}{runtime_usage}
 
 若 manifest 含 trace_bundle，评分工作空间的 trace/ 内含标准轨迹、trace-index 和原始会话。需要核验工具调用或过程行为时，使用 catalog 的 raw_trace 条目和 file 分页查询读取原件；桌面协议投影不代表模型会话的全部工具调用，不得只因标准轨迹缺少某事件便断言未发生。保留原始工具名与调用ID，不把命令的读写操作重命名为另一个工具。
+若 catalog 含 moa-sdk-assistant-lines.jsonl，必须完整分页读取该文件及其配套 audit。它逐字保留原生SDK的所有assistant行，包括与tool_calls同处一条消息的过程说明；标准投影可能只列出该行的工具调用。评价规划、解释或其他过程行为时同时核对这个绑定原始SHA的视图，不得把投影省略当作模型未执行；原执行、候选、标准轨迹、检查点和分值不变。
 
 {rule_instruction}
 

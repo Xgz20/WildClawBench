@@ -31,6 +31,7 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
+import native_moa_assistant_view
 import dataset_rule_corrections
 import rule_review
 import rule_review_runtime
@@ -1952,6 +1953,10 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         trace = trace_handoff.verify(root, manifest["trace_bundle"], execution)
         if paths.get("transcript") and _sha256_file(root/paths["transcript"]) != trace_handoff.sha(root/"trace"/trace["transcript"]):
             raise ScoringRuntimeError("SCORING_TRANSCRIPT_COPY_DRIFT")
+        try:
+            native_moa_assistant_view.materialize(root, manifest, create=False)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            raise ScoringRuntimeError("NATIVE_MOA_ASSISTANT_VIEW_INVALID", str(error)) from error
     lineage = manifest.get("lineage")
     if lineage is not None:
         required_lineage_keys = {
@@ -3517,6 +3522,11 @@ def _semantic_reference_inputs(
         add_file("trace_index", attempt_root / "trace" / bundle["trace_index"])
         for relative in bundle["raw_trace"]:
             add_file("raw_trace", attempt_root / "trace" / relative)
+        try:
+            for path in native_moa_assistant_view.materialize(attempt_root, dict(manifest), create=True):
+                add_file("raw_trace" if path.suffix == ".jsonl" else "rule_audit", path)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            raise ScoringRuntimeError("NATIVE_MOA_ASSISTANT_VIEW_INVALID", str(error)) from error
     transcript_relative = manifest["paths"].get("transcript")
     if transcript_relative is not None:
         transcript_path = attempt_root / transcript_relative
