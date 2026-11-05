@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.40` 已停止队列可用`--resume --prepare-retry-task-id ID`在真实队列owner锁内执行单题零发送prepare-only恢复，并按旧归档/新journal的SHA接纳新准备attempt。原任务、素材、队列题序、模型与并发保持冻结；不绕过托管父进程核验，不重发已受理Prompt。
+
 `0.14.39` 自动展开已核验的折叠项目分组；单题零发送重试支持prepare-only，不发送Prompt。原队列仅通过源码恢复manifest、旧归档/新准备journal的SHA及完整题目/Workspace/Prompt/项目谱系接纳替代准备attempt。已发送或未知发送不适用。
 
 `0.14.38` 将尚未创建的原生session目录记录为空目录清单；逐段拒绝符号链接/权限错误，仍须独立原生活动门禁，不把目录缺失当空闲。执行队列仅在明确session-root ENOENT、无journal、无attempt且零发送的准备失败上接受绑定原队列SHA的源码恢复。

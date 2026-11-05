@@ -139,6 +139,7 @@ export function adoptPreparedRetry(state, proof, priorBytes, currentBytes) {
 
 export async function runSerialQueue(options) {
   if (options.sourceRepairManifest && !options.resume) throw new Error("DOUBAOWORK_SOURCE_REPAIR_REQUIRES_RESUME");
+  if (options.prepareRetryTaskId && !options.resume) throw new Error("DOUBAOWORK_PREPARE_RETRY_REQUIRES_RESUME");
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/u.test(options.queueId || "")) throw new Error("DOUBAOWORK_QUEUE_ID_INVALID");
   if (!Number.isInteger(options.runSlots) || options.runSlots < 1 || options.runSlots > 3) throw new Error("DOUBAOWORK_CONCURRENCY_NOT_ADMITTED: run-slots must be 1–3");
   if (!options.expectedPermission || options.expectedPermission === "current") throw new Error("DOUBAOWORK_QUEUE_EXPLICIT_PERMISSION_REQUIRED");
@@ -189,6 +190,26 @@ export async function runSerialQueue(options) {
       state = { schema: "wildclawbench.doubaowork-general-queue/v1", config, config_digest: sha(JSON.stringify(config)),
         created_at: now(), status: "RUNNING", tasks: taskIds.map((task_id, i) => ({ task_id, order: i, phase: "PENDING", attempt_id: null,
           project_name: queueProjectName(unitRoot, options.queueId, i + 1), dispatch_attempt_count: 0, native_started_at: null, native_finished_at: null })), history: [] };
+      await save(stateFile, state);
+    }
+    if (options.prepareRetryTaskId) {
+      const row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
+      if (!row || row.phase !== "NEEDS_ATTENTION" || !/^[A-Za-z0-9-]+$/u.test(row.attempt_id || "")
+          || state.error?.task_id !== row.task_id || state.error.phase !== "prepare-project") throw new Error("DOUBAOWORK_PREPARE_RETRY_NOT_ELIGIBLE");
+      const root = join(unitRoot, ".general-e2e", "execution", row.task_id, "doubaowork"), journalPath = join(root, "automation_state.json");
+      let currentBytes = await readFile(journalPath), current = JSON.parse(currentBytes), priorBytes;
+      if (current.attempt_id === row.attempt_id) {
+        assertPreSendRetryEligible(current); priorBytes = currentBytes;
+        state.history.push({ event: "ZERO_SEND_PREPARATION_RETRY_INTENT", task_id: row.task_id, at: now(),
+          prior_attempt_id: row.attempt_id, prior_journal_sha256: sha(priorBytes) });
+        await save(stateFile, state);
+        await execFile(process.execPath, [join(HERE, "driver.mjs"), "--unit-root", unitRoot, "--task-id", row.task_id,
+          "--managed-queue-id", options.queueId, "--expected-permission", options.expectedPermission,
+          "--app-path", options.appPath, "--endpoint", options.endpoint, "--resume", "--retry-pre-send-failure", "--prepare-only"],
+        { cwd: HERE, maxBuffer: 2 * 1024 * 1024 });
+        currentBytes = await readFile(journalPath);
+      } else priorBytes = await readFile(join(root, ".attempts", row.attempt_id, "automation_state.json"));
+      state = adoptPreparedRetry(state, { task_id: row.task_id, prior_journal_sha256: sha(priorBytes), prepared_journal_sha256: sha(currentBytes) }, priorBytes, currentBytes);
       await save(stateFile, state);
     }
     if (state.error) state.history.push({ event: "RESUME_AFTER_ATTENTION", at: now(), previous_error: state.error });
@@ -310,12 +331,13 @@ export async function main(argv = process.argv.slice(2)) {
   const { values: v } = parseArgs({ args: argv, options: {
     "unit-root": { type: "string" }, "queue-id": { type: "string" }, "run-slots": { type: "string", default: "3" },
     "source-repair-manifest": { type: "string" },
+    "prepare-retry-task-id": { type: "string" },
     "expected-permission": { type: "string" }, "app-path": { type: "string", default: DEFAULT_APP_PATH },
     endpoint: { type: "string", default: DEFAULT_ENDPOINT }, resume: { type: "boolean" }, help: { type: "boolean" },
   } });
   if (v.help) { console.log("DoubaoWork General queue (development admission): --unit-root ABS --queue-id ID --expected-permission LABEL [--resume] [--run-slots 1–3]. No task deadline; unknown dispatch never repeats."); return; }
   const result = await runSerialQueue({ unitRoot: v["unit-root"], queueId: v["queue-id"], runSlots: Number(v["run-slots"]),
-    expectedPermission: v["expected-permission"], appPath: v["app-path"], endpoint: v.endpoint, resume: v.resume, sourceRepairManifest: v["source-repair-manifest"] });
+    expectedPermission: v["expected-permission"], appPath: v["app-path"], endpoint: v.endpoint, resume: v.resume, sourceRepairManifest: v["source-repair-manifest"], prepareRetryTaskId: v["prepare-retry-task-id"] });
   console.log(JSON.stringify({ status: result.status, tasks: result.tasks, error: result.error ?? null }, null, 2));
   if (result.status === "NEEDS_ATTENTION") process.exitCode = 3;
 }
