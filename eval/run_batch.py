@@ -448,7 +448,7 @@ def _build_agent_backend(args) -> BaseAgent:
 
 def _is_extension_task(task: dict) -> bool:
     """Return whether a parsed task belongs to a self-built dataset."""
-    if task.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3'}:return True
+    if task.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4'}:return True
     try:
         relative_path = Path(task["file_path"]).resolve().relative_to(
             TASKS_DIR.resolve()
@@ -501,7 +501,7 @@ def _task_provenance_or_unavailable(task: dict) -> dict[str, Any]:
 
 def _task_scope_entry(task: dict) -> dict[str, Any]:
     path = Path(str(task.get("file_path") or ""))
-    source = "general_e2e" if task.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3'} else "official"
+    source = "general_e2e" if task.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4'} else "official"
     category = str(task.get("category") or "").strip()
     try:
         relative = path.resolve().relative_to(TASKS_DIR.resolve())
