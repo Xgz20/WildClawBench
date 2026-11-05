@@ -64,6 +64,7 @@ import { installNativeToolObserver, collectNativeToolObserver, normalizeNativeTo
   readNativeToolActivity, assertNativeToolActivityAllowed, taskToolDeliveries } from "./runtime-tools.mjs";
 import { readNativeActivity, assertNativeActivityAllowed } from "./runtime-activity.mjs";
 import { configureMoaBackend } from "./runtime-moa.mjs";
+import { readNativeProjectWorkspace } from "./runtime-project.mjs";
 import { installNativeLifecycleObserver, bindNativeLifecycleObserver, collectNativeLifecycleObserver, normalizeNativeLifecycle } from "./runtime-lifecycle.mjs";
 import { preflightDoubaoPaths } from "./path-preflight.mjs";
 import { inspectNativeAuthorizationHistory, summarizePendingConfirmations } from "./interactions.mjs";
@@ -744,6 +745,7 @@ async function verifyPreparedProjectWorkspace(page, state) {
       || sha256Text(await section.getAttribute("data-project-id") || "") !== state.client.project_id_sha256) {
     throw new Error("DOUBAOWORK_PREPARED_PROJECT_ID_DRIFT");
   }
+  if (state.client.version === "2.35.15") return readNativeProjectWorkspace(page, state);
   const row = title.locator('xpath=ancestor::*[@role="button" and @aria-roledescription="draggable"]');
   if (await row.count() !== 1) throw new Error("DOUBAOWORK_PREPARED_PROJECT_ROW_AMBIGUOUS");
   await row.hover();

@@ -76,7 +76,7 @@ async function save(path, value) {
 }
 export async function sourceDigest() {
   const names = ["driver.mjs", "batch.mjs", "prepared-task.mjs", "managed-queue.mjs", "package-lock.json",
-    ...["controller.mjs", "interactions.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-dispatcher.mjs", "runtime-moa.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
+    ...["controller.mjs", "interactions.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-dispatcher.mjs", "runtime-moa.mjs", "runtime-project.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
   return sha(JSON.stringify(await Promise.all(names.map(async n => [n, sha(await readFile(join(HERE, n)))]))));
 }
 
@@ -121,7 +121,8 @@ export function adoptPreparedRetry(state, proof, priorBytes, currentBytes) {
   if (!row || row.phase !== "NEEDS_ATTENTION" || row.attempt_id !== prior.attempt_id
       || state.error?.task_id !== proof.task_id || state.error.phase !== "prepare-project"
       || proof.prior_journal_sha256 !== sha(priorBytes) || proof.prepared_journal_sha256 !== sha(currentBytes)
-      || current.attempt_id === prior.attempt_id || current.prepared_project !== true || current.phase !== "WORKSPACE_CONFIRMED"
+      || current.attempt_id === prior.attempt_id
+      || !(current.prepared_project === true && current.phase === "WORKSPACE_CONFIRMED" || current.phase === "INFRA_FAILED")
       || current.send?.dispatch_attempt_count !== 0 || current.send.intent_persisted_at || current.session?.conversation_id
       || current.identity?.task_id !== row.task_id || current.workspace !== prior.workspace
       || current.prompt.sha256 !== prior.prompt.sha256 || current.client.project_name !== row.project_name
@@ -130,9 +131,11 @@ export function adoptPreparedRetry(state, proof, priorBytes, currentBytes) {
       || !current.history.some(e => e.retry_of_attempt_sha256 === sha(prior.attempt_id))) {
     throw new Error("DOUBAOWORK_PREPARED_RETRY_ADOPTION_UNVERIFIED");
   }
+  if (current.phase === "INFRA_FAILED") assertPreSendRetryEligible(current);
   const updated = structuredClone(state), target = updated.tasks.find(r => r.task_id === proof.task_id);
-  target.phase = "PREPARED"; target.attempt_id = current.attempt_id;
-  updated.history.push({ event: "ZERO_SEND_PREPARED_RETRY_ADOPTED", task_id: proof.task_id, at: now(),
+  target.phase = current.phase === "INFRA_FAILED" ? "NEEDS_ATTENTION" : "PREPARED"; target.attempt_id = current.attempt_id;
+  if (current.phase === "INFRA_FAILED") updated.error = { task_id: proof.task_id, phase: "prepare-project", worker: null, native: current.error };
+  updated.history.push({ event: current.phase === "INFRA_FAILED" ? "ZERO_SEND_FAILED_RETRY_PRESERVED" : "ZERO_SEND_PREPARED_RETRY_ADOPTED", task_id: proof.task_id, at: now(),
     prior_attempt_id: prior.attempt_id, prepared_attempt_id: current.attempt_id, ...proof });
   return updated;
 }
@@ -193,11 +196,16 @@ export async function runSerialQueue(options) {
       await save(stateFile, state);
     }
     if (options.prepareRetryTaskId) {
-      const row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
+      let row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
       if (!row || row.phase !== "NEEDS_ATTENTION" || !/^[A-Za-z0-9-]+$/u.test(row.attempt_id || "")
           || state.error?.task_id !== row.task_id || state.error.phase !== "prepare-project") throw new Error("DOUBAOWORK_PREPARE_RETRY_NOT_ELIGIBLE");
       const root = join(unitRoot, ".general-e2e", "execution", row.task_id, "doubaowork"), journalPath = join(root, "automation_state.json");
       let currentBytes = await readFile(journalPath), current = JSON.parse(currentBytes), priorBytes;
+      if (current.attempt_id !== row.attempt_id && current.phase === "INFRA_FAILED") {
+        priorBytes = await readFile(join(root, ".attempts", row.attempt_id, "automation_state.json"));
+        state = adoptPreparedRetry(state, { task_id: row.task_id, prior_journal_sha256: sha(priorBytes), prepared_journal_sha256: sha(currentBytes) }, priorBytes, currentBytes);
+        await save(stateFile, state); row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
+      }
       if (current.attempt_id === row.attempt_id) {
         assertPreSendRetryEligible(current); priorBytes = currentBytes;
         state.history.push({ event: "ZERO_SEND_PREPARATION_RETRY_INTENT", task_id: row.task_id, at: now(),

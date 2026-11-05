@@ -52,6 +52,10 @@ test('a prepared retry is adopted only from SHA-bound archived zero-send evidenc
  const raw=Buffer.from(JSON.stringify(prior)),now=Buffer.from(JSON.stringify(current)),proof={task_id:'t',prior_journal_sha256:sha(raw),prepared_journal_sha256:sha(now)};
  assert.equal(adoptPreparedRetry(state,proof,raw,now).tasks[0].attempt_id,'new');
  assert.equal(state.tasks[0].attempt_id,'old');
+ const failed=structuredClone(current);failed.phase='INFRA_FAILED';failed.prepared_project=false;
+ const failedRaw=Buffer.from(JSON.stringify(failed));
+ const preserved=adoptPreparedRetry(state,{...proof,prepared_journal_sha256:sha(failedRaw)},raw,failedRaw);
+ assert.equal(preserved.tasks[0].phase,'NEEDS_ATTENTION');assert.equal(preserved.tasks[0].attempt_id,'new');
  const sent=structuredClone(current);sent.send.dispatch_attempt_count=1;const sentRaw=Buffer.from(JSON.stringify(sent));
  assert.throws(()=>adoptPreparedRetry(state,{...proof,prepared_journal_sha256:sha(sentRaw)},raw,sentRaw),/ADOPTION_UNVERIFIED/);
  assert.throws(()=>adoptPreparedRetry(state,{...proof,prior_journal_sha256:'0'.repeat(64)},raw,now),/ADOPTION_UNVERIFIED/);
