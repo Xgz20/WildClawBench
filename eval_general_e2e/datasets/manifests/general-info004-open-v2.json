@@ -1,0 +1,168 @@
+{
+  "bundle_protocol": "general-e2e-package-v1",
+  "contract_version": "general-e2e-contract-v1",
+  "created_at": "2026-11-05T00:00:00+08:00",
+  "dataset_digest": "d62dab951bf4ae51ca46854196f8fb8d90ee7c4da6ae5f7bad06850882081baa",
+  "dataset_id": "general-info004-open-v2",
+  "digest_algorithm": "wildclawbench.dataset-manifest-sha256/v1",
+  "generated_by": "eval_general_e2e.datasets.bundle/1",
+  "schema": {
+    "path": "schemas/dataset-manifest-v1.schema.json",
+    "sha256": "af5682fdcab3a2a82f68e39ce631facc29f227e18d28e888014981169edf4bf2"
+  },
+  "schema_id": "urn:wildclawbench:schema:general-e2e:dataset-manifest:v1",
+  "schema_version": 1,
+  "selection": {
+    "exclude_tags": [],
+    "include_tags": [],
+    "ordering": "source_path_posix_ascending",
+    "task_root": "tasks/general_e2e"
+  },
+  "source": {
+    "revision": "0ba583d42993cf141445ad86a29a50629d26867c",
+    "revision_scope": [
+      "tasks/general_e2e",
+      "workspace/general_e2e"
+    ],
+    "task_registry_path": "provenance/task_sources.yaml",
+    "task_registry_sha256": "ec12ffc8ac7a6637696731ae25fb62d8c517c46b9bcb9cb4c03bcc7e5cfd9ecd"
+  },
+  "statistics": {
+    "category_counts": {
+      "01_Information_Search_Organization": 1
+    },
+    "difficulty_counts": {
+      "L3": 1
+    },
+    "grading_type_counts": {
+      "hybrid": 1
+    },
+    "task_count": 1,
+    "timeout_counts": {
+      "3600": 1
+    }
+  },
+  "task_count": 1,
+  "tasks": [
+    {
+      "bundle": {
+        "execution_contract_path": "tasks/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/execution/contract.json",
+        "scoring_contract_path": "tasks/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/private-scoring/contract.json",
+        "task_path": "tasks/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/task.md"
+      },
+      "category": "01_Information_Search_Organization",
+      "difficulty": "L3",
+      "digests": {
+        "execution_contract_sha256": "2935fc5cd9b18fd9e44b99b2704623680965f3b2a926fa63a9cf38719f5a723e",
+        "private_scoring_sha256": "b7fdee82fbb6f66d501e6421cc3a3f157dbc5b65b7a71bccc14388dab8c09741",
+        "prompt_sha256": "ae65bf3f3b5f66b390e3cf04553401a06d1c96f04357f41a015f7303db794038",
+        "scoring_contract_sha256": "d7c3d7b445c9cb2ad1c18935f426faba87c9cd0e00951611e8ef4be009f4d86f",
+        "task_sha256": "3f731276587cf853b6f0f018801fce943821cdacab0f0db492cd4a7a297b540a",
+        "workspace_exec_sha256": "3c9dc627a9064e089699d3e0c65bbc19ca54e6574feb1aff6853bb44c33d99e8"
+      },
+      "grading_type": "hybrid",
+      "grading_weights": {
+        "automated": 0.02,
+        "llm_judge": 0.98
+      },
+      "materials": {
+        "execution": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": ".gitkeep",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "size": 0
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "AGENTS.md",
+              "sha256": "17718ca55cfbf785831b74df69a166be8f6762cbec154c20a9daa8ef5cae2941",
+              "size": 541
+            }
+          ],
+          "root": "tasks/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/execution/exec",
+          "sha256": "3c9dc627a9064e089699d3e0c65bbc19ca54e6574feb1aff6853bb44c33d99e8"
+        },
+        "private_scoring": {
+          "algorithm": "wildclawbench.dataset-tree-sha256/v1",
+          "entries": [
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference_answer.md",
+              "sha256": "a88071ceea20fc2e3e33e85709ac27e14ea2b0bd813d473a9655f8f5c22484c8",
+              "size": 25235
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "reference_sources.json",
+              "sha256": "3110016e5ba4d8249e09be9474eb2d00271b21591dc18d59acf088ffde2b4c92",
+              "size": 2960
+            },
+            {
+              "kind": "directory",
+              "mode": "0755",
+              "path": "source_evidence"
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "source_evidence/P1-cultural.json",
+              "sha256": "b3c4337921effac468773448d88d7a143ec72d306ac7c8415b990f229873e627",
+              "size": 957
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "source_evidence/S1-dong-bingyue.json",
+              "sha256": "4ae1148a88d8e50a1be1b7950ecd7c20fd7b36c94024ac8971e5adae20e47ef0",
+              "size": 2282
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "source_evidence/S2-yang-jingjian.json",
+              "sha256": "0ed4e4294974ba68b19b78dc9869ee8e6083564069531b5c5f866fd9c22a9ca8",
+              "size": 1006
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "source_evidence/S3-li-yi.json",
+              "sha256": "bfe3cfc9455a91718dd17d475eb148f12081addcd3eb9b4314bbadac533901f3",
+              "size": 1129
+            },
+            {
+              "kind": "file",
+              "mode": "0644",
+              "path": "source_evidence/Y1-yang-lianfen.json",
+              "sha256": "067551699f8979361ad4fa61f90e07cd5092798a6cd96cdbdb72df15f8ecaeed",
+              "size": 10579
+            }
+          ],
+          "root": "tasks/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/private-scoring/gt",
+          "sha256": "b7fdee82fbb6f66d501e6421cc3a3f157dbc5b65b7a71bccc14388dab8c09741"
+        }
+      },
+      "modality": "pure-text",
+      "name": "鲁迅留日思想与五四杂文的史料检索及比较",
+      "order": 1,
+      "source": {
+        "task_path": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
+        "workspace_path": "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison"
+      },
+      "tags": [
+        "custom",
+        "academic",
+        "general_task_e2e"
+      ],
+      "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
+      "timeout_seconds": 3600
+    }
+  ]
+}
