@@ -1,17 +1,24 @@
 export async function readNativeActivity(page) {
   return page.evaluate(() => {
-    const chunks = window["@flow-web/desktop:stable"];
-    if (!Array.isArray(chunks)) throw new Error("DOUBAOWORK_ACTIVITY_PROFILE_UNAVAILABLE");
+    const profiles = [
+      { key: "@flow-web/desktop:stable", id: 37476, getters: ["XQ", "ne"] },
+      { key: "chunk_@flow-web/desktop", id: "MBp", getters: ["AJ", "zo"] },
+    ].filter(p => Array.isArray(window[p.key]));
+    if (profiles.length !== 1) throw new Error("DOUBAOWORK_ACTIVITY_PROFILE_UNAVAILABLE");
+    const selected = profiles[0], chunks = window[selected.key];
     let require;
     const item = [[`wcb-activity-${crypto.randomUUID()}`], {}, r => { require = r; }];
     chunks.push(item); if (chunks.at(-1) === item) chunks.pop();
-    if (!String(require?.m?.[37476] || "").includes("Resource controller of GLOBAL_STORE not found")) throw new Error("DOUBAOWORK_ACTIVITY_PROFILE_UNSUPPORTED");
-    const module = require(37476);
-    const containers = [module.XQ(), module.ne()];
+    if (!String(require?.m?.[selected.id] || "").includes("Resource controller of GLOBAL_STORE not found")) throw new Error("DOUBAOWORK_ACTIVITY_PROFILE_UNSUPPORTED");
+    const module = require(selected.id);
+    if (selected.getters.some(key => typeof module[key] !== "function")) throw new Error("DOUBAOWORK_ACTIVITY_PROFILE_UNSUPPORTED");
+    const containers = selected.getters.map(key => module[key]());
     const services = [...new Set(containers.filter(c => c.serviceContainer.isBound("chatIMService")).map(c => c.serviceContainer.get("chatIMService")))];
     const rows = [];
     for (const service of services) {
-      const tasks = service.getTaskService(), values = Object.values(tasks.mainTaskService.tasks);
+      const tasks = service.getTaskService(), table = tasks.mainTaskService.tasks;
+      if (!table || typeof table !== "object" || table instanceof Map || Array.isArray(table)) throw new Error("DOUBAOWORK_ACTIVITY_TASK_STORE_UNSUPPORTED");
+      const values = Object.values(table);
       if (values.length > 32) throw new Error("DOUBAOWORK_ACTIVITY_LIMIT");
       for (const task of values) {
         const data = tasks.checkpointService.getMainTaskData(task.sessionId);

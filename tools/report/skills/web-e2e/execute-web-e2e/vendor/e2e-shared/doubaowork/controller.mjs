@@ -63,6 +63,7 @@ import { installRuntimeStreamObserver, collectRuntimeStream } from "./runtime-st
 import { installNativeToolObserver, collectNativeToolObserver, normalizeNativeToolEvents,
   readNativeToolActivity, assertNativeToolActivityAllowed, taskToolDeliveries } from "./runtime-tools.mjs";
 import { readNativeActivity, assertNativeActivityAllowed } from "./runtime-activity.mjs";
+import { configureMoaBackend } from "./runtime-moa.mjs";
 import { installNativeLifecycleObserver, bindNativeLifecycleObserver, collectNativeLifecycleObserver, normalizeNativeLifecycle } from "./runtime-lifecycle.mjs";
 import { preflightDoubaoPaths } from "./path-preflight.mjs";
 import { inspectNativeAuthorizationHistory, summarizePendingConfirmations } from "./interactions.mjs";
@@ -241,6 +242,7 @@ async function connectClient(endpointValue, appPath, connect) {
     page.setDefaultTimeout(10_000);
     const client = { browser, page, endpoint: endpoint.origin, app, listener };
     await verifyExecutionEnvironment(client);
+    configureMoaBackend(browser, { app, uiEndpoint: endpoint.origin });
     return client;
   } catch (error) {
     await browser.close();

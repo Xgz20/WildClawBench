@@ -7,15 +7,25 @@ async function callObserver(page, config) {
   const cdp = await page.context().newCDPSession(page), group = `wcb-lifecycle-${randomUUID()}`;
   try {
     const object = await cdp.send("Runtime.evaluate", { objectGroup: group, expression: `(() => {
-      let require; const chunks = window["@flow-web/desktop:stable"];
-      if (!Array.isArray(chunks)) throw new Error("CHECKPOINT_LOADER_UNAVAILABLE");
+      const candidates = ["@flow-web/desktop:stable", "chunk_@flow-web/desktop"].filter(k => Array.isArray(window[k]));
+      if (candidates.length !== 1) throw new Error("CHECKPOINT_LOADER_UNAVAILABLE");
+      const modern = candidates[0] === "chunk_@flow-web/desktop";
+      let require; const chunks = window[candidates[0]];
       const item = [["wcb-lifecycle-" + crypto.randomUUID()], {}, r => { require = r; }];
       chunks.push(item); if (chunks.at(-1) === item) chunks.pop();
-      const source = String(require.m[238525] || "");
-      if (!source.includes("receiveTimestamp:o=Date.now()") || !source.includes("queryMessageId")
-          || !source.includes("eventInstanceId") || !source.includes("perf_mark")) throw new Error("CHECKPOINT_CLOCK_PROFILE_UNSUPPORTED");
-      const registry = require(37476);
-      const services = [...new Set([registry.XQ(), registry.ne()].filter(c => c.serviceContainer.isBound("chatIMService"))
+      let source;
+      if (modern) {
+        const clock = require.c?.Tt?.exports, producer = require.c?.ZVL?.exports;
+        if (typeof clock?.b !== "function" || typeof producer?.lE !== "function" || typeof producer?.m6 !== "function") throw new Error("CHECKPOINT_CLOCK_PROFILE_UNSUPPORTED");
+        source = String(producer.lE) + "\\n" + String(producer.m6) + "\\n" + String(clock.b);
+      } else {
+        source = String(require.m[238525] || "");
+        if (!source.includes("receiveTimestamp:o=Date.now()") || !source.includes("queryMessageId")
+            || !source.includes("eventInstanceId") || !source.includes("perf_mark")) throw new Error("CHECKPOINT_CLOCK_PROFILE_UNSUPPORTED");
+      }
+      const registry = require(modern ? "MBp" : 37476);
+      const containers = modern ? [registry.AJ(), registry.zo()] : [registry.XQ(), registry.ne()];
+      const services = [...new Set(containers.filter(c => c.serviceContainer.isBound("chatIMService"))
         .map(c => c.serviceContainer.get("chatIMService")))];
       const checkpoints = [...new Set(services.map(s => s.getTaskService().checkpointService))];
       const stores = [...new Set(checkpoints.map(s => s.store))];
@@ -23,14 +33,19 @@ async function callObserver(page, config) {
       const owned = window.__wcbDoubaoLifecycleObserver?.releaseHooks?.find(h => h.checkpoint === checkpoints[0]
         && h.wrapper === checkpoints[0].removeMainTaskData && String(h.original).includes("removeMainTaskData"));
       if (checkpoints.length !== 1 || (!owned && !String(checkpoints[0].removeMainTaskData).includes("removeMainTaskData"))) throw new Error("CHECKPOINT_RELEASE_PROFILE_UNSUPPORTED");
-      return { stores, checkpoints, source };
+      return { stores, checkpoints, source, modern };
     })()` });
-    if (object.exceptionDetails || !object.result.objectId) throw new Error("DOUBAOWORK_LIFECYCLE_PROFILE_UNAVAILABLE");
+    if (object.exceptionDetails || !object.result.objectId) throw new Error("DOUBAOWORK_LIFECYCLE_PROFILE_UNAVAILABLE: "
+      + String(object.exceptionDetails?.exception?.description || object.exceptionDetails?.text || "object missing").slice(0,500));
     const properties = await cdp.send("Runtime.getProperties", { objectId: object.result.objectId, ownProperties: true });
     const source = properties.result.find(p => p.name === "source")?.value?.value;
     if (typeof source !== "string") throw new Error("DOUBAOWORK_LIFECYCLE_SOURCE_UNAVAILABLE");
+    const modern = properties.result.find(p => p.name === "modern")?.value?.value === true;
+    if (modern && sha(source) !== "0401bd3790c8de4ec4143b9bafbc4cdb1bf0679d6269cf3664698dd6ce569234") throw new Error("DOUBAOWORK_LIFECYCLE_CLOCK_SOURCE_UNVERIFIED");
     const result = await cdp.send("Runtime.callFunctionOn", { objectId: object.result.objectId, objectGroup: group, returnByValue: true,
-      arguments: [{ value: { ...config, profileSha: sha(source) } }], functionDeclaration: operateLifecycleObserver.toString() });
+      arguments: [{ value: { ...config, profileSha: sha(source), clockSource: modern
+        ? "native SDK ZVL.lE/m6 receiveTimestamp=Tt.b(): Math.floor(performance.now()+performance.timeOrigin)"
+        : "native SDK 238525 perf mark receiveTimestamp=Date.now()" } }], functionDeclaration: operateLifecycleObserver.toString() });
     if (result.exceptionDetails || !result.result.value) throw new Error(`DOUBAOWORK_LIFECYCLE_OBSERVER_FAILED: ${result.exceptionDetails?.exception?.description || config.operation}`);
     return result.result.value;
   } finally { await cdp.send("Runtime.releaseObjectGroup", { objectGroup: group }).catch(() => {}); await cdp.detach(); }
@@ -59,7 +74,7 @@ export function operateLifecycleObserver(cfg) {
   };
   if (cfg.operation === "install") {
     if (!root) {
-      root = { profile_sha256: cfg.profileSha, stores: this.stores, observers: new Map(), subscriptions: [], releaseHooks: [], notifications: 0 };
+      root = { profile_sha256: cfg.profileSha, clock_source: cfg.clockSource, stores: this.stores, observers: new Map(), subscriptions: [], releaseHooks: [], notifications: 0 };
       const receive = (state, previous) => {
         root.notifications += 1;
         for (const o of root.observers.values()) try {
@@ -138,7 +153,7 @@ export function operateLifecycleObserver(cfg) {
     attempt_id: o.attempt_id, workspace: o.workspace, installed_at: o.installed_at, collected_at: new Date().toISOString(),
     native_request_session_id: o.native_request_session_id, samples: [...o.samples.values()].map(s => JSON.parse(s)),
     errors: [...o.errors], diagnostics: o.last_shape, bound_at: o.bound_at ?? null,
-    store_update_notifications: root.notifications, clock_source: "native SDK 238525 perf mark receiveTimestamp=Date.now()" };
+    store_update_notifications: root.notifications, clock_source: root.clock_source || "native SDK 238525 perf mark receiveTimestamp=Date.now()" };
   if (cfg.restore) {
     root.observers.delete(cfg.attemptId);
     if (!root.observers.size) {

@@ -1,22 +1,28 @@
 // Observe a clone of this attempt's fetch response. Never alter request args,
 // headers, the original response, tool inputs, or native completion decisions.
 export async function installRuntimeStreamObserver(page, { attemptId, prompt, workspace }) {
-  return page.evaluate(({ attemptId, prompt, workspace }) => {
+  return page.evaluate(async ({ attemptId, prompt, workspace }) => {
     const key = "__wcbDoubaoResponseObserver";
     if (window[key]) throw new Error("DOUBAOWORK_STREAM_OBSERVER_ALREADY_EXISTS");
-    const chunks = window["@flow-web/desktop:stable"];
-    if (!Array.isArray(chunks)) throw new Error("DOUBAOWORK_RUNTIME_LOADER_UNAVAILABLE");
+    const candidates = ["@flow-web/desktop:stable", "chunk_@flow-web/desktop"].filter(k => Array.isArray(window[k]));
+    if (candidates.length !== 1) throw new Error("DOUBAOWORK_RUNTIME_LOADER_UNAVAILABLE");
+    const modern = candidates[0] === "chunk_@flow-web/desktop", chunks = window[candidates[0]];
     let require;
     const item = [[`wcb-observer-${crypto.randomUUID()}`], {}, r => { require = r; }];
     chunks.push(item);
     if (chunks.at(-1) === item) chunks.pop();
-    const module = String(require?.m?.[190005] || "");
+    const moduleId = modern ? "Yrv" : 190005;
+    const module = String(require?.m?.[moduleId] || "");
     if (!module.includes("baseURL") || !module.includes("fetch")) throw new Error("DOUBAOWORK_SSE_FETCH_PROFILE_UNSUPPORTED");
-    const sdk = require(190005);
-    if (typeof sdk.le !== "function" || typeof sdk.iv !== "function") throw new Error("DOUBAOWORK_SSE_FETCH_PROFILE_UNSUPPORTED");
-    const sdkFetch = sdk.le();
-    const getter = sdkFetch === undefined ? () => window.fetch : () => sdk.le();
-    const setter = sdkFetch === undefined ? value => { window.fetch = value; } : value => sdk.iv({ fetch: value });
+    if (modern) {
+      const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(module)))].map(x => x.toString(16).padStart(2, "0")).join("");
+      if (digest !== "a462a2fca114bb5514671b5943ae60ddc5fdd83ca51ec6529e48b8bcce8410b6") throw new Error("DOUBAOWORK_SSE_FETCH_SOURCE_UNVERIFIED");
+    }
+    const sdk = require(moduleId), getFetch = modern ? sdk.B3 : sdk.le, setConfig = modern ? sdk.k4 : sdk.iv;
+    if (typeof getFetch !== "function" || typeof setConfig !== "function") throw new Error("DOUBAOWORK_SSE_FETCH_PROFILE_UNSUPPORTED");
+    const sdkFetch = getFetch();
+    const getter = sdkFetch === undefined ? () => window.fetch : () => getFetch();
+    const setter = sdkFetch === undefined ? value => { window.fetch = value; } : value => setConfig({ fetch: value });
     const original = getter();
     if (typeof original !== "function") throw new Error("DOUBAOWORK_RUNTIME_FETCH_UNAVAILABLE");
     const expected = prompt.replace(/\r\n/g, "\n").replace(/\n+$/u, "");
