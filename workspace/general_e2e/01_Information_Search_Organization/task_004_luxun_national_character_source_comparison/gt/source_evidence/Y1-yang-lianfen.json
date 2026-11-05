@@ -3,25 +3,24 @@
   "role": "evaluator_reference_not_candidate_output",
   "url": "https://lxyj.cbpt.cnki.net/portal/journal/portal/client/paper/0e74b482f92af4130394be98e74de9f0",
   "title": "晚清与五四文学的国民性焦虑（三）——鲁迅国民性话语的矛盾与超越",
-  "retrieved_on": "2026-11-04",
-  "original_response_sha256": "75058384b203f42e8f6ca0a9d318ee86860452367a557f769b7b83c7ef82e2e2",
-  "coverage": "metadata_and_secondary_context_only",
+  "retrieved_on": "2026-11-05",
+  "original_response_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455",
+  "coverage": "primary_document_reviewed_relevant_passages",
   "excerpt": "",
-  "reviewer_summary": "本次官方页再次核实作者、完整题名、2003年第12期及29—38页；页面的参考文献列出《随感录·三十八》，不等于取得正文论证。2009述评仅支持索引注明的一般概括。两个具体归属仍无足够直接证据，既不判错也不判对。",
+  "reviewer_summary": "用户提供的知网PDF已核对题名、作者、刊期、29—38页及正文/注释边界。原冻结执行已由独立裁判结合完整PDF及关键页图重评并通过正式验分；本卡保留相关原文定位，不把获取原文等同于候选全部主张成立。来源卡不是候选阅读记录。",
   "reviewer_summary_is_not_original_text": true,
   "fulltext_included": false,
   "locator": "原冻结补证的官方期刊页与2009研究述评第68页及文献[20]",
   "supports": [
-    "来源身份"
+    "来源身份",
+    "相关论证的可定位原文",
+    "正文结尾与注36的跨页对应关系"
   ],
   "does_not_establish": [
-    "以随感录三十八论爱国话语收编危险",
-    "将超越解释为包含自身的内部自我反思"
+    "不能从找到原文直接推定候选转述正确或得满分",
+    "未在本卡展示的其他实质命题仍按原开放Rubric补证"
   ],
-  "unavailable_claims": [
-    "Y1-C1",
-    "Y1-C2"
-  ],
+  "unavailable_claims": [],
   "author": "杨联芬",
   "publication": {
     "journal": "鲁迅研究月刊",
@@ -84,7 +83,108 @@
       "附相关段落、前后文及该版本页码",
       "区分杨联芬自己的论证、她引用他人的观点与复核者推论"
     ],
-    "current_status": "evaluator_reference_unavailable",
+    "current_status": "primary_document_obtained_2026-11-05",
     "search_leads_are_not_supporting_evidence": true
+  },
+  "metadata_response_sha256": "75058384b203f42e8f6ca0a9d318ee86860452367a557f769b7b83c7ef82e2e2",
+  "primary_document": {
+    "provided_by_user": true,
+    "provided_on": "2026-11-05",
+    "format": "PDF",
+    "page_count": 10,
+    "printed_pages": "29-38",
+    "size": 699353,
+    "sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455",
+    "publisher_file_id": "LXYJ200312003",
+    "full_original_archived_with_rescore": true,
+    "full_original_in_source_bundle": false,
+    "boundary": "PDF1—9页为杨文正文/注释；PDF10页上方杨乾坤另一文不属于本论文，下方是杨文注31续文、32—36及通讯处。PDF8末句续至PDF9开头。"
+  },
+  "primary_passages": [
+    {
+      "id": "Y1-p32-p33",
+      "pdf_pages": [
+        4,
+        5
+      ],
+      "printed_pages": [
+        32,
+        33
+      ],
+      "text": "从根本上说\b中国晚清以来的启蒙话语\b都与西方话语有直接关系。问题是\b中国作家对西方话语的接受\b究竟是对西方殖民主义文化观念的妥协\b还是在本土舆论无法触动现实时权且借用以作工具的策略考虑？任何对中国现代启蒙话语激进主义倾向的反省\b都不能离开对百年来中国人生存处境的现实观照。鲁迅对史密斯等西方（包括日本）中国国民性理论的推崇\b也不是理论意义的赞同\b而是出于刺激国人的动机。不明白这一点\b就难免荒唐地将鲁迅推为“汉奸”〇15。",
+      "text_sha256": "dc7aa46e144573398baaaecaa20f00163b06e4b49e11993b5deda01c90995adc",
+      "derived_from_pdf_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455"
+    },
+    {
+      "id": "Y1-p33",
+      "pdf_pages": [
+        5
+      ],
+      "printed_pages": [
+        33
+      ],
+      "text": "这种“抉心自食”、不求宽恕的姿态\b体现出鲁迅特有的精神。他是以强有力的个人的精神\b辐射整个民族\b渴望这种忍辱负重的精神\b能够成为全民族励精图治、发奋抗争的精神。鲁迅一生都在试图以“绝对”、“偏激”的姿态\b催促民族自省精神诞生。",
+      "text_sha256": "891965c9bf3ee5f60329764a662bcb0e86b6b5d18229301eaaee16da5504ee77",
+      "derived_from_pdf_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455"
+    },
+    {
+      "id": "Y1-p36-subject",
+      "pdf_pages": [
+        8
+      ],
+      "printed_pages": [
+        36
+      ],
+      "text": "鲁迅作为叙事主体在他的文本中\b由此是充满紧张的：批判国民性使他引导读者嘲笑笔下的小人物；而阶级的意识\b又使他试图区分上流社会和下流社会的不同。鲁迅1925年以后几乎中断小说创作〇34\b此后的杂文由前期广泛的文明批评\b愈来愈多地集中于对社会政治和权力阶层的批判上\b批判造成国民奴性的政治道德律令\b指责带领众人走向屠场的“头羊”———鲁迅偏激地将拥有文化阐释权和话语权的社会上层知识分子\b与统治阶级同等看待\b称之为人肉筵席上的食人者。这是对国民性理论的超越\b还是对国民性理论的抛弃？",
+      "text_sha256": "3368f0f64a481c7445edfd225c5f1a8023562101e25c992f61f13d76d8355b3d",
+      "derived_from_pdf_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455"
+    },
+    {
+      "id": "Y1-p36-conclusion",
+      "pdf_pages": [
+        8
+      ],
+      "printed_pages": [
+        36
+      ],
+      "text": "“国民性”作为假设性理论\b在理论的价值上是值得怀疑的；但是\b作为对国民精神弱点的批判和自省\b它的实践意义又是存在的。五四以后\b当新文学面临某种特殊的语境\b如功利主义、政治斗争等\b国民性批判这原本有局限的母题\b却意外地可以起到扩大文学思想和艺术表现的作用〇35。由于国民性着眼的是民族整体素质和民族的文化形态\b比较阶级斗争、民族主义\b国民性批判所秉持的文化尺度\b具有更普遍和宏观的视野\b文学作品往往能够突破“国民性”命题的局限而对具体环境中的普遍人性进行深刻的揭示。所以\b阿Q的意义是在“国民性”之上的人类普遍精神的表现上。这大约是国民性母题对二十世纪中国文学的最积极的作用。",
+      "text_sha256": "92830da226201515822175ca41cee1229eb6557ed11bef524dcc8935d5c40db3",
+      "derived_from_pdf_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455"
+    },
+    {
+      "id": "Y1-p36-p37",
+      "pdf_pages": [
+        8,
+        9
+      ],
+      "printed_pages": [
+        36,
+        37
+      ],
+      "text": "与中国现代思想史和文学史上的许多理论一样\b国民性理论的价值\b并不在“理论”本身；它最大的意义\b是使中国现实中麻木的政俗之风\b即自欺式的“爱国的合群的自大”〇36\b始终有一种异端的力量与之抗衡\b使民族的自我意识不至于永远坠入黑暗的无底深渊。",
+      "text_sha256": "8af5f59431748cdb70efa59d34f02e1ef1d34a7717f8e9e10a23f30c6ced0147",
+      "derived_from_pdf_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455"
+    },
+    {
+      "id": "Y1-p38-note36",
+      "pdf_pages": [
+        10
+      ],
+      "printed_pages": [
+        38
+      ],
+      "text": "鲁迅《随感录·三十八》\b原载《新青年》第5卷第5号（1918年）。又《鲁迅全集》第1卷第311—314页。鲁迅原文说：“中国人向来有点自大。———只可惜没有‘个人的自大’\b都是‘合群的爱国的自大’。这便是文化竞争失败之后\b不能再见振拔改进的原因。”“‘合群的自大’\b‘爱国的自大’是党同伐异\b对少数的天才宣战”。",
+      "text_sha256": "1be441819238c351bc711b79ea13f135b7d1549c2fa3d43358677affbb313d47",
+      "derived_from_pdf_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455"
+    }
+  ],
+  "extraction_note": "仅去除提取排版空白与独立页脚页码；保留U+0008标点提取控制符，视觉核对以PDF页图为准。",
+  "independent_review_provenance": {
+    "scoring_attempt_id": "score-astudio-info004-yang-primary-001-001",
+    "score_sha256": "7e7e07e92fd02f5714832fdacc0dc953972f63c8ec97a64a286b1c2613fc1b6f",
+    "reference_supplement_manifest_sha256": "1a082aca94bc01b6ea02542bb0f5b945551c851834d90b54d83636893bc15c4e",
+    "judge_model": "gpt-6.1-sol",
+    "reasoning_effort": "high",
+    "meaning": "证明补证已进入合法独立核验；本卡不包含候选答案或预设评分"
   }
 }

@@ -126,13 +126,18 @@ GENERAL70_V3_DEFINITION = replace(
 )
 INFO004_OPEN_DEFINITION = replace(
     GENERAL70_V3_DEFINITION, dataset_id="general-info004-open-v1", created_at="2026-11-04T00:00:00+08:00",
-    source_revision="4bc133fd3b8e710f8bd8e163bac97a5bcb4c06d3", frozen_source_index=None,
+    source_revision="4bc133fd3b8e710f8bd8e163bac97a5bcb4c06d3",
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-info004-open-v1/index.json",
     task_ids=("01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",),
     expected_task_count=1, expected_category_counts={"01_Information_Search_Organization": 1},
     expected_grading_type_counts={"hybrid": 1}, expected_difficulty_counts={"L3": 1},
     expected_timeout_counts={"3600": 1},
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION)}
+INFO004_OPEN_V2_DEFINITION = replace(
+    INFO004_OPEN_DEFINITION, dataset_id="general-info004-open-v2", created_at="2026-11-05T00:00:00+08:00",
+    source_revision=None, frozen_source_index=None,
+)
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -516,7 +521,7 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id}:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

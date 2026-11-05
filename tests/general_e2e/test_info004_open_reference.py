@@ -9,7 +9,7 @@ import unittest
 
 from eval_general_e2e.datasets.bundle import (
     DATASETS, DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION,
-    GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, compile_dataset,
+    GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, compile_dataset,
     dataset_manifest_path, load_manifest_lock, _parse_task_source,
 )
 from src.utils.task_parser import parse_task_md
@@ -26,7 +26,7 @@ class Info004OpenReferenceTests(unittest.TestCase):
         cls.task = parse_task_md(REPO_ROOT / RELATIVE)
         cls.old = parse_task_md(REPO_ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v3/files' / RELATIVE)
         cls.workspace = Path(cls.task['workspace_path'])
-        cls.manifest, cls.members = compile_dataset(REPO_ROOT, definition=INFO004_OPEN_DEFINITION)
+        cls.manifest, cls.members = compile_dataset(REPO_ROOT, definition=INFO004_OPEN_V2_DEFINITION)
 
     def grade(self, root):
         shutil.copytree(self.workspace / 'exec', root, dirs_exist_ok=True)
@@ -73,8 +73,8 @@ class Info004OpenReferenceTests(unittest.TestCase):
         native = RUNTIME._parse_semantic_criteria(contract['llm_judge_rubric'], weight_scale=98.)
         self.assertEqual(len(native), 22)
 
-    def test_all_four_historical_datasets_rebuild_without_any_lock_change(self):
-        for definition in [DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION]:
+    def test_all_five_historical_datasets_rebuild_without_any_lock_change(self):
+        for definition in [DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION]:
             with self.subTest(dataset=definition.dataset_id):
                 manifest, _ = compile_dataset(REPO_ROOT, definition=definition)
                 self.assertEqual(manifest, load_manifest_lock(dataset_manifest_path(definition.dataset_id)))
@@ -87,7 +87,9 @@ class Info004OpenReferenceTests(unittest.TestCase):
             index = json.loads((root / 'evaluator_evidence/reference_sources.json').read_text())
             self.assertTrue(index['policy']['alternative_sources_allowed'])
             self.assertFalse(index['policy']['required_bibliography'])
-            self.assertEqual({r['claim_id'] for r in index['known_unresolved_claims']}, {'Y1-C1', 'Y1-C2'})
+            self.assertEqual(index['known_unresolved_claims'], [])
+            self.assertEqual({r['claim_id'] for r in index['reference_review_targets']}, {'Y1-C1', 'Y1-C2'})
+            self.assertIn('S1-dong-bingyue', index['remaining_reference_limitations'][0])
             for row in index['sources']:
                 data = (root / 'evaluator_evidence' / row['path']).read_bytes()
                 self.assertEqual(hashlib.sha256(data).hexdigest(), row['sha256'])
@@ -95,6 +97,14 @@ class Info004OpenReferenceTests(unittest.TestCase):
             self.assertEqual(yang['publication']['cnki_file_id'], 'LXYJ200312003')
             self.assertEqual(yang['excerpt'], '')
             self.assertFalse(yang['fulltext_included'])
+            self.assertTrue(yang['primary_document']['provided_by_user'])
+            self.assertEqual(yang['primary_document']['sha256'], 'd42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455')
+            self.assertEqual(yang['primary_document']['page_count'], 10)
+            self.assertNotIn('杨乾坤', ''.join(row['text'] for row in yang['primary_passages']))
+            note = next(row for row in yang['primary_passages'] if row['id'] == 'Y1-p38-note36')
+            self.assertEqual(note['pdf_pages'], [10])
+            self.assertEqual(note['printed_pages'], [38])
+            self.assertIn('随感录·三十八', note['text'])
             self.assertTrue(yang['manual_search_leads']['search_leads_are_not_supporting_evidence'])
             self.assertEqual(yang['secondary_evidence'][0]['does_not_establish'], ['Y1-C1', 'Y1-C2'])
 

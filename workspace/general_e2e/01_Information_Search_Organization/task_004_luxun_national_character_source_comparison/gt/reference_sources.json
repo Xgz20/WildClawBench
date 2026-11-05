@@ -1,7 +1,7 @@
 {
   "schema_version": "general-e2e-reference-sources/v1",
   "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
-  "reference_version": "2026-11-04.open-reference.1",
+  "reference_version": "2026-11-05.open-reference.2",
   "role": "evaluator_reference_not_candidate_output",
   "policy": {
     "fulltext_required": false,
@@ -51,22 +51,26 @@
     {
       "source_id": "Y1-yang-lianfen",
       "path": "source_evidence/Y1-yang-lianfen.json",
-      "sha256": "ede31d380d1e95b6ebb61ac91b1b760e71d22e76e8d117b80bb06f19fb707ea4",
-      "coverage": "metadata_and_secondary_context_only"
+      "sha256": "067551699f8979361ad4fa61f90e07cd5092798a6cd96cdbdb72df15f8ecaeed",
+      "coverage": "primary_document_reviewed_relevant_passages"
     }
   ],
-  "known_unresolved_claims": [
+  "known_unresolved_claims": [],
+  "reference_review_targets": [
     {
       "claim_id": "Y1-C1",
       "source_id": "Y1-yang-lianfen",
-      "claim": "作者以随感录三十八解释爱国话语收编国民性批判的危险",
-      "status": "evaluator_reference_unavailable"
+      "evidence_status": "primary_document_available",
+      "locator": "PDF8—9页/刊页36—37的结尾及PDF10页/刊页38注36；判断观点归属而非只匹配篇名"
     },
     {
       "claim_id": "Y1-C2",
       "source_id": "Y1-yang-lianfen",
-      "claim": "作者以包含自身的内部反思解释超越外部他者式审判",
-      "status": "evaluator_reference_unavailable"
+      "evidence_status": "primary_document_available",
+      "locator": "PDF7—9页/刊页35—37；区分读者/作者/叙事主体及文化尺度的不同层次"
     }
+  ],
+  "remaining_reference_limitations": [
+    "S1-dong-bingyue仍未取得正文，不将本次Y1补证外推到董文或其他研究"
   ]
 }
