@@ -32,7 +32,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const taskRoot = join(unitRoot, "execution/tasks", task.task_id);
   if (!within(taskRoot, promptPath) || !within(taskRoot, workspace) || workspace !== journal.workspace || promptPath !== journal.prompt.file
       || sha(await readRegular(promptPath)) !== journal.prompt.sha256 || task.prompt.sent_sha256 !== journal.prompt.sha256) throw new Error("DOUBAOWORK_COLLECTOR_TASK_DRIFT");
-  const { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, assignmentBytes, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown, searchDisplayProof, nativeSdkProtocol } = await readBoundNativeEvidence({ journalFile, journal, workspace, allowNativeMoaSdkProtocol: true });
+  const { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, assignmentBytes, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown, searchDisplayProof, guiDisplayProof, nativeSdkProtocol } = await readBoundNativeEvidence({ journalFile, journal, workspace, allowNativeMoaSdkProtocol: true });
   const identity = { batch_id: manifest.batch_id, unit_id: manifest.unit.unit_id, task_id: task.task_id, attempt_id: journal.attempt_id };
   await mkdir(dirname(outputRoot), { recursive: true });
   if (await realpath(dirname(outputRoot)) !== dirname(outputRoot)) throw new Error("DOUBAOWORK_COLLECTION_SYMLINK_PARENT");
@@ -64,6 +64,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     tool_order_basis: timeline.basis, shared_call_count: timeline.shared_call_count ?? null,
     trajectory_prompt_binding: trajectoryPromptBinding,
     native_search_display_projection: searchDisplayProof,
+    native_gui_display_projection: guiDisplayProof,
     non_success_tool_displays_without_execution: missingToolDisplays,
     native_tool_coverage_diagnostic: nativeToolCoverageDiagnostic })));
   const binding = await write("bindings/runtime-messages.json", runtimeBytes);

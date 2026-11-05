@@ -24,10 +24,15 @@ export function reconcileNativeSearchDisplays(blocks, events) {
         && typeof search.queries[0] === 'string' && Array.isArray(search.results)
         && search.results.every(r => Object.keys(r).length === 1 && typeof r.text_card?.url === 'string' && typeof r.text_card?.title === 'string')) {
       k = key('general_search', search.queries[0]);
-    } else if (block.block_type === 10006 && fetch && !search && typeof fetch.summary === 'string'
-        && fetch.summary.startsWith('已阅读内容: ') && Array.isArray(fetch.items)
+    } else if (block.block_type === 10006 && fetch && !search && typeof fetch.summary === 'string' && Array.isArray(fetch.items)
         && fetch.items.every(item => typeof item.summary === 'string')) {
-      k = key('web.fetch', fetch.summary.slice('已阅读内容: '.length));
+      const prefix = ['已阅读内容: ','正在阅读内容: '].find(p => fetch.summary.startsWith(p));
+      const explicit = fetch.tool_name === 'web.fetch' && typeof fetch.url === 'string' && fetch.url ? fetch.url : null;
+      // A finished error card can retain its loading label. Its explicit URL
+      // must still bind the original request; the SDK result decides outcome.
+      if (explicit && prefix && fetch.summary.slice(prefix.length) !== explicit) continue;
+      const input = explicit || (prefix === '已阅读内容: ' ? fetch.summary.slice(prefix.length) : null);
+      if (input) k = key('web.fetch', input);
     }
     if (k && groups.has(k)) groups.get(k).blocks.push(block.block_id);
   }
@@ -41,4 +46,23 @@ export function reconcileNativeSearchDisplays(blocks, events) {
   return { profile: 'doubaowork-search-fetch-presentation-2.35.15/v1', matched_block_ids, matches,
     mapping: 'input-multiset; individual-result mapping is not asserted',
     model_result_source: 'original native trajectory; presentation cards do not replace tool results' };
+}
+
+export function reconcileNativeGuiDisplays(blocks, protocol) {
+  const names = new Map();
+  for (const block of blocks) {
+    const value = block.content?.gui_tool_block;
+    if (block.block_type !== 10068 || block.is_finish !== true || !block.block_id || typeof value?.tool_name !== 'string'
+        || typeof value.header?.summary !== 'string' || Object.entries(block.content).some(([k,v]) =>
+          k !== 'gui_tool_block' && !(k === 'pc_event_block' && v === ''))) continue;
+    const rows = names.get(value.tool_name) || []; rows.push(block.block_id); names.set(value.tool_name, rows);
+  }
+  const matched_block_ids = [], matches = [];
+  for (const [name, ids] of names) {
+    const calls = protocol.calls.filter(call => call.name === name);
+    if (calls.length !== ids.length || new Set(ids).size !== ids.length) continue;
+    matched_block_ids.push(...ids); matches.push({ tool_name: name, block_ids: ids, call_ids: calls.map(c => c.call_id) });
+  }
+  return { profile: 'doubaowork-gui-presentation-2.35.15/v1', matched_block_ids, matches,
+    mapping: 'tool-name multiset; no arguments, results or additional calls are synthesized' };
 }

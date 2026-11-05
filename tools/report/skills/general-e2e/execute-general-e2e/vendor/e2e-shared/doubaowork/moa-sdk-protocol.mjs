@@ -47,9 +47,12 @@ export function verifyMoaSdkProtocol({ trajectoryBytes, assignmentProof, snapsho
       }
     } else {
       const call = calls.get(row.tool_call_id);
-      check(call && call.result_line === null && typeof row.content === 'string', 'RESULT_INVALID');
+      const voidPresentation = call?.name === 'present_files'
+        && Object.keys(row).sort().join(',') === 'role,tool_call_id';
+      check(call && call.result_line === null && (typeof row.content === 'string' || voidPresentation), 'RESULT_INVALID');
       call.result_line = i + 1;
-      call.result_sha256 = sha(row.content);
+      if (voidPresentation) { call.result_kind = 'native-empty-presentation-ack'; call.result_sha256 = null; }
+      else call.result_sha256 = sha(row.content);
       check(row.image_link_list == null || Array.isArray(row.image_link_list), 'MEDIA_UNSUPPORTED');
       for (const [n,url] of (row.image_link_list || []).entries()) {
         check(typeof url === 'string', 'MEDIA_UNSUPPORTED');
@@ -141,7 +144,8 @@ export function countMoaSdkTools(protocol, transcript, index) {
     const calls = normalized.filter(e => e.tool.call_id === c.call_id), matches = results.filter(e => e.tool.call_id === c.call_id);
     check(calls.length === 1 && matches.length === 1 && calls[0].tool.name === c.name
       && JSON.stringify(calls[0].tool.arguments) === JSON.stringify(c.arguments)
-      && typeof matches[0].tool.result === 'string' && sha(matches[0].tool.result) === c.result_sha256, 'NORMALIZED_CALL_DRIFT');
+      && (c.result_kind === 'native-empty-presentation-ack' ? matches[0].tool.result === null
+        : typeof matches[0].tool.result === 'string' && sha(matches[0].tool.result) === c.result_sha256), 'NORMALIZED_CALL_DRIFT');
     byTool[c.name] = (byTool[c.name] || 0) + 1;
     catalog.push({ id_namespace: 'native-moa-sdk-tool-call', native_id: c.call_id, tool_name: c.name,
       source_ref: `trace/raw/trajectory.jsonl#L${c.call_line}`, result_ref: `trace/raw/trajectory.jsonl#L${c.result_line}` });

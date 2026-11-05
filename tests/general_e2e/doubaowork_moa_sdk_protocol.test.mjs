@@ -43,6 +43,15 @@ test('SDK binding rejects missing results, duplicate calls, a foreign native ses
  const p=verifyMoaSdkProtocol(fixture([call,{...result,image_link_list:['https://p3-flow-sign.byteimg.com/a']}])) ;
  assert.equal(p.attachments[0].call_id,'call');assert.equal(p.attachments[0].image_index,0);
 });
+test('a native empty presentation acknowledgement remains null and does not imply success',()=>{
+ const presentation=structuredClone(call);presentation.tool_calls[0].function={name:'present_files',arguments:{artifacts:[]}};
+ const empty={role:'tool',tool_call_id:'call'};
+ const p=verifyMoaSdkProtocol(fixture([presentation,empty]));assert.equal(p.calls[0].result_kind,'native-empty-presentation-ack');
+ const transcript=[{type:'tool_call',tool:{call_id:'call',name:'present_files',arguments:{artifacts:[]}}},{type:'tool_result',tool:{call_id:'call',result:null,status:'unknown'}}];
+ assert.equal(countMoaSdkTools(p,transcript,{calls:[{}],completeness:{status:'complete'}}).total,1);
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([call,empty])),/RESULT_INVALID/);
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([presentation,{...empty,is_error:true}])),/RESULT_INVALID/);
+});
 test('native media retrieval verifies type and bytes and refuses an unapproved redirect',async()=>{
  const original=globalThis.fetch;
  const protocol={attachments:[{url:'https://p3-flow-sign.byteimg.com/a',url_sha256:'a',call_id:'call',result_line:2,image_index:0}]};

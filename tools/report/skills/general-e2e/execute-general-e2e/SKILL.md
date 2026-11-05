@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.45` 按原生SDK同名调用/返回数量核验已结束GUI卡片；不从展示补造调用。仅对present_files的精确双字段原生空回执保留null/unknown，其他工具缺内容继续拒绝；不从空回执推断成功或失败。普通文本SDK证明保持向后兼容，旧冻结原件不覆盖。
+
 `0.14.44` 增加2.35.15原生MOA SDK协议采集：独立assignment必须逐字匹配冻结Prompt及唯一main agent，SDK调用ID与返回逐项守恒；原JS观察器的零交付只描述旧路线，不替代SDK用量。搜索/阅读卡片仅按原调用输入多重集对账，原工具返回不改写。图片按原SDK链接、受限HTTPS来源及原系统loopback代理封存，保留重定向/字节SHA和离线复算；缺失、漂移、未知来源继续拒绝，不合成内容或补零。
 
 `0.14.43` 项目目录核验固定实际缓存的七个只读getter源码SHA，并另存懒加载factory摘要；不再将被等价替换、但没有实际调用的factory当作getter来源。未知实际函数、项目/设备/目录关系仍拒绝；旧冻结SHA记录保持原样。
