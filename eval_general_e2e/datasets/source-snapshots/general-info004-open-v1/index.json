@@ -20,5 +20,8 @@
       "sha256": "ede31d380d1e95b6ebb61ac91b1b760e71d22e76e8d117b80bb06f19fb707ea4"
     }
   },
-  "excluded_paths": []
+  "excluded_paths": [
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.pdf",
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.pages.txt"
+  ]
 }

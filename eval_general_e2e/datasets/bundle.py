@@ -135,9 +135,14 @@ INFO004_OPEN_DEFINITION = replace(
 )
 INFO004_OPEN_V2_DEFINITION = replace(
     INFO004_OPEN_DEFINITION, dataset_id="general-info004-open-v2", created_at="2026-11-05T00:00:00+08:00",
-    source_revision="0ba583d42993cf141445ad86a29a50629d26867c", frozen_source_index=None,
+    source_revision="0ba583d42993cf141445ad86a29a50629d26867c",
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-info004-open-v2/index.json",
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION)}
+INFO004_OPEN_V3_DEFINITION = replace(
+    INFO004_OPEN_V2_DEFINITION, dataset_id="general-info004-open-v3", created_at="2026-11-05T00:00:00+08:00",
+    source_revision=None, frozen_source_index=None,
+)
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, INFO004_OPEN_V3_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -521,7 +526,7 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id}:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

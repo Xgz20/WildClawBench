@@ -5,12 +5,12 @@
   "title": "晚清与五四文学的国民性焦虑（三）——鲁迅国民性话语的矛盾与超越",
   "retrieved_on": "2026-11-05",
   "original_response_sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455",
-  "coverage": "primary_document_reviewed_relevant_passages",
+  "coverage": "primary_full_document_and_paged_text",
   "excerpt": "",
-  "reviewer_summary": "用户提供的知网PDF已核对题名、作者、刊期、29—38页及正文/注释边界。原冻结执行已由独立裁判结合完整PDF及关键页图重评并通过正式验分；本卡保留相关原文定位，不把获取原文等同于候选全部主张成立。来源卡不是候选阅读记录。",
+  "reviewer_summary": "用户提供的知网PDF已核对题名、作者、刊期、29—38页及正文/注释边界。原冻结执行已由独立裁判结合完整PDF及关键页图重评并通过正式验分；本卡保留相关原文定位，不把获取原文等同于候选全部主张成立。来源卡不是候选阅读记录。本版将同一SHA的完整PDF和按页提取的杨文全文直接纳入私有GT及规则导出，后续评分不再依赖旧attempt、Downloads目录或外网。",
   "reviewer_summary_is_not_original_text": true,
-  "fulltext_included": false,
-  "locator": "原冻结补证的官方期刊页与2009研究述评第68页及文献[20]",
+  "fulltext_included": true,
+  "locator": "包内PDF第1—10页/刊页29—38；第10页只使用下方杨文续注，详见分页全文与boundary说明",
   "supports": [
     "来源身份",
     "相关论证的可定位原文",
@@ -97,8 +97,10 @@
     "sha256": "d42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455",
     "publisher_file_id": "LXYJ200312003",
     "full_original_archived_with_rescore": true,
-    "full_original_in_source_bundle": false,
-    "boundary": "PDF1—9页为杨文正文/注释；PDF10页上方杨乾坤另一文不属于本论文，下方是杨文注31续文、32—36及通讯处。PDF8末句续至PDF9开头。"
+    "full_original_in_source_bundle": true,
+    "boundary": "PDF1—9页为杨文正文/注释；PDF10页上方杨乾坤另一文不属于本论文，下方是杨文注31续文、32—36及通讯处。PDF8末句续至PDF9开头。",
+    "path": "source_evidence/Y1-yang-lianfen.pdf",
+    "role": "evaluator_reference_not_candidate_output"
   },
   "primary_passages": [
     {
@@ -186,5 +188,74 @@
     "judge_model": "gpt-6.1-sol",
     "reasoning_effort": "high",
     "meaning": "证明补证已进入合法独立核验；本卡不包含候选答案或预设评分"
+  },
+  "fulltext": {
+    "path": "source_evidence/Y1-yang-lianfen.pages.txt",
+    "sha256": "e16001b237ed93ec6bbc198f1e0567b18ae261057733ad4b37a18b6ba2b370cd",
+    "chars": 15505,
+    "page_count": 10,
+    "pages": [
+      {
+        "pdf_page": 1,
+        "printed_page": 29,
+        "text_sha256": "631da9d8f625207e1ce5842f3c0bf9897dad29689b1a0f1c0ca4d35d3f4f4097",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 2,
+        "printed_page": 30,
+        "text_sha256": "c6b480f0d1a5bbc303ee2045304dadb439bb955b773057a58ac1142c755194de",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 3,
+        "printed_page": 31,
+        "text_sha256": "18295ce71d3cfb6e5ab6387ce3e57bb2dd1aa26aadf2145b4c07924253f597f8",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 4,
+        "printed_page": 32,
+        "text_sha256": "5f3c8926c687055930fa10ac58633531148fafb2fbd273b0a01fb52a2a3b9ce3",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 5,
+        "printed_page": 33,
+        "text_sha256": "b88607b767c6a53b8cd9ae3e517dab22616cc1819c3d3b035455ecaa9187bbb4",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 6,
+        "printed_page": 34,
+        "text_sha256": "12e8994112cea202398b9acdcee1c20900f9af8e4f857de0d59eff3aec8c47fb",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 7,
+        "printed_page": 35,
+        "text_sha256": "d75ab5811ba040509d1b8345b0d6dc3805f12f0b1df43dc320d6fd09d94bd00b",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 8,
+        "printed_page": 36,
+        "text_sha256": "4b1aed14dcb3eefe755b3655c615351e72c5c8b0032116ee4dfb336959e3b6e1",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 9,
+        "printed_page": 37,
+        "text_sha256": "eb4607031f0ae9d05c6e128b5f5149bcccd52e237076e7a45939f1d899843a2b",
+        "region": "full page"
+      },
+      {
+        "pdf_page": 10,
+        "printed_page": 38,
+        "text_sha256": "e2bc00752223108fb43a5ffb044c1bc0495e80d0a217571cd0464db8c0a81348",
+        "region": "bottom continuation notes only; y>=455"
+      }
+    ],
+    "extraction_note": "完整提取杨文正文和全部续注；仅按页面边界排除另一篇文章，不改原PDF，不将提取控制符改成新文字。"
   }
 }

@@ -6,13 +6,16 @@ import re
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from eval_general_e2e.datasets.bundle import (
     DATASETS, DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION,
-    GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, compile_dataset,
+    GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION,
+    INFO004_OPEN_V3_DEFINITION, compile_dataset,
     dataset_manifest_path, load_manifest_lock, _parse_task_source,
 )
 from src.utils.task_parser import parse_task_md
+from src.utils.workspace_evidence import collect_workspace_evidence
 from src.wildclawbench_grading_core.criterion_states import validate_semantic_response, finalize_cli_score
 from tests.general_e2e.test_local_scoring_runtime import REPO_ROOT, RUNTIME
 
@@ -26,7 +29,7 @@ class Info004OpenReferenceTests(unittest.TestCase):
         cls.task = parse_task_md(REPO_ROOT / RELATIVE)
         cls.old = parse_task_md(REPO_ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v3/files' / RELATIVE)
         cls.workspace = Path(cls.task['workspace_path'])
-        cls.manifest, cls.members = compile_dataset(REPO_ROOT, definition=INFO004_OPEN_V2_DEFINITION)
+        cls.manifest, cls.members = compile_dataset(REPO_ROOT, definition=INFO004_OPEN_V3_DEFINITION)
 
     def grade(self, root):
         shutil.copytree(self.workspace / 'exec', root, dirs_exist_ok=True)
@@ -73,8 +76,8 @@ class Info004OpenReferenceTests(unittest.TestCase):
         native = RUNTIME._parse_semantic_criteria(contract['llm_judge_rubric'], weight_scale=98.)
         self.assertEqual(len(native), 22)
 
-    def test_all_five_historical_datasets_rebuild_without_any_lock_change(self):
-        for definition in [DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION]:
+    def test_all_six_historical_datasets_rebuild_without_any_lock_change(self):
+        for definition in [DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION]:
             with self.subTest(dataset=definition.dataset_id):
                 manifest, _ = compile_dataset(REPO_ROOT, definition=definition)
                 self.assertEqual(manifest, load_manifest_lock(dataset_manifest_path(definition.dataset_id)))
@@ -96,7 +99,8 @@ class Info004OpenReferenceTests(unittest.TestCase):
             yang = json.loads((root / 'evaluator_evidence/source_evidence/Y1-yang-lianfen.json').read_text())
             self.assertEqual(yang['publication']['cnki_file_id'], 'LXYJ200312003')
             self.assertEqual(yang['excerpt'], '')
-            self.assertFalse(yang['fulltext_included'])
+            self.assertTrue(yang['fulltext_included'])
+            self.assertTrue(yang['primary_document']['full_original_in_source_bundle'])
             self.assertTrue(yang['primary_document']['provided_by_user'])
             self.assertEqual(yang['primary_document']['sha256'], 'd42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455')
             self.assertEqual(yang['primary_document']['page_count'], 10)
@@ -114,17 +118,48 @@ class Info004OpenReferenceTests(unittest.TestCase):
             self.assertEqual(self.grade(root)(self.trace(''), str(root))['source_link_present'], 0.)
 
     def test_missing_or_changed_reference_never_becomes_a_candidate_zero(self):
-        for mode in ['missing', 'changed']:
-            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as tmp:
-                root = Path(tmp)
-                grade = self.grade(root)
-                target = root / 'gt/source_evidence/Y1-yang-lianfen.json'
-                if mode == 'missing':
-                    target.unlink()
-                else:
-                    target.write_text('changed')
-                with self.assertRaises((ValueError, FileNotFoundError)):
-                    grade(self.trace('https://example.org/alternative'), str(root))
+        for filename in ['Y1-yang-lianfen.json', 'Y1-yang-lianfen.pdf', 'Y1-yang-lianfen.pages.txt']:
+            for mode in ['missing', 'changed']:
+                with self.subTest(file=filename, mode=mode), tempfile.TemporaryDirectory() as tmp:
+                    root = Path(tmp)
+                    grade = self.grade(root)
+                    target = root / 'gt/source_evidence' / filename
+                    if mode == 'missing':
+                        target.unlink()
+                    else:
+                        target.write_text('changed')
+                    with self.assertRaises((ValueError, FileNotFoundError)):
+                        grade(self.trace('https://example.org/alternative'), str(root))
+
+    def test_complete_primary_reference_is_available_offline_without_cli_truncation(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            grade = self.grade(root)
+            with patch('urllib.request.urlopen', side_effect=AssertionError('offline reference must not use network')):
+                grade(self.trace('可靠替代来源 https://example.org/alternative'), str(root))
+                evidence = collect_workspace_evidence(str(root), self.task['judge_evidence'])
+            path = 'evaluator_evidence/source_evidence/Y1-yang-lianfen.pages.txt'
+            row = next(r for r in evidence['metadata']['selected'] if r['path'] == path)
+            self.assertFalse(row['truncated'])
+            self.assertEqual(row['role'], 'evaluator_reference_not_agent_output')
+            fulltext = (root / path).read_text()
+            self.assertEqual(fulltext.count('===== PDF PAGE'), 10)
+            self.assertIn(fulltext, evidence['text'])
+            last = fulltext.split('===== PDF PAGE 10')[1]
+            self.assertIn('随感录·三十八', last)
+            self.assertNotIn('注释商榷两例', last)
+            self.assertNotIn('杨乾坤', last)
+            pdf = root / 'evaluator_evidence/source_evidence/Y1-yang-lianfen.pdf'
+            self.assertEqual(hashlib.sha256(pdf.read_bytes()).hexdigest(), 'd42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455')
+
+    def test_original_pdf_is_packaged_only_as_private_scoring_material(self):
+        files = {m.path: m.data for m in self.members}
+        private = f'tasks/{TASK}/private-scoring/gt/source_evidence/'
+        self.assertEqual(hashlib.sha256(files[private + 'Y1-yang-lianfen.pdf']).hexdigest(), 'd42a5b5dd458469b160f57da3abfde3e27e194a2b107a1c2227b858cface0455')
+        self.assertIn(b'PDF PAGE 10', files[private + 'Y1-yang-lianfen.pages.txt'])
+        execution = [p for p in files if p.startswith(f'tasks/{TASK}/execution/')]
+        self.assertTrue(execution)
+        self.assertFalse(any('Y1-yang-lianfen' in p for p in execution))
 
     def test_two_original_dimensions_keep_known_scores_and_unknown_null_in_cli_and_native(self):
         criteria = [{'key': 'known', 'weight': 94., 'allowed_scores': [0., 1.]},
