@@ -124,7 +124,12 @@ public class NativeDocxEditProbe {
             XUnoUrlResolver resolver=UnoRuntime.queryInterface(XUnoUrlResolver.class,
                 local.getServiceManager().createInstanceWithContext("com.sun.star.bridge.UnoUrlResolver",local));
             Object remoteObject=null;
-            for(int retry=0;retry<100;retry++) {
+            // A cold macOS Writer can publish its UNO listener after font and
+            // profile initialization takes more than ten seconds. This is an
+            // infrastructure startup budget; the Python supervisor retains
+            // its independent whole-probe timeout and exact process cleanup.
+            long connectionDeadline=System.nanoTime()+java.util.concurrent.TimeUnit.SECONDS.toNanos(60);
+            while(System.nanoTime()<connectionDeadline) {
                 try{remoteObject=resolver.resolve(args[0]);break;}
                 catch(com.sun.star.connection.NoConnectException error){Thread.sleep(100);}
             }
