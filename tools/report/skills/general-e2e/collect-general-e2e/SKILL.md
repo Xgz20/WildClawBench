@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.22` 增加 `agentcube-astudio-native/v1` 远端来源验证。沙箱结果经执行器完成原生身份、Prompt、工作区、工具调用与返回、进程收口和备份核验后，生成单题标准交接包。`verify-only` 对该 Profile 独立复放原生证据；既有本地来源按原协议核验。识别沙箱批次或单题 ready 文件时，使用 `execute-sandbox-e2e` 的状态与交接入口取得已封存结果，并交 `orchestrate-e2e-pipeline` 编排评分。
+
 `0.11.21` 保护 Office 审计的 opaque .bin 副本，并提供严格锁定原执行 ZIP、保留变体的未评分轨迹副本维护入口；详见 [受控恢复](references/trace-office-canonical-recovery.md)。
 
 

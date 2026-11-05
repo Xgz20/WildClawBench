@@ -20,6 +20,8 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILDER_PATH = REPO_ROOT / "tools/e2e-build/build_skill_packages.py"
 FIXED_REVISION = "1" * 40
 EXPECTED_SKILLS = {
+    "execute-sandbox-e2e",
+    "orchestrate-e2e-pipeline",
     "prepare-web-e2e-workspaces",
     "execute-web-e2e",
     "orchestrate-web-e2e",
@@ -68,10 +70,10 @@ class E2EBuildTests(unittest.TestCase):
     def archive_path(self, skill_name: str) -> Path:
         return self.first_output / self.rows[skill_name]["archive"]
 
-    def test_build_plan_covers_all_thirteen_scene_skills(self) -> None:
+    def test_build_plan_covers_all_fifteen_scene_skills(self) -> None:
         components, skills = BUILD._load_configuration(REPO_ROOT)
         self.assertEqual(set(skills), EXPECTED_SKILLS)
-        self.assertEqual(len(skills), 13)
+        self.assertEqual(len(skills), 15)
         self.assertEqual(
             set(components),
             {
@@ -95,7 +97,7 @@ class E2EBuildTests(unittest.TestCase):
                 "qwenwork-native-state",
             },
         )
-        self.assertEqual(self.manifest["skill_count"], 13)
+        self.assertEqual(self.manifest["skill_count"], 15)
         self.assertEqual(set(self.rows), EXPECTED_SKILLS)
         self.assertEqual(
             {
@@ -226,7 +228,7 @@ class E2EBuildTests(unittest.TestCase):
             self.first_output / "skills-build-manifest.json"
         )
         self.assertEqual(verification["status"], "PASS")
-        self.assertEqual(verification["skill_count"], 13)
+        self.assertEqual(verification["skill_count"], 15)
 
         original_row = self.rows["score-web-e2e"]
         original_archive = self.archive_path("score-web-e2e")

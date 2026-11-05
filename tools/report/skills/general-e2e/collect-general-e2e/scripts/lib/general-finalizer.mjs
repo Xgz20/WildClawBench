@@ -34,6 +34,7 @@ import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resourc
 import { verifyArchivedTerminalFinalRecapture, assertRecaptureDeclaration } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
 import { historicalTerminalProjection, verifyTerminalProjection } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
+import { verifyAgentCubeNative } from './agentcube-native-verification.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -794,8 +795,12 @@ export async function verifyGeneralCollection(options) {
     const traceRoot = dirname(indexSource.absolute);
     if (record.harness?.id === 'astronstudio') {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
-      assertRecaptureDeclaration(declaredState.value, index);
-      verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
+      if (index.adapter?.id === 'agentcube-astudio-native') {
+        await verifyAgentCubeNative({ unitRoot, traceRoot, index, stateBytes: declaredState.bytes, record });
+      } else {
+        assertRecaptureDeclaration(declaredState.value, index);
+        verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
+      }
     }
     if (index.native_provider_log_profile) {
       const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
