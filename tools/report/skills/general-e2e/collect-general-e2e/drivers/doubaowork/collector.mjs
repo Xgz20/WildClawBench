@@ -5,6 +5,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve, sep } from "nod
 import { parseArgs } from "node:util";
 import { pathToFileURL } from "node:url";
 import { readBoundNativeEvidence, readRegular } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
+import { fetchMoaSdkAttachments, countMoaSdkTools } from "../../vendor/e2e-shared/doubaowork/moa-sdk-protocol.mjs";
 import { countBoundTools } from "../../vendor/e2e-shared/doubaowork/tool-counts.mjs";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
 export { verifyTrajectoryPrompt, verifyRecoveredDispatchAcknowledgement } from "../../vendor/e2e-shared/doubaowork/bound-evidence.mjs";
@@ -31,7 +32,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const taskRoot = join(unitRoot, "execution/tasks", task.task_id);
   if (!within(taskRoot, promptPath) || !within(taskRoot, workspace) || workspace !== journal.workspace || promptPath !== journal.prompt.file
       || sha(await readRegular(promptPath)) !== journal.prompt.sha256 || task.prompt.sent_sha256 !== journal.prompt.sha256) throw new Error("DOUBAOWORK_COLLECTOR_TASK_DRIFT");
-  const { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown } = await readBoundNativeEvidence({ journalFile, journal, workspace });
+  const { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, assignmentBytes, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown, searchDisplayProof, nativeSdkProtocol } = await readBoundNativeEvidence({ journalFile, journal, workspace, allowNativeMoaSdkProtocol: true });
   const identity = { batch_id: manifest.batch_id, unit_id: manifest.unit.unit_id, task_id: task.task_id, attempt_id: journal.attempt_id };
   await mkdir(dirname(outputRoot), { recursive: true });
   if (await realpath(dirname(outputRoot)) !== dirname(outputRoot)) throw new Error("DOUBAOWORK_COLLECTION_SYMLINK_PARENT");
@@ -41,6 +42,17 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const write = async (name, bytes) => { await mkdir(dirname(join(staging, name)), { recursive: true }); await writeFile(join(staging, name), bytes, { flag: "wx", mode: 0o600 }); return artifact(name, bytes); };
   const raw = [await write("raw/runtime-messages.json", runtimeBytes)];
   if (trajectory) raw.push(await write("raw/trajectory.jsonl", trajectory));
+  if (assignmentBytes) raw.push(await write("raw/native-assignment.md", assignmentBytes));
+  const sdkAttachments = nativeSdkProtocol ? await fetchMoaSdkAttachments(nativeSdkProtocol) : [];
+  const sdkMedia = [];
+  for (const item of sdkAttachments) {
+    if (!raw.some(row => row.path === item.path)) raw.push(await write(item.path, item.bytes));
+    const { bytes, ...metadata } = item; sdkMedia.push(metadata);
+  }
+  if (nativeSdkProtocol) {
+    const proof = { ...nativeSdkProtocol, attachments: sdkMedia };
+    raw.push(await write("raw/native-moa-sdk-protocol.json", json(proof)));
+  }
   if (cancellationIntentBytes) raw.push(await write("raw/cancellation-intent.json", cancellationIntentBytes));
   if (terminalObservationBytes) raw.push(await write("raw/native-terminal-observation.json", terminalObservationBytes));
   raw.push(await write("raw/native-resource-observations.json", json(nativeResourceObservations)));
@@ -51,11 +63,13 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   raw.push(await write("raw/normalization-diagnostics.json", json({ duplicate_events: legacy.duplicates, cross_source_order_unknown: crossSourceOrderUnknown,
     tool_order_basis: timeline.basis, shared_call_count: timeline.shared_call_count ?? null,
     trajectory_prompt_binding: trajectoryPromptBinding,
+    native_search_display_projection: searchDisplayProof,
     non_success_tool_displays_without_execution: missingToolDisplays,
     native_tool_coverage_diagnostic: nativeToolCoverageDiagnostic })));
   const binding = await write("bindings/runtime-messages.json", runtimeBytes);
   const dispatchBinding = await write("bindings/dispatch-journal.json", journalBytes);
   const bindings = [binding, dispatchBinding];
+  if (assignmentBytes) bindings.push(await write("bindings/native-assignment.md", assignmentBytes));
   const response = await write("final-response.txt", finalBytes);
   const session = { thread_id: null, turn_id: native.reply_message_id, session_id: native.conversation_id, cwd: workspace, lifecycle_generation: null };
   const controllerFinishedAt = nonSuccess?.observed_at ?? runtime.observed_at;
@@ -121,7 +135,10 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       const call = calls.get(e.call_id);
       if (!call || call.result_sequence !== null) throw new Error("DOUBAOWORK_ORPHAN_OR_DUPLICATE_TOOL_RESULT");
       call.result_sequence = events.length;
-      add("tool_result", null, null, ref, { ...sourceMetadata, tool: { call_id: e.call_id, name: events[call.call_sequence].tool.name, arguments: null, result: e.content, status: "unknown" } });
+      const media = sdkMedia.filter(item => item.call_id === e.call_id);
+      add("tool_result", null, null, ref, { ...sourceMetadata,
+        ...(media.length ? { native: { ...(sourceMetadata.native || {}), image_attachments: media } } : {}),
+        tool: { call_id: e.call_id, name: events[call.call_sequence].tool.name, arguments: null, result: e.content, status: "unknown" } });
     } else if (e.kind === "assistant_message" && e.content !== native.final_text) add("assistant_message", "assistant", e.content, ref);
   }
   if (native.final_text) add("assistant_message", "assistant", native.final_text, "raw/runtime-messages.json#L1", { native: { reply_message_id: native.reply_message_id } });
@@ -144,7 +161,12 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       filtered_native_event_count: allNativeEvents.length + (nativeTools?.events.length || 0) + 2 - events.length,
       compatibility_profiles: ["doubaowork-native-im/v1", "doubaowork-trajectory-replay-dedup/v1", ...(nativeTools ? [nativeTools.profile] : [])] } };
   let toolCounts = null;
-  if (!nonSuccess && nativeToolBytes && nativeTools?.status !== "partial" && trajectoryPromptBinding.status === "verified") {
+  if (nativeSdkProtocol) {
+    index.normalization.compatibility_profiles.push(nativeSdkProtocol.profile);
+    toolCounts = countMoaSdkTools(nativeSdkProtocol, events, index);
+    raw.push(await write("raw/tool-count-summary.json", json(toolCounts)));
+  }
+  if (!nativeSdkProtocol && !nonSuccess && nativeToolBytes && nativeTools?.status !== "partial" && trajectoryPromptBinding.status === "verified") {
     try {
       toolCounts = countBoundTools({ execution: { identity, execution: state.execution }, state, index,
         transcript: events, runtime, journal, nativeSnapshot: JSON.parse(nativeToolBytes) });

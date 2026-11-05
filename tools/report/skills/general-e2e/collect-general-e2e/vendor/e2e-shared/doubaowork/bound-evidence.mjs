@@ -14,6 +14,8 @@ import { inspectNativeAuthorizationHistory } from "./interactions.mjs";
 import { verifyCancellationEvidence, verifyFailureEvidence } from "./terminal-evidence.mjs";
 import { DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256, isSupportedDispatcherSource } from "./runtime-dispatcher.mjs";
 import { MOA_SOURCE_SHA256, validateMoaBackendProof } from "./runtime-moa.mjs";
+import { reconcileNativeSearchDisplays } from "./search-displays.mjs";
+import { verifyMoaSdkProtocol } from "./moa-sdk-protocol.mjs";
 
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 export function trajectoryArchiveClockPolicy(snapshot) {
@@ -54,6 +56,20 @@ export function verifyTrajectoryPrompt(events, expectedHash, { sourceBytes, nonS
     return { status: "unavailable", reason: sourceBytes === null ? "native-trajectory-missing" : "native-trajectory-empty-at-capture" };
   }
   return { status: "verified", user_event_count: users.length };
+}
+
+export function verifyNativeMainAssignment(bytes, { agentId, expectedHash }) {
+  const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  const match = text.match(/^# Assignment\n- Agent ID: ([A-Za-z0-9_-]+)\n- Role: main\n- Assigned by: user\n- Created: ([^\n]+)\n\n> append-only: 每个 turn 的需求按时间戳追加在下方，最新在末尾。\n\n## \[([^\]]+)\] 需求\n([\s\S]+)$/u);
+  if (!match || match[1] !== agentId || match[2] !== match[3]
+      || !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3,9}Z$/u.test(match[2])
+      || !Number.isFinite(Date.parse(match[2])) || summarizePromptReadback(match[4]).sha256 !== expectedHash) {
+    throw Error('DOUBAOWORK_NATIVE_ASSIGNMENT_UNBOUND');
+  }
+  return { status: 'verified', user_event_count: 0, source: 'native-main-assignment/v1',
+    assignment_sha256: sha(bytes), agent_id: agentId, created_at: match[2], prompt_sha256: expectedHash,
+    reason: 'native-trajectory-user-prompt-stored-in-sibling-assignment',
+    clock_policy: 'assignment-timestamp-is-not-used-for-execution-timing', raw_ref: 'raw/native-assignment.md' };
 }
 
 export function verifyRecoveredDispatchAcknowledgement(snapshot, journal, native) {
@@ -189,7 +205,7 @@ export function verifyEquivalentWebTerminal(journal, runtime, native) {
   return finished;
 }
 
-export async function readBoundNativeEvidence({ journalFile, journal, workspace = journal.workspace }) {
+export async function readBoundNativeEvidence({ journalFile, journal, workspace = journal.workspace, allowNativeMoaSdkProtocol = false }) {
   if (journal.native_observation?.equivalent_web_binding === true && journal.scene !== "web") {
     throw new Error("DOUBAOWORK_EQUIVALENT_TERMINAL_SCENE_MISMATCH");
   }
@@ -262,15 +278,17 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
           source_profile: nativeTools.profile, scope: nativeTools.scope } : null;
   const assistant = Object.values(runtime.maps.messageMap).find(m => m.message_id === native.reply_message_id);
   const supportedBlocks = new Set(["text_block", "thinking_block", "elapsed_block", "file_operation_block", "local_file_block", "generic_tool_block"]);
-  const unknownBlocks = (assistant.content_blocks_v2 || []).filter(b => Object.entries(b.content || {}).some(([k, v]) => !supportedBlocks.has(k)
+  let unknownBlocks = (assistant.content_blocks_v2 || []).filter(b => Object.entries(b.content || {}).some(([k, v]) => !supportedBlocks.has(k)
     && !(k === "pc_event_block" && v === "")));
   const multimodalBypassCount = (nativeTools?.events || []).filter(e => e.phase === "settled"
     && e.output?.structuredResultFacts?.localFileReadV2Bypass?.reason === "image").length;
   let completeToolTrace = !nonSuccess && Boolean(nativeTools) && nativeTools.status !== "partial" && unknownBlocks.length === 0 && multimodalBypassCount === 0;
   const missingToolDisplays = [];
+  const sdkCandidate = allowNativeMoaSdkProtocol && journal.scene === 'general' && journal.client.version === '2.35.15'
+    && nativeTools?.profile_sha256 === MOA_SOURCE_SHA256 && nativeTools?.known_subtotal === 0;
   if (nativeTools && nativeTools.known_subtotal === 0 && assistant.content_blocks_v2.some(b => b.content?.file_operation_block)) {
-    if (!nonSuccess) throw new Error("DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS");
-    missingToolDisplays.push("file_operation_block");
+    if (!nonSuccess && !sdkCandidate) throw new Error("DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS");
+    if (!sdkCandidate) missingToolDisplays.push("file_operation_block");
   }
   const discovery = await discoverNativeSources({ sessionId: native.conversation_id });
   const evidence = nonSuccess && discovery.session?.trajectories?.length === 0
@@ -313,8 +331,31 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const currentEvents = evidence.trace.events.map(e => ({ ...e, source: { ...e.source, file: "raw/trajectory.jsonl" } }));
   const allNativeEvents = [...snapshots.flatMap(s => s.events), ...currentEvents];
   const legacy = deduplicateTrajectoryEvents(allNativeEvents);
-  const trajectoryPromptBinding = verifyTrajectoryPrompt(legacy.events, journal.prompt.readback_sha256,
+  let assignmentBytes = null, trajectoryPromptBinding;
+  if (!legacy.events.some(e => e.kind === 'user_message') && trajectoryPath && !nonSuccess
+      && journal.client.version === '2.35.15' && nativeTools?.profile_sha256 === MOA_SOURCE_SHA256) {
+    validateMoaBackendProof(JSON.parse(nativeToolBytes).native_backend);
+    assignmentBytes = await readRegular(join(dirname(trajectoryPath), 'assignment.md'));
+    trajectoryPromptBinding = verifyNativeMainAssignment(assignmentBytes,
+      { agentId: source.agent_id, expectedHash: journal.prompt.readback_sha256 });
+  } else trajectoryPromptBinding = verifyTrajectoryPrompt(legacy.events, journal.prompt.readback_sha256,
     { sourceBytes: trajectory, nonSuccessVerified: nonSuccess?.verified === true });
+  let nativeSdkProtocol = null;
+  if (sdkCandidate && assignmentBytes && !nonSuccess) {
+    nativeSdkProtocol = verifyMoaSdkProtocol({ trajectoryBytes: trajectory, assignmentProof: trajectoryPromptBinding,
+      snapshot: JSON.parse(nativeToolBytes), journal, source });
+    if (assistant.content_blocks_v2.some(b => b.content?.file_operation_block) && !nativeSdkProtocol.calls.length) {
+      throw new Error('DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS');
+    }
+  }
+  let searchDisplayProof = null;
+  if (assignmentBytes) {
+    searchDisplayProof = reconcileNativeSearchDisplays(unknownBlocks, legacy.events);
+    const matched = new Set(searchDisplayProof.matched_block_ids);
+    unknownBlocks = unknownBlocks.filter(block => !matched.has(block.block_id));
+    completeToolTrace = !nonSuccess && Boolean(nativeTools) && nativeTools.status !== 'partial'
+      && unknownBlocks.length === 0 && multimodalBypassCount === 0;
+  }
   const nativeCalls = new Map((nativeTools?.events || []).filter(e => e.phase === "started").map(e => [e.tool_call_id, e]));
   const remoteCalls = legacy.events.filter(e => e.kind === "assistant_tool_call" && !nativeCalls.has(e.call_id));
   const observedToolNames = new Set([...nativeCalls.values()].map(e => e.tool_name).concat(remoteCalls.map(e => e.tool_name)));
@@ -347,5 +388,5 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   }
   const crossSourceOrderUnknown = !timeline.order_verified;
   if (crossSourceOrderUnknown) completeToolTrace = false;
-  return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown };
+  return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, assignmentBytes, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown, searchDisplayProof, nativeSdkProtocol };
 }
