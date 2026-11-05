@@ -11,7 +11,7 @@ export async function readNativeProjectWorkspace(page, state) {
     const source = ids.map(id => String(req.m[id])).join('\n');
     const hash = value => crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)).then(b => [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join(''));
     const sourceSha = await hash(source);
-    if (sourceSha !== cfg.sourceSha) throw Error('DOUBAOWORK_PROJECT_MODULE_SOURCE_CHANGED');
+    if (!cfg.sourceHashes.includes(sourceSha)) throw Error('DOUBAOWORK_PROJECT_MODULE_SOURCE_CHANGED');
     const rows = [...document.querySelectorAll('section[data-project-id]')].filter(e =>
       [...e.querySelectorAll('[title]')].some(n => n.getAttribute('title') === cfg.name));
     if (rows.length !== 1) throw Error('DOUBAOWORK_PROJECT_ROW_AMBIGUOUS');
@@ -26,10 +26,13 @@ export async function readNativeProjectWorkspace(page, state) {
     return { workspace: cfg.workspace, profile: 'doubaowork-native-primary-folder-2.35.15/v1', module_source_sha256: sourceSha,
       project_id_sha256: await hash(id), device_id_sha256: await hash(device), folder_id_sha256: await hash(folders[0].projectFolderId) };
   }, { name: state.client.project_name, workspace: state.workspace, projectSha: state.client.project_id_sha256,
-    sourceSha: PROJECT_SOURCE_SHA256 });
+    sourceHashes: [PROJECT_SOURCE_SHA256, PROJECT_LAZY_SOURCE_SHA256] });
   if (result.workspace !== state.workspace || result.project_id_sha256 !== state.client.project_id_sha256) throw Error('DOUBAOWORK_PROJECT_READBACK_INVALID');
   state.history.push({ event: 'NATIVE_PRIMARY_PROJECT_FOLDER_RECONFIRMED', at: new Date().toISOString(), ...result });
   return result.workspace;
 }
 
 export const PROJECT_SOURCE_SHA256 = '38bd5081f9639f936627caa002ef69604360fb07e5efcca044c74a0ac68a317c';
+// Same getters after the native lazy chunk replaces two factories. The only
+// differences in PBe/kuf are verified minifier-local variable renames.
+export const PROJECT_LAZY_SOURCE_SHA256 = '60ecaf7aaee2d6d9bd97635355bbb7d8cf349d1a8feb9156918330dd21978702';

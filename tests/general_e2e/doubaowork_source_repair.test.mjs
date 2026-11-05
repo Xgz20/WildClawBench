@@ -48,10 +48,12 @@ test('a prepared retry is adopted only from SHA-bound archived zero-send evidenc
  const current=structuredClone(prior);current.attempt_id='new';current.phase='WORKSPACE_CONFIRMED';current.prepared_project=true;
  current.client.project_name='project';current.client.manifest_sha256='a'.repeat(64);current.prepared={managed_queue_id:'q'};
  current.history.push({retry_of_attempt_sha256:sha('old')});
- const state={config:{queue_id:'q',manifest_sha256:'a'.repeat(64)},tasks:[{task_id:'t',phase:'NEEDS_ATTENTION',attempt_id:'old',project_name:'project'}],error:{task_id:'t',phase:'prepare-project'},history:[]};
+ const state={config:{queue_id:'q',manifest_sha256:'a'.repeat(64)},tasks:[{task_id:'t',phase:'NEEDS_ATTENTION',attempt_id:'old',dispatch_attempt_count:0,project_name:'project'}],error:{task_id:'t',phase:'prepare-project'},history:[]};
  const raw=Buffer.from(JSON.stringify(prior)),now=Buffer.from(JSON.stringify(current)),proof={task_id:'t',prior_journal_sha256:sha(raw),prepared_journal_sha256:sha(now)};
  assert.equal(adoptPreparedRetry(state,proof,raw,now).tasks[0].attempt_id,'new');
  assert.equal(state.tasks[0].attempt_id,'old');
+ const dispatchFailure=structuredClone(state);dispatchFailure.error={task_id:'t',native:{code:'DEVELOPMENT_PRE_SEND_FAILED'}};
+ assert.equal(adoptPreparedRetry(dispatchFailure,proof,raw,now).tasks[0].phase,'PREPARED');
  const failed=structuredClone(current);failed.phase='INFRA_FAILED';failed.prepared_project=false;
  const failedRaw=Buffer.from(JSON.stringify(failed));
  const preserved=adoptPreparedRetry(state,{...proof,prepared_journal_sha256:sha(failedRaw)},raw,failedRaw);

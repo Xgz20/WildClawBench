@@ -14,6 +14,9 @@ const execFile = promisify(execFileCallback), HERE = dirname(fileURLToPath(impor
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const now = () => new Date().toISOString();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const isZeroSendPreparationError = (state, row) => state.error?.task_id === row?.task_id
+  && row.dispatch_attempt_count === 0 && (state.error.phase === "prepare-project"
+    || state.error.native?.code === "DEVELOPMENT_PRE_SEND_FAILED");
 
 export function queueProjectName(unitRoot, queueId, ordinal) {
   if (!Number.isInteger(ordinal) || ordinal < 1) throw new Error("DOUBAOWORK_PROJECT_ORDINAL_INVALID");
@@ -119,7 +122,7 @@ export function adoptPreparedRetry(state, proof, priorBytes, currentBytes) {
   assertPreSendRetryEligible(prior);
   const row = state.tasks.find(r => r.task_id === proof.task_id);
   if (!row || row.phase !== "NEEDS_ATTENTION" || row.attempt_id !== prior.attempt_id
-      || state.error?.task_id !== proof.task_id || state.error.phase !== "prepare-project"
+      || !isZeroSendPreparationError(state, row)
       || proof.prior_journal_sha256 !== sha(priorBytes) || proof.prepared_journal_sha256 !== sha(currentBytes)
       || current.attempt_id === prior.attempt_id
       || !(current.prepared_project === true && current.phase === "WORKSPACE_CONFIRMED" || current.phase === "INFRA_FAILED")
@@ -198,7 +201,7 @@ export async function runSerialQueue(options) {
     if (options.prepareRetryTaskId) {
       let row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
       if (!row || row.phase !== "NEEDS_ATTENTION" || !/^[A-Za-z0-9-]+$/u.test(row.attempt_id || "")
-          || state.error?.task_id !== row.task_id || state.error.phase !== "prepare-project") throw new Error("DOUBAOWORK_PREPARE_RETRY_NOT_ELIGIBLE");
+          || !isZeroSendPreparationError(state, row)) throw new Error("DOUBAOWORK_PREPARE_RETRY_NOT_ELIGIBLE");
       const root = join(unitRoot, ".general-e2e", "execution", row.task_id, "doubaowork"), journalPath = join(root, "automation_state.json");
       let currentBytes = await readFile(journalPath), current = JSON.parse(currentBytes), priorBytes;
       if (current.attempt_id !== row.attempt_id && current.phase === "INFRA_FAILED") {
