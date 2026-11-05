@@ -5,7 +5,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { lstat, readFile, realpath, rename, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { acquireExclusiveWorkerLock } from "../../vendor/e2e-shared/doubaowork/controller.mjs";
+import { acquireExclusiveWorkerLock, assertPreSendRetryEligible } from "../../vendor/e2e-shared/doubaowork/controller.mjs";
 import { validateGeneralTask } from "./prepared-task.mjs";
 import { DEFAULT_APP_PATH, DEFAULT_ENDPOINT } from "../../vendor/e2e-shared/doubaowork/lib.mjs";
 import { startTrajectoryArchivePump } from "../../vendor/e2e-shared/doubaowork/trajectory-archive.mjs";
@@ -114,6 +114,29 @@ export function applyQueueSourceRepair(state, config, repair, originalBytes, at 
   return updated;
 }
 
+export function adoptPreparedRetry(state, proof, priorBytes, currentBytes) {
+  const prior = JSON.parse(priorBytes), current = JSON.parse(currentBytes);
+  assertPreSendRetryEligible(prior);
+  const row = state.tasks.find(r => r.task_id === proof.task_id);
+  if (!row || row.phase !== "NEEDS_ATTENTION" || row.attempt_id !== prior.attempt_id
+      || state.error?.task_id !== proof.task_id || state.error.phase !== "prepare-project"
+      || proof.prior_journal_sha256 !== sha(priorBytes) || proof.prepared_journal_sha256 !== sha(currentBytes)
+      || current.attempt_id === prior.attempt_id || current.prepared_project !== true || current.phase !== "WORKSPACE_CONFIRMED"
+      || current.send?.dispatch_attempt_count !== 0 || current.send.intent_persisted_at || current.session?.conversation_id
+      || current.identity?.task_id !== row.task_id || current.workspace !== prior.workspace
+      || current.prompt.sha256 !== prior.prompt.sha256 || current.client.project_name !== row.project_name
+      || current.client.manifest_sha256 !== state.config.manifest_sha256
+      || current.prepared?.managed_queue_id !== state.config.queue_id
+      || !current.history.some(e => e.retry_of_attempt_sha256 === sha(prior.attempt_id))) {
+    throw new Error("DOUBAOWORK_PREPARED_RETRY_ADOPTION_UNVERIFIED");
+  }
+  const updated = structuredClone(state), target = updated.tasks.find(r => r.task_id === proof.task_id);
+  target.phase = "PREPARED"; target.attempt_id = current.attempt_id;
+  updated.history.push({ event: "ZERO_SEND_PREPARED_RETRY_ADOPTED", task_id: proof.task_id, at: now(),
+    prior_attempt_id: prior.attempt_id, prepared_attempt_id: current.attempt_id, ...proof });
+  return updated;
+}
+
 export async function runSerialQueue(options) {
   if (options.sourceRepairManifest && !options.resume) throw new Error("DOUBAOWORK_SOURCE_REPAIR_REQUIRES_RESUME");
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/u.test(options.queueId || "")) throw new Error("DOUBAOWORK_QUEUE_ID_INVALID");
@@ -146,6 +169,15 @@ export async function runSerialQueue(options) {
             && await readJournal(join(unitRoot, ".general-e2e", "execution", repair.retry_pre_journal_preparation_task_id,
               "doubaowork", "automation_state.json"))) throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_HAS_JOURNAL");
         state = applyQueueSourceRepair(state, config, repair, originalBytes);
+        if (repair.prepared_retry) {
+          const proof = repair.prepared_retry;
+          const row = state.tasks.find(r => r.task_id === proof.task_id);
+          if (!row || !/^[A-Za-z0-9-]+$/u.test(row.attempt_id || "")) throw new Error("DOUBAOWORK_PREPARED_RETRY_TASK_INVALID");
+          const root = join(unitRoot, ".general-e2e", "execution", row.task_id, "doubaowork");
+          state = adoptPreparedRetry(state, proof,
+            await readFile(join(root, ".attempts", row.attempt_id, "automation_state.json")),
+            await readFile(join(root, "automation_state.json")));
+        }
         await writeFile(join(queueRoot, `queue-before-source-repair-${repair.original_queue_sha256}.json`), originalBytes, { flag: "wx", mode: 0o600 });
         await save(stateFile, state);
       }

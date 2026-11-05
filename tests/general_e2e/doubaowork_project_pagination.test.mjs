@@ -23,3 +23,14 @@ test("project creation rejects native truncation before folder selection or conf
   input.inputValue = async () => "truncated";
   await assert.rejects(() => fillVerifiedProjectName(input, "exact-name"), /PROJECT_NAME_READBACK_MISMATCH/);
 });
+
+test("collapsed project group is expanded once and the exact project is read again", async () => {
+  let expanded=false,clicks=0;
+  const title={count:async()=>expanded?1:0};
+  const rows={count:async()=>expanded?1:0,first:()=>({waitFor:async()=>{assert.ok(expanded);}})};
+  const header={filter(){return this;},count:async()=>1,isVisible:async()=>true,click:async()=>{expanded=true;clicks++;}};
+  const grouped={count:async()=>1,getByTitle:()=>title,getByRole:()=>({count:async()=>0}),
+    locator:s=>s==='section[data-project-id]'?rows:header};
+  const page={getByTestId:()=>grouped,getByText:()=>({})};
+  assert.equal(await ensureProjectVisible(page,'exact-project'),title);assert.equal(clicks,1);
+});

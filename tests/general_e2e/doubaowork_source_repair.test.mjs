@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {createHash} from "node:crypto";
-import {applyQueueSourceRepair} from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/doubaowork/batch.mjs";
+import {applyQueueSourceRepair,adoptPreparedRetry} from "../../tools/report/skills/general-e2e/execute-general-e2e/drivers/doubaowork/batch.mjs";
+import {createAttemptState,transitionAttempt} from "../../tools/report/e2e-shared/doubaowork/state.mjs";
 const sha=b=>createHash("sha256").update(b).digest("hex");
 
 test("runtime repair binds the exact paused queue and preserves every sent and pending attempt",()=>{
@@ -39,4 +40,19 @@ test("pre-journal recovery accepts only the exact missing-session-root failure w
   const changed=structuredClone(state);changed.error.worker.message="Timeout waiting for send";
   const raw=Buffer.from(JSON.stringify(changed));
   assert.throws(()=>applyQueueSourceRepair(changed,config,{...repair,original_queue_sha256:sha(raw)},raw),/PRE_JOURNAL_RECOVERY_UNVERIFIED/);
+});
+
+test('a prepared retry is adopted only from SHA-bound archived zero-send evidence and the original task',()=>{
+ const prior=createAttemptState({attemptId:'old',batchId:'b',taskId:'t',workspace:'/unit/workspace',promptFile:'/unit/prompt.md',prompt:'frozen'});
+ transitionAttempt(prior,'CLIENT_READY');transitionAttempt(prior,'INFRA_FAILED');prior.error={code:'DEVELOPMENT_PRE_SEND_FAILED'};
+ const current=structuredClone(prior);current.attempt_id='new';current.phase='WORKSPACE_CONFIRMED';current.prepared_project=true;
+ current.client.project_name='project';current.client.manifest_sha256='a'.repeat(64);current.prepared={managed_queue_id:'q'};
+ current.history.push({retry_of_attempt_sha256:sha('old')});
+ const state={config:{queue_id:'q',manifest_sha256:'a'.repeat(64)},tasks:[{task_id:'t',phase:'NEEDS_ATTENTION',attempt_id:'old',project_name:'project'}],error:{task_id:'t',phase:'prepare-project'},history:[]};
+ const raw=Buffer.from(JSON.stringify(prior)),now=Buffer.from(JSON.stringify(current)),proof={task_id:'t',prior_journal_sha256:sha(raw),prepared_journal_sha256:sha(now)};
+ assert.equal(adoptPreparedRetry(state,proof,raw,now).tasks[0].attempt_id,'new');
+ assert.equal(state.tasks[0].attempt_id,'old');
+ const sent=structuredClone(current);sent.send.dispatch_attempt_count=1;const sentRaw=Buffer.from(JSON.stringify(sent));
+ assert.throws(()=>adoptPreparedRetry(state,{...proof,prepared_journal_sha256:sha(sentRaw)},raw,sentRaw),/ADOPTION_UNVERIFIED/);
+ assert.throws(()=>adoptPreparedRetry(state,{...proof,prior_journal_sha256:'0'.repeat(64)},raw,now),/ADOPTION_UNVERIFIED/);
 });
