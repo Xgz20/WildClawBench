@@ -1,9 +1,9 @@
 import { createHash, randomUUID } from "node:crypto";
-import { isMoaBackend, moaDispatcherCall, MOA_SOURCE_SHA256 } from "./runtime-moa.mjs";
+import { isMoaBackend, moaDispatcherCall, moaProfileForSource } from "./runtime-moa.mjs";
 
 export const DISPATCHER_PROFILE = "doubaowork-tool-dispatch-observer/v1";
 export const DISPATCHER_SOURCE_SHA256 = "40941282dd34f9ff7b5a0c5b399913f97c5b92a03eca90072c8f1b279c004baa";
-export const isSupportedDispatcherSource = value => value === DISPATCHER_SOURCE_SHA256 || value === MOA_SOURCE_SHA256;
+export const isSupportedDispatcherSource = value => value === DISPATCHER_SOURCE_SHA256 || Boolean(moaProfileForSource(value));
 
 // Read the initialized 2.31.10 dispatcher and context store. Never call the
 // cleanup/initializer, a tool, a permission API, or a result upload function.

@@ -2,6 +2,10 @@
 // Read the same initialized native project store and device-specific primary
 // folder resolver used by the visible Open Project Folder action.
 export async function readNativeProjectWorkspace(page, state) {
+  const version = state.client.version || '2.35.15';
+  const getterSourceSha = version === '2.35.15' ? PROJECT_GETTER_SOURCE_SHA256
+    : version === '2.35.19' ? PROJECT_23519_GETTER_SOURCE_SHA256 : null;
+  if (!getterSourceSha) throw Error('DOUBAOWORK_PROJECT_VERSION_UNVERIFIED');
   const result = await page.evaluate(async cfg => {
     const chunks = window['chunk_@flow-web/desktop'];
     if (!Array.isArray(chunks) || Array.isArray(window['@flow-web/desktop:stable'])) throw Error('DOUBAOWORK_PROJECT_RUNTIME_UNKNOWN');
@@ -30,11 +34,11 @@ export async function readNativeProjectWorkspace(page, state) {
     const folders = project.folders.filter(f => f.folderDeviceId === device && f.isPrimary === true);
     if (folders.length !== 1 || folders[0].projectId !== id || typeof folders[0].projectFolderId !== 'string'
         || req('ZBb').W(project, device) !== cfg.workspace || folders[0].workspace.trim() !== cfg.workspace) throw Error('DOUBAOWORK_PROJECT_FOLDER_CHANGED');
-    return { workspace: cfg.workspace, profile: 'doubaowork-native-primary-folder-2.35.15/v2', getter_source_sha256: sourceSha,
+    return { workspace: cfg.workspace, profile: cfg.profile, getter_source_sha256: sourceSha,
       factory_source_sha256: factorySha,
       project_id_sha256: await hash(id), device_id_sha256: await hash(device), folder_id_sha256: await hash(folders[0].projectFolderId) };
   }, { name: state.client.project_name, workspace: state.workspace, projectSha: state.client.project_id_sha256,
-    getterSourceSha: PROJECT_GETTER_SOURCE_SHA256 });
+    getterSourceSha, profile: `doubaowork-native-primary-folder-${version}/v2` });
   if (result.workspace !== state.workspace || result.project_id_sha256 !== state.client.project_id_sha256) throw Error('DOUBAOWORK_PROJECT_READBACK_INVALID');
   state.history.push({ event: 'NATIVE_PRIMARY_PROJECT_FOLDER_RECONFIRMED', at: new Date().toISOString(), ...result });
   return result.workspace;
@@ -45,3 +49,6 @@ export const PROJECT_SOURCE_SHA256 = '38bd5081f9639f936627caa002ef69604360fb07e5
 // differences in PBe/kuf are verified minifier-local variable renames.
 export const PROJECT_LAZY_SOURCE_SHA256 = '60ecaf7aaee2d6d9bd97635355bbb7d8cf349d1a8feb9156918330dd21978702';
 export const PROJECT_GETTER_SOURCE_SHA256 = 'c0c507e18c4a2d313560673263f7e52934262583b22bd5885b2f842da3453afa';
+// Captured actual seven getters on 2.35.19; the required store/device/folder
+// relationship and native resolver are checked independently after the pin.
+export const PROJECT_23519_GETTER_SOURCE_SHA256 = '05110aa14aa5efe0d6f6c166ff58f5b11f86ef624e63aab81c4f330815ce6cbc';

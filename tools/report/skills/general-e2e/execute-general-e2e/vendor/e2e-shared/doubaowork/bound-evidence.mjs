@@ -13,7 +13,7 @@ import { mergeNativeToolTimeline, mergeObservedToolTimeline } from "./trajectory
 import { inspectNativeAuthorizationHistory } from "./interactions.mjs";
 import { verifyCancellationEvidence, verifyFailureEvidence } from "./terminal-evidence.mjs";
 import { DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256, isSupportedDispatcherSource } from "./runtime-dispatcher.mjs";
-import { MOA_SOURCE_SHA256, validateMoaBackendProof } from "./runtime-moa.mjs";
+import { moaProfileForVersion, moaProfileForSource, validateMoaBackendProof } from "./runtime-moa.mjs";
 import { reconcileNativeSearchDisplays, reconcileNativeGuiDisplays } from "./search-displays.mjs";
 import { verifyMoaSdkProtocol } from "./moa-sdk-protocol.mjs";
 
@@ -24,7 +24,7 @@ export function trajectoryArchiveClockPolicy(snapshot) {
     return { use_observation_bounds: true, basis: "verified-native-emitter-host-clock/v1" };
   }
   if (snapshot?.profile === DISPATCHER_PROFILE && isSupportedDispatcherSource(snapshot.profile_sha256)) {
-    if (snapshot.profile_sha256 === MOA_SOURCE_SHA256) validateMoaBackendProof(snapshot.native_backend);
+    if (moaProfileForSource(snapshot.profile_sha256)) validateMoaBackendProof(snapshot.native_backend, snapshot.profile_sha256);
     // The dispatcher profile is bound and verified, but its ledger times do
     // not prove the old emitter clock. Preserve archives without using their
     // capture times to order dispatcher and model events across sources.
@@ -284,8 +284,8 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
     && e.output?.structuredResultFacts?.localFileReadV2Bypass?.reason === "image").length;
   let completeToolTrace = !nonSuccess && Boolean(nativeTools) && nativeTools.status !== "partial" && unknownBlocks.length === 0 && multimodalBypassCount === 0;
   const missingToolDisplays = [];
-  const sdkCandidate = allowNativeMoaSdkProtocol && journal.scene === 'general' && journal.client.version === '2.35.15'
-    && nativeTools?.profile_sha256 === MOA_SOURCE_SHA256 && nativeTools?.known_subtotal === 0;
+  const sdkCandidate = allowNativeMoaSdkProtocol && journal.scene === 'general' && Boolean(moaProfileForVersion(journal.client.version))
+    && nativeTools?.profile_sha256 === moaProfileForVersion(journal.client.version)?.sourceSha && nativeTools?.known_subtotal === 0;
   if (nativeTools && nativeTools.known_subtotal === 0 && assistant.content_blocks_v2.some(b => b.content?.file_operation_block)) {
     if (!nonSuccess && !sdkCandidate) throw new Error("DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS");
     if (!sdkCandidate) missingToolDisplays.push("file_operation_block");
@@ -333,8 +333,8 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   const legacy = deduplicateTrajectoryEvents(allNativeEvents);
   let assignmentBytes = null, trajectoryPromptBinding;
   if (!legacy.events.some(e => e.kind === 'user_message') && trajectoryPath && !nonSuccess
-      && journal.client.version === '2.35.15' && nativeTools?.profile_sha256 === MOA_SOURCE_SHA256) {
-    validateMoaBackendProof(JSON.parse(nativeToolBytes).native_backend);
+      && Boolean(moaProfileForVersion(journal.client.version)) && nativeTools?.profile_sha256 === moaProfileForVersion(journal.client.version)?.sourceSha) {
+    validateMoaBackendProof(JSON.parse(nativeToolBytes).native_backend, nativeTools.profile_sha256);
     assignmentBytes = await readRegular(join(dirname(trajectoryPath), 'assignment.md'));
     trajectoryPromptBinding = verifyNativeMainAssignment(assignmentBytes,
       { agentId: source.agent_id, expectedHash: journal.prompt.readback_sha256 });

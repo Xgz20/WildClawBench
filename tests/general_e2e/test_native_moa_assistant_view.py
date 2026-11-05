@@ -14,18 +14,18 @@ SPEC.loader.exec_module(MODULE)
 
 
 class NativeMoaAssistantViewTests(unittest.TestCase):
-    def fixture(self, root: Path):
+    def fixture(self, root: Path, profile=MODULE.PROFILE):
         trace = root / 'trace/raw'
         trace.mkdir(parents=True)
         rows = [dict(role='assistant', content='我会先核验来源。', tool_calls=[{'id': 'c'}]),
                 dict(role='tool', content='tool result', tool_call_id='c'),
                 dict(role='assistant', content='final answer')]
         raw = b''.join((json.dumps(r, ensure_ascii=False)+'\n').encode() for r in rows)
-        proof = json.dumps(dict(profile=MODULE.PROFILE, source_sha256=hashlib.sha256(raw).hexdigest())).encode()
+        proof = json.dumps(dict(profile=profile, source_sha256=hashlib.sha256(raw).hexdigest())).encode()
         (trace/'trajectory.jsonl').write_bytes(raw)
         (trace/'native-moa-sdk-protocol.json').write_bytes(proof)
         identity = dict(batch_id='b', unit_id='u', task_id='t', attempt_id='execution')
-        index = dict(identity=identity, normalization=dict(compatibility_profiles=[MODULE.PROFILE]), raw_trace=[
+        index = dict(identity=identity, normalization=dict(compatibility_profiles=[profile]), raw_trace=[
             dict(path='raw/trajectory.jsonl', sha256=hashlib.sha256(raw).hexdigest(), size=len(raw)),
             dict(path='raw/native-moa-sdk-protocol.json', sha256=hashlib.sha256(proof).hexdigest(), size=len(proof))])
         (root/'trace/trace-index.json').write_text(json.dumps(index))
@@ -65,3 +65,18 @@ class NativeMoaAssistantViewTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(MODULE.materialize(Path(tmp), {}, create=True), [])
             self.assertFalse((Path(tmp)/'native-compatibility').exists())
+
+    def test_23519_view_preserves_raw_rows_and_rejects_conflicting_profile_declarations(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            profile = 'doubaowork-native-moa-sdk-model-protocol-2.35.19/v1'
+            manifest, raw = self.fixture(root, profile)
+            view, audit = MODULE.materialize(root, manifest, create=True)
+            self.assertEqual((root/'trace/raw/trajectory.jsonl').read_bytes(), raw)
+            self.assertEqual(len(view.read_bytes().splitlines()), 2)
+            index_path = root/'trace/trace-index.json'
+            index = json.loads(index_path.read_bytes())
+            index['normalization']['compatibility_profiles'].append(MODULE.PROFILE)
+            index_path.write_text(json.dumps(index))
+            with self.assertRaisesRegex(ValueError, 'profile is ambiguous'):
+                MODULE.materialize(root, manifest, create=False)

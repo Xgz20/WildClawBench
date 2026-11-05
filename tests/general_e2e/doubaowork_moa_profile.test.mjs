@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
-import { configureMoaBackend, isMoaBackend, validateMoaListener, validateMoaBackendProof, MOA_SOURCE_SHA256 } from '../../tools/report/e2e-shared/doubaowork/runtime-moa.mjs';
+import { configureMoaBackend, isMoaBackend, validateMoaListener, validateMoaBackendProof, MOA_SOURCE_SHA256, MOA_23519_SOURCE_SHA256, moaProfileForVersion } from '../../tools/report/e2e-shared/doubaowork/runtime-moa.mjs';
 import { isSupportedDispatcherSource, DISPATCHER_SOURCE_SHA256, operateDispatcherObserver } from '../../tools/report/e2e-shared/doubaowork/runtime-dispatcher.mjs';
 import { readNativeActivity, assertNativeActivityAllowed } from '../../tools/report/e2e-shared/doubaowork/runtime-activity.mjs';
 import { normalizeNativeToolEvents } from '../../tools/report/e2e-shared/doubaowork/runtime-tools.mjs';
@@ -43,6 +43,20 @@ test('New source SHA alone never admits an archived MOA capture', () => {
     { ...p, worker_pid: 100 }, { ...p, worker_command_sha256: null }, { ...p, source_verification: 'assumed' }]) {
     assert.throws(() => validateMoaBackendProof(value), /BACKEND_PROOF_INVALID/);
   }
+});
+test('2.35.19 has its own exact source and proof; client versions and source pins cannot be mixed', () => {
+  const browser = {};
+  assert.equal(configureMoaBackend(browser, { app: { version: '2.35.19' }, uiEndpoint: 'http://127.0.0.1:9260' }), true);
+  assert.equal(isMoaBackend(browser), true);
+  assert.equal(isSupportedDispatcherSource(MOA_23519_SOURCE_SHA256), true);
+  const profile = moaProfileForVersion('2.35.19');
+  assert.equal(profile.contextGetter, 'sd'); assert.equal(profile.serviceGetter, 'wv');
+  const proof = { ...backendProof(), profile: profile.backendProfile, worker_source_sha256: profile.sourceSha };
+  assert.doesNotThrow(() => validateMoaBackendProof(proof, MOA_23519_SOURCE_SHA256));
+  assert.throws(() => validateMoaBackendProof(proof, MOA_SOURCE_SHA256), /BACKEND_PROOF_INVALID/);
+  assert.throws(() => validateMoaBackendProof({ ...proof, profile: backendProof().profile }), /BACKEND_PROOF_INVALID/);
+  assert.equal(moaProfileForVersion('2.35.20'), null); assert.equal(moaProfileForVersion('constructor'), null);
+  assert.equal(configureMoaBackend({}, { app: { version: '2.35.20' }, uiEndpoint: 'http://127.0.0.1:9260' }), false);
 });
 
 test('MOA uses the original consumer/dispatch/upload algorithm, with no invented tool events', () => {

@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute } from "node:path";
 import { dispatcherCall, DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256, isSupportedDispatcherSource } from "./runtime-dispatcher.mjs";
-import { isMoaBackend, MOA_SOURCE_SHA256, validateMoaBackendProof } from "./runtime-moa.mjs";
+import { isMoaBackend, moaProfileForSource, validateMoaBackendProof } from "./runtime-moa.mjs";
 
 const PROFILE = "doubaowork-local-tool-debug-sink/v1";
 
@@ -262,7 +262,7 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
   const supportedProfile = snapshot?.profile === PROFILE || snapshot?.profile === DISPATCHER_PROFILE && isSupportedDispatcherSource(snapshot.profile_sha256);
   if (snapshot?.schema !== "wildclawbench.doubaowork-native-tool-events/v1" || !supportedProfile
       || snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId) throw new Error("NATIVE_TOOL_EVIDENCE_IDENTITY_MISMATCH");
-  if (snapshot.profile_sha256 === MOA_SOURCE_SHA256) validateMoaBackendProof(snapshot.native_backend);
+  if (moaProfileForSource(snapshot.profile_sha256)) validateMoaBackendProof(snapshot.native_backend, snapshot.profile_sha256);
   if (![snapshot.installed_at, snapshot.collected_at, sentAt, finishedAt].every(t => Number.isFinite(Date.parse(t)))
       || Date.parse(finishedAt) < Date.parse(sentAt)) throw new Error("NATIVE_TOOL_CAPTURE_TIME_INVALID");
   if (snapshot.overflow || snapshot.errors.length || snapshot.unknown_context_events || snapshot.ledger_at_capacity

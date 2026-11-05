@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import vm from 'node:vm';
 import { createHash, webcrypto } from 'node:crypto';
-import { readNativeProjectWorkspace, PROJECT_GETTER_SOURCE_SHA256 } from '../../tools/report/e2e-shared/doubaowork/runtime-project.mjs';
+import { readNativeProjectWorkspace, PROJECT_GETTER_SOURCE_SHA256, PROJECT_23519_GETTER_SOURCE_SHA256 } from '../../tools/report/e2e-shared/doubaowork/runtime-project.mjs';
 const sha=s=>createHash('sha256').update(s).digest('hex');
 const state=()=>({client:{project_name:'exact',project_id_sha256:sha('123')},workspace:'/unit/workspace',history:[]});
 function page({workspace='/unit/workspace',device='this-device',sourceSha=PROJECT_GETTER_SOURCE_SHA256}={}) {
@@ -21,4 +21,13 @@ test('native project readback binds the exact UI ID, initialized store, current 
  await assert.rejects(readNativeProjectWorkspace(page({workspace:'/other'}),state()),/FOLDER_CHANGED/);
  await assert.rejects(readNativeProjectWorkspace(page({device:'other-device'}),state()),/FOLDER_CHANGED/);
  await assert.rejects(readNativeProjectWorkspace(page({sourceSha:'0'.repeat(64)}),state()),/GETTER_SOURCE_CHANGED/);
+});
+test('2.35.19 native project getters are separately pinned and retain exact folder/device checks',async()=>{
+ const s=state();s.client.version='2.35.19';
+ assert.equal(await readNativeProjectWorkspace(page({sourceSha:PROJECT_23519_GETTER_SOURCE_SHA256}),s),s.workspace);
+ assert.equal(s.history[0].profile,'doubaowork-native-primary-folder-2.35.19/v2');
+ await assert.rejects(readNativeProjectWorkspace(page(),s),/GETTER_SOURCE_CHANGED/);
+ await assert.rejects(readNativeProjectWorkspace(page({sourceSha:PROJECT_23519_GETTER_SOURCE_SHA256,device:'other-device'}),s),/FOLDER_CHANGED/);
+ const unknown=state();unknown.client.version='2.35.20';
+ await assert.rejects(readNativeProjectWorkspace(page(),unknown),/VERSION_UNVERIFIED/);
 });

@@ -1,3 +1,4 @@
+import { moaProfileForVersion } from './runtime-moa.mjs';
 // Count native invocation identities independently of process-content completeness.
 import { normalizeRuntimeMessages } from './runtime-messages.mjs';
 import { normalizeNativeToolEvents } from './runtime-tools.mjs';
@@ -89,7 +90,7 @@ export async function recountArchivedTools({stateFile, traceIndex}) {
  const nativeSnapshot=JSON.parse(await bound('raw/native-tools.json'));
  const journal=JSON.parse(await bound('bindings/dispatch-journal.json'));
  const transcript=(await bound(index.transcript.path)).toString('utf8').split('\n').filter(x=>x.trim()).map(JSON.parse);
- if(index.normalization?.compatibility_profiles?.includes('doubaowork-native-moa-sdk-model-protocol-2.35.15/v1')) {
+ if(index.normalization?.compatibility_profiles?.includes(moaProfileForVersion(journal.client.version)?.sdkProfile)) {
   ensure(state.phase==='COMPLETED'&&state.execution.business_status==='completed','SDK_EXECUTION_NOT_COMPLETED');
   normalizeRuntimeMessages(runtime,journal);
   const proof=JSON.parse(await bound('raw/native-moa-sdk-protocol.json'));

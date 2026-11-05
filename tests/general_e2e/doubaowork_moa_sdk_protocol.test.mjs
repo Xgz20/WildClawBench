@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
-import { MOA_SOURCE_SHA256 } from '../../tools/report/e2e-shared/doubaowork/runtime-moa.mjs';
+import { MOA_SOURCE_SHA256, moaProfileForVersion } from '../../tools/report/e2e-shared/doubaowork/runtime-moa.mjs';
 import { verifyMoaSdkProtocol, countMoaSdkTools, fetchMoaSdkAttachments, parseMacSystemHttpsProxy } from '../../tools/report/e2e-shared/doubaowork/moa-sdk-protocol.mjs';
 const sha=s=>createHash('sha256').update(s).digest('hex');
 function fixture(rows) {
@@ -34,6 +34,17 @@ test('SDK protocol uses original invocation IDs and results; an inactive JS obse
  const transcript=[{type:'tool_call',tool:{call_id:'call',name:'Bash',arguments:{command:'pwd'}}},{type:'tool_result',tool:{call_id:'call',result:'native stdout'}}];
  assert.equal(countMoaSdkTools(p,transcript,{calls:[{}],completeness:{status:'complete'}}).total,1);
  transcript[1].tool.result='fabricated';assert.throws(()=>countMoaSdkTools(p,transcript,{calls:[{}],completeness:{status:'complete'}}),/NORMALIZED_CALL_DRIFT/);
+});
+test('2.35.19 SDK evidence requires the matching client, observer, consumer and backend source proof',()=>{
+ const f=fixture([call,result]),profile=moaProfileForVersion('2.35.19');
+ f.journal.client.version='2.35.19';f.snapshot.profile_sha256=profile.sourceSha;
+ f.snapshot.consumer_witness.source_sha256=profile.sourceSha;
+ f.snapshot.native_backend.profile=profile.backendProfile;f.snapshot.native_backend.worker_source_sha256=profile.sourceSha;
+ assert.equal(verifyMoaSdkProtocol(f).profile,profile.sdkProfile);
+ f.snapshot.native_backend.worker_source_sha256=MOA_SOURCE_SHA256;
+ assert.throws(()=>verifyMoaSdkProtocol(f),/BACKEND_PROOF_INVALID/);
+ const wrong=fixture([call,result]);wrong.journal.client.version='2.35.19';
+ assert.throws(()=>verifyMoaSdkProtocol(wrong),/PROFILE_UNBOUND/);
 });
 test('SDK binding rejects missing results, duplicate calls, a foreign native session and unrelated media origins',()=>{
  assert.throws(()=>verifyMoaSdkProtocol(fixture([call])),/MISSING_RESULT/);

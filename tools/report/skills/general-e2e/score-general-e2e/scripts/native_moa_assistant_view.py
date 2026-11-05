@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 
 PROFILE = "doubaowork-native-moa-sdk-model-protocol-2.35.15/v1"
+SUPPORTED_PROFILES = frozenset({PROFILE, "doubaowork-native-moa-sdk-model-protocol-2.35.19/v1"})
 VIEW_PROFILE = "bound-native-moa-assistant-rows/v1"
 
 
@@ -30,10 +31,14 @@ def materialize(root: Path, manifest: dict, *, create: bool) -> list[Path]:
             raise ValueError("native view exists without its frozen trace")
         return []
     index = json.loads(_bytes(index_path))
-    if PROFILE not in index.get("normalization", {}).get("compatibility_profiles", []):
+    profiles = SUPPORTED_PROFILES.intersection(index.get("normalization", {}).get("compatibility_profiles", []))
+    if not profiles:
         if target.exists():
             raise ValueError("native view exists for an unsupported trace")
         return []
+    if len(profiles) != 1:
+        raise ValueError("native SDK compatibility profile is ambiguous")
+    profile = next(iter(profiles))
     if not create and not target.exists():
         return []
     raw_path = trace / "raw/trajectory.jsonl"
@@ -44,7 +49,7 @@ def materialize(root: Path, manifest: dict, *, create: bool) -> list[Path]:
         if refs.get(name, {}).get("sha256") != _sha(value) or refs[name]["size"] != len(value):
             raise ValueError("frozen native source digest mismatch")
     proof = json.loads(proof_bytes)
-    if proof.get("profile") != PROFILE or proof.get("source_sha256") != _sha(raw):
+    if proof.get("profile") != profile or proof.get("source_sha256") != _sha(raw):
         raise ValueError("native SDK proof does not bind the raw trajectory")
     expected = {k: manifest["identity"][k] for k in ["batch_id", "unit_id", "task_id"]}
     expected["attempt_id"] = manifest["identity"]["execution_attempt_id"]

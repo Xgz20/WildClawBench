@@ -5,6 +5,15 @@ import { inspectEndpointListener } from './platform.mjs';
 
 // Pinned installed AND live entry-moa source, inspected on DoubaoWork 2.35.15.
 export const MOA_SOURCE_SHA256 = 'd7fb756b89560ae2fc8e0939d3afc1478c05bbfa5d1ed890927b731d6cbe5e42';
+export const MOA_23519_SOURCE_SHA256 = 'e387108b1ffd23a898591d3822c37f578ebce07b52510a54e5bd25a186d03900';
+const profiles = Object.freeze({
+  '2.35.15': Object.freeze({ version: '2.35.15', sourceSha: MOA_SOURCE_SHA256, contextGetter: 'sE', serviceGetter: 'Rh',
+    backendProfile: 'doubaowork-moa-2.35.15-inspector/v1', sdkProfile: 'doubaowork-native-moa-sdk-model-protocol-2.35.15/v1' }),
+  '2.35.19': Object.freeze({ version: '2.35.19', sourceSha: MOA_23519_SOURCE_SHA256, contextGetter: 'sd', serviceGetter: 'wv',
+    backendProfile: 'doubaowork-moa-2.35.19-inspector/v1', sdkProfile: 'doubaowork-native-moa-sdk-model-protocol-2.35.19/v1' }),
+});
+export const moaProfileForVersion = version => Object.hasOwn(profiles, version) ? profiles[version] : null;
+export const moaProfileForSource = source => Object.values(profiles).find(p => p.sourceSha === source) || null;
 const URL_BASE = 'http://127.0.0.1:9261';
 const configured = new WeakMap();
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -12,9 +21,10 @@ const check = (ok, code) => { if (!ok) throw Error('DOUBAOWORK_MOA_' + code); };
 const readProcess = promisify(execFile);
 
 export function configureMoaBackend(browser, { app, uiEndpoint }) {
-  if (app.version !== '2.35.15') return false;
+  const profile = moaProfileForVersion(app.version);
+  if (!profile) return false;
   check(uiEndpoint === 'http://127.0.0.1:9260', 'DEFAULT_LOOPBACK_PORTS_REQUIRED');
-  configured.set(browser, { app, uiEndpoint });
+  configured.set(browser, { app, uiEndpoint, profile });
   return true;
 }
 export const isMoaBackend = browser => configured.has(browser);
@@ -30,9 +40,10 @@ export function validateMoaListener({ pid, parentPid, command, address, target }
     && /^ws:\/\/127\.0\.0\.1:9261\/ws\/[A-Za-z0-9-]+$/u.test(target.webSocketDebuggerUrl || ''), 'INSPECTOR_TARGET_UNVERIFIED');
 }
 
-export function validateMoaBackendProof(value) {
-  check(value?.profile === 'doubaowork-moa-2.35.15-inspector/v1' && value.worker_id === 'entry-moa'
-    && value.worker_source_sha256 === MOA_SOURCE_SHA256 && value.endpoint === URL_BASE
+export function validateMoaBackendProof(value, expectedSourceSha = value?.worker_source_sha256) {
+  const profile = moaProfileForSource(expectedSourceSha);
+  check(profile && value?.profile === profile.backendProfile && value.worker_id === 'entry-moa'
+    && value.worker_source_sha256 === profile.sourceSha && value.endpoint === URL_BASE
     && value.source_verification === 'live-debugger-script-sha256'
     && value.script_url === 'https://resource.sandbox.invalid/local_webcontents/apps/entry-moa/main.js'
     && Number.isSafeInteger(value.worker_pid) && value.worker_pid > 0
@@ -97,7 +108,7 @@ class Inspector {
   close() { this.socket.close(); }
 }
 
-async function verifyEntry(c) {
+async function verifyEntry(c, profile) {
   const scripts = [], receive = event => {
     if (event.method === 'Debugger.scriptParsed' && event.params.url === 'https://resource.sandbox.invalid/local_webcontents/apps/entry-moa/main.js') scripts.push(event.params);
   };
@@ -105,7 +116,7 @@ async function verifyEntry(c) {
   try {
     await c.send('Debugger.enable'); check(scripts.length === 1, 'ENTRY_SCRIPT_AMBIGUOUS');
     const source = await c.send('Debugger.getScriptSource', { scriptId: scripts[0].scriptId });
-    check(sha(source.scriptSource) === MOA_SOURCE_SHA256, 'LIVE_SOURCE_UNVERIFIED');
+    check(sha(source.scriptSource) === profile.sourceSha, 'LIVE_SOURCE_UNVERIFIED');
   } finally { c.events.delete(receive); await c.send('Debugger.disable').catch(() => {}); }
 }
 
@@ -115,7 +126,7 @@ async function checked(c, method, params) {
   return value;
 }
 
-async function toolObjects(c, group) {
+async function toolObjects(c, group, profile) {
   const proto = await checked(c, 'Runtime.evaluate', { expression: 'Object.prototype', objectGroup: group });
   const all = await c.send('Runtime.queryObjects', { prototypeObjectId: proto.result.objectId, objectGroup: group });
   const typed = await checked(c, 'Runtime.callFunctionOn', { objectId: all.objects.objectId, objectGroup: group,
@@ -133,7 +144,8 @@ async function toolObjects(c, group) {
   let pair;
   for (const scope of list.result.filter(x => x.value?.description?.startsWith('Closure'))) {
     const variables = await c.send('Runtime.getProperties', { objectId: scope.value.objectId, ownProperties: true });
-    const context = variables.result.find(x => x.name === 'sE')?.value, service = variables.result.find(x => x.name === 'Rh')?.value;
+    const context = variables.result.find(x => x.name === profile.contextGetter)?.value,
+      service = variables.result.find(x => x.name === profile.serviceGetter)?.value;
     if (context?.type === 'function' && service?.type === 'function') {
       check(!pair, 'NATIVE_GETTERS_AMBIGUOUS'); pair = { context, service };
     }
@@ -153,18 +165,18 @@ export async function moaDispatcherCall(browser, operation, values, observer) {
   const before = await readIdentity(browser, config), c = await Inspector.connect(before.target.webSocketDebuggerUrl);
   const group = 'wcb-moa-dispatch-' + randomUUID();
   try {
-    await verifyEntry(c);
-    const objects = await toolObjects(c, group);
+    await verifyEntry(c, config.profile);
+    const objects = await toolObjects(c, group, config.profile);
     const after = await readIdentity(browser, config);
     check(before.pid === after.pid && before.process_start_identity === after.process_start_identity
       && before.command_sha256 === after.command_sha256 && before.target.id === after.target.id
       && before.browser_pid === after.browser_pid && before.browser_start_identity === after.browser_start_identity, 'PROCESS_DRIFT');
     const result = await checked(c, 'Runtime.callFunctionOn', { objectId: objects.managerId, objectGroup: group, returnByValue: true,
-      arguments: [{ objectId: objects.storeId }, { value: { ...values, operation, profileSha: MOA_SOURCE_SHA256 } },
+      arguments: [{ objectId: objects.storeId }, { value: { ...values, operation, profileSha: config.profile.sourceSha } },
         { objectId: objects.serviceId }], functionDeclaration: observer.toString() });
     check(result.result?.value, 'OBSERVER_RESULT_UNAVAILABLE');
-    return { ...result.result.value, native_backend: { profile: 'doubaowork-moa-2.35.15-inspector/v1',
-      worker_id: 'entry-moa', worker_source_sha256: MOA_SOURCE_SHA256, worker_pid: before.pid,
+    return { ...result.result.value, native_backend: { profile: config.profile.backendProfile,
+      worker_id: 'entry-moa', worker_source_sha256: config.profile.sourceSha, worker_pid: before.pid,
       worker_start_identity: before.process_start_identity, worker_command_sha256: before.command_sha256,
       browser_pid: before.browser_pid, browser_start_identity: before.browser_start_identity,
       browser_command_sha256: before.browser_command_sha256, inspector_target_id: before.target.id,

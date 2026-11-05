@@ -1,7 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { MOA_SOURCE_SHA256, validateMoaBackendProof } from './runtime-moa.mjs';
+import { moaProfileForVersion, validateMoaBackendProof } from './runtime-moa.mjs';
 import { normalizeNativeToolEvents } from './runtime-tools.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 const check = (ok, code) => { if (!ok) throw Error('DOUBAOWORK_MOA_SDK_' + code); };
@@ -14,12 +14,13 @@ const allowedImageOrigin = parsed => parsed.protocol === 'https:' && !parsed.use
 // candidate files or UI text. Keep the unused legacy JS observer as evidence;
 // its zero deliveries do not mean zero SDK tool calls.
 export function verifyMoaSdkProtocol({ trajectoryBytes, assignmentProof, snapshot, journal, source }) {
-  check(journal.scene === 'general' && journal.client.version === '2.35.15'
+  const profile = moaProfileForVersion(journal.client.version);
+  check(journal.scene === 'general' && profile
     && assignmentProof?.status === 'verified' && assignmentProof.source === 'native-main-assignment/v1'
-    && assignmentProof.agent_id === source.agent_id && snapshot.profile_sha256 === MOA_SOURCE_SHA256,
+    && assignmentProof.agent_id === source.agent_id && snapshot.profile_sha256 === profile.sourceSha,
   'PROFILE_UNBOUND');
   check(journal.send.dispatch_attempt_count === 1 && journal.session.prompt_readback.status === 'verified', 'SEND_UNBOUND');
-  validateMoaBackendProof(snapshot.native_backend);
+  validateMoaBackendProof(snapshot.native_backend, profile.sourceSha);
   normalizeNativeToolEvents(snapshot, { attemptId: journal.attempt_id, workspace: journal.workspace,
     agentId: journal.session.native_request_session_id, conversationId: journal.session.conversation_id,
     sentAt: journal.timing.sent_at, finishedAt: journal.native_observation.finished_at });
@@ -63,7 +64,7 @@ export function verifyMoaSdkProtocol({ trajectoryBytes, assignmentProof, snapsho
     }
   }
   check([...calls.values()].every(c => c.result_line !== null), 'MISSING_RESULT');
-  return { profile: 'doubaowork-native-moa-sdk-model-protocol-2.35.15/v1', source_sha256: source.sha256,
+  return { profile: profile.sdkProfile, source_sha256: source.sha256,
     native_source: { kind: source.kind, relative_path: source.relative_path, agent_id: source.agent_id, sha256: source.sha256 },
     assignment_sha256: assignmentProof.assignment_sha256, agent_id: source.agent_id, calls: [...calls.values()], attachments,
     legacy_js_observer: { status: 'not-the-sdk-execution-route', observed_deliveries: 0 },
