@@ -1304,13 +1304,15 @@ def render_excel(
     skip_preview: bool,
 ) -> dict[str, Any]:
     renderer = Path(__file__).with_name("render_general_e2e_excel.mjs")
+    preview_helper = renderer.with_name("isolated_workbook_preview.mjs")
     node_modules = node_modules.expanduser().resolve()
-    if not renderer.is_file() or not node_modules.is_dir():
+    if not renderer.is_file() or not preview_helper.is_file() or not node_modules.is_dir():
         raise ReportError("EXCEL_RUNTIME_INVALID")
     with tempfile.TemporaryDirectory(prefix="general-e2e-report-xlsx-") as temp_dir:
         runtime = Path(temp_dir)
         runtime_renderer = runtime / renderer.name
         shutil.copy2(renderer, runtime_renderer)
+        shutil.copy2(preview_helper, runtime / preview_helper.name)
         link = runtime / "node_modules"
         try:
             os.symlink(node_modules, link, target_is_directory=True)
