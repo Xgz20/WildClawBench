@@ -94,6 +94,19 @@ export function applyQueueSourceRepair(state, config, repair, originalBytes, at 
     throw new Error("DOUBAOWORK_QUEUE_SOURCE_REPAIR_INVALID");
   }
   const updated = structuredClone(state);
+  if (repair.retry_pre_journal_preparation_task_id != null) {
+    const id = repair.retry_pre_journal_preparation_task_id;
+    const row = updated.tasks.find(r => r.task_id === id);
+    if (!row || row.phase !== "NEEDS_ATTENTION" || row.attempt_id !== null || row.dispatch_attempt_count !== 0
+        || state.error?.task_id !== id || state.error.phase !== "prepare-project" || state.error.native !== null
+        || !/^ENOENT: no such file or directory, lstat '[^'\n]+\/\.sessions'\n?$/u.test(state.error.worker?.message || "")
+        || state.history.some(e => e.task_id === id && e.event !== "PROJECT_PREPARATION_INTENT")) {
+      throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_UNVERIFIED");
+    }
+    row.phase = "PENDING";
+    updated.history.push({ event: "PRE_JOURNAL_PREPARATION_RECOVERED", task_id: id, at,
+      original_error: state.error, dispatch_attempt_count: 0 });
+  }
   updated.history.push({ event: "QUEUE_SOURCE_REPAIR_ACTIVATED", at, reason: repair.reason,
     original_queue_sha256: repair.original_queue_sha256, original_source_sha256: repair.original_source_sha256,
     patched_source_sha256: repair.patched_source_sha256, manifest_sha256: sha(JSON.stringify(repair)), attempts_preserved: true });
@@ -127,6 +140,11 @@ export async function runSerialQueue(options) {
       if (!options.resume) throw new Error("DOUBAOWORK_QUEUE_EXISTS_USE_RESUME");
       if (options.sourceRepairManifest && state.config.source_digest !== config.source_digest) {
         const repair = await readJournal(options.sourceRepairManifest);
+        if (repair.retry_pre_journal_preparation_task_id != null
+            && !taskIds.includes(repair.retry_pre_journal_preparation_task_id)) throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_UNKNOWN_TASK");
+        if (repair.retry_pre_journal_preparation_task_id != null
+            && await readJournal(join(unitRoot, ".general-e2e", "execution", repair.retry_pre_journal_preparation_task_id,
+              "doubaowork", "automation_state.json"))) throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_HAS_JOURNAL");
         state = applyQueueSourceRepair(state, config, repair, originalBytes);
         await writeFile(join(queueRoot, `queue-before-source-repair-${repair.original_queue_sha256}.json`), originalBytes, { flag: "wx", mode: 0o600 });
         await save(stateFile, state);

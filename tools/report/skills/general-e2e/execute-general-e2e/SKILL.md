@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.38` 将尚未创建的原生session目录记录为空目录清单；逐段拒绝符号链接/权限错误，仍须独立原生活动门禁，不把目录缺失当空闲。执行队列仅在明确session-root ENOENT、无journal、无attempt且零发送的准备失败上接受绑定原队列SHA的源码恢复。
+
 `0.14.37` 为DoubaoWork2.35.15接入原生MOA工具观察器和新版前端入口。需要Node≥22，并以本机loopback9260及`--jsruntime-debugging-port=entry-moa:9261`启动；核验UI目标、JSRuntime父进程/启动身份及实时脚本SHA后才读取或安装观察器，不初始化工具服务或修改后端模式。旧SSE入口保留；具体准入与验收边界见仓库`docs/general-e2e/doubao-moa-23515-adaptation.md`。
 
 `0.14.36` 兼容QwenWork1.4新版模型选择器：旧包装类缺失时，只在新任务输入区内识别已核验的“标准”“高级”“Qwen3.8-Max”菜单按钮；仍要求唯一可见控件，不按侧栏文本猜测，不选择或切换模型。

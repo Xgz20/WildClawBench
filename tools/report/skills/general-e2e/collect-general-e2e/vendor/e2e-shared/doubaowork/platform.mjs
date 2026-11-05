@@ -1,7 +1,7 @@
 import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
 import { homedir } from "node:os";
-import { join, relative, resolve } from "node:path";
+import { join, relative, resolve, parse } from "node:path";
 import { lstat, readdir, realpath, stat } from "node:fs/promises";
 import { inspectMacGuiSession } from "../desktop-gui/macos.mjs";
 import { createHash } from "node:crypto";
@@ -250,7 +250,18 @@ export async function listSessionDirectoryIds({
   userHome = homedir(),
   roots = defaultNativeRoots(userHome),
 } = {}) {
-  await requireOrdinaryDirectory(roots.sessions_root, "DoubaoWork sessions root");
+  // A fresh native local runtime creates this optional inventory lazily.
+  // An absent inventory is not evidence of native idleness: callers still
+  // require the independently initialized frontend/backend activity checks.
+  // Verify every existing ancestor so a dangling symlink cannot look absent.
+  const absolute = resolve(roots.sessions_root);
+  if (absolute !== roots.sessions_root) throw new Error("DOUBAOWORK_SESSION_ROOT_NOT_CANONICAL");
+  let current = parse(absolute).root;
+  for (const part of absolute.slice(current.length).split("/").filter(Boolean)) {
+    current = join(current, part);
+    try { await requireOrdinaryDirectory(current, "DoubaoWork sessions root chain"); }
+    catch (error) { if (error.code === "ENOENT") return []; throw error; }
+  }
   const entries = await readdir(roots.sessions_root, { withFileTypes: true });
   const sessionIds = [];
   for (const entry of entries) {

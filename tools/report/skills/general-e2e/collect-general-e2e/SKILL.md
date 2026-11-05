@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.24` 将尚未创建的原生session目录记录为空目录清单；逐段拒绝符号链接/权限错误，仍须独立原生活动门禁，不把目录缺失当空闲。执行队列仅在明确session-root ENOENT、无journal、无attempt且零发送的准备失败上接受绑定原队列SHA的源码恢复。
+
 `0.11.23` 同步DoubaoWork2.35.15 MOA派发/消费/上传账本的严格来源准入和新版本机epoch单调时钟。MOA原件必须保留worker、父浏览器、启动身份、命令SHA、Inspector目标及实时脚本SHA证明；未知来源、错会话、缺派发/回执或超时账本仍失败关闭。沿用原生事件数、评分含义和旧SSE验证；不以文件产物推断工具成功或把资源未知补零。
 
 `0.11.22` 为QwenWork SDK子任务取消目录外清理增加独立审计Profile。仍要求本次直接用户决定、精确目标、原会话和Agent父调用、点击前SDK前缀及点击后的逐目标PATH_NOT_AUTHORIZED拒绝；只记录1次机械介入，不批准删除、不重发题目，不把SDK记录伪装成旧OpenCode SQL证据。旧Profile保持原门禁。
