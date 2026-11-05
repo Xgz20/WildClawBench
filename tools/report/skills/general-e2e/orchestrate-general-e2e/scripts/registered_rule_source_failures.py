@@ -32,6 +32,22 @@ def evidence(rt, attempt, manifest, contract, task):
             or task.get('thread') is not None or task.get('score') is not None
             or any((attempt / p).exists() for p in ('score.json', 'rule-component.json', 'semantic'))):
         raise ValueError('RULE_SOURCE_FAILURE_IDENTITY_OR_JUDGE_INVALID')
+    profile=manifest.get('runtime',{}).get('shared_rule_source_repair',{})
+    if (contract.get('task_id')=='02_Office_task_015_procurement_reconciliation'
+            and profile.get('profile')=='procurement-date-and-section-extraction/v2'
+            and profile.get('current_source_sha256')=='34cd4dae061555354dea38a62146b4f1b833423837d2898ac30720470e02f3df'):
+        audit=rt._read_json(attempt/'rule-audit.json')
+        correction=rt._read_json(attempt/'rule-source-correction.json')
+        if (audit.get('status')!='failed' or audit.get('identity')!=manifest.get('identity')
+                or audit.get('worker') is not None or (attempt/'worker').exists()
+                or audit.get('runtime_workspace',{}).get('drifted') is not False
+                or audit.get('error')!={'code':'RULE_ENTRYPOINT_INVALID',
+                    'message':'automated_checks must define exactly one synchronous grade() function'}
+                or correction.get('effective_source_sha256')!=profile['current_source_sha256']
+                or audit.get('source_correction')!={'path':'rule-source-correction.json',
+                    'sha256':rt._sha256_file(attempt/'rule-source-correction.json')}):
+            raise ValueError('RULE_SOURCE_PREWORKER_FAILURE_INVALID')
+        return {'worker_never_started':True}
     request = rt._read_json(attempt / worker_path / 'request.json')
     result = rt._read_json(attempt / worker_path / 'result.json')
     error = result.get('error') or {}

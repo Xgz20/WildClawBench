@@ -219,7 +219,7 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    'flat(args))')],
                                                                       'current_source_sha256': '9117a9db4c4a761348e40518d83a521da1ef6b8f66093332771fe71ab8d63764'},
  '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b': {'task_id': '02_Office_task_015_procurement_reconciliation',
-                                                                      'profile': 'procurement-date-and-section-extraction/v2',
+                                                                      'profile': 'procurement-date-and-section-extraction/v3',
                                                                       'reason': '证据分片体积估算与原最终JSON编码采用同一日期策略；不改日期单元格、业务计算或评分权重。',
                                                                       'changes': [('json.dumps(chunks[i],ensure_ascii=False)',
                                                                                    'json.dumps(chunks[i],ensure_ascii=False,default=str)'),
@@ -228,10 +228,15 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    'Decimal(0)',
                                                                                    "tol=_PS_TOLERANCES.get(c['key'],MONEY_TOLERANCE+Decimal('0.00000001') "
                                                                                    "if c['key'] in MONEY_KEYS else "
-                                                                                   'Decimal(0))')],
-                                                                      'current_source_sha256': '34cd4dae061555354dea38a62146b4f1b833423837d2898ac30720470e02f3df',
+                                                                                   'Decimal(0))'),
+                                                                                  ('    '
+                                                                                   'root=Path(workspace_path).resolve();truth,facts,metrics=reference(root)',
+                                                                                   '    global _PS_ROOT\n'
+                                                                                   '    '
+                                                                                   'root=Path(workspace_path).resolve();_PS_ROOT=root;truth,facts,metrics=reference(root)')],
+                                                                      'current_source_sha256': 'a7e4fe6b9659cfc0553e022512347595d6d12ca59e131a7210eff2b68a4ab183',
                                                                       'append_source': 'procurement_sections.py',
-                                                                      'append_source_sha256': 'ee10886c989b3804f273c181b1897bcb33bc8176c81014c1d7ecaa7e8e44937c'}}
+                                                                      'append_source_sha256': 'f0741077e84c99dc230a0a25f62970ec8d7f8a3a5c5580d42029efc585d83f82'}}
 
 def effective_source(task_id, original, effective=None, prior=None):
     digest=hashlib.sha256(original.encode('utf-8')).hexdigest()

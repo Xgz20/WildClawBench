@@ -18,6 +18,7 @@ from openpyxl.formula.tokenizer import Tokenizer
 from openpyxl.utils.cell import range_boundaries
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 from src.wildclawbench_grading_core.source_repairs import _PROFILES, effective_source
+from src.wildclawbench_grading_core.rules import _validate_grade_function
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -72,6 +73,31 @@ class Round7SourceRepairTests(unittest.TestCase):
                 (worker/'result.json').write_text(json.dumps(result))
                 with self.assertRaises(ValueError):module.evidence(rt,attempt,manifest,contract,task)
 
+    def test_preworker_failure_cannot_claim_an_exited_worker_or_hide_changed_runtime(self):
+        path=ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts/registered_rule_source_failures.py'
+        spec=importlib.util.spec_from_file_location('round7_preworker',path)
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        tid='02_Office_task_015_procurement_reconciliation';row=module.ROWS[tid]
+        _,_,old,_=sources(tid)
+        with tempfile.TemporaryDirectory() as tmp:
+            attempt=Path(tmp);sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+            rt=SimpleNamespace(_read_json=lambda p:json.loads(p.read_text()),_sha256_file=sha)
+            effective='34cd4dae061555354dea38a62146b4f1b833423837d2898ac30720470e02f3df'
+            profile={'profile':'procurement-date-and-section-extraction/v2','current_source_sha256':effective}
+            manifest={'identity':{'task_id':tid},'dataset':{'id':'general-custom70-v4'},'digests':{'contract_sha256':row[0]},'runtime':{'shared_rule_source_repair':profile}}
+            (attempt/'rule-source-correction.json').write_text(json.dumps({'effective_source_sha256':effective}))
+            audit={'identity':manifest['identity'],'status':'failed','worker':None,'runtime_workspace':{'drifted':False},
+                'error':{'code':'RULE_ENTRYPOINT_INVALID','message':'automated_checks must define exactly one synchronous grade() function'},
+                'source_correction':{'path':'rule-source-correction.json','sha256':sha(attempt/'rule-source-correction.json')}}
+            (attempt/'rule-audit.json').write_text(json.dumps(audit))
+            contract={'task_id':tid,'automated_checks':old};task={'score':None,'thread':None}
+            self.assertEqual(module.evidence(rt,attempt,manifest,contract,task),{'worker_never_started':True})
+            (attempt/'worker').mkdir()
+            with self.assertRaises(ValueError):module.evidence(rt,attempt,manifest,contract,task)
+            (attempt/'worker').rmdir();audit['runtime_workspace']['drifted']=True
+            (attempt/'rule-audit.json').write_text(json.dumps(audit))
+            with self.assertRaises(ValueError):module.evidence(rt,attempt,manifest,contract,task)
+
     def test_only_exact_sources_change_and_task_meaning_stays_frozen(self):
         for digest,profile in _PROFILES.items():
             a,b,old,new=sources(profile['task_id'])
@@ -82,6 +108,7 @@ class Round7SourceRepairTests(unittest.TestCase):
             self.assertEqual(effective_source('other',old),(old,None))
             self.assertEqual(effective_source(profile['task_id'],old+'\n'),(old+'\n',None))
             ast.parse(new)
+            _validate_grade_function(new)
 
     def test_whole_column_aggregates_preserve_implicit_blank_rows_and_bounded_results(self):
         tid='02_Office_task_010_warranty_recovery_allocation'

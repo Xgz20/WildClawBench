@@ -545,7 +545,8 @@ def export_evidence(root,status,tables,truth,metrics,diagnostics,unresolved,arti
         p.write_text(text,encoding='utf-8')
 
 def grade(transcript,workspace_path):
-    root=Path(workspace_path).resolve();truth,facts,metrics=reference(root)
+    global _PS_ROOT
+    root=Path(workspace_path).resolve();_PS_ROOT=root;truth,facts,metrics=reference(root)
     tables=[];unresolved=[];status='ok';candidate_error=None;artifact='results/对账报告.xlsx'
     try:
         output=root/'results';path=output/'对账报告.xlsx';safe_inside(output,root,CandidateError)
@@ -973,16 +974,6 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,*args):
     converted,extra,new_locations,audit=_ps_sections(converted,records,metrics,numeric,truth,_PS_ROOT)
     expected.update(extra);locations.update(new_locations);projections.extend(audit)
     return converted,expected,locations,projections
-
-
-_ps_original_grade=grade
-
-
-def grade(transcript,workspace_path):
-    global _PS_ROOT
-    _PS_ROOT=Path(workspace_path).resolve()
-    return _ps_original_grade(transcript,workspace_path)
-
 ```
 
 ## LLM Judge Rubric

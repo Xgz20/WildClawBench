@@ -75,7 +75,7 @@ def locks(rt,root,task):
     for folder in ['worker','semantic','rule-review','infrastructure-evidence']:
         base=attempt/folder
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
-    paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json'] if p.exists())
+    paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json',attempt/'rule-source-correction.json'] if p.exists())
     if task['task_id']==sterilization_quote_layout.TASK:paths.append(attempt/'scoring-infrastructure-blocker.json')
     if task['task_id']==native_writer_cleanup_failure.TASK:
         m=rt._read_json(attempt/'attempt-manifest.json');contract=rt._read_json(attempt/m['paths']['contract'])
@@ -98,7 +98,10 @@ def verify(rt,root,state,task):
         result=(source_failures.evidence(rt,root/task['attempt_path'],rt._read_json(root/task['attempt_path']/'attempt-manifest.json'),
             rt._read_json(root/task['attempt_path']/rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['paths']['contract']),task)
             if proof['kind']==source_failures.ERROR_KIND else rt._read_json(root/task['attempt_path']/'rule-review/discovery/worker/result.json'))
-        if (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
+        if result.get('worker_never_started') is True:
+            if proof.get('owner_exit')!={'worker_never_started':True,'process_created':False}:
+                raise ValueError('RULE_SOURCE_PREWORKER_OWNER_INVALID')
+        elif (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
     elif proof['kind'] in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}:
         native=proof.get('native_context',{})
@@ -127,11 +130,14 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
         manifest=rt._read_json(attempt/'attempt-manifest.json')
         result=(source_failures.evidence(rt,attempt,manifest,rt._read_json(attempt/manifest['paths']['contract']),task)
             if kind==source_failures.ERROR_KIND else rt._read_json(attempt/'rule-review/discovery/worker/result.json'))
-        pid=result.get('worker',{}).get('pid')
-        if isinstance(pid,bool) or not isinstance(pid,int) or pid<=0:raise ValueError('DISCOVERY_OWNER_PID_INVALID')
-        process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
-        if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
-        proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
+        if result.get('worker_never_started') is True:
+            proof['owner_exit']={'worker_never_started':True,'process_created':False}
+        else:
+            pid=result.get('worker',{}).get('pid')
+            if isinstance(pid,bool) or not isinstance(pid,int) or pid<=0:raise ValueError('DISCOVERY_OWNER_PID_INVALID')
+            process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
+            if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
+            proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
     elif kind in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}:
         if sdk_file is None:raise ValueError('COMPLETED_NATIVE_SDK_REQUIRED')
         from verify_judge_context import verify_context

@@ -231,10 +231,3 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,*args):
     return converted,expected,locations,projections
 
 
-_ps_original_grade=grade
-
-
-def grade(transcript,workspace_path):
-    global _PS_ROOT
-    _PS_ROOT=Path(workspace_path).resolve()
-    return _ps_original_grade(transcript,workspace_path)
