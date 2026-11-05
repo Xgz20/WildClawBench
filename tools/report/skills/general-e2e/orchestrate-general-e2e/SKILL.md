@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.57` 对Score0.10.71已退出的Office010发现Worker新增精确COUNTA失败留证；同时绑定原契约、原3dd95a03源码请求及整列修复v1标记。未知函数/源码不退役，修复从相同执行新建独立评分。
+
 `0.11.56` 可对精确注册的Info001非等价损坏PDF、Office010整列公式发现失败及Office015日期取证编码失败留证退役。逐项绑定原契约、源码、Worker原错误、未评分/无裁判状态及已退出进程；原失败和输入不改写，新冻结Skill须从相同执行建立独立评分。未知错误不接受。
 
 `0.11.55` 为原生MOA SDK协议发布逐字保留全部assistant行的独立评分视图及来源SHA/行号审计，供Codex通过catalog/file完整分页核验与tool_calls同条的过程说明。只对已冻结SDK Profile生效；原执行、候选、标准轨迹、规则分、检查点和权重不改写。视图漂移拒绝，旧60题及既有评分attempt保持原行为。

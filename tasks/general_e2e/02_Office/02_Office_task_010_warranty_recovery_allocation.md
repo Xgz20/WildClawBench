@@ -240,7 +240,7 @@ class Cells:
             return ops[type(n.ops[0])](a,b)
         if not isinstance(n,ast.Call) or not isinstance(n.func,ast.Name):raise EvaluationError('不支持的未缓存公式结构')
         name=n.func.id
-        if name not in {'IF','IFERROR','REF','SUM','MIN','MAX','ABS','ROUND','SUMIFS','COUNTIFS','SUMIF','COUNTIF'}:raise EvaluationError(f'未支持的未缓存公式函数：{name}')
+        if name not in {'IF','IFERROR','REF','SUM','COUNTA','MIN','MAX','ABS','ROUND','SUMIFS','COUNTIFS','SUMIF','COUNTIF'}:raise EvaluationError(f'未支持的未缓存公式函数：{name}')
         if name=='IF':
             condition=run(n.args[0])
             if isinstance(condition,_WarrantyWholeColumnRange):raise EvaluationError('未支持的全列数组条件')
@@ -255,6 +255,7 @@ class Cells:
         flat=lambda values:[x for v in values for x in (v if isinstance(v,list) else [v])]
         nums=[x for x in flat(args) if isinstance(x,(int,float)) and not isinstance(x,bool)]
         if name=='SUM':return sum(nums)
+        if name=='COUNTA':return sum(x is not None for x in flat(args))
         if name=='MIN':return min(nums or [0])
         if name=='MAX':return max(nums or [0])
         if name=='ABS':return abs(args[0])
@@ -522,9 +523,6 @@ def _warranty_reason_matches(key,row,fact,context):
         'instruction':'Judge only whether the actual candidate reason/note/action and explicitly applicable shared explanation express this original category for this same claim/supplier. Do not infer a candidate statement from the expected category or repair a wrong statement. Missing/clearly wrong is false; insufficient evidence is unresolved. Never decide amounts, assign a rule score, or change the denominator.'})
 
 RULE_REVIEW_PROFILE = 'warranty-recovery-reason-semantic-review/v1'
-
-
-
 ```
 
 ## LLM Judge Rubric

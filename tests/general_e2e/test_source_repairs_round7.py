@@ -10,6 +10,7 @@ import re
 import tempfile
 import unittest
 import importlib.util
+import csv
 from types import SimpleNamespace
 
 import openpyxl
@@ -98,12 +99,65 @@ class Round7SourceRepairTests(unittest.TestCase):
             formulas={1:"=SUMIF(Detail!$I:$I,\"A\",Detail!$N:$N)",2:'=COUNTIF(Detail!I:I,"A")',
                       3:'=COUNTIF(Detail!I:I,"")',4:'=COUNTIFS(Detail!I:I,"A",Other!J:J,"ok")',
                       5:'=COUNTIFS(Detail!I:I,"",Other!J:J,"")',6:'=SUMIF(Detail!I1:I4,"A",Detail!N1:N4)',
-                      7:'=SUM(Detail!N:N)',8:'=IF(Detail!I:I="A",1,0)'}
+                      7:'=SUM(Detail!N:N)',8:'=IF(Detail!I:I="A",1,0)',9:'=COUNTA(Detail!I:I)',
+                      10:'=COUNTA(0,FALSE,"")',11:'=COUNTA(IF(TRUE,"",""))'}
             for r,text in formulas.items():s.cell(r,1,text)
             w.save(f);cells=scope['Cells'](f)
-            for row,value in [(1,15),(2,2),(3,1048572),(4,1),(5,1048572),(6,15),(7,35)]:
+            for row,value in [(1,15),(2,2),(3,1048572),(4,1),(5,1048572),(6,15),(7,35),(9,4),(10,3),(11,1)]:
                 self.assertEqual(cells.cell('Summary',f'A{row}'),value)
             with self.assertRaises(scope['EvaluationError']):cells.cell('Summary','A8')
+
+    def test_procurement_section_headers_keep_priority_counts_and_status_subsets_separate(self):
+        _,_,_,code=sources('02_Office_task_015_procurement_reconciliation')
+        scope={};exec(code,scope)
+        records={
+            'qty':[{'id':'A','row':2,'values':{'oq':10,'rq':9,'oa':100,'ra':90,'dq':-1,'da':-10}}],
+            'amount':[{'id':'A','row':2,'values':{'oq':10,'rq':9,'oa':100,'ra':90,'dq':-1,'da':-10}}],
+            'missing':[{'id':'B','row':2,'values':{'oq':20,'oa':200}}, {'id':'C','row':3,'values':{'oq':30,'oa':300}}],
+            'orphan':[{'id':'D-01','row':2,'values':{'rq':5,'ra':50}}]}
+        tables=[]
+        for kind,items in records.items():
+            table={'sheet':kind,'kind':kind,'header_row':1,'records':items,
+                   'rows':[{'row':1,'values':['业务编号','优先级']}]}
+            for row in items:table['rows'].append({'row':row['row'],'values':[row['id'],'P2' if row['id']=='B' else '跟踪' if row['id']=='C' else 'P1']})
+            tables.append(table)
+        raw=[['项目','笔数','订单金额（元）','入库金额（元）','金额差额（元）','数量（订单）','数量（入库）','说明'],
+             ['采购订单（全部状态）',3,600,'—','—',60,'—','全量'],
+             ['入库记录（全部）',2,'—',140,'—','—',14,'全量'],
+             ['已匹配（一单一入库）',1,100,90,-10,10,9,'入库减订单'],
+             ['工作表','P1','P2','P3','跟踪','合计','优先级判定规则'],
+             ['数量差异',1,0,0,0,1,'金额规则'],['金额差异',1,0,0,0,1,'金额规则'],
+             ['未入库订单',0,1,0,1,2,'状态规则'],['无对应订单入库',1,0,0,0,1,'金额规则'],
+             ['去重后 P1 合计',2,0,0,0,2,'两个不同业务对象'],
+             ['项目','笔数','订单金额（元）','入库金额（元）','差额（元）','数量','占订单总额','说明'],
+             ['未入库订单',2,500,'—',-500,50,500/600,'完整类别'],
+             ['其中：状态“已完成”',1,200,'—',-200,20,200/600,'子集'],
+             ['其中：状态“待确认”',1,300,'—',-300,30,300/600,'子集'],
+             ['无对应订单入库',1,'—',50,50,5,50/600,'完整类别']]
+        summary={'sheet':'汇总','kind':'summary','rows':[{'row':i+1,'values':r} for i,r in enumerate(raw)]}
+        tables.append(summary)
+        metrics={k:Decimal(str(v)) for k,v in {'orders':3,'receipts':2,'orders_amount':600,'receipts_amount':140}.items()}
+        truth={k:{r['id']:None for r in rows} for k,rows in records.items()}
+        numeric={'categories':{k:{'direction':1} for k in ['qty','amount']}}
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);(root/'input').mkdir()
+            for name,fields,rows in [
+                ('采购订单.csv',['ORDER_ID','ORDER_QTY','TOTAL_AMOUNT','STATUS'],[['A',10,100,'已完成'],['B',20,200,'已完成'],['C',30,300,'待确认']]),
+                ('入库记录.csv',['RECEIPT_NO','RECV_QTY','RECV_AMOUNT'],[['A-01',9,90],['D-01',5,50]])]:
+                with (root/'input'/name).open('w',encoding='utf-8',newline='') as stream:
+                    writer=csv.writer(stream);writer.writerow(fields);writer.writerows(rows)
+            scope['_PS_ROOT']=root
+            result=scope['summary_diagnostics'](tables,records,metrics,numeric,truth)
+            self.assertEqual(result['unrecognized_numeric_rows'],[])
+            self.assertTrue(all(c['matches'] is True for c in result['claims']))
+            self.assertEqual(next(c for c in result['claims'] if c['value_location']=='汇总!F6')['key'],'qty')
+            self.assertNotEqual(next(c for c in result['claims'] if c['value_location']=='汇总!B6')['key'],'qty')
+            raw[5][1]=0
+            result=scope['summary_diagnostics'](tables,records,metrics,numeric,truth)
+            self.assertTrue(any(c['matches'] is False and c['value_location']=='汇总!B6' for c in result['claims']))
+            summary['rows'].append({'row':99,'values':['未知数字口径',123]})
+            result=scope['summary_diagnostics'](tables,records,metrics,numeric,truth)
+            self.assertEqual(result['unrecognized_numeric_rows'][-1]['row'],99)
 
     def test_repaired_non_equivalent_pdf_is_candidate_failure_not_unknown_version(self):
         tid='01_Information_Search_Organization_task_001_acl2024_long_context_qa'
