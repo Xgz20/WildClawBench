@@ -114,9 +114,9 @@ ALIASES = {
  'exception':['contract_exception','合同例外','合同例外类型','合同调整'],
  'share':['实际分摊比例','分摊比例','分摊份额','allocation_share','supplier_share','effective_share'],
  'ratio':['政策责任比例','责任比例','政策比例','policy_ratio','追偿比例'],
- 'cost':['维修成本','分摊维修成本','分摊成本','repair_cost','供应商维修成本'],
+ 'cost':['计入暴露维修成本','维修成本','分摊维修成本','分摊成本','repair_cost','供应商维修成本'],
  'cap':['CAP上限','封顶金额','合同上限','cap_amount'],
- 'already':['已追偿汇总','已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
+ 'already':['已追偿（已入账）','已追偿汇总','已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
  'current':['本次金额','本次可追偿金额','本次可追偿','current_recovery','recoverable_amount','本次追偿金额'],
  'note':['分摊及合同依据说明','分摊说明','allocation_note','核算说明','分摊依据','说明'],
  'source':['依据位置','来源','证据位置','source_ref','依据','来源位置'],
@@ -286,6 +286,14 @@ class Cells:
             return result
         raise EvaluationError(f'未支持的未缓存公式函数：{name}')
 
+def _warranty_explicit_aggregate(item,values,kind):
+    def total_label(value):
+        text=re.sub(r'\s+', '',str(value or '')).casefold()
+        return re.fullmatch(r'(?:合计|总计|小计|total|grandtotal)(?:[（(]\d+(?:行|笔|条|rows?)[）)])?',text) is not None
+    if kind=='summary':return total_label(item.get('supplier'))
+    if item.get('supplier'):return False
+    return total_label(item.get('claim')) or (not item.get('claim') and bool(values) and total_label(values[0]))
+
 def read_tables(path):
     cells=Cells(path);out={k:[] for k in SHEET_ALIASES};found={'_context':[]}
     for ws in cells.formulas:
@@ -307,12 +315,14 @@ def read_tables(path):
             for r in range(ri+1,ws.max_row+1):
                 item={k:cells.cell(ws.title,ws.cell(r,c).coordinate) for k,c in cols.items()}
                 anchor=item.get('supplier') if kind=='summary' else item.get('claim')
+                raw_values=[cells.cell(ws.title,ws.cell(r,c).coordinate) for c in range(1,ws.max_column+1)]
+                if _warranty_explicit_aggregate(item,raw_values,kind):continue
                 if norm(anchor) in ('合计','总计','小计','total','grandtotal') or header_key(anchor)==('supplier' if kind=='summary' else 'claim'):continue
                 if not any(v is not None and str(v).strip() for v in item.values()):continue
                 # Ignore free commentary beneath a table; monetary or identified rows are substantive.
                 if not anchor and not any(number(item.get(k)) is not None for k in ('current','cost','already','gross','pending')):continue
                 item['_location']=f'{ws.title}!row{r}'
-                item['_raw_values']=[cells.cell(ws.title,ws.cell(r,c).coordinate) for c in range(1,ws.max_column+1)]
+                item['_raw_values']=raw_values
                 row_kind='review' if kind=='detail' and _warranty_no_initiation(item) else kind
                 out[row_kind].append(item)
             break
@@ -472,7 +482,7 @@ def _warranty_allocated_cost_header(value):
     # Raw repair cost and allocated supplier cost may coexist. Only an explicit
     # allocated heading takes precedence; never substitute a private oracle value.
     name=re.sub(r'(?:人民币元|元)$', '', norm(value))
-    return name in {'分摊维修成本','分摊成本','供应商维修成本'}
+    return name in {'计入暴露维修成本','分摊维修成本','分摊成本','供应商维修成本'}
 
 import hashlib as _rr_hashlib
 import json as _rr_json

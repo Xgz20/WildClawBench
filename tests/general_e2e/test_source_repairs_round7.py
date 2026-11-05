@@ -134,6 +134,38 @@ class Round7SourceRepairTests(unittest.TestCase):
                 self.assertEqual(cells.cell('Summary',f'A{row}'),value)
             with self.assertRaises(scope['EvaluationError']):cells.cell('Summary','A8')
 
+    def test_warranty_totals_and_explicit_summary_roles_do_not_become_phantom_claims(self):
+        _,_,_,code=sources('02_Office_task_010_warranty_recovery_allocation')
+        scope={};exec(code,scope)
+        with tempfile.TemporaryDirectory() as tmp:
+            path=Path(tmp)/'warranty.xlsx';wb=openpyxl.Workbook();ws=wb.active;ws.title='可追偿明细'
+            for row in [ ['序号','索赔编号','供应商','维修成本','分摊维修成本','本次金额','已追偿'],
+                         [1,'WR-1','供应商甲',100,50,10,5],
+                         ['合计（1 行）',None,None,None,50,10,5],
+                         ['缺少编号',None,'供应商甲',20,20,10,0] ]:ws.append(row)
+            review=wb.create_sheet('不可追偿或待核查')
+            review.append(['索赔编号','供应商','缺口与原因','维修成本','参考分摊成本','计入暴露维修成本','已追偿','本次金额','待核查金额'])
+            review.append(['WR-2','供应商甲','已覆盖',100,50,50,40,0,0])
+            summary=wb.create_sheet('供应商汇总')
+            summary.append(['供应商','涉及索赔数','维修成本暴露','已追偿（已入账）','本次可追偿金额'])
+            summary.append(['供应商甲',2,100,45,10]);wb.save(path)
+            tables,_=scope['read_tables'](path)
+            self.assertEqual(len(tables['detail']),2)
+            self.assertEqual(tables['detail'][1]['supplier'],'供应商甲')
+            self.assertIsNone(tables['detail'][1]['claim'])
+            self.assertEqual(tables['review'][0]['cost'],50)
+            self.assertEqual(tables['summary'][0]['already'],45)
+
+    def test_prior_source_repair_profiles_reproduce_their_original_sha(self):
+        from src.wildclawbench_grading_core.source_repairs import _history
+        for digest,profiles in _history().items():
+            for profile,row in profiles.items():
+                _,_,old,_=sources(row['task_id'])
+                source,receipt=effective_source(row['task_id'],old,profile=profile)
+                self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),row['current_source_sha256'])
+                self.assertEqual(receipt['correction_id'],profile)
+                self.assertEqual(receipt['reason'],row['reason'])
+
     def test_procurement_section_headers_keep_priority_counts_and_status_subsets_separate(self):
         _,_,_,code=sources('02_Office_task_015_procurement_reconciliation')
         scope={};exec(code,scope)

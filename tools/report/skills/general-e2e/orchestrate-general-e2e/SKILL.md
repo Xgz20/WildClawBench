@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.59` 同步Score0.10.74及共享评分Core0.2.5，保持历史修正Profile复验；已发布的有效旧分仅以原冻结执行建立独立rescore并显式选择，不修改原分。
+
 `0.11.58` 严格留证Office015的Score0.10.72精确重复入口失败：只接受冻结v2源码SHA、原审计、无Worker/无裁判且runtime未漂移；明确记录进程从未创建，不伪造退出PID。原件保持，新attempt继续评分。
 
 `0.11.57` 对Score0.10.71已退出的Office010发现Worker新增精确COUNTA失败留证；同时绑定原契约、原3dd95a03源码请求及整列修复v1标记。未知函数/源码不退役，修复从相同执行新建独立评分。

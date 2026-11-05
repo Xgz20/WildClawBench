@@ -28,15 +28,16 @@ def effective_source(manifest, original, effective, prior):
     if frozen is None:
         return effective, prior
     expected = marker({'task_id': manifest.get('identity', {}).get('task_id'),
-                       'automated_checks': original})
+                       'automated_checks': original}, profile=frozen.get('profile'))
     if expected is None or frozen != expected:
         raise ValueError('SHARED_RULE_SOURCE_REPAIR_PROFILE_MISMATCH')
-    return _module().effective_source(manifest.get('identity',{}).get('task_id'),original,effective,prior)
+    return _module().effective_source(manifest.get('identity',{}).get('task_id'),original,effective,prior,
+                                     profile=frozen['profile'])
 
 
-def marker(contract):
+def marker(contract, *, profile=None):
     source_sha = hashlib.sha256(contract.get('automated_checks', '').encode()).hexdigest()
-    row = _module()._PROFILES.get(source_sha)
+    row = _module().profile_entry(source_sha,profile)
     if row is None or row['task_id'] != contract.get('task_id'):
         return None
     return {'profile': row['profile'], 'source_sha256': source_sha,

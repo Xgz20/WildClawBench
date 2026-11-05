@@ -131,7 +131,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="grading-core",
-        version="0.2.4",
+        version="0.2.5",
         source_root="src/wildclawbench_grading_core",
         vendor_root="vendor/e2e-shared/wildclawbench_grading_core",
         entrypoints=("__init__.py",),

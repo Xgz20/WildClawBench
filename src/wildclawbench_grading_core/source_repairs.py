@@ -1,7 +1,9 @@
 """Exact-source implementation repairs shared by native E2E and the CLI."""
 from __future__ import annotations
 import hashlib
+import json
 from pathlib import Path
+from functools import lru_cache
 
 _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe': {'task_id': '01_Information_Search_Organization_task_001_acl2024_long_context_qa',
                                                                       'profile': 'invalid-candidate-pdf-structure/v1',
@@ -31,8 +33,8 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    'possible_paper_ids=identified)')],
                                                                       'current_source_sha256': 'be25eda7c74472bce30429d08e3b1fc10fb7e47c0f74dd149d571d76c07c43a7'},
  '5b734e764fc73422f656b579feed386d41c9bd49ec4437568a8e37e4363bb810': {'task_id': '02_Office_task_010_warranty_recovery_allocation',
-                                                                      'profile': 'warranty-whole-column-aggregates/v2',
-                                                                      'reason': '支持合法整列SUMIF/COUNTIF及其复数形式；有限存储保留1048576行隐式空白计数，原100000单元解析预算、外链/宏禁令和业务分值保持。',
+                                                                      'profile': 'warranty-whole-column-and-summary-roles/v3',
+                                                                      'reason': '支持合法整列聚合与COUNTA，按明确业务表头抽取已入账/计入暴露成本，并识别无业务ID的显式合计行；缺编号实际业务行保留，原金额、分母、重大错误和权重不变。',
                                                                       'changes': [('class Cells:\n',
                                                                                    'class '
                                                                                    '_WarrantyWholeColumnRange(list):\n'
@@ -216,8 +218,54 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    'sum(nums)\n'
                                                                                    "        if name=='COUNTA':return "
                                                                                    'sum(x is not None for x in '
-                                                                                   'flat(args))')],
-                                                                      'current_source_sha256': '9117a9db4c4a761348e40518d83a521da1ef6b8f66093332771fe71ab8d63764'},
+                                                                                   'flat(args))'),
+                                                                                  (" 'already':['已追偿汇总'",
+                                                                                   " 'already':['已追偿（已入账）','已追偿汇总'"),
+                                                                                  (" 'cost':['维修成本'",
+                                                                                   " 'cost':['计入暴露维修成本','维修成本'"),
+                                                                                  ("return name in {'分摊维修成本'",
+                                                                                   'return name in '
+                                                                                   "{'计入暴露维修成本','分摊维修成本'"),
+                                                                                  ('def read_tables(path):',
+                                                                                   'def '
+                                                                                   '_warranty_explicit_aggregate(item,values,kind):\n'
+                                                                                   '    def total_label(value):\n'
+                                                                                   "        text=re.sub(r'\\s+', "
+                                                                                   "'',str(value or '')).casefold()\n"
+                                                                                   '        return '
+                                                                                   "re.fullmatch(r'(?:合计|总计|小计|total|grandtotal)(?:[（(]\\d+(?:行|笔|条|rows?)[）)])?',text) "
+                                                                                   'is not None\n'
+                                                                                   "    if kind=='summary':return "
+                                                                                   "total_label(item.get('supplier'))\n"
+                                                                                   "    if item.get('supplier'):return "
+                                                                                   'False\n'
+                                                                                   '    return '
+                                                                                   "total_label(item.get('claim')) or "
+                                                                                   "(not item.get('claim') and "
+                                                                                   'bool(values) and '
+                                                                                   'total_label(values[0]))\n'
+                                                                                   '\n'
+                                                                                   'def read_tables(path):'),
+                                                                                  ('                '
+                                                                                   "anchor=item.get('supplier') if "
+                                                                                   "kind=='summary' else "
+                                                                                   "item.get('claim')",
+                                                                                   '                '
+                                                                                   "anchor=item.get('supplier') if "
+                                                                                   "kind=='summary' else "
+                                                                                   "item.get('claim')\n"
+                                                                                   '                '
+                                                                                   'raw_values=[cells.cell(ws.title,ws.cell(r,c).coordinate) '
+                                                                                   'for c in '
+                                                                                   'range(1,ws.max_column+1)]\n'
+                                                                                   '                if '
+                                                                                   '_warranty_explicit_aggregate(item,raw_values,kind):continue'),
+                                                                                  ('                '
+                                                                                   "item['_raw_values']=[cells.cell(ws.title,ws.cell(r,c).coordinate) "
+                                                                                   'for c in range(1,ws.max_column+1)]',
+                                                                                   '                '
+                                                                                   "item['_raw_values']=raw_values")],
+                                                                      'current_source_sha256': '3e1acfa74c962ac8ac1b1bd6f66fc8ddcea06170e1a49ab184f086ad989ff0a4'},
  '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b': {'task_id': '02_Office_task_015_procurement_reconciliation',
                                                                       'profile': 'procurement-date-and-section-extraction/v3',
                                                                       'reason': '证据分片体积估算与原最终JSON编码采用同一日期策略；不改日期单元格、业务计算或评分权重。',
@@ -238,16 +286,33 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                       'append_source': 'procurement_sections.py',
                                                                       'append_source_sha256': 'f0741077e84c99dc230a0a25f62970ec8d7f8a3a5c5580d42029efc585d83f82'}}
 
-def effective_source(task_id, original, effective=None, prior=None):
+@lru_cache(maxsize=1)
+def _history():
+    raw=Path(__file__).with_name('source_repair_history.json').read_bytes()
+    if hashlib.sha256(raw).hexdigest()!='2c709b219e0668932c074f7fc6a1da185af1da9ef63eeb166088500a38f2c59a':
+        raise ValueError('RULE_SOURCE_REPAIR_HISTORY_DRIFT')
+    return json.loads(raw)
+
+
+def profile_entry(digest, profile=None):
+    current=_PROFILES.get(digest)
+    if profile is None or current is not None and profile==current['profile']:return current
+    historical=_history().get(digest,{}).get(profile)
+    if historical is None:raise ValueError('RULE_SOURCE_REPAIR_PROFILE_UNKNOWN')
+    return historical
+
+
+def effective_source(task_id, original, effective=None, prior=None, *, profile=None):
     digest=hashlib.sha256(original.encode('utf-8')).hexdigest()
-    entry=_PROFILES.get(digest)
+    entry=profile_entry(digest,profile)
     source=original if effective is None else effective
     if entry is None or task_id not in {None,entry['task_id']}:return source,prior
     for old,new in entry['changes']:
         if source.count(old)!=1:raise ValueError('RULE_SOURCE_REPAIR_MARKER_MISMATCH')
         source=source.replace(old,new,1)
-    if entry.get('append_source'):
-        extra=Path(__file__).with_name(entry['append_source']).read_bytes()
+    if entry.get('append_source') or entry.get('append_text'):
+        extra=(entry['append_text'].encode('utf-8') if entry.get('append_text') is not None else
+               Path(__file__).with_name(entry['append_source']).read_bytes())
         if hashlib.sha256(extra).hexdigest()!=entry['append_source_sha256']:
             raise ValueError('RULE_SOURCE_REPAIR_APPEND_DRIFT')
         source+='\n'+extra.decode('utf-8').rstrip()
