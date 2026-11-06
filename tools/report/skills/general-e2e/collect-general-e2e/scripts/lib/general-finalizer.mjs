@@ -36,6 +36,7 @@ import { historicalTerminalProjection, verifyTerminalProjection } from '../../ve
 import { verifyRuntimeInterruption } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 import { verifyFinalPrefix } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-final-prefix-divergence.mjs';
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
+import { readFrozenStartRejection } from '../../vendor/e2e-shared/astronstudio-start-rejection/index.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -610,12 +611,13 @@ function buildExecutionRecord({
   resource,
   finalResponse,
   candidateArtifact,
+  startRejection,
   evidenceRootRelative,
 }) {
   const traceComplete = traceBundle?.index?.completeness?.status === "complete"
     && traceBundle.index.completeness.omitted_event_count === 0;
   const resourceComplete = resource?.value?.collection?.status === "complete";
-  const evidenceAvailable = Boolean(traceBundle || resource || finalResponse);
+  const evidenceAvailable = Boolean(traceBundle || resource || finalResponse || startRejection);
   const completeness = traceComplete && resourceComplete
     ? "complete"
     : evidenceAvailable ? "partial" : "unavailable";
@@ -782,6 +784,10 @@ export async function verifyGeneralCollection(options) {
     throw new Error("COLLECT_RECEIPT_ARTIFACT_SCOPE_MISMATCH");
   }
   for (const item of receipt.artifacts || []) await verifyArtifactPath(unitRoot, { ...item, type: "file" });
+  if (record.harness?.id === 'astronstudio') {
+    const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
+    await readFrozenStartRejection(unitRoot, declaredState.value, record);
+  }
 
   // Inventory verification alone cannot detect an index reference whose file
   // was never copied. Verify the complete archived reference closure as well.
@@ -957,6 +963,7 @@ export async function finalizeExecution(options, profile, overrides = {}) {
   ]);
   const binding = await assertUnitAndState(unitRoot, manifestSource, stateSource, profile);
   const { manifest, state, workspace, promptSource } = binding;
+  const startRejection = await readFrozenStartRejection(unitRoot, state);
   const identity = state.identity;
   const evidenceRootRelative = `evidence/tasks/${identity.task_id}/${identity.attempt_id}`;
   const evidenceRoot = resolveWithin(unitRoot, evidenceRootRelative, "evidence root");
@@ -1088,6 +1095,12 @@ export async function finalizeExecution(options, profile, overrides = {}) {
       await writeFile(join(staging, "resource-metrics.json"), resolvedResource.source.bytes, { flag: "wx" });
     }
     if (finalResponse) await writeFile(join(staging, "final-response.md"), finalResponse.bytes, { flag: "wx" });
+    if (startRejection) {
+      await mkdir(join(staging, 'native-start-rejection'));
+      for (const file of startRejection.files) {
+        await writeFile(join(staging, 'native-start-rejection', file.path), file.bytes, { flag: 'wx' });
+      }
+    }
     const cleanupDocument = {
       ...cleanup,
       collected_at: collectedAt,
@@ -1103,9 +1116,13 @@ export async function finalizeExecution(options, profile, overrides = {}) {
       resource: resolvedResource,
       finalResponse,
       candidateArtifact,
+      startRejection,
       evidenceRootRelative,
     });
     const stageStatus = collectionStageStatus(state, record.evidence.completeness);
+    if (startRejection) record.evidence.native_start_rejection = {
+      path: `${evidenceRootRelative}/native-start-rejection/proof.json`, sha256: startRejection.binding.sha256,
+    };
     const manifestPath = `${evidenceRootRelative}/evidence-manifest.json`;
     const recordPath = `${evidenceRootRelative}/execution-record.json`;
     if (record.harness.id === "astronstudio" && state.phase === "FAILED"

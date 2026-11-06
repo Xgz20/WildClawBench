@@ -12,6 +12,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+import report_failure_policy
 
 SCHEMA = 'wildclawbench.general-e2e-report-run-audit/v1'
 
@@ -60,7 +61,7 @@ def overlap(intervals):
     return peak if intervals else None
 
 
-def load(path, data):
+def load(path, data, node=None):
     path, source_sha, _ = checked_file(path)
     raw = path.read_bytes()
     require(hashlib.sha256(raw).hexdigest() == source_sha, 'ledger changed')
@@ -162,6 +163,9 @@ def load(path, data):
             output['controller_holds'].append({'started_at': hold['started_at'], 'finished_at': hold['finished_at'],
                 'duration_seconds': duration, 'task_ids': list(affected), 'native_processes_paused': False,
                 'evidence': refs(hold.get('evidence'))})
+        if 'failure_zero_decisions' in unit:
+            output['failure_zero_decisions'] = report_failure_policy.normalize(
+                unit['failure_zero_decisions'], rows, refs, node=node)
         normalized.append(output)
     return {'schema_version': SCHEMA, 'source_sha256': source_sha, 'source_path': str(path),
             'basis': 'Explicit administrator native-interval audit; source hashes and selected full scope verified. '
@@ -174,8 +178,9 @@ def prepare(data, args):
     source = getattr(args, 'run_audit', None)
     if not source:
         return False
-    audit = load(source, data)
+    audit = load(source, data, node=getattr(args, 'node', None))
     data['run_audit'] = audit
+    report_failure_policy.prepare(data, audit)
     data['lineage']['run_audit_source_sha256'] = audit['source_sha256']
     return True
 
@@ -195,7 +200,7 @@ def stage(data, output_root):
 
 
 def notes(data, labels):
-    output = []
+    output = report_failure_policy.notes(data)
     for unit in data.get('run_audit', {}).get('units', []):
         label = labels[unit['unit_id']]
         parts = []
@@ -232,6 +237,9 @@ def audit_markdown(data):
              f"运行审计输入SHA-256：`{audit['source_sha256']}`。规范化审计见`data/run-audit.json`。", '',
              '来源文件保留原路径、大小和SHA；本报告不复制原生裁判思考正文。', '']
     for unit in audit['units']:
+        for decision in unit.get('failure_zero_decisions', []):
+            lines += [f"- 失败策略0分：{labels[unit['unit_id']]} / {decision['task_id']}；"
+                      f"execution attempt `{decision['execution_attempt_id']}`。原Rubric仍未评分，非伪造valid评分。"]
         for phase in ('execution', 'scoring'):
             value = unit[phase]
             lines += [f"- {labels[unit['unit_id']]} / {phase}：{value['method']}"]

@@ -151,6 +151,15 @@ function buildView(workbook, name, view, existingSheet = null) {
   }
   if (name === "效率对比") sheet.getRange("I:I").format.columnWidth = 25;
   if (name === "分类对比") sheet.getRange("C:H").format.columnWidth = 24;
+  if (name === '端到端计分') {
+    widths(sheet, { B: 80, C: 16, D: 22, E: 16, F: 16, G: 62 });
+    if (view.rows.length) {
+      sheet.getRange(`B${dataRow}:B${end}`).format.wrapText = true;
+      sheet.getRange(`G${dataRow}:G${end}`).format.wrapText = true;
+    }
+  }
+  const policyMean = view.headers.indexOf('端到端均分(含策略零分)');
+  if (policyMean >= 0) sheet.getRange(`${columnName(policyMean + 1)}:${columnName(policyMean + 1)}`).format.columnWidth = 28;
   if (view.rows.length) {
     sheet.getRange(`A${dataRow}:${last}${end}`).format.rowHeight = 42;
     sheet.getRange(`A${dataRow}:A${end}`).format.wrapText = true;
@@ -158,6 +167,7 @@ function buildView(workbook, name, view, existingSheet = null) {
       const scoreLast = name === "总览" ? "B" : last;
       scoreScale(sheet, `B${dataRow}:${scoreLast}${end}`, 100);
     }
+    if (policyMean >= 0) scoreScale(sheet, `${columnName(policyMean + 1)}${dataRow}:${columnName(policyMean + 1)}${end}`, 100);
   }
   for (const [key, annotation] of Object.entries(view.cell_annotations || {})) {
     const [row, col] = key.split(":").map(Number);

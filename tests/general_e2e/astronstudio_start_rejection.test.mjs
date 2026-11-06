@@ -6,40 +6,11 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { verifyNativeStartRejection } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-start-rejection.mjs';
 import { executeSingleTask, parseArgs } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
+import { readFrozenStartRejection } from '../../tools/report/e2e-shared/astronstudio-start-rejection/index.mjs';
+import { finalizeAstronStudioExecution, verifyAstronStudioCollection } from '../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
 
 const sha = value => createHash('sha256').update(value).digest('hex');
-function fixture(workspace = '/tmp/subject/workspace') {
-  const prompt = 'Create the requested deliverables.';
-  const created = '2026-11-06T06:28:17.904Z', failed = '2026-11-06T06:29:11.361Z';
-  const error = 'ACode turn submission did not complete within 20000ms. at /Applications/AStudio.app/Contents/Resources/app.asar/apps/server/dist/index.mjs:119910:9';
-  const model = { provider: 'acode', model: 'spark-x2.6', options: { reasoningEffort: 'high' } };
-  const state = { phase: 'NEEDS_ATTENTION', identity: { batch_id: 'batch', unit_id: 'astronstudio-macos', task_id: 'task', attempt_id: 'original' },
-    dataset: { id: 'dataset', digest: 'f'.repeat(64) }, driver: { id: 'astronstudio-macos', version: '0.4.18' },
-    run_config: { config_digest: 'config' }, candidate_workspace: workspace,
-    prompt: { sha256: sha(prompt), send_status: 'uncertain', sent_at: '2026-11-06T06:28:17.703Z' },
-    session: { verified: false, thread_id: null, turn_id: null, session_id: null, baseline: [] },
-    send: { dispatch_attempt_count: 1, pre_send_route_thread_id: 'thread', post_send_route_thread_id: 'thread',
-      dispatch_armed_at: '2026-11-06T06:28:17.703Z', dispatch_completed_at: '2026-11-06T06:28:18.343Z' },
-    client: { version: '3.6.0', model: 'Spark-X2.6', reasoning: 'High',
-      workspace_selection: { project_id: 'project', thread_id: 'thread', path: workspace } },
-    execution: { flow_profile: 'prompt-send-to-controller-terminal/v1', error: { code: 'PROMPT_SEND_UNCERTAIN' } },
-    evidence: {}, human_assistance: { operation_count: 0 }, history: [] };
-  const event = (sequence, type, payload, extra = {}) => ({ sequence, event_type: type, stream_id: 'thread', actor_kind: 'client', payload_json: JSON.stringify(payload), ...extra });
-  const data = { projection_threads: [{ thread_id: 'thread', project_id: 'project', latest_turn_id: null, runtime_mode: 'full-access', model_selection_json: JSON.stringify(model) }],
-    projection_projects: [{ project_id: 'project', workspace_root: workspace }],
-    projection_thread_sessions: [{ thread_id: 'thread', status: 'error', last_error: error, updated_at: failed }],
-    projection_thread_messages: [{ message_id: 'message', thread_id: 'thread', role: 'user', text: prompt, source: 'native', dispatch_origin: 'user', dispatch_mode: 'queue', created_at: created, sequence: 10 }],
-    projection_turns: [], projection_pending_interactions: [], provider_runtime_open_turns: [], queued_turn_promotions: [], provider_runtime_events: [],
-    provider_session_runtime: [{ thread_id: 'thread', status: 'stopped', resume_cursor_json: '{"emptyPrewarm":true}', runtime_payload_json: JSON.stringify({ cwd: workspace, activeTurnId: null }) }],
-    orchestration_events: [event(10, 'thread.message-sent', { messageId: 'message', text: prompt }, { command_id: 'command', event_id: 'sent' }),
-      event(11, 'thread.turn-start-requested', { threadId: 'thread', messageId: 'message', requestCommandId: 'command', createdAt: created, modelSelection: model, runtimeMode: 'full-access' }, { command_id: 'command', causation_event_id: 'sent' }),
-      event(12, 'thread.activity-appended', { activity: { id: 'provider-start-failed:11:1', kind: 'provider.turn.start.failed', turnId: null, createdAt: failed,
-        payload: { messageId: 'message', requestCommandId: 'command', requestCreatedAt: created, eventSequence: 11, preparationTerminal: true, settlementStatus: 'rejected', submissionState: 'not-sent', detail: error } } })],
-    orchestration_command_receipts: [{ command_id: 'command', aggregate_id: 'thread', aggregate_kind: 'thread', status: 'accepted', error: null, result_sequence: 11, accepted_at: created, command_fingerprint: 'a'.repeat(64) }],
-    orchestration_event_deliveries: [{ consumer_name: 'provider-command-reactor.v1', event_sequence: 11, thread_id: 'thread', state: 'succeeded', submission_state: 'not-submitted-v1', attempt_count: 1, completed_at: failed }] };
-  const config = { candidateWorkspace: workspace, promptSha256: sha(prompt), expectedPermission: '完全访问', expectedModel: 'Spark-X2.6', expectedReasoning: 'High', runConfig: { tested_model: {} } };
-  return { state, data, config };
-}
+import { rejectionFixture as fixture } from './fixtures/native-start-rejection.mjs';
 
 test('verified native rejection preserves absence of model execution and does not determine a score', () => {
   const f = fixture(); const result = verifyNativeStartRejection(f.data, f.state, f.config);
@@ -78,13 +49,20 @@ test('resolution flag requires observation and forbids dispatch/retry', () => {
 test('resume publishes same-attempt failed terminal and archives original bytes without any send', async () => {
   const root=await mkdtemp(join(tmpdir(),'native-start-rejection-'));
   try {
-    const f=fixture(join(root,'workspace'));
+    const taskRoot=join(root,'execution/tasks/task');
+    const f=fixture(join(taskRoot,'workspace'));
+    f.state.schema_version='wildclawbench.general-e2e-astronstudio-execution-state/v1';
+    f.state.task_root=taskRoot;f.state.prompt.path=join(taskRoot,'PROMPT.md');
+    await mkdir(f.config.candidateWorkspace,{recursive:true});
+    await mkdir(join(root,'receipts'));await writeFile(f.state.prompt.path,'Create the requested deliverables.');
     Object.assign(f.config,{unitRoot:root,controlRoot:join(root,'control'),stateFile:join(root,'control/state.json'),recordFile:join(root,'control/record.json'),
-      task:{task_id:'task'},manifest:{batch_id:'batch',unit_id:'astronstudio-macos',unit:{harness:{platform:'macos'},model:{requested_id:'Spark-X2.6'}}},
+      task:{task_id:'task'},manifest:{schema_id:'urn:wildclawbench:schema:general-e2e:package-manifest:v1',schema_version:1,manifest_kind:'execution',batch_id:'batch',unit_id:'astronstudio-macos',dataset:f.state.dataset,
+        task_ids:['task'],tasks:[{task_id:'task',prompt:{path:'execution/tasks/task/PROMPT.md',sent_sha256:f.state.prompt.sha256},workspace:{path:'execution/tasks/task/workspace'}}],
+        unit:{harness:{id:'astronstudio',platform:'macos'},model:{requested_id:'Spark-X2.6',reasoning_effort:'high'}}},
       resume:true,observeOnce:true,resolveNativeStartRejection:true,timeoutMs:1000,endpoint:'http://localhost:9240'});
     Object.assign(f.config.runConfig,{config_digest:'config',harness:{client_version:'3.6.0'},control:{endpoint:f.config.endpoint},
       tested_model:{display_name:'Spark-X2.6',reasoning_display:'High',permission_display:'完全访问'}});
-    await mkdir(f.config.controlRoot); const original=JSON.stringify(f.state)+'\n',oldRecord='{"original":true}\n';
+    await mkdir(f.config.controlRoot); const original=JSON.stringify(f.state)+'\n',oldRecord=JSON.stringify({original:true,identity:f.state.identity,prompt:f.state.prompt})+'\n';
     await writeFile(f.config.stateFile,original);await writeFile(f.config.recordFile,oldRecord);
     const result=await executeSingleTask(f.config,{probeAstronStudio:async()=>({ready:true,failed_checks:[],app:{version:'3.6.0'},cdp:{endpoint:f.config.endpoint},frozen_run_config:f.config.runConfig,state_database:{active_or_pending_session_count:0}}),
       queryNativeStartRejection:async()=>f.data,now:()=> '2026-11-06T07:00:00.000Z',clickSend:()=>{throw Error('must not send');},connectCdp:()=>{throw Error('must not navigate');}});
@@ -95,5 +73,21 @@ test('resume publishes same-attempt failed terminal and archives original bytes 
     assert.equal(await readFile(join(proofPath,'../original-execution-record.json'),'utf8'),oldRecord);
     assert.equal(proof.native_turn_id,null);assert.equal(proof.retry_performed,false);
     assert.equal(JSON.parse(await readFile(f.config.recordFile)).evidence.native_start_rejection.sha256,sha(await readFile(proofPath)));
+    assert.equal((await readFrozenStartRejection(root,result)).files.length,4);
+    await assert.rejects(readFrozenStartRejection(root,result,{evidence:{}}),/RECORD_PROOF_REQUIRED/);
+    await writeFile(join(root,'manifest.json'),JSON.stringify(f.config.manifest));
+    const cleanup={schema_version:'wildclawbench.general-e2e-task-process-cleanup/v1',supported:true,platform:'darwin',success:true,
+      quiet_window_milliseconds:0,quiet_observed_milliseconds:0,late_process_detected:false,
+      before:{supported:true,targets:[],seed_pids:[],root_pids:[]},termination_attempts:[],after:{supported:true,targets:[],seed_pids:[],root_pids:[]}};
+    const closed=await finalizeAstronStudioExecution({unitRoot:root,stateFile:f.config.stateFile,traceIndex:'',resourceMetrics:'',candidatePolicy:'',
+      stabilityMilliseconds:0,processQuietMilliseconds:0,processWaitMilliseconds:0},{terminateProcesses:async()=>cleanup});
+    const record=JSON.parse(await readFile(join(root,'evidence/tasks/task/original/execution-record.json')));
+    assert.equal(record.session.verified,false);assert.equal(record.session.turn_id,null);
+    assert.equal(record.evidence.completeness,'partial');assert.equal(record.resource_metrics_path,null);
+    assert.ok(record.evidence.native_start_rejection.path.startsWith('evidence/tasks/task/original/'));
+    await verifyAstronStudioCollection({unitRoot:root,taskId:'task'});
+    const archived=join(root,record.evidence.native_start_rejection.path);
+    const proofBefore=await readFile(archived);await writeFile(archived,proofBefore.toString().replace('harness-native-turn-start','framework'));
+    await assert.rejects(readFrozenStartRejection(root,result,record),/PROOF_SHA/);
   } finally { await rm(root,{recursive:true,force:true}); }
 });

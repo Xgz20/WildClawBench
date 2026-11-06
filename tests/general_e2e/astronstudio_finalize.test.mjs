@@ -894,11 +894,11 @@ test("macOS live cleanup terminates only the process whose cwd is the candidate"
   const root = await mkdtemp(join(tmpdir(), "general-e2e-process-cleanup-"));
   const workspace = join(root, "workspace");
   await mkdir(workspace);
-  const child = spawn("/bin/sh", ["-c", `cd "${workspace}" && exec /bin/sleep 30`], {
-    stdio: "ignore",
+  const child = spawn("/bin/sleep", ["30"], {
+    stdio: "ignore", cwd: workspace,
   });
   try {
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
+    await new Promise((resolvePromise, reject) => { child.once('spawn', resolvePromise); child.once('error', reject); });
     const result = await terminateDarwinTaskProcesses(workspace, {
       quietMilliseconds: 250,
       waitMilliseconds: 3_000,

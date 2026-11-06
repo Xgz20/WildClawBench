@@ -621,6 +621,9 @@ def build_views(data, references):
     views["工具调用对比"].update(layout="grouped_tools", groups=tool_groups,
                                  render_row_count=min(cursor + len(views["工具调用对比"]["notes"]), 160))
     order = ["总览", "效率对比", "分类对比", "难度对比", "Agent能力对比", "模态对比", "工具调用对比"]
+    import report_failure_policy
+    if report_failure_policy.attach_views(data, views, labels_by_id):
+        order.append('端到端计分')
     if has5 and has7:
         order.insert(5, "Agent五维能力对比")
     presentation = {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},

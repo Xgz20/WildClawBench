@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.48` 将原生未提交启动拒绝核验提取为独立共享组件，支持正式采集与报告离线复核同一原始状态、原始执行记录、原生同快照和派生终态；不改变0.14.47收口边界或作答动作。
+
 `0.14.47` 增加显式只读收口 `--resume --observe-once --resolve-native-start-rejection`：仅在完整原生 Prompt、项目/模型、accepted 回执、唯一启动请求、原生 rejected/not-sent/preparationTerminal 及已结算 not-submitted 投递闭合，且无模型 turn、活动运行时或排队输入时，将原 uncertain attempt 收为 Harness 启动失败。保留原状态/记录字节和完整核验快照，turn/SDK 身份仍为 null；不取消、重发、重试、重启或决定分数。未知或矛盾来源继续拒绝。当前窄范围只支持原生 ACode 20 秒启动提交超时。
 
 `0.14.46` 为豆包2.35.19增加独立MOA实时源码、闭包getter和项目getter准入；版本、Inspector与SDK证明逐项绑定，保留2.35.15原Profile和全部旧证据，未知版本继续拒绝。
