@@ -71,6 +71,36 @@ test('bound prewarm connection and acode_apps timeout are preserved without trea
   event.lifecycleGeneration='foreign';f.data.provider_runtime_events[0].event_json=JSON.stringify(event);
   assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/PROVIDER_ACTIVITY/);
 });
+
+function recoveredMcpFixture() {
+  const f=fixture(),runtime=f.data.provider_session_runtime[0];runtime.status='running';runtime.lifecycle_generation='epoch';
+  runtime.resume_cursor_json='{"emptyPrewarm":true,"threadId":"prewarm"}';
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:null,lastError:null,emptyPrewarmDispatch:null,lastRuntimeEvent:'session.state.changed'});
+  const error='MCP client for `acode_apps` timed out after 30 seconds.';
+  for(const [state,sequence,at] of [['failed',31,'2026-11-06T06:29:11Z'],['ready',32,'2026-11-06T06:29:40Z']]) {
+    const event={provider:'acode',threadId:'thread',lifecycleGeneration:'epoch',createdAt:at,type:'mcp.status.updated',providerRefs:{providerThreadId:'prewarm'},
+      raw:{method:'mcpServer/startupStatus/updated',payload:{threadId:'prewarm',name:'acode_apps',status:state,error:state==='failed'?error:null,failureReason:null}},
+      payload:{status:{name:'acode_apps',state,...(state==='failed'?{error}:{})}}};
+    f.data.provider_runtime_events.push({thread_id:'thread',turn_id:null,sequence,event_type:event.type,event_json:JSON.stringify(event)});
+  }
+  return f;
+}
+test('later MCP ready is setup recovery only and does not undo the settled no-model rejection',()=>{
+  const f=recoveredMcpFixture();const proof=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(proof.prewarm_mcp_recovered_without_model_turn,true);assert.deepEqual(proof.prewarm_mcp_ready_sequences,[32]);
+  assert.equal(proof.native_turn_id,null);assert.equal(proof.retry_performed,false);assert.equal('score' in proof,false);
+});
+for(const kind of ['no-timeout','wrong-order','wrong-clock','extra-source','live-turn','foreign-provider-thread'])test('MCP-ready setup rejects '+kind,()=>{
+  const f=recoveredMcpFixture();const ready=f.data.provider_runtime_events[1];const event=JSON.parse(ready.event_json);
+  if(kind==='no-timeout')f.data.provider_runtime_events.shift();
+  if(kind==='wrong-order')ready.sequence=30;
+  if(kind==='wrong-clock')event.createdAt='2026-11-06T06:29:00Z';
+  if(kind==='extra-source')event.raw.payload.activeTurnId='surprise';
+  if(kind==='live-turn')ready.turn_id='turn';
+  if(kind==='foreign-provider-thread')event.providerRefs.providerThreadId='foreign';
+  ready.event_json=JSON.stringify(event);
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/NATIVE_START_REJECTION_/);
+});
 for (const [name, change] of [
   ['changed prompt', f => f.data.projection_thread_messages[0].text += 'changed'],
   ['foreign workspace', f => f.data.projection_projects[0].workspace_root = '/foreign'],

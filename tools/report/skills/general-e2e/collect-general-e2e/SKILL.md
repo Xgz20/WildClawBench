@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.37` 启动拒绝证明兼容同一已绑定空预热连接在acode_apps超时后恢复ready的原生setup事件，原/现事件按序封存；没有模型turn、原请求已rejected/not-submitted的门禁不变，不把后来连接就绪当作已执行或成功。
+
 `0.11.36` 新增原生watchdog失败的SDK中断证明，保留candidate_error和原工具错误及滞后session字段；必须SDK唯一abort、SQL error/停止runtime与精确provider失败终态闭合，不把原失败改为cancelled或成功。
 
 `0.11.35` 启动拒绝证明兼容明确provider.session.starting的空预热连接；仍要求原请求rejected/not-sent/not-submitted已结算，emptyPrewarm=true，activeTurnId/lastError/emptyPrewarmDispatch均null且无任何模型turn/待派发/交互。连接初始化状态不被误认成已执行模型任务；未知活动继续拒绝，不重发、取消或重启。

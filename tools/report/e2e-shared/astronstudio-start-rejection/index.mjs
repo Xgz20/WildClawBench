@@ -31,12 +31,14 @@ function prewarmSetupNotice(row, route, runtime, cursor) {
     }
     if(event.type==='mcp.status.updated'&&row.event_type===event.type) {
       const value=event.payload?.status,source=raw?.payload;
-      return raw?.method==='mcpServer/startupStatus/updated'
-        &&event.providerRefs?.providerThreadId===cursor.threadId&&source?.threadId===cursor.threadId
-        &&value?.name==='acode_apps'&&source.name===value.name
-        &&value.state==='failed'&&source.status==='failed'&&source.error===value.error
-        &&source.failureReason===null&&typeof value.error==='string'
-        &&value.error.startsWith('MCP client for `acode_apps` timed out after 30 seconds.');
+      if(raw?.method!=='mcpServer/startupStatus/updated'
+        ||event.providerRefs?.providerThreadId!==cursor.threadId||source?.threadId!==cursor.threadId
+        ||value?.name!=='acode_apps'||source.name!==value.name||source.failureReason!==null)return false;
+      if(value.state==='failed')return source.status==='failed'&&source.error===value.error
+        &&typeof value.error==='string'&&value.error.startsWith('MCP client for `acode_apps` timed out after 30 seconds.');
+      return value.state==='ready'&&source.status==='ready'&&source.error===null
+        &&Object.keys(value).sort().join(',')==='name,state'
+        &&Object.keys(source).sort().join(',')==='error,failureReason,name,status,threadId';
     }
     return false;
   } catch {return false;}
@@ -76,6 +78,16 @@ export function verifyNativeStartRejection(data, state, config) {
   const cursor = JSON.parse(runtime.resume_cursor_json || '{}');
   const runtimePayload = JSON.parse(runtime.runtime_payload_json || '{}');
   assert(data.provider_runtime_events?.every(row => prewarmSetupNotice(row, route, runtime, cursor)), 'PROVIDER_ACTIVITY');
+  const mcpReady=data.provider_runtime_events.filter(row=>row.event_type==='mcp.status.updated'
+    &&JSON.parse(row.event_json).payload?.status?.state==='ready');
+  for(const ready of mcpReady) {
+    const readyEvent=JSON.parse(ready.event_json);
+    assert(Number.isSafeInteger(ready.sequence)&&Number.isFinite(Date.parse(readyEvent.createdAt))
+      &&data.provider_runtime_events.some(previous=>Number.isSafeInteger(previous.sequence)&&previous.sequence<ready.sequence
+        &&previous.event_type==='mcp.status.updated'&&prewarmSetupNotice(previous,route,runtime,cursor)
+        &&JSON.parse(previous.event_json).payload?.status?.state==='failed'
+        &&Date.parse(JSON.parse(previous.event_json).createdAt)<=Date.parse(readyEvent.createdAt)), 'MCP_READY_WITHOUT_BOUND_TIMEOUT');
+  }
   const idlePrewarm = ['running', 'ready'].includes(runtime.status)
     && ['session.state.changed', 'provider.session.starting'].includes(runtimePayload.lastRuntimeEvent)
     && runtimePayload.activeTurnId === null && runtimePayload.lastError === null
@@ -139,6 +151,7 @@ export function verifyNativeStartRejection(data, state, config) {
     }
   }
   return { profile: idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
+    ...(mcpReady.length?{prewarm_mcp_recovered_without_model_turn:true,prewarm_mcp_ready_sequences:mcpReady.map(row=>row.sequence)}:{}),
     ...(idlePrewarm ? { prewarm_runtime_status: runtime.status, prewarm_provider_session_id: cursor.threadId,
       prewarm_only: true, active_model_turn_id: null, native_projection_status: session.status,
       native_projection_updated_at: session.updated_at, native_projection_stale: readyProjection } : {}),

@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.37` 离线回放启动拒绝来源时保留严格绑定的MCP超时后ready setup事件；原原生失败/人类政策0/未知Rubric的区分和权重不变，连接后来ready不补造模型turn或成绩。
+
 `0.8.36` 整轮原生中断故障0可包含严格SDK中断证明闭合的native watchdog candidate_error；保留业务错误和原Rubric/根因，不把普通candidate_error或待核验执行统一补零。
 
 `0.8.35` 启动拒绝证明兼容明确provider.session.starting的空预热连接；仍要求原请求rejected/not-sent/not-submitted已结算，emptyPrewarm=true，activeTurnId/lastError/emptyPrewarmDispatch均null且无任何模型turn/待派发/交互。连接初始化状态不被误认成已执行模型任务；未知活动继续拒绝，不重发、取消或重启。
