@@ -28,6 +28,9 @@ class BackendTests(unittest.TestCase):
         self.assertEqual(gzip.decompress(base64.b64decode(compressed)).decode("utf-8"), script)
         self.assertIn("already_exited", script)
         self.assertLess(script.index("Save $proof"), script.index("Stop-Process"))
+        self.assertIn("$targets=@($proof.before)+$additional", script)
+        self.assertIn("CLEANUP_PROOF_IDENTITY_MISMATCH", script)
+        self.assertIn("WORKSPACE_PROCESS_IDENTITY_UNAVAILABLE", script)
 
     def test_windows_missing_file_envelope_is_not_an_artifact(self):
         client = AgentCubeClient(AgentCubeConfig(user_id="test", auth_token="test"))
@@ -68,6 +71,7 @@ class BackendTests(unittest.TestCase):
             driver.client.windows_execute.return_value = {"output": base64.b64encode(json.dumps(proof).encode()).decode()}
             self.assertEqual(driver._cleanup_processes("sid"), proof)
             self.assertTrue(driver.client.windows_execute.called)
+            driver.client.windows_download.assert_not_called()
 
     def test_timeout_salvage_quiesces_agent_and_preserves_prior_live_snapshot(self):
         with tempfile.TemporaryDirectory() as directory:

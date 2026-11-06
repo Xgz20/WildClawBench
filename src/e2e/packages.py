@@ -10,13 +10,50 @@ import uuid
 import zipfile
 
 from .artifacts import _members, _protect, extract_zip, freeze_metadata_files, import_execution, inventory, quarantine_local_metadata, remove_temporary_tree, verify_backup, verify_execution
-from .common import E2EError, atomic_json, digest, file_sha256, inside, read_json, utc_now
+from .common import E2EError, atomic_json, digest, file_sha256, inside, load_script, read_json, utc_now
 from .engine import load_batch
 from .handoff import export_scoring_context
 from .store import BatchStore
 
 
 PACKAGE_SCHEMA = "wildclawbench.sandbox-result-package/v1"
+
+
+def _local_report_inputs(batch: Path, stage: Path, manifest: dict, exported: list[dict]) -> list[dict]:
+    """Freeze report inputs using the same preparation code as local Skills."""
+    reports = []
+    for entry in exported:
+        context = entry.get("scoring_context")
+        if not context:
+            continue
+        root = inside(stage, context["context_root"])
+        installed = inside(stage, context["installed_skills"])
+        if context["scene"] == "general":
+            config = read_json(root / "report-config.json")
+            assets = manifest["compatibility"]["general"]
+            prepare = load_script(installed / "prepare-general-e2e-workspaces/scripts/prepare_general_e2e_workspaces.py", "sandbox_export_report_prepare")
+            input_config = {"schema_id": prepare.CONFIG_SCHEMA_ID, "schema_version": 1,
+                            "contract_version": prepare.CONTRACT_VERSION, "bundle_protocol": prepare.BUNDLE_PROTOCOL,
+                            "batch_id": config["batch_id"], "task_ids": config["units"][0]["task_ids"],
+                            "units": config["units"], "judge": config["judge"], "report": config["report"]}
+            path = root / "report-input.json"
+            atomic_json(path, input_config)
+            result = prepare.prepare_batch(inside(batch, assets["dataset_bundle"]),
+                                           inside(batch, assets["release_suite"]), path, root / "reports")
+            location = Path(result["batch_root"])
+        else:
+            prepare = load_script(installed / "prepare-web-e2e-workspaces/scripts/prepare_web_e2e_workspaces.py", "sandbox_export_web_report_prepare")
+            unit = read_json(root / "unit/manifest.json")
+            record = read_json(root / context["score_task_root"] / "execution_record.json")
+            harness = unit["harness"]["id"]
+            config = prepare.build_report_config(unit["batch_id"], unit["metric_profile"], [harness],
+                                                 record["model"]["id"], {}, record.get("reasoning_effort") or "none", {})
+            location = root / "report-config.yaml"
+            prepare.write_report_config(location, config)
+        reports.append({"execution_key": entry["execution"]["key"], "scene": context["scene"],
+                        "task_ids": [entry["execution"]["task_id"]],
+                        "path": location.relative_to(stage).as_posix()})
+    return reports
 
 
 def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results", include_unsealed=False) -> dict:
@@ -36,6 +73,14 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
         stage = Path(directory)
         rows_exported = []
         skill_roots = {}
+        task_inputs = []
+        selected_ids = {row["task_id"] for row in selected}
+        for task in manifest["tasks"]:
+            if task["task_id"] in selected_ids and task.get("input_root"):
+                source = inside(batch, task["input_root"])
+                target = stage / "task-inputs" / task["task_id"]
+                shutil.copytree(source, target)
+                task_inputs.append({"task_id": task["task_id"], "path": target.relative_to(stage).as_posix()})
         for row in selected:
             execution = inside(batch, row["execution_root"])
             if not (execution / "backups/backup-receipt.json").exists():
@@ -84,10 +129,12 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
         atomic_json(stage / "parent-batch.json", manifest)
         index = {"schema": PACKAGE_SCHEMA, "parent_batch_id": batch.name, "parent_batch_sha256": digest(manifest),
                  "purpose": purpose, "created_at": utc_now(), "parent_scope": [row["key"] for row in rows],
+                 "selected_scope": [row["key"] for row in selected], "task_inputs": task_inputs,
                  "exported": rows_exported,
-                 "unavailable_executions": [{"execution": row, "reason": "EXECUTION_NOT_SEALED"} for row in selected
+                 "unavailable_executions": [{"execution": row, "reason": "EXECUTION_NOT_SEALED" if row in selected else "NOT_SELECTED"} for row in rows
                                             if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}],
-                 "not_exported": [row["key"] for row in selected if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}]}
+                 "not_exported": [row["key"] for row in rows if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}]}
+        index["local_reports"] = _local_report_inputs(batch, stage, manifest, rows_exported) if purpose == "scoring" else []
         atomic_json(stage / "package-index.json", index)
         (stage / "LOCAL_START.md").write_text(
             "# 本地评分与报告接续\n\n"
@@ -97,7 +144,16 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
             "读取生成的 import-receipt.json 中 scoring_contexts。每项 context_root 是本题标准材料，"
             "installed_skills 是包内冻结 Skill 的本机路径。按相应 orchestrate-general-e2e 或 "
             "orchestrate-web-e2e Skill 建立独立单题评分项目，再由 report-general-e2e 或 report-web-e2e "
-            "按 parent-batch.json 和 package-index.json 的完整范围汇总。\n\n"
+            "使用 import-receipt.json 的 local_reports 对应输入。General 的 path 是标准单题 batch-root，"
+            "评分后使用 run-general-e2e 的 package-return / import-return / select-import，再交 report-general-e2e。"
+            "Web 的 path 是报告 YAML，将单题完整 submission.json 所在目录交 report-web-e2e 并显式传 --config。\n\n"
+            "各 context 的 unit_root、scoring_package、execution_record 等路径相对 context_root。"
+            "context_root 和 installed_skills 已映射为本机绝对路径。原包及评分输入保留只读，"
+            "评分运行目录、回传包和报告应放在本地工作根的新目录。\n\n"
+            "local_reports 按单题接续，保持原 batch/unit/run/attempt 身份。整批比较需按 parent-batch.json、"
+            "parent_scope 和 not_exported 检查覆盖。General 多个单题来源使用 report-general-e2e 的"
+            " selected_report.py 显式选择来源包，Web 分单元、run 与 Profile 生成报告。"
+            "成功题与未封存题的覆盖分别记录，不将缺失材料补作有效分数。\n\n"
             "purpose=results 只提供原始执行资料。purpose=scoring 另提供成功题的标准评分输入和冻结 Skill。"
             "失败题的 scoring_unavailable_reason、部分轨迹和原始失败资料随包保留。\n",
             encoding="utf-8")
@@ -224,7 +280,9 @@ def import_package(archive: Path, receipt_path: Path | None, workspace: Path) ->
                                  "installed_skills": str(inside(destination, context["installed_skills"]))})
         local = {"schema": PACKAGE_SCHEMA, "status": "imported", "archive_sha256": receipt["archive_sha256"],
                  "parent_batch_id": index["parent_batch_id"], "purpose": index["purpose"],
-                 "execution_count": len(index["exported"]), "scoring_contexts": contexts, "imported_at": utc_now()}
+                 "execution_count": len(index["exported"]), "scoring_contexts": contexts,
+                 "local_reports": [{**row, "path": str(inside(destination, row["path"]))} for row in index.get("local_reports", [])],
+                 "imported_at": utc_now()}
         atomic_json(temporary / "import-receipt.json", local)
         temporary.rename(destination)
     finally:

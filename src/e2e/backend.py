@@ -49,6 +49,20 @@ $ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';
 $proofPath=__PROOF__;$workspace=__WORKSPACE__;
 function Snap($p){@{pid=[int]$p.ProcessId;parent_pid=[int]$p.ParentProcessId;name=$p.Name;path=$p.ExecutablePath;created=$p.CreationDate.ToUniversalTime().ToString('o');command=$p.CommandLine}}
 function Save($value){$text=ConvertTo-Json -InputObject $value -Depth 15 -Compress;[IO.File]::WriteAllText($proofPath,$text,[Text.UTF8Encoding]::new($false))}
+if(Test-Path -LiteralPath $proofPath){
+ $proof=Get-Content -LiteralPath $proofPath -Raw|ConvertFrom-Json;
+ if($proof.schema -ne 'wildclawbench.agentcube-process-cleanup/v1' -or $proof.workspace -ne $workspace){throw 'CLEANUP_PROOF_IDENTITY_MISMATCH'};
+ if($proof.phase -eq 'completed' -and $proof.success -and $proof.quiet_observed_milliseconds -ge 5000){
+  [Console]::Out.Write([Convert]::ToBase64String([IO.File]::ReadAllBytes($proofPath)));return
+ };
+ if($proof.phase -notin @('started','completed')){throw 'CLEANUP_PROOF_PHASE_INVALID'};
+ $additional=@($proof.additional_targets|Where-Object {$_});
+ foreach($late in @($proof.after|Where-Object {$_.command -and $_.command.IndexOf($workspace,[StringComparison]::OrdinalIgnoreCase) -ge 0})){
+  if(@($proof.before+$additional|Where-Object {$_.pid -eq $late.pid}).Count -eq 0){$additional+=@($late)}
+ };
+ $proof|Add-Member -NotePropertyName additional_targets -NotePropertyValue $additional -Force;
+ $targets=@($proof.before)+$additional;$ids=[Collections.Generic.HashSet[int]]::new();foreach($p in $targets){[void]$ids.Add([int]$p.pid)};Save $proof;
+}else{
 $all=@(Get-CimInstance Win32_Process);
 $apps=@($all|Where-Object {$_.Name -ieq 'AStudio.exe'});
 $appIds=@($apps|ForEach-Object {[int]$_.ProcessId});
@@ -60,12 +74,17 @@ if($roots.Count -eq 1){
  if(-not $roots[0].ExecutablePath -or -not $roots[0].CreationDate){throw 'HARNESS_PROCESS_IDENTITY_UNAVAILABLE'};
  $rootPid=[int]$roots[0].ProcessId;[void]$ids.Add($rootPid);$disposition='stopped_owned_tree';
 };
+foreach($p in @($all|Where-Object {$_.CommandLine -and $_.CommandLine.IndexOf($workspace,[StringComparison]::OrdinalIgnoreCase) -ge 0})){
+ if(-not $p.ExecutablePath -or -not $p.CreationDate){throw 'WORKSPACE_PROCESS_IDENTITY_UNAVAILABLE'};[void]$ids.Add([int]$p.ProcessId)
+};
 do{$added=$false;foreach($p in $all){if($ids.Contains([int]$p.ParentProcessId) -and $ids.Add([int]$p.ProcessId)){$added=$true}}}while($added);
 $targets=@($all|Where-Object {$ids.Contains([int]$_.ProcessId)}|ForEach-Object {Snap $_});
-$proof=@{schema='wildclawbench.agentcube-process-cleanup/v1';phase='started';supported=$true;success=$false;platform='win32';workspace=$workspace;root_pid=$rootPid;disposition=$disposition;before=$targets};
+$proof=[pscustomobject]@{schema='wildclawbench.agentcube-process-cleanup/v1';phase='started';supported=$true;success=$false;platform='win32';workspace=$workspace;root_pid=$rootPid;disposition=$disposition;before=$targets};
 Save $proof;
+};
 foreach($p in ($targets|Sort-Object @{Expression={if($_.pid -eq $proof.root_pid){0}else{1}}})){
  $live=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.pid);
+ for($retry=0;$live -and -not $live.ExecutablePath -and $retry -lt 20;$retry++){Start-Sleep -Milliseconds 100;$live=Get-CimInstance Win32_Process -Filter ('ProcessId='+$p.pid)};
  if($live){$current=Snap $live;if($current.created -ne $p.created -or $current.path -ne $p.path){throw 'PROCESS_IDENTITY_CHANGED'};Stop-Process -Id $p.pid -Force -ErrorAction Stop}
 };
 $watch=[Diagnostics.Stopwatch]::StartNew();$late=$false;$after=@();
@@ -80,7 +99,7 @@ while($watch.ElapsedMilliseconds -lt 5000){
  }|ForEach-Object {Snap $_});
  if($after.Count -ne 0){$late=$true;break}
 };
-$proof.phase='completed';$proof.after=$after;$proof.late_process_detected=$late;$proof.quiet_observed_milliseconds=$watch.ElapsedMilliseconds;$proof.success=(-not $late -and $after.Count -eq 0 -and $watch.ElapsedMilliseconds -ge 5000);Save $proof;
+$proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=$late;quiet_observed_milliseconds=$watch.ElapsedMilliseconds}.GetEnumerator()){$proof|Add-Member -NotePropertyName $entry.Key -NotePropertyValue $entry.Value -Force};$proof.success=(-not $late -and $after.Count -eq 0 -and $watch.ElapsedMilliseconds -ge 5000);Save $proof;
 [Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -InputObject $proof -Depth 15 -Compress))));
 """.replace("__PROOF__", "'" + proof_path.replace("'", "''") + "'").replace(
         "__WORKSPACE__", "'" + workspace.replace("'", "''") + "'")
@@ -286,19 +305,14 @@ class AStudioSandboxDriver:
     def _cleanup_processes(self, sid):
         path = self.staging / "metadata/process-cleanup.json"
         proof = json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
-        if not proof or proof.get("phase") != "completed":
+        if not proof or proof.get("phase") != "completed" or proof.get("quiet_observed_milliseconds", 0) < 5000:
             row = self.store.get(self.key)
             proof_path = r"C:\Windows\Temp\wcb-cleanup-" + row["attempt_id"] + ".json"
-            if row.get("process_cleanup_intent"):
-                try:
-                    proof = json.loads(self.client.windows_download(sid, proof_path).decode("utf-8-sig"))
-                except FileNotFoundError:
-                    # The guest writes its proof before any process mutation.
-                    # Absence therefore permits discovery on the same attempt.
-                    proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE)), timeout=120))
-            else:
+            if not row.get("process_cleanup_intent"):
                 self._phase("COLLECTING", process_cleanup_intent={"path": proof_path, "at": utc_now()})
-                proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE)), timeout=120))
+            # The guest resumes the original target identities from its durable
+            # proof and returns base64, preserving JSON bytes across the gateway.
+            proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE)), timeout=120))
             if proof.get("phase") == "completed":
                 atomic_json(path, proof)
         if (proof.get("schema") != "wildclawbench.agentcube-process-cleanup/v1" or proof.get("phase") != "completed"
@@ -368,7 +382,7 @@ class AStudioSandboxDriver:
         self._phase("COLLECTING", report=report, observed_terminal_at=utc_now())
         if result["exit_code"] != 0 or report.get("status") != "completed":
             raise E2EError("CONTROLLER_EXECUTION_INCOMPLETE: " + str(report.get("status")))
-        run = self._download_tree(sid, "/logs/artifacts/run", "run")
+        self._download_tree(sid, "/logs/artifacts/run", "run")
         identity = {"batch_id": self.batch.name + f"-r{row['run_index']:04d}", "unit_id": row["unit_id"], "task_id": row["task_id"],
                     "attempt_id": row["attempt_id"]}
         prompt = (inside(self.batch, self.task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")

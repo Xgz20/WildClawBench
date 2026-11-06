@@ -5,5 +5,6 @@
   "at": "2026-11-06T00:00:00Z",
   "event_type": "COMPLETED",
   "execution_key": "unit/run-0001/task",
-  "payload": {}
+  "payload": {},
+  "api_version": 1
 }

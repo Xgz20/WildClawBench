@@ -8,7 +8,8 @@
     "cursor",
     "at",
     "event_type",
-    "payload"
+    "payload",
+    "api_version"
   ],
   "properties": {
     "batch_id": {
@@ -32,6 +33,9 @@
     },
     "payload": {
       "type": "object"
+    },
+    "api_version": {
+      "const": 1
     }
   },
   "additionalProperties": true

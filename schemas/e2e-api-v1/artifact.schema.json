@@ -8,7 +8,9 @@
     "name",
     "kind",
     "is_dir",
-    "size"
+    "size",
+    "source",
+    "completeness"
   ],
   "properties": {
     "path": {
@@ -35,6 +37,12 @@
         "string",
         "null"
       ]
+    },
+    "source": {
+      "type": "string"
+    },
+    "completeness": {
+      "type": "string"
     }
   },
   "additionalProperties": true

@@ -8,6 +8,7 @@ from src.e2e.engine import run_batch
 from src.e2e.handoff import prepare_scoring_context
 from src.e2e.preparation import prepare_batch
 from src.e2e.pipeline import init_orchestration
+from src.e2e.packages import export_package, import_package
 from src.e2e.store import BatchStore
 from tests.e2e.test_scheduler import FakeDriver, Provider
 
@@ -47,6 +48,13 @@ class WebHandoffTests(unittest.TestCase):
                 current = store.scoring_rows()[0]
                 self.assertEqual(current["phase"], "RUNNING")
                 self.assertTrue(Path(current["orchestration"]["state_file"]).is_file())
+                archive = Path(directory) / "download.zip"
+                export_package(batch, archive, purpose="scoring")
+                imported = import_package(archive, None, Path(directory) / "recipient")
+                self.assertEqual(imported["scoring_contexts"][0]["scene"], "web")
+                report_config = Path(imported["local_reports"][0]["path"])
+                self.assertTrue(report_config.is_file())
+                self.assertIn("web-e2e-detailed-v1", report_config.read_text())
             finally:
                 for path in Path(directory).rglob("*"):
                     if path.is_dir():

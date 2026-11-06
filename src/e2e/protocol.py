@@ -7,7 +7,7 @@ import json
 import os
 from pathlib import Path
 
-from .common import E2EError, digest, file_sha256, inside, read_json, utc_now
+from .common import E2EError, digest, file_sha256, inside, read_json
 from .preparation import (
     canonical_script,
     normalize_plan,
@@ -29,6 +29,7 @@ DEFAULT_PROFILE = {
     "enabled": True,
     "models": [
         {"id": "auto", "display_name": "Auto（实际模型以原生回读为准）"},
+        {"id": "spark-x2.5", "display_name": "Spark-X2.5"},
     ],
     "reasoning_efforts": ["none", "high", "max"],
 }
@@ -297,6 +298,7 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None) -> dict:
 
 def public_event(row: dict, batch_id: str) -> dict:
     return {
+        "api_version": API_VERSION,
         "batch_id": batch_id,
         "cursor": row["sequence"],
         "at": row["at"],
@@ -353,12 +355,26 @@ def snapshot(batch: Path) -> dict:
         final = source / "final-response.md"
         binding_path = source / "metadata/native-binding.json"
         binding = read_json(binding_path) if binding_path.exists() else {}
+        error = row.get("error")
+        for collected in ("collect", "failure-quiesced-collect"):
+            diagnostics = source / collected / "evidence/diagnostics.json"
+            if diagnostics.is_file():
+                failure = read_json(diagnostics).get("failure")
+                if failure:
+                    error = {**(error or {}), "product_failure": failure}
+        trace_status = ready.get("trace_status")
+        if not trace_status:
+            if any((source / "native").glob("*/*.jsonl")):
+                trace_status = "partial"
+            else:
+                trace_status = "missing" if source.exists() else "unavailable"
         references = []
         for kind, path in (
             ("original_backup", execution / "backups/execution-original.zip"),
             ("backup_receipt", backup),
             ("final_response", final),
             ("trace", source / "trace"),
+            ("trace", source / "native/failure-quiesced"),
             ("workspace", source / "collect/workspace"),
             ("failure_workspace", source / "failure-quiesced-collect/workspace"),
         ):
@@ -383,15 +399,14 @@ def snapshot(batch: Path) -> dict:
                 and not row["resource_held"],
                 "resource_held": row["resource_held"],
                 "session_id": row.get("session_id"),
-                "error": row.get("error"),
+                "error": error,
                 "harness": units[row["unit_id"]]["harness"],
                 "requested_model": units[row["unit_id"]]["model"],
                 "actual_model": ready.get("actual_model")
                 or binding.get("actual_model"),
                 "reasoning_effort": units[row["unit_id"]].get("reasoning_effort"),
                 "scene": tasks[row["task_id"]].get("scene", "general"),
-                "trace_completeness": ready.get("trace_status")
-                or ("partial" if (execution / "original").exists() else "unavailable"),
+                "trace_completeness": trace_status,
                 "backup_status": "verified" if backup.exists() else "pending",
                 "exportable": backup.exists(),
                 "artifact_root": str(source.relative_to(batch))
@@ -499,6 +514,8 @@ def artifacts(batch: Path, path: str = "", content: bool = False) -> dict:
                 "sha256": file_sha256(item)
                 if item.is_file() and not item.is_symlink()
                 else None,
+                "source": "native_rollout" if kind == "final_response" else "executor",
+                "completeness": "directory" if item.is_dir() else "present",
             }
         )
     return {"batch_id": batch.name, "path": path, "artifacts": result}

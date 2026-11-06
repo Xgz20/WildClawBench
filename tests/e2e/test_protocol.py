@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
-from src.e2e.cli import main
+from src.e2e.cli import main, _run, build_parser
 from src.e2e.common import E2EError
 from src.e2e.engine import run_batch, cancel_batch
 from src.e2e.store import BatchStore
@@ -81,6 +81,26 @@ class ProtocolTests(unittest.TestCase):
         with self.assertRaises(E2EError):
             artifacts(self.fixture.root, "units/../../outside")
 
+    def test_failed_snapshot_exposes_diagnostic_and_actual_trace_coverage(self):
+        store = BatchStore(self.fixture.root)
+        row = store.rows()[0]
+        original = self.fixture.root / row["execution_root"] / "original"
+        diagnostics = original / "collect/evidence/diagnostics.json"
+        diagnostics.parent.mkdir(parents=True)
+        diagnostics.write_text(json.dumps({"failure": {"stage": "select_model"}}))
+        store.update(
+            row["key"], "FAILED", resource_held=False, error={"code": "controller"}
+        )
+        result = snapshot(self.fixture.root)["executions"][0]
+        self.assertEqual(result["error"]["product_failure"]["stage"], "select_model")
+        self.assertEqual(result["trace_completeness"], "missing")
+        native = original / "native/failure-quiesced/rollout-test.jsonl"
+        native.parent.mkdir(parents=True)
+        native.write_text("{}\n")
+        result = snapshot(self.fixture.root)["executions"][0]
+        self.assertEqual(result["trace_completeness"], "partial")
+        self.assertTrue(any(item["kind"] == "trace" for item in result["artifacts"]))
+
     def test_single_zip_can_be_imported_without_sidecar(self):
         run_batch(
             self.fixture.root, self.fixture.config, driver_factory=self.fixture.factory
@@ -100,6 +120,27 @@ class ProtocolTests(unittest.TestCase):
             import_package(
                 path, path.with_suffix(".zip.json"), self.fixture.root / "recipient"
             )
+
+    def test_subset_download_preserves_full_parent_coverage(self):
+        import zipfile
+
+        run_batch(
+            self.fixture.root, self.fixture.config, driver_factory=self.fixture.factory
+        )
+        key = BatchStore(self.fixture.root).rows()[0]["key"]
+        path = self.fixture.root / "subset.zip"
+        export_package(self.fixture.root, path, keys=[key])
+        with zipfile.ZipFile(path) as archive:
+            index = json.loads(archive.read("package-index.json"))
+        self.assertEqual(len(index["parent_scope"]), 10)
+        self.assertEqual(index["selected_scope"], [key])
+        self.assertEqual(len(index["not_exported"]), 9)
+        self.assertTrue(
+            all(
+                row["reason"] == "NOT_SELECTED"
+                for row in index["unavailable_executions"]
+            )
+        )
 
     def test_preflight_resolves_real_catalog_without_creating_sandbox(self):
         root = Path(__file__).resolve().parents[2]
@@ -123,6 +164,75 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(result["planned_execution_count"], 2)
         create.assert_not_called()
+
+    def test_inline_and_plan_invocations_resolve_identical_scope(self):
+        repo = Path(__file__).resolve().parents[2]
+        task_id = "03_Social_Interaction_task_003_colleague_leave_reply"
+        raw = {
+            "batch_id": "equivalent",
+            "selection": {
+                "scenario": "general",
+                "dataset": "general-custom60-v1",
+                "task_ids": [task_id],
+            },
+            "units": [
+                {"harness": "astronstudio", "model": "auto", "reasoning_effort": "high"}
+            ],
+            "runs": 2,
+            "execution_concurrency": 3,
+            "timeout_override": 3600,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "plan.json"
+            path.write_text(json.dumps(raw))
+            common = [
+                "--api-version",
+                "1",
+                "run",
+                "--workspace-root",
+                directory,
+                "--dry-run",
+            ]
+            invocations = [
+                common + ["--plan", str(path)],
+                common
+                + [
+                    "--batch-id",
+                    "equivalent",
+                    "--scenario",
+                    "general",
+                    "--dataset",
+                    "general-custom60-v1",
+                    "--task-id",
+                    task_id,
+                    "--harness",
+                    "astronstudio",
+                    "--model",
+                    "auto",
+                    "--reasoning-effort",
+                    "high",
+                    "--runs",
+                    "2",
+                    "--concurrency",
+                    "3",
+                    "--timeout-override",
+                    "3600",
+                ],
+            ]
+            results = []
+            for arguments in invocations:
+                with patch(
+                    "src.e2e.preparation.prepare_batch",
+                    side_effect=E2EError("captured"),
+                ) as prepare:
+                    with self.assertRaisesRegex(E2EError, "captured"):
+                        _run(build_parser().parse_args(arguments))
+                    results.append(preflight(repo, prepare.call_args.args[2]))
+            self.assertEqual(
+                results[0]["selection_sha256"], results[1]["selection_sha256"]
+            )
+            self.assertEqual(results[0]["plan"]["units"], results[1]["plan"]["units"])
+            self.assertEqual(results[0]["planned_execution_count"], 2)
 
     def test_protocol_error_is_structured(self):
         with tempfile.TemporaryDirectory() as directory:
