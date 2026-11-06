@@ -11,7 +11,7 @@ import {queryNativeSessions} from './lib/astronstudio-state.mjs';
 import {queryNativeStartRejection} from './lib/astronstudio-start-rejection.mjs';
 import {probeAstronStudio} from './probe_astronstudio_macos.mjs';
 import {CdpClient,discoverMainTarget,readUiConfiguration,renderExpectedPrompt,currentThreadId} from './lib/astronstudio-cdp.mjs';
-import {readDispatchAuthorization,assertUnacceptedDispatch,archiveDispatchAttempt,verifyFrameworkDispatchRecoveries,hash,requireRetry as check} from './lib/astronstudio-dispatch-retry.mjs';
+import {readDispatchAuthorization,verifyDispatchHumanAuthority,assertUnacceptedDispatch,archiveDispatchAttempt,verifyFrameworkDispatchRecoveries,hash,requireRetry as check} from './lib/astronstudio-dispatch-retry.mjs';
 
 const json=async p=>JSON.parse(await readFile(p,'utf8'));
 const exists=async p=>{try{await access(p);return true;}catch(e){if(e.code==='ENOENT')return false;throw e;}};
@@ -58,12 +58,11 @@ export async function recoverUnacceptedDispatch(options,overrides={}) {
     const oldBytes=await readFile(config.stateFile),recordBytes=await readFile(config.recordFile),old=JSON.parse(oldBytes);
     const newPending=old.identity.attempt_id===auth.new_attempt_id&&old.phase==='PENDING'&&old.send.dispatch_attempt_count===0;
     if(!newPending)check(hash(oldBytes)===auth.old_state_sha256&&hash(recordBytes)===auth.old_record_sha256,'OLD_STATE_SHA');
-    const human=await readFile(auth.human_source.path);check(hash(human)===auth.human_source.sha256,'HUMAN_SOURCE_SHA');
-    const h=JSON.parse(human);check(h.retry_authorized===true&&h.cleanup_authorized===true&&h.task_id===auth.task_id
-      &&h.old_attempt_id===auth.old_attempt_id&&h.human_statement&&h.question_item_id,'DIRECT_HUMAN_SCOPE');
+    const authority=await verifyDispatchHumanAuthority(auth);
     check(row.selected_attempt_id===auth.old_attempt_id&&hash(qbytes)===auth.queue_state_sha256,'PARTIAL_QUEUE_DRIFT');
     await ownedDirectory(unit,root);check(await realpath(root)===root,'RECOVERY_SYMLINK');
     await writeOnce(join(root,'authorization.json'),authorization.bytes);
+    for(const source of authority.files)await writeOnce(join(root,source.name),source.bytes);
     await writeOnce(join(root,'queue-before.json'),qbytes);
     const original=newPending?await json(join(root,'failed-control/automation-state.json')):old;
     const idle=async()=>check(!(await api.queryNativeSessions(config.stateDatabase)).some(isBlockingActiveSession),'NATIVE_ACTIVE');
@@ -107,10 +106,11 @@ export async function recoverUnacceptedDispatch(options,overrides={}) {
     else {
       const sources=[];for(const name of ['authorization.json','human-source.json','queue-before.json','native-before.json','ui-before.json','cleanup.json','native-after.json','archive-manifest.json','failed-attempt.zip']) {
         const bytes=await readFile(join(root,name));sources.push({path:name,sha256:hash(bytes),size:bytes.length});}
+      for(const {name} of authority.files){const bytes=await readFile(join(root,name));sources.push({path:name,sha256:hash(bytes),size:bytes.length});}
       receipt={schema_version:'general-e2e.unaccepted-dispatch-retry-receipt/v1',authorization_sha256:authorization.sha256,
         old_attempt_id:auth.old_attempt_id,new_attempt_id:auth.new_attempt_id,old_state_sha256:auth.old_state_sha256,
         old_record_sha256:auth.old_record_sha256,receipt_relative_path:relative(unit,receiptPath),sources,
-        profile:'human-authorized-unaccepted-dispatch/v1',prompt_send_calls:0,initial_workspace_retained_verified:true,
+        profile:'human-authorized-unaccepted-dispatch/v1',authority_profile:authority.profile,prompt_send_calls:0,initial_workspace_retained_verified:true,
         initial_workspace_verification_profile:(await json(join(root,'archive-manifest.json'))).initial_office_metadata
           ?'canonical-cwm-only-initial-input/v2':'exact-initial-workspace'};
       receiptBytes=encoded(receipt);await writeOnce(receiptPath,receiptBytes);

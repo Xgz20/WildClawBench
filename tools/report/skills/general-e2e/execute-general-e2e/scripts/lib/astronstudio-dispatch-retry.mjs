@@ -40,6 +40,32 @@ export async function readDispatchAuthorization(path) {
   requireRetry(isAbsolute(auth.human_source?.path||'')&&/^[0-9a-f]{64}$/.test(auth.human_source?.sha256||''),'HUMAN_SOURCE');
   return {auth,bytes,sha256:hash(bytes)};
 }
+// A standing policy application is controller-authored and labelled as such.
+// It preserves both original human statements and their original task context;
+// it must never be presented as a new per-task answer from the human.
+export async function verifyDispatchHumanAuthority(auth) {
+  const bytes=await readFile(auth.human_source.path);requireRetry(hash(bytes)===auth.human_source.sha256,'HUMAN_SOURCE_SHA');
+  const h=JSON.parse(bytes);
+  requireRetry(h.retry_authorized===true&&h.cleanup_authorized===true&&h.task_id===auth.task_id
+    &&h.old_attempt_id===auth.old_attempt_id&&h.human_statement&&h.question_item_id,'HUMAN_SCOPE');
+  if(h.derived_application!==true)return {profile:'direct-specific-human-framework-retry',files:[]};
+  requireRetry(h.schema_version==='general-e2e.standing-framework-retry-application/v1'
+    &&h.applied_boundary==='no-native-prompt-acceptance-owned-draft-restored','STANDING_APPLICATION_PROFILE');
+  const sources=[];
+  for(const [key,name] of [['standing_policy','standing-policy.json'],['boundary_policy','boundary-policy.json']]) {
+    const ref=h[key];requireRetry(isAbsolute(ref?.path||'')&&/^[0-9a-f]{64}$/.test(ref?.sha256||''),'STANDING_SOURCE');
+    const raw=await readFile(ref.path);requireRetry(hash(raw)===ref.sha256,'STANDING_SOURCE_SHA');sources.push({name,bytes:raw,value:JSON.parse(raw)});
+  }
+  const policy=sources[0].value,boundary=sources[1].value;
+  requireRetry(policy.schema_version==='general70-human-conditional-failure-disposition/v1'
+    &&policy.conditions?.proven_framework_cause==='repair framework, preserve original, retry in independent attempt'
+    &&policy.human_statement===h.human_statement&&policy.question_item_id===h.question_item_id,'STANDING_POLICY');
+  requireRetry(boundary.schema_version==='general-e2e.framework-dispatch-retry-human-statement/v1'
+    &&boundary.human_classification==='evaluation-framework-send-failure'&&boundary.cleanup_authorized===true
+    &&boundary.retry_authorized===true&&boundary.task_id===h.boundary_context_task
+    &&boundary.human_statement===h.boundary_statement&&boundary.question_item_id===h.boundary_question_item_id,'HUMAN_DEFINED_BOUNDARY');
+  return {profile:'standing-human-framework-policy-applied-to-certified-unaccepted-dispatch',files:sources.map(({name,bytes})=>({name,bytes}))};
+}
 export async function archiveDispatchAttempt(unitRoot, authorizationPath, verifyOnly=false) {
   const argv=[fileURLToPath(new URL('../snapshot_framework_dispatch.py',import.meta.url)),
     '--unit-root',unitRoot,'--authorization',authorizationPath];

@@ -92,3 +92,5 @@ Execute0.14.55 / Driver0.4.22的`recover_astronstudio_dispatch.mjs --unit-root A
 入口持有原队列及UI锁；同快照原路由仅允许已结算创建/元数据命令，无原生消息、turn、session、interaction、promotion、open turn或provider事件，且全局真正空闲。模型/权限/cwd/完整Prompt不得漂移。原Workspace须与冻结初始树相同，旧state点击计数1与uncertain原字节、完整控制和Workspace封存到独立不可变ZIP。只清精确旧草稿，再次证明无迟到受理后生成PENDING新attempt，保留旧新身份/授权/归档闭包，随后普通队列`--resume`首次发送。重复恢复已准备事务只验证原新attempt，不重新清理或发送；已有原生接受或其他命令继续拒绝，观察原尝试。
 
 0.14.56仅对已有canonical CWM-only审计确认的初始Office属性差异增加准入：实际路径、类型和权限须完全相同，原execution ZIP与manifest和全部业务OPC成员保持原SHA契约。原/现Office字节和比较清单纳入旧attempt封存ZIP，回执显式记录该Profile；不删除标记或改输入。非Office变化、增删文件或业务内容变化仍失败。
+
+0.14.58的派生应用必须同时保存原“框架故障可独立重试”持续指令和原“未送达属于框架发送故障”的人类界定，两份原件路径/SHA、原question ID、原context task均不改。应用schema为`general-e2e.standing-framework-retry-application/v1`，`derived_application=true`，只作用于当前明确绑定task/old attempt及`no-native-prompt-acceptance-owned-draft-restored`边界。CLI和回执标明是控制器对既有授权的应用，不是假冒人类为每题再次答复。任何已受理消息/turn/未结算投递、非本题草稿或活动模型仍不适用；不是自动把未知评分补0。

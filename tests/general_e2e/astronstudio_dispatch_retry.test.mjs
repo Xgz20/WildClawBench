@@ -5,7 +5,7 @@ import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
-import {assertUnacceptedDispatch,hash,archiveDispatchAttempt} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-dispatch-retry.mjs';
+import {assertUnacceptedDispatch,hash,archiveDispatchAttempt,verifyDispatchHumanAuthority} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-dispatch-retry.mjs';
 const emptyTables=['projection_turns','projection_thread_messages','projection_thread_sessions','projection_pending_interactions',
   'provider_runtime_open_turns','provider_session_runtime','provider_runtime_events','queued_turn_promotions'];
 function boundary() {
@@ -58,4 +58,34 @@ test('immutable archive survives subsequent selected-workspace changes and leave
 test('changed candidate cannot be relabeled as pristine before the retry',async t=>{
   const f=await archiveFixture(t);await writeFile(join(f.workspace,'input.txt'),'unexpected write');
   await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/WORKSPACE_/);
+});
+
+async function standingFixture(t) {
+  const root=await realpath(await mkdtemp(join(tmpdir(),'standing-dispatch-authority-')));t.after(()=>rm(root,{recursive:true,force:true}));
+  const policy={schema_version:'general70-human-conditional-failure-disposition/v1',context_task:'original-task',
+    question_item_id:'original-policy-question',human_statement:'框架问题修复后可以独立重试',
+    conditions:{proven_framework_cause:'repair framework, preserve original, retry in independent attempt'}};
+  const boundary={schema_version:'general-e2e.framework-dispatch-retry-human-statement/v1',human_classification:'evaluation-framework-send-failure',
+    task_id:'boundary-example',question_item_id:'boundary-question',human_statement:'没有送达是框架发送故障，清理后重试',cleanup_authorized:true,retry_authorized:true};
+  const refs=[];for(const [name,value] of [['policy',policy],['boundary',boundary]]){const p=join(root,name+'.json'),bytes=Buffer.from(JSON.stringify(value));await writeFile(p,bytes);refs.push({path:p,sha256:hash(bytes)});}
+  const h={schema_version:'general-e2e.standing-framework-retry-application/v1',derived_application:true,task_id:'new-task',old_attempt_id:'new-old-attempt',
+    cleanup_authorized:true,retry_authorized:true,human_statement:policy.human_statement,question_item_id:policy.question_item_id,
+    boundary_context_task:boundary.task_id,boundary_statement:boundary.human_statement,boundary_question_item_id:boundary.question_item_id,
+    applied_boundary:'no-native-prompt-acceptance-owned-draft-restored',standing_policy:refs[0],boundary_policy:refs[1]};
+  const source=join(root,'application.json');
+  const save=async()=>{const bytes=Buffer.from(JSON.stringify(h));await writeFile(source,bytes);return {task_id:h.task_id,old_attempt_id:h.old_attempt_id,human_source:{path:source,sha256:hash(bytes)}};};
+  return {h,save,policy,boundary,refs};
+}
+test('standing application preserves original human context and explicitly labels controller derivation',async t=>{
+  const f=await standingFixture(t);const a=await verifyDispatchHumanAuthority(await f.save());
+  assert.equal(a.profile,'standing-human-framework-policy-applied-to-certified-unaccepted-dispatch');assert.equal(a.files.length,2);
+  assert.equal(JSON.parse(a.files[0].bytes).context_task,'original-task');assert.equal(JSON.parse(a.files[1].bytes).task_id,'boundary-example');
+});
+for(const kind of ['changed-source','wrong-context','fabricated-question','unresolved-boundary'])test('standing authority rejects '+kind,async t=>{
+  const f=await standingFixture(t);
+  if(kind==='changed-source')await writeFile(f.refs[0].path,'changed');
+  if(kind==='wrong-context')f.h.boundary_context_task='pretend-new-task';
+  if(kind==='fabricated-question')f.h.question_item_id='a-new-human-answer-that-never-happened';
+  if(kind==='unresolved-boundary')f.h.applied_boundary='unknown-message-or-possibly-active-turn';
+  await assert.rejects(verifyDispatchHumanAuthority(await f.save()),/FRAMEWORK_DISPATCH_RETRY_/);
 });
