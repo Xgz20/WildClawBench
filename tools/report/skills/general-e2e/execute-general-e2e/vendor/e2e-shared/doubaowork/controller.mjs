@@ -63,6 +63,8 @@ import { installRuntimeStreamObserver, collectRuntimeStream } from "./runtime-st
 import { installNativeToolObserver, collectNativeToolObserver, normalizeNativeToolEvents,
   readNativeToolActivity, assertNativeToolActivityAllowed, taskToolDeliveries } from "./runtime-tools.mjs";
 import { readNativeActivity, assertNativeActivityAllowed } from "./runtime-activity.mjs";
+import { configureMoaBackend } from "./runtime-moa.mjs";
+import { readNativeProjectWorkspace } from "./runtime-project.mjs";
 import { installNativeLifecycleObserver, bindNativeLifecycleObserver, collectNativeLifecycleObserver, normalizeNativeLifecycle } from "./runtime-lifecycle.mjs";
 import { preflightDoubaoPaths } from "./path-preflight.mjs";
 import { inspectNativeAuthorizationHistory, summarizePendingConfirmations } from "./interactions.mjs";
@@ -241,6 +243,7 @@ async function connectClient(endpointValue, appPath, connect) {
     page.setDefaultTimeout(10_000);
     const client = { browser, page, endpoint: endpoint.origin, app, listener };
     await verifyExecutionEnvironment(client);
+    configureMoaBackend(browser, { app, uiEndpoint: endpoint.origin });
     return client;
   } catch (error) {
     await browser.close();
@@ -602,6 +605,13 @@ export async function ensureProjectVisible(page, projectName, timeoutMillisecond
   const grouped = page.getByTestId("project-grouped-section");
   if (await grouped.count() !== 1) throw new Error("DOUBAOWORK_PROJECT_SIDEBAR_AMBIGUOUS");
   const projectTitle = grouped.getByTitle(projectName, { exact: true });
+  if (await projectTitle.count() === 0 && await grouped.locator("section[data-project-id]").count() === 0
+      && await grouped.getByRole("button", { name: "展开更多项目", exact: true }).count() === 0) {
+    const header = grouped.locator(':scope > div[role="button"]').filter({ has: page.getByText("项目", { exact: true }) });
+    if (await header.count() !== 1 || !await header.isVisible()) throw new Error("DOUBAOWORK_PROJECT_SECTION_HEADER_AMBIGUOUS");
+    await header.click();
+    await grouped.locator("section[data-project-id]").first().waitFor({ state: "visible", timeout: 5000 });
+  }
   const deadline = Date.now() + timeoutMilliseconds;
   for (let clicks = 0; await projectTitle.count() === 0 && clicks < 20 && Date.now() < deadline; clicks += 1) {
     const expand = grouped.getByRole("button", { name: "展开更多项目", exact: true });
@@ -735,6 +745,7 @@ async function verifyPreparedProjectWorkspace(page, state) {
       || sha256Text(await section.getAttribute("data-project-id") || "") !== state.client.project_id_sha256) {
     throw new Error("DOUBAOWORK_PREPARED_PROJECT_ID_DRIFT");
   }
+  if (state.client.version === "2.35.15") return readNativeProjectWorkspace(page, state);
   const row = title.locator('xpath=ancestor::*[@role="button" and @aria-roledescription="draggable"]');
   if (await row.count() !== 1) throw new Error("DOUBAOWORK_PREPARED_PROJECT_ROW_AMBIGUOUS");
   await row.hover();
@@ -977,7 +988,8 @@ export function assertPreSendRetryEligible(state) {
       || state.session.session_directory_id
       || (state.workspace_selection.confirmed
         && (state.workspace_selection.actual_path !== state.workspace
-        || !/^[0-9a-f]{64}$/.test(state.client.project_id_sha256 ?? "")))) {
+        || (!/^[0-9a-f]{64}$/.test(state.client.project_id_sha256 ?? "")
+          && !(state.client.project_id_sha256 == null && state.error?.message === "DOUBAOWORK_PROJECT_EXPAND_AMBIGUOUS"))))) {
     throw new Error("发送前重试只允许 workspace 已确认且从未进入发送临界区的 INFRA_FAILED attempt");
   }
   return state;
@@ -1314,6 +1326,11 @@ async function retryPreSendDevelopmentRunUnlocked(options) {
       await atomicWriteAttemptState(stateFile, state);
       await verifyExecutionEnvironment(client);
       await createProject(client.page, state, stateFile, config);
+      if (options.prepareOnly) {
+        state.prepared_project = true;
+        await atomicWriteAttemptState(stateFile, state);
+        return { state: sanitizedStateSummary(state), prepared_only: true, formal_execution_record_created: false };
+      }
       return await dispatchFromSelectedProject({ client, state, stateFile, config, roots });
     }
 
@@ -1377,6 +1394,11 @@ async function retryPreSendDevelopmentRunUnlocked(options) {
       at: new Date().toISOString(),
     });
     await atomicWriteAttemptState(stateFile, state);
+    if (options.prepareOnly) {
+      state.prepared_project = true;
+      await atomicWriteAttemptState(stateFile, state);
+      return { state: sanitizedStateSummary(state), prepared_only: true, formal_execution_record_created: false };
+    }
     return await dispatchFromSelectedProject({ client, state, stateFile, config, roots });
   } catch (error) {
     primaryError = error;

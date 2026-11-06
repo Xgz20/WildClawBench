@@ -3,6 +3,10 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.24` 将预览视口隔离固化为正式流程：重算后只导出一次Excel，每张左侧、右侧及异常预览从该内存导出文件独立载入，避免跨图视口残留裁切。预览副本不重新导出，也不改最终Excel；脱仓运行携带独立预览模块，校验回执记录隔离Profile和预览数量。既有评分、资源、工作表布局、冻结输入和旧报告不变。
+
+`0.8.23` 正式分发DoubaoWork共享证据组件0.8.15，报告端可严格复算2.35.15原生MOA SDK工具计数。核对冻结轨迹、assignment、原生身份、媒体及调用SHA后复算，未知Profile和漂移仍拒绝；不从旧GUI展示计数，也不补造Token/请求数。原执行、评分和资源字节不改，旧报告发行保留。
+
 `0.8.22` 同步共享WorkBuddy证据核验组件0.2.7，保留被拒绝响应的原生API说明来源及SDK缺口警告；报告分数、权重和已有封存原件不变。
 
 `0.8.21` 将单一配置领导版和待核验展示纳入正式入口。`--display-config`支持`pending_review: [{task_id, unit_id?, reason}]`；只允许已完成执行且`score_status=evaluation_error / total_score=null`的显式题目，不能隐藏有效低分、真实零分或未评分。原任务状态、分母和分数不改，JSON另记展示别名；MD与Excel总览、用例比较及评分明细同步显示待核验。单一配置不再虚构参照组合，部分资源仍保持覆盖与下限说明。

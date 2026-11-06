@@ -109,6 +109,12 @@ class General70SourceRevisionTests(unittest.TestCase):
         source=ROOT/'workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt'
         with tempfile.TemporaryDirectory() as tmp:
             work=Path(tmp);shutil.copytree(source,work/'gt')
+            # This test is for the immutable v2 profile, including its GT bytes.
+            from eval_general_e2e.datasets.source_history import FrozenSources
+            frozen=FrozenSources(ROOT, GENERAL70_V2_DEFINITION.frozen_source_index)
+            for path in source.rglob('*'):
+                if path.is_file():
+                    (work/'gt'/path.relative_to(source)).write_bytes(frozen.read_bytes(path))
             trace=[{'role':'assistant','channel':'final','content':'使用已取得段落，其他解释待核验。 https://example.org/source'},
                    {'type':'task_complete','last_agent_message':'使用已取得段落，其他解释待核验。 https://example.org/source'}]
             result=scope['grade'](trace,str(work));self.assertEqual(result['source_link_present'],1.)

@@ -54,10 +54,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="doubaowork",
-        version="0.8.7",
+        version="0.8.15",
         source_root="tools/report/e2e-shared/doubaowork",
         vendor_root="vendor/e2e-shared/doubaowork",
-        entrypoints=("controller.mjs", "native-evidence.mjs", "runtime-dispatcher.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift", "tool-counts.mjs"),
+        entrypoints=("controller.mjs", "native-evidence.mjs", "runtime-dispatcher.mjs", "runtime-moa.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift", "tool-counts.mjs"),
     ),
     SharedComponentSpec(
         name="report-reference-data",
@@ -131,7 +131,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="grading-core",
-        version="0.2.1",
+        version="0.2.5",
         source_root="src/wildclawbench_grading_core",
         vendor_root="vendor/e2e-shared/wildclawbench_grading_core",
         entrypoints=("__init__.py",),

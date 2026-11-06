@@ -31,6 +31,8 @@ import zipfile
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
+import native_moa_assistant_view
+import shared_source_repairs
 import dataset_rule_corrections
 import rule_review
 import rule_review_runtime
@@ -1875,6 +1877,8 @@ def prepare_attempt(
                    if public_snapshot_sidecar.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'shared_rule_source_repair': shared_source_repairs.marker(contract)}
+                   if shared_source_repairs.marker(contract) is not None else {}),
                 **({'warranty_recovery_layout_profile':warranty_recovery_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if warranty_recovery_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'service_report_layout_profile':service_report_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -1952,6 +1956,10 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         trace = trace_handoff.verify(root, manifest["trace_bundle"], execution)
         if paths.get("transcript") and _sha256_file(root/paths["transcript"]) != trace_handoff.sha(root/"trace"/trace["transcript"]):
             raise ScoringRuntimeError("SCORING_TRANSCRIPT_COPY_DRIFT")
+        try:
+            native_moa_assistant_view.materialize(root, manifest, create=False)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            raise ScoringRuntimeError("NATIVE_MOA_ASSISTANT_VIEW_INVALID", str(error)) from error
     lineage = manifest.get("lineage")
     if lineage is not None:
         required_lineage_keys = {
@@ -2782,10 +2790,11 @@ def _effective_rule_source(
         corrected, receipt = answer_delivery.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = quadrant_metric_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = namc_inline_distances.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = shared_source_repairs.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
-        if manifest.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3'}:
+        if manifest.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4'}:
             current_contract=manifest['digests']['contract_sha256']
             def bind(value):
                 result=dict(value)
@@ -3517,6 +3526,11 @@ def _semantic_reference_inputs(
         add_file("trace_index", attempt_root / "trace" / bundle["trace_index"])
         for relative in bundle["raw_trace"]:
             add_file("raw_trace", attempt_root / "trace" / relative)
+        try:
+            for path in native_moa_assistant_view.materialize(attempt_root, dict(manifest), create=True):
+                add_file("raw_trace" if path.suffix == ".jsonl" else "rule_audit", path)
+        except (ValueError, OSError, KeyError, TypeError) as error:
+            raise ScoringRuntimeError("NATIVE_MOA_ASSISTANT_VIEW_INVALID", str(error)) from error
     transcript_relative = manifest["paths"].get("transcript")
     if transcript_relative is not None:
         transcript_path = attempt_root / transcript_relative
@@ -6365,6 +6379,8 @@ def prepare_rescore_attempt(
                    if public_snapshot_sidecar.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'shared_rule_source_repair': shared_source_repairs.marker(_read_json(staging/source_paths['contract']))}
+                   if shared_source_repairs.marker(_read_json(staging/source_paths['contract'])) is not None else {}),
                 **({'warranty_recovery_layout_profile':warranty_recovery_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if warranty_recovery_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'service_report_layout_profile':service_report_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}

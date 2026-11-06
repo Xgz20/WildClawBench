@@ -2,6 +2,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { SpreadsheetFile, Workbook } from "@oai/artifact-tool";
+import { PREVIEW_PROFILE, renderIsolatedPreview } from "./isolated_workbook_preview.mjs";
 
 
 function parseArgs(argv) {
@@ -396,6 +397,13 @@ async function main() {
 
   await fs.mkdir(path.dirname(args.output), { recursive: true });
   await fs.mkdir(args["preview-dir"], { recursive: true });
+  // Export once before rendering. Previews import this in-memory frozen file,
+  // so viewport changes and renderer caches cannot affect another image or XLSX.
+  const file = await SpreadsheetFile.exportXlsx(workbook);
+  await file.save(args.output);
+  const renderPreview = options => renderIsolatedPreview(
+    file, options, source => SpreadsheetFile.importXlsx(source),
+  );
   const sheetNames = [...data.presentation.sheet_order, "用例对比明细", ...data.presentation.score_detail_order, "资源覆盖与异常"];
   const previewFiles = [];
   if (args["skip-preview"] !== "true") {
@@ -413,20 +421,20 @@ async function main() {
       // sixty-case detail and 2,640 resource rows. Bound visual previews while
       // exporting and validating every full sheet in the workbook itself.
       const left = `A1:${columnName(Math.min(columns, 12))}${rows}`;
-      const image = await workbook.render({ sheetName, range: left, scale: 1, format: "png" });
+      const image = await renderPreview({ sheetName, range: left, scale: 1, format: "png" });
       const filename = `${sheetName}.png`;
       await fs.writeFile(path.join(args["preview-dir"], filename), new Uint8Array(await image.arrayBuffer()));
       previewFiles.push(filename);
       if (columns > 12) {
         const right = `${columnName(columns - 11)}1:${columnName(columns)}${rows}`;
-        const extra = await workbook.render({ sheetName, range: right, scale: 1, format: "png" });
+        const extra = await renderPreview({ sheetName, range: right, scale: 1, format: "png" });
         const extraName = `${sheetName}-右侧.png`;
         await fs.writeFile(path.join(args["preview-dir"], extraName), new Uint8Array(await extra.arrayBuffer()));
         previewFiles.push(extraName);
       }
       if (sheetName === "资源覆盖与异常") {
         const start = 4 + data.tasks.length * 11 + 2;
-        const exception = await workbook.render({ sheetName, range: `A${start}:H${start + 8}`, scale: 1, format: "png" });
+        const exception = await renderPreview({ sheetName, range: `A${start}:H${start + 8}`, scale: 1, format: "png" });
         const exceptionName = `${sheetName}-异常.png`;
         await fs.writeFile(path.join(args["preview-dir"], exceptionName), new Uint8Array(await exception.arrayBuffer()));
         previewFiles.push(exceptionName);
@@ -458,8 +466,6 @@ async function main() {
     });
     rangeChecks.push(inspection.ndjson);
   }
-  const file = await SpreadsheetFile.exportXlsx(workbook);
-  await file.save(args.output);
   const validationPath = path.join(args["preview-dir"], "excel-validation.json");
   await fs.writeFile(validationPath, JSON.stringify({
     schema_version: "wildclawbench.general-e2e-excel-validation/v1",
@@ -469,6 +475,13 @@ async function main() {
     formula_error_scan: formulaErrors.ndjson,
     key_range_checks: rangeChecks,
     previews: previewFiles,
+    preview_isolation: {
+      profile: PREVIEW_PROFILE,
+      source_workbook: path.basename(args.output),
+      source_export_count: 1,
+      preview_count: previewFiles.length,
+      preview_workbooks_exported: false,
+    },
   }, null, 2) + "\n");
   process.stdout.write(JSON.stringify({
     status: "PASS",

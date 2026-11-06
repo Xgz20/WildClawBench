@@ -40,7 +40,7 @@ export async function main(argv = process.argv.slice(2)) {
     connect: (...args) => chromium.connectOverCDP(...args),
   };
   if (v["retry-pre-send-failure"] && !v.resume) throw new Error("Retry requires --resume");
-  if (v["prepare-only"] && (v.resume || v["dispatch-prepared"])) throw new Error("Prepare-only cannot resume or dispatch");
+  if (v["prepare-only"] && ((v.resume && !v["retry-pre-send-failure"]) || v["dispatch-prepared"])) throw new Error("Prepare-only resume requires explicit pre-send retry and cannot dispatch");
   if (v["dispatch-prepared"] && (!v.resume || v["retry-pre-send-failure"])) throw new Error("Prepared dispatch requires a separate --resume");
   if (v.cancel && (!v.resume || v["managed-queue-id"] || v["retry-pre-send-failure"] || v["prepare-only"] || v["dispatch-prepared"])) throw new Error("Cancel requires an exclusive standalone --resume --cancel");
   const result = v.cancel ? await cancelDevelopmentRun(options) : v["dispatch-prepared"] ? await dispatchPreparedRun(options)

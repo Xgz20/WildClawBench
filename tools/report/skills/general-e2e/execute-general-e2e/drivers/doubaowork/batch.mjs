@@ -5,7 +5,7 @@ import { createHash, randomUUID } from "node:crypto";
 import { lstat, readFile, realpath, rename, writeFile } from "node:fs/promises";
 import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { acquireExclusiveWorkerLock } from "../../vendor/e2e-shared/doubaowork/controller.mjs";
+import { acquireExclusiveWorkerLock, assertPreSendRetryEligible } from "../../vendor/e2e-shared/doubaowork/controller.mjs";
 import { validateGeneralTask } from "./prepared-task.mjs";
 import { DEFAULT_APP_PATH, DEFAULT_ENDPOINT } from "../../vendor/e2e-shared/doubaowork/lib.mjs";
 import { startTrajectoryArchivePump } from "../../vendor/e2e-shared/doubaowork/trajectory-archive.mjs";
@@ -14,6 +14,9 @@ const execFile = promisify(execFileCallback), HERE = dirname(fileURLToPath(impor
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
 const now = () => new Date().toISOString();
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const isZeroSendPreparationError = (state, row) => state.error?.task_id === row?.task_id
+  && row.dispatch_attempt_count === 0 && (state.error.phase === "prepare-project"
+    || state.error.native?.code === "DEVELOPMENT_PRE_SEND_FAILED");
 
 export function queueProjectName(unitRoot, queueId, ordinal) {
   if (!Number.isInteger(ordinal) || ordinal < 1) throw new Error("DOUBAOWORK_PROJECT_ORDINAL_INVALID");
@@ -76,7 +79,7 @@ async function save(path, value) {
 }
 export async function sourceDigest() {
   const names = ["driver.mjs", "batch.mjs", "prepared-task.mjs", "managed-queue.mjs", "package-lock.json",
-    ...["controller.mjs", "interactions.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
+    ...["controller.mjs", "interactions.mjs", "path-preflight.mjs", "runtime-messages.mjs", "runtime-stream.mjs", "runtime-tools.mjs", "runtime-dispatcher.mjs", "runtime-moa.mjs", "runtime-project.mjs", "runtime-lifecycle.mjs", "runtime-activity.mjs", "trajectory-archive.mjs", "native-evidence.mjs", "state.mjs", "lib.mjs", "platform.mjs", "select-folder.swift"].map(n => `../../vendor/e2e-shared/doubaowork/${n}`)];
   return sha(JSON.stringify(await Promise.all(names.map(async n => [n, sha(await readFile(join(HERE, n)))]))));
 }
 
@@ -94,6 +97,19 @@ export function applyQueueSourceRepair(state, config, repair, originalBytes, at 
     throw new Error("DOUBAOWORK_QUEUE_SOURCE_REPAIR_INVALID");
   }
   const updated = structuredClone(state);
+  if (repair.retry_pre_journal_preparation_task_id != null) {
+    const id = repair.retry_pre_journal_preparation_task_id;
+    const row = updated.tasks.find(r => r.task_id === id);
+    if (!row || row.phase !== "NEEDS_ATTENTION" || row.attempt_id !== null || row.dispatch_attempt_count !== 0
+        || state.error?.task_id !== id || state.error.phase !== "prepare-project" || state.error.native !== null
+        || !/^ENOENT: no such file or directory, lstat '[^'\n]+\/\.sessions'\n?$/u.test(state.error.worker?.message || "")
+        || state.history.some(e => e.task_id === id && e.event !== "PROJECT_PREPARATION_INTENT")) {
+      throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_UNVERIFIED");
+    }
+    row.phase = "PENDING";
+    updated.history.push({ event: "PRE_JOURNAL_PREPARATION_RECOVERED", task_id: id, at,
+      original_error: state.error, dispatch_attempt_count: 0 });
+  }
   updated.history.push({ event: "QUEUE_SOURCE_REPAIR_ACTIVATED", at, reason: repair.reason,
     original_queue_sha256: repair.original_queue_sha256, original_source_sha256: repair.original_source_sha256,
     patched_source_sha256: repair.patched_source_sha256, manifest_sha256: sha(JSON.stringify(repair)), attempts_preserved: true });
@@ -101,8 +117,35 @@ export function applyQueueSourceRepair(state, config, repair, originalBytes, at 
   return updated;
 }
 
+export function adoptPreparedRetry(state, proof, priorBytes, currentBytes) {
+  const prior = JSON.parse(priorBytes), current = JSON.parse(currentBytes);
+  assertPreSendRetryEligible(prior);
+  const row = state.tasks.find(r => r.task_id === proof.task_id);
+  if (!row || row.phase !== "NEEDS_ATTENTION" || row.attempt_id !== prior.attempt_id
+      || !isZeroSendPreparationError(state, row)
+      || proof.prior_journal_sha256 !== sha(priorBytes) || proof.prepared_journal_sha256 !== sha(currentBytes)
+      || current.attempt_id === prior.attempt_id
+      || !(current.prepared_project === true && current.phase === "WORKSPACE_CONFIRMED" || current.phase === "INFRA_FAILED")
+      || current.send?.dispatch_attempt_count !== 0 || current.send.intent_persisted_at || current.session?.conversation_id
+      || current.identity?.task_id !== row.task_id || current.workspace !== prior.workspace
+      || current.prompt.sha256 !== prior.prompt.sha256 || current.client.project_name !== row.project_name
+      || current.client.manifest_sha256 !== state.config.manifest_sha256
+      || current.prepared?.managed_queue_id !== state.config.queue_id
+      || !current.history.some(e => e.retry_of_attempt_sha256 === sha(prior.attempt_id))) {
+    throw new Error("DOUBAOWORK_PREPARED_RETRY_ADOPTION_UNVERIFIED");
+  }
+  if (current.phase === "INFRA_FAILED") assertPreSendRetryEligible(current);
+  const updated = structuredClone(state), target = updated.tasks.find(r => r.task_id === proof.task_id);
+  target.phase = current.phase === "INFRA_FAILED" ? "NEEDS_ATTENTION" : "PREPARED"; target.attempt_id = current.attempt_id;
+  if (current.phase === "INFRA_FAILED") updated.error = { task_id: proof.task_id, phase: "prepare-project", worker: null, native: current.error };
+  updated.history.push({ event: current.phase === "INFRA_FAILED" ? "ZERO_SEND_FAILED_RETRY_PRESERVED" : "ZERO_SEND_PREPARED_RETRY_ADOPTED", task_id: proof.task_id, at: now(),
+    prior_attempt_id: prior.attempt_id, prepared_attempt_id: current.attempt_id, ...proof });
+  return updated;
+}
+
 export async function runSerialQueue(options) {
   if (options.sourceRepairManifest && !options.resume) throw new Error("DOUBAOWORK_SOURCE_REPAIR_REQUIRES_RESUME");
+  if (options.prepareRetryTaskId && !options.resume) throw new Error("DOUBAOWORK_PREPARE_RETRY_REQUIRES_RESUME");
   if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/u.test(options.queueId || "")) throw new Error("DOUBAOWORK_QUEUE_ID_INVALID");
   if (!Number.isInteger(options.runSlots) || options.runSlots < 1 || options.runSlots > 3) throw new Error("DOUBAOWORK_CONCURRENCY_NOT_ADMITTED: run-slots must be 1–3");
   if (!options.expectedPermission || options.expectedPermission === "current") throw new Error("DOUBAOWORK_QUEUE_EXPLICIT_PERMISSION_REQUIRED");
@@ -127,7 +170,21 @@ export async function runSerialQueue(options) {
       if (!options.resume) throw new Error("DOUBAOWORK_QUEUE_EXISTS_USE_RESUME");
       if (options.sourceRepairManifest && state.config.source_digest !== config.source_digest) {
         const repair = await readJournal(options.sourceRepairManifest);
+        if (repair.retry_pre_journal_preparation_task_id != null
+            && !taskIds.includes(repair.retry_pre_journal_preparation_task_id)) throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_UNKNOWN_TASK");
+        if (repair.retry_pre_journal_preparation_task_id != null
+            && await readJournal(join(unitRoot, ".general-e2e", "execution", repair.retry_pre_journal_preparation_task_id,
+              "doubaowork", "automation_state.json"))) throw new Error("DOUBAOWORK_PRE_JOURNAL_RECOVERY_HAS_JOURNAL");
         state = applyQueueSourceRepair(state, config, repair, originalBytes);
+        if (repair.prepared_retry) {
+          const proof = repair.prepared_retry;
+          const row = state.tasks.find(r => r.task_id === proof.task_id);
+          if (!row || !/^[A-Za-z0-9-]+$/u.test(row.attempt_id || "")) throw new Error("DOUBAOWORK_PREPARED_RETRY_TASK_INVALID");
+          const root = join(unitRoot, ".general-e2e", "execution", row.task_id, "doubaowork");
+          state = adoptPreparedRetry(state, proof,
+            await readFile(join(root, ".attempts", row.attempt_id, "automation_state.json")),
+            await readFile(join(root, "automation_state.json")));
+        }
         await writeFile(join(queueRoot, `queue-before-source-repair-${repair.original_queue_sha256}.json`), originalBytes, { flag: "wx", mode: 0o600 });
         await save(stateFile, state);
       }
@@ -139,6 +196,31 @@ export async function runSerialQueue(options) {
       state = { schema: "wildclawbench.doubaowork-general-queue/v1", config, config_digest: sha(JSON.stringify(config)),
         created_at: now(), status: "RUNNING", tasks: taskIds.map((task_id, i) => ({ task_id, order: i, phase: "PENDING", attempt_id: null,
           project_name: queueProjectName(unitRoot, options.queueId, i + 1), dispatch_attempt_count: 0, native_started_at: null, native_finished_at: null })), history: [] };
+      await save(stateFile, state);
+    }
+    if (options.prepareRetryTaskId) {
+      let row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
+      if (!row || row.phase !== "NEEDS_ATTENTION" || !/^[A-Za-z0-9-]+$/u.test(row.attempt_id || "")
+          || !isZeroSendPreparationError(state, row)) throw new Error("DOUBAOWORK_PREPARE_RETRY_NOT_ELIGIBLE");
+      const root = join(unitRoot, ".general-e2e", "execution", row.task_id, "doubaowork"), journalPath = join(root, "automation_state.json");
+      let currentBytes = await readFile(journalPath), current = JSON.parse(currentBytes), priorBytes;
+      if (current.attempt_id !== row.attempt_id && current.phase === "INFRA_FAILED") {
+        priorBytes = await readFile(join(root, ".attempts", row.attempt_id, "automation_state.json"));
+        state = adoptPreparedRetry(state, { task_id: row.task_id, prior_journal_sha256: sha(priorBytes), prepared_journal_sha256: sha(currentBytes) }, priorBytes, currentBytes);
+        await save(stateFile, state); row = state.tasks.find(r => r.task_id === options.prepareRetryTaskId);
+      }
+      if (current.attempt_id === row.attempt_id) {
+        assertPreSendRetryEligible(current); priorBytes = currentBytes;
+        state.history.push({ event: "ZERO_SEND_PREPARATION_RETRY_INTENT", task_id: row.task_id, at: now(),
+          prior_attempt_id: row.attempt_id, prior_journal_sha256: sha(priorBytes) });
+        await save(stateFile, state);
+        await execFile(process.execPath, [join(HERE, "driver.mjs"), "--unit-root", unitRoot, "--task-id", row.task_id,
+          "--managed-queue-id", options.queueId, "--expected-permission", options.expectedPermission,
+          "--app-path", options.appPath, "--endpoint", options.endpoint, "--resume", "--retry-pre-send-failure", "--prepare-only"],
+        { cwd: HERE, maxBuffer: 2 * 1024 * 1024 });
+        currentBytes = await readFile(journalPath);
+      } else priorBytes = await readFile(join(root, ".attempts", row.attempt_id, "automation_state.json"));
+      state = adoptPreparedRetry(state, { task_id: row.task_id, prior_journal_sha256: sha(priorBytes), prepared_journal_sha256: sha(currentBytes) }, priorBytes, currentBytes);
       await save(stateFile, state);
     }
     if (state.error) state.history.push({ event: "RESUME_AFTER_ATTENTION", at: now(), previous_error: state.error });
@@ -260,12 +342,13 @@ export async function main(argv = process.argv.slice(2)) {
   const { values: v } = parseArgs({ args: argv, options: {
     "unit-root": { type: "string" }, "queue-id": { type: "string" }, "run-slots": { type: "string", default: "3" },
     "source-repair-manifest": { type: "string" },
+    "prepare-retry-task-id": { type: "string" },
     "expected-permission": { type: "string" }, "app-path": { type: "string", default: DEFAULT_APP_PATH },
     endpoint: { type: "string", default: DEFAULT_ENDPOINT }, resume: { type: "boolean" }, help: { type: "boolean" },
   } });
   if (v.help) { console.log("DoubaoWork General queue (development admission): --unit-root ABS --queue-id ID --expected-permission LABEL [--resume] [--run-slots 1–3]. No task deadline; unknown dispatch never repeats."); return; }
   const result = await runSerialQueue({ unitRoot: v["unit-root"], queueId: v["queue-id"], runSlots: Number(v["run-slots"]),
-    expectedPermission: v["expected-permission"], appPath: v["app-path"], endpoint: v.endpoint, resume: v.resume, sourceRepairManifest: v["source-repair-manifest"] });
+    expectedPermission: v["expected-permission"], appPath: v["app-path"], endpoint: v.endpoint, resume: v.resume, sourceRepairManifest: v["source-repair-manifest"], prepareRetryTaskId: v["prepare-retry-task-id"] });
   console.log(JSON.stringify({ status: result.status, tasks: result.tasks, error: result.error ?? null }, null, 2));
   if (result.status === "NEEDS_ATTENTION") process.exitCode = 3;
 }

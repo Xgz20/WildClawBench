@@ -114,9 +114,9 @@ ALIASES = {
  'exception':['contract_exception','合同例外','合同例外类型','合同调整'],
  'share':['实际分摊比例','分摊比例','分摊份额','allocation_share','supplier_share','effective_share'],
  'ratio':['政策责任比例','责任比例','政策比例','policy_ratio','追偿比例'],
- 'cost':['维修成本','分摊维修成本','分摊成本','repair_cost','供应商维修成本'],
+ 'cost':['计入暴露维修成本','维修成本','分摊维修成本','分摊成本','repair_cost','供应商维修成本'],
  'cap':['CAP上限','封顶金额','合同上限','cap_amount'],
- 'already':['已追偿汇总','已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
+ 'already':['已追偿（已入账）','已追偿汇总','已追偿','已追偿金额','already_recovered','历史已追偿','已入账金额'],
  'current':['本次金额','本次可追偿金额','本次可追偿','current_recovery','recoverable_amount','本次追偿金额'],
  'note':['分摊及合同依据说明','分摊说明','allocation_note','核算说明','分摊依据','说明'],
  'source':['依据位置','来源','证据位置','source_ref','依据','来源位置'],
@@ -151,6 +151,11 @@ def number(x):
 def close(a,b,tol=.010000001):
     a,b=number(a),number(b)
     return a is not None and b is not None and abs(a-b)<=tol
+
+class _WarrantyWholeColumnRange(list):
+    def __init__(self, values, logical_length):
+        super().__init__(values)
+        self.logical_length=logical_length
 
 class Cells:
     """Read cached results, or evaluate a bounded, pure Excel formula subset.
@@ -187,7 +192,9 @@ class Cells:
                 else:raise EvaluationError(f'未支持的未缓存公式：{sheet}!{address}')
             try:tree=ast.parse(''.join(parts),mode='eval').body
             except SyntaxError as exc:raise EvaluationError(f'公式语法未支持：{sheet}!{address}') from exc
-            value=self.node(tree,sheet,refs);self.memo[key]=value;return value
+            value=self.node(tree,sheet,refs)
+            if isinstance(value,_WarrantyWholeColumnRange):raise EvaluationError('全列引用必须用于聚合')
+            self.memo[key]=value;return value
         except EvaluationError:
             if cached is not None:return cached
             raise
@@ -195,6 +202,15 @@ class Cells:
     def reference(self,text,sheet):
         if '!' in text:
             sheet,text=text.rsplit('!',1);sheet=sheet.strip("'").replace("''", "'")
+        if re.fullmatch(r'\$?[A-Z]+:\$?[A-Z]+',text,re.I):
+            x1,_,x2,_=range_boundaries(text.replace('$',''))
+            if not 1<=x1<=x2<=16384:raise CandidateError('公式列引用不合法')
+            if '[' in sheet or ']' in sheet:raise EvaluationError('未支持的外部工作簿引用')
+            if sheet not in self.formulas.sheetnames:raise CandidateError('公式引用缺少的工作表')
+            ws=self.formulas[sheet];last=max(1,ws.max_row);width=x2-x1+1
+            if last*width>100000:raise EvaluationError('公式区域过大')
+            values=[self.cell(sheet,ws.cell(r,c).coordinate) for r in range(1,last+1) for c in range(x1,x2+1)]
+            return _WarrantyWholeColumnRange(values,1048576*width)
         if not re.fullmatch(r'\$?[A-Z]+\$?\d+(?::\$?[A-Z]+\$?\d+)?',text,re.I):raise EvaluationError('未支持的命名区域或外部引用')
         x1,y1,x2,y2=range_boundaries(text.replace('$',''))
         if (x2-x1+1)*(y2-y1+1)>100000:raise EvaluationError('公式区域过大')
@@ -209,19 +225,26 @@ class Cells:
         if isinstance(n,ast.BinOp):
             ops={ast.Add:operator.add,ast.Sub:operator.sub,ast.Mult:operator.mul,ast.Div:operator.truediv,ast.Pow:operator.pow}
             if type(n.op) not in ops:raise EvaluationError('不支持的公式运算')
-            a,b=run(n.left) or 0,run(n.right) or 0
+            a,b=run(n.left),run(n.right)
+            if isinstance(a,_WarrantyWholeColumnRange) or isinstance(b,_WarrantyWholeColumnRange):raise EvaluationError('未支持的全列数组运算')
+            a,b=a or 0,b or 0
             if isinstance(n.op,ast.Pow) and abs(b)>12:raise EvaluationError('公式幂运算超过预算')
             try:return ops[type(n.op)](a,b)
             except (ZeroDivisionError,TypeError,OverflowError) as exc:raise CandidateError('公式计算错误') from exc
         if isinstance(n,ast.Compare) and len(n.ops)==1:
             ops={ast.Eq:operator.eq,ast.NotEq:operator.ne,ast.Lt:operator.lt,ast.LtE:operator.le,ast.Gt:operator.gt,ast.GtE:operator.ge}
             if type(n.ops[0]) not in ops:raise EvaluationError('不支持的公式比较')
-            a,b=run(n.left),run(n.comparators[0]);a='' if a is None else a;b='' if b is None else b
+            a,b=run(n.left),run(n.comparators[0])
+            if isinstance(a,_WarrantyWholeColumnRange) or isinstance(b,_WarrantyWholeColumnRange):raise EvaluationError('未支持的全列数组比较')
+            a='' if a is None else a;b='' if b is None else b
             return ops[type(n.ops[0])](a,b)
         if not isinstance(n,ast.Call) or not isinstance(n.func,ast.Name):raise EvaluationError('不支持的未缓存公式结构')
         name=n.func.id
-        if name not in {'IF','IFERROR','REF','SUM','MIN','MAX','ABS','ROUND','SUMIFS','COUNTIFS','SUMIF','COUNTIF'}:raise EvaluationError(f'未支持的未缓存公式函数：{name}')
-        if name=='IF':return run(n.args[1] if run(n.args[0]) else n.args[2])
+        if name not in {'IF','IFERROR','REF','SUM','COUNTA','MIN','MAX','ABS','ROUND','SUMIFS','COUNTIFS','SUMIF','COUNTIF'}:raise EvaluationError(f'未支持的未缓存公式函数：{name}')
+        if name=='IF':
+            condition=run(n.args[0])
+            if isinstance(condition,_WarrantyWholeColumnRange):raise EvaluationError('未支持的全列数组条件')
+            return run(n.args[1] if condition else n.args[2])
         if name=='IFERROR':
             try:return run(n.args[0])
             except CandidateError:return run(n.args[1])
@@ -232,22 +255,44 @@ class Cells:
         flat=lambda values:[x for v in values for x in (v if isinstance(v,list) else [v])]
         nums=[x for x in flat(args) if isinstance(x,(int,float)) and not isinstance(x,bool)]
         if name=='SUM':return sum(nums)
+        if name=='COUNTA':return sum(x is not None for x in flat(args))
         if name=='MIN':return min(nums or [0])
         if name=='MAX':return max(nums or [0])
         if name=='ABS':return abs(args[0])
         if name=='ROUND':return float(Decimal(str(args[0])).quantize(Decimal(1).scaleb(-int(args[1])),rounding=ROUND_HALF_UP))
         if name in ('SUMIFS','COUNTIFS','SUMIF','COUNTIF'):
             arr=lambda x:x if isinstance(x,list) else [x]
+            counting=name in ('COUNTIF','COUNTIFS')
             if name=='SUMIFS':amounts=arr(args[0]);conditions=args[1:]
             elif name=='SUMIF':conditions=args[:2];amounts=arr(args[2] if len(args)>2 else args[0])
-            else:conditions=args;amounts=[1]*len(arr(args[0]))
-            for region,criterion in zip(conditions[::2],conditions[1::2]):
-                if len(arr(region))!=len(amounts):raise CandidateError('条件公式区域长度不一致')
+            else:conditions=args;amounts=None
+            regions=[arr(region) for region in conditions[::2]]
+            logical=lambda region:getattr(region,'logical_length',len(region))
+            length=logical(regions[0])
+            if any(logical(region)!=length for region in regions) or not counting and logical(amounts)!=length:raise CandidateError('条件公式区域长度不一致')
+            stored=max([len(region) for region in regions]+([] if counting else [len(amounts)]))
+            if stored>100000:raise EvaluationError('公式区域过大')
+            value_at=lambda region,i:region[i] if i<len(region) else None
             def matches(value,criterion):
-                if isinstance(criterion,str) and criterion[:1] in '<>=':raise EvaluationError('未支持的条件公式比较字符串')
+                if isinstance(criterion,str) and criterion and criterion[:1] in '<>=':raise EvaluationError('未支持的条件公式比较字符串')
+                if criterion=='':return value is None or value==''
                 return str(value or '').casefold()==str(criterion or '').casefold()
-            return sum((v if isinstance(v,(int,float)) else 0) for i,v in enumerate(amounts) if all(matches(arr(region)[i],criterion) for region,criterion in zip(conditions[::2],conditions[1::2])))
+            result=0
+            for i in range(stored):
+                if all(matches(value_at(region,i),criterion) for region,criterion in zip(regions,conditions[1::2])):
+                    v=1 if counting else value_at(amounts,i)
+                    result+=v if isinstance(v,(int,float)) else 0
+            if counting and length>stored and all(matches(None,criterion) for criterion in conditions[1::2]):result+=length-stored
+            return result
         raise EvaluationError(f'未支持的未缓存公式函数：{name}')
+
+def _warranty_explicit_aggregate(item,values,kind):
+    def total_label(value):
+        text=re.sub(r'\s+', '',str(value or '')).casefold()
+        return re.fullmatch(r'(?:合计|总计|小计|total|grandtotal)(?:[（(]\d+(?:行|笔|条|rows?)[）)])?',text) is not None
+    if kind=='summary':return total_label(item.get('supplier'))
+    if item.get('supplier'):return False
+    return total_label(item.get('claim')) or (not item.get('claim') and bool(values) and total_label(values[0]))
 
 def read_tables(path):
     cells=Cells(path);out={k:[] for k in SHEET_ALIASES};found={'_context':[]}
@@ -270,12 +315,14 @@ def read_tables(path):
             for r in range(ri+1,ws.max_row+1):
                 item={k:cells.cell(ws.title,ws.cell(r,c).coordinate) for k,c in cols.items()}
                 anchor=item.get('supplier') if kind=='summary' else item.get('claim')
+                raw_values=[cells.cell(ws.title,ws.cell(r,c).coordinate) for c in range(1,ws.max_column+1)]
+                if _warranty_explicit_aggregate(item,raw_values,kind):continue
                 if norm(anchor) in ('合计','总计','小计','total','grandtotal') or header_key(anchor)==('supplier' if kind=='summary' else 'claim'):continue
                 if not any(v is not None and str(v).strip() for v in item.values()):continue
                 # Ignore free commentary beneath a table; monetary or identified rows are substantive.
                 if not anchor and not any(number(item.get(k)) is not None for k in ('current','cost','already','gross','pending')):continue
                 item['_location']=f'{ws.title}!row{r}'
-                item['_raw_values']=[cells.cell(ws.title,ws.cell(r,c).coordinate) for c in range(1,ws.max_column+1)]
+                item['_raw_values']=raw_values
                 row_kind='review' if kind=='detail' and _warranty_no_initiation(item) else kind
                 out[row_kind].append(item)
             break
@@ -435,7 +482,7 @@ def _warranty_allocated_cost_header(value):
     # Raw repair cost and allocated supplier cost may coexist. Only an explicit
     # allocated heading takes precedence; never substitute a private oracle value.
     name=re.sub(r'(?:人民币元|元)$', '', norm(value))
-    return name in {'分摊维修成本','分摊成本','供应商维修成本'}
+    return name in {'计入暴露维修成本','分摊维修成本','分摊成本','供应商维修成本'}
 
 import hashlib as _rr_hashlib
 import json as _rr_json
@@ -486,9 +533,6 @@ def _warranty_reason_matches(key,row,fact,context):
         'instruction':'Judge only whether the actual candidate reason/note/action and explicitly applicable shared explanation express this original category for this same claim/supplier. Do not infer a candidate statement from the expected category or repair a wrong statement. Missing/clearly wrong is false; insufficient evidence is unresolved. Never decide amounts, assign a rule score, or change the denominator.'})
 
 RULE_REVIEW_PROFILE = 'warranty-recovery-reason-semantic-review/v1'
-
-
-
 ```
 
 ## LLM Judge Rubric

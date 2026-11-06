@@ -609,6 +609,11 @@ def _exec_container_grade(
     same loader/shim/docker-exec machinery as the legacy path, but returns the
     parsed dict instead of writing score.json (the v2 combiner writes once).
     """
+    from src.wildclawbench_grading_core.source_repairs import effective_source
+    automated_checks, source_repair = effective_source(None, automated_checks)
+    if source_repair is not None:
+        logger.info("[%s] Exact-source grader repair: %s", task_id,
+                    json.dumps(source_repair, ensure_ascii=False, sort_keys=True))
     loader_src = Path(__file__).with_name("transcript_loader.py")
     if not loader_src.exists():
         return None, f"transcript loader module not found: {loader_src}"

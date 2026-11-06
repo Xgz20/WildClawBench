@@ -1,6 +1,8 @@
 // Count native invocation identities independently of process-content completeness.
 import { normalizeRuntimeMessages } from './runtime-messages.mjs';
 import { normalizeNativeToolEvents } from './runtime-tools.mjs';
+import { verifyNativeMainAssignment } from './bound-evidence.mjs';
+import { verifyMoaSdkProtocol, countMoaSdkTools } from './moa-sdk-protocol.mjs';
 import { readFile, lstat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, resolve, sep } from 'node:path';
@@ -87,6 +89,24 @@ export async function recountArchivedTools({stateFile, traceIndex}) {
  const nativeSnapshot=JSON.parse(await bound('raw/native-tools.json'));
  const journal=JSON.parse(await bound('bindings/dispatch-journal.json'));
  const transcript=(await bound(index.transcript.path)).toString('utf8').split('\n').filter(x=>x.trim()).map(JSON.parse);
+ if(index.normalization?.compatibility_profiles?.includes('doubaowork-native-moa-sdk-model-protocol-2.35.15/v1')) {
+  ensure(state.phase==='COMPLETED'&&state.execution.business_status==='completed','SDK_EXECUTION_NOT_COMPLETED');
+  normalizeRuntimeMessages(runtime,journal);
+  const proof=JSON.parse(await bound('raw/native-moa-sdk-protocol.json'));
+  const assignment=verifyNativeMainAssignment(await bound('raw/native-assignment.md'),
+    {agentId:proof.native_source.agent_id,expectedHash:journal.prompt.readback_sha256});
+  const protocol=verifyMoaSdkProtocol({trajectoryBytes:await bound('raw/trajectory.jsonl'),assignmentProof:assignment,
+    snapshot:nativeSnapshot,journal,source:proof.native_source});
+  ensure(JSON.stringify(proof.calls)===JSON.stringify(protocol.calls),'SDK_PROOF_CALL_DRIFT');
+  ensure(proof.attachments.length===protocol.attachments.length,'SDK_MEDIA_SET');
+  for(const [i,item]of proof.attachments.entries()) {
+    const expected=protocol.attachments[i];
+    ensure(item.call_id===expected.call_id&&item.image_index===expected.image_index&&item.result_line===expected.result_line
+      &&item.url_sha256===expected.url_sha256,'SDK_MEDIA_BINDING');
+    const bytes=await bound(item.path);ensure(hash(bytes)===item.sha256&&bytes.length===item.size,'SDK_MEDIA_DRIFT');
+  }
+  return countMoaSdkTools(protocol,transcript,index);
+ }
  return countBoundTools({execution:{identity:state.identity,execution:state.execution},state,index,transcript,runtime,journal,nativeSnapshot});
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {

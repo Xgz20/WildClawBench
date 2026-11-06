@@ -3,7 +3,17 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
-`0.11.22` 增加 `agentcube-astudio-native/v1` 远端来源验证。沙箱结果经执行器完成原生身份、Prompt、工作区、工具调用与返回、进程收口和备份核验后，生成单题标准交接包。`verify-only` 对该 Profile 独立复放原生证据；既有本地来源按原协议核验。识别沙箱批次或单题 ready 文件时，使用 `execute-sandbox-e2e` 的状态与交接入口取得已封存结果，并交 `orchestrate-e2e-pipeline` 编排评分。
+`0.11.27` 增加 `agentcube-astudio-native/v1` 远端来源验证。沙箱结果绑定原生身份、Prompt、工作区、工具调用与返回、进程收口和备份。`verify-only` 复放远端证据，平台和执行 Skill 使用统一端到端入口取得封存结果。
+
+`0.11.26` 按原生SDK同名调用/返回数量核验已结束GUI卡片；不从展示补造调用。仅对present_files的精确双字段原生空回执保留null/unknown，其他工具缺内容继续拒绝；不从空回执推断成功或失败。普通文本SDK证明保持向后兼容，旧冻结原件不覆盖。
+
+`0.11.25` 增加2.35.15原生MOA SDK协议采集：独立assignment必须逐字匹配冻结Prompt及唯一main agent，SDK调用ID与返回逐项守恒；原JS观察器的零交付只描述旧路线，不替代SDK用量。搜索/阅读卡片仅按原调用输入多重集对账，原工具返回不改写。图片按原SDK链接、受限HTTPS来源及原系统loopback代理封存，保留重定向/字节SHA和离线复算；缺失、漂移、未知来源继续拒绝，不合成内容或补零。
+
+`0.11.24` 将尚未创建的原生session目录记录为空目录清单；逐段拒绝符号链接/权限错误，仍须独立原生活动门禁，不把目录缺失当空闲。执行队列仅在明确session-root ENOENT、无journal、无attempt且零发送的准备失败上接受绑定原队列SHA的源码恢复。
+
+`0.11.23` 同步DoubaoWork2.35.15 MOA派发/消费/上传账本的严格来源准入和新版本机epoch单调时钟。MOA原件必须保留worker、父浏览器、启动身份、命令SHA、Inspector目标及实时脚本SHA证明；未知来源、错会话、缺派发/回执或超时账本仍失败关闭。沿用原生事件数、评分含义和旧SSE验证；不以文件产物推断工具成功或把资源未知补零。
+
+`0.11.22` 为QwenWork SDK子任务取消目录外清理增加独立审计Profile。仍要求本次直接用户决定、精确目标、原会话和Agent父调用、点击前SDK前缀及点击后的逐目标PATH_NOT_AUTHORIZED拒绝；只记录1次机械介入，不批准删除、不重发题目，不把SDK记录伪装成旧OpenCode SQL证据。旧Profile保持原门禁。
 
 `0.11.21` 保护 Office 审计的 opaque .bin 副本，并提供严格锁定原执行 ZIP、保留变体的未评分轨迹副本维护入口；详见 [受控恢复](references/trace-office-canonical-recovery.md)。
 

@@ -1,0 +1,90 @@
+{
+  "source_id": "Y1-yang-lianfen",
+  "role": "evaluator_reference_not_candidate_output",
+  "url": "https://lxyj.cbpt.cnki.net/portal/journal/portal/client/paper/0e74b482f92af4130394be98e74de9f0",
+  "title": "晚清与五四文学的国民性焦虑（三）——鲁迅国民性话语的矛盾与超越",
+  "retrieved_on": "2026-11-04",
+  "original_response_sha256": "75058384b203f42e8f6ca0a9d318ee86860452367a557f769b7b83c7ef82e2e2",
+  "coverage": "metadata_and_secondary_context_only",
+  "excerpt": "",
+  "reviewer_summary": "本次官方页再次核实作者、完整题名、2003年第12期及29—38页；页面的参考文献列出《随感录·三十八》，不等于取得正文论证。2009述评仅支持索引注明的一般概括。两个具体归属仍无足够直接证据，既不判错也不判对。",
+  "reviewer_summary_is_not_original_text": true,
+  "fulltext_included": false,
+  "locator": "原冻结补证的官方期刊页与2009研究述评第68页及文献[20]",
+  "supports": [
+    "来源身份"
+  ],
+  "does_not_establish": [
+    "以随感录三十八论爱国话语收编危险",
+    "将超越解释为包含自身的内部自我反思"
+  ],
+  "unavailable_claims": [
+    "Y1-C1",
+    "Y1-C2"
+  ],
+  "author": "杨联芬",
+  "publication": {
+    "journal": "鲁迅研究月刊",
+    "year": 2003,
+    "issue": 12,
+    "pages": "29-38",
+    "cnki_file_id": "LXYJ200312003"
+  },
+  "secondary_evidence": [
+    {
+      "title": "20世纪90年代以来中国近代国民性改造思潮研究述评",
+      "authors": [
+        "闫润鱼",
+        "陆央云"
+      ],
+      "journal": "教学与研究",
+      "year": 2009,
+      "issue": 3,
+      "url": "https://jxyyj.ruc.edu.cn/CN/abstract/abstract14478.shtml",
+      "original_pdf_url": "https://jxyyj.ruc.edu.cn/CN/article/downloadArticleFile.do?attachType=PDF&id=14478",
+      "original_response_sha256": "b3f97af606c41b5487d392eadf6518280938bd157fd31e19953865ebf7a2072a",
+      "retrieved_on": "2026-11-01",
+      "locator": "PDF第6页/纸页68；参考文献[20]在PDF第9页/纸页71",
+      "excerpt": "催促民族自省精神诞生",
+      "coverage": "secondary_citation_only",
+      "supports": [
+        "述评将刺激国人及催促民族自省这一一般概括归于目标论文"
+      ],
+      "does_not_establish": [
+        "Y1-C1",
+        "Y1-C2"
+      ],
+      "current_access": {
+        "checked_on": "2026-11-04",
+        "original_pdf_http_status": 404,
+        "historical_frozen_response_retained": true
+      }
+    }
+  ],
+  "manual_search_leads": {
+    "target": "目标论文中支持或反驳Y1-C1/Y1-C2的实际段落及上下文，不必取得整篇PDF",
+    "queries": [
+      "\"杨联芬\" \"晚清与五四文学的国民性焦虑（三）\"",
+      "\"鲁迅国民性话语的矛盾与超越\" \"29-38\"",
+      "\"LXYJ200312003\"",
+      "\"杨联芬\" \"三十八\" \"爱国\"",
+      "\"杨联芬\" \"国民性\" \"自我\" \"超越\""
+    ],
+    "entry_points": [
+      "https://lxyj.cbpt.cnki.net/portal/journal/portal/client/paper/0e74b482f92af4130394be98e74de9f0",
+      "https://wenxueyuan.ruc.edu.cn/sztd/zzjs/ajyspl/zgxddwxjys/zgxddwxjysjs/c97d6e031b744cb491eb1d4598aef023.htm"
+    ],
+    "other_routes": [
+      "知网按文件号或完整题名检索",
+      "国家哲学社会科学文献中心按作者和刊期检索",
+      "高校图书馆或国家图书馆查2003年第12期29—38页；合法馆际文献传递"
+    ],
+    "acceptance": [
+      "作者、完整题名及刊期可绑定",
+      "附相关段落、前后文及该版本页码",
+      "区分杨联芬自己的论证、她引用他人的观点与复核者推论"
+    ],
+    "current_status": "evaluator_reference_unavailable",
+    "search_leads_are_not_supporting_evidence": true
+  }
+}

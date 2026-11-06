@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -532,6 +533,24 @@ class ReportGeneralE2ETests(unittest.TestCase):
             REPORT.command_generate(args)
         self.assertFalse(output.exists())
         self.assertFalse(list(output.parent.glob(".atomic-output.pending-*")))
+
+    def test_detached_renderer_receives_the_isolated_preview_helper(self) -> None:
+        modules = self.root / "runtime-modules"
+        modules.mkdir()
+        output = self.root / "report.xlsx"
+
+        def run_renderer(command, **_kwargs):
+            renderer = Path(command[1])
+            helper = renderer.with_name("isolated_workbook_preview.mjs")
+            self.assertEqual(helper.read_bytes(), SCRIPT.with_name(helper.name).read_bytes())
+            self.assertIn('"./isolated_workbook_preview.mjs"', renderer.read_text())
+            output.write_bytes(b"test-renderer-output")
+            return REPORT.subprocess.CompletedProcess(command, 0, json.dumps({"status": "PASS"}), "")
+
+        with patch.object(REPORT.subprocess, "run", side_effect=run_renderer):
+            result = REPORT.render_excel(self.root / "input.json", output, self.root / "previews",
+                node="node", node_modules=modules, skip_preview=False)
+        self.assertEqual(result["status"], "PASS")
 
     def test_published_receipt_is_accepted_by_run_general_e2e(self) -> None:
         output = self.fixture.batch / "reports/final-smoke"

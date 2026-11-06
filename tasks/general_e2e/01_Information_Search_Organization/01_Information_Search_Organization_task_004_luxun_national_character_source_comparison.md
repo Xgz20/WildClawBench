@@ -103,8 +103,8 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 
-EXPECTED_REFERENCE_SHA256 = "b3c5c0644af6f959b88ba343b010d9ad51251d864b829f74f4a089de84e543e8"
-EXPECTED_SOURCE_INDEX_SHA256 = "0fde1f0d6559379f9b64030003fe943bb2bc08de049fce4f9759495121950c68"
+EXPECTED_REFERENCE_SHA256 = "fd8a8cba558880edb24609dd0ca2454d283cb3a2d5bbe8d28d0b7a90cce9e101"
+EXPECTED_SOURCE_INDEX_SHA256 = "8569af1b50bef32baefc2231c07aec63785af69425f4244e25ca1660e3107a67"
 
 
 def _visible_text(message):
@@ -433,6 +433,8 @@ def grade(transcript: list, workspace_path: str) -> dict:
 逐主张列出处、原文定位及两个固定单元台账，状态仅为supported、contradicted、evaluator_reference_unavailable。取得准确摘要或相关段落即可核定其支持范围，不强制下载全文。每个单元有独立的已证实反例则不通过；没有反例但仍有实质主张无法核定，则该单元为未知；全部实质主张获支持才通过。未决不作0或1，不删项重归一；不得挑选最有利的两项研究以忽略其他实质错误。一个根因只归最直接单元。裁判拿不到全文、网页403、书目之外无正文或GT目录未收录，均不能独自证明候选观点错误。
 
 结构化CLI输出在claim_reviews.scholar_claim_binding记录unit、claim_id、claim、status和evidence_refs。General E2E使用同一台账，引用已查询冻结evidence_id及具体位置；未知项在criteria中为unresolved/null。只有两个原固定单元都可判定才按原分档合分，否则整题正式总分保持null。
+
+补证只在裁判侧进行：先核查候选已取得的公开返回，再查可定位的原始段落或准确摘要；书目、检索线索和二次引述不得扩大成原文已证实命题。记录具体缺口、已查入口、支持与反证及后续搜索词，正常接受可靠替代来源，不以GT目录作白名单。完整交付可证的研究遗漏仍依原固定单元判业务失败；无法核定具体观点时保持未知。新增参考不能追认为候选已读；补齐后须新建独立评分attempt并锁定原执行与补证身份，历史结果保留。
 
 **Score 1**: 2个单元通过。
 **Score 0.5**: 1个单元通过。

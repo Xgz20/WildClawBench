@@ -1,0 +1,27 @@
+{
+  "schema_version": "general-e2e-frozen-source-index/v1",
+  "dataset_id": "general-info004-open-v2",
+  "dataset_digest": "d62dab951bf4ae51ca46854196f8fb8d90ee7c4da6ae5f7bad06850882081baa",
+  "files": {
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
+      "sha256": "3f731276587cf853b6f0f018801fce943821cdacab0f0db492cd4a7a297b540a"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md",
+      "sha256": "a88071ceea20fc2e3e33e85709ac27e14ea2b0bd813d473a9655f8f5c22484c8"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json",
+      "sha256": "3110016e5ba4d8249e09be9474eb2d00271b21591dc18d59acf088ffde2b4c92"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.json": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.json",
+      "sha256": "067551699f8979361ad4fa61f90e07cd5092798a6cd96cdbdb72df15f8ecaeed"
+    }
+  },
+  "excluded_paths": [
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.pdf",
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/Y1-yang-lianfen.pages.txt"
+  ]
+}

@@ -17,7 +17,7 @@ def dataset_task_paths(repo: Path, dataset_id: str):
     from eval_general_e2e.datasets.bundle import (DATASETS, compile_dataset,
         dataset_manifest_path, load_manifest_lock)
     from eval_general_e2e.datasets.source_history import dataset_task_path
-    if dataset_id not in {'general-custom70-v2', 'general-custom70-v3'}:
+    if dataset_id not in {'general-custom70-v2', 'general-custom70-v3', 'general-custom70-v4'}:
         raise ValueError("UNSUPPORTED_CLI_DATASET")
     definition = DATASETS[dataset_id]
     manifest, _ = compile_dataset(repo, definition=definition)

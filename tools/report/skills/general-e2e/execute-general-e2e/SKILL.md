@@ -3,6 +3,26 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.45` 按原生SDK同名调用/返回数量核验已结束GUI卡片；不从展示补造调用。仅对present_files的精确双字段原生空回执保留null/unknown，其他工具缺内容继续拒绝；不从空回执推断成功或失败。普通文本SDK证明保持向后兼容，旧冻结原件不覆盖。
+
+`0.14.44` 增加2.35.15原生MOA SDK协议采集：独立assignment必须逐字匹配冻结Prompt及唯一main agent，SDK调用ID与返回逐项守恒；原JS观察器的零交付只描述旧路线，不替代SDK用量。搜索/阅读卡片仅按原调用输入多重集对账，原工具返回不改写。图片按原SDK链接、受限HTTPS来源及原系统loopback代理封存，保留重定向/字节SHA和离线复算；缺失、漂移、未知来源继续拒绝，不合成内容或补零。
+
+`0.14.43` 项目目录核验固定实际缓存的七个只读getter源码SHA，并另存懒加载factory摘要；不再将被等价替换、但没有实际调用的factory当作getter来源。未知实际函数、项目/设备/目录关系仍拒绝；旧冻结SHA记录保持原样。
+
+`0.14.42` 增加经逐字节复核仅局部变量改名的项目getter懒加载源码SHA。托管prepare-only恢复兼容已准备项目在发送前失败的零发送状态，仍逐项验证旧journal、无发送边界及原attempt谱系；已发送任务只观察。
+
+`0.14.41` 对2.35.15只读核验原生项目Store、当前设备主目录及完整路径，固定对应getter源码SHA，适配已移除的编辑目录窗口；旧版仍用原编辑窗口。连续零发送准备失败按原attempt谱系保存新失败，不丢弃记录或误认为已发送。
+
+`0.14.40` 已停止队列可用`--resume --prepare-retry-task-id ID`在真实队列owner锁内执行单题零发送prepare-only恢复，并按旧归档/新journal的SHA接纳新准备attempt。原任务、素材、队列题序、模型与并发保持冻结；不绕过托管父进程核验，不重发已受理Prompt。
+
+`0.14.39` 自动展开已核验的折叠项目分组；单题零发送重试支持prepare-only，不发送Prompt。原队列仅通过源码恢复manifest、旧归档/新准备journal的SHA及完整题目/Workspace/Prompt/项目谱系接纳替代准备attempt。已发送或未知发送不适用。
+
+`0.14.38` 将尚未创建的原生session目录记录为空目录清单；逐段拒绝符号链接/权限错误，仍须独立原生活动门禁，不把目录缺失当空闲。执行队列仅在明确session-root ENOENT、无journal、无attempt且零发送的准备失败上接受绑定原队列SHA的源码恢复。
+
+`0.14.37` 为DoubaoWork2.35.15接入原生MOA工具观察器和新版前端入口。需要Node≥22，并以本机loopback9260及`--jsruntime-debugging-port=entry-moa:9261`启动；核验UI目标、JSRuntime父进程/启动身份及实时脚本SHA后才读取或安装观察器，不初始化工具服务或修改后端模式。旧SSE入口保留；具体准入与验收边界见仓库`docs/general-e2e/doubao-moa-23515-adaptation.md`。
+
+`0.14.36` 兼容QwenWork1.4新版模型选择器：旧包装类缺失时，只在新任务输入区内识别已核验的“标准”“高级”“Qwen3.8-Max”菜单按钮；仍要求唯一可见控件，不按侧栏文本猜测，不选择或切换模型。
+
 `0.14.35` 兼容503原生错误重新加载后的已验证投影：仅当category缺省、code为0且raw内10310/503及原错误文本逐项相同，再结合原SDK及完整身份核验准入；不补写缺省category，不接受改成其他分类或冲突错误。
 
 `0.14.34` 原生503服务繁忙可按精确Runtime terminalError与SDK最后错误、原Prompt/会话/请求和SQL终态登记待复核，保留全部失败原件且不计能力零分；其余独立题目可继续。重跑仍必须另有用户明确授权，并创建新attempt；不把服务错误当原生用户取消或擅自重发旧Prompt。

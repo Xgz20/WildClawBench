@@ -14,6 +14,19 @@
 
 Excel 单工作表上限为 1,048,576 行，4 万多条可以存放。但完整 ES hit 字段宽、文本长且包含敏感数据，不适合把 Excel 作为原始存储。
 
+## 批次归档
+
+每批数据和分析结果按该批分析截止日期放入 `outputs/astroncode_usage/update_YYYYMMDD/`，同批原始快照、Parquet、分类缓存和各版本 Excel 一起保留，校验脚本及预览放在该批目录内。
+
+| 批次目录 | 内容 |
+| --- | --- |
+| `update_20260914/` | 2026-08-15 至 2026-09-14 的首次采集、各版本分析和候选表，以及 `.artifact-verify/` 校验资料 |
+| `update_20261015/` | 截至 2026-10-15 的增量、历史补抓、累计数据和分析，以及 MaaS 核验资料 |
+
+历史补抓文件保留在实施补抓的批次中；因此复用 08/15—10/15 的原始数据时，仍需同时读取首次快照、10/15 批次中的历史补抓快照和增量快照。目录名不代表完整自然日，实际起止时间以快照 metadata 为准。
+
+后续抓取使用 `run` 或 `fetch` 的 `--output-dir outputs/astroncode_usage/update_YYYYMMDD` 显式指定新批次，避免文件散落根目录。本地 `analyze` 默认将结果写在输入 Parquet 同目录；重做不同版本分析时另用 `--analysis-output` 和 `--candidates-output` 区分文件名，避免覆盖已归档结果。
+
 ## 安全与生产负载控制
 
 - 凭据只从环境变量读取，不接受密码命令行参数，不写入任何产物。
@@ -80,7 +93,8 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py run
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py run \
   --start 2026-08-15 \
-  --end 2026-09-14
+  --end 2026-09-14 \
+  --output-dir outputs/astroncode_usage/update_20260914
 ```
 
 日期按 `Asia/Shanghai` 解释。`--end 2026-09-14` 包含 9 月 14 日全天；带时分秒的 ISO 8601 截止时间按该时刻排除。
@@ -90,22 +104,23 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py run \
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py fetch \
   --start 2026-08-15 \
-  --end 2026-09-14
+  --end 2026-09-14 \
+  --output-dir outputs/astroncode_usage/update_20260914
 ```
 
 从本地 Parquet 重新生成两个 Excel，不访问 ES：
 
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py analyze \
-  --input outputs/astroncode_usage/astroncode_usage_normalized_20260815_20260914.parquet
+  --input outputs/astroncode_usage/update_20260914/astroncode_usage_normalized_20260815_20260914.parquet
 ```
 
 先生成可复用的 V3 混合场景分类缓存，同样不访问 ES：
 
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py classify-scenes \
-  --input outputs/astroncode_usage/astroncode_usage_normalized_20260815_20260914.parquet \
-  --output outputs/astroncode_usage/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
+  --input outputs/astroncode_usage/update_20260914/astroncode_usage_normalized_20260815_20260914.parquet \
+  --output outputs/astroncode_usage/update_20260914/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
   --allow-remote-query-content
 ```
 
@@ -113,8 +128,8 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py classify-scenes 
 
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py classify-scenes \
-  --input outputs/astroncode_usage/astroncode_usage_normalized_20260815_20260914.parquet \
-  --output outputs/astroncode_usage/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
+  --input outputs/astroncode_usage/update_20260914/astroncode_usage_normalized_20260815_20260914.parquet \
+  --output outputs/astroncode_usage/update_20260914/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
   --allow-remote-query-content \
   --resume
 ```
@@ -123,10 +138,10 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py classify-scenes 
 
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py analyze \
-  --input outputs/astroncode_usage/astroncode_usage_normalized_20260815_20260914.parquet \
-  --scene-classifications outputs/astroncode_usage/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
-  --analysis-output outputs/astroncode_usage/astroncode_usage_analysis_20260815_20260914_scene_v3_hybrid.xlsx \
-  --candidates-output outputs/astroncode_usage/astroncode_usage_candidates_20260815_20260914_scene_v3_hybrid.xlsx
+  --input outputs/astroncode_usage/update_20260914/astroncode_usage_normalized_20260815_20260914.parquet \
+  --scene-classifications outputs/astroncode_usage/update_20260914/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
+  --analysis-output outputs/astroncode_usage/update_20260914/astroncode_usage_analysis_20260815_20260914_scene_v3_hybrid.xlsx \
+  --candidates-output outputs/astroncode_usage/update_20260914/astroncode_usage_candidates_20260815_20260914_scene_v3_hybrid.xlsx
 ```
 
 复用 V3 分类缓存，对初次“大模型未判定”且具有明确任务意图的 Query 做二次分类，
@@ -135,9 +150,9 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py analyze \
 
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py refine-scenes \
-  --input outputs/astroncode_usage/astroncode_usage_normalized_20260815_20260914.parquet \
-  --base-classifications outputs/astroncode_usage/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
-  --output outputs/astroncode_usage/astroncode_usage_scene_classifications_20260815_20260914_v4.parquet \
+  --input outputs/astroncode_usage/update_20260914/astroncode_usage_normalized_20260815_20260914.parquet \
+  --base-classifications outputs/astroncode_usage/update_20260914/astroncode_usage_scene_classifications_20260815_20260914_v3.parquet \
+  --output outputs/astroncode_usage/update_20260914/astroncode_usage_scene_classifications_20260815_20260914_v4.parquet \
   --allow-remote-query-content
 ```
 
@@ -149,10 +164,10 @@ python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py refine-scenes \
 
 ```bash
 python3 tools/astroncode_usage/analyze_astroncode_prod_usage.py analyze \
-  --input outputs/astroncode_usage/astroncode_usage_normalized_20260815_20260914.parquet \
-  --scene-classifications outputs/astroncode_usage/astroncode_usage_scene_classifications_20260815_20260914_v4.parquet \
-  --analysis-output outputs/astroncode_usage/astroncode_usage_analysis_20260815_20260914_scene_v4_secondary.xlsx \
-  --candidates-output outputs/astroncode_usage/astroncode_usage_candidates_20260815_20260914_scene_v4_secondary.xlsx
+  --input outputs/astroncode_usage/update_20260914/astroncode_usage_normalized_20260815_20260914.parquet \
+  --scene-classifications outputs/astroncode_usage/update_20260914/astroncode_usage_scene_classifications_20260815_20260914_v4.parquet \
+  --analysis-output outputs/astroncode_usage/update_20260914/astroncode_usage_analysis_20260815_20260914_scene_v4_secondary.xlsx \
+  --candidates-output outputs/astroncode_usage/update_20260914/astroncode_usage_candidates_20260815_20260914_scene_v4_secondary.xlsx
 ```
 
 可用 `--snapshot-output`、`--parquet-output`、`--analysis-output` 和 `--candidates-output` 覆盖默认路径。

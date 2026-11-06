@@ -1,0 +1,72 @@
+{
+  "schema_version": "general-e2e-reference-sources/v1",
+  "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
+  "reference_version": "2026-11-04.open-reference.1",
+  "role": "evaluator_reference_not_candidate_output",
+  "policy": {
+    "fulltext_required": false,
+    "alternative_sources_allowed": true,
+    "unavailable_is_failure": false,
+    "unavailable_is_pass": false,
+    "unknown_zero_fill": false,
+    "unknown_renormalization": false,
+    "supplement_counts_as_candidate_reading": false,
+    "reference_only_revision": true,
+    "candidate_input_changed": false,
+    "required_bibliography": false,
+    "claim_unit_meanings": {
+      "1": "全部实质使用研究的主要解释与作者作品归属",
+      "2": "全部实质使用研究的转述及实际论证范围"
+    },
+    "metadata_or_search_lead_proves_claim": false,
+    "confirmed_omission_requires_complete_delivery_evidence": true,
+    "rescore_requires_independent_attempt": true,
+    "historical_results_overwritten": false
+  },
+  "sources": [
+    {
+      "source_id": "S2-yang-jingjian",
+      "path": "source_evidence/S2-yang-jingjian.json",
+      "sha256": "0ed4e4294974ba68b19b78dc9869ee8e6083564069531b5c5f866fd9c22a9ca8",
+      "coverage": "primary_short_excerpt"
+    },
+    {
+      "source_id": "S3-li-yi",
+      "path": "source_evidence/S3-li-yi.json",
+      "sha256": "bfe3cfc9455a91718dd17d475eb148f12081addcd3eb9b4314bbadac533901f3",
+      "coverage": "primary_short_excerpt"
+    },
+    {
+      "source_id": "P1-cultural",
+      "path": "source_evidence/P1-cultural.json",
+      "sha256": "b3c4337921effac468773448d88d7a143ec72d306ac7c8415b990f229873e627",
+      "coverage": "primary_public_domain_excerpt"
+    },
+    {
+      "source_id": "S1-dong-bingyue",
+      "path": "source_evidence/S1-dong-bingyue.json",
+      "sha256": "4ae1148a88d8e50a1be1b7950ecd7c20fd7b36c94024ac8971e5adae20e47ef0",
+      "coverage": "metadata_only_reference_unavailable"
+    },
+    {
+      "source_id": "Y1-yang-lianfen",
+      "path": "source_evidence/Y1-yang-lianfen.json",
+      "sha256": "ede31d380d1e95b6ebb61ac91b1b760e71d22e76e8d117b80bb06f19fb707ea4",
+      "coverage": "metadata_and_secondary_context_only"
+    }
+  ],
+  "known_unresolved_claims": [
+    {
+      "claim_id": "Y1-C1",
+      "source_id": "Y1-yang-lianfen",
+      "claim": "作者以随感录三十八解释爱国话语收编国民性批判的危险",
+      "status": "evaluator_reference_unavailable"
+    },
+    {
+      "claim_id": "Y1-C2",
+      "source_id": "Y1-yang-lianfen",
+      "claim": "作者以包含自身的内部反思解释超越外部他者式审判",
+      "status": "evaluator_reference_unavailable"
+    }
+  ]
+}

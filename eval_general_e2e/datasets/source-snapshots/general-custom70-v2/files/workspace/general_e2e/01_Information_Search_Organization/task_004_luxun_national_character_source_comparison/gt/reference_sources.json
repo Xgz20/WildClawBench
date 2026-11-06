@@ -1,0 +1,61 @@
+{
+  "schema_version": "general-e2e-reference-sources/v1",
+  "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
+  "reference_version": "2026-11-02.1",
+  "role": "evaluator_reference_not_candidate_output",
+  "policy": {
+    "fulltext_required": false,
+    "alternative_sources_allowed": true,
+    "unavailable_is_failure": false,
+    "unavailable_is_pass": false,
+    "unknown_zero_fill": false,
+    "unknown_renormalization": false,
+    "supplement_counts_as_candidate_reading": false
+  },
+  "sources": [
+    {
+      "source_id": "S2-yang-jingjian",
+      "path": "source_evidence/S2-yang-jingjian.json",
+      "sha256": "0ed4e4294974ba68b19b78dc9869ee8e6083564069531b5c5f866fd9c22a9ca8",
+      "coverage": "primary_short_excerpt"
+    },
+    {
+      "source_id": "S3-li-yi",
+      "path": "source_evidence/S3-li-yi.json",
+      "sha256": "bfe3cfc9455a91718dd17d475eb148f12081addcd3eb9b4314bbadac533901f3",
+      "coverage": "primary_short_excerpt"
+    },
+    {
+      "source_id": "P1-cultural",
+      "path": "source_evidence/P1-cultural.json",
+      "sha256": "b3c4337921effac468773448d88d7a143ec72d306ac7c8415b990f229873e627",
+      "coverage": "primary_public_domain_excerpt"
+    },
+    {
+      "source_id": "S1-dong-bingyue",
+      "path": "source_evidence/S1-dong-bingyue.json",
+      "sha256": "418d3efb949fab875bf58647047bcfbbed08b6388bb88e2c2c7f44a7d3a820de",
+      "coverage": "metadata_only_reference_unavailable"
+    },
+    {
+      "source_id": "Y1-yang-lianfen",
+      "path": "source_evidence/Y1-yang-lianfen.json",
+      "sha256": "3d6cbc3b125f14816c31b224d15965a223d88d3e9ba42fef75a02d55a1bceedc",
+      "coverage": "metadata_and_secondary_context_only"
+    }
+  ],
+  "known_unresolved_claims": [
+    {
+      "claim_id": "Y1-C1",
+      "source_id": "Y1-yang-lianfen",
+      "claim": "作者以随感录三十八解释爱国话语收编国民性批判的危险",
+      "status": "evaluator_reference_unavailable"
+    },
+    {
+      "claim_id": "Y1-C2",
+      "source_id": "Y1-yang-lianfen",
+      "claim": "作者以包含自身的内部反思解释超越外部他者式审判",
+      "status": "evaluator_reference_unavailable"
+    }
+  ]
+}

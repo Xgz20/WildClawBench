@@ -3,11 +3,11 @@
   "role": "evaluator_reference_not_candidate_output",
   "url": "https://waseda.repo.nii.ac.jp/record/2006867/files/10Dong_zhou_special2.pdf",
   "title": "“国民”的建构与扬弃——论鲁迅留日时期的文学启蒙思想",
-  "retrieved_on": "2026-11-02",
+  "retrieved_on": "2026-11-04",
   "original_response_sha256": null,
   "coverage": "metadata_only_reference_unavailable",
   "excerpt": "",
-  "reviewer_summary": "原参考的大学仓库正文链接本次出现503，在线浏览也出现429。保留原目录身份与页码说明，不以访问故障否定作者或候选。使用该研究的实质命题仍需取得相关段落。",
+  "reviewer_summary": "国家图书馆联合目录可核对作者、题名、收录文集、页码及DOI。早稻田单篇和整本文集公开PDF本次仍返回503，网页工具返回429；未取得对应论证段落，不把目录页、其他版本或访问故障当作观点证据。原参考94—95、99—102页仅为待核验定位。",
   "reviewer_summary_is_not_original_text": true,
   "fulltext_included": false,
   "locator": "原参考S1目录；当前没有冻结正文",
@@ -16,7 +16,34 @@
     "原参考中94—95及99—102页的具体论证"
   ],
   "access_failure": {
+    "checked_on": "2026-11-04",
     "kind": "http_error",
-    "status": 503
+    "status": 503,
+    "browser_fetch_status": 429
+  },
+  "bibliographic_identity": {
+    "author": "董炳月",
+    "collection": "周氏兄弟研究特刊シリーズ2",
+    "published_on": "2025-06-25",
+    "pages": "83-105",
+    "doi": "10.20556/0002006867",
+    "metadata_url": "https://ndlsearch.ndl.go.jp/books/R100000136-I1390306428919050368",
+    "metadata_is_not_fulltext": true
+  },
+  "manual_search_leads": {
+    "queries": [
+      "\"董炳月\" \"国民\" \"建构与扬弃\"",
+      "\"10.20556/0002006867\"",
+      "\"10Dong_zhou_special2.pdf\""
+    ],
+    "entry_points": [
+      "https://waseda.repo.nii.ac.jp/record/2006867/files/10Dong_zhou_special2.pdf",
+      "https://waseda.repo.nii.ac.jp/records/2006867",
+      "https://doi.org/10.20556/0002006867",
+      "https://ndlsearch.ndl.go.jp/books/R100000136-I1390306428919050368"
+    ],
+    "target": "核对原参考所列94—95、99—102页关于留日阶段国民观、立人及回忆编选的论证；版本页码需先绑定",
+    "version_warning": "检索也有《文艺研究》2025年第3期同名文章；不得未经逐段核对沿用文集83—105页的页码",
+    "search_leads_are_not_supporting_evidence": true
   }
 }

@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { isAbsolute } from "node:path";
-import { dispatcherCall, DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256 } from "./runtime-dispatcher.mjs";
+import { dispatcherCall, DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256, isSupportedDispatcherSource } from "./runtime-dispatcher.mjs";
+import { isMoaBackend, MOA_SOURCE_SHA256, validateMoaBackendProof } from "./runtime-moa.mjs";
 
 const PROFILE = "doubaowork-local-tool-debug-sink/v1";
 
@@ -224,6 +225,7 @@ export async function installNativeToolObserver(browser, { attemptId, workspace 
   return callSupportedBackend(browser, "install", { attemptId, workspace });
 }
 async function callSupportedBackend(browser, operation, values) {
+  if (isMoaBackend(browser)) return dispatcherCall(browser, operation, values);
   try { return await backendCall(browser, operation, values); }
   catch (error) {
     if (error.message !== "DOUBAOWORK_BACKGROUND_PROFILE_UNAVAILABLE") throw error;
@@ -257,9 +259,10 @@ export async function collectNativeToolObserver(browser, { attemptId, workspace,
 }
 
 export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agentId, conversationId, sentAt, finishedAt }) {
-  const supportedProfile = snapshot?.profile === PROFILE || snapshot?.profile === DISPATCHER_PROFILE && snapshot.profile_sha256 === DISPATCHER_SOURCE_SHA256;
+  const supportedProfile = snapshot?.profile === PROFILE || snapshot?.profile === DISPATCHER_PROFILE && isSupportedDispatcherSource(snapshot.profile_sha256);
   if (snapshot?.schema !== "wildclawbench.doubaowork-native-tool-events/v1" || !supportedProfile
       || snapshot.attempt_id !== attemptId || snapshot.workspace !== workspace || snapshot.native_agent_id !== agentId) throw new Error("NATIVE_TOOL_EVIDENCE_IDENTITY_MISMATCH");
+  if (snapshot.profile_sha256 === MOA_SOURCE_SHA256) validateMoaBackendProof(snapshot.native_backend);
   if (![snapshot.installed_at, snapshot.collected_at, sentAt, finishedAt].every(t => Number.isFinite(Date.parse(t)))
       || Date.parse(finishedAt) < Date.parse(sentAt)) throw new Error("NATIVE_TOOL_CAPTURE_TIME_INVALID");
   if (snapshot.overflow || snapshot.errors.length || snapshot.unknown_context_events || snapshot.ledger_at_capacity
@@ -292,7 +295,7 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
   if (snapshot.consumer_witness?.admission_rejections !== undefined) {
     const witness = snapshot.consumer_witness;
     if (snapshot.profile !== DISPATCHER_PROFILE || witness.schema !== "wildclawbench.doubaowork-local-tool-consumer-witness/v1"
-        || witness.source_sha256 !== DISPATCHER_SOURCE_SHA256 || !Array.isArray(witness.admission_rejections)) throw new Error("NATIVE_TOOL_CONSUMER_WITNESS_INVALID");
+        || witness.source_sha256 !== snapshot.profile_sha256 || !Array.isArray(witness.admission_rejections)) throw new Error("NATIVE_TOOL_CONSUMER_WITNESS_INVALID");
     for (const proof of witness.admission_rejections) {
       if (!proof.tool_call_id || admissions.has(proof.tool_call_id) || ledger.has(proof.tool_call_id)
           || proof.source !== "ToolCallManager.reportAdmissionFailure" || proof.native_cwd !== workspace
@@ -325,7 +328,7 @@ export function normalizeNativeToolEvents(snapshot, { attemptId, workspace, agen
     const witness = snapshot.consumer_witness;
     if (snapshot.profile !== DISPATCHER_PROFILE
         || witness?.schema !== "wildclawbench.doubaowork-local-tool-consumer-witness/v1"
-        || witness.source_sha256 !== DISPATCHER_SOURCE_SHA256 || witness.installed_at !== snapshot.installed_at
+        || witness.source_sha256 !== snapshot.profile_sha256 || witness.installed_at !== snapshot.installed_at
         || witness.unbound_agent_event_count !== 0 || !Array.isArray(witness.received_calls)) throw new Error("NATIVE_TOOL_CONSUMER_WITNESS_INVALID");
     const incoming = new Map();
     for (const event of witness.received_calls) {

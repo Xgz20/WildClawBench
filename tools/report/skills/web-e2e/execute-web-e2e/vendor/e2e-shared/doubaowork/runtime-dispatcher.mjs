@@ -1,11 +1,14 @@
 import { createHash, randomUUID } from "node:crypto";
+import { isMoaBackend, moaDispatcherCall, MOA_SOURCE_SHA256 } from "./runtime-moa.mjs";
 
 export const DISPATCHER_PROFILE = "doubaowork-tool-dispatch-observer/v1";
 export const DISPATCHER_SOURCE_SHA256 = "40941282dd34f9ff7b5a0c5b399913f97c5b92a03eca90072c8f1b279c004baa";
+export const isSupportedDispatcherSource = value => value === DISPATCHER_SOURCE_SHA256 || value === MOA_SOURCE_SHA256;
 
 // Read the initialized 2.31.10 dispatcher and context store. Never call the
 // cleanup/initializer, a tool, a permission API, or a result upload function.
 export async function dispatcherCall(browser, operation, value) {
+  if (isMoaBackend(browser)) return moaDispatcherCall(browser, operation, value, operateDispatcherObserver);
   const pages = browser.contexts().flatMap(c => c.pages()).filter(p => {
     try { const u = new URL(p.url()); return ["chrome:", "doubaowork:"].includes(u.protocol) && u.hostname === "doubaowork-background"; }
     catch { return false; }
