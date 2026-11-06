@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.28` 原生运行时中断使用独立三方确认Profile：严格核对SQL运行时来源/终态、SDK中断和provider相同session/turn/duration；保留原state字节，只确认已停止，不推断人工取消、不改变可评分性。
+
 `0.11.27` 消费豆包2.35.19独立原生MOA及SDK证明，调用/结果守恒、原文和来源SHA继续严格核验；2.35.15原件及规则保持。
 
 `0.11.26` 按原生SDK同名调用/返回数量核验已结束GUI卡片；不从展示补造调用。仅对present_files的精确双字段原生空回执保留null/unknown，其他工具缺内容继续拒绝；不从空回执推断成功或失败。普通文本SDK证明保持向后兼容，旧冻结原件不覆盖。

@@ -33,6 +33,7 @@ import { createWorkspaceIntegrity } from "../../vendor/e2e-shared/handoff/worksp
 import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resource-supplements/astronstudio-native-provider-log.mjs";
 import { verifyArchivedTerminalFinalRecapture, assertRecaptureDeclaration } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
 import { historicalTerminalProjection, verifyTerminalProjection } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
+import { verifyRuntimeInterruption } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
@@ -292,10 +293,7 @@ async function assertUnitAndState(unitRoot, manifestSource, stateSource, profile
       throw new Error("COMPLETED_EXECUTION_IDENTITY_UNVERIFIED");
     }
   }
-  if (new Set(["timeout", "cancelled"]).has(state.execution.business_status)
-      && (profile.generic ? state.execution?.cancellation_confirmed : state.timeout?.cancellation_confirmed) !== true) {
-    throw new Error("EXECUTION_CANCELLATION_UNVERIFIED");
-  }
+
   return { manifest, state, task, taskRoot: actualTaskRoot, workspace: actualWorkspace, promptSource };
 }
 
@@ -344,7 +342,8 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   if (nativeLog) await verifyArchivedNativeLog(index, state, stateBytes, root);
   if (index.terminal_final_recapture_profile) await verifyArchivedTerminalFinalRecapture(index, state, stateBytes, root, { candidateRoot: state.candidate_workspace });
   if (!profile.generic) verifyTerminalProjection(index, stateBytes, root);
-  return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts };
+  const runtimeInterruption = !profile.generic ? await verifyRuntimeInterruption(index, stateBytes, root) : null;
+  return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts, runtimeInterruption };
 
 }
 
@@ -796,6 +795,7 @@ export async function verifyGeneralCollection(options) {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
       assertRecaptureDeclaration(declaredState.value, index);
       verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
+      await verifyRuntimeInterruption(index, declaredState.bytes, traceRoot, record);
     }
     if (index.native_provider_log_profile) {
       const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
@@ -969,6 +969,11 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     loadFinalResponse(unitRoot, state),
     loadCandidatePolicy(options.candidatePolicy),
   ]);
+  if (new Set(['timeout', 'cancelled']).has(state.execution.business_status)
+      && (profile.generic ? state.execution?.cancellation_confirmed : state.timeout?.cancellation_confirmed) !== true
+      && !(state.execution.business_status === 'cancelled' && traceBundle?.runtimeInterruption)) {
+    throw new Error('EXECUTION_CANCELLATION_UNVERIFIED');
+  }
   const resolvedResource = options.resourceMetrics
     ? await loadResourceMetrics(options.resourceMetrics, stateSource, traceBundle, profile)
     : resource;

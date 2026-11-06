@@ -13,6 +13,9 @@ import { prepareTerminalFinalRecapture, recaptureCandidateTree } from '../../too
 import { archiveAstronStudioTrace } from '../../tools/report/e2e-shared/general-resource-supplements/archive_astronstudio_trace.mjs';
 import { recaptureFixture, writeRecaptureInput } from './fixtures/terminal-final-recapture.mjs';
 import { DatabaseSync } from 'node:sqlite';
+import { deriveRuntimeInterruption, RUNTIME_INTERRUPTION_PROFILE, RUNTIME_INTERRUPTION_STATE,
+  RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
+  from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 import { deriveTerminalProjection, TERMINAL_PROJECTION_STATE, TERMINAL_PROJECTION_PROOF }
   from '../../tools/report/skills/general-e2e/collect-general-e2e/vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 
@@ -227,6 +230,58 @@ function options(value) {
     processWaitMilliseconds: 0,
   };
 }
+
+test('runtime interruption can be formally frozen only with intact three-source confirmation, without editing original state', async () => {
+  const value = await fixture({ businessStatus:'cancelled', includeResource:false, traceStatus:'partial' });
+  try {
+    const state = JSON.parse(await readFile(value.statePath,'utf8'));delete state.timeout;
+    state.session.native_status='interrupted';await writeJson(value.statePath,state);
+    const stateBytes=await readFile(value.statePath), prompt=await readFile(state.prompt.path,'utf8');
+    const session=state.session;
+    const sdk=Buffer.from([
+      {type:'session_meta',payload:{id:session.session_id,cwd:session.cwd}},
+      {type:'event_msg',payload:{type:'task_started',turn_id:session.turn_id}},
+      {type:'event_msg',payload:{type:'user_message',message:prompt}},
+      {type:'event_msg',timestamp:'2026-09-18T00:00:08.000Z',payload:{type:'turn_aborted',turn_id:session.turn_id,
+        reason:'interrupted',completed_at:1789689608,duration_ms:7000}},
+    ].map(JSON.stringify).join('\n')+'\n');
+    const raw=Buffer.from(JSON.stringify({sequence:1,event_type:'turn.completed',thread_id:session.thread_id,turn_id:session.turn_id,
+      event:{threadId:session.thread_id,turnId:session.turn_id,providerRefs:{providerThreadId:session.session_id,providerTurnId:session.turn_id},
+        payload:{state:'interrupted'},raw:{payload:{threadId:session.session_id,turn:{id:session.turn_id,status:'interrupted',error:null,
+          completedAt:1789689608,durationMs:7000}}}}})+'\n');
+    const index=JSON.parse(await readFile(value.indexPath,'utf8'));index.canonical_source_policy={id:'bound-native-sdk-canonical/v1'};
+    index.raw_trace=[{path:'raw/astronstudio-provider-events.jsonl',sha256:digest(raw),size:raw.length},
+      {path:'raw/astronstudio-rollout.jsonl',sha256:digest(sdk),size:sdk.length}];
+    const native={turn_state:'interrupted',termination_origin:'runtime',latest_turn_id:session.turn_id,session_status:'interrupted',
+      active_turn_id:null,pending_count:0,cwd:session.cwd,completed_at:'2026-09-18T00:00:09Z'};
+    const proof=deriveRuntimeInterruption(stateBytes,index,sdk,raw,native);
+    index.runtime_interruption_profile={id:RUNTIME_INTERRUPTION_PROFILE};index.binding_evidence=[];
+    const traceRoot=join(value.root,'fixture-input/trace');await mkdir(join(traceRoot,'bindings'));
+    await writeFile(join(traceRoot,'raw/astronstudio-provider-events.jsonl'),raw);
+    await writeFile(join(traceRoot,'raw/astronstudio-rollout.jsonl'),sdk);
+    for (const [path,body] of [[RUNTIME_INTERRUPTION_STATE,stateBytes],[RUNTIME_INTERRUPTION_NATIVE,Buffer.from(JSON.stringify(native))],
+      [RUNTIME_INTERRUPTION_PROOF,Buffer.from(JSON.stringify(proof))]]) {
+      await writeFile(join(traceRoot,path),body);index.binding_evidence.push({path,sha256:digest(body),size:body.length});
+    }
+    await writeJson(value.indexPath,index);
+    const result=await finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>successfulCleanup()});
+    assert.equal(result.status,'PASS');await verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId});
+    assert.deepEqual(await readFile(value.statePath),stateBytes);
+    const archived=join(result.evidence_root,'trace',RUNTIME_INTERRUPTION_PROOF);
+    await writeFile(archived,'{}');
+    await assert.rejects(verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId}),/DRIFT|MISMATCH/);
+  } finally { await rm(value.root,{recursive:true,force:true}); }
+});
+
+test('native cancelled without operator confirmation or verified runtime evidence still fails before cleanup', async () => {
+  const value=await fixture({businessStatus:'cancelled',includeTrace:false,includeResource:false});
+  try {
+    const state=JSON.parse(await readFile(value.statePath,'utf8'));delete state.timeout;state.session.native_status='interrupted';
+    await writeJson(value.statePath,state);let cleanup=0;
+    await assert.rejects(finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>{cleanup++;return successfulCleanup();}}),/CANCELLATION_UNVERIFIED/);
+    assert.equal(cleanup,0);
+  } finally {await rm(value.root,{recursive:true,force:true});}
+});
 
 test('historical running projection needs an exact SDK proof and survives formal archive verification', async () => {
   const value = await fixture();

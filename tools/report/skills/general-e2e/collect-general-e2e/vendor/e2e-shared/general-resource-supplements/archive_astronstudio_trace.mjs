@@ -23,6 +23,8 @@ import { historicalTerminalProjection, deriveTerminalProjection,
 import { readTerminalFinalRecapture, assertRecaptureArchiveSources, requiresTerminalFinalRecapture, FINAL_RECAPTURE_PROFILE } from './astronstudio-terminal-final-recapture.mjs';
 import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
 import { readBoundNativeLogBundle } from "./astronstudio-native-provider-log.mjs";
+import { runtimeInterruptionCandidate, deriveRuntimeInterruption, RUNTIME_INTERRUPTION_PROFILE,
+  RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF } from './astronstudio-runtime-interruption.mjs';
 
 export const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
 export const TRACE_ADAPTER_VERSION = "0.1.1";
@@ -242,6 +244,17 @@ WHERE turns.thread_id = ${sqlString(threadId)}
   const binding = bindingRows[0];
   if (!samePath(binding.cwd, cwd)) {
     throw new Error(`TRACE_CWD_MISMATCH: expected=${cwd} actual=${binding.cwd}`);
+  }
+  if (runtimeInterruptionCandidate(state) && state.timeout?.cancellation_confirmed !== true) {
+    const extra = database.prepare(`SELECT turns.termination_origin AS termination_origin,
+      threads.latest_turn_id AS latest_turn_id, sessions.status AS session_status,
+      sessions.active_turn_id AS active_turn_id,
+      (SELECT COUNT(*) FROM projection_pending_interactions p WHERE p.thread_id=turns.thread_id AND p.status='pending') AS pending_count
+      FROM projection_turns turns JOIN projection_threads threads ON threads.thread_id=turns.thread_id
+      JOIN projection_thread_sessions sessions ON sessions.thread_id=turns.thread_id
+      WHERE turns.thread_id=${sqlString(threadId)} AND turns.turn_id=${sqlString(turnId)}`).all();
+    if (extra.length !== 1) throw Error('RUNTIME_INTERRUPTION_NATIVE_BINDING_AMBIGUOUS');
+    Object.assign(binding, extra[0]);
   }
   return binding;
 }
@@ -877,6 +890,17 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     bindingArtifacts.push({ path: TERMINAL_PROJECTION_STATE, bytes: stateBytes },
       { path: TERMINAL_PROJECTION_PROOF, bytes: prettyJsonBytes(proof) });
     index.binding_evidence = bindingArtifacts.map(a => artifact(a.path, a.bytes));
+  }
+  if (runtimeInterruptionCandidate(state) && native.binding.termination_origin === 'runtime') {
+    if (!rollout || sourcePolicy !== 'bound-native-sdk' || nativeLog || recapture) throw Error('RUNTIME_INTERRUPTION_CANONICAL_SOURCES_REQUIRED');
+    const proof = deriveRuntimeInterruption(stateBytes, index, rollout.bytes,
+      await readFile(native.temporary_raw), native.binding);
+    bindingArtifacts.push({ path: RUNTIME_INTERRUPTION_STATE, bytes: stateBytes },
+      { path: RUNTIME_INTERRUPTION_NATIVE, bytes: prettyJsonBytes(native.binding) },
+      { path: RUNTIME_INTERRUPTION_PROOF, bytes: prettyJsonBytes(proof) });
+    index.binding_evidence = bindingArtifacts.map(a => artifact(a.path, a.bytes));
+    index.runtime_interruption_profile = { id: RUNTIME_INTERRUPTION_PROFILE, original_state_modified: false,
+      human_cancellation_inferred: false, scoreability_changed: false };
   }
   const indexBytes = prettyJsonBytes(index);
   await mkdir(join(outputDir, "raw"), { recursive: true });

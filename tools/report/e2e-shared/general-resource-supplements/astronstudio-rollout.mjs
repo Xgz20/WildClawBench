@@ -187,6 +187,11 @@ export async function analyzeIndexedRollout(indexPath, state, options={}) {
   const file=await readRolloutFile(join(dirname(indexPath),ROLLOUT_PATH),refs[0]);
   const result=analyzeRollout(file.bytes,state,options),ids=new Set(result.tool_counts.catalog.map(c=>c.call_id));
   ensure((index.calls||[]).every(c=>ids.has(c.call_id)),'ROLLOUT_PROVIDER_CALL_MISSING');
+  if (index.runtime_interruption_profile) {
+    const { verifyRuntimeInterruption, RUNTIME_INTERRUPTION_STATE } = await import('./astronstudio-runtime-interruption.mjs');
+    const original = await readRolloutFile(join(dirname(indexPath), RUNTIME_INTERRUPTION_STATE));
+    await verifyRuntimeInterruption(index, original.bytes, dirname(indexPath), state);
+  }
   return {...result,source:{path:ROLLOUT_PATH,sha256:file.sha256,size:file.size}};
 }
 
