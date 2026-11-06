@@ -6,6 +6,7 @@ import json
 import re
 from pathlib import Path
 import shutil
+import sys
 import uuid
 
 from . import DEFAULT_EXECUTION_CONCURRENCY
@@ -59,7 +60,7 @@ def _web_catalog(repo: Path, web):
                       "category": metadata.get("category") or path.parent.name,
                       "modality": metadata.get("modality"), "tags": tags,
                       "scene": "web", "metric_profile": web.resolve_metric_profile(metadata),
-                      "source": {"task_path": path.relative_to(repo).as_posix()}})
+                      "source": {"task_path": path.relative_to(repo).as_posix(), "task_sha256": file_sha256(path)}})
     return tasks
 
 
@@ -126,6 +127,9 @@ def _write_general(task: dict, members: dict, destination: Path, prepare) -> dic
 
 def _write_web(task: dict, destination: Path, repo: Path, web) -> dict:
     parsed = web.parse_task(repo, task["task_id"])
+    if (parsed["task_sha256"] != task["source"]["task_sha256"]
+            or parsed["workspace_sha256"] != task["source"]["workspace_sha256"]):
+        raise E2EError("WEB_SOURCE_CHANGED_DURING_PREPARATION")
     destination.mkdir(parents=True)
     shutil.copyfile(parsed["task_file"], destination / "task.md")
     public = destination / "execution"
@@ -209,21 +213,13 @@ def normalize_plan(raw: dict) -> dict:
     return plan
 
 
-def prepare_batch(repo: Path, workspace: Path, raw_plan: dict) -> Path:
+def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selection_sha256: str | None = None) -> Path:
+    from .protocol import resolve
     repo, workspace = repo.resolve(strict=True), workspace.expanduser().resolve()
-    plan = normalize_plan(raw_plan)
+    plan, selected, members, general_manifest, web = resolve(repo, raw_plan)
+    if expected_selection_sha256 and digest(selected) != expected_selection_sha256:
+        raise E2EError("CONFIRMED_SELECTION_CHANGED")
     batch = workspace / "batches" / plan["batch_id"]
-    web = canonical_script(repo, "web-e2e", "prepare-web-e2e-workspaces", "prepare_web_e2e_workspaces.py")
-    tasks, members, general_manifest = [], {}, None
-    scene = plan["selection"]["scenario"]
-    if scene in {"general", "all"}:
-        general, members, general_manifest = _general_catalog(repo, plan["selection"]["dataset"])
-        tasks.extend(general)
-    if scene in {"web", "all"}:
-        tasks.extend(_web_catalog(repo, web))
-    selected = _select(tasks, plan["selection"], repo, web)
-    if len({task["task_id"] for task in selected}) != len(selected):
-        raise E2EError("CROSS_SCENE_TASK_ID_AMBIGUOUS")
     general_prepare = canonical_script(repo, "general-e2e", "prepare-general-e2e-workspaces", "prepare_general_e2e_workspaces.py")
     workspace.mkdir(parents=True, exist_ok=True)
     with controller_lock(workspace, "prepare-" + plan["batch_id"]):
@@ -267,6 +263,8 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict) -> Path:
             compatibility = freeze_assets(repo, staging, prepared, general_manifest, members)
             manifest = {"schema": BATCH_SCHEMA, "created_at": utc_now(), "plan": plan,
                         "source_revision": _revision(repo), "units": units, "tasks": prepared,
+                        "engine": {"api_version": 1, "root": str(repo), "python": sys.executable,
+                                   "revision": _revision(repo)},
                         "compatibility": compatibility}
             atomic_json(staging / "batch.json", manifest)
             atomic_json(staging / "selection.json", {"requested": plan["selection"], "tasks": [{

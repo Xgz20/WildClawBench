@@ -28,7 +28,25 @@ def _batch_root(args):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="WildClawBench 沙箱端到端执行入口")
+    parser.add_argument("--api-version", type=int, choices=(1,))
     commands = parser.add_subparsers(dest="command", required=True)
+    describe = commands.add_parser("describe", help="查询执行器协议与能力")
+    describe.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
+    catalog = commands.add_parser("catalog", help="查询数据集与任务目录")
+    catalog.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
+    catalog.add_argument("--scenario", choices=("general", "web", "all"), default="general")
+    catalog.add_argument("--dataset")
+    preflight = commands.add_parser("preflight", help="检查执行计划，返回实际任务范围")
+    preflight.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
+    preflight.add_argument("--plan", type=Path, required=True)
+    _agentcube(preflight)
+    events = commands.add_parser("events", help="按游标只读查询执行事件")
+    _batch(events)
+    events.add_argument("--after-cursor", type=int, default=0)
+    artifacts = commands.add_parser("artifacts", help="查询公开产物清单或读取文本")
+    _batch(artifacts)
+    artifacts.add_argument("--path", default="")
+    artifacts.add_argument("--content", action="store_true")
     poc = commands.add_parser("poc", help="复现显式参考 BVT，记录严格 POC 证据")
     poc.add_argument("--workspace-root", required=True, type=Path)
     poc.add_argument("--reference-script", required=True, type=Path, help="受信任的 astudio-bvt.py 绝对路径")
@@ -65,6 +83,7 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--scoring-mode", choices=("streaming", "batch"))
     run.add_argument("--scoring-concurrency", type=int, help="评分槽位，默认 3")
     run.add_argument("--dry-run", action="store_true")
+    run.add_argument("--expected-selection-sha256")
     run.add_argument("--jsonl", action="store_true", help="逐行输出持久化事件与最终回执")
     resume = commands.add_parser("resume", help="按冻结批次恢复原任务与远端 job")
     _batch(resume)
@@ -89,7 +108,7 @@ def build_parser() -> argparse.ArgumentParser:
     imported = commands.add_parser("import", help="导入原始执行结果并核验完整性")
     _workspace(imported)
     imported.add_argument("--archive", type=Path, required=True)
-    imported.add_argument("--receipt", type=Path, required=True)
+    imported.add_argument("--receipt", type=Path)
     pipeline = commands.add_parser("pipeline", help="逐题或整批评分交接与现有编排器接续")
     _batch(pipeline)
     pipeline.add_argument("action", choices=("next-actions", "prepare-context", "init-orchestration", "poll", "record-submission", "compose", "takeover"))
@@ -133,17 +152,20 @@ def _run(args):
             raise E2EError("HARNESS_UNITS_MUST_BE_OBJECT_LIST")
         raw["units"] = [{**unit, "timeout_override": args.timeout_override} for unit in raw["units"]]
     config = None if args.dry_run else AgentCubeConfig.load(args.agentcube_config)
-    if args.jsonl:
+    if args.jsonl and not args.api_version:
         print(json.dumps({"type": "BATCH_PREPARING", "batch_id": raw.get("batch_id")}, ensure_ascii=False), flush=True)
-    batch = prepare_batch(args.repo_root, args.workspace_root, raw)
-    if args.jsonl:
+    if args.expected_selection_sha256:
+        batch = prepare_batch(args.repo_root, args.workspace_root, raw, expected_selection_sha256=args.expected_selection_sha256)
+    else:
+        batch = prepare_batch(args.repo_root, args.workspace_root, raw)
+    if args.jsonl and not args.api_version:
         print(json.dumps({"type": "BATCH_PREPARED", "batch_id": batch.name, "batch_root": str(batch)}, ensure_ascii=False), flush=True)
     if args.dry_run:
         manifest = read_json(batch / "batch.json")
         return {"dry_run": True, "batch_root": str(batch), "plan": manifest["plan"],
                 "unit_count": len(manifest["units"]), "selected_task_count": len(manifest["tasks"]),
                 "planned_execution_count": len(BatchStore(batch).rows())}
-    progress = (lambda event: print(json.dumps(event, ensure_ascii=False), flush=True)) if args.jsonl else None
+    progress = (lambda event: _print_event(args, batch.name, event)) if args.jsonl else None
     return run_batch(batch, config, progress=progress)
 
 
@@ -160,14 +182,18 @@ def _status(args):
 def _resume(args):
     from .agentcube import AgentCubeConfig
     from .engine import run_batch
-    progress = (lambda event: print(json.dumps(event, ensure_ascii=False), flush=True)) if args.jsonl else None
+    progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
     return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config), unit_ids=args.unit_id, progress=progress)
 
 
 def _cleanup(args):
     from .agentcube import AgentCubeConfig
     from .engine import cleanup_batch
-    return cleanup_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config), cancel=args.cancel)
+    root = _batch_root(args)
+    from .store import BatchStore
+    local_only = args.cancel and all(not row.get("creation_intent_at") and not row.get("session_id") for row in BatchStore(root).rows())
+    config = AgentCubeConfig() if local_only else AgentCubeConfig.load(args.agentcube_config)
+    return cleanup_batch(root, config, cancel=args.cancel)
 
 
 def _restore(args):
@@ -206,16 +232,20 @@ def _export(args):
                 and (args.run_index is None or row["run_index"] == args.run_index)]
         if not keys:
             raise E2EError("EXPORT_SELECTION_EMPTY")
-    return export_package(root, args.output.resolve(), keys=keys, purpose=args.purpose)
+    include_unsealed = False
+    if args.api_version:
+        from .protocol import snapshot
+        include_unsealed = snapshot(root)["terminal"]
+    return export_package(root, args.output.resolve(), keys=keys, purpose=args.purpose, include_unsealed=include_unsealed)
 
 
 def _import(args):
     from .artifacts import import_execution
     from .common import digest
-    receipt = read_json(args.receipt)
+    receipt = read_json(args.receipt) if args.receipt else {}
     from .packages import PACKAGE_SCHEMA, import_package
-    if receipt.get("schema") == PACKAGE_SCHEMA:
-        return import_package(args.archive.resolve(), args.receipt.resolve(), args.workspace_root.expanduser().resolve())
+    if not receipt or receipt.get("schema") == PACKAGE_SCHEMA:
+        return import_package(args.archive.resolve(), args.receipt.resolve() if args.receipt else None, args.workspace_root.expanduser().resolve())
     destination = args.workspace_root.expanduser().resolve() / "imports" / digest(receipt["identity"])
     return import_execution(args.archive.resolve(), args.receipt.resolve(), destination)
 
@@ -251,6 +281,25 @@ def _pipeline(args):
     return handlers[args.action](root, args.execution_key, args.claim_id)
 
 
+def _print_event(args, batch_id, event):
+    from .protocol import envelope, public_event
+    value = envelope("event", public_event(event, batch_id)) if args.api_version else event
+    print(json.dumps(value, ensure_ascii=False), flush=True)
+
+
+def _public_command(args):
+    from . import protocol
+    if args.command == "describe":
+        return protocol.describe(args.repo_root)
+    if args.command == "catalog":
+        return protocol.catalog(args.repo_root, args.scenario, args.dataset)
+    if args.command == "preflight":
+        return protocol.preflight(args.repo_root, read_json(args.plan), args.agentcube_config)
+    if args.command == "events":
+        return protocol.events(_batch_root(args), args.after_cursor)
+    return protocol.artifacts(_batch_root(args), args.path, args.content)
+
+
 def main(argv=None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -262,20 +311,30 @@ def main(argv=None) -> int:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
     handlers = {"run": _run, "resume": _resume, "status": _status, "cleanup": _cleanup,
-                "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline}
+                "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline,
+                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts")}}
     try:
         result = handlers[args.command](args)
-        if getattr(args, "jsonl", False):
+        if args.api_version:
+            from .protocol import envelope, snapshot
+            if args.command in {"status", "resume", "cleanup"} or (args.command == "run" and not args.dry_run):
+                result = snapshot(_batch_root(args) if args.command != "run" else args.workspace_root.expanduser().resolve() / "batches" / result["batch_id"])
+            print(json.dumps(envelope("result", result), ensure_ascii=False), flush=True)
+        elif getattr(args, "jsonl", False):
             print(json.dumps({"type": "BATCH_FINISHED", "result": result}, ensure_ascii=False), flush=True)
         else:
             print(json.dumps(result, ensure_ascii=False, indent=2))
         if result.get("interrupted"):
             return 130
-        if result.get("status") == "NEEDS_ATTENTION":
+        if result.get("status") == "NEEDS_ATTENTION" or result.get("state") == "needs_attention":
             return 3
-        return 1 if result.get("status") == "FAILED" else 0
+        return 1 if result.get("status") == "FAILED" or result.get("state") in {"failed", "partial"} else 0
     except KeyboardInterrupt:
         return 130
-    except (E2EError, OSError, KeyError) as error:
-        print(json.dumps({"type": "E2E_ERROR", "error": str(error)}, ensure_ascii=False))
+    except (E2EError, OSError, KeyError, ValueError) as error:
+        value = {"type": "E2E_ERROR", "error": str(error)}
+        if args.api_version:
+            from .protocol import envelope
+            value = envelope("error", {"code": type(error).__name__, "message": str(error)})
+        print(json.dumps(value, ensure_ascii=False))
         return 2

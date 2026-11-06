@@ -1,0 +1,41 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:wildclawbench:e2e-api:v1:artifact",
+  "title": "WildClawBench E2E API v1 artifact",
+  "type": "object",
+  "required": [
+    "path",
+    "name",
+    "kind",
+    "is_dir",
+    "size"
+  ],
+  "properties": {
+    "path": {
+      "type": "string"
+    },
+    "name": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "is_dir": {
+      "type": "boolean"
+    },
+    "size": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "sha256": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  },
+  "additionalProperties": true
+}

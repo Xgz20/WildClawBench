@@ -19,7 +19,7 @@ from .store import BatchStore
 PACKAGE_SCHEMA = "wildclawbench.sandbox-result-package/v1"
 
 
-def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results") -> dict:
+def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results", include_unsealed=False) -> dict:
     manifest = load_batch(batch)
     if purpose not in {"results", "scoring"}:
         raise E2EError("EXPORT_PURPOSE_INVALID")
@@ -39,7 +39,7 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
         for row in selected:
             execution = inside(batch, row["execution_root"])
             if not (execution / "backups/backup-receipt.json").exists():
-                if keys:
+                if keys and not include_unsealed:
                     raise E2EError("SELECTED_EXECUTION_NOT_SEALED")
                 continue
             receipt, _ = verify_backup(execution)
@@ -79,14 +79,28 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
             elif purpose == "scoring":
                 entry["scoring_unavailable_reason"] = "EXECUTION_NOT_READY_FOR_SCORING"
             rows_exported.append(entry)
-        if not rows_exported:
+        if not rows_exported and not include_unsealed:
             raise E2EError("NO_SEALED_EXECUTIONS_TO_EXPORT")
         atomic_json(stage / "parent-batch.json", manifest)
         index = {"schema": PACKAGE_SCHEMA, "parent_batch_id": batch.name, "parent_batch_sha256": digest(manifest),
                  "purpose": purpose, "created_at": utc_now(), "parent_scope": [row["key"] for row in rows],
                  "exported": rows_exported,
+                 "unavailable_executions": [{"execution": row, "reason": "EXECUTION_NOT_SEALED"} for row in selected
+                                            if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}],
                  "not_exported": [row["key"] for row in selected if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}]}
         atomic_json(stage / "package-index.json", index)
+        (stage / "LOCAL_START.md").write_text(
+            "# 本地评分与报告接续\n\n"
+            "本包保留完整父范围、执行原件、原生文本与轨迹、备份和回执。\n\n"
+            "在本地 WildClawBench 环境使用 eval/run_e2e.py import --workspace-root <本地工作根> "
+            "--archive <本ZIP> 完成成员校验、恢复和路径映射。也可通过 --receipt 提供外部校验回执。\n\n"
+            "读取生成的 import-receipt.json 中 scoring_contexts。每项 context_root 是本题标准材料，"
+            "installed_skills 是包内冻结 Skill 的本机路径。按相应 orchestrate-general-e2e 或 "
+            "orchestrate-web-e2e Skill 建立独立单题评分项目，再由 report-general-e2e 或 report-web-e2e "
+            "按 parent-batch.json 和 package-index.json 的完整范围汇总。\n\n"
+            "purpose=results 只提供原始执行资料。purpose=scoring 另提供成功题的标准评分输入和冻结 Skill。"
+            "失败题的 scoring_unavailable_reason、部分轨迹和原始失败资料随包保留。\n",
+            encoding="utf-8")
         descriptor = os.open(stage / "package-integrity.json", os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o444)
         with os.fdopen(descriptor, "w", encoding="utf-8") as integrity:
             freeze_metadata_files(stage)
@@ -149,11 +163,13 @@ def _verify_package(path: Path) -> dict:
         return index
 
 
-def import_package(archive: Path, receipt_path: Path, workspace: Path) -> dict:
-    receipt = read_json(receipt_path)
+def import_package(archive: Path, receipt_path: Path | None, workspace: Path) -> dict:
+    index = _verify_package(archive)
+    receipt = read_json(receipt_path) if receipt_path else {
+        "schema": PACKAGE_SCHEMA, "archive": archive.name, "archive_sha256": file_sha256(archive),
+        "purpose": index["purpose"], "parent_batch_id": index["parent_batch_id"]}
     if receipt.get("schema") != PACKAGE_SCHEMA or file_sha256(archive) != receipt.get("archive_sha256"):
         raise E2EError("RESULT_PACKAGE_ARCHIVE_INVALID")
-    index = _verify_package(archive)
     imports = workspace / "imports"
     imports.mkdir(parents=True, exist_ok=True)
     destination = imports / receipt["archive_sha256"]

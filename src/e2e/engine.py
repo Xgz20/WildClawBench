@@ -135,7 +135,9 @@ def _worker(root: Path, store: BatchStore, item: dict, manifest: dict, unit: dic
                         "task_id": item["task_id"], "attempt_id": item["attempt_id"]}
             if receipt["identity"] != expected:
                 raise E2EError("SEALED_FAILURE_IDENTITY_MISMATCH")
-            current = store.update(item["key"], "FAILED", error=read_json(failure_file))
+            failure = read_json(failure_file)
+            final_phase = failure.get("execution_phase", "FAILED")
+            current = store.update(item["key"], final_phase, error=failure)
         if current["phase"] in {"FAILED", "CANCELLED"}:
             try:
                 cleanup = driver.client.delete_session(current["session_id"])
@@ -183,10 +185,12 @@ def _worker(root: Path, store: BatchStore, item: dict, manifest: dict, unit: dic
         driver.client.close()
 
 
-def _failure(root, store, item, driver, error):
+def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
     row = store.get(item["key"])
     message = str(redact(str(error), driver.config.auth_token))
     failure = {"code": type(error).__name__, "message": message, "report_status": row.get("report", {}).get("status")}
+    if final_phase == "CANCELLED":
+        failure["execution_phase"] = final_phase
     try:
         preservation = driver.salvage()
         atomic_json(driver.staging / "metadata/failure.json", failure)
@@ -199,7 +203,7 @@ def _failure(root, store, item, driver, error):
         cleanup = None
         if row.get("session_id"):
             cleanup = driver.client.delete_session(row["session_id"])
-        store.update(item["key"], "FAILED", resource_held=bool(row.get("session_id") and row.get("resource_held") and not (cleanup or {}).get("confirmed")),
+        store.update(item["key"], final_phase, resource_held=bool(row.get("session_id") and row.get("resource_held") and not (cleanup or {}).get("confirmed")),
                      error=failure, cleanup=cleanup, preservation=preservation,
                      preservation_error=None, finished_at=utc_now())
     except Exception as backup_error:
@@ -305,6 +309,8 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
 
 
 def cleanup_batch(root: Path, config: AgentCubeConfig, *, cancel: bool = False) -> dict:
+    if cancel:
+        return cancel_batch(root, config)
     load_batch(root)
     store = BatchStore(root)
     with controller_lock(root):
@@ -328,4 +334,40 @@ def cleanup_batch(root: Path, config: AgentCubeConfig, *, cancel: bool = False) 
                              cleanup=receipt, cancellation_requested_at=utc_now() if cancel else None)
             finally:
                 client.close()
+    return store.summary()
+
+
+def cancel_batch(root: Path, config: AgentCubeConfig, driver_factory=None) -> dict:
+    """Stop new dispatch and seal owned evidence before releasing dispatched VMs."""
+    manifest = load_batch(root)
+    store = BatchStore(root)
+    units = {unit["unit_id"]: unit for unit in manifest["units"]}
+    tasks = {task["task_id"]: task for task in manifest["tasks"]}
+    stop = threading.Event()
+    with controller_lock(root):
+        for item in store.rows():
+            if not item.get("session_id"):
+                if item.get("creation_intent_at"):
+                    store.update(item["key"], "NEEDS_ATTENTION", error={"code": "UNKNOWN_SESSION_REQUIRES_PLATFORM_RECONCILIATION"})
+                elif item["phase"] not in {"COMPLETED", "FAILED", "CANCELLED"}:
+                    store.update(item["key"], "CANCELLED", resource_held=False, cancellation_requested_at=utc_now())
+                continue
+            if not item["resource_held"]:
+                continue
+            runtime = item.get("runtime") or config.public()
+            if runtime.get("user_id") != config.user_id or runtime.get("app_id") != config.app_id:
+                raise E2EError("CLEANUP_ACCOUNT_MISMATCH")
+            frozen = AgentCubeConfig(**{**runtime, "auth_token": config.auth_token})
+            unit, task = units[item["unit_id"]], tasks[item["task_id"]]
+            execution = inside(root, item["execution_root"])
+            if (execution / "backups/backup-receipt.json").exists() or item.get("report", {}).get("status") == "completed":
+                _worker(root, store, item, manifest, unit, task, frozen, stop, driver_factory)
+                continue
+            factory = driver_factory or DRIVERS[(unit["backend"], unit["harness"])]
+            driver = factory(batch_root=root, store=store, item=item, task=task, unit=unit, config=frozen, stop_event=stop)
+            try:
+                _failure(root, store, item, driver, E2EError("CANCEL_REQUESTED"), final_phase="CANCELLED")
+            finally:
+                driver.client.close()
+        store.export_events()
     return store.summary()

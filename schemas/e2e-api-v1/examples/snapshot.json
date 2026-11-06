@@ -1,0 +1,28 @@
+{
+  "example": true,
+  "batch_id": "example",
+  "state": "completed",
+  "terminal": true,
+  "executions": [
+    {
+      "execution_key": "unit/run-0001/task",
+      "task_id": "task",
+      "unit_id": "unit",
+      "run_index": 1,
+      "attempt_id": "exec-example",
+      "stage": "COMPLETED",
+      "terminal": true,
+      "resource_held": false,
+      "trace_completeness": "complete",
+      "backup_status": "verified",
+      "exportable": true
+    }
+  ],
+  "total": 1,
+  "finished": 1,
+  "resource_held": 0,
+  "allowed_actions": [
+    "export",
+    "restore"
+  ]
+}
