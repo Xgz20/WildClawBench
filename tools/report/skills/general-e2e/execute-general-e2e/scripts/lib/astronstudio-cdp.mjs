@@ -357,6 +357,7 @@ export async function clickProjectsTab(client) {
 
 async function addWorkspace(client, workspace, timeoutMs) {
   await clickProjectsTab(client);
+  await resetOwnedProjectPathForm(client,workspace);
   await waitFor(
     () => client.evaluate(expression(`
       const pickers = Array.from(document.querySelectorAll('.sidebar-segmented-picker'))
@@ -430,6 +431,20 @@ async function addWorkspace(client, workspace, timeoutMs) {
     "等待 AstronStudio 项目路径提交按钮",
   );
   if (!submitted.clicked) throw new Error("AstronStudio 项目路径提交失败");
+}
+
+export async function resetOwnedProjectPathForm(client,workspace) {
+  const result=await client.evaluate(expression(`
+    const inputs=Array.from(document.querySelectorAll('input[aria-label="项目路径"], input[aria-label="Project path"]')).filter(visible);
+    if(!inputs.length)return {reset:false,absent:true};
+    const cancel=Array.from(document.querySelectorAll('button[aria-label="取消添加项目"], button[aria-label="Cancel adding project"]')).filter(visible);
+    const dialogs=Array.from(document.querySelectorAll('[role="dialog"],dialog')).filter(visible);
+    if(inputs.length!==1||inputs[0].value!==${JSON.stringify(workspace)}||cancel.length!==1||dialogs.length)
+      return {reset:false,unsafe:true};
+    cancel[0].click();return {reset:true,owned_workspace:${JSON.stringify(workspace)}};
+  `));
+  if(result.unsafe)throw Error('PROJECT_PATH_DRAFT_NOT_OWNED');
+  return result;
 }
 
 export async function waitForExactProjectIdentity(stateDatabase, workspace, timeoutMs, overrides = {}) {

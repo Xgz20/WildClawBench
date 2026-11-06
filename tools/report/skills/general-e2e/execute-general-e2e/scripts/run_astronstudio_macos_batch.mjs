@@ -778,9 +778,11 @@ export async function runQueue(plan, args, overrides = {}) {
       if (!row) throw new Error("指定的准备失败任务不在冻结队列中");
       const automation = await readJsonIfPresent(controlPath(plan, row.task_id, "automation-state.json"));
       validateAutomation(plan, row, automation);
+      const peers=state.tasks.filter(task=>task.task_id!==row.task_id&&task.phase==='RUNNING');
       if (!isRetryablePreSendFailure(automation)
-        || state.tasks.some((task) => ["RUNNING", "NEEDS_ATTENTION"].includes(task.phase))) {
-        throw new Error("准备失败接续要求指定任务零发送且队列没有活动或未知发送任务");
+        || state.tasks.some((task) => task.phase==='NEEDS_ATTENTION')
+        || peers.length>=args.runSlots||peers.some(task=>!task.session.session_id)) {
+        throw new Error("准备失败接续要求指定任务零发送且同伴原生身份完整、没有未知发送或超槽");
       }
       state.history.push({ at: dependencies.now(), event: "ZERO_SEND_PREPARATION_RETRY_REQUESTED",
         task_id: row.task_id, attempt_id: row.selected_attempt_id });
@@ -788,7 +790,7 @@ export async function runQueue(plan, args, overrides = {}) {
       const quotaTransaction = row.quota_recoveries?.at(-1);
       const quotaAuthorization = quotaTransaction?.new_attempt_id === row.selected_attempt_id
         ? await cachedAuthorization(plan, state, row, quotaTransaction) : null;
-      const result = await dependencies.runTask(row.task_id, "retry-pre-send", [], quotaAuthorization?.path || null);
+      const result = await dependencies.runTask(row.task_id, "retry-pre-send", peers.map(task=>task.session.session_id), quotaAuthorization?.path || null);
       row.driver_exit_code = result.code;
       const recovered = await readJsonIfPresent(controlPath(plan, row.task_id, "automation-state.json"));
       synchronizeTaskFromAutomation(plan, row, recovered, dependencies.now());

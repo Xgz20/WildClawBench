@@ -82,3 +82,5 @@ Execute0.14.49 / 启动拒绝组件1.0.1另支持`bound-native-unsubmitted-start
 Execute0.14.50 / 启动拒绝组件1.0.2保留同生命周期的空预热session connecting/ready及acode_apps 30秒启动失败事件，逐项验证原生thread、lifecycleGeneration、providerThreadId、原始方法/状态/错误；这些连接初始化行不是模型工具轨迹。它们与明确not-submitted的原拒绝共同封存，不删行以绕过门禁，不修改Harness的MCP配置或超时。任何turn/item/content事件、外来生命周期、实际活动turn或未结算请求继续拒绝。
 
 Execute0.14.51 / Driver0.4.20对精确原生终态后重开的用量账本增加只读闭合核验：SQL最新head已completed/error/interrupted、无active/pending，runtime已stopped且原生turn.completed或后续provider.stopRuntimeSession对同一闭合时刻成立；同turn/provider身份的重开tail只能含typed token/gateway usage，时钟和序号均闭合。完整历史事件与计费数据不删除；原provider终态已被客户端消费/清理时，只接受剩余完整typed资源行，不重构终态。任何模型动作、未知状态/身份、未停止runtime或待交互仍阻塞；无项目的活动会话不会被INNER JOIN漏掉。该修复不更改模型/Prompt/槽位/重试策略。
+
+Execute0.14.52 / Driver0.4.21允许显式托管零发送准备恢复与精确已登记同伴共存：保留原失败SHA与attempt，目标无发送意图/接受/会话，活动同伴的session均在队列allowlist且总数低于冻结槽数，没有未知发送；单槽或外来活动仍拒绝。该动作不会刷新页面/重启/停止同伴。添加项目表单只有完整路径精确属于本任务、没有弹窗且唯一取消控件时才关闭并重建；其他路径、Prompt和未知草稿不动。

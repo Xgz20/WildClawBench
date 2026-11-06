@@ -17,6 +17,7 @@ import {
   reloadIdleProjectProjection,
   waitForExactProjectIdentity,
   createFreshTask,
+  resetOwnedProjectPathForm,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
@@ -939,6 +940,27 @@ test("zero-send recovery rejects native activity and any persisted dispatch boun
     assert.equal(await readFile(config.stateFile, "utf8"), original);
     assert.equal(clicks.count, 0);
   } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
+});
+
+test('managed zero-send recovery keeps a verified peer running and preserves the original attempt',async()=>{
+  const config=await fixture(),clicks={count:0};
+  try{
+    const first=commonDependencies(config,[[]],clicks);first.prepareExecutionUi=async()=>{throw Error('owned project form failed');};
+    const failed=await executeSingleTask(config,first),old=await readFile(config.stateFile);
+    const peer={...nativeSession(),thread_id:'peer-thread',session_id:'peer-session',cwd:'/peer'};
+    const deps=commonDependencies(config,[[]],clicks);let reads=0;
+    deps.queryNativeSessions=async()=>++reads<=3?[peer]:[peer,{...nativeSession(),cwd:config.candidateWorkspace}];
+    const result=await executeSingleTask({...config,resume:true,retryPreSendFailure:true,managedRunSlots:3,allowedActiveSessionIds:['peer-session'],detachAfterSubmit:true},deps);
+    assert.equal(result.identity.attempt_id,failed.identity.attempt_id);assert.equal(result.send.dispatch_attempt_count,1);assert.equal(clicks.count,1);
+    assert.equal(result.phase,'RUNNING');const audit=result.history.find(r=>r.event==='ZERO_SEND_PREPARATION_RESUMED');
+    assert.deepEqual(await readFile(join(config.unitRoot,audit.previous_state_path)),old);
+  }finally{await rm(config.unitRoot,{recursive:true,force:true});}
+});
+
+test('owned project-path reset refuses a foreign form and never resets a Prompt',async()=>{
+  assert.deepEqual(await resetOwnedProjectPathForm({evaluate:async()=>({reset:false,absent:true})},'/owned'),{reset:false,absent:true});
+  assert.equal((await resetOwnedProjectPathForm({evaluate:async()=>({reset:true,owned_workspace:'/owned'})},'/owned')).reset,true);
+  await assert.rejects(resetOwnedProjectPathForm({evaluate:async()=>({reset:false,unsafe:true})},'/owned'),/PROJECT_PATH_DRAFT_NOT_OWNED/);
 });
 
 test("managed startup restores configuration controls only from a bound queue-owned route", async () => {

@@ -43,7 +43,7 @@ import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-disco
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
 
-export const EXECUTION_DRIVER_VERSION = "0.4.20";
+export const EXECUTION_DRIVER_VERSION = "0.4.21";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -1047,9 +1047,12 @@ export async function executeSingleTask(config, overrides = {}) {
     // Recheck both the environment and native source before changing any state.
     await currentProbe(config, dependencies, true);
     const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
-    if (sessions.some(isBlockingActiveSession)
+    const active=sessions.filter(isBlockingActiveSession),allowed=new Set(config.allowedActiveSessionIds||[]);
+    const managedOwnedPeers=config.managedRunSlots>1&&config.detachAfterSubmit
+      &&active.length<config.managedRunSlots&&active.every(row=>row.session_id&&allowed.has(row.session_id));
+    if (active.length&&!managedOwnedPeers
       || sessions.some((session) => resolve(String(session.cwd || "")) === config.candidateWorkspace)) {
-      throw new Error("准备失败接续要求原生空闲且目标 Workspace 没有已接受的会话");
+      throw new Error("准备失败接续要求原生空闲或精确队列托管同伴，目标 Workspace 不能有已接受会话");
     }
     const oldBytes = await readFile(config.stateFile);
     const oldSha = sha256(oldBytes);

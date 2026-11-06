@@ -132,6 +132,28 @@ test("queue resumes an explicit zero-send preparation failure without replacing 
   } finally { await rm(current.unitRoot, { recursive: true, force: true }); }
 });
 
+test('explicit managed preparation recovery forwards only the running peer identity and never redispatches it',async()=>{
+  const current=await fixture([TASK_IDS[0],TASK_IDS[1]],['--continue-on-terminal-failure']);
+  try{
+    const peer=automation(current.plan,TASK_IDS[0],'peer-attempt');
+    const failed=automation(current.plan,TASK_IDS[1],'zero-attempt','FAILED');
+    failed.prompt={send_status:'not_sent',sent_at:null};failed.send={dispatch_attempt_count:0,dispatch_armed_at:null,dispatch_completed_at:null};
+    failed.session={verified:false,thread_id:null,turn_id:null,session_id:null};failed.execution.business_status='infrastructure_error';failed.execution.error={code:'PRE_SEND_DRIVER_ERROR'};failed.history=[];
+    await writeAutomation(current.plan,TASK_IDS[0],peer);await writeAutomation(current.plan,TASK_IDS[1],failed);
+    await mkdir(current.plan.queueRoot,{recursive:true});await writeFile(current.plan.queueStateFile,JSON.stringify(createQueueState(current.plan)));
+    const calls=[];
+    const result=await runQueue(current.plan,{...current.args,resume:true,retryPreSendTaskId:TASK_IDS[1]},{sleep:async()=>{},runTask:async(task,operation,active)=>{
+      calls.push({task,operation,active});
+      if(operation==='retry-pre-send'){assert.equal(task,TASK_IDS[1]);assert.deepEqual(active,[peer.session.session_id]);await writeAutomation(current.plan,task,automation(current.plan,task,'zero-attempt','COMPLETED'));}
+      else {assert.equal(operation,'observe');assert.equal(task,TASK_IDS[0]);await writeAutomation(current.plan,task,automation(current.plan,task,'peer-attempt','COMPLETED'));}
+      return {code:0,signal:null};
+    }});
+    assert.equal(result.phase,'COMPLETED');assert.equal(calls.filter(x=>x.operation==='retry-pre-send').length,1);
+    assert.equal(calls.some(x=>x.task===TASK_IDS[0]&&x.operation==='dispatch'),false);
+    assert.equal(result.tasks[1].selected_attempt_id,'zero-attempt');
+  }finally{await rm(current.unitRoot,{recursive:true,force:true});}
+});
+
 test("five tasks fill default three slots and dynamically refill in manifest order", async () => {
   const current = await fixture();
   const calls = [];

@@ -44,3 +44,5 @@ queue digest 覆盖 batch/unit、dataset、manifest SHA、运行配置 digest、
 ## 并发门禁
 
 `--run-slots` 默认 `3`、上限 `8`，且不得超过冻结运行配置的 `maximum_execution_concurrency`。每次发送前，单题 Driver 会读取原生状态库：所有活动 session 必须都属于队列已登记集合且数量小于槽位上限；出现未登记活动 session 时失败关闭，不发送 Prompt。改变槽位、任务范围或 Driver 参数后不得恢复旧 queue。
+
+0.14.52显式`--resume --retry-pre-send-task-id ID`可在精确绑定RUNNING同伴存在且有空槽时恢复该零发送任务；同伴只观察、不重派。队列传递全部当前同伴session allowlist到单题Driver，二次fresh原生核验仍可拒绝任何外来活动、目标已接受或身份不完整；任何NEEDS_ATTENTION同伴阻断。此恢复不适用于已发送/未知发送。原配置/题序/并发digest不变。
