@@ -46,3 +46,5 @@ queue digest 覆盖 batch/unit、dataset、manifest SHA、运行配置 digest、
 `--run-slots` 默认 `3`、上限 `8`，且不得超过冻结运行配置的 `maximum_execution_concurrency`。每次发送前，单题 Driver 会读取原生状态库：所有活动 session 必须都属于队列已登记集合且数量小于槽位上限；出现未登记活动 session 时失败关闭，不发送 Prompt。改变槽位、任务范围或 Driver 参数后不得恢复旧 queue。
 
 0.14.52显式`--resume --retry-pre-send-task-id ID`可在精确绑定RUNNING同伴存在且有空槽时恢复该零发送任务；同伴只观察、不重派。队列传递全部当前同伴session allowlist到单题Driver，二次fresh原生核验仍可拒绝任何外来活动、目标已接受或身份不完整；任何NEEDS_ATTENTION同伴阻断。此恢复不适用于已发送/未知发送。原配置/题序/并发digest不变。
+
+0.14.53可在全部已派任务真正原生空闲、队列worker结束后运行`scripts/prepare_astronstudio_native_projects.mjs --unit-root ABS --run-config ABS --queue-id ID --output NEW_JSON`。入口核验manifest SHA、原队列完整task_ids/config digest、真实模型权限及每个项目唯一完整cwd；既有项目直接复核，缺失项目只用公开“添加项目/输入路径”登记。不调用新任务/新线程/编辑器/发送，不修改automation state或队列attempt，不开私有评分目录。任意活动/外来worker/未知UI表单/原生身份歧义/配置漂移均拒绝；部分失败保留已有原生项目和独立准备回执，恢复新output时再次幂等读回。它不能冒充70题执行，也不改变UI发送单槽和原生Agent最多3槽。

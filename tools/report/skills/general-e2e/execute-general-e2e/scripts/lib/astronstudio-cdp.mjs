@@ -355,7 +355,7 @@ export async function clickProjectsTab(client) {
   return result;
 }
 
-async function addWorkspace(client, workspace, timeoutMs) {
+export async function addWorkspace(client, workspace, timeoutMs) {
   await clickProjectsTab(client);
   await resetOwnedProjectPathForm(client,workspace);
   await waitFor(

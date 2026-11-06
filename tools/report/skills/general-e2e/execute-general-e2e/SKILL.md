@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.53` 增加prepare_astronstudio_native_projects.mjs：仅真实原生空闲且队列worker已退出时，按原冻结完整题序幂等登记execution Workspace为原生项目，逐项核验project/cwd。入口不创建任务/聊天、不填Prompt、不发送、不改模型、不刷新/重启，准备回执独立保存，不能当执行或评分。用于避免在后台流式任务运行期间反复进行项目登记。
+
 `0.14.52` 托管队列可在所有活动同伴均精确登记、无未知发送且有空槽时接续已证明零发送的准备失败，同伴继续运行；不要求单槽式全局空闲。仍拒绝目标Workspace已接受会话、非零/未知发送及外来同伴。只重建精确本任务的项目路径表单，不重置Prompt、不刷新页面或重启。旧失败按SHA留存，同一attempt只作首次发送。独立单槽恢复继续要求全局空闲。
 
 `0.14.51` 闭合原生turn后晚到的typed用量回执不再被误认成模型活动：仅精确head/provider身份、原生terminal先于重开的ledger、runtime stopped/无active，且tail仅合法usage行时忽略该账本活动标记；不删除任何原生行。无项目的未知活动会话仍保留为blocking。
