@@ -231,7 +231,7 @@ function options(value) {
   };
 }
 
-test('runtime interruption can be formally frozen only with intact three-source confirmation, without editing original state', async () => {
+for (const missingProjection of [false, true]) test(`runtime interruption formal freeze preserves original state; missing provider=${missingProjection}`, async () => {
   const value = await fixture({ businessStatus:'cancelled', includeResource:false, traceStatus:'partial' });
   try {
     const state = JSON.parse(await readFile(value.statePath,'utf8'));delete state.timeout;
@@ -245,17 +245,19 @@ test('runtime interruption can be formally frozen only with intact three-source 
       {type:'event_msg',timestamp:'2026-09-18T00:00:08.000Z',payload:{type:'turn_aborted',turn_id:session.turn_id,
         reason:'interrupted',completed_at:1789689608,duration_ms:7000}},
     ].map(JSON.stringify).join('\n')+'\n');
-    const raw=Buffer.from(JSON.stringify({sequence:1,event_type:'turn.completed',thread_id:session.thread_id,turn_id:session.turn_id,
+    let raw=Buffer.from(JSON.stringify({sequence:1,event_type:'turn.completed',thread_id:session.thread_id,turn_id:session.turn_id,
       event:{threadId:session.thread_id,turnId:session.turn_id,providerRefs:{providerThreadId:session.session_id,providerTurnId:session.turn_id},
         payload:{state:'interrupted'},raw:{payload:{threadId:session.session_id,turn:{id:session.turn_id,status:'interrupted',error:null,
           completedAt:1789689608,durationMs:7000}}}}})+'\n');
+    if (missingProjection) raw=Buffer.alloc(0);
     const index=JSON.parse(await readFile(value.indexPath,'utf8'));index.canonical_source_policy={id:'bound-native-sdk-canonical/v1'};
     index.raw_trace=[{path:'raw/astronstudio-provider-events.jsonl',sha256:digest(raw),size:raw.length},
       {path:'raw/astronstudio-rollout.jsonl',sha256:digest(sdk),size:sdk.length}];
     const native={turn_state:'interrupted',termination_origin:'runtime',latest_turn_id:session.turn_id,session_status:'interrupted',
       active_turn_id:null,pending_count:0,cwd:session.cwd,completed_at:'2026-09-18T00:00:09Z'};
+    if (missingProjection) native.runtime_turn_event_count=0;
     const proof=deriveRuntimeInterruption(stateBytes,index,sdk,raw,native);
-    index.runtime_interruption_profile={id:RUNTIME_INTERRUPTION_PROFILE};index.binding_evidence=[];
+    index.runtime_interruption_profile={id:proof.profile};index.binding_evidence=[];
     const traceRoot=join(value.root,'fixture-input/trace');await mkdir(join(traceRoot,'bindings'));
     await writeFile(join(traceRoot,'raw/astronstudio-provider-events.jsonl'),raw);
     await writeFile(join(traceRoot,'raw/astronstudio-rollout.jsonl'),sdk);

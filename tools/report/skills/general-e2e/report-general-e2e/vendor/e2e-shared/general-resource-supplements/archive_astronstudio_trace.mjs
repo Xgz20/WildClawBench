@@ -249,6 +249,7 @@ WHERE turns.thread_id = ${sqlString(threadId)}
     const extra = database.prepare(`SELECT turns.termination_origin AS termination_origin,
       threads.latest_turn_id AS latest_turn_id, sessions.status AS session_status,
       sessions.active_turn_id AS active_turn_id,
+      (SELECT COUNT(*) FROM provider_runtime_events e WHERE e.thread_id=turns.thread_id AND e.turn_id=turns.turn_id) AS runtime_turn_event_count,
       (SELECT COUNT(*) FROM projection_pending_interactions p WHERE p.thread_id=turns.thread_id AND p.status='pending') AS pending_count
       FROM projection_turns turns JOIN projection_threads threads ON threads.thread_id=turns.thread_id
       JOIN projection_thread_sessions sessions ON sessions.thread_id=turns.thread_id
@@ -899,8 +900,10 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
       { path: RUNTIME_INTERRUPTION_NATIVE, bytes: prettyJsonBytes(native.binding) },
       { path: RUNTIME_INTERRUPTION_PROOF, bytes: prettyJsonBytes(proof) });
     index.binding_evidence = bindingArtifacts.map(a => artifact(a.path, a.bytes));
-    index.runtime_interruption_profile = { id: RUNTIME_INTERRUPTION_PROFILE, original_state_modified: false,
+    index.runtime_interruption_profile = { id: proof.profile, original_state_modified: false,
       human_cancellation_inferred: false, scoreability_changed: false };
+    if (proof.provider_projection) index.completeness = { ...index.completeness, status:'partial',
+      missing:[...new Set([...(index.completeness.missing ?? []), 'runtime-provider-turn-projection-unavailable'])] };
   }
   const indexBytes = prettyJsonBytes(index);
   await mkdir(join(outputDir, "raw"), { recursive: true });

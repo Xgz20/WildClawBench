@@ -5,6 +5,7 @@ import { mkdtemp, mkdir, writeFile, rm, readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { deriveRuntimeInterruption, verifyRuntimeInterruption, RUNTIME_INTERRUPTION_PROFILE,
+  RUNTIME_INTERRUPTION_MISSING_PROFILE,
   RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 const hash = b => createHash('sha256').update(b).digest('hex');
@@ -30,6 +31,36 @@ function fixture() {
 }
 const lines = rows => Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
 const derive = f => deriveRuntimeInterruption(bytes(f.state), f.index, lines(f.sdk), lines(f.provider), f.native);
+test('a missing provider projection is explicitly partial and needs verified zero native turn rows', () => {
+  const f=fixture();f.native.runtime_turn_event_count=0;
+  const p=deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),Buffer.alloc(0),f.native);
+  assert.equal(p.profile,RUNTIME_INTERRUPTION_MISSING_PROFILE);
+  assert.equal(p.provider_terminal_sequence,null);assert.equal(p.provider_projection.evidence_completeness,'partial');
+  for (const count of [undefined,1,null]) {
+    assert.throws(()=>deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),Buffer.alloc(0),
+      {...f.native,runtime_turn_event_count:count}),/PROVIDER_TERMINAL_AMBIGUOUS/);
+  }
+  assert.throws(()=>deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),Buffer.from('{}\n'),f.native),/PROVIDER_TERMINAL_AMBIGUOUS/);
+});
+test('resource-only mirrors cannot stand for activity and must match the complete original SDK usage', () => {
+  const f=fixture(),total={input_tokens:10,cached_input_tokens:5,output_tokens:2,reasoning_output_tokens:0,total_tokens:12};
+  f.sdk.splice(-1,0,{type:'event_msg',payload:{type:'token_count',info:{total_token_usage:total,last_token_usage:total}}});
+  const usage={totalTokens:12,inputTokens:10,cachedInputTokens:5,outputTokens:2,reasoningOutputTokens:0};
+  const row={sequence:1,event_type:'thread.token-usage.updated',thread_id:'thread',turn_id:'turn',event:{type:'thread.token-usage.updated',
+    threadId:'thread',turnId:'turn',providerRefs:{providerThreadId:'sdk',providerTurnId:'turn'},
+    raw:{source:'acode',method:'thread/tokenUsage/updated',payload:{threadId:'sdk',turnId:'turn',tokenUsage:{total:usage,last:usage}}},
+    payload:{usage:{totalProcessedTokens:12,totalInputTokens:10,totalCachedInputTokens:5,totalOutputTokens:2,totalReasoningOutputTokens:0,
+      lastUsedTokens:12,lastInputTokens:10,lastCachedInputTokens:5,lastOutputTokens:2,lastReasoningOutputTokens:0}}}};
+  f.native.runtime_turn_event_count=1;
+  const proof=deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),lines([row]),f.native);
+  assert.equal(proof.profile,RUNTIME_INTERRUPTION_MISSING_PROFILE);
+  assert.equal(proof.provider_projection.status,'verified-resource-only-at-collection');
+  assert.equal(proof.provider_terminal_sequence,null);
+  const wrong=structuredClone(row);wrong.event.payload.usage.totalInputTokens=11;
+  assert.throws(()=>deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),lines([wrong]),f.native),/PROVIDER_TERMINAL_AMBIGUOUS/);
+  const activity=structuredClone(row);activity.event_type='item.started';
+  assert.throws(()=>deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),lines([activity]),f.native),/PROVIDER_TERMINAL_AMBIGUOUS/);
+});
 test('runtime interruption needs independently matching SQL, original SDK and provider terminal identities', () => {
   const f = fixture(), proof = derive(f);
   assert.equal(proof.cancellation_confirmed,true); assert.equal(proof.native_termination_origin,'runtime');
