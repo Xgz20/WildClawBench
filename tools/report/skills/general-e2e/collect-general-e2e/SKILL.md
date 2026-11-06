@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.31` 后台退出后缺少provider终态时，仅在同一只读SQL快照中存在精确restart-reconcile事件及accepted回执、对应原最新turn已runtime interrupted且无active/pending、原SDK唯一中断完全绑定时确认失败已停止。原部分provider行全部保留，终态序号null、证据partial；另为FAILED/cancelled且精确turn-interrupted错误、仅session字段滞留running的原state留独立证明，仍核验实际SQL/SDK终态。均不补造事件、不改原state或评分资格；未知/重复/拒绝回执及矛盾终态继续拒绝。见[后台重启中断证明](references/native-restart-interruption.md)。
+
 `0.11.30` 完成态原生落盘终稿为同一消息SDK终稿严格非空前缀时，另存分歧原件/精确绑定证明并保持partial；原回复不补全、不替换，评分仍由原证据门禁决定，不能因SDK正文完整自动授分。
 
 `0.11.29` 原生运行时中断另支持显式缺失生命周期投影Profile：同一只读SQL快照须证明0条事件/零字节原件，或全量仅有与SDK total/last用量逐项一致的资源镜像；SDK仍完整绑定原Prompt及中断，只确认失败已停止，缺证保持partial、终态序号null，不补造行、不改变评分资格。

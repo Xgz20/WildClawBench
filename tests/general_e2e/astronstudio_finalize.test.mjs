@@ -272,11 +272,14 @@ test('formal prefix-divergence collection preserves native final bytes and expli
  }finally{await rm(value.root,{recursive:true,force:true});}
 });
 
-for (const missingProjection of [false, true]) test(`runtime interruption formal freeze preserves original state; missing provider=${missingProjection}`, async () => {
+for (const projection of ['native','missing','reconciled','stale-session']) test(`runtime interruption formal freeze preserves original state; projection=${projection}`, async () => {
+  const missingProjection=projection==='missing';
   const value = await fixture({ businessStatus:'cancelled', includeResource:false, traceStatus:'partial' });
   try {
     const state = JSON.parse(await readFile(value.statePath,'utf8'));delete state.timeout;
-    state.session.native_status='interrupted';await writeJson(value.statePath,state);
+    state.session.native_status=projection==='stale-session'?'running':'interrupted';
+    if(projection==='stale-session')state.execution.error={code:'ASTRONSTUDIO_TURN_INTERRUPTED'};
+    await writeJson(value.statePath,state);
     const stateBytes=await readFile(value.statePath), prompt=await readFile(state.prompt.path,'utf8');
     const session=state.session;
     const sdk=Buffer.from([
@@ -297,6 +300,18 @@ for (const missingProjection of [false, true]) test(`runtime interruption formal
     const native={turn_state:'interrupted',termination_origin:'runtime',latest_turn_id:session.turn_id,session_status:'interrupted',
       active_turn_id:null,pending_count:0,cwd:session.cwd,completed_at:'2026-09-18T00:00:09Z'};
     if (missingProjection) native.runtime_turn_event_count=0;
+    if(projection==='reconciled'){
+      raw=Buffer.from(JSON.stringify({sequence:1,event_type:'turn.started',thread_id:session.thread_id,turn_id:session.turn_id,
+        event:{type:'turn.started',threadId:session.thread_id,turnId:session.turn_id}})+'\n');
+      index.raw_trace[0]={path:'raw/astronstudio-provider-events.jsonl',sha256:digest(raw),size:raw.length};
+      native.runtime_turn_event_count=1;const time=native.completed_at,command=`restart-reconcile:${session.thread_id}:${time}`;
+      native.restart_reconciliations=[{sequence:2,event_id:'recovery',aggregate_kind:'thread',stream_id:session.thread_id,
+        event_type:'thread.session-set',occurred_at:time,command_id:command,correlation_id:command,causation_event_id:null,
+        actor_kind:'client',metadata:{persistedEventSchemaVersion:1},payload:{threadId:session.thread_id,session:{threadId:session.thread_id,
+          status:'interrupted',providerName:'acode',runtimeMode:'full-access',activeTurnId:null,lastError:null,updatedAt:time}},
+        receipt:{command_id:command,aggregate_kind:'thread',aggregate_id:session.thread_id,accepted_at:time,result_sequence:2,
+          status:'accepted',error:null,fingerprint_version:1,command_fingerprint:'a'.repeat(64)}}];
+    }
     const proof=deriveRuntimeInterruption(stateBytes,index,sdk,raw,native);
     index.runtime_interruption_profile={id:proof.profile};index.binding_evidence=[];
     const traceRoot=join(value.root,'fixture-input/trace');await mkdir(join(traceRoot,'bindings'));

@@ -6,6 +6,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { deriveRuntimeInterruption, verifyRuntimeInterruption, RUNTIME_INTERRUPTION_PROFILE,
   RUNTIME_INTERRUPTION_MISSING_PROFILE,
+  RUNTIME_INTERRUPTION_RECONCILED_PROFILE,
+  RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE,
   RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 const hash = b => createHash('sha256').update(b).digest('hex');
@@ -31,6 +33,60 @@ function fixture() {
 }
 const lines = rows => Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
 const derive = f => deriveRuntimeInterruption(bytes(f.state), f.index, lines(f.sdk), lines(f.provider), f.native);
+test('failed interrupted turn can retain a stale running session field without rewriting original state', () => {
+  const f=fixture();f.state.session.native_status='running';f.state.execution.error={code:'ASTRONSTUDIO_TURN_INTERRUPTED'};
+  const original=bytes(f.state),proof=derive(f);
+  assert.equal(proof.profile,RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE);
+  assert.equal(proof.state_session_projection.original_native_status,'running');
+  assert.equal(proof.cancellation_confirmed,true);assert.equal(proof.original_state_modified,false);
+  assert.equal(proof.scoreability_changed,false);assert.deepEqual(bytes(f.state),original);
+  delete f.state.execution.error;assert.throws(()=>derive(f),/STATE_UNBOUND/);
+  const active=fixture();active.state.phase='RUNNING';active.state.execution.business_status=null;
+  assert.throws(()=>derive(active),/STATE_UNBOUND/);
+});
+function reconciledFixture() {
+  const f=fixture(),time=f.native.completed_at,command=`restart-reconcile:thread:${time}`;
+  f.provider=[{sequence:1,event_type:'turn.started',thread_id:'thread',turn_id:'turn',
+    event:{type:'turn.started',threadId:'thread',turnId:'turn',providerRefs:{providerThreadId:'sdk',providerTurnId:'turn'}}}];
+  f.native.runtime_turn_event_count=1;
+  f.native.restart_reconciliations=[{sequence:2,event_id:'native-restart-event',aggregate_kind:'thread',stream_id:'thread',
+    event_type:'thread.session-set',occurred_at:time,command_id:command,correlation_id:command,causation_event_id:null,
+    actor_kind:'client',metadata:{persistedEventSchemaVersion:1},payload:{threadId:'thread',session:{threadId:'thread',
+      status:'interrupted',providerName:'acode',runtimeMode:'full-access',activeTurnId:null,lastError:null,updatedAt:time}},
+    receipt:{command_id:command,aggregate_kind:'thread',aggregate_id:'thread',accepted_at:time,result_sequence:2,
+      status:'accepted',error:null,fingerprint_version:1,command_fingerprint:'a'.repeat(64)}}];
+  return f;
+}
+test('native restart reconciliation confirms stopped failure but retains the missing provider terminal', () => {
+  const f=reconciledFixture(),proof=derive(f);
+  assert.equal(proof.profile,RUNTIME_INTERRUPTION_RECONCILED_PROFILE);
+  assert.equal(proof.provider_terminal_sequence,null);
+  assert.equal(proof.provider_projection.status,'partial-before-native-restart-reconciliation');
+  assert.equal(proof.provider_projection.fabricated_rows,0);
+  assert.equal(proof.cancellation_confirmed,true);
+  assert.equal(proof.human_cancellation_inferred,false);
+  assert.equal(proof.scoreability_changed,false);
+  assert.equal(proof.native_reconciliation.sequence,2);
+  const absent=reconciledFixture();delete absent.native.restart_reconciliations;
+  assert.throws(()=>derive(absent),/PROVIDER_TERMINAL_AMBIGUOUS/);
+  const patches=[
+    f=>f.native.restart_reconciliations.push(structuredClone(f.native.restart_reconciliations[0])),
+    f=>f.native.restart_reconciliations[0].payload.session.status='running',
+    f=>f.native.restart_reconciliations[0].payload.session.activeTurnId='turn',
+    f=>f.native.restart_reconciliations[0].stream_id='foreign',
+    f=>f.native.restart_reconciliations[0].command_id='user-interrupt',
+    f=>f.native.restart_reconciliations[0].receipt.result_sequence=3,
+    f=>f.native.restart_reconciliations[0].receipt.status='rejected',
+    f=>f.native.restart_reconciliations[0].receipt.command_fingerprint='invalid',
+    f=>f.native.runtime_turn_event_count=2,
+    f=>f.provider[0].event.turnId='foreign',
+    f=>f.provider[0].event_type=f.provider[0].event.type='unknown.lifecycle',
+  ];
+  for(const patch of patches){const changed=reconciledFixture();patch(changed);assert.throws(()=>derive(changed),/RECONCILIATION_/);}
+  const contradiction=reconciledFixture();contradiction.provider.push(fixture().provider[0]);
+  contradiction.provider.at(-1).event.payload.state='completed';
+  assert.throws(()=>derive(contradiction),/PROVIDER_SDK_MISMATCH/);
+});
 test('a missing provider projection is explicitly partial and needs verified zero native turn rows', () => {
   const f=fixture();f.native.runtime_turn_event_count=0;
   const p=deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),Buffer.alloc(0),f.native);

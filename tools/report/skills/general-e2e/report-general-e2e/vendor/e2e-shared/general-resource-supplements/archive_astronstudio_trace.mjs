@@ -258,6 +258,43 @@ WHERE turns.thread_id = ${sqlString(threadId)}
       WHERE turns.thread_id=${sqlString(threadId)} AND turns.turn_id=${sqlString(turnId)}`).all();
     if (extra.length !== 1) throw Error('RUNTIME_INTERRUPTION_NATIVE_BINDING_AMBIGUOUS');
     Object.assign(binding, extra[0]);
+    // A crashed backend can omit its provider terminal event. Preserve the
+    // native restart reconciliation and accepted command receipt from this
+    // same snapshot; neither synthesizes a provider event nor changes state.
+    if (binding.runtime_turn_event_count > 0) {
+      const terminalCount = database.prepare(`SELECT COUNT(*) AS count FROM provider_runtime_events
+        WHERE thread_id=${sqlString(threadId)} AND turn_id=${sqlString(turnId)}
+        AND event_type='turn.completed'`).all()[0]?.count;
+      const nonMetricCount = database.prepare(`SELECT COUNT(*) AS count FROM provider_runtime_events
+        WHERE thread_id=${sqlString(threadId)} AND turn_id=${sqlString(turnId)}
+        AND event_type!='thread.token-usage.updated'`).all()[0]?.count;
+      if (terminalCount === 0 && nonMetricCount > 0) {
+        const tables = database.prepare(`SELECT name FROM sqlite_master WHERE type='table'
+          AND name IN ('orchestration_events','orchestration_command_receipts')`).all();
+        if (tables.length === 2) {
+          const command = `restart-reconcile:${threadId}:${binding.completed_at}`;
+          const reconciliations = database.prepare(`SELECT e.*,
+            c.command_id AS receipt_command_id,c.aggregate_kind AS receipt_aggregate_kind,
+            c.aggregate_id AS receipt_aggregate_id,c.accepted_at AS receipt_accepted_at,
+            c.result_sequence AS receipt_result_sequence,c.status AS receipt_status,
+            c.error AS receipt_error,c.fingerprint_version AS receipt_fingerprint_version,
+            c.command_fingerprint AS receipt_command_fingerprint
+            FROM orchestration_events e LEFT JOIN orchestration_command_receipts c ON c.command_id=e.command_id
+            WHERE e.stream_id=${sqlString(threadId)} AND e.event_type='thread.session-set'
+            AND e.command_id=${sqlString(command)} ORDER BY e.sequence`).all();
+          if (reconciliations.length) binding.restart_reconciliations = reconciliations.map(row => ({
+            sequence:row.sequence,event_id:row.event_id,aggregate_kind:row.aggregate_kind,stream_id:row.stream_id,
+            event_type:row.event_type,occurred_at:row.occurred_at,command_id:row.command_id,
+            causation_event_id:row.causation_event_id,correlation_id:row.correlation_id,actor_kind:row.actor_kind,
+            payload:JSON.parse(row.payload_json),metadata:JSON.parse(row.metadata_json),
+            receipt:{command_id:row.receipt_command_id,aggregate_kind:row.receipt_aggregate_kind,
+              aggregate_id:row.receipt_aggregate_id,accepted_at:row.receipt_accepted_at,
+              result_sequence:row.receipt_result_sequence,status:row.receipt_status,error:row.receipt_error,
+              fingerprint_version:row.receipt_fingerprint_version,command_fingerprint:row.receipt_command_fingerprint},
+          }));
+        }
+      }
+    }
   }
   return binding;
 }
@@ -927,6 +964,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
       human_cancellation_inferred: false, scoreability_changed: false };
     if (proof.provider_projection) index.completeness = { ...index.completeness, status:'partial',
       missing:[...new Set([...(index.completeness.missing ?? []), 'runtime-provider-turn-projection-unavailable'])] };
+    if (proof.state_session_projection) index.completeness = { ...index.completeness, status:'partial',
+      missing:[...new Set([...(index.completeness.missing ?? []), 'runtime-state-session-projection-stale'])] };
   }
   if(prefixDivergence){
     bindingArtifacts.push({path:FINAL_PREFIX_STATE,bytes:stateBytes},{path:FINAL_PREFIX_NATIVE,bytes:prettyJsonBytes(prefixDivergence.projection)},

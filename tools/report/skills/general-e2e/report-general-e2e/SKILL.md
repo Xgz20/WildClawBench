@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.30` 复算显式bound-native-runtime-reconciled-interruption/v1及stale-session证明：核验原SDK中断、SQL最新头的runtime终态、需要时同快照原restart-reconcile事件及accepted回执。原state滞后字段不改，缺少provider终态的原部分行不丢弃，资源保持partial/原生终态序号null；失败或未知分不补零，不推断人工取消或改变评分资格。原版本证明保持兼容。
+
 `0.8.29` 可显式传`--run-audit ABS`，对完整选定范围逐题绑定执行/评分attempt，核验管理员原生区间审计的来源SHA并重算区间重叠峰值，另列配置槽位、区间覆盖及控制审阅暂停。缺失区间不补零，部分峰值仅是下限；不把配置当实际并发，不从区间重叠推断始终满载或同时HTTP请求。MD/Excel/JSON同源披露，规范化审计进入原回执和封存包；分数、原流程/任务耗时保持原值。输入审计必须先完成真实原生身份/边界核验，哈希相符本身不证明未见事件。见[运行编排审计](references/run-audit.md)。
 
 `0.8.28` 完成态原生落盘终稿为同一消息SDK终稿严格非空前缀时，另存分歧原件/精确绑定证明并保持partial；原回复不补全、不替换，评分仍由原证据门禁决定，不能因SDK正文完整自动授分。

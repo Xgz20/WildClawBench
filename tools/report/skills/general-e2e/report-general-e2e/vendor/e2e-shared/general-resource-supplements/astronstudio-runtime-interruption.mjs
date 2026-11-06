@@ -6,6 +6,8 @@ import { analyzeRollout, ROLLOUT_PATH } from './astronstudio-rollout.mjs';
 
 export const RUNTIME_INTERRUPTION_PROFILE = 'bound-native-runtime-interruption/v1';
 export const RUNTIME_INTERRUPTION_MISSING_PROFILE = 'bound-native-runtime-interruption-missing-projection/v1';
+export const RUNTIME_INTERRUPTION_RECONCILED_PROFILE = 'bound-native-runtime-reconciled-interruption/v1';
+export const RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE = 'bound-native-runtime-interruption-stale-session/v1';
 export const RUNTIME_INTERRUPTION_STATE = 'bindings/runtime-interruption-original-state.json';
 export const RUNTIME_INTERRUPTION_NATIVE = 'bindings/runtime-interruption-native-binding.json';
 export const RUNTIME_INTERRUPTION_PROOF = 'bindings/runtime-interruption-proof.json';
@@ -16,7 +18,46 @@ const stable = value => Array.isArray(value) ? value.map(stable) : value && type
 const same = (a, b) => JSON.stringify(stable(a)) === JSON.stringify(stable(b));
 export function runtimeInterruptionCandidate(state) {
   return state?.phase === 'FAILED' && state.execution?.business_status === 'cancelled'
-    && state.session?.native_status === 'interrupted';
+    && (state.session?.native_status === 'interrupted'
+      || state.session?.native_status === 'running' && state.execution?.error?.code === 'ASTRONSTUDIO_TURN_INTERRUPTED');
+}
+
+function reconciledInterruption(binding, state, terminal, rows) {
+  const records = binding.restart_reconciliations;
+  if (!records) return false;
+  ensure(Array.isArray(records) && records.length === 1, 'RECONCILIATION_AMBIGUOUS');
+  const record = records[0], receipt = record.receipt, payload = record.payload;
+  const thread = state.session.thread_id;
+  const command = `restart-reconcile:${thread}:${record.occurred_at}`;
+  ensure(record.event_type === 'thread.session-set' && record.aggregate_kind === 'thread'
+    && record.stream_id === thread && record.actor_kind === 'client'
+    && record.command_id === command && record.correlation_id === command
+    && record.causation_event_id === null && record.metadata?.persistedEventSchemaVersion === 1
+    && Number.isSafeInteger(record.sequence) && record.sequence > 0 && typeof record.event_id === 'string'
+    && payload?.threadId === thread && payload.session?.threadId === thread
+    && payload.session.status === 'interrupted' && payload.session.activeTurnId === null
+    && payload.session.lastError === null && payload.session.providerName === 'acode'
+    && typeof payload.session.runtimeMode === 'string' && payload.session.runtimeMode
+    && payload.session.updatedAt === record.occurred_at && binding.completed_at === record.occurred_at,
+  'RECONCILIATION_EVENT_UNBOUND');
+  ensure(receipt?.command_id === command && receipt.aggregate_kind === 'thread'
+    && receipt.aggregate_id === thread && receipt.accepted_at === record.occurred_at
+    && receipt.status === 'accepted' && receipt.error === null
+    && receipt.result_sequence === record.sequence && receipt.fingerprint_version === 1
+    && /^[a-f0-9]{64}$/.test(receipt.command_fingerprint ?? ''), 'RECONCILIATION_RECEIPT_UNBOUND');
+  const time = Date.parse(record.occurred_at);
+  ensure(Number.isFinite(time) && time >= Date.parse(terminal.timestamp)
+    && time <= Date.parse(state.execution.finished_at), 'RECONCILIATION_CLOCK_INVALID');
+  const permitted = new Set(['turn.started', 'item.started', 'item.completed', 'item.updated',
+    'content.delta', 'thread.token-usage.updated', 'turn.gateway-usage.updated', 'turn.tasks.updated']);
+  ensure(rows.length > 0 && binding.runtime_turn_event_count === rows.length
+    && rows.every(row => permitted.has(row.event_type) && row.thread_id === thread
+      && row.turn_id === state.session.turn_id && row.event?.type === row.event_type
+      && row.event.threadId === thread && row.event.turnId === state.session.turn_id
+      && (!row.event.providerRefs?.providerThreadId || row.event.providerRefs.providerThreadId === state.session.session_id)
+      && (!row.event.providerRefs?.providerTurnId || row.event.providerRefs.providerTurnId === state.session.turn_id)),
+  'RECONCILIATION_PARTIAL_PROJECTION_UNBOUND');
+  return record;
 }
 
 function resourceMirror(row, state, sdk) {
@@ -68,8 +109,10 @@ export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerB
   const absent = providerBytes.length === 0 && rows.length === 0;
   const resourceOnly = rows.length>0 && nativeBinding.runtime_turn_event_count===rows.length
     && rows.every(row=>resourceMirror(row,state,sdk));
-  const missingTerminal = absent || resourceOnly;
   const ends = rows.filter(r => r.event_type === 'turn.completed');
+  const reconciliation = !absent && !resourceOnly && ends.length === 0
+    ? reconciledInterruption(nativeBinding, state, terminals[0], rows) : false;
+  const missingTerminal = absent || resourceOnly || Boolean(reconciliation);
   ensure(missingTerminal ? nativeBinding.runtime_turn_event_count === rows.length : ends.length === 1, 'PROVIDER_TERMINAL_AMBIGUOUS');
   const row = ends[0], event = row?.event, raw = event?.raw?.payload;
   if (!missingTerminal) ensure(row.thread_id === session.thread_id && row.turn_id === session.turn_id
@@ -82,16 +125,27 @@ export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerB
     && raw.turn.durationMs === terminals[0].payload.duration_ms, 'PROVIDER_SDK_MISMATCH');
   ensure(Number.isFinite(Date.parse(state.execution.finished_at))
     && Date.parse(state.execution.finished_at) >= Date.parse(terminals[0].timestamp), 'CLOCK_INVALID');
-  return { profile: missingTerminal ? RUNTIME_INTERRUPTION_MISSING_PROFILE : RUNTIME_INTERRUPTION_PROFILE, identity: state.identity,
+  const staleSession = session.native_status === 'running';
+  return { profile: staleSession ? RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE
+      : reconciliation ? RUNTIME_INTERRUPTION_RECONCILED_PROFILE
+      : missingTerminal ? RUNTIME_INTERRUPTION_MISSING_PROFILE : RUNTIME_INTERRUPTION_PROFILE, identity: state.identity,
     session: Object.fromEntries(['thread_id', 'turn_id', 'session_id', 'cwd'].map(k => [k, session[k]])),
     source_state_sha256: sha(stateBytes), sdk_sha256: sha(sdkBytes), provider_sha256: sha(providerBytes),
     native_binding_sha256: sha(Buffer.from(JSON.stringify(stable(nativeBinding)))),
     prompt_sha256: state.prompt.sha256, native_termination_origin: 'runtime',
     sdk_terminal_at: terminals[0].timestamp, sdk_duration_ms: terminals[0].payload.duration_ms,
     provider_terminal_sequence: row?.sequence ?? null, cancellation_confirmed: true,
-    ...(missingTerminal ? { provider_projection: { status:absent?'absent-at-collection':'verified-resource-only-at-collection',
+    ...(missingTerminal ? { provider_projection: { status:reconciliation?'partial-before-native-restart-reconciliation'
+      :absent?'absent-at-collection':'verified-resource-only-at-collection',
       verified_turn_event_count:rows.length, evidence_completeness:'partial', fabricated_rows:0,
-      basis:absent?'same readonly SQL snapshot and zero-byte original projection':'same readonly SQL count; every row is a metric-only mirror matching original SDK total/last usage' } } : {}),
+      basis:reconciliation?'same readonly SQL snapshot; explicit native restart-reconcile session event and accepted receipt close the exact interrupted head; provider terminal event remains missing'
+        :absent?'same readonly SQL snapshot and zero-byte original projection':'same readonly SQL count; every row is a metric-only mirror matching original SDK total/last usage' } } : {}),
+    ...(reconciliation ? { native_reconciliation: { sequence:reconciliation.sequence, event_id:reconciliation.event_id,
+      command_id:reconciliation.command_id, occurred_at:reconciliation.occurred_at,
+      command_fingerprint:reconciliation.receipt.command_fingerprint } } : {}),
+    ...(staleSession ? { state_session_projection: { original_native_status:'running',
+      verified_native_status:'interrupted', original_turn_error_code:state.execution.error.code,
+      original_state_preserved:true, evidence_completeness:'partial' } } : {}),
     human_cancellation_inferred: false, scoreability_changed: false, original_state_modified: false };
 }
 
@@ -99,7 +153,9 @@ export async function verifyRuntimeInterruption(index, stateBytes, traceRoot, ex
   const paths = [RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF];
   const bindings = index.binding_evidence ?? [];
   if (!index.runtime_interruption_profile && !bindings.some(r => paths.includes(r.path))) return null;
-  ensure([RUNTIME_INTERRUPTION_PROFILE, RUNTIME_INTERRUPTION_MISSING_PROFILE].includes(index.runtime_interruption_profile?.id), 'DECLARATION_INVALID');
+  ensure([RUNTIME_INTERRUPTION_PROFILE, RUNTIME_INTERRUPTION_MISSING_PROFILE,
+    RUNTIME_INTERRUPTION_RECONCILED_PROFILE, RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE]
+    .includes(index.runtime_interruption_profile?.id), 'DECLARATION_INVALID');
   async function bound(path) {
     const refs = [...(index.raw_trace ?? []), ...bindings].filter(r => r.path === path);
     ensure(refs.length === 1, 'ARTIFACT_AMBIGUOUS');
