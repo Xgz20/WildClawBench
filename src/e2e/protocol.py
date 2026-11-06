@@ -28,8 +28,7 @@ DEFAULT_PROFILE = {
     "scenarios": ["general", "web"],
     "enabled": True,
     "models": [
-        {"id": "spark-x2.6", "display_name": "Spark X2.6"},
-        {"id": "auto", "display_name": "客户端默认模型"},
+        {"id": "auto", "display_name": "Auto（实际模型以原生回读为准）"},
     ],
     "reasoning_efforts": ["none", "high", "max"],
 }

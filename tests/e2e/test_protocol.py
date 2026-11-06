@@ -112,7 +112,7 @@ class ProtocolTests(unittest.TestCase):
             "units": [
                 {
                     "harness": "astronstudio",
-                    "model": "spark-x2.6",
+                    "model": "auto",
                     "reasoning_effort": "high",
                 }
             ],
