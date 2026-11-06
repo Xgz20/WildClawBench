@@ -36,6 +36,41 @@ import {
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
 
+async function preparedFrameworkFixture(config) {
+  const deps=commonDependencies(config,[[]],{count:0});
+  deps.waitForThreadStreamLease=async()=>{throw new Error('test preparation stop before send');};
+  const state=await executeSingleTask(config,deps);
+  state.phase='PENDING';state.prompt.send_status='not_sent';state.prompt.sent_at=null;
+  Object.assign(state.send,{dispatch_attempt_count:0,dispatch_armed_at:null,dispatch_completed_at:null,pre_send_route_thread_id:null,post_send_route_thread_id:null});
+  Object.assign(state.execution,{business_status:null,finished_at:null,duration_seconds:null,error:null});
+  state.history=[{phase:'PENDING',event:'ATTEMPT_CREATED'}];
+  state.evidence.framework_dispatch_retry={path:'fixture-receipt.json',sha256:'a'.repeat(64)};
+  await writeFile(config.stateFile,JSON.stringify(state));return state;
+}
+
+test('an authorized prepared framework attempt gets its first dispatch, then only observes on resume',async()=>{
+  const config=await fixture(),clicks={count:0};
+  try {
+    const prepared=await preparedFrameworkFixture(config);config.resume=true;
+    const deps=commonDependencies(config,[[],[nativeSession('running')],[nativeSession('completed')]],clicks);
+    let admissions=0;deps.verifyPreparedFrameworkRetry=async()=>{admissions++;};
+    const result=await executeSingleTask(config,deps);
+    assert.equal(result.identity.attempt_id,prepared.identity.attempt_id);assert.equal(result.phase,'COMPLETED');
+    assert.equal(clicks.count,1);assert.equal(admissions,1);
+    await executeSingleTask(config,deps);assert.equal(clicks.count,1);assert.equal(admissions,1);
+  } finally {await rm(config.unitRoot,{recursive:true,force:true});}
+});
+
+test('a prepared framework attempt without verified archive admission never clicks send',async()=>{
+  const config=await fixture(),clicks={count:0};
+  try {
+    await preparedFrameworkFixture(config);config.resume=true;
+    const deps=commonDependencies(config,[[]],clicks);deps.verifyPreparedFrameworkRetry=async()=>{throw new Error('untrusted receipt');};
+    await assert.rejects(executeSingleTask(config,deps),/untrusted receipt/);assert.equal(clicks.count,0);
+    assert.equal(JSON.parse(await readFile(config.stateFile,'utf8')).send.dispatch_attempt_count,0);
+  } finally {await rm(config.unitRoot,{recursive:true,force:true});}
+});
+
 test("General sidebar recovery recognizes 3.5 and rejects duplicate toggles", async () => {
   let clicked=0;
   class Element { closest(){return null;} getBoundingClientRect(){return {width:10,height:10};} }

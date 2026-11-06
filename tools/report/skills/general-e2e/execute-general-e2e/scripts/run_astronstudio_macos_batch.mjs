@@ -591,6 +591,10 @@ async function launchSingleTask(plan, args, taskId, operation, activeSessionIds 
     if (operation === "retry-pre-send") childArgs.push("--resume", "--retry-pre-send-failure");
     if (operation === 'retry-pre-send' && authorizationPath) childArgs.push('--quota-retry-authorization', authorizationPath);
     if (operation === 'retry-quota') childArgs.push('--resume', '--quota-retry-authorization', authorizationPath);
+    if(operation==='dispatch') {
+      const prepared=await readJsonIfPresent(controlPath(plan,taskId,'automation-state.json'));
+      if(prepared?.evidence?.framework_dispatch_retry&&pristineUnsentAttempt(prepared))childArgs.push('--resume');
+    }
     for (const sessionId of activeSessionIds) {
       childArgs.push("--allowed-active-session-id", sessionId);
     }

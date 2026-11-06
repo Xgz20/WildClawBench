@@ -42,8 +42,9 @@ import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
+import { verifyFrameworkDispatchRecoveries, assertUnacceptedDispatch } from './lib/astronstudio-dispatch-retry.mjs';
 
-export const EXECUTION_DRIVER_VERSION = "0.4.22";
+export const EXECUTION_DRIVER_VERSION = "0.4.23";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -977,6 +978,22 @@ async function resumeExecution(config, state, dependencies) {
   return waitForTerminal(config, state, dependencies);
 }
 
+async function verifyPreparedFrameworkRetry(config,state,dependencies) {
+  const root=join(config.unitRoot,'.general-e2e/framework-dispatch-recoveries',config.task.task_id,state.identity.attempt_id);
+  const receiptPath=join(root,'receipt.json'),bytes=await readFile(receiptPath),receipt=JSON.parse(bytes);
+  if(state.evidence.framework_dispatch_retry.path!==relativePosix(config.unitRoot,receiptPath)
+    ||state.evidence.framework_dispatch_retry.sha256!==sha256(bytes))throw new Error('FRAMEWORK_PREPARED_RECEIPT_DRIFT');
+  const auth=JSON.parse(await readFile(join(root,'authorization.json'),'utf8'));
+  const queue=await readJsonIfPresent(join(config.unitRoot,'.general-e2e/queues',auth.queue_id,'queue-state.json'));
+  if(queue?.identity?.queue_digest!==auth.queue_digest||queue.configuration?.run_config_digest!==config.runConfig.config_digest
+    ||queue.tasks.find(t=>t.task_id===config.task.task_id)?.selected_attempt_id!==state.identity.attempt_id)throw new Error('FRAMEWORK_PREPARED_QUEUE_DRIFT');
+  await verifyFrameworkDispatchRecoveries(config.unitRoot,queue);
+  const rows=await dependencies.queryNativeSessions(config.stateDatabase);
+  if(rows.some(isBlockingActiveSession)||rows.some(r=>resolve(String(r.cwd||''))===config.candidateWorkspace))throw new Error('FRAMEWORK_PREPARED_NATIVE_ACTIVITY');
+  const old=JSON.parse(await readFile(join(root,'failed-control/automation-state.json'),'utf8'));
+  assertUnacceptedDispatch(old,await dependencies.queryNativeStartRejection(config.stateDatabase,old),config.candidateWorkspace);
+}
+
 export async function executeSingleTask(config, overrides = {}) {
   const dependencies = {
     probeAstronStudio,
@@ -985,6 +1002,7 @@ export async function executeSingleTask(config, overrides = {}) {
     queryFinalResponse,
     queryTerminalFinalResponse,
     queryNativeStartRejection,
+    verifyPreparedFrameworkRetry,
     waitForThreadStreamLease,
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
@@ -1059,6 +1077,15 @@ export async function executeSingleTask(config, overrides = {}) {
     await persist(config, state);
   } else if (existing) {
     if (!config.resume) throw new Error("已有执行状态；必须使用 --resume，禁止创建新 attempt 或重发 Prompt");
+    if(!config.retryPreSendFailure&&existing.evidence?.framework_dispatch_retry&&pristineUnsentAttempt(existing)) {
+      assertStateIdentity(config,existing);
+      await currentProbe(config,dependencies,true);
+      await dependencies.verifyPreparedFrameworkRetry(config,existing,dependencies);
+      state=existing;state.driver.version=EXECUTION_DRIVER_VERSION;
+      state.history.push({phase:'PENDING',at:dependencies.now(),event:'AUTHORIZED_FRAMEWORK_PRISTINE_DISPATCH_ADMITTED',
+        recovery_receipt:state.evidence.framework_dispatch_retry});
+      await persist(config,state);
+    } else {
     if (!config.retryPreSendFailure) return resumeExecution(config, existing, dependencies);
     assertStateIdentity(config, existing);
     if (!isRetryablePreSendFailure(existing)) throw new Error("非零发送准备失败不能重试");
@@ -1102,6 +1129,7 @@ export async function executeSingleTask(config, overrides = {}) {
       driver_version: EXECUTION_DRIVER_VERSION,
       driver_source_sha256: sha256(await readFile(fileURLToPath(import.meta.url))) });
     await persist(config, state);
+    }
   } else {
     if (config.resume) throw new Error("--resume 要求已有 automation-state.json");
     await currentProbe(config, dependencies, true);
