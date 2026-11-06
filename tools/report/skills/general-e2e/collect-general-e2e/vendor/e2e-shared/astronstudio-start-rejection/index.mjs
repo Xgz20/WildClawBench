@@ -3,9 +3,20 @@ import { resolve } from 'node:path';
 import { dirname, join, relative, isAbsolute } from 'node:path';
 import { lstat, readFile, realpath } from 'node:fs/promises';
 export const START_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection/v1';
+export const IDLE_PREWARM_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection-idle-prewarm/v1';
 const digest = text => createHash('sha256').update(text).digest('hex');
 const assert = (ok, code) => { if (!ok) throw new Error(`NATIVE_START_REJECTION_${code}`); };
 const one = (rows, code) => { assert(rows?.length === 1, code); return rows[0]; };
+function unavailableRateNotice(row, route) {
+  if (row.thread_id !== route || row.turn_id || row.event_type !== 'account.rate-limits.updated') return false;
+  try {
+    const event=JSON.parse(row.event_json), outer=event.payload?.rateLimits;
+    const rates=outer && Object.keys(outer).length===1 && outer.rateLimits
+      ? outer.rateLimits : outer;
+    return event.type === row.event_type && rates &&
+      ['primary','secondary','credits','individualLimit','planType','rateLimitReachedType'].every(key=>rates[key] === null);
+  } catch { return false; }
+}
 
 export function verifyNativeStartRejection(data, state, config) {
   assert(state.phase === 'NEEDS_ATTENTION' && state.session?.verified === false
@@ -25,7 +36,8 @@ export function verifyNativeStartRejection(data, state, config) {
     && state.client?.workspace_selection?.project_id === project.project_id
     && state.client.workspace_selection.thread_id === route
     && resolve(state.client.workspace_selection.path) === resolve(config.candidateWorkspace), 'WORKSPACE');
-  assert(session.thread_id === route && session.status === 'error' && !session.active_turn_id
+  const readyProjection = session.status === 'ready' && session.last_error === null;
+  assert(session.thread_id === route && (session.status === 'error' || readyProjection) && !session.active_turn_id
     && !session.provider_session_id && !session.provider_thread_id, 'SESSION_TERMINAL');
   assert(message.thread_id === route && message.role === 'user' && message.source === 'native'
     && message.dispatch_origin === 'user' && message.dispatch_mode === 'queue'
@@ -36,13 +48,18 @@ export function verifyNativeStartRejection(data, state, config) {
   for (const table of ['projection_turns', 'projection_pending_interactions', 'provider_runtime_open_turns', 'queued_turn_promotions']) {
     assert(data[table]?.length === 0, 'ACTIVITY_' + table);
   }
-  assert(data.provider_runtime_events?.every(row => row.thread_id === route && !row.turn_id
-    && row.event_type === 'account.rate-limits.updated'), 'PROVIDER_ACTIVITY');
+  assert(data.provider_runtime_events?.every(row => unavailableRateNotice(row, route)), 'PROVIDER_ACTIVITY');
   const runtime = one(data.provider_session_runtime, 'RUNTIME');
   const cursor = JSON.parse(runtime.resume_cursor_json || '{}');
   const runtimePayload = JSON.parse(runtime.runtime_payload_json || '{}');
-  assert(runtime.thread_id === route && runtime.status === 'stopped' && cursor.emptyPrewarm === true
+  const idlePrewarm = ['running', 'ready'].includes(runtime.status)
+    && runtimePayload.lastRuntimeEvent === 'session.state.changed'
+    && runtimePayload.activeTurnId === null && runtimePayload.lastError === null
+    && runtimePayload.emptyPrewarmDispatch === null
+    && typeof cursor.threadId === 'string' && cursor.threadId.length > 0;
+  assert(runtime.thread_id === route && (runtime.status === 'stopped' || idlePrewarm) && cursor.emptyPrewarm === true
     && !runtimePayload.activeTurnId && resolve(runtimePayload.cwd || '') === resolve(config.candidateWorkspace), 'PREWARM');
+  assert(!readyProjection || idlePrewarm, 'READY_PROJECTION_PREWARM');
   const events = data.orchestration_events.map(row => ({ ...row, payload: JSON.parse(row.payload_json) }));
   const request = one(events.filter(row => row.event_type === 'thread.turn-start-requested'), 'REQUEST');
   const sent = one(events.filter(row => row.event_type === 'thread.message-sent'), 'MESSAGE_EVENT');
@@ -69,18 +86,39 @@ export function verifyNativeStartRejection(data, state, config) {
     && payload.eventSequence === request.sequence && payload.requestCreatedAt === message.created_at
     && payload.preparationTerminal === true && payload.settlementStatus === 'rejected'
     && payload.submissionState === 'not-sent'
-    && payload.detail === session.last_error
+    && typeof payload.detail === 'string' && (readyProjection || payload.detail === session.last_error)
     && payload.detail.includes('ACode turn submission did not complete within 20000ms.')
     && payload.detail.includes('/Applications/AStudio.app/Contents/Resources/app.asar/'), 'FAILURE_BINDING');
   const delivery = one(data.orchestration_event_deliveries.filter(row => row.event_sequence === request.sequence), 'DELIVERY');
   assert(delivery.consumer_name === 'provider-command-reactor.v1' && delivery.thread_id === route
     && delivery.state === 'succeeded' && delivery.submission_state === 'not-submitted-v1'
     && delivery.attempt_count === 1 && !delivery.claim_owner && !delivery.claim_expires_at
-    && delivery.completed_at === activity.createdAt && session.updated_at === activity.createdAt
+    && delivery.completed_at === activity.createdAt
+    && (readyProjection ? Date.parse(session.updated_at) < Date.parse(activity.createdAt) : session.updated_at === activity.createdAt)
     && Date.parse(activity.createdAt) > Date.parse(message.created_at), 'SETTLEMENT');
   assert(data.orchestration_event_deliveries.every(row => row.state === 'succeeded'
     && !row.claim_owner && !row.claim_expires_at), 'OTHER_DELIVERY');
-  return { profile: START_REJECTION_PROFILE, thread_id: route, project_id: project.project_id,
+  if (readyProjection) {
+    const errorEvent=one(events.filter(row=>row.event_type==='thread.session-set'
+      && row.command_id?.startsWith(`provider-start-failed:${request.sequence}:1:session:v1:`)), 'ERROR_EVENT');
+    const nativeError=errorEvent.payload.session;
+    assert(nativeError?.threadId===route && nativeError.status==='error' && nativeError.providerName==='acode'
+      && nativeError.activeTurnId===null && nativeError.lastError===payload.detail
+      && nativeError.updatedAt===activity.createdAt, 'ERROR_EVENT_BINDING');
+    for (const event of [failure,errorEvent]) {
+      const accepted=one(data.orchestration_command_receipts.filter(row=>row.command_id===event.command_id),'ERROR_RECEIPT');
+      assert(event.actor_kind==='client' && event.correlation_id===event.command_id
+        && accepted.aggregate_id===route && accepted.aggregate_kind==='thread'
+        && accepted.status==='accepted' && accepted.error===null && accepted.result_sequence===event.sequence
+        && accepted.accepted_at===activity.createdAt && /^[a-f0-9]{64}$/.test(accepted.command_fingerprint)
+        && event.command_id.endsWith(':'+accepted.command_fingerprint),'ERROR_RECEIPT_BINDING');
+    }
+  }
+  return { profile: idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
+    ...(idlePrewarm ? { prewarm_runtime_status: runtime.status, prewarm_provider_session_id: cursor.threadId,
+      prewarm_only: true, active_model_turn_id: null, native_projection_status: session.status,
+      native_projection_updated_at: session.updated_at, native_projection_stale: readyProjection } : {}),
+    thread_id: route, project_id: project.project_id,
     message_id: message.message_id, request_sequence: request.sequence, request_command_id: request.command_id,
     failed_at: activity.createdAt, error: payload.detail, prompt_sha256: state.prompt.sha256,
     native_turn_id: null, native_sdk_session_id: null, pending_dispatches: 0,
@@ -111,7 +149,8 @@ export async function readFrozenStartRejection(unitRoot, state, record = null) {
   assert(digest(bytes) === binding.sha256
     && binding.sha256 === state.evidence?.native_start_rejection?.sha256, 'PROOF_SHA');
   const proof = JSON.parse(bytes);
-  assert(proof.profile === START_REJECTION_PROFILE && JSON.stringify(proof.identity) === JSON.stringify(state.identity), 'PROOF_IDENTITY');
+  assert([START_REJECTION_PROFILE, IDLE_PREWARM_REJECTION_PROFILE].includes(proof.profile)
+    && JSON.stringify(proof.identity) === JSON.stringify(state.identity), 'PROOF_IDENTITY');
   assert(Array.isArray(proof.files) && proof.files.length === 3
     && [...proof.files.map(row => row.path)].sort().join('|') === 'native-snapshot.json|original-execution-record.json|original-state.json', 'PROOF_SOURCES');
   const files = [{ path: 'proof.json', bytes }]; const sources = {};

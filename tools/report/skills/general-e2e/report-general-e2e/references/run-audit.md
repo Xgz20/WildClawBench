@@ -23,3 +23,5 @@ JSON保存完整的规范化审计和来源指纹，MD/Excel总览及效率注�
 Report0.8.31可在对应unit内另列`failure_zero_decisions`，每项包含`task_id`、`execution_attempt_id`、`decision:{path,sha256}`、`human_policy:{path,sha256}`。该列表不替代完整有序task_bindings。决策必须绑定已选execution record的身份、Prompt、正式冻结候选和`native_start_rejection`proof；授权保留人类原文、问题身份和条件，明确未决归因不能直接计零。当前只接受AStudio原生20秒启动提交拒绝且`not-submitted-v1`已结算、无模型turn/排队输入、预热runtime停止的共享核验Profile；不会外推其他Harness、未知中断或额度失败。生成时需要可用Node（优先显式`--node ABS`）回放完整原始状态及原生同快照。
 
 JSON保留`total_score=null/score_status=unscored`，另存`failure_policy_score=0/e2e_score=0`及授权证据；已valid题的e2e_score沿用Rubric，未决题保持null。总览分别显示Rubric均分与含策略零分的端到端均分、策略零分数及已计分覆盖；Excel和MD新增完整范围的端到端计分表。原valid数、Rubric权重、能力维度和原始计时不修改。该授权是管理员保存的人类直接指令记录，不声称密码学验证人类身份。
+
+Report0.8.32支持同轮后续失败对人类通用条件规则的派生应用。`human_policy`可引用保留原schema的应用记录，但须明确`derived_application=true`、`source_context_task`、`source_policy:{path,sha256}`、`application_basis=ongoing-round-generic-conditional-failure-rule`和原batch_id；当前context_task仅指被应用任务。原始人类原文、question_item_id、conditions必须逐字相等，父记录必须是非派生原件，不能伪称后续收到新的人工消息。规范化审计保存应用记录和原指令双层来源。此机制不把未知根因、已valid评分或评分异常转成零分。

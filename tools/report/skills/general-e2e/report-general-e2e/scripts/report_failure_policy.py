@@ -30,6 +30,19 @@ def normalize(items, rows, refs, node=None):
                 'only selected unscored failure can receive policy zero')
         references = refs([item.get('decision'), item.get('human_policy')])
         decision, human = [json.loads(Path(ref['path']).read_bytes()) for ref in references]
+        if human.get('derived_application') is True:
+            parent_ref = refs([human.get('source_policy')])[0]
+            parent = json.loads(Path(parent_ref['path']).read_bytes())
+            require(parent.get('schema_version') == 'general70-human-conditional-failure-disposition/v1'
+                    and parent.get('derived_application') is not True
+                    and human.get('source_context_task') == parent.get('context_task')
+                    and human.get('human_statement') == parent.get('human_statement')
+                    and human.get('question_item_id') == parent.get('question_item_id')
+                    and human.get('conditions') == parent.get('conditions')
+                    and human.get('application_basis') == 'ongoing-round-generic-conditional-failure-rule'
+                    and human.get('batch_id') == decision.get('identity', {}).get('batch_id'),
+                    'inherited human policy application provenance')
+            references.append(parent_ref)
         require(decision.get('schema_version') == 'general70-authorized-failure-zero-decision/v1'
                 and decision.get('classification') == 'proven-harness-native-start-failure'
                 and type(decision.get('failure_policy_score')) in (int, float)

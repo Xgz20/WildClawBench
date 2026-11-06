@@ -76,3 +76,5 @@ node scripts/execute_astronstudio_macos.mjs \
 # 原生启动前拒绝的显式收口
 
 Execute 0.14.47 / Driver 0.4.19 提供 `--resume --observe-once --resolve-native-start-rejection`。此动作不是重试或取消：只有原生用户消息精确匹配冻结 Prompt、原项目/模型/权限、accepted 命令回执和唯一启动事件，并且原生活动明确 `provider.turn.start.failed`、`rejected / not-sent / preparationTerminal=true`、投递 `succeeded / not-submitted-v1`，才接受原生 ACode 20 秒提交超时为 FAILED/candidate_error。必须没有 turn、待交互、queued promotion 或 open turn，预热运行时已停止。原状态及执行记录按字节保存在 `native-start-rejections/`，连同完整同快照读取和 proof 引用；原 attempt 和一次发送计数不变，模型 turn/session 身份不补造。未知发送、额度耗尽、其他启动错误或活动矛盾不适用。收口本身不赋分，评分仍由既定评分入口及明确政策决定。
+
+Execute0.14.49 / 启动拒绝组件1.0.1另支持`bound-native-unsubmitted-start-rejection-idle-prewarm/v1`：只允许明确emptyPrewarm=true、activeTurnId/lastError/emptyPrewarmDispatch都为null的空闲ready/running预热运行时，仍满足原拒绝及全部无turn/待派发门禁，不关闭连接、不重启或重发。若较早的ready投影覆盖失败，只在该投影时刻严格早于失败、原生error session事件与失败activity均有同快照accepted回执及精确指纹时采纳原拒绝；保存ready投影及stale标志。仅有ready、未结算或未知活动不能确认失败。额度通知允许原生单层rateLimits包装，但只有全部额度指标明确null才作为未知通知接受；已知耗尽或未知形状拒绝，不能以故障计零绕过额度停机政策。

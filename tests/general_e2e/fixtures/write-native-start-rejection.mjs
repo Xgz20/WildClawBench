@@ -7,6 +7,11 @@ import { finalizeAstronStudioExecution } from '../../../tools/report/skills/gene
 
 const root=process.argv[2],taskRoot=join(root,'execution/tasks/task');
 const f=rejectionFixture(join(taskRoot,'workspace'));
+if (process.argv[3] === '--idle-prewarm') {
+  const runtime=f.data.provider_session_runtime[0];runtime.status='running';
+  runtime.resume_cursor_json='{"emptyPrewarm":true,"threadId":"prewarm-session"}';
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:null,lastError:null,emptyPrewarmDispatch:null,lastRuntimeEvent:'session.state.changed'});
+}
 Object.assign(f.state,{schema_version:'wildclawbench.general-e2e-astronstudio-execution-state/v1',task_root:taskRoot});
 f.state.prompt.path=join(taskRoot,'PROMPT.md');
 await mkdir(f.config.candidateWorkspace,{recursive:true});await mkdir(join(root,'receipts'));

@@ -19,6 +19,43 @@ test('verified native rejection preserves absence of model execution and does no
   assert.equal(result.pending_dispatches, 0); assert.equal('score' in result, false);
   assert.equal(f.state.phase, 'NEEDS_ATTENTION');
 });
+
+test('native single-wrapper unavailable quota notice remains unknown and cannot hide exhaustion',()=>{
+  const f=fixture(),rates={primary:null,secondary:null,credits:null,individualLimit:null,planType:null,rateLimitReachedType:null};
+  const event={type:'account.rate-limits.updated',payload:{rateLimits:{rateLimits:rates}}};
+  f.data.provider_runtime_events.push({thread_id:'thread',turn_id:null,event_type:event.type,event_json:JSON.stringify(event)});
+  assert.equal(verifyNativeStartRejection(f.data,f.state,f.config).native_turn_id,null);
+  rates.rateLimitReachedType='primary';f.data.provider_runtime_events[0].event_json=JSON.stringify(event);
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/PROVIDER_ACTIVITY/);
+});
+
+test('a proven rejected unsubmitted request can retain an idle empty prewarm connection', () => {
+  const f=fixture(),runtime=f.data.provider_session_runtime[0];
+  runtime.status='running';runtime.resume_cursor_json='{"emptyPrewarm":true,"threadId":"prewarm"}';
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:null,lastError:null,emptyPrewarmDispatch:null,lastRuntimeEvent:'session.state.changed'});
+  const result=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(result.profile,'bound-native-unsubmitted-start-rejection-idle-prewarm/v1');
+  assert.equal(result.native_turn_id,null);assert.equal(result.prewarm_only,true);
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:'turn',lastRuntimeEvent:'session.state.changed'});
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/PREWARM/);
+});
+
+test('an older ready prewarm projection requires accepted native error events, never a ready label alone', () => {
+  const f=fixture(),runtime=f.data.provider_session_runtime[0];runtime.status='running';
+  runtime.resume_cursor_json='{"emptyPrewarm":true,"threadId":"prewarm"}';
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:null,lastError:null,emptyPrewarmDispatch:null,lastRuntimeEvent:'session.state.changed'});
+  const session=f.data.projection_thread_sessions[0],error=session.last_error;
+  session.status='ready';session.last_error=null;session.updated_at='2026-11-06T06:28:35.511Z';
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/ERROR_EVENT/);
+  const failure=f.data.orchestration_events[2];failure.command_id='provider-start-failed:11:1:activity:v1:'+ 'b'.repeat(64);failure.correlation_id=failure.command_id;
+  const errorEvent={sequence:13,event_type:'thread.session-set',stream_id:'thread',actor_kind:'client',
+    command_id:'provider-start-failed:11:1:session:v1:'+'c'.repeat(64),payload_json:JSON.stringify({session:{threadId:'thread',status:'error',providerName:'acode',activeTurnId:null,lastError:error,updatedAt:'2026-11-06T06:29:11.361Z'}})};
+  errorEvent.correlation_id=errorEvent.command_id;f.data.orchestration_events.push(errorEvent);
+  for(const event of [failure,errorEvent]) f.data.orchestration_command_receipts.push({command_id:event.command_id,aggregate_id:'thread',aggregate_kind:'thread',status:'accepted',error:null,result_sequence:event.sequence,accepted_at:'2026-11-06T06:29:11.361Z',command_fingerprint:event.command_id.split(':').at(-1)});
+  assert.equal(verifyNativeStartRejection(f.data,f.state,f.config).native_projection_stale,true);
+  f.data.orchestration_command_receipts.at(-1).result_sequence=99;
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/ERROR_RECEIPT_BINDING/);
+});
 for (const [name, change] of [
   ['changed prompt', f => f.data.projection_thread_messages[0].text += 'changed'],
   ['foreign workspace', f => f.data.projection_projects[0].workspace_root = '/foreign'],
@@ -26,6 +63,7 @@ for (const [name, change] of [
   ['pending input', f => f.data.projection_pending_interactions.push({ status: 'pending' })],
   ['queued promotion', f => f.data.queued_turn_promotions.push({ message_id: 'message' })],
   ['provider activity', f => f.data.provider_runtime_events.push({ thread_id: 'thread', event_type: 'turn.started', turn_id: 'turn' })],
+  ['quota exhaustion notice', f => f.data.provider_runtime_events.push({thread_id:'thread',turn_id:null,event_type:'account.rate-limits.updated',event_json:JSON.stringify({type:'account.rate-limits.updated',payload:{rateLimits:{primary:null,secondary:null,credits:null,individualLimit:null,planType:null,rateLimitReachedType:'primary'}}})})],
   ['live provider runtime', f => f.data.provider_session_runtime[0].status = 'running'],
   ['uncertain delivery', f => f.data.orchestration_event_deliveries[0].state = 'uncertain'],
   ['submitted request', f => f.data.orchestration_event_deliveries[0].submission_state = 'submitted-v1'],

@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.49` 空闲原生预热连接不是模型turn。新增idle-prewarm拒绝Profile，仍要求原生rejected/not-sent、已结算not-submitted及完整消息/模型/项目绑定；只有emptyPrewarm=true、明确activeTurnId=null/lastError=null、无turn/open turn/待派发/交互和仅额度通知时，才允许保留该空闲连接而收口，不取消、不重启或赋分。
+
 `0.14.48` 将原生未提交启动拒绝核验提取为独立共享组件，支持正式采集与报告离线复核同一原始状态、原始执行记录、原生同快照和派生终态；不改变0.14.47收口边界或作答动作。
 
 `0.14.47` 增加显式只读收口 `--resume --observe-once --resolve-native-start-rejection`：仅在完整原生 Prompt、项目/模型、accepted 回执、唯一启动请求、原生 rejected/not-sent/preparationTerminal 及已结算 not-submitted 投递闭合，且无模型 turn、活动运行时或排队输入时，将原 uncertain attempt 收为 Harness 启动失败。保留原状态/记录字节和完整核验快照，turn/SDK 身份仍为 null；不取消、重发、重试、重启或决定分数。未知或矛盾来源继续拒绝。当前窄范围只支持原生 ACode 20 秒启动提交超时。

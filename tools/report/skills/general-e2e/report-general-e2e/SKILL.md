@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.32` 支持空闲预热拒绝Profile，并校验持续本轮条件规则的派生应用：保留原始人类指令/上下文和SHA，明确派生记录不是新的人类消息；按同一批次的独立已核验失败应用策略零分，不改原Rubric。
+
 `0.8.31` 支持运行审计中的显式用户失败计零决策：只对完整选定范围内、原生未提交启动拒绝proof离线回放通过的unscored失败另列端到端0分。总览和完整逐题表同时展示Rubric与端到端口径；原score/valid/能力维度不改，未知失败、额度与评分异常不可自动补零。决策、人类条件授权和冻结原证据逐项绑定SHA并进入审计/规范封存。
 
 `0.8.30` 复算显式bound-native-runtime-reconciled-interruption/v1及stale-session证明：核验原SDK中断、SQL最新头的runtime终态、需要时同快照原restart-reconcile事件及accepted回执。原state滞后字段不改，缺少provider终态的原部分行不丢弃，资源保持partial/原生终态序号null；失败或未知分不补零，不推断人工取消或改变评分资格。原版本证明保持兼容。

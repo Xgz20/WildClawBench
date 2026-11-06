@@ -100,3 +100,26 @@ class ReportFailurePolicyTests(unittest.TestCase):
         data = {'tasks': [copy.deepcopy(self.row)]}; before = copy.deepcopy(data)
         POLICY.prepare(data, {'units': []})
         self.assertEqual(data, before)
+
+    def test_inherited_generic_rule_keeps_original_human_context(self):
+        parent = {**self.human, 'context_task': 'original-context-task'}
+        path = self.root / 'original-human-policy.json'; path.write_text(json.dumps(parent))
+        self.human.update(derived_application=True, source_context_task=parent['context_task'],
+                          source_policy={'path': str(path), 'sha256': hashlib.sha256(path.read_bytes()).hexdigest()},
+                          application_basis='ongoing-round-generic-conditional-failure-rule', batch_id='batch')
+        self.assertEqual(len(self.normalize()[0]['evidence']), 8)
+        self.human['human_statement'] += ' changed'
+        with self.assertRaisesRegex(ValueError, 'application provenance'):
+            self.normalize()
+
+    def test_idle_prewarm_native_profile_is_replayed_without_cancelling(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            result = subprocess.run([NODE, str(REPO / 'tests/general_e2e/fixtures/write-native-start-rejection.mjs'),
+                                     str(root), '--idle-prewarm'], capture_output=True, text=True, check=True)
+            paths = json.loads(result.stdout); record_path = Path(paths['record'])
+            record = json.loads(record_path.read_bytes())
+            self.row['lineage'].update(source_unit_root=str(root), source_execution_record=str(record_path),
+                                       execution_record_sha256=hashlib.sha256(record_path.read_bytes()).hexdigest())
+            self.decision['native_failure_proof']['sha256'] = record['evidence']['native_start_rejection']['sha256']
+            self.assertEqual(self.normalize()[0]['failure_policy_score'], 0)
