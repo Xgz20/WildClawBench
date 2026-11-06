@@ -84,7 +84,7 @@ SELECT
   END AS status
 FROM projection_thread_sessions AS sessions
 INNER JOIN projection_threads AS threads ON threads.thread_id = sessions.thread_id
-INNER JOIN projection_projects AS projects ON projects.project_id = threads.project_id
+LEFT JOIN projection_projects AS projects ON projects.project_id = threads.project_id
 LEFT JOIN latest_turn ON latest_turn.thread_id = sessions.thread_id
 LEFT JOIN provider_session_runtime AS runtime ON runtime.thread_id = sessions.thread_id
 WHERE threads.deleted_at IS NULL AND projects.deleted_at IS NULL
@@ -245,10 +245,70 @@ export function normalizeNativeSession(row) {
 export async function queryNativeSessions(stateDatabase, overrides = {}) {
   return withStateSnapshot(
     stateDatabase,
-    async (snapshot) => (await querySnapshot(snapshot, SESSION_QUERY, overrides))
-      .map(normalizeNativeSession),
+    async (snapshot) => {
+      const sessions=(await querySnapshot(snapshot, SESSION_QUERY, overrides)).map(normalizeNativeSession);
+      for(const session of sessions) {
+        if(session.status!=='running'||session.active_turn_id||!['completed','error','interrupted'].includes(session.turn_state)
+          ||!['ready','error','interrupted'].includes(session.session_status)) continue;
+        const key=sqlString(session.thread_id),turn=sqlString(session.turn_id);
+        const runtime=await querySnapshot(snapshot,`SELECT * FROM provider_session_runtime WHERE thread_id=${key}`,overrides);
+        if(runtime.length!==1||runtime[0].status!=='stopped') continue;
+        const ledger=await querySnapshot(snapshot,`SELECT * FROM provider_runtime_open_turns WHERE thread_id=${key}`,overrides);
+        const events=await querySnapshot(snapshot,`SELECT * FROM provider_runtime_events WHERE thread_id=${key} AND turn_id=${turn} ORDER BY sequence`,overrides);
+        const proof=closedMetricTail(session,runtime[0],ledger,events);
+        if(proof){session.status=session.turn_state;session.closed_metric_tail=proof;}
+      }
+      return sessions;
+    },
     overrides, SESSION_SNAPSHOT_TABLES,
   );
+}
+
+export function closedMetricTail(session,runtime,ledgers,events) {
+  try {
+    const cursor=JSON.parse(runtime.resume_cursor_json),payload=JSON.parse(runtime.runtime_payload_json);
+    const end=Date.parse(session.completed_at);
+    if(session.active_turn_id||session.latest_turn_id!==session.turn_id||runtime.status!=='stopped'
+      ||cursor.threadId!==session.session_id||payload.activeTurnId!==null
+      ||!(payload.lastRuntimeEvent==='turn.completed'&&Date.parse(payload.lastRuntimeEventAt)===end
+        ||payload.lastRuntimeEvent==='provider.stopRuntimeSession'&&Date.parse(payload.lastRuntimeEventAt)>=end)
+      ||!Number.isFinite(end)||!ledgers.length) return null;
+    const accepted=[];
+    for(const ledger of ledgers){
+      const updated=Date.parse(ledger.updated_at),first=ledger.first_sequence;
+      if(ledger.turn_id!==session.turn_id||!Number.isSafeInteger(first)||first<=0||!Number.isFinite(updated))return null;
+      const tail=events.filter(row=>row.sequence>=first);
+      if(!tail.length)return null;
+      const ends=events.filter(row=>row.event_type==='turn.completed');
+      for(const row of ends.length?tail:events){
+        const e=JSON.parse(row.event_json),at=Date.parse(e.createdAt),persisted=Date.parse(row.persisted_at);
+        if(!['thread.token-usage.updated','turn.gateway-usage.updated'].includes(row.event_type)
+          ||e.type!==row.event_type||e.provider!=='acode'||e.threadId!==session.thread_id||e.turnId!==session.turn_id
+          ||e.providerRefs?.providerThreadId!==session.session_id||e.providerRefs?.providerTurnId!==session.turn_id
+          ||!Number.isFinite(at)||!Number.isFinite(persisted)||(row.sequence>=first&&at<end)||persisted<at||persisted>updated)return null;
+        if(e.raw?.source!=='acode')return null;
+        if(row.event_type==='turn.gateway-usage.updated'&&(e.raw.method!=='turn.gateway-usage.updated'
+          ||e.payload?.complete!==true||!Array.isArray(e.payload.requests)))return null;
+        if(row.event_type==='thread.token-usage.updated'&&e.raw.method!=='thread/tokenUsage/updated')return null;
+        if(row.sequence>=first)accepted.push(row.sequence);
+      }
+      if(ends.length>1||ends.length===1&&ends[0].sequence>=first)return null;
+      if(ends.length){
+        const e=JSON.parse(ends[0].event_json);
+        if(e.threadId!==session.thread_id||e.turnId!==session.turn_id
+          ||e.providerRefs?.providerThreadId!==session.session_id||e.providerRefs?.providerTurnId!==session.turn_id
+          ||e.raw?.payload?.threadId!==session.session_id||e.raw.payload.turn?.id!==session.turn_id
+          ||!['completed','interrupted','failed','error'].includes(e.raw.payload.turn.status)
+          ||e.payload?.state!==(session.turn_state==='error'?'failed':session.turn_state)
+          ||Date.parse(e.createdAt)!==end)return null;
+      }
+      // Consumed provider events may have been pruned. Only a fully typed
+      // metric remainder, alongside the exact SQL/runtime terminal, qualifies.
+    }
+    return {profile:'closed-native-metric-tail/v1',turn_id:session.turn_id,
+      provider_session_id:session.session_id,metric_sequences:[...new Set(accepted)],
+      native_terminal_preserved:true,raw_rows_deleted:false};
+  }catch{return null;}
 }
 
 // No credential value, credential reference, endpoint, or complete config is returned.

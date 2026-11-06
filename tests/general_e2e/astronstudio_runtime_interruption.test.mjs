@@ -8,6 +8,7 @@ import { deriveRuntimeInterruption, verifyRuntimeInterruption, RUNTIME_INTERRUPT
   RUNTIME_INTERRUPTION_MISSING_PROFILE,
   RUNTIME_INTERRUPTION_RECONCILED_PROFILE,
   RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE,
+  RUNTIME_WATCHDOG_FAILURE_PROFILE,
   RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 const hash = b => createHash('sha256').update(b).digest('hex');
@@ -33,6 +34,18 @@ function fixture() {
 }
 const lines = rows => Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
 const derive = f => deriveRuntimeInterruption(bytes(f.state), f.index, lines(f.sdk), lines(f.provider), f.native);
+test('native watchdog failure keeps candidate_error and its tool error while proving the exact SDK stop',()=>{
+  const f=fixture(),message='最后失败工具 Ran command，失败原因：command not found；308 秒无进展。任务已失败。';
+  f.state.execution.business_status='candidate_error';f.state.execution.error={code:'ASTRONSTUDIO_TURN_ERROR',message};f.state.session.native_status='running';
+  Object.assign(f.native,{turn_state:'error',session_status:'error',runtime_status:'stopped',last_runtime_event:'turn.completed',last_runtime_event_at:f.native.completed_at,last_error:message});
+  f.provider[0].event.payload={state:'failed',errorMessage:message};
+  const original=bytes(f.state),proof=derive(f);assert.equal(proof.profile,RUNTIME_WATCHDOG_FAILURE_PROFILE);
+  assert.equal(proof.original_business_status,'candidate_error');assert.equal(proof.sdk_interruption_confirmed,true);assert.deepEqual(bytes(f.state),original);
+  f.native.runtime_status='running';assert.throws(()=>derive(f),/WATCHDOG_FAILURE_UNBOUND/);
+  f.native.runtime_status='stopped';f.provider[0].event.payload.errorMessage='foreign';assert.throws(()=>derive(f),/PROVIDER_SDK_MISMATCH/);
+  f.provider=[];f.native.runtime_turn_event_count=0;
+  assert.equal(deriveRuntimeInterruption(bytes(f.state),f.index,lines(f.sdk),Buffer.alloc(0),f.native).provider_terminal_sequence,null);
+});
 test('failed interrupted turn can retain a stale running session field without rewriting original state', () => {
   const f=fixture();f.state.session.native_status='running';f.state.execution.error={code:'ASTRONSTUDIO_TURN_INTERRUPTED'};
   const original=bytes(f.state),proof=derive(f);

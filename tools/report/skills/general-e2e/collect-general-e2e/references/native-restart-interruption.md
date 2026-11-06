@@ -19,3 +19,5 @@
 ## 原执行状态的session字段滞后
 
 `bound-native-runtime-interruption-stale-session/v1`只接受原state已FAILED/cancelled且精确错误码ASTRONSTUDIO_TURN_INTERRUPTED、session.native_status仍running的窄范围。原字段及字节不改；仍须独立满足同一最新SQL头已runtime interrupted、session interrupted且无active/pending、完整绑定SDK唯一中断，以及正常provider终态或上述严格reconcile证明。单独的running、未知错误、SDK正常完成或实际SQL仍活动均拒绝。新索引另记runtime-state-session-projection-stale并保持partial；不会把滞后字段改写为完成或给予评分资格。
+
+`bound-native-runtime-watchdog-failure/v1`保留AStudio原生watchdog的candidate_error/工具失败消息与原state滞后字段，同时证明SDK唯一turn_aborted、SQL latest error/no active、runtime stopped及精确原生失败终态或被消费后只剩typed usage的投影。308秒等无进展计时来自被测客户端，不是框架task deadline。原provider终态已消费时序号保留null并partial，不从SDK造回去；所有剩余token/gateway行原样保留。该证明只确认物理停止，不改变Rubric评分资格或将原记录改成cancelled。

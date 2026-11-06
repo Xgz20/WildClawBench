@@ -258,10 +258,19 @@ WHERE turns.thread_id = ${sqlString(threadId)}
       WHERE turns.thread_id=${sqlString(threadId)} AND turns.turn_id=${sqlString(turnId)}`).all();
     if (extra.length !== 1) throw Error('RUNTIME_INTERRUPTION_NATIVE_BINDING_AMBIGUOUS');
     Object.assign(binding, extra[0]);
+    if(state.execution?.business_status==='candidate_error') {
+      const failure = database.prepare(`SELECT sessions.last_error AS last_error,runtime.status AS runtime_status,
+        json_extract(runtime.runtime_payload_json,'$.lastRuntimeEvent') AS last_runtime_event,
+        json_extract(runtime.runtime_payload_json,'$.lastRuntimeEventAt') AS last_runtime_event_at
+        FROM projection_thread_sessions sessions JOIN provider_session_runtime runtime ON runtime.thread_id=sessions.thread_id
+        WHERE sessions.thread_id=${sqlString(threadId)}`).all();
+      if(failure.length!==1) throw Error('WATCHDOG_FAILURE_NATIVE_RUNTIME_AMBIGUOUS');
+      Object.assign(binding,failure[0]);
+    }
     // A crashed backend can omit its provider terminal event. Preserve the
     // native restart reconciliation and accepted command receipt from this
     // same snapshot; neither synthesizes a provider event nor changes state.
-    if (binding.runtime_turn_event_count > 0) {
+    if (binding.runtime_turn_event_count > 0 && binding.turn_state==='interrupted') {
       const terminalCount = database.prepare(`SELECT COUNT(*) AS count FROM provider_runtime_events
         WHERE thread_id=${sqlString(threadId)} AND turn_id=${sqlString(turnId)}
         AND event_type='turn.completed'`).all()[0]?.count;

@@ -43,7 +43,7 @@ import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-disco
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
 
-export const EXECUTION_DRIVER_VERSION = "0.4.19";
+export const EXECUTION_DRIVER_VERSION = "0.4.20";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";

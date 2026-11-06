@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { deriveRuntimeInterruption, RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 import { finalizeAstronStudioExecution } from '../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
-const root=process.argv[2],missing=process.argv[3]==='--missing-provider';
+const root=process.argv[2],missing=process.argv[3]==='--missing-provider',watchdog=process.argv[3]==='--watchdog';
 const hash=b=>createHash('sha256').update(b).digest('hex'),json=v=>Buffer.from(JSON.stringify(v)+'\n');
 const id={batch_id:'fixture-batch',unit_id:'astronstudio-macos',task_id:'interrupted-task',attempt_id:'original'};
 const task=join(root,'execution/tasks',id.task_id),workspace=join(task,'workspace'),trace=join(root,'source-trace');
@@ -15,15 +15,18 @@ const state={schema_version:'wildclawbench.general-e2e-astronstudio-execution-st
   prompt:{path:join(task,'PROMPT.md'),sha256:hash(prompt),send_status:'sent',sent_at:'2026-09-18T00:00:01Z'},send:{dispatch_attempt_count:1},
   session:{thread_id:'native-thread',turn_id:'native-turn',session_id:'native-session',cwd:workspace,verified:true,native_status:'interrupted'},
   client:{version:'3.6.0',model:'Spark-X2.6',reasoning:'High'},execution:{business_status:'cancelled',started_at:'2026-09-18T00:00:01Z',finished_at:'2026-09-18T00:00:10Z',duration_seconds:9,agent_duration_seconds:null,error:{code:'ASTRONSTUDIO_TURN_INTERRUPTED',message:'interrupted'}},evidence:{},human_assistance:{mode:'automatic',operation_count:0,semantic_intervention_count:0}};
+const watchdogMessage='最后失败工具 Ran command，失败原因：command not found；308 秒无进展。任务已失败。';
+if(watchdog){state.execution.business_status='candidate_error';state.execution.error={code:'ASTRONSTUDIO_TURN_ERROR',message:watchdogMessage};state.session.native_status='running';}
 const stateBytes=json(state),session=state.session;
 const sdk=Buffer.from([{type:'session_meta',payload:{id:session.session_id,cwd:workspace}},{type:'event_msg',payload:{type:'task_started',turn_id:session.turn_id}},
   {type:'event_msg',payload:{type:'user_message',message:prompt.toString()}},{type:'event_msg',timestamp:'2026-09-18T00:00:08.000Z',payload:{type:'turn_aborted',turn_id:session.turn_id,reason:'interrupted',completed_at:1789689608,duration_ms:7000}}].map(JSON.stringify).join('\n')+'\n');
 const provider=missing?Buffer.alloc(0):json({sequence:1,event_type:'turn.completed',thread_id:session.thread_id,turn_id:session.turn_id,event:{threadId:session.thread_id,turnId:session.turn_id,
-  providerRefs:{providerThreadId:session.session_id,providerTurnId:session.turn_id},payload:{state:'interrupted'},raw:{payload:{threadId:session.session_id,turn:{id:session.turn_id,status:'interrupted',error:null,completedAt:1789689608,durationMs:7000}}}}});
+  providerRefs:{providerThreadId:session.session_id,providerTurnId:session.turn_id},payload:{state:watchdog?'failed':'interrupted',...(watchdog?{errorMessage:watchdogMessage}:{})},raw:{payload:{threadId:session.session_id,turn:{id:session.turn_id,status:'interrupted',error:null,completedAt:1789689608,durationMs:7000}}}}});
 const transcript=Buffer.from('{"event":"fixture"}\n'),ref=(path,b)=>({path,sha256:hash(b),size:b.length});
 const index={schema_id:'urn:wildclawbench:schema:general-e2e:trace-index:v1',schema_version:1,identity:id,session:{thread_id:session.thread_id,turn_id:session.turn_id,session_id:session.session_id,cwd:workspace},
   transcript:ref('transcript.jsonl',transcript),raw_trace:[ref('raw/astronstudio-provider-events.jsonl',provider),ref('raw/astronstudio-rollout.jsonl',sdk)],binding_evidence:[],canonical_source_policy:{id:'bound-native-sdk-canonical/v1'},completeness:{status:'partial',omitted_event_count:0,missing:['native-runtime-interruption']}};
 const native={turn_state:'interrupted',termination_origin:'runtime',latest_turn_id:session.turn_id,session_status:'interrupted',active_turn_id:null,pending_count:0,cwd:workspace,completed_at:'2026-09-18T00:00:09Z',...(missing?{runtime_turn_event_count:0}:{})};
+if(watchdog)Object.assign(native,{turn_state:'error',session_status:'error',runtime_status:'stopped',last_runtime_event:'turn.completed',last_runtime_event_at:native.completed_at,last_error:watchdogMessage});
 const proof=deriveRuntimeInterruption(stateBytes,index,sdk,provider,native);index.runtime_interruption_profile={id:proof.profile};
 for(const[path,b]of[[RUNTIME_INTERRUPTION_STATE,stateBytes],[RUNTIME_INTERRUPTION_NATIVE,json(native)],[RUNTIME_INTERRUPTION_PROOF,json(proof)]]){await writeFile(join(trace,path),b);index.binding_evidence.push(ref(path,b));}
 await writeFile(join(trace,'transcript.jsonl'),transcript);await writeFile(join(trace,'raw/astronstudio-provider-events.jsonl'),provider);await writeFile(join(trace,'raw/astronstudio-rollout.jsonl'),sdk);await writeFile(join(trace,'trace-index.json'),json(index));await writeFile(join(root,'state.json'),stateBytes);

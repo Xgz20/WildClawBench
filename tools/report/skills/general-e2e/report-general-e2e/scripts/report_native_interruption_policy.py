@@ -26,25 +26,35 @@ def normalize(policy_reference, rows, refs, node=None):
     require(isinstance(human.get('current_task_ids'), list) and isinstance(human.get('harness_scope'), list), 'policy scope')
     output = []
     for row in rows:
-        if row.get('execution_status') != 'cancelled':
+        if row.get('execution_status') not in {'cancelled', 'candidate_error'}:
             continue
-        require(row.get('total_score') is None and row.get('score_status') == 'unscored', 'selected unscored interruption')
         lineage = row['lineage']
         record_ref = refs([{'path': lineage['source_execution_record'], 'sha256': lineage['execution_record_sha256']}])[0]
         record = json.loads(Path(record_ref['path']).read_bytes())
+        if row.get('execution_status') == 'candidate_error':
+            relative_index = record.get('evidence', {}).get('trace_index_path')
+            if not isinstance(relative_index, str):
+                continue
+            candidate_index = json.loads((Path(lineage['source_unit_root']) / relative_index).read_bytes())
+            if candidate_index.get('runtime_interruption_profile', {}).get('id') != 'bound-native-runtime-watchdog-failure/v1':
+                continue
+        require(row.get('total_score') is None and row.get('score_status') == 'unscored', 'selected unscored interruption')
         identity = record.get('identity', {})
         require(identity.get('task_id') == row['task_id'] and identity.get('attempt_id') == row['execution_attempt_id']
                 and identity.get('unit_id') == lineage.get('source_unit_id', row['unit_id'])
                 and identity.get('batch_id') == human.get('batch_id')
                 and record.get('dataset', {}).get('id') == human.get('dataset_id')
                 and record.get('harness', {}).get('id') in human['harness_scope'], 'selected source identity')
-        require(record.get('phase') == 'FAILED' and record.get('execution', {}).get('business_status') == 'cancelled'
+        require(record.get('phase') == 'FAILED' and record.get('execution', {}).get('business_status') in {'cancelled', 'candidate_error'}
                 and record.get('session', {}).get('verified') is True
                 and all(record['session'].get(key) for key in ['thread_id', 'turn_id', 'session_id', 'cwd'])
                 and record.get('candidate', {}).get('drift_status') == 'stable', 'collected native cancellation')
         require(record['harness']['id'] == 'astronstudio', 'native replay adapter unavailable for this Harness')
         unit = Path(lineage['source_unit_root']).absolute()
         index_path = unit / record['evidence']['trace_index_path']
+        index = json.loads(index_path.read_bytes())
+        if record['execution']['business_status'] == 'candidate_error' and index.get('runtime_interruption_profile', {}).get('id') != 'bound-native-runtime-watchdog-failure/v1':
+            continue
         state_path = Path(record_ref['path']).parent / 'execution/automation-state.json'
         executable = node or shutil.which('node')
         require(executable, 'Node required for native interruption replay')

@@ -80,3 +80,5 @@ Execute 0.14.47 / Driver 0.4.19 提供 `--resume --observe-once --resolve-native
 Execute0.14.49 / 启动拒绝组件1.0.1另支持`bound-native-unsubmitted-start-rejection-idle-prewarm/v1`：只允许明确emptyPrewarm=true、activeTurnId/lastError/emptyPrewarmDispatch都为null的空闲ready/running预热运行时，仍满足原拒绝及全部无turn/待派发门禁，不关闭连接、不重启或重发。若较早的ready投影覆盖失败，只在该投影时刻严格早于失败、原生error session事件与失败activity均有同快照accepted回执及精确指纹时采纳原拒绝；保存ready投影及stale标志。仅有ready、未结算或未知活动不能确认失败。额度通知允许原生单层rateLimits包装，但只有全部额度指标明确null才作为未知通知接受；已知耗尽或未知形状拒绝，不能以故障计零绕过额度停机政策。
 
 Execute0.14.50 / 启动拒绝组件1.0.2保留同生命周期的空预热session connecting/ready及acode_apps 30秒启动失败事件，逐项验证原生thread、lifecycleGeneration、providerThreadId、原始方法/状态/错误；这些连接初始化行不是模型工具轨迹。它们与明确not-submitted的原拒绝共同封存，不删行以绕过门禁，不修改Harness的MCP配置或超时。任何turn/item/content事件、外来生命周期、实际活动turn或未结算请求继续拒绝。
+
+Execute0.14.51 / Driver0.4.20对精确原生终态后重开的用量账本增加只读闭合核验：SQL最新head已completed/error/interrupted、无active/pending，runtime已stopped且原生turn.completed或后续provider.stopRuntimeSession对同一闭合时刻成立；同turn/provider身份的重开tail只能含typed token/gateway usage，时钟和序号均闭合。完整历史事件与计费数据不删除；原provider终态已被客户端消费/清理时，只接受剩余完整typed资源行，不重构终态。任何模型动作、未知状态/身份、未停止runtime或待交互仍阻塞；无项目的活动会话不会被INNER JOIN漏掉。该修复不更改模型/Prompt/槽位/重试策略。

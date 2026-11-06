@@ -22,7 +22,7 @@ class NativeInterruptionPolicyTests(unittest.TestCase):
         cls.temp = tempfile.TemporaryDirectory()
         cls.root = Path(cls.temp.name).resolve()
         cls.fixtures = []
-        for name, extra in [('native', []), ('missing', ['--missing-provider'])]:
+        for name, extra in [('native', []), ('missing', ['--missing-provider']), ('watchdog', ['--watchdog'])]:
             result = subprocess.run([NODE, str(REPO / 'tests/general_e2e/fixtures/write-native-interruption.mjs'),
                                      str(cls.root / name), *extra], capture_output=True, text=True, check=True)
             cls.fixtures.append(json.loads(result.stdout))
@@ -73,6 +73,12 @@ class NativeInterruptionPolicyTests(unittest.TestCase):
         self.paths = self.fixtures[1]
         self.assertEqual(self.normalize()[0]['failure_policy_score'], 0)
         self.assertIn((0, True), self.seen)
+
+    def test_native_watchdog_error_with_bound_sdk_abort_keeps_failure_and_policy_zero(self):
+        self.paths = self.fixtures[2]
+        result = self.normalize(execution_status='candidate_error')
+        self.assertEqual(result[0]['failure_policy_score'], 0)
+        self.assertEqual(result[0]['native_profile'], 'bound-native-runtime-watchdog-failure/v1')
 
     def test_wrong_policy_batch_and_other_execution_status_do_not_zero(self):
         self.human['batch_id'] = 'other'

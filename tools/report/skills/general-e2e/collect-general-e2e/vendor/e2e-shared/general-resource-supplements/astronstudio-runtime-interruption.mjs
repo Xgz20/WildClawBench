@@ -8,6 +8,7 @@ export const RUNTIME_INTERRUPTION_PROFILE = 'bound-native-runtime-interruption/v
 export const RUNTIME_INTERRUPTION_MISSING_PROFILE = 'bound-native-runtime-interruption-missing-projection/v1';
 export const RUNTIME_INTERRUPTION_RECONCILED_PROFILE = 'bound-native-runtime-reconciled-interruption/v1';
 export const RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE = 'bound-native-runtime-interruption-stale-session/v1';
+export const RUNTIME_WATCHDOG_FAILURE_PROFILE = 'bound-native-runtime-watchdog-failure/v1';
 export const RUNTIME_INTERRUPTION_STATE = 'bindings/runtime-interruption-original-state.json';
 export const RUNTIME_INTERRUPTION_NATIVE = 'bindings/runtime-interruption-native-binding.json';
 export const RUNTIME_INTERRUPTION_PROOF = 'bindings/runtime-interruption-proof.json';
@@ -17,9 +18,14 @@ const stable = value => Array.isArray(value) ? value.map(stable) : value && type
   ? Object.fromEntries(Object.keys(value).sort().map(k => [k, stable(value[k])])) : value;
 const same = (a, b) => JSON.stringify(stable(a)) === JSON.stringify(stable(b));
 export function runtimeInterruptionCandidate(state) {
-  return state?.phase === 'FAILED' && state.execution?.business_status === 'cancelled'
+  return state?.phase === 'FAILED' && (state.execution?.business_status === 'cancelled'
     && (state.session?.native_status === 'interrupted'
-      || state.session?.native_status === 'running' && state.execution?.error?.code === 'ASTRONSTUDIO_TURN_INTERRUPTED');
+      || state.session?.native_status === 'running' && state.execution?.error?.code === 'ASTRONSTUDIO_TURN_INTERRUPTED')
+    || state.execution?.business_status === 'candidate_error'
+      && state.execution?.error?.code === 'ASTRONSTUDIO_TURN_ERROR'
+      && typeof state.execution.error.message === 'string'
+      && /最后失败工具[\s\S]+无进展。任务已失败。/.test(state.execution.error.message)
+      && ['running','error'].includes(state.session?.native_status));
 }
 
 function reconciledInterruption(binding, state, terminal, rows) {
@@ -87,15 +93,27 @@ function resourceMirror(row, state, sdk) {
     && usage.lastOutputTokens===last.outputTokens && usage.lastReasoningOutputTokens===last.reasoningOutputTokens;
 }
 
+function watchdogGatewayMetric(row,state,native) {
+  const e=row.event,s=state.session,raw=e?.raw,p=e?.payload;
+  return row.event_type==='turn.gateway-usage.updated'&&e?.type===row.event_type
+    &&row.thread_id===s.thread_id&&row.turn_id===s.turn_id&&e.threadId===s.thread_id&&e.turnId===s.turn_id
+    &&e.providerRefs?.providerThreadId===s.session_id&&e.providerRefs?.providerTurnId===s.turn_id
+    &&raw?.source==='acode'&&raw.method===row.event_type&&same(raw.payload,p)
+    &&p?.complete===true&&Array.isArray(p.requests)&&p.requests.every(r=>r.requestKind==='turn'&&r.status==='usage_missing')
+    &&Number.isFinite(Date.parse(e.createdAt))&&Date.parse(e.createdAt)>=Date.parse(native.completed_at)
+    &&Number.isFinite(Date.parse(row.persisted_at))&&Date.parse(row.persisted_at)>=Date.parse(e.createdAt);
+}
+
 export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerBytes, nativeBinding) {
   const state = JSON.parse(stateBytes), session = state.session;
+  const watchdog = state.execution?.business_status === 'candidate_error';
   ensure(runtimeInterruptionCandidate(state) && session.verified === true
     && state.prompt.send_status === 'sent' && state.send.dispatch_attempt_count === 1, 'STATE_UNBOUND');
   ensure(same(index.identity, state.identity)
     && ['thread_id', 'turn_id', 'session_id', 'cwd'].every(k => index.session?.[k] === session[k])
     && index.canonical_source_policy?.id === 'bound-native-sdk-canonical/v1', 'INDEX_UNBOUND');
-  ensure(nativeBinding?.turn_state === 'interrupted' && nativeBinding.termination_origin === 'runtime'
-    && nativeBinding.latest_turn_id === session.turn_id && nativeBinding.session_status === 'interrupted'
+  ensure(nativeBinding?.turn_state === (watchdog?'error':'interrupted') && nativeBinding.termination_origin === 'runtime'
+    && nativeBinding.latest_turn_id === session.turn_id && nativeBinding.session_status === (watchdog?'error':'interrupted')
     && nativeBinding.active_turn_id === null && nativeBinding.pending_count === 0
     && resolve(nativeBinding.cwd) === resolve(session.cwd)
     && Number.isFinite(Date.parse(nativeBinding.completed_at)), 'NATIVE_NOT_TERMINAL');
@@ -110,23 +128,30 @@ export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerB
   const resourceOnly = rows.length>0 && nativeBinding.runtime_turn_event_count===rows.length
     && rows.every(row=>resourceMirror(row,state,sdk));
   const ends = rows.filter(r => r.event_type === 'turn.completed');
-  const reconciliation = !absent && !resourceOnly && ends.length === 0
+  const watchdogMissingTerminal=watchdog&&ends.length===0&&(absent||rows.every(row=>resourceMirror(row,state,sdk)||watchdogGatewayMetric(row,state,nativeBinding)));
+  if(watchdog) ensure((ends.length===1||watchdogMissingTerminal) && nativeBinding.runtime_status==='stopped'
+    && (nativeBinding.last_runtime_event==='turn.completed'&&nativeBinding.last_runtime_event_at===nativeBinding.completed_at
+      ||nativeBinding.last_runtime_event==='provider.stopRuntimeSession'&&Date.parse(nativeBinding.last_runtime_event_at)>=Date.parse(nativeBinding.completed_at))
+    && nativeBinding.last_error===state.execution.error.message
+    && /最后失败工具[\s\S]+无进展。任务已失败。/.test(state.execution.error.message), 'WATCHDOG_FAILURE_UNBOUND');
+  const reconciliation = !watchdog && !absent && !resourceOnly && ends.length === 0
     ? reconciledInterruption(nativeBinding, state, terminals[0], rows) : false;
-  const missingTerminal = absent || resourceOnly || Boolean(reconciliation);
+  const missingTerminal = absent || resourceOnly || Boolean(reconciliation) || watchdogMissingTerminal;
   ensure(missingTerminal ? nativeBinding.runtime_turn_event_count === rows.length : ends.length === 1, 'PROVIDER_TERMINAL_AMBIGUOUS');
   const row = ends[0], event = row?.event, raw = event?.raw?.payload;
   if (!missingTerminal) ensure(row.thread_id === session.thread_id && row.turn_id === session.turn_id
     && event.threadId === session.thread_id && event.turnId === session.turn_id
     && event.providerRefs?.providerThreadId === session.session_id
     && event.providerRefs?.providerTurnId === session.turn_id
-    && event.payload?.state === 'interrupted' && raw?.threadId === session.session_id
+    && event.payload?.state === (watchdog?'failed':'interrupted')
+    && (!watchdog || event.payload.errorMessage===state.execution.error.message) && raw?.threadId === session.session_id
     && raw.turn?.id === session.turn_id && raw.turn.status === 'interrupted'
     && raw.turn.error === null && raw.turn.completedAt === terminals[0].payload.completed_at
     && raw.turn.durationMs === terminals[0].payload.duration_ms, 'PROVIDER_SDK_MISMATCH');
   ensure(Number.isFinite(Date.parse(state.execution.finished_at))
     && Date.parse(state.execution.finished_at) >= Date.parse(terminals[0].timestamp), 'CLOCK_INVALID');
   const staleSession = session.native_status === 'running';
-  return { profile: staleSession ? RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE
+  return { profile: watchdog ? RUNTIME_WATCHDOG_FAILURE_PROFILE : staleSession ? RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE
       : reconciliation ? RUNTIME_INTERRUPTION_RECONCILED_PROFILE
       : missingTerminal ? RUNTIME_INTERRUPTION_MISSING_PROFILE : RUNTIME_INTERRUPTION_PROFILE, identity: state.identity,
     session: Object.fromEntries(['thread_id', 'turn_id', 'session_id', 'cwd'].map(k => [k, session[k]])),
@@ -135,16 +160,19 @@ export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerB
     prompt_sha256: state.prompt.sha256, native_termination_origin: 'runtime',
     sdk_terminal_at: terminals[0].timestamp, sdk_duration_ms: terminals[0].payload.duration_ms,
     provider_terminal_sequence: row?.sequence ?? null, cancellation_confirmed: true,
-    ...(missingTerminal ? { provider_projection: { status:reconciliation?'partial-before-native-restart-reconciliation'
+    ...(watchdog ? { original_business_status:'candidate_error', native_failure_error:state.execution.error,
+      sdk_interruption_confirmed:true, native_watchdog_failure_preserved:true } : {}),
+    ...(missingTerminal ? { provider_projection: { status:watchdogMissingTerminal?'verified-native-watchdog-metric-remainder':reconciliation?'partial-before-native-restart-reconciliation'
       :absent?'absent-at-collection':'verified-resource-only-at-collection',
       verified_turn_event_count:rows.length, evidence_completeness:'partial', fabricated_rows:0,
-      basis:reconciliation?'same readonly SQL snapshot; explicit native restart-reconcile session event and accepted receipt close the exact interrupted head; provider terminal event remains missing'
+      basis:watchdogMissingTerminal?'same readonly snapshot: exact latest native error, stopped runtime and matching original SDK abort; only a typed usage remainder or empty consumed projection remains; terminal row is not reconstructed'
+        :reconciliation?'same readonly SQL snapshot; explicit native restart-reconcile session event and accepted receipt close the exact interrupted head; provider terminal event remains missing'
         :absent?'same readonly SQL snapshot and zero-byte original projection':'same readonly SQL count; every row is a metric-only mirror matching original SDK total/last usage' } } : {}),
     ...(reconciliation ? { native_reconciliation: { sequence:reconciliation.sequence, event_id:reconciliation.event_id,
       command_id:reconciliation.command_id, occurred_at:reconciliation.occurred_at,
       command_fingerprint:reconciliation.receipt.command_fingerprint } } : {}),
     ...(staleSession ? { state_session_projection: { original_native_status:'running',
-      verified_native_status:'interrupted', original_turn_error_code:state.execution.error.code,
+      verified_native_status:watchdog?'error':'interrupted', original_turn_error_code:state.execution.error.code,
       original_state_preserved:true, evidence_completeness:'partial' } } : {}),
     human_cancellation_inferred: false, scoreability_changed: false, original_state_modified: false };
 }
@@ -154,7 +182,7 @@ export async function verifyRuntimeInterruption(index, stateBytes, traceRoot, ex
   const bindings = index.binding_evidence ?? [];
   if (!index.runtime_interruption_profile && !bindings.some(r => paths.includes(r.path))) return null;
   ensure([RUNTIME_INTERRUPTION_PROFILE, RUNTIME_INTERRUPTION_MISSING_PROFILE,
-    RUNTIME_INTERRUPTION_RECONCILED_PROFILE, RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE]
+    RUNTIME_INTERRUPTION_RECONCILED_PROFILE, RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE, RUNTIME_WATCHDOG_FAILURE_PROFILE]
     .includes(index.runtime_interruption_profile?.id), 'DECLARATION_INVALID');
   async function bound(path) {
     const refs = [...(index.raw_trace ?? []), ...bindings].filter(r => r.path === path);
@@ -177,6 +205,6 @@ export async function verifyRuntimeInterruption(index, stateBytes, traceRoot, ex
   ensure(index.runtime_interruption_profile.id === expected.profile, 'PROFILE_MISMATCH');
   ensure(same(proof, expected), 'PROOF_DRIFT');
   if (execution) ensure(same(execution.identity, proof.identity)
-    && execution.execution.business_status === 'cancelled', 'RECORD_MISMATCH');
+    && execution.execution.business_status === (proof.profile===RUNTIME_WATCHDOG_FAILURE_PROFILE?'candidate_error':'cancelled'), 'RECORD_MISMATCH');
   return proof;
 }
