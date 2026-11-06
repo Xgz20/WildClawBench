@@ -224,6 +224,7 @@ def main(argv=None):
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ["workspace-root","batch-root","source-index","task-index"]:parser.add_argument("--"+name,type=Path,required=True)
     parser.add_argument("--resource-root",type=Path);parser.add_argument("--display-config",type=Path)
+    parser.add_argument("--run-audit",type=Path,help="完整选定范围的原生区间与控制暂停审计")
     parser.add_argument("--target-unit");parser.add_argument("--output-dir",type=Path)
     parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
     parser.add_argument("--seal-output-dir",type=Path,help="Immediately seal a newly generated report into this separate directory")
@@ -303,11 +304,14 @@ def main(argv=None):
     if args.display_config:
         data["display_overrides"]=load(safe_file(args.display_config,ROOT))
         for entry in data["display_overrides"].get("unit_model_labels",{}).values():entry.setdefault("reason",entry.get("source"))
+    import report_run_audit
+    report_run_audit.prepare(data,args)
     data["presentation"]=report.report_views.build_views(data,report.report_views.load_references())
     if args.target_unit:require(args.target_unit in data["presentation"]["unit_labels"],"SELECTION_TARGET_UNKNOWN")
     leader_report.configure(data,args)
     if args.data_output:
         target=data_output_path(args.data_output,ROOT,args.data_output_root)
+        report_run_audit.stage(data,target.with_suffix(""))
         if not args.output_dir:
             maas_model_timing.apply_options(data,args,target.with_suffix(""))
         report.write_json(target,data)
@@ -316,6 +320,7 @@ def main(argv=None):
         out=args.output_dir.resolve();require(out.is_relative_to(BATCH) and not out.exists(),"SELECTION_OUTPUT_UNSAFE_OR_EXISTS")
         stage=out.with_name('.'+out.name+'.'+uuid.uuid4().hex+'.staging');stage.mkdir(parents=True)
         try:
+            run_audit_artifacts=report_run_audit.stage(data,stage)
             model_artifacts=maas_model_timing.apply_options(data,args,stage)
             name=report.excel_report_filename(generated);data["artifact_filenames"]={"excel":name,"leader_markdown":"通用场景端到端自动化评测报告.md","audit_markdown":"通用场景端到端评测审计.md"}
             report.write_json(stage/"general_e2e_report_data.json",data)
@@ -329,7 +334,8 @@ def main(argv=None):
             report.write_json(stage/"composite-report-receipt.json",{"source_json_sha256":sha(stage/"general_e2e_report_data.json"),"excel_sha256":sha(stage/name),
                 "markdown_sha256":sha(stage/"通用场景端到端自动化评测报告.md"),"composite_import_index_sha256":sha(args.source_index),
                 "selection_manifest_sha256":sha(args.task_index),"resource_supplement_manifest_sha256":supplement_sha,"source_mode":data["lineage"]["source_mode"],
-                "model_timing_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in model_artifacts]})
+                "model_timing_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in model_artifacts],
+                "run_audit_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in run_audit_artifacts]})
             shutil.copy2(args.source_index,stage/"developer-source-index.json");shutil.copy2(args.task_index,stage/"developer-task-index.json")
             stage.rename(out)
             if args.seal_output_dir:

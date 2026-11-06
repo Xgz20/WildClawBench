@@ -609,6 +609,8 @@ def build_views(data, references):
         if not any(v["status"] == "partial" for v in annotations.values()):
             views[name]["notes"] = [s for s in views[name]["notes"] if not s.startswith("星号或浅黄色")]
             views[name]["notes"].append("各指标的完整统计用例数见下表；客户端未暴露的字段显示 -。" + ("平均 Token=总 Token/冻结用例数。" if name == "效率对比" else ""))
+    import report_run_audit
+    report_run_audit.attach_notes(data, views, labels_by_id)
     attach_token_comparison(views["效率对比"])
     attach_task_timing(data, views["效率对比"], labels_by_id)
     cursor = 1

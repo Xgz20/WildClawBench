@@ -24,6 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import report_views
 import report_case_views
 import maas_model_timing
+import report_run_audit
 from report_display import fixed_number
 
 REPORT_CONFIG_SCHEMA = "wildclawbench.general-e2e-report-config/v1"
@@ -1128,6 +1129,7 @@ def render_audit_markdown(data: Mapping[str, Any]) -> str:
         "- 本 Markdown 与 Excel 均由同目录报告 JSON 生成。",
         "",
     ]
+    lines += report_run_audit.audit_markdown(data)
     if data.get("model_timing_provenance"):
         import maas_model_timing
         lines += ["## MaaS模型耗时覆盖", "", "只在报告阶段关联冻结执行身份与SID，采用 maas_cube.perf(ms÷1000) 累计口径。缺失或冲突不补零，不替换原生任务耗时。", "",
@@ -1500,6 +1502,8 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
             data["presentation"] = report_views.build_views(data, report_views.load_references())
         except (ValueError, KeyError, OSError) as exc:
             raise ReportError(f"REPORT_DISPLAY_CONFIG_INVALID: {exc}") from exc
+    if report_run_audit.prepare(data, args):
+        data["presentation"] = report_views.build_views(data, report_views.load_references())
     if getattr(args, "target_unit", None):
         if args.target_unit not in data["presentation"]["unit_labels"]:
             raise ReportError("REPORT_TARGET_UNIT_NOT_FOUND")
@@ -1527,6 +1531,7 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
     staging = Path(tempfile.mkdtemp(prefix=f".{output_root.name}.pending-", dir=output_root.parent))
     try:
         import maas_model_timing
+        run_audit_artifacts = report_run_audit.stage(data, staging)
         model_artifacts = maas_model_timing.apply_options(data, args, staging)
         data_path = staging / "general_e2e_report_data.json"
         markdown_path = staging / "通用场景端到端自动化评测报告.md"
@@ -1562,7 +1567,7 @@ def command_generate(args: argparse.Namespace) -> dict[str, Any]:
         receipt = build_report_receipt(
             data,
             batch_root,
-            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path, *leader_artifacts, *developer_indexes, *model_artifacts],
+            [data_path, markdown_path, audit_path, excel_path, cli_manifest_path, validation_path, *leader_artifacts, *developer_indexes, *model_artifacts, *run_audit_artifacts],
             staged_output_root=staging,
             published_output_root=output_root,
         )
@@ -1618,6 +1623,7 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--generated-at")
     generate.add_argument("--target-unit", help="目标 unit ID；从导出的 Excel 提取领导版数据，生成目标单元总结")
     generate.add_argument("--display-config", type=Path, help="报告展示覆盖JSON；不改变来源模型验证信息")
+    generate.add_argument("--run-audit", type=Path, help="完整选定范围的原生区间/控制暂停运行审计；保留原分数和耗时")
     import leader_report
     leader_report.add_arguments(generate)
     generate.add_argument("--node", default=os.environ.get("GENERAL_E2E_NODE", "node"))

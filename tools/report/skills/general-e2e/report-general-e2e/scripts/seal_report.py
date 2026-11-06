@@ -36,6 +36,11 @@ def seal_report(report_dir, output_dir, *, batch_root=None):
         for name, expected in [('general_e2e_report_data.json', receipt['source_json_sha256']),
                                (data['artifact_filenames']['excel'], receipt['excel_sha256'])]:
             require(sha(child(report_dir, name)) == expected, 'REPORT_SEAL_ARTIFACT_DRIFT')
+        if data.get('run_audit'):
+            expected = data.get('lineage', {}).get('run_audit_sha256')
+            require(receipt.get('run_audit_artifacts') == [{'path': 'data/run-audit.json', 'sha256': expected}]
+                    and expected and sha(child(report_dir, 'data/run-audit.json')) == expected,
+                    'REPORT_SEAL_RUN_AUDIT_DRIFT')
     files = []
     for p in sorted(report_dir.rglob('*')):
         require(not p.is_symlink(), 'REPORT_SEAL_SYMLINK')
