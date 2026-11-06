@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.35` 启动拒绝证明兼容明确provider.session.starting的空预热连接；仍要求原请求rejected/not-sent/not-submitted已结算，emptyPrewarm=true，activeTurnId/lastError/emptyPrewarmDispatch均null且无任何模型turn/待派发/交互。连接初始化状态不被误认成已执行模型任务；未知活动继续拒绝，不重发、取消或重启。
+
 `0.11.34` 修复共享SDK回放模块在Node stdin或非文件启动器下导入时的入口检测；缺少真实argv文件不再触发主命令或抛lstat错误。轨迹解析、证明、资源数值及评分逻辑不变。
 
 `0.11.33` 离线回放并封存空闲预热拒绝Profile，保留未启动模型的原生证据与空闲连接身份；活动turn、未知字段或未结算投递继续拒绝。

@@ -36,6 +36,8 @@ test('a proven rejected unsubmitted request can retain an idle empty prewarm con
   const result=verifyNativeStartRejection(f.data,f.state,f.config);
   assert.equal(result.profile,'bound-native-unsubmitted-start-rejection-idle-prewarm/v1');
   assert.equal(result.native_turn_id,null);assert.equal(result.prewarm_only,true);
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:null,lastError:null,emptyPrewarmDispatch:null,lastRuntimeEvent:'provider.session.starting'});
+  assert.equal(verifyNativeStartRejection(f.data,f.state,f.config).native_turn_id,null);
   runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:'turn',lastRuntimeEvent:'session.state.changed'});
   assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/PREWARM/);
 });
@@ -55,6 +57,19 @@ test('an older ready prewarm projection requires accepted native error events, n
   assert.equal(verifyNativeStartRejection(f.data,f.state,f.config).native_projection_stale,true);
   f.data.orchestration_command_receipts.at(-1).result_sequence=99;
   assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/ERROR_RECEIPT_BINDING/);
+});
+
+test('bound prewarm connection and acode_apps timeout are preserved without treating them as a model turn',()=>{
+  const f=fixture(),runtime=f.data.provider_session_runtime[0];runtime.status='running';runtime.lifecycle_generation='epoch';
+  runtime.resume_cursor_json='{"emptyPrewarm":true,"threadId":"prewarm"}';
+  runtime.runtime_payload_json=JSON.stringify({cwd:f.config.candidateWorkspace,activeTurnId:null,lastError:null,emptyPrewarmDispatch:null,lastRuntimeEvent:'provider.session.starting'});
+  const error='MCP client for `acode_apps` timed out after 30 seconds. No model turn submitted.';
+  const event={provider:'acode',threadId:'thread',lifecycleGeneration:'epoch',type:'mcp.status.updated',providerRefs:{providerThreadId:'prewarm'},
+    raw:{method:'mcpServer/startupStatus/updated',payload:{threadId:'prewarm',name:'acode_apps',status:'failed',error,failureReason:null}},payload:{status:{name:'acode_apps',state:'failed',error}}};
+  f.data.provider_runtime_events.push({thread_id:'thread',turn_id:null,event_type:event.type,event_json:JSON.stringify(event)});
+  assert.equal(verifyNativeStartRejection(f.data,f.state,f.config).native_turn_id,null);
+  event.lifecycleGeneration='foreign';f.data.provider_runtime_events[0].event_json=JSON.stringify(event);
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/PROVIDER_ACTIVITY/);
 });
 for (const [name, change] of [
   ['changed prompt', f => f.data.projection_thread_messages[0].text += 'changed'],

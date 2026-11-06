@@ -17,6 +17,30 @@ function unavailableRateNotice(row, route) {
       ['primary','secondary','credits','individualLimit','planType','rateLimitReachedType'].every(key=>rates[key] === null);
   } catch { return false; }
 }
+function prewarmSetupNotice(row, route, runtime, cursor) {
+  if (unavailableRateNotice(row, route)) return true;
+  if(row.thread_id!==route || row.turn_id) return false;
+  try {
+    const event=JSON.parse(row.event_json),raw=event.raw;
+    if(event.provider!=='acode'||event.threadId!==route||event.turnId
+      ||!runtime.lifecycle_generation||event.lifecycleGeneration!==runtime.lifecycle_generation) return false;
+    if(event.type==='session.state.changed'&&row.event_type===event.type) {
+      return Object.keys(raw?.payload||{}).length===0 &&
+        (raw.method==='session/connecting'&&event.payload?.state==='starting'
+        ||raw.method==='session/ready'&&event.payload?.state==='ready');
+    }
+    if(event.type==='mcp.status.updated'&&row.event_type===event.type) {
+      const value=event.payload?.status,source=raw?.payload;
+      return raw?.method==='mcpServer/startupStatus/updated'
+        &&event.providerRefs?.providerThreadId===cursor.threadId&&source?.threadId===cursor.threadId
+        &&value?.name==='acode_apps'&&source.name===value.name
+        &&value.state==='failed'&&source.status==='failed'&&source.error===value.error
+        &&source.failureReason===null&&typeof value.error==='string'
+        &&value.error.startsWith('MCP client for `acode_apps` timed out after 30 seconds.');
+    }
+    return false;
+  } catch {return false;}
+}
 
 export function verifyNativeStartRejection(data, state, config) {
   assert(state.phase === 'NEEDS_ATTENTION' && state.session?.verified === false
@@ -48,12 +72,12 @@ export function verifyNativeStartRejection(data, state, config) {
   for (const table of ['projection_turns', 'projection_pending_interactions', 'provider_runtime_open_turns', 'queued_turn_promotions']) {
     assert(data[table]?.length === 0, 'ACTIVITY_' + table);
   }
-  assert(data.provider_runtime_events?.every(row => unavailableRateNotice(row, route)), 'PROVIDER_ACTIVITY');
   const runtime = one(data.provider_session_runtime, 'RUNTIME');
   const cursor = JSON.parse(runtime.resume_cursor_json || '{}');
   const runtimePayload = JSON.parse(runtime.runtime_payload_json || '{}');
+  assert(data.provider_runtime_events?.every(row => prewarmSetupNotice(row, route, runtime, cursor)), 'PROVIDER_ACTIVITY');
   const idlePrewarm = ['running', 'ready'].includes(runtime.status)
-    && runtimePayload.lastRuntimeEvent === 'session.state.changed'
+    && ['session.state.changed', 'provider.session.starting'].includes(runtimePayload.lastRuntimeEvent)
     && runtimePayload.activeTurnId === null && runtimePayload.lastError === null
     && runtimePayload.emptyPrewarmDispatch === null
     && typeof cursor.threadId === 'string' && cursor.threadId.length > 0;

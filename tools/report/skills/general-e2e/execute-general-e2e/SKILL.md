@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.50` 启动拒绝证明兼容明确provider.session.starting的空预热连接；仍要求原请求rejected/not-sent/not-submitted已结算，emptyPrewarm=true，activeTurnId/lastError/emptyPrewarmDispatch均null且无任何模型turn/待派发/交互。连接初始化状态不被误认成已执行模型任务；未知活动继续拒绝，不重发、取消或重启。
+
 `0.14.49` 空闲原生预热连接不是模型turn。新增idle-prewarm拒绝Profile，仍要求原生rejected/not-sent、已结算not-submitted及完整消息/模型/项目绑定；只有emptyPrewarm=true、明确activeTurnId=null/lastError=null、无turn/open turn/待派发/交互和仅额度通知时，才允许保留该空闲连接而收口，不取消、不重启或赋分。
 
 `0.14.48` 将原生未提交启动拒绝核验提取为独立共享组件，支持正式采集与报告离线复核同一原始状态、原始执行记录、原生同快照和派生终态；不改变0.14.47收口边界或作答动作。
