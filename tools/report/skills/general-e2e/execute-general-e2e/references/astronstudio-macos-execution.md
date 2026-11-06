@@ -73,3 +73,6 @@ node scripts/execute_astronstudio_macos.mjs \
 - `4`：已发送并绑定身份，当前仍为 `RUNNING`（通常来自 `--detach-after-submit`）；
 - `3`：`NEEDS_ATTENTION`；
 - `2`：参数、输入、执行失败或原生失败终态。
+# 原生启动前拒绝的显式收口
+
+Execute 0.14.47 / Driver 0.4.19 提供 `--resume --observe-once --resolve-native-start-rejection`。此动作不是重试或取消：只有原生用户消息精确匹配冻结 Prompt、原项目/模型/权限、accepted 命令回执和唯一启动事件，并且原生活动明确 `provider.turn.start.failed`、`rejected / not-sent / preparationTerminal=true`、投递 `succeeded / not-submitted-v1`，才接受原生 ACode 20 秒提交超时为 FAILED/candidate_error。必须没有 turn、待交互、queued promotion 或 open turn，预热运行时已停止。原状态及执行记录按字节保存在 `native-start-rejections/`，连同完整同快照读取和 proof 引用；原 attempt 和一次发送计数不变，模型 turn/session 身份不补造。未知发送、额度耗尽、其他启动错误或活动矛盾不适用。收口本身不赋分，评分仍由既定评分入口及明确政策决定。

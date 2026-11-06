@@ -104,6 +104,10 @@ export const SESSION_SNAPSHOT_TABLES = Object.freeze([
 export const STATE_SNAPSHOT_TABLES = Object.freeze([
   ...SESSION_SNAPSHOT_TABLES, "projection_thread_messages",
 ]);
+export const START_REJECTION_TABLES = Object.freeze([
+  "orchestration_events", "orchestration_command_receipts", "orchestration_event_deliveries",
+  "queued_turn_promotions",
+]);
 
 let sqliteModulePromise;
 
@@ -147,7 +151,7 @@ async function queryWithCli(databasePath, sql, runCommand = runCapture) {
   return result.stdout.trim() ? JSON.parse(result.stdout) : [];
 }
 
-async function querySnapshot(databasePath, sql, overrides = {}) {
+export async function querySnapshot(databasePath, sql, overrides = {}) {
   const sqliteModule = await (overrides.loadNodeSqlite || loadNodeSqlite)();
   if (typeof sqliteModule?.DatabaseSync === "function") {
     return queryWithNodeSqlite(databasePath, sql, sqliteModule);
@@ -156,7 +160,7 @@ async function querySnapshot(databasePath, sql, overrides = {}) {
 }
 
 export async function withStateSnapshot(stateDatabase, operation, overrides = {}, tables = STATE_SNAPSHOT_TABLES) {
-  if (!Array.isArray(tables) || !tables.length || tables.some((table) => ![...STATE_SNAPSHOT_TABLES, "custom_model_configs"].includes(table))) {
+  if (!Array.isArray(tables) || !tables.length || tables.some((table) => ![...STATE_SNAPSHOT_TABLES, ...START_REJECTION_TABLES, "custom_model_configs"].includes(table))) {
     throw new Error("快照必须声明非空、已知的读取表范围");
   }
   const source = resolve(stateDatabase);

@@ -41,8 +41,9 @@ import { waitForThreadStreamLease } from "./lib/astronstudio-stream.mjs";
 import { verifyDesktopAppPath } from "../vendor/e2e-shared/desktop-app-discovery/index.mjs";
 import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-discovery/profiles.mjs";
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
+import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
 
-export const EXECUTION_DRIVER_VERSION = "0.4.18";
+export const EXECUTION_DRIVER_VERSION = "0.4.19";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -62,6 +63,7 @@ function usage() {
   --quota-retry-authorization <JSON> 原队列已登记的额度恢复授权；新 attempt 只发送一次
   --detach-after-submit          绑定 thread/turn/session/cwd 后退出观察
   --observe-once                 恢复后只执行一次原生状态观察
+  --resolve-native-start-rejection 与 --resume --observe-once 使用；核验原生未提交启动拒绝，不发送或重试
   --managed-run-slots <1-8>     批队列传入冻结槽位；独立单题默认 1
   --allowed-active-session-id   批队列已登记的活动 session，可重复
   --timeout-ms <毫秒>            单次 UI/CDP 操作超时，默认 30000
@@ -95,6 +97,7 @@ export function parseArgs(argv) {
     quotaRetryAuthorization: null,
     detachAfterSubmit: false,
     observeOnce: false,
+    resolveNativeStartRejection: false,
     managedRunSlots: 1,
     allowedActiveSessionIds: [],
     timeoutMs: 30_000,
@@ -119,6 +122,7 @@ export function parseArgs(argv) {
     else if (arg === "--retry-pre-send-failure") values.retryPreSendFailure = true;
     else if (arg === "--detach-after-submit") values.detachAfterSubmit = true;
     else if (arg === "--observe-once") values.observeOnce = true;
+    else if (arg === "--resolve-native-start-rejection") values.resolveNativeStartRejection = true;
     else if (arg === "--allowed-active-session-id") {
       const value = argv[index + 1];
       if (!value || value.startsWith("--")) throw new Error("--allowed-active-session-id 缺少值");
@@ -137,6 +141,10 @@ export function parseArgs(argv) {
     }
   }
   if (values.observeOnce && !values.resume) throw new Error("--observe-once 必须与 --resume 一起使用");
+  if (values.resolveNativeStartRejection && (!values.resume || !values.observeOnce
+    || values.retryPreSendFailure || values.quotaRetryAuthorization || values.detachAfterSubmit)) {
+    throw new Error('--resolve-native-start-rejection 只允许 --resume --observe-once 且不得重试或派发');
+  }
   if (values.retryPreSendFailure && (!values.resume || values.observeOnce)) {
     throw new Error("--retry-pre-send-failure 要求 --resume 且不能仅观察");
   }
@@ -530,6 +538,7 @@ function recordFromState(config, state) {
       trace_index_path: null,
       final_response_path: state.evidence.final_response_path,
       missing,
+      ...(state.evidence.native_start_rejection ? { native_start_rejection: state.evidence.native_start_rejection } : {}),
     },
     candidate: {
       path: relativePosix(config.unitRoot, config.candidateWorkspace),
@@ -871,6 +880,52 @@ async function resumeExecution(config, state, dependencies) {
   assertStateIdentity(config, state);
   if (new Set(["COMPLETED", "FAILED"]).has(state.phase)) return state;
   await currentProbe(config, dependencies, false);
+  if (config.resolveNativeStartRejection) {
+    const snapshot = await dependencies.queryNativeStartRejection(config.stateDatabase, state);
+    const proof = verifyNativeStartRejection(snapshot, state, config);
+    // Preserve the pre-repair state and record byte for byte before publishing
+    // a derived terminal. The proof keeps turn/SDK identity explicitly absent.
+    const oldState = await readFile(config.stateFile);
+    const oldRecord = await readFile(config.recordFile);
+    const root = join(config.controlRoot, 'native-start-rejections', sha256(oldState));
+    await mkdir(root, { recursive: true });
+    const files = [];
+    for (const [name, bytes] of [
+      ['original-state.json', oldState], ['original-execution-record.json', oldRecord],
+      ['native-snapshot.json', Buffer.from(`${JSON.stringify(snapshot, null, 2)}\n`)],
+    ]) {
+      const target = join(root, name);
+      try { await writeFile(target, bytes, { flag: 'wx', mode: 0o400 }); }
+      catch (error) { if (error?.code !== 'EEXIST' || sha256(await readFile(target)) !== sha256(bytes)) throw error; }
+      files.push({ path: name, sha256: sha256(bytes), size: bytes.length });
+    }
+    const body = Buffer.from(`${JSON.stringify({ ...proof, identity: state.identity, files }, null, 2)}\n`);
+    const proofPath = join(root, 'proof.json');
+    try { await writeFile(proofPath, body, { flag: 'wx', mode: 0o400 }); }
+    catch (error) { if (error?.code !== 'EEXIST' || sha256(await readFile(proofPath)) !== sha256(body)) throw error; }
+    const now = dependencies.now();
+    state.evidence.native_start_rejection = { path: relativePosix(config.unitRoot, proofPath), sha256: sha256(body) };
+    state.prompt.send_status = 'sent'; // Accepted native user message, not a started model turn.
+    state.session.thread_id = proof.thread_id;
+    state.session.cwd = config.candidateWorkspace;
+    state.session.native_status = 'error';
+    state.session.last_observed_at = now;
+    state.execution.business_status = 'candidate_error';
+    state.execution.finished_at = now;
+    state.execution.native_rejected_at = proof.failed_at;
+    state.execution.duration_seconds = flowTiming(state.prompt.sent_at, now).value;
+    state.execution.error = { code: 'ASTRONSTUDIO_NATIVE_START_REJECTED', message: proof.error };
+    const previousVersion = state.driver.version;
+    state.driver.version = EXECUTION_DRIVER_VERSION;
+    transition(state, 'FAILED', 'NATIVE_UNSUBMITTED_START_REJECTION_VERIFIED', {
+      proof: state.evidence.native_start_rejection, native_rejected_at: proof.failed_at,
+      previous_driver_version: previousVersion, driver_source_sha256: sha256(await readFile(fileURLToPath(import.meta.url))),
+      original_state_sha256: sha256(oldState), original_record_sha256: sha256(oldRecord),
+      prompt_resent: false, native_cancelled: false,
+    }, now);
+    await persist(config, state);
+    return state;
+  }
   if (!state.session.verified) {
     const captured = await captureIdentity(
       config,
@@ -911,6 +966,7 @@ export async function executeSingleTask(config, overrides = {}) {
     queryNativeCustomModelBinding,
     queryFinalResponse,
     queryTerminalFinalResponse,
+    queryNativeStartRejection,
     waitForThreadStreamLease,
     discoverMainTarget,
     connectCdp: (url, timeout) => CdpClient.connect(url, timeout),
