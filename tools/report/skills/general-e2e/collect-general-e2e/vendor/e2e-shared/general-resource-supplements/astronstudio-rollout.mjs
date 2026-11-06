@@ -192,6 +192,11 @@ export async function analyzeIndexedRollout(indexPath, state, options={}) {
     const original = await readRolloutFile(join(dirname(indexPath), RUNTIME_INTERRUPTION_STATE));
     await verifyRuntimeInterruption(index, original.bytes, dirname(indexPath), state);
   }
+  if(index.native_final_prefix_divergence_profile){
+    const {verifyFinalPrefix,FINAL_PREFIX_STATE}=await import('./astronstudio-final-prefix-divergence.mjs');
+    const original=await readRolloutFile(join(dirname(indexPath),FINAL_PREFIX_STATE));
+    await verifyFinalPrefix(index,original.bytes,dirname(indexPath),state);
+  }
   return {...result,source:{path:ROLLOUT_PATH,sha256:file.sha256,size:file.size}};
 }
 

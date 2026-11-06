@@ -16,6 +16,8 @@ import { DatabaseSync } from 'node:sqlite';
 import { deriveRuntimeInterruption, RUNTIME_INTERRUPTION_PROFILE, RUNTIME_INTERRUPTION_STATE,
   RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
+import { deriveFinalPrefix, FINAL_PREFIX_PROFILE, FINAL_PREFIX_STATE, FINAL_PREFIX_NATIVE, FINAL_PREFIX_TEXT, FINAL_PREFIX_PROOF }
+  from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-final-prefix-divergence.mjs';
 import { deriveTerminalProjection, TERMINAL_PROJECTION_STATE, TERMINAL_PROJECTION_PROOF }
   from '../../tools/report/skills/general-e2e/collect-general-e2e/vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 
@@ -230,6 +232,45 @@ function options(value) {
     processWaitMilliseconds: 0,
   };
 }
+
+test('formal prefix-divergence collection preserves native final bytes and explicit incomplete evidence',async()=>{
+ const value=await fixture({traceStatus:'partial'});
+ try{
+  const state=JSON.parse(await readFile(value.statePath,'utf8')),nativeFinal=Buffer.from('Do\n');
+  state.evidence.final_response_sha256=digest(nativeFinal);
+  await writeFile(join(value.root,state.evidence.final_response_path),nativeFinal);await writeJson(value.statePath,state);
+  const stateBytes=await readFile(value.statePath),prompt=await readFile(state.prompt.path,'utf8'),s=state.session;
+  const sdk=Buffer.from([{type:'session_meta',payload:{id:s.session_id,cwd:s.cwd}},
+   {type:'event_msg',payload:{type:'task_started',turn_id:s.turn_id}},
+   {type:'event_msg',payload:{type:'user_message',message:prompt}},
+   {type:'response_item',payload:{type:'message',id:'final',role:'assistant',content:[{type:'output_text',text:'Done.'}],
+    internal_chat_message_metadata_passthrough:{turn_id:s.turn_id}}},
+   {type:'event_msg',payload:{type:'task_complete',turn_id:s.turn_id,last_agent_message:'Done.'}}].map(JSON.stringify).join('\n')+'\n');
+  const native={thread_id:s.thread_id,turn_id:s.turn_id,latest_turn_id:s.turn_id,turn_state:'completed',role:'assistant',is_streaming:0,
+   message_id:'assistant:final',assistant_message_id:'assistant:final',text:'Do',cwd:s.cwd};
+  const index=JSON.parse(await readFile(value.indexPath,'utf8'));index.canonical_source_policy={id:'bound-native-sdk-canonical/v1'};
+  const proof=deriveFinalPrefix(stateBytes,index,sdk,native,nativeFinal),traceRoot=join(value.root,'fixture-input/trace');
+  await mkdir(join(traceRoot,'bindings'));await writeFile(join(traceRoot,'raw/astronstudio-rollout.jsonl'),sdk);
+  index.raw_trace.push({path:'raw/astronstudio-rollout.jsonl',sha256:digest(sdk),size:sdk.length});
+  index.native_final_prefix_divergence_profile={id:FINAL_PREFIX_PROFILE};
+  index.completeness={status:'partial',omitted_event_count:0,missing:['native-final-prefix-divergence']};index.binding_evidence=[];
+  for(const[path,body]of[[FINAL_PREFIX_STATE,stateBytes],[FINAL_PREFIX_NATIVE,Buffer.from(JSON.stringify(native))],
+   [FINAL_PREFIX_TEXT,nativeFinal],[FINAL_PREFIX_PROOF,Buffer.from(JSON.stringify(proof))]]){
+   await writeFile(join(traceRoot,path),body);index.binding_evidence.push({path,sha256:digest(body),size:body.length});
+  }
+  await writeJson(value.indexPath,index);
+  const metrics=JSON.parse(await readFile(value.metricsPath,'utf8')),indexBytes=await readFile(value.indexPath);
+  metrics.collection.sources[0]={path:'execution/automation-state.json',sha256:digest(stateBytes),size:stateBytes.length};
+  metrics.collection.sources[1]={path:'trace/trace-index.json',sha256:digest(indexBytes),size:indexBytes.length};
+  for(const ref of [...index.raw_trace.slice(1),...index.binding_evidence])metrics.collection.sources.push({...ref,path:'trace/'+ref.path});
+  await writeJson(value.metricsPath,metrics);
+  const result=await finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>successfulCleanup()});
+  const record=JSON.parse(await readFile(join(result.evidence_root,'execution-record.json'),'utf8'));
+  assert.equal(record.evidence.completeness,'partial');assert.ok(record.evidence.missing.includes('native-final-prefix-divergence'));
+  assert.deepEqual(await readFile(join(value.root,state.evidence.final_response_path)),nativeFinal);
+  await verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId});
+ }finally{await rm(value.root,{recursive:true,force:true});}
+});
 
 for (const missingProjection of [false, true]) test(`runtime interruption formal freeze preserves original state; missing provider=${missingProjection}`, async () => {
   const value = await fixture({ businessStatus:'cancelled', includeResource:false, traceStatus:'partial' });

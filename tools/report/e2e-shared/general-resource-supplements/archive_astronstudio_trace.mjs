@@ -26,6 +26,8 @@ import { readBoundNativeLogBundle } from "./astronstudio-native-provider-log.mjs
 import { runtimeInterruptionCandidate, deriveRuntimeInterruption, RUNTIME_INTERRUPTION_PROFILE,
   RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF } from './astronstudio-runtime-interruption.mjs';
 
+import { deriveFinalPrefix, FINAL_PREFIX_PROFILE, FINAL_PREFIX_STATE, FINAL_PREFIX_NATIVE, FINAL_PREFIX_TEXT, FINAL_PREFIX_PROOF } from './astronstudio-final-prefix-divergence.mjs';
+
 export const TRACE_ADAPTER_ID = "astronstudio-provider-runtime-events";
 export const TRACE_ADAPTER_VERSION = "0.1.1";
 export const TRACE_EVENT_SCHEMA = "urn:wildclawbench:schema:general-e2e:transcript-event:v1";
@@ -838,7 +840,28 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     }) });
   }
   if (recapture) assertRecaptureArchiveSources(recapture, rollout?.bytes, native.rows);
-  await assertPromptAndFinalResponse(state, normalized.events);
+  let prefixDivergence = null;
+  try { await assertPromptAndFinalResponse(state, normalized.events); }
+  catch (error) {
+    if (error.message !== 'ARCHIVED_FINAL_RESPONSE_MISMATCH' || sourcePolicy !== 'bound-native-sdk' || !rollout || recapture || nativeLog) throw error;
+    const final=await readFile(resolve(state.task_root,'../../..',state.evidence.final_response_path));
+    const originalText=final.toString('utf8');
+    const nativeText=originalText.endsWith('\n')?originalText.slice(0,-1):'';
+    const sdkFinal=finalResponseFromEvents(normalized.events);
+    if(!nativeText || typeof sdkFinal!=='string' || sdkFinal.length<=nativeText.length || !sdkFinal.startsWith(nativeText)) throw error;
+    const projection = await withStateSnapshot(stateDatabase, db => {
+      const result=db.prepare(`SELECT turns.thread_id,turns.turn_id,turns.state AS turn_state,turns.assistant_message_id,
+        threads.latest_turn_id,projects.workspace_root AS cwd,messages.message_id,messages.role,messages.text,messages.is_streaming
+        FROM projection_turns turns JOIN projection_threads threads ON threads.thread_id=turns.thread_id
+        JOIN projection_projects projects ON projects.project_id=threads.project_id
+        JOIN projection_thread_messages messages ON messages.message_id=turns.assistant_message_id
+        AND messages.thread_id=turns.thread_id AND messages.turn_id=turns.turn_id
+        WHERE turns.thread_id=${sqlString(state.session.thread_id)} AND turns.turn_id=${sqlString(state.session.turn_id)}`).all();
+      if(result.length!==1)throw Error('FINAL_PREFIX_NATIVE_AMBIGUOUS');return result[0];
+    },overrides);
+    const scope={identity:state.identity,session:state.session,canonical_source_policy:{id:'bound-native-sdk-canonical/v1'}};
+    prefixDivergence={projection,final,proof:deriveFinalPrefix(stateBytes,scope,rollout.bytes,projection,final)};
+  }
 
   const transcriptBytes = jsonLineBytes(normalized.events);
   const index = {
@@ -904,6 +927,13 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
       human_cancellation_inferred: false, scoreability_changed: false };
     if (proof.provider_projection) index.completeness = { ...index.completeness, status:'partial',
       missing:[...new Set([...(index.completeness.missing ?? []), 'runtime-provider-turn-projection-unavailable'])] };
+  }
+  if(prefixDivergence){
+    bindingArtifacts.push({path:FINAL_PREFIX_STATE,bytes:stateBytes},{path:FINAL_PREFIX_NATIVE,bytes:prettyJsonBytes(prefixDivergence.projection)},
+      {path:FINAL_PREFIX_TEXT,bytes:prefixDivergence.final},{path:FINAL_PREFIX_PROOF,bytes:prettyJsonBytes(prefixDivergence.proof)});
+    index.binding_evidence=bindingArtifacts.map(a=>artifact(a.path,a.bytes));
+    index.native_final_prefix_divergence_profile={id:FINAL_PREFIX_PROFILE,sdk_final_not_substituted:true,scoreability:'unchanged-contract-evidence-policy'};
+    index.completeness={...index.completeness,status:'partial',missing:[...new Set([...(index.completeness.missing??[]),'native-final-prefix-divergence'])]};
   }
   const indexBytes = prettyJsonBytes(index);
   await mkdir(join(outputDir, "raw"), { recursive: true });

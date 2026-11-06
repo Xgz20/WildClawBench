@@ -34,6 +34,7 @@ import { verifyArchivedNativeLog } from "../../vendor/e2e-shared/general-resourc
 import { verifyArchivedTerminalFinalRecapture, assertRecaptureDeclaration } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-final-recapture.mjs';
 import { historicalTerminalProjection, verifyTerminalProjection } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 import { verifyRuntimeInterruption } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
+import { verifyFinalPrefix } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-final-prefix-divergence.mjs';
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
@@ -343,6 +344,7 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   if (index.terminal_final_recapture_profile) await verifyArchivedTerminalFinalRecapture(index, state, stateBytes, root, { candidateRoot: state.candidate_workspace });
   if (!profile.generic) verifyTerminalProjection(index, stateBytes, root);
   const runtimeInterruption = !profile.generic ? await verifyRuntimeInterruption(index, stateBytes, root) : null;
+  if (!profile.generic) await verifyFinalPrefix(index,stateBytes,root);
   return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts, runtimeInterruption };
 
 }
@@ -796,6 +798,7 @@ export async function verifyGeneralCollection(options) {
       assertRecaptureDeclaration(declaredState.value, index);
       verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
       await verifyRuntimeInterruption(index, declaredState.bytes, traceRoot, record);
+      await verifyFinalPrefix(index,declaredState.bytes,traceRoot,record);
     }
     if (index.native_provider_log_profile) {
       const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));

@@ -9,6 +9,13 @@ RULE = "def grade(**kwargs):\n    from pathlib import Path\n    p = Path(kwargs.
 
 
 class PartialTraceAdmissionTests(unittest.TestCase):
+    def test_native_final_prefix_conflict_never_enters_standard_or_optional_evidence_admission(self):
+        execution = {'evidence': {'completeness': 'partial', 'missing': ['native-final-prefix-divergence'],
+                                 'transcript_path': 'trace', 'trace_index_path': 'index', 'final_response_path': 'native-final'}}
+        for grading_type in ['automated', 'hybrid', 'llm_judge']:
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, 'EXECUTION_NOT_SCORABLE'):
+                RUNTIME._validate_evidence_admission(execution, {'grading_type': grading_type, 'automated_checks': RULE})
+
     def test_partial_without_missing_reason_is_never_standard(self):
         execution = {"evidence": {"completeness": "partial", "missing": []}}
         for grading_type in ["automated", "llm_judge", "hybrid"]:

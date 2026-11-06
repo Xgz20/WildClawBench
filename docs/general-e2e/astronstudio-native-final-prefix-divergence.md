@@ -1,0 +1,9 @@
+# 原生落盘终稿与SDK正文前缀分歧的保留
+
+round1 Info009的原执行器已绑定completed turn的assistant_message_id，但该精确消息在原生SQL中只有188字；同一SDK消息ID及task_complete.last_agent_message有2196字，前188字逐字一致。原生消息已非streaming，也没有另一条完整消息或message_text_chunks可合法重建正文。没有满足既有自定义模型三方终稿补采Profile的来源，不能用SDK正文覆盖原生落盘回复。
+
+Collect0.11.30与resource组件1.3.9增加`bound-native-final-prefix-divergence/v1`。它仅保留证据，不修复Harness、候选或答案：原state、原final字节、同一只读SQL快照的精确head/turn/assistant消息、完整SDK及可离线重算证明全部保留。要求唯一发送、同session/CWD/turn/原Prompt；SQL head completed且消息ID绑定、role assistant、is_streaming=0；SDK同一消息ID、明确turn passthrough、唯一task_complete及完整output_text一致；原生正文必须是非空严格前缀。其它不同正文、身份歧义、活动状态或额外发送均拒绝，不自动切换任意来源。
+
+归档transcript继续明确使用原SDK规范来源，同时final-response文件保持实际原生188字。trace-index强制partial并声明`native-final-prefix-divergence`，不把完整SDK当已补全的落盘交付。正式收口、verify-only及报告资源复算重验全闭包；原评分证据门禁决定评分资格。这一缺失原因不属于标准、可选过程或workspace-only自动规则的放行集合，所以不自动授分、不把未知分补零，保持UNSCORED/null。原题、Rubric、权重、执行时间和候选均不改。
+
+实际原件归档和资源复验已通过。回归覆盖前缀/身份/活动状态拒绝、原final不替换、正式partial收口及原评分准入拒绝；旧终稿不一致仍失败关闭，既有经授权的终稿补采流程保持。修复使用独立发行/取证输出，旧失败输出和原state/final继续保留。

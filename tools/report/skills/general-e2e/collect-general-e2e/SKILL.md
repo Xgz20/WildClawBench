@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.30` 完成态原生落盘终稿为同一消息SDK终稿严格非空前缀时，另存分歧原件/精确绑定证明并保持partial；原回复不补全、不替换，评分仍由原证据门禁决定，不能因SDK正文完整自动授分。
+
 `0.11.29` 原生运行时中断另支持显式缺失生命周期投影Profile：同一只读SQL快照须证明0条事件/零字节原件，或全量仅有与SDK total/last用量逐项一致的资源镜像；SDK仍完整绑定原Prompt及中断，只确认失败已停止，缺证保持partial、终态序号null，不补造行、不改变评分资格。
 
 `0.11.28` 原生运行时中断使用独立三方确认Profile：严格核对SQL运行时来源/终态、SDK中断和provider相同session/turn/duration；保留原state字节，只确认已停止，不推断人工取消、不改变可评分性。

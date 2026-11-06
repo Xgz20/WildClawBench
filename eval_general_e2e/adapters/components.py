@@ -37,10 +37,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
     ),
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.3.8",
+        name="general-resource-supplements", version="1.3.9",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
-        entrypoints=("astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs"),
+        entrypoints=("astronstudio-final-prefix-divergence.mjs", "astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs"),
     ),
     SharedComponentSpec(
         name="qwenwork-native-state", version="1.1.0",

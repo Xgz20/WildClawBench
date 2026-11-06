@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.28` 完成态原生落盘终稿为同一消息SDK终稿严格非空前缀时，另存分歧原件/精确绑定证明并保持partial；原回复不补全、不替换，评分仍由原证据门禁决定，不能因SDK正文完整自动授分。
+
 `0.8.27` 原生运行时中断另支持显式缺失生命周期投影Profile：同一只读SQL快照须证明0条事件/零字节原件，或全量仅有与SDK total/last用量逐项一致的资源镜像；SDK仍完整绑定原Prompt及中断，只确认失败已停止，缺证保持partial、终态序号null，不补造行、不改变评分资格。
 
 `0.8.26` 资源复算重新核验原生runtime中断的SQL/SDK/provider证据闭包；中断结果及未知分数保持原状态，不作为能力零分，也不将运行时中断归因为人工停止。
