@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.39` 离线回放明确无模型turn的SDK空线程初始化及成对MCP准备事件，核验同目录/cursor/generation、原生idle与空turn列表。原失败、原字段与来源SHA保留，不把SDK线程创建当成模型执行，不补资源或分数。
+
+
 `0.11.38` 独立idle-bootstrap Profile保留直接初始化运行时缺少emptyPrewarm标志的实际字段，核验完整已知cursor/payload、模型/目录/generation、空active turn与全部原生拒绝/投递/无待派发证明。原字段不补造、SDK缺失不当作空闲，业务失败和资源partial保持原样。
 
 `0.11.37` 启动拒绝证明兼容同一已绑定空预热连接在acode_apps超时后恢复ready的原生setup事件，原/现事件按序封存；没有模型turn、原请求已rejected/not-submitted的门禁不变，不把后来连接就绪当作已执行或成功。

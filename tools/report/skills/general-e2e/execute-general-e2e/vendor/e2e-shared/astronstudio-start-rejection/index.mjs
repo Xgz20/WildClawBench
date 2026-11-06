@@ -45,6 +45,67 @@ function prewarmSetupNotice(row, route, runtime, cursor) {
   } catch {return false;}
 }
 
+// thread/started initializes a provider connection; it is not turn/started.
+// Admit only the complete observed empty SDK shape, bound to the same direct
+// bootstrap generation/cursor/workspace. Unknown fields or any real turn fail.
+function emptyBootstrapThread(data, route, runtime, cursor, config) {
+  if(!Array.isArray(data.provider_runtime_events))return null;
+  const rows=data.provider_runtime_events.filter(row=>row.event_type==='thread.started');
+  if(rows.length!==1)return null;
+  const row=rows[0];
+  try {
+    const event=JSON.parse(row.event_json),raw=event.raw,thread=raw?.payload?.thread;
+    const keys='agentNickname,agentRole,cliVersion,createdAt,cwd,ephemeral,extra,forkedFromId,gitInfo,historyMode,id,modelProvider,name,parentThreadId,path,preview,recencyAt,sessionId,source,status,threadSource,turns,updatedAt';
+    if(row.thread_id!==route||row.turn_id!==null||row.lifecycle_generation!==runtime.lifecycle_generation
+      ||!Number.isSafeInteger(row.sequence)||event.eventId!==row.event_id||event.modelSource!=='builtin'
+      ||event.provider!=='acode'||event.threadId!==route||event.turnId||event.type!=='thread.started'
+      ||Object.keys(event).sort().join(',')!=='createdAt,eventId,lifecycleGeneration,modelSource,payload,provider,providerRefs,raw,threadId,type'
+      ||Object.keys(event.providerRefs||{}).join(',')!=='providerThreadId'
+      ||event.lifecycleGeneration!==runtime.lifecycle_generation||raw?.source!=='acode'||raw.method!=='thread/started'
+      ||Object.keys(raw).sort().join(',')!=='method,payload,source'
+      ||Object.keys(raw.payload||{}).join(',')!=='thread'||!thread||Object.keys(thread).sort().join(',')!==keys
+      ||Object.keys(event.payload||{}).join(',')!=='providerThreadId'
+      ||event.payload.providerThreadId!==cursor.threadId||event.providerRefs?.providerThreadId!==cursor.threadId
+      ||thread.id!==cursor.threadId||thread.sessionId!==cursor.threadId
+      ||!Array.isArray(thread.turns)||thread.turns.length||thread.preview!==''||thread.ephemeral!==false
+      ||thread.historyMode!=='legacy'||thread.modelProvider!=='astron_gateway'||thread.cliVersion!=='0.144.1'
+      ||thread.source!=='vscode'||Object.keys(thread.status||{}).join(',')!=='type'||thread.status.type!=='idle'
+      ||['extra','forkedFromId','parentThreadId','threadSource','agentNickname','agentRole','gitInfo','name'].some(key=>thread[key]!==null)
+      ||typeof thread.cwd!=='string'||!isAbsolute(thread.cwd)||resolve(thread.cwd)!==resolve(config.candidateWorkspace)
+      ||typeof thread.path!=='string'||!isAbsolute(thread.path)||resolve(thread.path)!==thread.path
+      ||!/^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/.test(cursor.threadId)
+      ||!new RegExp(`/sessions/\\d{4}/\\d{2}/\\d{2}/rollout-\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}-${cursor.threadId}\\.jsonl$`).test(thread.path)
+      ||![thread.createdAt,thread.updatedAt,thread.recencyAt].every(value=>Number.isSafeInteger(value)&&value>0)
+      ||thread.createdAt>thread.updatedAt||thread.updatedAt>thread.recencyAt
+      ||!Number.isFinite(Date.parse(event.createdAt))||Date.parse(event.createdAt)<thread.createdAt*1000)return null;
+    return row;
+  } catch {return null;}
+}
+
+function bootstrapMcpSetup(row, route, runtime, cursor, initialized) {
+  try {
+    const event=JSON.parse(row.event_json),value=event.payload?.status,source=event.raw?.payload;
+    if(row.thread_id!==route||row.turn_id!==null||row.lifecycle_generation!==runtime.lifecycle_generation
+      ||!Number.isSafeInteger(row.sequence)||row.sequence<=initialized.sequence
+      ||event.eventId!==row.event_id||event.modelSource!=='builtin'||event.provider!=='acode'
+      ||event.threadId!==route||event.turnId||event.lifecycleGeneration!==runtime.lifecycle_generation
+      ||Object.keys(event).sort().join(',')!=='createdAt,eventId,lifecycleGeneration,modelSource,payload,provider,providerRefs,raw,threadId,type'
+      ||Object.keys(event.providerRefs||{}).join(',')!=='providerThreadId'||Object.keys(event.payload||{}).join(',')!=='status'
+      ||event.type!=='mcp.status.updated'||row.event_type!==event.type
+      ||event.raw?.source!=='acode'||event.raw.method!=='mcpServer/startupStatus/updated'
+      ||Object.keys(event.raw).sort().join(',')!=='method,payload,source'
+      ||event.providerRefs?.providerThreadId!==cursor.threadId||source?.threadId!==cursor.threadId
+      ||Object.keys(source).sort().join(',')!=='error,failureReason,name,status,threadId'
+      ||Object.keys(value||{}).sort().join(',')!=='name,state'||value.name!==source.name
+      ||value.state!==source.status||source.error!==null||source.failureReason!==null
+      ||!Number.isFinite(Date.parse(event.createdAt))
+      ||Date.parse(event.createdAt)<Date.parse(JSON.parse(initialized.event_json).createdAt))return null;
+    if(value.state==='starting'&&['acode','acode_apps'].includes(value.name))return value;
+    if(value.state==='ready'&&value.name==='acode')return value;
+    return null;
+  } catch {return null;}
+}
+
 export function verifyNativeStartRejection(data, state, config) {
   assert(state.phase === 'NEEDS_ATTENTION' && state.session?.verified === false
     && !state.session.thread_id && !state.session.turn_id && !state.session.session_id
@@ -78,17 +139,6 @@ export function verifyNativeStartRejection(data, state, config) {
   const runtime = one(data.provider_session_runtime, 'RUNTIME');
   const cursor = JSON.parse(runtime.resume_cursor_json || '{}');
   const runtimePayload = JSON.parse(runtime.runtime_payload_json || '{}');
-  assert(data.provider_runtime_events?.every(row => prewarmSetupNotice(row, route, runtime, cursor)), 'PROVIDER_ACTIVITY');
-  const mcpReady=data.provider_runtime_events.filter(row=>row.event_type==='mcp.status.updated'
-    &&JSON.parse(row.event_json).payload?.status?.state==='ready');
-  for(const ready of mcpReady) {
-    const readyEvent=JSON.parse(ready.event_json);
-    assert(Number.isSafeInteger(ready.sequence)&&Number.isFinite(Date.parse(readyEvent.createdAt))
-      &&data.provider_runtime_events.some(previous=>Number.isSafeInteger(previous.sequence)&&previous.sequence<ready.sequence
-        &&previous.event_type==='mcp.status.updated'&&prewarmSetupNotice(previous,route,runtime,cursor)
-        &&JSON.parse(previous.event_json).payload?.status?.state==='failed'
-        &&Date.parse(JSON.parse(previous.event_json).createdAt)<=Date.parse(readyEvent.createdAt)), 'MCP_READY_WITHOUT_BOUND_TIMEOUT');
-  }
   const idlePrewarm = ['running', 'ready'].includes(runtime.status)
     && ['session.state.changed', 'provider.session.starting'].includes(runtimePayload.lastRuntimeEvent)
     && runtimePayload.activeTurnId === null && runtimePayload.lastError === null
@@ -112,6 +162,25 @@ export function verifyNativeStartRejection(data, state, config) {
   assert(runtime.thread_id === route && ((runtime.status === 'stopped' || idlePrewarm) && cursor.emptyPrewarm === true || idleBootstrap)
     && !runtimePayload.activeTurnId && resolve(runtimePayload.cwd || '') === resolve(config.candidateWorkspace), 'PREWARM');
   assert(!readyProjection || idlePrewarm || idleBootstrap, 'READY_PROJECTION_PREWARM');
+  const bootstrapThread=idleBootstrap?emptyBootstrapThread(data,route,runtime,cursor,config):null;
+  const bootstrapMcp=bootstrapThread?data.provider_runtime_events.map(row=>({row,value:bootstrapMcpSetup(row,route,runtime,cursor,bootstrapThread)})).filter(item=>item.value):[];
+  const bootstrapReady=bootstrapMcp.filter(item=>item.value.state==='ready'&&bootstrapMcp.some(previous=>
+    previous.value.state==='starting'&&previous.value.name===item.value.name&&previous.row.sequence<item.row.sequence
+    &&Date.parse(JSON.parse(previous.row.event_json).createdAt)<=Date.parse(JSON.parse(item.row.event_json).createdAt)));
+  assert(data.provider_runtime_events?.every(row=>prewarmSetupNotice(row,route,runtime,cursor)
+    ||bootstrapThread&&(row===bootstrapThread||bootstrapMcp.some(item=>item.row===row
+      &&(item.value.state==='starting'||bootstrapReady.includes(item))))), 'PROVIDER_ACTIVITY');
+  const mcpReady=data.provider_runtime_events.filter(row=>row.event_type==='mcp.status.updated'
+    &&JSON.parse(row.event_json).payload?.status?.name==='acode_apps'
+    &&JSON.parse(row.event_json).payload?.status?.state==='ready');
+  for(const ready of mcpReady) {
+    const readyEvent=JSON.parse(ready.event_json);
+    assert(Number.isSafeInteger(ready.sequence)&&Number.isFinite(Date.parse(readyEvent.createdAt))
+      &&data.provider_runtime_events.some(previous=>Number.isSafeInteger(previous.sequence)&&previous.sequence<ready.sequence
+        &&previous.event_type==='mcp.status.updated'&&prewarmSetupNotice(previous,route,runtime,cursor)
+        &&JSON.parse(previous.event_json).payload?.status?.state==='failed'
+        &&Date.parse(JSON.parse(previous.event_json).createdAt)<=Date.parse(readyEvent.createdAt)), 'MCP_READY_WITHOUT_BOUND_TIMEOUT');
+  }
   const events = data.orchestration_events.map(row => ({ ...row, payload: JSON.parse(row.payload_json) }));
   const request = one(events.filter(row => row.event_type === 'thread.turn-start-requested'), 'REQUEST');
   const sent = one(events.filter(row => row.event_type === 'thread.message-sent'), 'MESSAGE_EVENT');
@@ -167,6 +236,8 @@ export function verifyNativeStartRejection(data, state, config) {
     }
   }
   return { profile: idleBootstrap ? IDLE_BOOTSTRAP_REJECTION_PROFILE : idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
+    ...(bootstrapThread?{bootstrap_empty_thread_initialized:true,bootstrap_thread_started_sequence:bootstrapThread.sequence,
+      bootstrap_mcp_ready_sequences:bootstrapReady.map(item=>item.row.sequence)}:{}),
     ...(mcpReady.length?{prewarm_mcp_recovered_without_model_turn:true,prewarm_mcp_ready_sequences:mcpReady.map(row=>row.sequence)}:{}),
     ...(idlePrewarm ? { prewarm_runtime_status: runtime.status, prewarm_provider_session_id: cursor.threadId,
       prewarm_only: true, active_model_turn_id: null, native_projection_status: session.status,

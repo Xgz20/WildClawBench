@@ -116,6 +116,71 @@ test('direct idle bootstrap retains missing prewarm flag and its distinct connec
   assert.equal(p.empty_prewarm_flag_present,false);assert.equal(p.native_turn_id,null);assert.equal('prewarm_only' in p,false);
   assert.equal(JSON.stringify(f.state),before);assert.equal(JSON.parse(f.data.provider_session_runtime[0].resume_cursor_json).emptyPrewarm,undefined);
 });
+
+function initializedBootstrapFixture() {
+  const f=idleBootstrapFixture(),r=f.data.provider_session_runtime[0];
+  const sdk='01900000-0000-7000-8000-000000000018';
+  r.resume_cursor_json=JSON.stringify({threadId:sdk});
+  const thread={id:sdk,extra:null,sessionId:sdk,forkedFromId:null,parentThreadId:null,preview:'',ephemeral:false,
+    historyMode:'legacy',modelProvider:'astron_gateway',createdAt:1793946510,updatedAt:1793946510,recencyAt:1793946510,
+    status:{type:'idle'},path:`/overlay/sessions/2026/11/06/rollout-2026-11-06T06-28-30-${sdk}.jsonl`,
+    cwd:f.config.candidateWorkspace,cliVersion:'0.144.1',source:'vscode',threadSource:null,agentNickname:null,agentRole:null,gitInfo:null,name:null,turns:[]};
+  const add=(sequence,type,createdAt,raw,payload)=>{
+    const event={eventId:'setup-'+sequence,modelSource:'builtin',provider:'acode',threadId:'thread',
+      lifecycleGeneration:'bootstrap-epoch',type,createdAt,providerRefs:{providerThreadId:sdk},raw:{source:'acode',...raw},payload};
+    const row={sequence,event_id:event.eventId,thread_id:'thread',turn_id:null,lifecycle_generation:'bootstrap-epoch',event_type:type,event_json:JSON.stringify(event)};
+    f.data.provider_runtime_events.push(row);return row;
+  };
+  add(30,'thread.started','2026-11-06T06:28:30.500Z',{method:'thread/started',payload:{thread}},{providerThreadId:sdk});
+  for(const [sequence,name,state,at] of [[31,'acode_apps','starting','06:28:31'],[32,'acode','starting','06:28:31'],[33,'acode','ready','06:28:32']]){
+    add(sequence,'mcp.status.updated',`2026-11-06T${at}Z`,{method:'mcpServer/startupStatus/updated',payload:{threadId:sdk,name,status:state,error:null,failureReason:null}},{status:{name,state}});
+  }
+  const error='MCP client for `acode_apps` timed out after 30 seconds.';
+  add(34,'mcp.status.updated','2026-11-06T06:29:02Z',{method:'mcpServer/startupStatus/updated',payload:{threadId:sdk,name:'acode_apps',status:'failed',error,failureReason:null}},{status:{name:'acode_apps',state:'failed',error}});
+  return f;
+}
+
+test('native idle empty SDK initialization and paired MCP startup are setup, never a model turn',()=>{
+  const f=initializedBootstrapFixture(),before=JSON.stringify(f.state),p=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(p.profile,'bound-native-unsubmitted-start-rejection-idle-bootstrap/v1');
+  assert.equal(p.bootstrap_empty_thread_initialized,true);assert.equal(p.bootstrap_thread_started_sequence,30);
+  assert.deepEqual(p.bootstrap_mcp_ready_sequences,[33]);assert.equal(p.native_turn_id,null);
+  assert.equal('prewarm_mcp_recovered_without_model_turn' in p,false);assert.equal('score' in p,false);
+  assert.equal(JSON.stringify(f.state),before);
+});
+for(const kind of ['busy-thread','nonempty-turns','preview','foreign-cwd','foreign-sdk','event-generation','row-generation','sdk-version',
+  'unknown-thread-field','forked-thread','mcp-extra-field','unpaired-mcp-ready','mcp-foreign-thread','mcp-wrong-clock','missing-thread-init','live-model-turn','pending-delivery','provider-model-turn','unknown-mcp-server',
+  'thread-envelope-extra','thread-raw-extra','mcp-outer-extra','mcp-ref-extra'])
+test('empty SDK initialization rejects '+kind,()=>{
+  const f=initializedBootstrapFixture(),rows=f.data.provider_runtime_events,first=JSON.parse(rows[0].event_json),thread=first.raw.payload.thread;
+  const ready=JSON.parse(rows[3].event_json);
+  if(kind==='busy-thread')thread.status.type='active';
+  if(kind==='nonempty-turns')thread.turns=[{id:'real-turn'}];
+  if(kind==='preview')thread.preview='previous prompt';
+  if(kind==='foreign-cwd')thread.cwd='/foreign';
+  if(kind==='foreign-sdk')first.providerRefs.providerThreadId='foreign';
+  if(kind==='event-generation')first.lifecycleGeneration='foreign';
+  if(kind==='row-generation')rows[0].lifecycle_generation='foreign';
+  if(kind==='sdk-version')thread.cliVersion='unknown';
+  if(kind==='unknown-thread-field')thread.activeTurnId=null;
+  if(kind==='thread-envelope-extra')first.turnId=null;
+  if(kind==='thread-raw-extra')first.raw.activeTurnId=null;
+  if(kind==='forked-thread')thread.forkedFromId='prior';
+  if(kind==='mcp-extra-field')ready.raw.payload.activeTurnId=null;
+  if(kind==='mcp-outer-extra')ready.payload.activeTurnId=null;
+  if(kind==='mcp-ref-extra')ready.providerRefs.turnId='live';
+  if(kind==='mcp-foreign-thread')ready.raw.payload.threadId='foreign';
+  if(kind==='mcp-wrong-clock')ready.createdAt='2026-11-06T06:28:29Z';
+  if(kind==='unknown-mcp-server')ready.raw.payload.name=ready.payload.status.name='unknown';
+  if(kind==='live-model-turn')f.data.projection_turns.push({turn_id:'real-turn'});
+  if(kind==='pending-delivery')f.data.orchestration_event_deliveries[0].state='pending';
+  rows[0].event_json=JSON.stringify(first);rows[3].event_json=JSON.stringify(ready);
+  if(kind==='unpaired-mcp-ready')rows.splice(2,1);
+  if(kind==='missing-thread-init')rows.shift();
+  if(kind==='provider-model-turn')rows.push({thread_id:'thread',turn_id:'turn',event_type:'turn.started',event_json:'{}'});
+  const before=JSON.stringify(f.state);assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/NATIVE_START_REJECTION_/);
+  assert.equal(JSON.stringify(f.state),before);
+});
 for(const kind of ['cursor-extra','false-prewarm','active-turn','unknown-payload','model-drift','generation-drift','recovery-pending'])test('direct bootstrap rejects '+kind,()=>{
   const f=idleBootstrapFixture(),r=f.data.provider_session_runtime[0],p=JSON.parse(r.runtime_payload_json);
   if(kind==='cursor-extra')r.resume_cursor_json='{"threadId":"bootstrap-sdk","pending":true}';
