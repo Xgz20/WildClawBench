@@ -3,6 +3,9 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.40` 对原生连接清理后的独立stopped-bootstrap证明重放同一严格来源，区分原生明确停止与缺失SDK；故障政策仍须绑定人类指令、真实原生拒绝和唯一选中执行，原Rubric与未知资源保持null。
+
+
 `0.8.39` 启动失败政策仅在共享核验严格确认原生SDK线程初始化为空、原请求已拒绝未提交且无真实turn/待派发时消费新证明；保留原Rubric null及同源覆盖，不从初始化事件推断模型执行或成功。
 
 

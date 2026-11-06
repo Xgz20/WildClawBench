@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.40` 冻结并离线回放明确原生停止的bootstrap连接：严格核验stopRuntimeSession、完整无活动载荷、停止晚于原生拒绝和全部not-submitted回执；原字段和资源缺失保留，不补造预热标志或把SDK文件缺失当无执行。
+
+
 `0.11.39` 离线回放明确无模型turn的SDK空线程初始化及成对MCP准备事件，核验同目录/cursor/generation、原生idle与空turn列表。原失败、原字段与来源SHA保留，不把SDK线程创建当成模型执行，不补资源或分数。
 
 

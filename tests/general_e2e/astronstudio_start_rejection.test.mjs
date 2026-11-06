@@ -117,6 +117,40 @@ test('direct idle bootstrap retains missing prewarm flag and its distinct connec
   assert.equal(JSON.stringify(f.state),before);assert.equal(JSON.parse(f.data.provider_session_runtime[0].resume_cursor_json).emptyPrewarm,undefined);
 });
 
+function stoppedBootstrapFixture() {
+  const f=idleBootstrapFixture(),r=f.data.provider_session_runtime[0],p=JSON.parse(r.runtime_payload_json);
+  r.status='stopped';r.last_seen_at='2026-11-06T06:30:00.001Z';
+  p.lastRuntimeEvent='provider.stopRuntimeSession';p.lastRuntimeEventAt='2026-11-06T06:30:00.000Z';
+  r.runtime_payload_json=JSON.stringify(p);return f;
+}
+test('explicit native stopped-bootstrap cleanup is distinct and never inferred from a missing SDK file',()=>{
+  const f=stoppedBootstrapFixture(),before=JSON.stringify(f.state),p=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(p.profile,'bound-native-unsubmitted-start-rejection-stopped-bootstrap/v1');
+  assert.equal(p.stopped_bootstrap_only,true);assert.equal(p.bootstrap_runtime_stop_method,'provider.stopRuntimeSession');
+  assert.equal(p.empty_prewarm_flag_present,false);assert.equal(p.active_model_turn_id,null);
+  assert.equal('score' in p,false);assert.equal(JSON.stringify(f.state),before);
+});
+for(const kind of ['not-stopped','unknown-stop-marker','stop-before-rejection','stop-after-last-seen','unknown-payload','active-turn',
+  'generation-drift','cursor-extra','model-drift','pending-recovery','provider-events-remain','native-model-turn','pending-delivery'])
+test('stopped bootstrap rejects '+kind,()=>{
+  const f=stoppedBootstrapFixture(),r=f.data.provider_session_runtime[0],p=JSON.parse(r.runtime_payload_json);
+  if(kind==='not-stopped')r.status='running';
+  if(kind==='unknown-stop-marker')p.lastRuntimeEvent='unknown';
+  if(kind==='stop-before-rejection')p.lastRuntimeEventAt='2026-11-06T06:28:00.000Z';
+  if(kind==='stop-after-last-seen')p.lastRuntimeEventAt='2026-11-06T06:31:00.000Z';
+  if(kind==='unknown-payload')p.emptyPrewarm=true;
+  if(kind==='active-turn')p.activeTurnId='turn';
+  if(kind==='generation-drift')p.lifecycleGeneration='foreign';
+  if(kind==='cursor-extra')r.resume_cursor_json='{"threadId":"bootstrap-sdk","emptyPrewarm":false}';
+  if(kind==='model-drift')p.model='other';
+  if(kind==='pending-recovery')p.contextRecovery={pending:true};
+  if(kind==='provider-events-remain')f.data.provider_runtime_events.push({event_type:'unknown'});
+  if(kind==='native-model-turn')f.data.projection_turns.push({turn_id:'turn'});
+  if(kind==='pending-delivery')f.data.orchestration_event_deliveries[0].state='pending';
+  r.runtime_payload_json=JSON.stringify(p);const before=JSON.stringify(f.state);
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/NATIVE_START_REJECTION_/);assert.equal(JSON.stringify(f.state),before);
+});
+
 function initializedBootstrapFixture() {
   const f=idleBootstrapFixture(),r=f.data.provider_session_runtime[0];
   const sdk='01900000-0000-7000-8000-000000000018';

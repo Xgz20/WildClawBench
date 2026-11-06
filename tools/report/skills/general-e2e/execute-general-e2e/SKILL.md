@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.63` 为原生空连接清理保留独立stopped-bootstrap证明：必须完整已知载荷、明确provider.stopRuntimeSession且停止不早于原拒绝、active turn显式null、原请求已not-submitted及无turn/排队/交互。保留缺失emptyPrewarm原样，不从SDK文件缺失推断空闲，不重发、不重启或赋分。
+
+
 `0.14.62` 原生thread/started只在完整已知SDK空线程、idle/turns为空、同cursor/generation/目录及成对MCP初始化时作为连接准备。仍须原请求rejected/not-submitted、无模型turn/排队/交互及完整投递回执；不重发、不改变Harness配置、不据此评分。未知SDK版本/字段/真实活动继续拒绝。
 
 
