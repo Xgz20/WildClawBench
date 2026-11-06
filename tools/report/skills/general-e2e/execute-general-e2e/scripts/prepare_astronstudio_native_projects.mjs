@@ -6,7 +6,7 @@ import {join,dirname,resolve,relative,isAbsolute} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {resolveExecutionConfig,parseArgs as executionArgs,isBlockingActiveSession} from './execute_astronstudio_macos.mjs';
 import {queryNativeSessions,queryExactProjectsForWorkspace} from './lib/astronstudio-state.mjs';
-import {CdpClient,discoverMainTarget,addWorkspace,waitForExactProjectIdentity} from './lib/astronstudio-cdp.mjs';
+import {CdpClient,discoverMainTarget,addWorkspace,waitForExactProjectIdentity,resetOwnedProjectPathForm} from './lib/astronstudio-cdp.mjs';
 import {probeAstronStudio} from './probe_astronstudio_macos.mjs';
 const hash=b=>createHash('sha256').update(b).digest('hex');
 const require=(value,code)=>{if(!value)throw Error('NATIVE_PROJECT_PREPARATION_'+code);};
@@ -22,7 +22,7 @@ export function parseProjectPreparationArgs(args){
 
 export async function prepareNativeProjects(options,overrides={}){
   const deps={resolveExecutionConfig,queryNativeSessions,queryExactProjectsForWorkspace,probeAstronStudio,discoverMainTarget,
-    connect:(url,timeout)=>CdpClient.connect(url,timeout),addWorkspace,waitForExactProjectIdentity,...overrides};
+    connect:(url,timeout)=>CdpClient.connect(url,timeout),addWorkspace,waitForExactProjectIdentity,resetOwnedProjectPathForm,...overrides};
   const unit=await realpath(resolve(options.unitRoot)),manifestPath=join(unit,'manifest.json'),manifestBytes=await readFile(manifestPath),manifest=JSON.parse(manifestBytes);
   const queue=await json(join(unit,'.general-e2e/queues',options.queueId,'queue-state.json'));
   const queueLock=await json(join(unit,'.general-e2e/queues',options.queueId,'worker.lock')).catch(error=>{if(error.code==='ENOENT')return null;throw error;});
@@ -54,6 +54,10 @@ export async function prepareNativeProjects(options,overrides={}){
       if(!rows.length){await deps.addWorkspace(client,workspace,options.timeoutMs);await deps.waitForExactProjectIdentity(config.stateDatabase,workspace,options.timeoutMs);rows=await deps.queryExactProjectsForWorkspace(config.stateDatabase,workspace);created=true;}
       require(rows.length===1&&rows[0].workspace_root===workspace,'PROJECT_BINDING');
       audit.projects.push({task_id:id,workspace,project_id:rows[0].project_id,created});await save();
+      // A native mutation can persist the project but leave its own error
+      // form mounted. Clear only this just-certified full path, not the next
+      // task's path or any unknown draft, before continuing the frozen order.
+      if(created)await deps.resetOwnedProjectPathForm(client,workspace);
     }
     await verify();audit.status='PASS';await save();return audit;
   }catch(error){audit.status='NEEDS_ATTENTION';audit.error=String(error.message||error);await save();throw error;}

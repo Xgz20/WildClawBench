@@ -18,14 +18,16 @@ async function fixture(){
   const deps={resolveExecutionConfig:async()=>config,queryNativeSessions:async()=>[],probeAstronStudio:async()=>probe,
     discoverMainTarget:async()=>({webSocketDebuggerUrl:'fixture'}),connect:async()=>({close:()=>calls.push('close')}),
     queryExactProjectsForWorkspace:async(_db,w)=>registered.has(w)?[registered.get(w)]:[],
-    addWorkspace:async(_c,w)=>{calls.push(w);registered.set(w,{project_id:'created',workspace_root:w});},waitForExactProjectIdentity:async()=>{},};
+    addWorkspace:async(_c,w)=>{calls.push(w);registered.set(w,{project_id:'created',workspace_root:w});},waitForExactProjectIdentity:async()=>{},
+    resetOwnedProjectPathForm:async(_c,w)=>{calls.push('reset:'+w);return {reset:true};}};
   return{root,q,config,probe,registered,calls,deps,options:{unitRoot:root,runConfig:'fixture',queueId:'queue',output:join(root,'audit.json'),timeoutMs:1000}};
 }
 
 test('native project preparation preserves full frozen order and never calls task/composer/send',async()=>{
   const f=await fixture();try{const a=await prepareNativeProjects(f.options,f.deps);assert.equal(a.status,'PASS');assert.deepEqual(a.projects.map(p=>p.task_id),['first','second']);
     assert.deepEqual(a.projects.map(p=>p.created),[false,true]);assert.equal(a.prompt_send_calls,0);assert.equal(a.new_task_calls,0);assert.equal(a.page_reload_calls,0);
-    assert.equal(f.calls.filter(x=>x!=='close').length,1);await assert.rejects(access(join(f.root,'.general-e2e/astronstudio-ui.lock')));
+    assert.equal(f.calls.filter(x=>x!=='close'&&!x.startsWith('reset:')).length,1);
+    assert.equal(f.calls.filter(x=>x.startsWith('reset:')).length,1);await assert.rejects(access(join(f.root,'.general-e2e/astronstudio-ui.lock')));
   }finally{await rm(f.root,{recursive:true,force:true});}
 });
 
