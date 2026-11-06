@@ -4,6 +4,7 @@ import { dirname, join, relative, isAbsolute } from 'node:path';
 import { lstat, readFile, realpath } from 'node:fs/promises';
 export const START_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection/v1';
 export const IDLE_PREWARM_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection-idle-prewarm/v1';
+export const IDLE_BOOTSTRAP_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection-idle-bootstrap/v1';
 const digest = text => createHash('sha256').update(text).digest('hex');
 const assert = (ok, code) => { if (!ok) throw new Error(`NATIVE_START_REJECTION_${code}`); };
 const one = (rows, code) => { assert(rows?.length === 1, code); return rows[0]; };
@@ -93,9 +94,24 @@ export function verifyNativeStartRejection(data, state, config) {
     && runtimePayload.activeTurnId === null && runtimePayload.lastError === null
     && runtimePayload.emptyPrewarmDispatch === null
     && typeof cursor.threadId === 'string' && cursor.threadId.length > 0;
-  assert(runtime.thread_id === route && (runtime.status === 'stopped' || idlePrewarm) && cursor.emptyPrewarm === true
+  // A directly bootstrapped connection has no emptyPrewarm declaration. Keep
+  // that absence; require its complete known setup shape and exact generation,
+  // model, workspace, and explicitly null active turn instead of inventing it.
+  const idleBootstrap=['running','ready'].includes(runtime.status)
+    &&Object.keys(cursor).sort().join(',')==='threadId'&&typeof cursor.threadId==='string'&&cursor.threadId.length>0
+    &&runtime.provider_name==='acode'&&runtime.adapter_key==='acode'&&runtime.runtime_mode==='full-access'
+    &&Object.keys(runtimePayload).sort().join(',')==='activeTurnId,contextRecovery,cwd,lastError,lastRuntimeEvent,lastRuntimeEventAt,lifecycleGeneration,model,modelSelection,providerOptions,workspaceKind'
+    &&runtimePayload.lastRuntimeEvent==='session.state.changed'&&runtimePayload.activeTurnId===null
+    &&runtimePayload.lastError===null&&runtimePayload.contextRecovery===null&&runtimePayload.workspaceKind==='project'
+    &&runtimePayload.lifecycleGeneration===runtime.lifecycle_generation
+    &&runtimePayload.model===config.expectedModel.toLowerCase()
+    &&JSON.stringify(runtimePayload.modelSelection)===JSON.stringify(JSON.parse(thread.model_selection_json))
+    &&JSON.stringify(runtimePayload.providerOptions)==='{"acode":{}}'
+    &&Number.isFinite(Date.parse(runtimePayload.lastRuntimeEventAt))
+    &&Date.parse(runtimePayload.lastRuntimeEventAt)<=Date.parse(session.updated_at);
+  assert(runtime.thread_id === route && ((runtime.status === 'stopped' || idlePrewarm) && cursor.emptyPrewarm === true || idleBootstrap)
     && !runtimePayload.activeTurnId && resolve(runtimePayload.cwd || '') === resolve(config.candidateWorkspace), 'PREWARM');
-  assert(!readyProjection || idlePrewarm, 'READY_PROJECTION_PREWARM');
+  assert(!readyProjection || idlePrewarm || idleBootstrap, 'READY_PROJECTION_PREWARM');
   const events = data.orchestration_events.map(row => ({ ...row, payload: JSON.parse(row.payload_json) }));
   const request = one(events.filter(row => row.event_type === 'thread.turn-start-requested'), 'REQUEST');
   const sent = one(events.filter(row => row.event_type === 'thread.message-sent'), 'MESSAGE_EVENT');
@@ -150,11 +166,14 @@ export function verifyNativeStartRejection(data, state, config) {
         && event.command_id.endsWith(':'+accepted.command_fingerprint),'ERROR_RECEIPT_BINDING');
     }
   }
-  return { profile: idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
+  return { profile: idleBootstrap ? IDLE_BOOTSTRAP_REJECTION_PROFILE : idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
     ...(mcpReady.length?{prewarm_mcp_recovered_without_model_turn:true,prewarm_mcp_ready_sequences:mcpReady.map(row=>row.sequence)}:{}),
     ...(idlePrewarm ? { prewarm_runtime_status: runtime.status, prewarm_provider_session_id: cursor.threadId,
       prewarm_only: true, active_model_turn_id: null, native_projection_status: session.status,
       native_projection_updated_at: session.updated_at, native_projection_stale: readyProjection } : {}),
+    ...(idleBootstrap?{bootstrap_runtime_status:runtime.status,bootstrap_provider_session_id:cursor.threadId,
+      bootstrap_only:true,empty_prewarm_flag_present:false,active_model_turn_id:null,
+      native_projection_status:session.status,native_projection_updated_at:session.updated_at,native_projection_stale:readyProjection}:{}),
     thread_id: route, project_id: project.project_id,
     message_id: message.message_id, request_sequence: request.sequence, request_command_id: request.command_id,
     failed_at: activity.createdAt, error: payload.detail, prompt_sha256: state.prompt.sha256,
@@ -186,7 +205,7 @@ export async function readFrozenStartRejection(unitRoot, state, record = null) {
   assert(digest(bytes) === binding.sha256
     && binding.sha256 === state.evidence?.native_start_rejection?.sha256, 'PROOF_SHA');
   const proof = JSON.parse(bytes);
-  assert([START_REJECTION_PROFILE, IDLE_PREWARM_REJECTION_PROFILE].includes(proof.profile)
+  assert([START_REJECTION_PROFILE, IDLE_PREWARM_REJECTION_PROFILE, IDLE_BOOTSTRAP_REJECTION_PROFILE].includes(proof.profile)
     && JSON.stringify(proof.identity) === JSON.stringify(state.identity), 'PROOF_IDENTITY');
   assert(Array.isArray(proof.files) && proof.files.length === 3
     && [...proof.files.map(row => row.path)].sort().join('|') === 'native-snapshot.json|original-execution-record.json|original-state.json', 'PROOF_SOURCES');

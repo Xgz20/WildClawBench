@@ -94,3 +94,5 @@ Execute0.14.55 / Driver0.4.22的`recover_astronstudio_dispatch.mjs --unit-root A
 0.14.56仅对已有canonical CWM-only审计确认的初始Office属性差异增加准入：实际路径、类型和权限须完全相同，原execution ZIP与manifest和全部业务OPC成员保持原SHA契约。原/现Office字节和比较清单纳入旧attempt封存ZIP，回执显式记录该Profile；不删除标记或改输入。非Office变化、增删文件或业务内容变化仍失败。
 
 0.14.58的派生应用必须同时保存原“框架故障可独立重试”持续指令和原“未送达属于框架发送故障”的人类界定，两份原件路径/SHA、原question ID、原context task均不改。应用schema为`general-e2e.standing-framework-retry-application/v1`，`derived_application=true`，只作用于当前明确绑定task/old attempt及`no-native-prompt-acceptance-owned-draft-restored`边界。CLI和回执标明是控制器对既有授权的应用，不是假冒人类为每题再次答复。任何已受理消息/turn/未结算投递、非本题草稿或活动模型仍不适用；不是自动把未知评分补0。
+
+0.14.60 / 组件1.0.4另用`bound-native-unsubmitted-start-rejection-idle-bootstrap/v1`记录直接初始化连接：cursor只能有threadId；runtime payload字段范围、generation、model/options、cwd、full-access/provider/adapter和显式null activeTurnId/lastError/contextRecovery逐项匹配，无emptyPrewarm或emptyPrewarmDispatch声明不补值。原生精确Prompt/accepted request/明确rejected/not-submitted已结算、零turn/open/promotion/interaction、同快照原生error事件及accepted指纹仍必须闭合。它不是旧empty-prewarm Profile，不能由缺SDK文件或ready文字单独推出无模型或成功。未知动态字段、活跃turn、pending及矛盾来源继续拒绝；所有原行和部分覆盖原样保留。

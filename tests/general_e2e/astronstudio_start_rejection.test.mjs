@@ -101,6 +101,32 @@ for(const kind of ['no-timeout','wrong-order','wrong-clock','extra-source','live
   ready.event_json=JSON.stringify(event);
   assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/NATIVE_START_REJECTION_/);
 });
+
+function idleBootstrapFixture() {
+  const f=fixture(),r=f.data.provider_session_runtime[0];
+  Object.assign(r,{status:'running',provider_name:'acode',adapter_key:'acode',runtime_mode:'full-access',lifecycle_generation:'bootstrap-epoch',resume_cursor_json:'{"threadId":"bootstrap-sdk"}'});
+  r.runtime_payload_json=JSON.stringify({contextRecovery:null,lastRuntimeEvent:'session.state.changed',lastRuntimeEventAt:'2026-11-06T06:28:35.511Z',
+    cwd:f.config.candidateWorkspace,model:'spark-x2.6',workspaceKind:'project',lastError:null,
+    modelSelection:JSON.parse(f.data.projection_threads[0].model_selection_json),providerOptions:{acode:{}},lifecycleGeneration:'bootstrap-epoch',activeTurnId:null});
+  return f;
+}
+test('direct idle bootstrap retains missing prewarm flag and its distinct connection provenance',()=>{
+  const f=idleBootstrapFixture(),before=JSON.stringify(f.state),p=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(p.profile,'bound-native-unsubmitted-start-rejection-idle-bootstrap/v1');assert.equal(p.bootstrap_only,true);
+  assert.equal(p.empty_prewarm_flag_present,false);assert.equal(p.native_turn_id,null);assert.equal('prewarm_only' in p,false);
+  assert.equal(JSON.stringify(f.state),before);assert.equal(JSON.parse(f.data.provider_session_runtime[0].resume_cursor_json).emptyPrewarm,undefined);
+});
+for(const kind of ['cursor-extra','false-prewarm','active-turn','unknown-payload','model-drift','generation-drift','recovery-pending'])test('direct bootstrap rejects '+kind,()=>{
+  const f=idleBootstrapFixture(),r=f.data.provider_session_runtime[0],p=JSON.parse(r.runtime_payload_json);
+  if(kind==='cursor-extra')r.resume_cursor_json='{"threadId":"bootstrap-sdk","pending":true}';
+  if(kind==='false-prewarm')r.resume_cursor_json='{"threadId":"bootstrap-sdk","emptyPrewarm":false}';
+  if(kind==='active-turn')p.activeTurnId='running';
+  if(kind==='unknown-payload')p.emptyPrewarmDispatch={pending:true};
+  if(kind==='model-drift')p.model='other';
+  if(kind==='generation-drift')p.lifecycleGeneration='foreign';
+  if(kind==='recovery-pending')p.contextRecovery={pending:true};
+  r.runtime_payload_json=JSON.stringify(p);assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/NATIVE_START_REJECTION_/);
+});
 for (const [name, change] of [
   ['changed prompt', f => f.data.projection_thread_messages[0].text += 'changed'],
   ['foreign workspace', f => f.data.projection_projects[0].workspace_root = '/foreign'],
