@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, open, unlink, realpath } from 'node:fs/prom
 import { createHash, randomUUID } from 'node:crypto';
 import { resolve, join, relative, isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { discoverMainTarget, CdpClient, renderExpectedPrompt, createFreshTask } from './lib/astronstudio-cdp.mjs';
+import { discoverMainTarget, CdpClient, renderExpectedPrompt, createFreshTask, clearOwnedComposerDraft } from './lib/astronstudio-cdp.mjs';
 import { queryNativeSessions, queryPristineThread, queryProjectForThread } from './lib/astronstudio-state.mjs';
 import { isRetryablePreSendFailure, isBlockingActiveSession } from './execute_astronstudio_macos.mjs';
 
@@ -86,11 +86,7 @@ export async function prepareZeroSendUi({ unitRoot, stateDatabase, endpoint, aud
       require(sha(await readFile(owned.statePath)) === owned.state_sha256, 'DRAFT_ATTEMPT_CHANGED');
       require(!(await api.queryNativeSessions(stateDatabase)).some(isBlockingActiveSession)
         && await api.queryPristineThread(stateDatabase, thread), 'DRAFT_NATIVE_ACTIVITY_CHANGED');
-      const selected = await client.evaluate(`(() => {const e=document.querySelector('[data-testid="composer-editor"]');if(location.hash!==${JSON.stringify(ui.route)}||e?.innerText?.trim()!==${JSON.stringify(ui.text)})return false;e.focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r);return document.activeElement===e;})()`);
-      require(selected, 'DRAFT_OR_FOCUS_CHANGED');
-      await client.send('Input.dispatchKeyEvent', {type:'keyDown',key:'Backspace',code:'Backspace'});
-      await client.send('Input.dispatchKeyEvent', {type:'keyUp',key:'Backspace',code:'Backspace'});
-      const empty = await client.evaluate(`(() => {const e=document.querySelector('[data-testid="composer-editor"]');return{route:location.hash,text:e?.innerText?.trim(),chips:e?.querySelectorAll('[role="link"][contenteditable="false"]').length}})()`);
+      const empty = await clearOwnedComposerDraft(client,{route:ui.route,text:ui.text});
       require(empty.text === '' && empty.chips === 0 && empty.route === ui.route, 'DRAFT_RESET_NOT_VERIFIED');
       require(sha(await readFile(owned.statePath)) === owned.state_sha256, 'DRAFT_ATTEMPT_CHANGED');
       proof.reset = { operation: 'clear only bound preserved zero-send draft', after: empty };

@@ -813,6 +813,33 @@ export async function fillPrompt(client, prompt, timeoutMs) {
   );
 }
 
+export async function clearOwnedComposerDraft(client, {route, text}, timeoutMs=5000) {
+  const focused=await client.evaluate(expression(`
+    const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible);
+    const dialogs=Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(visible);
+    if(location.hash!==${JSON.stringify(route)}||es.length!==1||dialogs.length
+      ||es[0].innerText?.trim()!==${JSON.stringify(text)})return false;
+    es[0].focus();return document.activeElement===es[0];
+  `));
+  if(!focused)throw new Error('OWNED_DRAFT_CHANGED_BEFORE_NATIVE_SELECTION');
+  // Native editing commands update the editor's own selection state. A DOM
+  // Range alone can leave a final character in a controlled rich-text editor.
+  await client.send('Input.dispatchKeyEvent',{type:'rawKeyDown',key:'a',code:'KeyA',modifiers:4,commands:['selectAll']});
+  await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'a',code:'KeyA',modifiers:4});
+  await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Backspace',code:'Backspace'});
+  await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Backspace',code:'Backspace'});
+  let emptySince=null;
+  return waitFor(async()=>{const value=await client.evaluate(expression(`
+    const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible),e=es[0];
+    return {route:location.hash,count:es.length,text:e?.innerText?.trim(),
+      chips:e?.querySelectorAll('[role="link"][contenteditable="false"]').length,
+      dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(visible).length};
+  `));const empty=value.route===route&&value.count===1&&value.text===''&&value.chips===0&&value.dialogs===0;
+    if(empty&&emptySince===null)emptySince=Date.now();if(!empty)emptySince=null;
+    return {...value,empty_stable_ms:emptySince===null?0:Date.now()-emptySince};
+  },v=>v.route===route&&v.count===1&&v.text===''&&v.chips===0&&v.dialogs===0&&v.empty_stable_ms>=200,timeoutMs,'验证本题草稿完全清空');
+}
+
 export async function inspectSendTarget(client, prompt, workspace) {
   const expectedPrompt = prompt.trim().replaceAll("\r\n", "\n");
   return client.evaluate(expression(`

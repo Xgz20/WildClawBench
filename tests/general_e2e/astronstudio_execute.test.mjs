@@ -18,6 +18,7 @@ import {
   waitForExactProjectIdentity,
   createFreshTask,
   resetOwnedProjectPathForm,
+  clearOwnedComposerDraft,
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs";
 import {
   withStateSnapshot,
@@ -35,6 +36,22 @@ import {
 } from "../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs";
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
+
+test('owned draft clearing updates native editor selection and waits through a delayed final-character residue',async()=>{
+  let reads=0,nativeSelected=false,deleted=false;const calls=[];
+  const client={evaluate:async()=>{reads++;if(reads===1)return true;
+    return {route:'#/owned',count:1,text:reads===2?'。':deleted?'':'not empty',chips:0,dialogs:0};},
+    send:async(method,value)=>{calls.push({method,...value});if(value.commands?.includes('selectAll'))nativeSelected=true;
+      if(value.type==='keyDown'&&value.key==='Backspace'){assert.equal(nativeSelected,true);deleted=true;}}};
+  const result=await clearOwnedComposerDraft(client,{route:'#/owned',text:'原冻结全文。'},1500);
+  assert.equal(result.text,'');assert.ok(result.empty_stable_ms>=200);
+  assert.equal(calls.filter(v=>v.type==='keyDown'&&v.key==='Backspace').length,1);
+  assert.equal(calls.some(v=>v.method==='Input.insertText'),false);
+});
+test('changed or foreign draft is preserved before any selection or deletion key',async()=>{
+  const calls=[];const client={evaluate:async()=>false,send:async(...args)=>calls.push(args)};
+  await assert.rejects(clearOwnedComposerDraft(client,{route:'#/owned',text:'known frozen text'}),/OWNED_DRAFT_CHANGED/);assert.deepEqual(calls,[]);
+});
 
 async function preparedFrameworkFixture(config) {
   const deps=commonDependencies(config,[[]],{count:0});

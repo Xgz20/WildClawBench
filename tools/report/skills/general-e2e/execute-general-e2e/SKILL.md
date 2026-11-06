@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.61` 已绑定本题草稿的清理使用原生编辑器selectAll/Backspace并等待完全空白回读，避免DOM Range与受控编辑器选择状态不同步而残留末字。授权未受理恢复先持久化清理意图；只有该意图/原全文/SHA和归档闭合时才可恢复已清空但未回传结果的动作，不再次按键。未知文本或残留不自动丢弃，不发送、不改材料/模型。
+
 `0.14.60` 独立idle-bootstrap启动拒绝证明保留直接初始化连接缺少emptyPrewarm字段的原样；必须严格已知完整runtime payload/cursor、相同generation/model/cwd、activeTurnId显式null，且原请求已拒绝未提交、无turn/交互/派发及全部原生错误回执闭合。不能把字段缺失补成true、凭ready或SDK文件缺失判无模型；其余动态字段/活动仍拒绝。
 
 `0.14.59` 原生未提交启动拒绝证明保留同一空预热生命周期内、严格绑定acode_apps超时后的ready状态事件；必须同provider thread、原序列和时间顺序、无任何模型turn/待派发且原请求已rejected/not-submitted结算。MCP后来ready不改原失败，不据此重发、判分或修改客户端配置。

@@ -40,7 +40,7 @@ test('preparation failures block refilling separately from candidate failures',(
   assert.equal(preSendInfrastructureFailure({phase:'FAILED',dispatch_attempt_count:0,error:{code:'CANDIDATE_ERROR'}}),false);
 });
 
-for(const digestField of ['sha256','sent_sha256']) for(const foreign of [false,true]) test(digestField+': '+(foreign?'foreign draft never gets a key event and is not exported':'owned draft clearing preserves state and only emits Backspace'),async()=>{
+for(const digestField of ['sha256','sent_sha256']) for(const foreign of [false,true]) test(digestField+': '+(foreign?'foreign draft never gets a key event and is not exported':'owned draft clearing preserves state and uses native selection before Backspace'),async()=>{
   const root=await realpath(await mkdtemp(join(tmpdir(),'bound-zero-send-')));
   try{
     const prompt='exact frozen prompt',workspace=join(root,'workspace'),control=join(root,'.general-e2e/execution/task');
@@ -49,11 +49,11 @@ for(const digestField of ['sha256','sent_sha256']) for(const foreign of [false,t
     const source=state();source.identity={batch_id:'batch',unit_id:'unit',task_id:'task',attempt_id:'original'};
     const statePath=join(control,'automation-state.json');await writeFile(statePath,JSON.stringify(source));const before=await readFile(statePath);
     const audit=join(root,'audit'),keys=[];let reads=0,closed=false;
-    const client={evaluate:async()=>++reads===1?{...ui(),route:'#/thread',workspace:[workspace],text:foreign?'foreign private draft':prompt}:reads===2?true:{route:'#/thread',text:'',chips:0},send:async(_name,value)=>keys.push(value.key),close:()=>closed=true};
+    const client={evaluate:async()=>++reads===1?{...ui(),route:'#/thread',workspace:[workspace],text:foreign?'foreign private draft':prompt}:reads===2?true:{route:'#/thread',count:1,text:'',chips:0,dialogs:0},send:async(_name,value)=>keys.push(value.key),close:()=>closed=true};
     const options={unitRoot:root,stateDatabase:'synthetic',endpoint:'synthetic',auditDir:audit};
     const deps={queryNativeSessions:async()=>[],queryPristineThread:async()=>true,queryProjectForThread:async()=>[{project_id:'project',workspace_root:workspace}],discoverMainTarget:async()=>({webSocketDebuggerUrl:'synthetic'}),connect:async()=>client,createFreshTask:async()=>({thread_id:'fresh'})};
     if(foreign){await assert.rejects(prepareZeroSendUi(options,deps),/NOT_UNIQUE/);assert.deepEqual(keys,[]);for(const f of await readdir(audit))assert.ok(!(await readFile(join(audit,f),'utf8')).includes('foreign private draft'));}
-    else{const proof=await prepareZeroSendUi(options,deps);assert.equal(proof.status,'PASS');assert.equal(proof.formal_send_calls,0);assert.deepEqual(keys,['Backspace','Backspace']);assert.equal((await readdir(audit)).length,2);}
+    else{const proof=await prepareZeroSendUi(options,deps);assert.equal(proof.status,'PASS');assert.equal(proof.formal_send_calls,0);assert.deepEqual(keys,['a','a','Backspace','Backspace']);assert.equal((await readdir(audit)).length,2);}
     assert.deepEqual(await readFile(statePath),before);assert.equal(closed,true);await assert.rejects(access(join(root,'.general-e2e/astronstudio-ui.lock')));
   }finally{await rm(root,{recursive:true,force:true});}
 });

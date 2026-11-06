@@ -10,7 +10,7 @@ import {parseBatchArgs,resolveBatchPlan,assertQueueIdentity,acquireWorkerLock,pe
 import {queryNativeSessions} from './lib/astronstudio-state.mjs';
 import {queryNativeStartRejection} from './lib/astronstudio-start-rejection.mjs';
 import {probeAstronStudio} from './probe_astronstudio_macos.mjs';
-import {CdpClient,discoverMainTarget,readUiConfiguration,renderExpectedPrompt,currentThreadId} from './lib/astronstudio-cdp.mjs';
+import {CdpClient,discoverMainTarget,readUiConfiguration,renderExpectedPrompt,currentThreadId,clearOwnedComposerDraft} from './lib/astronstudio-cdp.mjs';
 import {readDispatchAuthorization,verifyDispatchHumanAuthority,assertUnacceptedDispatch,archiveDispatchAttempt,verifyFrameworkDispatchRecoveries,hash,requireRetry as check} from './lib/astronstudio-dispatch-retry.mjs';
 
 const json=async p=>JSON.parse(await readFile(p,'utf8'));
@@ -88,17 +88,24 @@ export async function recoverUnacceptedDispatch(options,overrides={}) {
       const previous=await json(cleanupPath);check(previous.authorization_sha256===authorization.sha256
         &&previous.original_route===original.send.post_send_route_thread_id&&ui.text===''&&ui.chips.length===0,'CLEANUP_RESUME');
     } else {
-      check(renderExpectedPrompt(config.prompt.trim(),ui.chips)?.trim()===ui.text,'FOREIGN_DRAFT');
+      const intentPath=join(root,'cleanup-intent.json');
+      const recoveringEmpty=ui.text===''&&ui.chips.length===0&&await exists(intentPath);
+      if(recoveringEmpty){const intent=await json(intentPath);check(intent.authorization_sha256===authorization.sha256
+        &&intent.original_route===original.send.post_send_route_thread_id
+        &&intent.ui_before_sha256===hash(await readFile(join(root,'ui-before.json'))),'CLEANUP_INTENT_DRIFT');}
+      else check(renderExpectedPrompt(config.prompt.trim(),ui.chips)?.trim()===ui.text,'FOREIGN_DRAFT');
+      if(!recoveringEmpty){
       await writeOnce(join(root,'native-before.json'),encoded(snapshot));await writeOnce(join(root,'ui-before.json'),encoded(ui));
+      }
       await api.archiveDispatchAttempt(unit,join(root,'authorization.json'),await exists(join(root,'archive-manifest.json')));
       await verifyNative();
-      const selected=await client.evaluate(`(() => {const e=document.querySelector('[data-testid="composer-editor"]');if(location.hash!==${JSON.stringify(ui.route)}||e?.innerText?.trim()!==${JSON.stringify(ui.text)})return false;e.focus();const r=document.createRange();r.selectNodeContents(e);const s=getSelection();s.removeAllRanges();s.addRange(r);return document.activeElement===e;})()`);
-      check(selected,'DRAFT_CHANGED');
-      await client.send('Input.dispatchKeyEvent',{type:'keyDown',key:'Backspace',code:'Backspace'});
-      await client.send('Input.dispatchKeyEvent',{type:'keyUp',key:'Backspace',code:'Backspace'});
+      await writeOnce(intentPath,encoded({authorization_sha256:authorization.sha256,original_route:original.send.post_send_route_thread_id,
+        ui_before_sha256:hash(await readFile(join(root,'ui-before.json'))),action:'native-editor-selectAll-and-Backspace',prompt_send_calls:0}));
+      if(!recoveringEmpty)await clearOwnedComposerDraft(client,{route:ui.route,text:ui.text});
       const after=await readUi();check(after.route===ui.route&&after.text===''&&after.chips.length===0&&after.dialogs===0,'CLEAR_NOT_VERIFIED');
       await writeOnce(cleanupPath,encoded({authorization_sha256:authorization.sha256,original_route:original.send.post_send_route_thread_id,
-        before:ui,after,prompt_send_calls:0,page_reload_calls:0,app_restart_calls:0,at:new Date().toISOString()}));
+        before:await json(join(root,'ui-before.json')),after,recovered_armed_empty_cleanup:recoveringEmpty,
+        prompt_send_calls:0,page_reload_calls:0,app_restart_calls:0,at:new Date().toISOString()}));
     }
     await writeOnce(join(root,'native-after.json'),encoded(await verifyNative()));
     const receiptPath=join(root,'receipt.json');let receipt,receiptBytes;
@@ -106,6 +113,7 @@ export async function recoverUnacceptedDispatch(options,overrides={}) {
     else {
       const sources=[];for(const name of ['authorization.json','human-source.json','queue-before.json','native-before.json','ui-before.json','cleanup.json','native-after.json','archive-manifest.json','failed-attempt.zip']) {
         const bytes=await readFile(join(root,name));sources.push({path:name,sha256:hash(bytes),size:bytes.length});}
+      if(await exists(join(root,'cleanup-intent.json'))){const b=await readFile(join(root,'cleanup-intent.json'));sources.push({path:'cleanup-intent.json',sha256:hash(b),size:b.length});}
       for(const {name} of authority.files){const bytes=await readFile(join(root,name));sources.push({path:name,sha256:hash(bytes),size:bytes.length});}
       receipt={schema_version:'general-e2e.unaccepted-dispatch-retry-receipt/v1',authorization_sha256:authorization.sha256,
         old_attempt_id:auth.old_attempt_id,new_attempt_id:auth.new_attempt_id,old_state_sha256:auth.old_state_sha256,
