@@ -13,6 +13,7 @@ import json
 import math
 from pathlib import Path
 import report_failure_policy
+import report_native_interruption_policy
 
 SCHEMA = 'wildclawbench.general-e2e-report-run-audit/v1'
 
@@ -76,7 +77,7 @@ def load(path, data, node=None):
             {unit.get('unit_id') for unit in declared} == known_units, 'unit scope')
     evidence = {}
 
-    def refs(items):
+    def refs(items, allow_empty=False):
         require(isinstance(items, list) and items, 'native evidence references required')
         result = []
         for item in items:
@@ -87,8 +88,9 @@ def load(path, data, node=None):
             cache_key = (str(file.absolute()), item['sha256'])
             if cache_key not in evidence:
                 checked, digest, size = checked_file(file, item['sha256'])
-                require(size > 0, 'empty native evidence')
+                require(size > 0 or allow_empty, 'empty native evidence')
                 evidence[cache_key] = {'path': str(checked), 'sha256': digest, 'size': size}
+            require(evidence[cache_key]['size'] > 0 or allow_empty, 'empty native evidence')
             result.append(dict(evidence[cache_key]))
         return result
 
@@ -166,6 +168,11 @@ def load(path, data, node=None):
         if 'failure_zero_decisions' in unit:
             output['failure_zero_decisions'] = report_failure_policy.normalize(
                 unit['failure_zero_decisions'], rows, refs, node=node)
+        if 'native_interruption_zero_policy' in unit:
+            output.setdefault('failure_zero_decisions', []).extend(report_native_interruption_policy.normalize(
+                unit['native_interruption_zero_policy'], rows, refs, node=node))
+        require(len({item['task_id'] for item in output.get('failure_zero_decisions', [])}) ==
+                len(output.get('failure_zero_decisions', [])), 'duplicate failure policy task')
         normalized.append(output)
     return {'schema_version': SCHEMA, 'source_sha256': source_sha, 'source_path': str(path),
             'basis': 'Explicit administrator native-interval audit; source hashes and selected full scope verified. '

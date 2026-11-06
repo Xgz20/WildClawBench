@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.33` 支持用户显式指定整轮原生中断计故障0：完整run-audit可传单元级native_interruption_zero_policy，对已正式采集的cancelled原生执行重放SDK/SQL/accepted回执闭包并另列E2E策略0。保留原因未知、原Rubric null/unscored和所有资源/计时，不推断框架或模型责任；无可信中断、未知发送、待执行和评分故障不转零。核验允许受原证明约束的零字节原生投影，不捏造缺失行。当前回放适配AStudio既有四种runtime interruption Profile。
+
 `0.8.32` 支持空闲预热拒绝Profile，并校验持续本轮条件规则的派生应用：保留原始人类指令/上下文和SHA，明确派生记录不是新的人类消息；按同一批次的独立已核验失败应用策略零分，不改原Rubric。
 
 `0.8.31` 支持运行审计中的显式用户失败计零决策：只对完整选定范围内、原生未提交启动拒绝proof离线回放通过的unscored失败另列端到端0分。总览和完整逐题表同时展示Rubric与端到端口径；原score/valid/能力维度不改，未知失败、额度与评分异常不可自动补零。决策、人类条件授权和冻结原证据逐项绑定SHA并进入审计/规范封存。

@@ -25,3 +25,5 @@ Report0.8.31可在对应unit内另列`failure_zero_decisions`，每项包含`tas
 JSON保留`total_score=null/score_status=unscored`，另存`failure_policy_score=0/e2e_score=0`及授权证据；已valid题的e2e_score沿用Rubric，未决题保持null。总览分别显示Rubric均分与含策略零分的端到端均分、策略零分数及已计分覆盖；Excel和MD新增完整范围的端到端计分表。原valid数、Rubric权重、能力维度和原始计时不修改。该授权是管理员保存的人类直接指令记录，不声称密码学验证人类身份。
 
 Report0.8.32支持同轮后续失败对人类通用条件规则的派生应用。`human_policy`可引用保留原schema的应用记录，但须明确`derived_application=true`、`source_context_task`、`source_policy:{path,sha256}`、`application_basis=ongoing-round-generic-conditional-failure-rule`和原batch_id；当前context_task仅指被应用任务。原始人类原文、question_item_id、conditions必须逐字相等，父记录必须是非派生原件，不能伪称后续收到新的人工消息。规范化审计保存应用记录和原指令双层来源。此机制不把未知根因、已valid评分或评分异常转成零分。
+
+Report0.8.33另支持单元字段`native_interruption_zero_policy:{path,sha256}`。它引用管理员保留的`general70-human-native-interruption-zero-policy/v1`人类直接指令，声明原batch/dataset、Harness范围及后续同轮原生中断是否适用。只从完整已选任务内识别正式cancelled/unscored执行，逐项核验原生已停止的完整冻结证明后派生策略0；不改变未确定的根因或原Rubric。当前AStudio支持native、missing projection、restart-reconciled及stale-session四种严格回放。零字节原生投影只有在该证明明确认证其缺失时才作为可核验的空源，其他原生区间审计仍要求非空。MD/Excel明确显示中文计分依据“用户规则：原生中断计零”。

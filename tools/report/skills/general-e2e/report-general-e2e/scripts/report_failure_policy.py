@@ -1,7 +1,7 @@
 """Explicit human failure-zero policy, kept separate from frozen Rubric scores.
 
-Only a replay-verified native unsubmitted start rejection is supported here.
-Unknown failures, quota stops and grading errors cannot become policy zeros.
+Startup rejection decisions and explicitly authorized native interruptions are
+separate policies. Neither turns unknown sends or grading errors into zeros.
 """
 from __future__ import annotations
 
@@ -107,7 +107,7 @@ def prepare(data, audit):
         row['e2e_score'] = 0.0 if policy else row.get('total_score') if row['score_status'] == 'valid' else None
         row['e2e_score_basis'] = policy['basis'] if policy else 'frozen-rubric' if row['score_status'] == 'valid' else 'unknown'
     data['failure_score_policy'] = {'decisions': decisions,
-        'rubric_scores_unchanged': True, 'unknown_failures_remain_null': True,
+        'rubric_scores_unchanged': True, 'unconfirmed_execution_failures_remain_null': True,
         'human_authorization_basis': 'Explicit administrator record of direct human instruction; no cryptographic human identity claim.'}
 
 
@@ -115,7 +115,7 @@ def notes(data):
     policy = data.get('failure_score_policy')
     if not policy:
         return []
-    return [f"失败计零口径：{len(policy['decisions'])}项已核验的 Harness 启动拒绝按用户明确政策计端到端0分。"
+    return [f"失败计零口径：{len(policy['decisions'])}项已核验的启动拒绝或原生中断按用户明确政策计端到端0分。"
             'Rubric分、valid状态和能力维度均保留原值；其他未评分/评测异常保持未知。'
             '总览另列含策略零分的端到端均分和计分覆盖，不能把该口径当成纯模型能力排名。']
 
@@ -137,7 +137,10 @@ def attach_views(data, views, labels):
     detail = [[labels[row['unit_id']], row['task_id'],
                None if row['total_score'] is None else 100 * row['total_score'], row['score_status'],
                None if row['failure_policy_score'] is None else 100 * row['failure_policy_score'],
-               None if row['e2e_score'] is None else 100 * row['e2e_score'], row['e2e_score_basis']]
+               None if row['e2e_score'] is None else 100 * row['e2e_score'],
+               {'explicit-human-policy/native-unsubmitted-start-rejection':'用户规则：启动失败计零',
+                'explicit-human-policy/native-interruption':'用户规则：原生中断计零',
+                'frozen-rubric':'冻结Rubric评分', 'unknown':'未评分/待核验'}.get(row['e2e_score_basis'], row['e2e_score_basis'])]
               for row in data['tasks']]
     views['端到端计分'] = {'headers': ['模型@Harness', '完整任务ID', 'Rubric得分', 'Rubric评分状态', '失败策略分', '端到端得分', '计分依据'],
                          'rows': detail, 'formats': {'2': '0.00', '4': '0.00', '5': '0.00'}, 'notes': notes(data)}
