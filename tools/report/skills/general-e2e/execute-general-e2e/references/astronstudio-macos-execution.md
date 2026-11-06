@@ -84,3 +84,9 @@ Execute0.14.50 / 启动拒绝组件1.0.2保留同生命周期的空预热session
 Execute0.14.51 / Driver0.4.20对精确原生终态后重开的用量账本增加只读闭合核验：SQL最新head已completed/error/interrupted、无active/pending，runtime已stopped且原生turn.completed或后续provider.stopRuntimeSession对同一闭合时刻成立；同turn/provider身份的重开tail只能含typed token/gateway usage，时钟和序号均闭合。完整历史事件与计费数据不删除；原provider终态已被客户端消费/清理时，只接受剩余完整typed资源行，不重构终态。任何模型动作、未知状态/身份、未停止runtime或待交互仍阻塞；无项目的活动会话不会被INNER JOIN漏掉。该修复不更改模型/Prompt/槽位/重试策略。
 
 Execute0.14.52 / Driver0.4.21允许显式托管零发送准备恢复与精确已登记同伴共存：保留原失败SHA与attempt，目标无发送意图/接受/会话，活动同伴的session均在队列allowlist且总数低于冻结槽数，没有未知发送；单槽或外来活动仍拒绝。该动作不会刷新页面/重启/停止同伴。添加项目表单只有完整路径精确属于本任务、没有弹窗且唯一取消控件时才关闭并重建；其他路径、Prompt和未知草稿不动。
+
+## 人类明确授权的未受理发送恢复
+
+Execute0.14.55 / Driver0.4.22的`recover_astronstudio_dispatch.mjs --unit-root ABS --run-config ABS --authorization ABS`只准备新attempt，不发送Prompt。授权schema为`general-e2e.unaccepted-dispatch-retry-authorization/v1`，冻结原队列/状态/记录/初始目录/manifest/config摘要、独立新UUID和直接人类原话路径/SHA。人类须明确清理并重试该题；既有中断0政策、自动生成建议或未回答问题不适用。
+
+入口持有原队列及UI锁；同快照原路由仅允许已结算创建/元数据命令，无原生消息、turn、session、interaction、promotion、open turn或provider事件，且全局真正空闲。模型/权限/cwd/完整Prompt不得漂移。原Workspace须与冻结初始树相同，旧state点击计数1与uncertain原字节、完整控制和Workspace封存到独立不可变ZIP。只清精确旧草稿，再次证明无迟到受理后生成PENDING新attempt，保留旧新身份/授权/归档闭包，随后普通队列`--resume`首次发送。重复恢复已准备事务只验证原新attempt，不重新清理或发送；已有原生接受或其他命令继续拒绝，观察原尝试。

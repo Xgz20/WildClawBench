@@ -43,7 +43,7 @@ import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-disco
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
 
-export const EXECUTION_DRIVER_VERSION = "0.4.21";
+export const EXECUTION_DRIVER_VERSION = "0.4.22";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -554,6 +554,24 @@ function recordFromState(config, state) {
 async function persist(config, state) {
   await atomicWriteJson(config.stateFile, state);
   await atomicWriteJson(config.recordFile, recordFromState(config, state));
+}
+
+// Called only by the explicit, locked unaccepted-dispatch recovery CLI after
+// native/UI checks and the immutable previous-attempt archive are complete.
+export async function initializeFrameworkDispatchRetry(config, receipt, now = new Date().toISOString()) {
+  if (sha256(await readFile(config.stateFile)) !== receipt.old_state_sha256
+      || sha256(await readFile(config.recordFile)) !== receipt.old_record_sha256
+      || !/^[0-9a-f-]{36}$/.test(receipt.new_attempt_id)
+      || receipt.new_attempt_id === receipt.old_attempt_id) throw new Error('FRAMEWORK_RETRY_ORIGINAL_DRIFT');
+  const state = createInitialState(config, now);
+  state.identity.attempt_id = receipt.new_attempt_id;
+  state.human_assistance.operation_count = 1;
+  state.evidence.framework_dispatch_retry = {path: receipt.receipt_relative_path, sha256: receipt.receipt_sha256};
+  state.history.push({phase:'PENDING', at:now, event:'AUTHORIZED_UNACCEPTED_DISPATCH_RETRY_CREATED',
+    old_attempt_id:receipt.old_attempt_id, authorization_sha256:receipt.authorization_sha256,
+    previous_state_sha256:receipt.old_state_sha256, recovery_receipt:state.evidence.framework_dispatch_retry});
+  await persist(config, state);
+  return state;
 }
 
 function assertStateIdentity(config, state) {

@@ -18,6 +18,8 @@ import { fileURLToPath } from "node:url";
 import { isRetryablePreSendFailure } from "./execute_astronstudio_macos.mjs";
 import { isQuotaError, pristineUnsentAttempt, readQuotaAuthorization, assertQuotaAuthorization, assertRetryableQuotaState,
   recoveryFiles, digest } from './lib/astronstudio-quota-retry.mjs';
+import { verifyFrameworkDispatchRecoveries } from './lib/astronstudio-dispatch-retry.mjs';
+export { acquireWorkerLock, persist as persistQueue };
 
 export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-queue/v1";
 export const QUEUE_WORKER_VERSION = "0.1.3";
@@ -501,6 +503,7 @@ async function synchronizationProof(plan, state, row, automation, dependencies) 
 }
 
 async function refreshAutomations(plan, state, dependencies) {
+  await verifyFrameworkDispatchRecoveries(plan.unitRoot,state,dependencies.verifiedFrameworkReceipts);
   for (const row of state.tasks) {
     for (const transaction of row.quota_recoveries || []) {
       const authorization = await cachedAuthorization(plan, state, row, transaction);
@@ -609,7 +612,7 @@ function buildQueueReceipt(plan, state, now) {
     new Set(task.attempts.map(item => item.attempt_id)).size === task.attempts.length
     && (!task.selected_attempt_id || (task.attempts.filter(item => item.selected).length === 1
       && task.attempts.find(item => item.selected)?.attempt_id === task.selected_attempt_id))
-    && task.attempts.every((item, index) => index === 0 || task.quota_recoveries?.some(tx =>
+    && task.attempts.every((item, index) => index === 0 || [...(task.quota_recoveries||[]),...(task.framework_dispatch_recoveries||[])].some(tx =>
       tx.new_attempt_id === item.attempt_id && tx.old_attempt_id === item.previous_attempt_id
       && tx.authorization_sha256 === item.authorization_sha256))
   ));
@@ -673,6 +676,7 @@ export async function runQueue(plan, args, overrides = {}) {
     isProcessAlive: processIsAlive,
     recoveryFiles,
     verifiedQuotaReceipts: new Set(),
+    verifiedFrameworkReceipts: new Set(),
     runTask: (taskId, operation, activeSessionIds, authorizationPath) => (
       launchSingleTask(plan, args, taskId, operation, activeSessionIds, authorizationPath)
     ),
