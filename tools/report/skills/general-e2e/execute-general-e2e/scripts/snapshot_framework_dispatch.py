@@ -1,7 +1,7 @@
 """Immutable snapshot of an explicitly authorized, unaccepted dispatch attempt.
 
-The execution workspace must still equal its frozen initial tree. No original
-state, workspace, app, model or score is modified by this archiver.
+The execution workspace must equal the frozen initial tree or pass the existing
+canonical CWM-only initial-input audit. Business changes remain forbidden.
 """
 import argparse
 import json
@@ -9,7 +9,9 @@ import os
 from pathlib import Path
 import stat
 import zipfile
+import uuid
 from prepare_quota_retry import inventory, tree_sha, sha, encoded, require, safe, live_unit, check_entries
+from initial_office_metadata import audit as audit_initial_office
 
 
 def archive(unit, auth_path, verify=False):
@@ -47,14 +49,35 @@ def archive(unit, auth_path, verify=False):
     require(state['phase']=='NEEDS_ATTENTION' and state['prompt']['send_status']=='uncertain'
             and state['send']['dispatch_attempt_count']==1 and state['session']['verified'] is False,'OLD_BOUNDARY')
     entries=inventory(workspace)
-    require(tree_sha(entries)==auth['old_workspace_sha256'],'WORKSPACE_SHA')
-    check_entries(workspace,task['workspace']['entries'])
+    initial=[{k:e[k] for k in ('path','kind','mode','size','sha256')} for e in sorted(task['workspace']['entries'],key=lambda e:e['path'])]
+    variance=None
+    if entries!=initial:
+        require([{k:e[k] for k in ('path','kind','mode')} for e in entries]
+                ==[{k:e[k] for k in ('path','kind','mode')} for e in initial],'WORKSPACE_SCOPE_OR_MODE_DRIFT')
+        for current,reference in zip(entries,initial):
+            if current!=reference:
+                require(current['kind']=='file' and Path(current['path']).suffix.lower() in ('.xlsx','.docx','.pptx'),
+                        'WORKSPACE_NON_OFFICE_CHANGED')
+        require(auth['old_workspace_sha256'] in (tree_sha(initial),tree_sha(entries)),'WORKSPACE_SHA')
+        output=unit/'.general-e2e/queue-repairs'/('framework-dispatch-'+new+'-'+str(uuid.uuid4()))
+        variance=audit_initial_office(unit,task_id,output)
+        require(variance['status']=='PASS_CWM_ONLY','INITIAL_OFFICE_AUDIT')
+        require(inventory(workspace)==entries,'WORKSPACE_CHANGED_AFTER_OFFICE_AUDIT')
+    else:
+        require(tree_sha(entries)==auth['old_workspace_sha256'],'WORKSPACE_SHA')
+        check_entries(workspace,task['workspace']['entries'])
     require({e['path'] for e in inventory(controls)}=={'automation-state.json','execution-record.json'},'UNEXPECTED_CONTROL_FILES')
     source_rows=[]
     for label,source in [('failed-control',controls),('failed-workspace',workspace)]:
         for e in inventory(source):
             require(e['kind'] in ('file','directory'),'UNSUPPORTED_SOURCE')
             source_rows.append(dict(e,archive_path=label+'/'+e['path'],source=source/e['path']))
+    if variance:
+        for artifact in variance['artifacts']:
+            source=unit/str(safe(artifact['path']));require(source.resolve()==source,'AUDIT_SOURCE_ALIAS')
+            b=source.read_bytes();require(sha(b)==artifact['sha256'] and len(b)==artifact['size'],'AUDIT_SOURCE_SHA')
+            source_rows.append(dict(path=source.name,kind='file',mode=format(stat.S_IMODE(source.stat().st_mode),'04o'),
+                                    size=len(b),sha256=sha(b),archive_path='initial-office-metadata/'+source.name,source=source))
     zpath=root/'failed-attempt.zip'
     require(not zpath.exists(),'ARCHIVE_EXISTS_USE_VERIFY')
     with zpath.open('xb') as stream, zipfile.ZipFile(stream,'w',compression=zipfile.ZIP_STORED) as z:
@@ -75,7 +98,9 @@ def archive(unit, auth_path, verify=False):
         if hasattr(os,'chflags'):os.chflags(target,target.stat().st_flags|stat.UF_IMMUTABLE)
     if hasattr(os,'chflags'):os.chflags(zpath,zpath.stat().st_flags|stat.UF_IMMUTABLE)
     result=dict(schema_version='general-e2e.unaccepted-dispatch-archive/v1',authorization_sha256=sha(raw),
-                archive_sha256=sha(zpath.read_bytes()),entries=[{k:v for k,v in r.items() if k!='source'} for r in source_rows])
+                archive_sha256=sha(zpath.read_bytes()),observed_workspace_sha256=tree_sha(entries),
+                initial_workspace_sha256=tree_sha(initial),initial_office_metadata=variance,
+                entries=[{k:v for k,v in r.items() if k!='source'} for r in source_rows])
     with (root/'archive-manifest.json').open('xb') as f:f.write(encoded(result))
     return dict(status='ARCHIVED',archive_sha256=result['archive_sha256'])
 

@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
+import uuid
 
 ENTRY = Path(__file__).resolve().parents[2] / 'tools/report/skills/general-e2e/execute-general-e2e/scripts/initial_office_metadata.py'
 SPEC = importlib.util.spec_from_file_location('workbuddy_initial_office_metadata', ENTRY)
@@ -89,3 +90,44 @@ class InitialOfficeMetadataTests(unittest.TestCase):
         self.assertTrue(delta['business_members_unchanged'])
         with self.assertRaisesRegex(ValueError, 'business Office member changed'):
             MODULE.office_delta(office(), office(marker=True, changed=True, unqualified=True))
+
+    def framework_archive(self):
+        entry=ENTRY.with_name('snapshot_framework_dispatch.py')
+        sys.path.insert(0,str(entry.parent))
+        try:
+            spec=importlib.util.spec_from_file_location('framework_archive',entry)
+            module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        finally:
+            sys.path.pop(0)
+        controls=self.unit/'.general-e2e/execution/task';controls.mkdir(parents=True)
+        identity=dict(batch_id='batch',unit_id='workbuddy',task_id='task',attempt_id='old')
+        old=json.dumps(dict(identity=identity,phase='NEEDS_ATTENTION',prompt={'send_status':'uncertain'},
+                            send={'dispatch_attempt_count':1},session={'verified':False})).encode()
+        record=json.dumps({'identity':identity}).encode()
+        (controls/'automation-state.json').write_bytes(old);(controls/'execution-record.json').write_bytes(record)
+        human=self.round/'human.json';human.write_bytes(b'direct human retry instruction')
+        manifest_bytes=(self.unit/'manifest.json').read_bytes();initial=json.loads(manifest_bytes)['tasks'][0]['workspace']['entries']
+        auth=dict(schema_version='general-e2e.unaccepted-dispatch-retry-authorization/v1',cleanup_authorized=True,retry_authorized=True,
+                  task_id='task',batch_id='batch',unit_id='workbuddy',old_attempt_id='old',new_attempt_id=str(uuid.uuid4()),
+                  unit_manifest_sha256=sha(manifest_bytes),old_state_sha256=sha(old),old_record_sha256=sha(record),
+                  old_workspace_sha256=module.tree_sha(initial),human_source={'path':str(human),'sha256':sha(human.read_bytes())})
+        root=self.unit/'.general-e2e/framework-dispatch-recoveries/task'/auth['new_attempt_id'];root.mkdir(parents=True)
+        authorization=root/'authorization.json';authorization.write_text(json.dumps(auth))
+        return module,authorization,root
+
+    def test_framework_retry_archive_retains_both_CWM_versions_and_exact_business_comparison(self):
+        module,authorization,root=self.framework_archive()
+        with patch.object(MODULE.time,'sleep'):
+            result=module.archive(self.unit,authorization)
+        self.assertEqual(result['status'],'ARCHIVED')
+        self.assertEqual(self.file.read_bytes(),self.current)
+        metadata=json.loads((root/'archive-manifest.json').read_bytes())
+        self.assertEqual(metadata['initial_office_metadata']['status'],'PASS_CWM_ONLY')
+        self.assertEqual(module.archive(self.unit,authorization,True)['status'],'VERIFIED')
+
+    def test_framework_retry_rejects_real_Office_edits_even_with_retry_authorization(self):
+        module,authorization,root=self.framework_archive()
+        self.file.write_bytes(office(marker=True,changed=True))
+        with self.assertRaisesRegex(ValueError,'business Office member changed'),patch.object(MODULE.time,'sleep'):
+            module.archive(self.unit,authorization)
+        self.assertFalse((root/'failed-attempt.zip').exists())

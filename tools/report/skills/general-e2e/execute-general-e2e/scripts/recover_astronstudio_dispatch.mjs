@@ -110,7 +110,9 @@ export async function recoverUnacceptedDispatch(options,overrides={}) {
       receipt={schema_version:'general-e2e.unaccepted-dispatch-retry-receipt/v1',authorization_sha256:authorization.sha256,
         old_attempt_id:auth.old_attempt_id,new_attempt_id:auth.new_attempt_id,old_state_sha256:auth.old_state_sha256,
         old_record_sha256:auth.old_record_sha256,receipt_relative_path:relative(unit,receiptPath),sources,
-        profile:'human-authorized-unaccepted-dispatch/v1',prompt_send_calls:0,initial_workspace_retained_verified:true};
+        profile:'human-authorized-unaccepted-dispatch/v1',prompt_send_calls:0,initial_workspace_retained_verified:true,
+        initial_workspace_verification_profile:(await json(join(root,'archive-manifest.json'))).initial_office_metadata
+          ?'canonical-cwm-only-initial-input/v2':'exact-initial-workspace'};
       receiptBytes=encoded(receipt);await writeOnce(receiptPath,receiptBytes);
     }
     if(!newPending)await initializeFrameworkDispatchRetry(config,{...receipt,receipt_sha256:hash(receiptBytes)});

@@ -57,5 +57,5 @@ test('immutable archive survives subsequent selected-workspace changes and leave
 });
 test('changed candidate cannot be relabeled as pristine before the retry',async t=>{
   const f=await archiveFixture(t);await writeFile(join(f.workspace,'input.txt'),'unexpected write');
-  await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/WORKSPACE_SHA|WORKSPACE_DRIFT/);
+  await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/WORKSPACE_/);
 });

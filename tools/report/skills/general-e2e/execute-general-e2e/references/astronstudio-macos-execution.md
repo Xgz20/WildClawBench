@@ -90,3 +90,5 @@ Execute0.14.52 / Driver0.4.21允许显式托管零发送准备恢复与精确已
 Execute0.14.55 / Driver0.4.22的`recover_astronstudio_dispatch.mjs --unit-root ABS --run-config ABS --authorization ABS`只准备新attempt，不发送Prompt。授权schema为`general-e2e.unaccepted-dispatch-retry-authorization/v1`，冻结原队列/状态/记录/初始目录/manifest/config摘要、独立新UUID和直接人类原话路径/SHA。人类须明确清理并重试该题；既有中断0政策、自动生成建议或未回答问题不适用。
 
 入口持有原队列及UI锁；同快照原路由仅允许已结算创建/元数据命令，无原生消息、turn、session、interaction、promotion、open turn或provider事件，且全局真正空闲。模型/权限/cwd/完整Prompt不得漂移。原Workspace须与冻结初始树相同，旧state点击计数1与uncertain原字节、完整控制和Workspace封存到独立不可变ZIP。只清精确旧草稿，再次证明无迟到受理后生成PENDING新attempt，保留旧新身份/授权/归档闭包，随后普通队列`--resume`首次发送。重复恢复已准备事务只验证原新attempt，不重新清理或发送；已有原生接受或其他命令继续拒绝，观察原尝试。
+
+0.14.56仅对已有canonical CWM-only审计确认的初始Office属性差异增加准入：实际路径、类型和权限须完全相同，原execution ZIP与manifest和全部业务OPC成员保持原SHA契约。原/现Office字节和比较清单纳入旧attempt封存ZIP，回执显式记录该Profile；不删除标记或改输入。非Office变化、增删文件或业务内容变化仍失败。
