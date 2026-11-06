@@ -279,4 +279,7 @@ export async function main(argv=process.argv.slice(2)) {
   }else result=await(cmd==='create'?createRolloutSupplement(opts):verifyRolloutSupplement(opts));
   console.log(JSON.stringify(result));
 }
-if(process.argv[1]&&realpathSync(resolve(process.argv[1]))===realpathSync(fileURLToPath(import.meta.url)))main().catch(e=>{console.error(e.message);process.exitCode=1});
+let isEntrypoint=false;
+try { isEntrypoint=Boolean(process.argv[1])&&realpathSync(resolve(process.argv[1]))===realpathSync(fileURLToPath(import.meta.url)); }
+catch { /* stdin and non-file launchers still support ordinary library imports. */ }
+if(isEntrypoint)main().catch(e=>{console.error(e.message);process.exitCode=1});

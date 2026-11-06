@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.34` 修复共享SDK回放模块在Node stdin或非文件启动器下导入时的入口检测；缺少真实argv文件不再触发主命令或抛lstat错误。轨迹解析、证明、资源数值及评分逻辑不变。
+
 `0.11.33` 离线回放并封存空闲预热拒绝Profile，保留未启动模型的原生证据与空闲连接身份；活动turn、未知字段或未结算投递继续拒绝。
 
 `0.11.32` 将已核验的原生未提交启动拒绝proof及全部原件纳入正式证据清单和不可变回放。保留FAILED/candidate_error、turn/session=null与verified=false；证据为partial，未知资源不补零，不据此赋分。原proof丢失、来源SHA漂移、另有活动或原生请求未结算均拒绝。

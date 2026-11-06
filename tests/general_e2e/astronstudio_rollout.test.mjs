@@ -8,6 +8,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { analyzeRollout, createRolloutSupplement, verifyRolloutSupplement } from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
+test('rollout library imports from stdin without treating dash as a file entrypoint',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'rollout-stdin-'));
+  try {
+    const uri=new URL('../../tools/report/e2e-shared/general-resource-supplements/astronstudio-rollout.mjs',import.meta.url).href;
+    const output=execFileSync(process.execPath,['--input-type=module','-'],{
+      input:`import {analyzeRollout} from ${JSON.stringify(uri)}; console.log(typeof analyzeRollout);`,cwd:root,encoding:'utf8'});
+    assert.equal(output.trim(),'function');
+  } finally {await rm(root,{recursive:true,force:true});}
+});
 const state={identity:{batch_id:'b',unit_id:'u',task_id:'t',attempt_id:'a'},phase:'COMPLETED',harness:{id:'astronstudio'},
   prompt:{send_status:'sent',sha256:sha('task prompt')},session:{session_id:'s',turn_id:'t1',cwd:'/task',verified:true}};
 const usage=n=>({input_tokens:10*n,cached_input_tokens:4*n,output_tokens:2*n,reasoning_output_tokens:n,total_tokens:12*n});
