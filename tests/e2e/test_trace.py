@@ -3,8 +3,8 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from src.e2e.common import E2EError
-from src.e2e.trace import normalize_rollout
+from src.e2e.common import E2EError, load_script
+from src.e2e.trace import normalize_rollout, resource_metrics, ensure_resource_coverage
 from tests.e2e.test_scheduler import GUEST, native_fixture
 
 
@@ -44,3 +44,23 @@ class NativeMcpTests(unittest.TestCase):
     def test_mcp_end_without_canonical_pair_marks_trace_incomplete(self):
         self.end["call_id"] = "unbound-call"
         self.assertIn("mcp-end-without-canonical-pair", self.normalize()["missing"])
+
+    def test_resource_coverage_reaches_existing_general_report(self):
+        binding = self.normalize()
+        metrics = resource_metrics(binding["identity"], binding, [])
+        report = load_script(
+            Path(__file__).resolve().parents[2]
+            / "tools/report/skills/general-e2e/report-general-e2e/scripts/report_general_e2e.py",
+            "sandbox_resource_report_test",
+        )
+        observed = report.metric_observation(metrics, "input_tokens")
+        self.assertTrue(observed["complete"])
+        self.assertEqual(observed["value"], 100)
+        self.assertIsNone(report.metric_observation(metrics, "request_count")["value"])
+        metrics["collection"].pop("coverage")
+        self.assertEqual(
+            ensure_resource_coverage(metrics)["collection"]["coverage"]["input_tokens"][
+                "known"
+            ],
+            1,
+        )

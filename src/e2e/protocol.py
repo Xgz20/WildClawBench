@@ -435,7 +435,9 @@ def snapshot(batch: Path) -> dict:
             state = "partial" if counts.get("COMPLETED") else "failed"
     elif counts.get("PENDING") == len(executions):
         state = "prepared"
-    actions = ["export"] if any(row["exportable"] for row in executions) else []
+    actions = (
+        ["export"] if terminal or any(row["exportable"] for row in executions) else []
+    )
     lease = raw.get("controllers", {}).get("execution") or {}
     if lease.get("lease_status") != "fresh":
         if not terminal:

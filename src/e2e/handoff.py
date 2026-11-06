@@ -14,6 +14,7 @@ from .common import E2EError, atomic_json, digest, file_sha256, inside, load_scr
 from .compatibility import verify_installed
 from .engine import load_batch, verify_ready
 from .store import BatchStore
+from .trace import ADAPTER, ensure_resource_coverage
 
 
 def _artifact(path: Path, root: Path, *, typed=False):
@@ -115,7 +116,13 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     proof = read_json(evidence / "trace/bindings/execution-proof.json")
     atomic_json(evidence / "execution/automation-state.json", proof)
     shutil.copyfile(public_task / "PROMPT.md", evidence / "execution/PROMPT.md")
-    shutil.copyfile(restored / "resource-metrics.json", evidence / "resource-metrics.json")
+    resources = read_json(restored / "resource-metrics.json")
+    if resources["collection"]["collector"] == ADAPTER and "coverage" not in resources["collection"]:
+        ensure_resource_coverage(resources)
+        resources["collection"]["warnings"].append(
+            "agentcube-resource-coverage/v1 derived from sealed per-field status; source_sha256="
+            + file_sha256(restored / "resource-metrics.json"))
+    atomic_json(evidence / "resource-metrics.json", resources)
     (evidence / "metadata").mkdir(exist_ok=True)
     shutil.copyfile(restored / "metadata/report.json", evidence / "metadata/report.json")
     shutil.copyfile(restored / "final-response.md", evidence / "final-response.md")

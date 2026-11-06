@@ -204,6 +204,16 @@ def write_trace(directory: Path, native_path: Path, binding: dict, *, binding_ar
     return index
 
 
+def ensure_resource_coverage(document: dict) -> dict:
+    """Describe coverage of the single bound task turn for report consumers."""
+    document["collection"].setdefault("coverage", {
+        field: {"known": int(value["value"] is not None and value["status"] in {"observed", "inferred"}),
+                "total": 1, "unit": "task-turn"}
+        for group in document["metrics"].values() for field, value in group.items()
+    })
+    return document
+
+
 def resource_metrics(identity: dict, binding: dict, sources: list[dict]) -> dict:
     def metric(value, basis):
         return {"value": value, "status": "observed" if value is not None else "unavailable", "basis": basis}
@@ -211,7 +221,7 @@ def resource_metrics(identity: dict, binding: dict, sources: list[dict]) -> dict
     input_tokens, output_tokens = usage.get("input_tokens"), usage.get("output_tokens")
     duration_ms = binding.get("native_duration_ms")
     duration = duration_ms / 1000 if type(duration_ms) in {int, float} and duration_ms >= 0 else None
-    return {"schema_id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1", "schema_version": 1,
+    return ensure_resource_coverage({"schema_id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1", "schema_version": 1,
             "identity": identity,
             "collection": {"collector": ADAPTER, "version": "0.1.0", "status": "partial", "collected_at": utc_now(),
                            "sources": sources, "warnings": [binding["usage_warning"]] if binding.get("usage_warning") else [],
@@ -228,4 +238,4 @@ def resource_metrics(identity: dict, binding: dict, sources: list[dict]) -> dict
                 "tools": {"call_count": metric(len(binding["calls"]) if not binding["missing"] else None,
                                                 "unique bound native call IDs with paired results")},
                 "timing": {"duration_seconds": metric(None, "same-clock local prompt acceptance time unavailable"),
-                           "agent_duration_seconds": metric(duration, "native task_complete.duration_ms")}}}
+                           "agent_duration_seconds": metric(duration, "native task_complete.duration_ms")}}})
