@@ -86,7 +86,7 @@ judge_evidence:
 ```python
 from pathlib import Path
 from collections import Counter, defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, time as _ge2e_evidence_time
 from decimal import Decimal, InvalidOperation
 from zipfile import BadZipFile, ZipFile
 from xml.etree.ElementTree import ParseError
@@ -680,7 +680,7 @@ def values_equal(field, candidate, reference):
 
 
 def to_jsonable(value):
-    if isinstance(value, (date, datetime)):
+    if isinstance(value, (date, datetime, _ge2e_evidence_time)):
         return value.isoformat(sep=" ") if isinstance(value, datetime) else value.isoformat()
     if isinstance(value, (set, frozenset)):
         return sorted(value)

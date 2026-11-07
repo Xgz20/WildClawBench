@@ -16,7 +16,7 @@ def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
-    if contract.get('task_id') in source_failures.ROWS:
+    if source_failures.registered(contract.get('task_id')):
         source_failures.evidence(rt,attempt,m,contract,task)
         return source_failures.ERROR_KIND
     if contract.get('task_id')==native_writer_cleanup_failure.TASK:
@@ -66,7 +66,8 @@ def failure_kind(rt,root,state,task):
             or audit.get('status')!='completed' or worker.get('ok') is not True
             or sorted(diagnostic.get('changed_protected_files',[]))!=sorted(r['path'] for r in release_baseline_text.registry()['files'])
             or diagnostic.get('admission_conditions',{}).get('trusted_basis') is not False
-            or not (attempt/'semantic/semantic-component.json').is_file()):
+            or not ((attempt/'semantic/semantic-component.json').is_file()
+                    or release_baseline_text.native_blocker_matches(rt,attempt,m,contract))):
         raise ValueError('RELEASE_BASELINE_FAILURE_UNREGISTERED')
     return release_baseline_text.ERROR_KIND
 
@@ -76,6 +77,11 @@ def locks(rt,root,task):
         base=attempt/folder
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
     paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json',attempt/'rule-source-correction.json'] if p.exists())
+    paths.extend(source_failures.partial_evidence_paths(attempt,task['task_id']))
+    m=rt._read_json(attempt/'attempt-manifest.json')
+    if m.get('digests',{}).get('contract_sha256')==release_baseline_text.V4_CONTRACT:
+        blocker=attempt/'scoring-infrastructure-blocker.json'
+        if blocker.exists():paths.append(blocker)
     if task['task_id']==sterilization_quote_layout.TASK:paths.append(attempt/'scoring-infrastructure-blocker.json')
     if task['task_id']==native_writer_cleanup_failure.TASK:
         m=rt._read_json(attempt/'attempt-manifest.json');contract=rt._read_json(attempt/m['paths']['contract'])
@@ -115,7 +121,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     root=rt._state_root(orchestration_root);state=rt._verify_state(root);task=rt._task_by_id(state,rt._identifier(task_id,'task_id'))
     if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT','RULES_NEEDS_ATTENTION'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
-    expected_phase={source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if task_id in source_failures.ROWS else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
+    expected_phase={source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if source_failures.registered(task_id) else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
         declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION',
         sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING',native_writer_cleanup_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')

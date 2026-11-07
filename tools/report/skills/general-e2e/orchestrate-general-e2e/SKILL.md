@@ -3,6 +3,9 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.61` 精确留证HR发现Worker的原time序列化失败及v4发布源文件LF/CRLF原生裁判阻断；核对原身份、完整原件和真实退出/完成证明，保持未评分，再从同一冻结执行独立重评。
+
+
 `0.11.60` 同步Score0.10.77及共享Core0.2.6采购汇总抽取修复；原EvaluationError留证未评分，从相同冻结执行建立独立attempt后显式合入完整范围，不重跑Harness。
 
 

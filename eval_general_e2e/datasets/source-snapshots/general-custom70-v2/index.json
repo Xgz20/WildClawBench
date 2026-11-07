@@ -58,6 +58,14 @@
     "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md": {
       "snapshot": "tasks/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md",
       "sha256": "92fb7989b735b84f5aefff3e69620ba9a8793bad5cf77f9e25357f9f4d6fbf37"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md": {
+      "snapshot": "tasks/02_Office_task_003_news_event_multifile_extract.md",
+      "sha256": "16130947a3d8f30d8f33fe2516f4eccbfacec4e3897084b45be591c3fb4a041f"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md": {
+      "snapshot": "tasks/03_Data_Analysis_task_001_hr_worktime_reconciliation.md",
+      "sha256": "e50923c9c8ad63ddd8c1a90714a2b87f83c8501c3c9c665c2d487125e149d1cd"
     }
   },
   "excluded_paths": [

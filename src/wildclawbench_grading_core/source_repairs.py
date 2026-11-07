@@ -286,6 +286,30 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                       'append_source': 'procurement_sections.py',
                                                                       'append_source_sha256': 'ca08c23cf2c297a7d943803983cb0bbbd0307ffe19b86f553d2821f42861d5f5'}}
 
+_PROFILES.update({'13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a': {'task_id': '03_Data_Analysis_task_001_hr_worktime_reconciliation',
+                                                                      'profile': 'hr-native-time-evidence-serialization/v1',
+                                                                      'reason': '只补充Excel原生time值的ISO证据序列化；原日期、工时、业务字段、来源判定及评分权重不变。',
+                                                                      'changes': [('from datetime import '
+                                                                                   'date, datetime',
+                                                                                   'from datetime import '
+                                                                                   'date, datetime, time as '
+                                                                                   '_ge2e_evidence_time'),
+                                                                                  ('def to_jsonable(value):\n'
+                                                                                   '    if isinstance(value, '
+                                                                                   '(date, datetime)):',
+                                                                                   'def to_jsonable(value):\n'
+                                                                                   '    if isinstance(value, '
+                                                                                   '(date, datetime, '
+                                                                                   '_ge2e_evidence_time)):')],
+                                                                      'current_source_sha256': '0dcea3cc4cc7d9dcdbd66e6824a3732ee7b5c98475cadecf2a26a175c4897cd4'},
+ 'e7500c47aec4d700e217546cb9efcbc25b06fa360586eaa79b0b191d68826dd5': {'task_id': '02_Office_task_003_news_event_multifile_extract',
+                                                                      'profile': 'news-equivalent-headings-and-explicit-rollup-scope/v1',
+                                                                      'reason': '仅识别公开等价中文表头，并从显式统计维度中选择全期类别行；日分项与合计保留完整原始单元格，未知类别和重复全期类别继续接受原规则判定，不改分母算法或权重。',
+                                                                      'changes': [],
+                                                                      'append_source': 'news_event_layout.py',
+                                                                      'append_source_sha256': '727d4f832066442a84cd2f1f914d372e5cdc97a374079b4a6f5af448fc85e36d',
+                                                                      'current_source_sha256': 'f93566fe176758953c40c63f1747a8248a864948588f7a02393f59e1b51f3702'}})
+
 @lru_cache(maxsize=1)
 def _history():
     raw=Path(__file__).with_name('source_repair_history.json').read_bytes()

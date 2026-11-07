@@ -2,6 +2,48 @@
 import hashlib
 
 ERROR_KIND = 'registered-rule-source-implementation-failure/v1'
+HR_TASK = '03_Data_Analysis_task_001_hr_worktime_reconciliation'
+HR_CONTRACT = '853ffd362d034b56e142c8102a02a4664bebd304a6228f4e1bb4ee04a869364e'
+HR_SOURCE = '13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a'
+HR_REQUEST_SOURCE = '86946fcc9d801277522f16d09c319928e886ca9623e3af6247370bad445a331e'
+
+def registered(task_id):
+    return task_id in ROWS or task_id == HR_TASK
+
+def _hr_evidence(rt, attempt, manifest, contract, task):
+    if (manifest.get('identity',{}).get('task_id') != HR_TASK
+            or manifest.get('digests',{}).get('contract_sha256') != HR_CONTRACT
+            or manifest.get('dataset') != {'id':'general-custom70-v4','digest':'914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff'}
+            or hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest() != HR_SOURCE
+            or manifest.get('runtime',{}).get('rule_review_profile') != 'hr-fields-and-sources-semantic-review/v1'
+            or manifest.get('runtime',{}).get('hr_source_locator_profile') != 'hr-equivalent-row-prefix-locators/v1'
+            or manifest.get('runtime',{}).get('shared_rule_source_repair') is not None
+            or task.get('thread') is not None or task.get('score') is not None
+            or any((attempt/p).exists() for p in ['score.json','rule-component.json','semantic','rule-audit.json',
+                'worker/result.json','rule-review/request.json','rule-review/discovery-audit.json'])):
+        raise ValueError('HR_TIME_FAILURE_IDENTITY_OR_PHASE_INVALID')
+    request=rt._read_json(attempt/'rule-review/discovery/worker/request.json')
+    result=rt._read_json(attempt/'rule-review/discovery/worker/result.json')
+    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest() != HR_REQUEST_SOURCE
+            or request.get('rule_review') != {'schema_version':'wildclawbench.general-e2e-rule-review-worker/v1',
+                'profile':'hr-fields-and-sources-semantic-review/v1','mode':'discover','decisions':{}}
+            or result.get('ok') is not False or result.get('result') is not None
+            or result.get('error',{}).get('type') != 'TypeError'
+            or result.get('error',{}).get('message') != '无法输出证据类型：time'):
+        raise ValueError('HR_TIME_FAILURE_SIGNATURE_INVALID')
+    return result
+
+def partial_evidence_paths(attempt, task_id):
+    if task_id != HR_TASK:
+        return []
+    base=attempt/'rule-review/discovery/runtime/workspace/评分证据'
+    names=['01候选分析全文.json','02候选核对记录.json','03部门及身份对照.json']
+    if base.is_symlink() or not base.is_dir() or sorted(p.name for p in base.iterdir()) != sorted(names):
+        raise ValueError('HR_TIME_PARTIAL_EVIDENCE_INVALID')
+    paths=[base/name for name in names]
+    if any(p.is_symlink() or not p.is_file() for p in paths):
+        raise ValueError('HR_TIME_PARTIAL_EVIDENCE_INVALID')
+    return paths
 ROWS = {
     '01_Information_Search_Organization_task_001_acl2024_long_context_qa': (
         'e9917777a34520b691e3d9ef8cc23887c712a11a3baca8e7108df3d2ec7aadfe',
@@ -22,6 +64,8 @@ ROWS = {
 
 
 def evidence(rt, attempt, manifest, contract, task):
+    if contract.get('task_id') == HR_TASK:
+        return _hr_evidence(rt,attempt,manifest,contract,task)
     row = ROWS.get(contract.get('task_id'))
     if row is None:
         raise ValueError('RULE_SOURCE_FAILURE_UNREGISTERED')
@@ -77,4 +121,6 @@ def evidence(rt, attempt, manifest, contract, task):
 
 
 def expected_phase(task_id):
+    if task_id == HR_TASK:
+        return 'RULES_RUNNING'
     return ROWS[task_id][2]
