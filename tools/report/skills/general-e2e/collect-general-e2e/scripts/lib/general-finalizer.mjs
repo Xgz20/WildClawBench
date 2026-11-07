@@ -37,6 +37,7 @@ import { verifyRuntimeInterruption } from '../../vendor/e2e-shared/general-resou
 import { verifyFinalPrefix } from '../../vendor/e2e-shared/general-resource-supplements/astronstudio-final-prefix-divergence.mjs';
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
 import { readFrozenStartRejection } from '../../vendor/e2e-shared/astronstudio-start-rejection/index.mjs';
+import { verifyChildSdkArchive } from '../../vendor/e2e-shared/workbuddy-jsonl-metrics/children.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -346,6 +347,7 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   if (!profile.generic) verifyTerminalProjection(index, stateBytes, root);
   const runtimeInterruption = !profile.generic ? await verifyRuntimeInterruption(index, stateBytes, root) : null;
   if (!profile.generic) await verifyFinalPrefix(index,stateBytes,root);
+  await verifyChildSdkArchive(root, index, state.identity, state.session);
   return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts, runtimeInterruption };
 
 }
@@ -799,6 +801,7 @@ export async function verifyGeneralCollection(options) {
       if (key in (record.session ?? {}) && record.session[key] !== index.session?.[key]) throw new Error(`TRACE_SESSION_MISMATCH: ${key}`);
     }
     const traceRoot = dirname(indexSource.absolute);
+    await verifyChildSdkArchive(traceRoot, index, record.identity, record.session);
     if (record.harness?.id === 'astronstudio') {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
       assertRecaptureDeclaration(declaredState.value, index);

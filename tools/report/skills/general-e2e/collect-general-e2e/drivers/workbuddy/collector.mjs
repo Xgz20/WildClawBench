@@ -18,6 +18,7 @@ import { homedir } from "node:os";
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from "../../scripts/lib/office-freeze.mjs";
 import { discoverJsonl, parseBoundJsonl, applyJsonlMetrics, withoutModelResponseCount } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/index.mjs";
 import { applyWorkBuddyTiming } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/timing.mjs";
+import { discoverChildSdk, childSdkProof, CHILD_SDK_PROOF, CHILD_SDK_SCHEMA } from "../../vendor/e2e-shared/workbuddy-jsonl-metrics/children.mjs";
 
 import {
   collectWorkBuddyGeneralEvidence,
@@ -357,11 +358,38 @@ export async function collectWorkBuddyEvidence(options) {
         const name = "raw/workbuddy-session.jsonl";
         await writeFile(join(stage, "trace", name), native.bytes, { flag: "wx", mode: 0o600 });
         evidence.trace_index.raw_trace.push(artifact(name, native.bytes));
+        const children = await discoverChildSdk(native, runtimeEvidence.value.runtime_snapshot, state.session);
+        if (children.length) {
+          const snapshots = evidence.trace_index.raw_trace.filter(x => x.sha256 === runtimeEvidence.source.sha256 && x.path.endsWith(".json"));
+          if (snapshots.length !== 1) throw new Error("WORKBUDDY_CHILD_SDK_RUNTIME_SOURCE_AMBIGUOUS");
+          const proof = childSdkProof(state.identity, state.session, snapshots[0], artifact(name, native.bytes),
+            native.bytes, runtimeEvidence.value.runtime_snapshot, children);
+          for (const child of children) {
+            for (const file of [{ name: child.name, bytes: child.bytes }, ...(child.attachments || [])]) {
+              const childPath = `raw/workbuddy-subagents/${file.name}`;
+              await mkdir(dirname(join(stage, "trace", childPath)), { recursive: true });
+              await writeFile(join(stage, "trace", childPath), file.bytes, { flag: "wx", mode: 0o600 });
+              evidence.trace_index.raw_trace.push(artifact(childPath, file.bytes));
+            }
+          }
+          const proofBytes = jsonBytes(proof);
+          await writeFile(join(stage, "trace", CHILD_SDK_PROOF), proofBytes, { flag: "wx", mode: 0o600 });
+          evidence.trace_index.binding_evidence.push(artifact(CHILD_SDK_PROOF, proofBytes));
+          evidence.trace_index.normalization.linked_child_sdk_profile = {
+            id: CHILD_SDK_SCHEMA, proof: CHILD_SDK_PROOF, child_count: children.length,
+            primary_transcript_unchanged: true, separate_native_sessions: true,
+          };
+        }
         const indexBytes = jsonBytes(evidence.trace_index);
         await writeFile(join(stage, "trace/trace-index.json"), indexBytes);
         evidence.trace_index_artifact = artifact("trace-index.json", indexBytes);
         resource = rebaseResourceMetrics(resource, { bytes: collectedStateBytes }, evidence);
         resource = applyJsonlMetrics(resource, parsed, artifact(`trace/${name}`, native.bytes));
+        if (children.length) {
+          resource.collection.native_usage_scope = "bound-primary-conversation-responses";
+          resource.collection.whole_execution_usage = "unknown; linked child usage not admitted by primary metric profile";
+          resource.collection.warnings.push(`WORKBUDDY_LINKED_CHILD_SDK_V1: ${children.length} separately bound child SDK transcripts archived; primary transcript and resource counters unchanged; child operations are not inferred from parent summaries; whole-execution token totals remain unknown`);
+        }
       }
     }
     if (runtimeEvidence) {
