@@ -4,6 +4,8 @@
 
 collector在可信终态后，从精确父SDK旁的`<父session>/subagents/agent-*.jsonl`读取稳定原件。它要求父Runtime和SDK中的唯一调用匹配，子首条指令逐字等于原父调用参数；逐行核对root request、父baggage、子独立session/request、完整cwd和父执行时间范围。重复谱系、错参数、异会话、越界时间、未知用户发送、外来结果、符号链接和未准入的嵌套目录均拒绝。
 
+`native-tool-execution-start/v1`通过原tool ID、request和模型响应ID绑定Runtime的`toolExecutionStartedAt`作为实际派发下界，并保存SDK调用记录时点。SDK写记录可以晚于实际派发，不能用写记录时间替代派发时间后再加任意容差。派发字段存在但非法/来源不符时拒绝；缺失时明确声明SDK时间来源。旧43证明没有此Profile，复验继续使用原SDK时点和原字段，不补写旧证明。
+
 部分已完成Runtime卡片只保留单字段description，值为原字符串或空对象占位。只对这两个精确形状，且原meta的description、工具名、子类型、isSubagent、request ID以及SDK模型响应ID全部匹配时，以SDK原始完整参数逐字核对子首条指令；分别保存`runtime-description-only-sdk-full-arguments/v1`或`runtime-empty-description-sdk-full-arguments/v1`来源说明，不填回或改写Runtime参数。其他缺参数形状不准入。
 
 原子调用/返回和最终助手是否完整单独记入子来源证明；原生子执行留下的未返回调用或明确`incomplete`结果保持partial，不补造返回或成功。原始子文件逐字写入`raw/workbuddy-subagents/`，证明写入`bindings/workbuddy-linked-child-sdk.json`；父转录、父call ID、一次发送记录、执行起止、人工介入和候选均不改。finalize与verify-only从正式归档原件重新计算谱系与证明。

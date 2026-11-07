@@ -7,6 +7,8 @@ import { safeRead, equal, artifact } from "./index.mjs";
 
 export const CHILD_SDK_SCHEMA = "wildclawbench.workbuddy-linked-child-sdk/v1";
 export const CHILD_SDK_PROOF = "bindings/workbuddy-linked-child-sdk.json";
+export const CHILD_TIME_PROFILE = "native-tool-execution-start/v1";
+const LEGACY_TIME_PROFILE = "sdk-record-timestamp/v1";
 const PREFIX = "raw/workbuddy-subagents/";
 const hash = value => createHash("sha256").update(value).digest("hex");
 const fail = code => { throw new Error(`WORKBUDDY_CHILD_SDK_${code}`); };
@@ -52,7 +54,8 @@ function argumentsOf(row) {
   } catch { fail("PARENT_ARGUMENTS_INVALID"); }
 }
 
-export function bindChildSdk(primaryBytes, snapshot, session, childSources) {
+export function bindChildSdk(primaryBytes, snapshot, session, childSources, { timeProfile = CHILD_TIME_PROFILE } = {}) {
+  if (![CHILD_TIME_PROFILE, LEGACY_TIME_PROFILE].includes(timeProfile)) fail("TIME_PROFILE_UNSUPPORTED");
   if (snapshot?.conversation?.id !== session.session_id || snapshot?.request?.id !== session.turn_id
       || snapshot.conversation.space?.cwd !== session.cwd || snapshot.request.state !== "completed"
       || snapshot.conversation.state !== "idle" || snapshot.request.assistantMessage?.state !== "completed"
@@ -102,8 +105,25 @@ export function bindChildSdk(primaryBytes, snapshot, session, childSources) {
       && calls[0].providerData.messageId === meta["codebuddy.ai/llmMessageId"]
       && calls[0].providerData.messageId === meta["codebuddy.ai/modelRequestId"];
     if (!fullArguments && !descriptionOnly) fail("PARENT_ARGUMENTS_MISMATCH");
-    const start = calls[0].timestamp, end = snapshot.request.completedAt ?? snapshot.request.finishTimestamp;
-    if (!Number.isFinite(start) || !Number.isFinite(end) || start > end) fail("PARENT_TIME_INVALID");
+    const sdkStart = calls[0].timestamp, end = snapshot.request.completedAt ?? snapshot.request.finishTimestamp;
+    let start = sdkStart, timeSource = "sdk.function_call.timestamp";
+    const nativeStart = meta["codebuddy.ai/toolExecutionStartedAt"];
+    if (timeProfile === CHILD_TIME_PROFILE && nativeStart != null) {
+      const primaryStart = snapshot.request.startedAt ?? snapshot.request.timestamp;
+      if (!Number.isFinite(nativeStart) || !Number.isFinite(primaryStart)
+          || nativeStart < primaryStart || nativeStart > end
+          || meta["codebuddy.ai/toolExecutionStarted"] !== true
+          || meta["codebuddy.ai/toolName"] !== "Agent"
+          || meta["codebuddy.ai/requestId"] !== session.turn_id
+          || meta["codebuddy.ai/conversationRequestId"] !== session.turn_id
+          || typeof calls[0].providerData?.messageId !== "string"
+          || calls[0].providerData.messageId !== meta["codebuddy.ai/modelRequestId"]
+          || calls[0].providerData.messageId !== meta["codebuddy.ai/llmMessageId"]
+          || !Number.isFinite(returns[0].timestamp) || nativeStart > returns[0].timestamp) fail("NATIVE_START_UNBOUND");
+      start = nativeStart; timeSource = "runtime.toolExecutionStartedAt";
+    }
+    if (!Number.isFinite(sdkStart) || !Number.isFinite(start) || !Number.isFinite(end)
+        || start > end || sdkStart > end) fail("PARENT_TIME_INVALID");
     const callMap = new Map(), resultIds = new Set(), responseIds = new Set(), incompleteResults = new Set();
     const users = [];
     for (const row of child) {
@@ -155,6 +175,11 @@ export function bindChildSdk(primaryBytes, snapshot, session, childSources) {
       session_id: sid, conversation_request_id: requestId, prompt_sha256: hash(text(first.content)),
       argument_binding: fullArguments ? "runtime-and-sdk-full-prompt" : emptyDescription
         ? "runtime-empty-description-sdk-full-arguments/v1" : "runtime-description-only-sdk-full-arguments/v1",
+      ...(timeProfile === CHILD_TIME_PROFILE ? { parent_time_binding: {
+        profile: timeProfile, source: timeSource, sdk_call_recorded_at: sdkStart,
+        native_execution_started_at: nativeStart ?? null, effective_lower_bound: start,
+        primary_completed_at: end,
+      } } : {}),
       raw: artifact(PREFIX + source.name, source.bytes), source_line_count: original.length,
       unique_event_count: child.length, observed_tool_call_count: callMap.size,
       observed_model_response_count: responseIds.size,
@@ -211,12 +236,14 @@ export async function discoverChildSdk(primaryNative, snapshot, session) {
   return sources;
 }
 
-export function childSdkProof(identity, session, snapshotRef, primaryRef, primaryBytes, snapshot, sources) {
+export function childSdkProof(identity, session, snapshotRef, primaryRef, primaryBytes, snapshot, sources,
+  { timeProfile = CHILD_TIME_PROFILE } = {}) {
   return { schema_version: CHILD_SDK_SCHEMA, identity, session: sessionKey(session),
+    ...(timeProfile === CHILD_TIME_PROFILE ? { binding_time_profile: timeProfile } : {}),
     runtime_snapshot: snapshotRef, primary_sdk: primaryRef,
     primary_normalized_transcript_unchanged: true,
     metric_scope: "bound-primary-conversation-responses; child usage excluded; whole-execution totals unknown",
-    children: bindChildSdk(primaryBytes, snapshot, session, sources) };
+    children: bindChildSdk(primaryBytes, snapshot, session, sources, { timeProfile }) };
 }
 
 export async function verifyChildSdkArchive(traceRoot, index, identity, session) {
@@ -250,7 +277,8 @@ export async function verifyChildSdkArchive(traceRoot, index, identity, session)
     });
     sources.push({ name: basename(child.path), bytes: await read(child), attachments });
   }
-  const expected = childSdkProof(identity, session, proof.runtime_snapshot, proof.primary_sdk, primary, runtime.runtime_snapshot, sources);
+  const expected = childSdkProof(identity, session, proof.runtime_snapshot, proof.primary_sdk, primary, runtime.runtime_snapshot, sources,
+    { timeProfile: proof.binding_time_profile ?? LEGACY_TIME_PROFILE });
   if (!equal(proof, expected)) fail("PROOF_REPLAY_MISMATCH");
   return proof;
 }

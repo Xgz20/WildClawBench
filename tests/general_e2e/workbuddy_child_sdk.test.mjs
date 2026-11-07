@@ -16,7 +16,7 @@ function fixture() {
       "codebuddy.ai/requestId": session.turn_id, "codebuddy.ai/conversationRequestId": session.turn_id,
       "codebuddy.ai/modelRequestId": "response-parent", "codebuddy.ai/llmMessageId": "response-parent" } };
   const snapshot = { conversation: { id: session.session_id, state: "idle", hasActiveChildAgents: false, space: { cwd: session.cwd } },
-    request: { id: session.turn_id, state: "completed", completedAt: 1000, assistantMessage: { state: "completed", content: [tool] } } };
+    request: { id: session.turn_id, state: "completed", timestamp: 50, completedAt: 1000, assistantMessage: { state: "completed", content: [tool] } } };
   const primary = [
     { type: "file-history-snapshot", value: "not a model event" },
     { id: "parent-call", type: "function_call", name: "Agent", callId: "call_parent", timestamp: 100,
@@ -99,14 +99,14 @@ test("ambiguous same-prompt parent calls cannot be linked by nearest-time guessi
   assert.throws(() => f.bind(), /PARENT_CALL_AMBIGUOUS/);
 });
 
-async function archive(root, f) {
+async function archive(root, f, options = {}) {
   const primaryRef = artifact("raw/workbuddy-session.jsonl", f.bytes(f.primary));
   const runtimeBytes = jsonBytes({ source_kind: "workbuddy-runtime-api", identity: f.identity,
     conversation_id: f.session.session_id, request_id: f.session.turn_id, workspace: f.session.cwd,
     runtime_snapshot: f.snapshot });
   const runtimeRef = artifact("raw/runtime.json", runtimeBytes);
   const sources = f.sources();
-  const proof = childSdkProof(f.identity, f.session, runtimeRef, primaryRef, f.bytes(f.primary), f.snapshot, sources);
+  const proof = childSdkProof(f.identity, f.session, runtimeRef, primaryRef, f.bytes(f.primary), f.snapshot, sources, options);
   const files = [{ ref: primaryRef, bytes: f.bytes(f.primary) }, { ref: runtimeRef, bytes: runtimeBytes }];
   for (const source of sources) for (const item of [{ name: source.name, bytes: source.bytes }, ...source.attachments])
     files.push({ ref: artifact("raw/workbuddy-subagents/" + item.name, item.bytes), bytes: item.bytes });
@@ -144,5 +144,36 @@ test("discovery accepts only bound native layout and rejects linked output symli
     const result = await discoverChildSdk(native, f.snapshot, f.session); assert.equal(result[0].attachments.length, 2);
     const p = join(dir, source.attachments[0].name); await rm(p); await symlink(native.path, p);
     await assert.rejects(() => discoverChildSdk(native, f.snapshot, f.session), /UNSAFE_AUXILIARY/);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("a child before the SDK recording time binds to its actual native dispatch without timestamp tolerance", () => {
+  const f = fixture(); f.primary[1].timestamp = 103;
+  f.tool._meta["codebuddy.ai/toolExecutionStarted"] = true;
+  f.tool._meta["codebuddy.ai/toolExecutionStartedAt"] = 100;
+  const result = f.bind()[0];
+  assert.equal(result.first_timestamp, 101);
+  assert.deepEqual(result.parent_time_binding, { profile: "native-tool-execution-start/v1",
+    source: "runtime.toolExecutionStartedAt", sdk_call_recorded_at: 103,
+    native_execution_started_at: 100, effective_lower_bound: 100, primary_completed_at: 1000 });
+  assert.throws(() => bindChildSdk(f.bytes(f.primary), f.snapshot, f.session, f.sources(),
+    { timeProfile: "sdk-record-timestamp/v1" }), /EVENT_TIME_OUTSIDE_PARENT/);
+  f.tool._meta["codebuddy.ai/toolExecutionStartedAt"] = 102;
+  assert.throws(() => f.bind(), /EVENT_TIME_OUTSIDE_PARENT/);
+  for (const value of [49, 1001, "100"]) {
+    f.tool._meta["codebuddy.ai/toolExecutionStartedAt"] = value;
+    assert.throws(() => f.bind(), /NATIVE_START_UNBOUND/);
+  }
+});
+
+test("old SDK-timestamp proofs replay unchanged and unknown time profiles fail closed", async () => {
+  const root = await mkdtemp(join(tmpdir(), "workbuddy-child-legacy-time-"));
+  try {
+    const f = fixture(), index = await archive(root, f, { timeProfile: "sdk-record-timestamp/v1" });
+    const proof = await verifyChildSdkArchive(root, index, f.identity, f.session);
+    assert.equal(proof.binding_time_profile, undefined);
+    assert.equal(proof.children[0].parent_time_binding, undefined);
+    assert.throws(() => bindChildSdk(f.bytes(f.primary), f.snapshot, f.session, f.sources(),
+      { timeProfile: "unknown-time-profile/v1" }), /TIME_PROFILE_UNSUPPORTED/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

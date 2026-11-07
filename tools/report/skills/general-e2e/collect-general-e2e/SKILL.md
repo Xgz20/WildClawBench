@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.44` 子SDK时间下界使用身份绑定的原生工具派发时点，单独保留可能稍晚的SDK记录时间；不增加时间容差，不改执行耗时。缺少原生派发字段时明确使用SDK来源；旧43证明仍按旧字段和旧时间Profile逐字重放，全部旧输入保留。
+
 `0.11.43` 独立封存已绑定WorkBuddy原生子Agent的SDK日志。逐字核对父调用参数/子首条指令，验证父会话、root request、子独立session/request、cwd、时间范围及调用返回；正式收口和verify-only重放谱系。子原件保持独立身份，不拼成父消息，不从父摘要推断验收。主转录和原主会话资源口径保持，子用量未准入时全链路总量仍为未知。见[子Agent日志](references/workbuddy-child-logs.md)。
 
 `0.11.42` 回放原生清理后的已声明空预热停止态，保留emptyPrewarm=true与原ready陈旧值；仍须明确stopRuntimeSession、完整无active/pending、停止晚于失败和原native错误accepted回执，不改原件或补资源。
