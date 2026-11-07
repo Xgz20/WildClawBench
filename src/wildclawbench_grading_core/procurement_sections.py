@@ -67,6 +67,7 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
                  'missing':['未入库订单','未入库订单金额','未入库订单金额合计'],
                  'orphan':['无对应订单入库','无对应订单入库金额','无订单入库金额','孤立入库金额合计'],
                  'unmatched_net':['两类未匹配金额净额'],
+                 'unmatched_sum':['两类未匹配金额合计'],
                  'source_net':['差额合计','总差额','恒等式：总差额 ＝ 未入库 － 无订单 ＋ 已匹配差']}
         text=re.sub(r'^其中', '',text)
         for kind,values in aliases.items():
@@ -91,9 +92,13 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
             if kind=='matched':return metrics['orders']-len(by_kind['missing'])
             if kind=='clean':return metrics['orders']-len(set().union(*(set(by_kind[k]) for k in ('qty','amount','missing'))))
             if kind=='price_only':return Decimal(len(set(by_kind['amount'])-set(by_kind['qty'])))
-            if kind=='unmatched_net':return Decimal(len(by_kind['missing'])+len(by_kind['orphan']))
+            if kind in {'unmatched_net','unmatched_sum'}:return Decimal(len(by_kind['missing'])+len(by_kind['orphan']))
+        if kind=='unmatched_sum' and field=='unmatched_amount':
+            a=total('missing','oa');b=total('orphan','ra')
+            return None if a is None or b is None else a+b
         if kind=='price_only':kind='amount';selected=set(by_kind['amount'])-set(by_kind['qty'])
         if kind in by_kind:
+            if field=='reported_difference':return total(kind,'da',selected)
             if field=='order_amount':return Decimal(0) if kind=='orphan' else total(kind,'oa',selected)
             if field=='receipt_amount':return Decimal(0) if kind=='missing' else total(kind,'ra',selected)
             if field in {'net','abs'}:
@@ -145,19 +150,20 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
         '订单金额元':'order_amount','订单金额':'order_amount','采购订单金额':'order_amount',
         '入库金额元':'receipt_amount','入库金额':'receipt_amount',
         '金额差额订单－入库':'net','金额差额元':'net','金额差额净额元':'net','差额元':'net',
+        '金额差额/金额合计元':'unmatched_amount',
         '差额绝对值合计元':'abs','订单数量':'order_quantity','入库数量':'receipt_quantity',
         '数量订单':'order_quantity','数量入库':'receipt_quantity','数量':'quantity',
         '少于订单笔数':'less','多于订单笔数':'more','占订单总额':'ratio',
         'p1':'p1','p2':'p2','p3':'p3','跟踪':'跟踪','合计':'count',
         '表内值':'check','源数据复算值':'check','差异':'check_difference'}
-    text_headers={'说明','说明与表间关系','备注','优先级判定规则','结论','校验方法'}
+    text_headers={'说明','说明与表间关系','备注','优先级判定规则','结论','校验方法','核对口径对应明细表'}
     converted=[];extra={};locations={};audit=[]
     for table in tables:
         if table['kind']!='summary':converted.append(table);continue
         rows=[];headers=None;parent=None;header_hidden=set()
         for row in table['rows']:
             vals=row['values'];names=[literal(v) for v in vals]
-            if names and names[0] in {'项目','差异类型','工作表','校验项'}:
+            if names and names[0] in {'项目','差异类型','工作表','校验项','类别'}:
                 recognized={i:header_names[n] for i,n in enumerate(names[1:],1) if n in header_names}
                 if recognized and all(not n or i==0 or i in recognized or n in text_headers for i,n in enumerate(names)):
                     headers=recognized;header_hidden=set(row.get('hidden_columns',[]));parent=None;continue
@@ -166,7 +172,30 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
                 headers=None;parent=None
             if headers is None or not any(number(v) is not None for v in vals):rows.append(row);continue
             kind,subset=subject(vals[0],parent)
+            if kind is None and 'unmatched_amount' in headers.values():
+                fallback=summary_key(vals[0])
+                if fallback in CATEGORIES:kind=fallback
             if kind is None:rows.append(row);continue
+            mixed_field=None
+            if 'unmatched_amount' in headers.values():
+                # A mixed amount header alone cannot decide sum versus signed net.
+                # Bind each value to its declared submitted column or explicit
+                # addition; preserve unknown meanings for the original failure gate.
+                texts=[literal(v).replace('＋','+') for i,v in enumerate(vals)
+                       if i not in headers and i!=0 and literal(v)]
+                descriptions={
+                    'qty': [('对应「数量差异」表，金额差额(订单-入库)列合计','reported_difference')],
+                    'amount': [('对应「金额差异」表，金额差额(订单-入库)列合计','reported_difference')],
+                    'missing': [('对应「未入库订单」表，订单金额列合计','order_amount')],
+                    'orphan': [('对应「'+name+'」表，入库金额列合计','receipt_amount')
+                               for name in ['无对应订单入库','无对应订单入库记录','无对应订单的入库记录']],
+                    'unmatched_sum': [('未入库订单金额合计+无对应订单入库金额合计','unmatched_amount')],
+                }
+                if len(texts)==1:
+                    mixed_field=next((field for note,field in descriptions.get(kind,[])
+                                      if texts[0]==literal(note)),None)
+                if (mixed_field is None or sorted(headers.values())!=['count','unmatched_amount']):
+                    rows.append(row);continue
             if subset is None and kind in by_kind:parent=kind
             # Unknown numeric columns remain subject to the original failure gate.
             if any(number(v) is not None and i not in headers for i,v in enumerate(vals)):
@@ -185,7 +214,7 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
                     else:raise EvaluationError('Unsupported priority summary subject')
                     group='counts';key=f'ps_{kind}_{subset or "all"}_{field}'
                 else:
-                    mapped=field
+                    mapped=mixed_field if field=='unmatched_amount' else field
                     if field in {'check','check_difference'}:
                         mapped=('order_amount' if kind=='missing' or kind=='orders' and '金额' in str(vals[0]) else
                                 'receipt_amount' if kind=='orphan' or kind=='receipts' and '金额' in str(vals[0]) else
@@ -197,9 +226,9 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
                     if field=='ratio':
                         basis=expected(kind,'abs' if kind in {'qty','amount','price_only'} else 'order_amount' if kind=='missing' else 'receipt_amount' if kind=='orphan' else 'net',subset)
                         e=None if basis is None else abs(basis)/metrics['orders_amount']
-                    group='money' if mapped in {'order_amount','receipt_amount','net','abs'} else 'counts'
+                    group='money' if mapped in {'order_amount','receipt_amount','net','abs','unmatched_amount','reported_difference'} else 'counts'
                     key=(kind if mapped=='count' and kind in {'qty','amount','missing','orphan','orders','receipts','matched','clean','price_only'} and subset is None and field!='check_difference' else
-                         'net_amount' if kind=='amount' and mapped=='net' else
+                         'net_amount' if kind=='amount' and mapped in {'net','reported_difference'} else
                          'abs_amount' if kind=='amount' and mapped=='abs' else
                          'missing_amount' if kind=='missing' and mapped=='order_amount' and subset is None and field!='check_difference' else
                          'orphan_amount' if kind=='orphan' and mapped=='receipt_amount' and subset is None and field!='check_difference' else
