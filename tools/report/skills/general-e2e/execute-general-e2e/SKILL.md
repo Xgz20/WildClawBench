@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.65` 同一SDK空线程的MCP启动通知可早于thread/started归一化回执；改用原生SDK创建时点下界，并保留同cursor/generation/目录、空turn、已拒绝未提交和MCP自身starting→ready序号/时钟门禁。未知活动继续拒绝，不改Harness/模型或重发。
+
+
 `0.14.64` 未受理发送的归档保留已登记零发送准备历史：逐项核验原history索引、路径、前序SHA、同attempt/输入、完整历史前缀和send0/无armed边界，原状态/回执同时进入完整ZIP与不可变failed-control副本。未知控制文件、受理记录或历史漂移继续拒绝，不删历史、不改旧计数、不发送或赋分。
 
 

@@ -182,6 +182,20 @@ test('native idle empty SDK initialization and paired MCP startup are setup, nev
   assert.equal('prewarm_mcp_recovered_without_model_turn' in p,false);assert.equal('score' in p,false);
   assert.equal(JSON.stringify(f.state),before);
 });
+test('MCP startup may precede the normalized empty-thread notification while its own ready pair stays ordered',()=>{
+  const f=initializedBootstrapFixture(),rows=f.data.provider_runtime_events;
+  for(const [index,sequence,at] of [[1,28,'2026-11-06T06:28:30.100Z'],[2,29,'2026-11-06T06:28:30.400Z']]){
+    rows[index].sequence=sequence;const event=JSON.parse(rows[index].event_json);event.createdAt=at;rows[index].event_json=JSON.stringify(event);
+  }
+  const p=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(p.bootstrap_empty_thread_initialized,true);assert.deepEqual(p.bootstrap_mcp_ready_sequences,[33]);
+  assert.equal(p.native_turn_id,null);assert.equal('score' in p,false);
+});
+test('a setup notification before the native SDK creation clock is rejected',()=>{
+  const f=initializedBootstrapFixture(),row=f.data.provider_runtime_events[2],event=JSON.parse(row.event_json);
+  event.createdAt='2026-11-06T06:28:29.999Z';row.event_json=JSON.stringify(event);
+  assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/PROVIDER_ACTIVITY/);
+});
 for(const kind of ['busy-thread','nonempty-turns','preview','foreign-cwd','foreign-sdk','event-generation','row-generation','sdk-version',
   'unknown-thread-field','forked-thread','mcp-extra-field','unpaired-mcp-ready','mcp-foreign-thread','mcp-wrong-clock','missing-thread-init','live-model-turn','pending-delivery','provider-model-turn','unknown-mcp-server',
   'thread-envelope-extra','thread-raw-extra','mcp-outer-extra','mcp-ref-extra'])

@@ -58,7 +58,7 @@ function emptyBootstrapThread(data, route, runtime, cursor, config) {
     const event=JSON.parse(row.event_json),raw=event.raw,thread=raw?.payload?.thread;
     const keys='agentNickname,agentRole,cliVersion,createdAt,cwd,ephemeral,extra,forkedFromId,gitInfo,historyMode,id,modelProvider,name,parentThreadId,path,preview,recencyAt,sessionId,source,status,threadSource,turns,updatedAt';
     if(row.thread_id!==route||row.turn_id!==null||row.lifecycle_generation!==runtime.lifecycle_generation
-      ||!Number.isSafeInteger(row.sequence)||event.eventId!==row.event_id||event.modelSource!=='builtin'
+      ||!Number.isSafeInteger(row.sequence)||row.sequence<=0||event.eventId!==row.event_id||event.modelSource!=='builtin'
       ||event.provider!=='acode'||event.threadId!==route||event.turnId||event.type!=='thread.started'
       ||Object.keys(event).sort().join(',')!=='createdAt,eventId,lifecycleGeneration,modelSource,payload,provider,providerRefs,raw,threadId,type'
       ||Object.keys(event.providerRefs||{}).join(',')!=='providerThreadId'
@@ -87,7 +87,7 @@ function bootstrapMcpSetup(row, route, runtime, cursor, initialized) {
   try {
     const event=JSON.parse(row.event_json),value=event.payload?.status,source=event.raw?.payload;
     if(row.thread_id!==route||row.turn_id!==null||row.lifecycle_generation!==runtime.lifecycle_generation
-      ||!Number.isSafeInteger(row.sequence)||row.sequence<=initialized.sequence
+      ||!Number.isSafeInteger(row.sequence)||row.sequence<=0
       ||event.eventId!==row.event_id||event.modelSource!=='builtin'||event.provider!=='acode'
       ||event.threadId!==route||event.turnId||event.lifecycleGeneration!==runtime.lifecycle_generation
       ||Object.keys(event).sort().join(',')!=='createdAt,eventId,lifecycleGeneration,modelSource,payload,provider,providerRefs,raw,threadId,type'
@@ -100,7 +100,10 @@ function bootstrapMcpSetup(row, route, runtime, cursor, initialized) {
       ||Object.keys(value||{}).sort().join(',')!=='name,state'||value.name!==source.name
       ||value.state!==source.status||source.error!==null||source.failureReason!==null
       ||!Number.isFinite(Date.parse(event.createdAt))
-      ||Date.parse(event.createdAt)<Date.parse(JSON.parse(initialized.event_json).createdAt))return null;
+      // MCP startup can be emitted before thread/started is normalized. Its
+      // provider thread must already exist; the starting/ready pair below
+      // still preserves its own strict sequence and clock order.
+      ||Date.parse(event.createdAt)<JSON.parse(initialized.event_json).raw.payload.thread.createdAt*1000)return null;
     if(value.state==='starting'&&['acode','acode_apps'].includes(value.name))return value;
     if(value.state==='ready'&&value.name==='acode')return value;
     return null;
