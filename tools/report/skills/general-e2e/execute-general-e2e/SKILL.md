@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.66` 明确预热连接停止后可保留陈旧ready投影：严格已知完整载荷、原emptyPrewarm=true不改、emptyPrewarmDispatch/active显式null、原生stop晚于拒绝及accepted错误回执/无turn/未提交投递闭合。原错误态证明回放不变，未知活动拒绝，不修改Harness/评分。
+
+
 `0.14.65` 同一SDK空线程的MCP启动通知可早于thread/started归一化回执；改用原生SDK创建时点下界，并保留同cursor/generation/目录、空turn、已拒绝未提交和MCP自身starting→ready序号/时钟门禁。未知活动继续拒绝，不改Harness/模型或重发。
 
 

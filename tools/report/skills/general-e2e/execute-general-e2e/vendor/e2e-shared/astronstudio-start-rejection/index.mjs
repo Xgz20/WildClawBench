@@ -151,9 +151,8 @@ export function verifyNativeStartRejection(data, state, config) {
   // A directly bootstrapped connection has no emptyPrewarm declaration. Keep
   // that absence; require its complete known setup shape and exact generation,
   // model, workspace, and explicitly null active turn instead of inventing it.
-  const bootstrapShape=Object.keys(cursor).sort().join(',')==='threadId'&&typeof cursor.threadId==='string'&&cursor.threadId.length>0
+  const bootstrapPayload=typeof cursor.threadId==='string'&&cursor.threadId.length>0
     &&runtime.provider_name==='acode'&&runtime.adapter_key==='acode'&&runtime.runtime_mode==='full-access'
-    &&Object.keys(runtimePayload).sort().join(',')==='activeTurnId,contextRecovery,cwd,lastError,lastRuntimeEvent,lastRuntimeEventAt,lifecycleGeneration,model,modelSelection,providerOptions,workspaceKind'
     &&runtimePayload.activeTurnId===null
     &&runtimePayload.lastError===null&&runtimePayload.contextRecovery===null&&runtimePayload.workspaceKind==='project'
     &&runtimePayload.lifecycleGeneration===runtime.lifecycle_generation
@@ -161,13 +160,22 @@ export function verifyNativeStartRejection(data, state, config) {
     &&JSON.stringify(runtimePayload.modelSelection)===JSON.stringify(JSON.parse(thread.model_selection_json))
     &&JSON.stringify(runtimePayload.providerOptions)==='{"acode":{}}'
     &&Number.isFinite(Date.parse(runtimePayload.lastRuntimeEventAt));
+  const bootstrapShape=bootstrapPayload&&Object.keys(cursor).sort().join(',')==='threadId'
+    &&Object.keys(runtimePayload).sort().join(',')==='activeTurnId,contextRecovery,cwd,lastError,lastRuntimeEvent,lastRuntimeEventAt,lifecycleGeneration,model,modelSelection,providerOptions,workspaceKind';
+  // Preserve an explicitly declared prewarm flag during native cleanup.
+  // Restrict this added route to the stale ready projection; historical error
+  // projections keep their original profile and replay bytes unchanged.
+  const declaredStoppedPrewarm=bootstrapPayload&&readyProjection&&cursor.emptyPrewarm===true
+    &&Object.keys(cursor).sort().join(',')==='emptyPrewarm,threadId'
+    &&Object.keys(runtimePayload).sort().join(',')==='activeTurnId,contextRecovery,cwd,emptyPrewarmDispatch,lastError,lastRuntimeEvent,lastRuntimeEventAt,lifecycleGeneration,model,modelSelection,providerOptions,workspaceKind'
+    &&runtimePayload.emptyPrewarmDispatch===null;
   const idleBootstrap=bootstrapShape&&['running','ready'].includes(runtime.status)
     &&runtimePayload.lastRuntimeEvent==='session.state.changed'
     &&Date.parse(runtimePayload.lastRuntimeEventAt)<=Date.parse(session.updated_at);
   // Native idle-connection cleanup can change the lifecycle generation while
   // retaining its SDK cursor. Require its explicit stop marker and complete
   // known null-active payload; a missing SDK file is not an idle proof.
-  const stoppedBootstrap=bootstrapShape&&runtime.status==='stopped'
+  const stoppedBootstrap=(bootstrapShape||declaredStoppedPrewarm)&&runtime.status==='stopped'
     &&runtimePayload.lastRuntimeEvent==='provider.stopRuntimeSession'
     &&Number.isFinite(Date.parse(runtime.last_seen_at))
     &&Date.parse(runtimePayload.lastRuntimeEventAt)<=Date.parse(runtime.last_seen_at)
@@ -260,7 +268,8 @@ export function verifyNativeStartRejection(data, state, config) {
       bootstrap_only:true,empty_prewarm_flag_present:false,active_model_turn_id:null,
       native_projection_status:session.status,native_projection_updated_at:session.updated_at,native_projection_stale:readyProjection}:{}),
     ...(stoppedBootstrap?{bootstrap_runtime_status:'stopped',bootstrap_provider_session_id:cursor.threadId,
-      stopped_bootstrap_only:true,empty_prewarm_flag_present:false,active_model_turn_id:null,
+      stopped_bootstrap_only:true,empty_prewarm_flag_present:declaredStoppedPrewarm,active_model_turn_id:null,
+      ...(declaredStoppedPrewarm?{empty_prewarm_value:true}:{}),
       bootstrap_runtime_stop_method:runtimePayload.lastRuntimeEvent,bootstrap_runtime_stopped_at:runtimePayload.lastRuntimeEventAt,
       bootstrap_runtime_lifecycle_generation:runtime.lifecycle_generation,
       native_projection_status:session.status,native_projection_updated_at:session.updated_at,native_projection_stale:readyProjection}:{}),

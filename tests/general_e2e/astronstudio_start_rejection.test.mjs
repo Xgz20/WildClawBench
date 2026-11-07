@@ -130,6 +130,38 @@ test('explicit native stopped-bootstrap cleanup is distinct and never inferred f
   assert.equal(p.empty_prewarm_flag_present,false);assert.equal(p.active_model_turn_id,null);
   assert.equal('score' in p,false);assert.equal(JSON.stringify(f.state),before);
 });
+function stoppedDeclaredPrewarmFixture() {
+  const f=stoppedBootstrapFixture(),r=f.data.provider_session_runtime[0],p=JSON.parse(r.runtime_payload_json);
+  r.resume_cursor_json='{"threadId":"bootstrap-sdk","emptyPrewarm":true}';p.emptyPrewarmDispatch=null;r.runtime_payload_json=JSON.stringify(p);
+  const session=f.data.projection_thread_sessions[0],error=session.last_error;
+  Object.assign(session,{status:'ready',last_error:null,updated_at:'2026-11-06T06:28:35.511Z'});
+  const failure=f.data.orchestration_events[2];failure.command_id='provider-start-failed:11:1:activity:v1:'+'b'.repeat(64);failure.correlation_id=failure.command_id;
+  const event={sequence:13,event_type:'thread.session-set',stream_id:'thread',actor_kind:'client',command_id:'provider-start-failed:11:1:session:v1:'+'c'.repeat(64),payload_json:JSON.stringify({session:{threadId:'thread',status:'error',providerName:'acode',activeTurnId:null,lastError:error,updatedAt:'2026-11-06T06:29:11.361Z'}})};event.correlation_id=event.command_id;f.data.orchestration_events.push(event);
+  for(const row of [failure,event])f.data.orchestration_command_receipts.push({command_id:row.command_id,aggregate_id:'thread',aggregate_kind:'thread',status:'accepted',error:null,result_sequence:row.sequence,accepted_at:'2026-11-06T06:29:11.361Z',command_fingerprint:row.command_id.split(':').at(-1)});
+  return f;
+}
+test('native cleanup retains a declared true prewarm flag and proves a stale ready projection',()=>{
+  const f=stoppedDeclaredPrewarmFixture(),before=JSON.stringify(f.state),p=verifyNativeStartRejection(f.data,f.state,f.config);
+  assert.equal(p.profile,'bound-native-unsubmitted-start-rejection-stopped-bootstrap/v1');
+  assert.equal(p.empty_prewarm_flag_present,true);assert.equal(p.empty_prewarm_value,true);
+  assert.equal(p.native_projection_stale,true);assert.equal(p.bootstrap_runtime_status,'stopped');
+  assert.equal(JSON.stringify(f.state),before);
+});
+for(const kind of ['false-flag','extra-cursor','extra-payload','active-turn','pending-dispatch','unknown-marker','generation','stop-before-failure','newer-ready-projection','missing-error-receipt'])
+test('stopped declared prewarm rejects '+kind,()=>{
+  const f=stoppedDeclaredPrewarmFixture(),r=f.data.provider_session_runtime[0],p=JSON.parse(r.runtime_payload_json);
+  if(kind==='false-flag')r.resume_cursor_json='{"threadId":"bootstrap-sdk","emptyPrewarm":false}';
+  if(kind==='extra-cursor')r.resume_cursor_json='{"threadId":"bootstrap-sdk","emptyPrewarm":true,"pending":true}';
+  if(kind==='extra-payload')p.surprise=null;
+  if(kind==='active-turn')p.activeTurnId='real';
+  if(kind==='pending-dispatch')p.emptyPrewarmDispatch={pending:true};
+  if(kind==='unknown-marker')p.lastRuntimeEvent='unknown';
+  if(kind==='generation')p.lifecycleGeneration='other';
+  if(kind==='stop-before-failure')p.lastRuntimeEventAt='2026-11-06T06:28:00Z';
+  if(kind==='newer-ready-projection')f.data.projection_thread_sessions[0].updated_at='2026-11-06T06:31:00Z';
+  if(kind==='missing-error-receipt')f.data.orchestration_command_receipts.pop();
+  r.runtime_payload_json=JSON.stringify(p);assert.throws(()=>verifyNativeStartRejection(f.data,f.state,f.config),/NATIVE_START_REJECTION_/);
+});
 for(const kind of ['not-stopped','unknown-stop-marker','stop-before-rejection','stop-after-last-seen','unknown-payload','active-turn',
   'generation-drift','cursor-extra','model-drift','pending-recovery','provider-events-remain','native-model-turn','pending-delivery'])
 test('stopped bootstrap rejects '+kind,()=>{

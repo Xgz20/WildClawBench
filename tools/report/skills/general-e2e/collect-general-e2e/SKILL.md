@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.42` 回放原生清理后的已声明空预热停止态，保留emptyPrewarm=true与原ready陈旧值；仍须明确stopRuntimeSession、完整无active/pending、停止晚于失败和原native错误accepted回执，不改原件或补资源。
+
+
 `0.11.41` 回放同一空SDK线程在thread/started通知前到达的已绑定MCP初始化，要求不早于SDK原生创建时点且MCP起止严格有序；无模型turn/排队/未结算投递门禁不变，原件与partial覆盖保留。
 
 

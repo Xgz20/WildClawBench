@@ -26,7 +26,7 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
-        name="astronstudio-start-rejection", version="1.0.7",
+        name="astronstudio-start-rejection", version="1.0.8",
         source_root="tools/report/e2e-shared/astronstudio-start-rejection",
         vendor_root="vendor/e2e-shared/astronstudio-start-rejection", entrypoints=("index.mjs",),
     ),
