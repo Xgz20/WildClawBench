@@ -28,6 +28,9 @@ class EscrowStateReviewTests(unittest.TestCase):
             return code,{'schema_version':RUNTIME.RULE_SOURCE_CORRECTION_SCHEMA,'correction_id':REVIEW.PROFILE,
                 'original_source_sha256':hashlib.sha256(source.encode()).hexdigest(),'effective_source_sha256':hashlib.sha256(code.encode()).hexdigest()}
         self.patches=[patch.object(RUNTIME.rule_review,'matches',return_value=False),
+            # This transport fixture deliberately remains frozen to v1 while
+            # production preparation may advance its default profile.
+            patch.object(RUNTIME.rule_review,'profile_for',return_value=REVIEW.PROFILE),
             patch.object(RUNTIME.escrow_grouped_review,'PROFILE',REVIEW.PROFILE),
             patch.object(RUNTIME.office001_rule_review,'matches',return_value=False),patch.object(REVIEW,'matches',return_value=True),
             patch.object(RUNTIME,'_effective_rule_source',side_effect=effective)]
@@ -91,7 +94,7 @@ class ExactEscrowSourceTests(unittest.TestCase):
                 self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA,frozen_profile=profile),profile)
         profile=RUNTIME.escrow_grouped_review.PROFILE
         self.assertEqual(profile,'escrow-status-equivalence-review/v3')
-        self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA),profile)
+        self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA),'escrow-status-equivalence-review/v4')
         self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA,frozen_profile=profile),profile)
         manifest['runtime']['rule_review_profile']=profile
         code,receipt=RUNTIME._effective_rule_source(manifest,source)

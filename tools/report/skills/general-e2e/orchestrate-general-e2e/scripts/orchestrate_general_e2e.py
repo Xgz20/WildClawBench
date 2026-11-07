@@ -30,6 +30,7 @@ import escrow_state_review
 import work_order_final_policy
 import domain_details_diagnostics
 import framework_failure_retirement
+import unscored_rule_review
 import communication_evidence_failure
 
 STATE_SCHEMA = "wildclawbench.general-e2e-scoring-orchestration/v1"
@@ -2115,6 +2116,9 @@ def _verify_state(
         if task.get('framework_failure') is not None:
             try:framework_failure_retirement.verify(sys.modules[__name__],root,state,task)
             except ValueError as exc:raise OrchestrationError('FRAMEWORK_FAILURE_PROOF_INVALID',str(exc)) from exc
+        if task.get('rule_review_unscored') is not None:
+            try:unscored_rule_review.verify(sys.modules[__name__],root,state,task)
+            except ValueError as exc:raise OrchestrationError('UNRESOLVED_RULE_REVIEW_PROOF_INVALID',str(exc)) from exc
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
@@ -3545,6 +3549,12 @@ def main(argv: list[str] | None = None) -> int:
     unscored_rule.add_argument("--task-id", required=True)
     unscored_rule.add_argument("--reason", required=True)
 
+    unscored_review=subparsers.add_parser('record-unscored-rule-review')
+    _parse_common(unscored_review)
+    unscored_review.add_argument('--task-id',required=True)
+    unscored_review.add_argument('--reason',required=True)
+    unscored_review.add_argument('--sdk-file',type=Path,required=True)
+
     framework_failure=subparsers.add_parser('record-framework-failure')
     _parse_common(framework_failure)
     framework_failure.add_argument('--task-id',required=True)
@@ -3682,6 +3692,9 @@ def main(argv: list[str] | None = None) -> int:
                 verifier_score_skill_dir=args.verifier_score_skill_dir,reason=args.reason)
         elif args.command == "record-unscored-rule-error":
             result = record_unscored_rule_error(args.orchestration_root, task_id=args.task_id, reason=args.reason)
+        elif args.command == 'record-unscored-rule-review':
+            result = unscored_rule_review.record(sys.modules[__name__],args.orchestration_root,
+                task_id=args.task_id,reason=args.reason,sdk_file=args.sdk_file)
         elif args.command == 'record-framework-failure':
             result = framework_failure_retirement.record(sys.modules[__name__],args.orchestration_root,
                 task_id=args.task_id,reason=args.reason,sdk_file=args.sdk_file)

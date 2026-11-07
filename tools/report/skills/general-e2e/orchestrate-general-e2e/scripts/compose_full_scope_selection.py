@@ -144,6 +144,7 @@ def compose(args, *, frozen):
                     raise ValueError('INFRASTRUCTURE_RESCORE_LINEAGE_REQUIRED')
             elif (previous['score_status']!='unscored'
                     or (original.get('framework_failure',{}).get('kind') not in frozen.framework_failure_retirement.KINDS
+                    and original.get('rule_review_unscored',{}).get('kind') != frozen.unscored_rule_review.ERROR_KIND
                     and original.get('scoring_error',{}).get('kind') not in {'dataset-rule-evaluation-error/v1',
                         'evaluator-public-context-setup-error/v1','office001-declared-numeric-review/v1',
                         frozen.private_reference_guard.ERROR_KIND,frozen.generated_evidence_globs.ERROR_KIND,
