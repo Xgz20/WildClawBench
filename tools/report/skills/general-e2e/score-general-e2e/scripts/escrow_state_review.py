@@ -60,6 +60,9 @@ def validate_choices(request,decisions):
     groups={}
     for item in request['contexts']:
         context=item['context']
+        if context.get('kind')=='escrow-unknown-marker-equivalence':
+            if context.get('expected_original_marker') not in {'待确认','不适用'} or not isinstance(context.get('original_row'),dict):raise ValueError('ESCROW_MARKER_CONTEXT_INVALID')
+            continue
         if context.get('kind')!='escrow-status-equivalence':raise ValueError('ESCROW_REVIEW_CONTEXT_INVALID')
         groups.setdefault(context['group_id'],[]).append(decisions[item['id']])
     for values in groups.values():

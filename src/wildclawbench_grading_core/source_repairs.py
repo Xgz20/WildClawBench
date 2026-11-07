@@ -323,6 +323,14 @@ _PROFILES['13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a'] = 
               'default=to_jsonable))')],
  'current_source_sha256': '0498e2fa704f07165ca736b9426286cdfea0fdf6db7327b67610965d8db45fd5'}
 
+_PROFILES['a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'] = {'task_id': '03_Data_Analysis_task_010_contract_escrow_refund_reconciliation',
+ 'profile': 'escrow-equivalent-row-prefix-locators/v1',
+ 'reason': '仅将明确文件/工作表后的第N行语法投影为原行N；原文件、工作表、正行号和存在性/相关性检查全部保持，不改来源内容或评分数值。',
+ 'changes': [("        part=str(part).strip().replace('！','!')",
+              "        part=str(part).strip().replace('！','!')\n"
+              "        part=re.sub(r'(?<=[|!])第([1-9]\\d*)行$',r'行\\1',part)")],
+ 'current_source_sha256': '47656f9572199c91454cd69bf31a8dc2506e621be645c4eea654c3a585b2a40e'}
+
 @lru_cache(maxsize=1)
 def _history():
     raw=Path(__file__).with_name('source_repair_history.json').read_bytes()

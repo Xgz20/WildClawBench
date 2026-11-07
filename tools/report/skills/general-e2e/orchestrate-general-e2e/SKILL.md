@@ -3,6 +3,9 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.64` 留证完成态原生复核后、原数值Worker拒绝第N行格式的精确失败；同时绑定原1081项复核、原源码、原错误、Worker退出和完整SDK，不补分、不重跑旧Worker，修复另建独立attempt。
+
+
 `0.11.63` 精确留证HR已完成取证导出但在返回字典JSON校验失败的旧v1发现Worker；绑定原源码/契约/Profile、真实退出和六份原JSON，保留未评分后从同执行独立修复。
 
 

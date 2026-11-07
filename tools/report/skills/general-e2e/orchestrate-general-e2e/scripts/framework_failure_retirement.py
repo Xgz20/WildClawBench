@@ -78,6 +78,7 @@ def locks(rt,root,task):
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
     paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json',attempt/'rule-source-correction.json'] if p.exists())
     paths.extend(source_failures.partial_evidence_paths(attempt,task['task_id']))
+    if task['task_id']==source_failures.ESCROW_TASK:paths.append(attempt/'scoring-infrastructure-blocker.json')
     m=rt._read_json(attempt/'attempt-manifest.json')
     if m.get('digests',{}).get('contract_sha256')==release_baseline_text.V4_CONTRACT:
         blocker=attempt/'scoring-infrastructure-blocker.json'
@@ -109,7 +110,8 @@ def verify(rt,root,state,task):
                 raise ValueError('RULE_SOURCE_PREWORKER_OWNER_INVALID')
         elif (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
-    elif proof['kind'] in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}:
+    if (proof['kind'] in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
+            or proof['kind']==source_failures.ERROR_KIND and task.get('thread') is not None):
         native=proof.get('native_context',{})
         if (native.get('status')!='PASS' or native.get('unfinished_turns')!=[]
                 or native.get('thread_id')!=task['thread']['thread_id']
@@ -144,7 +146,8 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
             process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
             if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
             proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
-    elif kind in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}:
+    if (kind in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
+            or kind==source_failures.ERROR_KIND and task.get('thread') is not None):
         if sdk_file is None:raise ValueError('COMPLETED_NATIVE_SDK_REQUIRED')
         from verify_judge_context import verify_context
         proof['native_context']=verify_context(sdk_file,thread_id=task['thread']['thread_id'],cwd=str(attempt.resolve()),

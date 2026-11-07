@@ -99,10 +99,11 @@ def prepare(rt, *, attempt_root, runtime_python, playwright_browsers_path=None):
         instructions='仅复核原规则明确无法抽取的任务ID/数值字段。每项根据完整候选、原参考与实际位置判断：原期望数值被明确陈述且全部重复陈述一致为passed=true；可确认遗漏或错误为false；证据不足为unresolved/null。不得把未解析当遗漏，不改分母/权重或已确定比较；控制器不代判。'
     if profile=='warranty-recovery-reason-semantic-review/v1':
         instructions='仅复核原6个不发起组合的原因类别。依据候选实际行、原表头及可明确继承的共享说明，判断是否表达该组合原covered/review类别；不要从期望类别替候选补写事实。明确缺失/错误为false，证据不足unresolved/null。不评金额、不改变原对象、分母、封顶、权重，不由控制器代判。完成全部复核后运行原正式数值规则，再独立判断原两项语义评分。'
-    if profile in {'escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','escrow-status-equivalence-review/v4'}:
+    if profile in {'escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','escrow-status-equivalence-review/v4','escrow-status-equivalence-review/v5'}:
         instructions='只复核原规则声明的逐行状态用语等价性，不把候选错误状态修成GT事实。每个group_id恰一选项true：等价于某个原状态，或保留原词（公开口径下含义明确且不同，供原比较扣分）。含义不明时保留unresolved/null，不猜测、不补值。全部context需实际分页查询并写中文证据理由。'
         if profile in {'escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3'}:instructions+=' 同表/字段/原词合并的问题列出全部出现位置，必须核对全部使用而不是取多数；同组含义不一致仍unresolved。'
-        if profile=='escrow-status-equivalence-review/v4':instructions+=' 动态问题类别按对象的完整原始行独立判断，不要求不同对象共享映射；其他固定字段仍须覆盖同组全部出现位置。不能从GT反向修正候选；证据不足保留unresolved，10000上下文上限保持。'
+        if profile in {'escrow-status-equivalence-review/v4','escrow-status-equivalence-review/v5'}:instructions+=' 动态问题类别按对象的完整原始行独立判断，不要求不同对象共享映射；其他固定字段仍须覆盖同组全部出现位置。不能从GT反向修正候选；证据不足保留unresolved，10000上下文上限保持。'
+    if profile=='escrow-status-equivalence-review/v5':instructions+=' 非数值未知/不适用上下文是独立布尔复核，不参与状态组选一；仅按候选原文的字段含义判断，禁止从GT事实反向改值。'
     request={'schema_version':rule_review.REQUEST_SCHEMA,'profile':profile,
         'identity':manifest['identity'],'judge':manifest['judge'],'input_locks':_locks(manifest),
         'contexts':contexts,'source_correction':correction,
@@ -175,7 +176,7 @@ def _validate_response(rt, root, manifest, request, response, query_log):
                     or any(not isinstance(p,str) or not p.strip() or len(p)>1000 for p in locations)):
                 raise rt.ScoringRuntimeError('RULE_REVIEW_RESPONSE_INVALID','Office001 requires concrete evidence_locations')
     decisions={row['context_id']:row['passed'] for row in rows}
-    if request['profile'] in {'escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','escrow-status-equivalence-review/v4'}:
+    if request['profile'] in {'escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','escrow-status-equivalence-review/v4','escrow-status-equivalence-review/v5'}:
         import escrow_state_review
         try:escrow_state_review.validate_choices(request,decisions)
         except ValueError as exc:raise rt.ScoringRuntimeError('RULE_REVIEW_RESPONSE_INVALID',str(exc)) from exc

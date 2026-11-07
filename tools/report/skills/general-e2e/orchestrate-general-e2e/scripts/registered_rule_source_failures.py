@@ -11,9 +11,42 @@ HR_V1_REQUEST_SOURCE = 'f0c1dd50d8f8e0dd4bfbe222db76ef067ed6757c1673c60cd6fd0490
 HR_V1_MARKER = {'profile':'hr-native-time-evidence-serialization/v1',
                 'source_sha256':HR_SOURCE,
                 'current_source_sha256':'0dcea3cc4cc7d9dcdbd66e6824a3732ee7b5c98475cadecf2a26a175c4897cd4'}
+ESCROW_TASK = '03_Data_Analysis_task_010_contract_escrow_refund_reconciliation'
+
+def _escrow_locator_evidence(rt,attempt,manifest,contract,task):
+    if (manifest.get('identity',{}).get('task_id')!=ESCROW_TASK
+            or manifest.get('digests',{}).get('contract_sha256')!='c93e50e83a8ac8eb9d6ba9e02510a762952b4011e8495c763073029a42bfff75'
+            or manifest.get('dataset')!={'id':'general-custom70-v4','digest':'914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff'}
+            or hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()!='a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'
+            or manifest.get('runtime',{}).get('rule_review_profile')!='escrow-status-equivalence-review/v4'
+            or manifest.get('runtime',{}).get('shared_rule_source_repair') is not None
+            or (task.get('thread') or {}).get('status')!='COMPLETED' or task.get('score') is not None
+            or any((attempt/p).exists() for p in ['score.json','rule-component.json','semantic/semantic-component.json'])):
+        raise ValueError('ESCROW_LOCATOR_FAILURE_IDENTITY_OR_PHASE_INVALID')
+    request=rt._read_json(attempt/'worker/request.json');result=rt._read_json(attempt/'worker/result.json')
+    audit=rt._read_json(attempt/'rule-audit.json');review=rt._read_json(attempt/'rule-review/audit.json')
+    blocker=rt._read_json(attempt/'scoring-infrastructure-blocker.json')
+    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest()!='229174ad3b86aed9a62f7e9281ceddcb4b55334b21c7df1df108c49231bc3f27'
+            or result.get('ok') is not False or result.get('result') is not None
+            or result.get('error',{}).get('type')!='RuntimeError'
+            or hashlib.sha256(result.get('error',{}).get('message','').encode()).hexdigest()!='b1e634110ac6aae1a2a0118edd1c0de788cbf229180987f626cc8ec079c065c1'
+            or audit.get('status')!='failed' or audit.get('identity')!=manifest['identity']
+            or audit.get('worker',{}).get('request_sha256')!=rt._sha256_file(attempt/'worker/request.json')
+            or audit.get('worker',{}).get('process_tree_cleanup',{}).get('remaining') is not False
+            or review.get('status')!='completed' or review.get('numeric_score_assigned') is not False
+            or review.get('reviewed_context_count')!=1081 or review.get('unresolved_context_ids')!=[]
+            or review.get('identity')!=manifest['identity'] or review.get('profile')!='escrow-status-equivalence-review/v4'
+            or blocker.get('task_id')!=ESCROW_TASK or blocker.get('scoring_attempt_id')!=manifest['identity']['scoring_attempt_id']
+            or blocker.get('error_code')!='RULE_WORKER_FAILED' or blocker.get('formal_score_generated') is not False):
+        raise ValueError('ESCROW_LOCATOR_FAILURE_SIGNATURE_INVALID')
+    for key,name in [('request_sha256','request.json'),('response_sha256','response.json'),
+                     ('query_log_sha256','query-log.json'),('discovery_audit_sha256','discovery-audit.json')]:
+        if review.get(key)!=rt._sha256_file(attempt/'rule-review'/name):
+            raise ValueError('ESCROW_LOCATOR_REVIEW_DRIFT')
+    return result
 
 def registered(task_id):
-    return task_id in ROWS or task_id == HR_TASK
+    return task_id in ROWS or task_id in {HR_TASK,ESCROW_TASK}
 
 def _hr_evidence(rt, attempt, manifest, contract, task):
     if (manifest.get('identity',{}).get('task_id') != HR_TASK
@@ -80,6 +113,8 @@ ROWS = {
 
 
 def evidence(rt, attempt, manifest, contract, task):
+    if contract.get('task_id') == ESCROW_TASK:
+        return _escrow_locator_evidence(rt,attempt,manifest,contract,task)
     if contract.get('task_id') == HR_TASK:
         return _hr_evidence(rt,attempt,manifest,contract,task)
     row = ROWS.get(contract.get('task_id'))
@@ -137,6 +172,8 @@ def evidence(rt, attempt, manifest, contract, task):
 
 
 def expected_phase(task_id):
+    if task_id == ESCROW_TASK:
+        return 'SCORE_VERIFICATION_PENDING'
     if task_id == HR_TASK:
         return 'RULES_RUNNING'
     return ROWS[task_id][2]

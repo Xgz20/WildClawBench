@@ -42,6 +42,10 @@
     "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md": {
       "snapshot": "tasks/03_Data_Analysis_task_001_hr_worktime_reconciliation.md",
       "sha256": "e50923c9c8ad63ddd8c1a90714a2b87f83c8501c3c9c665c2d487125e149d1cd"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
+      "snapshot": "tasks/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md",
+      "sha256": "c2805e46d0dc0a7e884e85d81351b926436753d7c7cbc69c31f865a2450c988d"
     }
   },
   "excluded_paths": [

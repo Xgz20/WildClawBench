@@ -28,6 +28,9 @@ INDEX=r'''
 '''
 
 def effective_source(manifest,original,current,prior):
+    import escrow_marker_review
+    if manifest.get('runtime',{}).get('rule_review_profile')==escrow_marker_review.PROFILE:
+        return escrow_marker_review.effective_source(manifest,original,current,prior)
     import escrow_problem_review
     if manifest.get('runtime',{}).get('rule_review_profile')==escrow_problem_review.PROFILE:
         return escrow_problem_review.effective_source(manifest,original,current,prior)

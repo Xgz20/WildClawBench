@@ -107,6 +107,7 @@ def locations(value,index_cells=None):
     result=set()
     for part in parts:
         part=str(part).strip().replace('！','!')
+        part=re.sub(r'(?<=[|!])第([1-9]\d*)行$',r'行\1',part)
         if index_cells:
             m=re.fullmatch(r"'?([^'!]+)'?!([A-Z]+)(\d+)(?::([A-Z]+)(\d+))?",part,re.I)
             if m and (m[4] is None or m[4].upper()==m[2].upper()):
