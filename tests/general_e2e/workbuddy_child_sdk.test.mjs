@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { artifact, jsonBytes } from "../../tools/report/e2e-shared/workbuddy-jsonl-metrics/index.mjs";
 import { bindChildSdk, childSdkProof, discoverChildSdk, verifyChildSdkArchive, CHILD_SDK_PROOF } from "../../tools/report/e2e-shared/workbuddy-jsonl-metrics/children.mjs";
+import { withCollectorDerivedChildBinding } from "../../tools/report/skills/general-e2e/collect-general-e2e/drivers/workbuddy/collector.mjs";
 
 function fixture() {
   const identity = { batch_id: "batch", unit_id: "unit", task_id: "task", attempt_id: "attempt" };
@@ -238,4 +239,21 @@ test("generated MCP path bindings replay offline without following the original 
     assert.equal(proof.children[0].auxiliary_tool_results[0].native_source_path, path);
     assert.equal(proof.children[0].auxiliary_tool_results[0].native_result_references[0].event_id, "child-result");
   } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test("collection-derived proof joins provenance without changing the original native state", () => {
+  const native = { path: ".general-e2e/execution/task/native-binding.json", sha256: "a".repeat(64), size: 100 };
+  const state = { identity: { task_id: "task" }, session: { verified: true, binding_evidence: [native] },
+    prompt: { sha256: "c".repeat(64), send_status: "sent" }, human_assistance: { operation_count: 9, semantic_intervention_count: 0 } };
+  const before = structuredClone(state), proof = { path: ".general-e2e/collection/task/trace/" + CHILD_SDK_PROOF,
+    sha256: "b".repeat(64), size: 200 };
+  const collected = withCollectorDerivedChildBinding(state, proof);
+  assert.deepEqual(state, before);
+  assert.deepEqual(collected.session.binding_evidence, [native, proof]);
+  assert.deepEqual(collected.prompt, state.prompt);
+  assert.deepEqual(collected.human_assistance, state.human_assistance);
+  assert.equal(collected.extensions.evidence.collector_derived_bindings[0].profile, "wildclawbench.workbuddy-linked-child-sdk/v1");
+  assert.deepEqual(withCollectorDerivedChildBinding(collected, proof), collected);
+  assert.throws(() => withCollectorDerivedChildBinding(collected, { ...proof, sha256: "d".repeat(64) }), /BINDING_CONFLICT/);
+  assert.throws(() => withCollectorDerivedChildBinding(state, { ...proof, path: "../foreign" }), /BINDING_INVALID/);
 });

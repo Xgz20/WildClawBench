@@ -21,3 +21,5 @@ collector在可信终态后，从精确父SDK旁的`<父session>/subagents/agent
 当前资源Profile仍统计绑定的主会话响应，明确保留`CHILD_AGENT_USAGE_NOT_INCLUDED`。独立封存不代表子用量已通过计数准入；全链路Token/响应/工具总数保持未知，报告必须说明主会话口径和子日志覆盖，不把主指标当作整个Agent树总量。此版本不改变已冻结资源算法或既有成绩。
 
 已经生成的旧collector输出不覆盖。修复收集使用同一可信终态的新输出目录，保留旧输入、源发行和SHA，在正式收口前明确选择新来源；已经正式发布的证据仍须通过独立补采协议，不能原地追加文件。
+
+采集状态是独立的派生副本：原Native绑定引用保持，另加入本次证明的unit-relative路径/大小/SHA，并以`collector_derived_bindings`显式注明来源阶段。原执行状态不改写。状态与trace-index中的完整binding摘要集合必须相同，通用collection验证不放宽；资源来源中的状态摘要在新增证明后重新绑定。

@@ -76,6 +76,24 @@ function artifact(path, bytes, extra = {}) {
   return { path, sha256: sha256(bytes), size: bytes.length, ...extra };
 }
 
+export function withCollectorDerivedChildBinding(state, reference) {
+  if (!Array.isArray(state.session?.binding_evidence) || typeof reference?.path !== "string"
+      || isAbsolute(reference.path) || reference.path.split(/[\\/]/u).some(x => !x || x === "." || x === "..")
+      || !/^[0-9a-f]{64}$/u.test(reference.sha256 || "") || !Number.isSafeInteger(reference.size) || reference.size <= 0) {
+    throw new Error("WORKBUDDY_COLLECTOR_DERIVED_BINDING_INVALID");
+  }
+  const next = structuredClone(state);
+  const existing = next.session.binding_evidence.find(x => x.path === reference.path);
+  if (existing && (existing.sha256 !== reference.sha256 || existing.size !== reference.size)) {
+    throw new Error("WORKBUDDY_COLLECTOR_DERIVED_BINDING_CONFLICT");
+  }
+  if (!existing) next.session.binding_evidence.push({ ...reference });
+  next.extensions ??= {}; next.extensions.evidence ??= {};
+  const derived = next.extensions.evidence.collector_derived_bindings ??= [];
+  if (!derived.some(x => x.path === reference.path)) derived.push({ profile: CHILD_SDK_SCHEMA, ...reference });
+  return next;
+}
+
 async function assertRegularFile(path, label) {
   const absolute = resolve(path);
   const info = await lstat(absolute);
@@ -323,7 +341,7 @@ export async function collectWorkBuddyEvidence(options) {
     await mkdir(join(stage, "execution"), { recursive: true });
     const responseBytes = Buffer.from(normalized.final_response, "utf8");
     await writeFile(join(stage, "final-response.md"), responseBytes, { flag: "wx", mode: 0o600 });
-    const collectedState = {
+    let collectedState = {
       ...state,
       extensions: {
         ...state.extensions,
@@ -334,7 +352,7 @@ export async function collectWorkBuddyEvidence(options) {
         },
       },
     };
-    const collectedStateBytes = jsonBytes(collectedState);
+    let collectedStateBytes = jsonBytes(collectedState);
     await writeFile(join(stage, "execution", "automation-state.json"), collectedStateBytes, { flag: "wx", mode: 0o600 });
     const evidence = await collectWorkBuddyGeneralEvidence({
       identity: state.identity,
@@ -375,6 +393,10 @@ export async function collectWorkBuddyEvidence(options) {
           const proofBytes = jsonBytes(proof);
           await writeFile(join(stage, "trace", CHILD_SDK_PROOF), proofBytes, { flag: "wx", mode: 0o600 });
           evidence.trace_index.binding_evidence.push(artifact(CHILD_SDK_PROOF, proofBytes));
+          const unitProofPath = relative(unitRoot, join(outputRoot, "trace", CHILD_SDK_PROOF)).split(sep).join("/");
+          collectedState = withCollectorDerivedChildBinding(collectedState, artifact(unitProofPath, proofBytes));
+          collectedStateBytes = jsonBytes(collectedState);
+          await writeFile(join(stage, "execution/automation-state.json"), collectedStateBytes);
           evidence.trace_index.normalization.linked_child_sdk_profile = {
             id: CHILD_SDK_SCHEMA, proof: CHILD_SDK_PROOF, child_count: children.length,
             primary_transcript_unchanged: true, separate_native_sessions: true,
