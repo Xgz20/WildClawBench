@@ -885,7 +885,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
     diagnostics["规则得分"] = dict(scores)
     export_evidence(workspace_root, candidate, reference, diagnostics, source_identities, transcript)
     scores["诊断"] = diagnostics
-    return scores
+    return json.loads(json.dumps(scores, ensure_ascii=False, allow_nan=False, default=to_jsonable))
 ```
 
 ## LLM Judge Rubric

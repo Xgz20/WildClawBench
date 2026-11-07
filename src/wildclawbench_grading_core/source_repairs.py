@@ -310,10 +310,23 @@ _PROFILES.update({'13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca
                                                                       'append_source_sha256': '727d4f832066442a84cd2f1f914d372e5cdc97a374079b4a6f5af448fc85e36d',
                                                                       'current_source_sha256': 'f93566fe176758953c40c63f1747a8248a864948588f7a02393f59e1b51f3702'}})
 
+_PROFILES['13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a'] = {'task_id': '03_Data_Analysis_task_001_hr_worktime_reconciliation',
+ 'profile': 'hr-native-time-evidence-serialization/v2',
+ 'reason': 'Excel原生时间按原ISO策略同时序列化取证文件和规则返回诊断；原字段、数值计算、比较、分母和权重不变，不将时间改为零。',
+ 'changes': [('from datetime import date, datetime',
+              'from datetime import date, datetime, time as _ge2e_evidence_time'),
+             ('def to_jsonable(value):\n    if isinstance(value, (date, datetime)):',
+              'def to_jsonable(value):\n    if isinstance(value, (date, datetime, _ge2e_evidence_time)):'),
+             ('    scores["诊断"] = diagnostics\n    return scores',
+              '    scores["诊断"] = diagnostics\n'
+              '    return json.loads(json.dumps(scores, ensure_ascii=False, allow_nan=False, '
+              'default=to_jsonable))')],
+ 'current_source_sha256': '0498e2fa704f07165ca736b9426286cdfea0fdf6db7327b67610965d8db45fd5'}
+
 @lru_cache(maxsize=1)
 def _history():
     raw=Path(__file__).with_name('source_repair_history.json').read_bytes()
-    if hashlib.sha256(raw).hexdigest()!='b5a0d68d6f48d2691e053223e9c5c6a436785ea8b49726768eedb7a7a84c9476':
+    if hashlib.sha256(raw).hexdigest()!='a16e90b6ddfbd21987dd73c378bf6d381a2ae2ad2e0b060d7a4a961ed540ffd4':
         raise ValueError('RULE_SOURCE_REPAIR_HISTORY_DRIFT')
     return json.loads(raw)
 

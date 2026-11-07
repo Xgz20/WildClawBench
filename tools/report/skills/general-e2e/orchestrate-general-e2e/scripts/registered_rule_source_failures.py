@@ -1,11 +1,16 @@
 """Retain known, unscored source failures; never rerun the frozen rule worker."""
 import hashlib
+import json
 
 ERROR_KIND = 'registered-rule-source-implementation-failure/v1'
 HR_TASK = '03_Data_Analysis_task_001_hr_worktime_reconciliation'
 HR_CONTRACT = '853ffd362d034b56e142c8102a02a4664bebd304a6228f4e1bb4ee04a869364e'
 HR_SOURCE = '13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a'
 HR_REQUEST_SOURCE = '86946fcc9d801277522f16d09c319928e886ca9623e3af6247370bad445a331e'
+HR_V1_REQUEST_SOURCE = 'f0c1dd50d8f8e0dd4bfbe222db76ef067ed6757c1673c60cd6fd049033517f56'
+HR_V1_MARKER = {'profile':'hr-native-time-evidence-serialization/v1',
+                'source_sha256':HR_SOURCE,
+                'current_source_sha256':'0dcea3cc4cc7d9dcdbd66e6824a3732ee7b5c98475cadecf2a26a175c4897cd4'}
 
 def registered(task_id):
     return task_id in ROWS or task_id == HR_TASK
@@ -17,19 +22,25 @@ def _hr_evidence(rt, attempt, manifest, contract, task):
             or hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest() != HR_SOURCE
             or manifest.get('runtime',{}).get('rule_review_profile') != 'hr-fields-and-sources-semantic-review/v1'
             or manifest.get('runtime',{}).get('hr_source_locator_profile') != 'hr-equivalent-row-prefix-locators/v1'
-            or manifest.get('runtime',{}).get('shared_rule_source_repair') is not None
             or task.get('thread') is not None or task.get('score') is not None
             or any((attempt/p).exists() for p in ['score.json','rule-component.json','semantic','rule-audit.json',
                 'worker/result.json','rule-review/request.json','rule-review/discovery-audit.json'])):
         raise ValueError('HR_TIME_FAILURE_IDENTITY_OR_PHASE_INVALID')
     request=rt._read_json(attempt/'rule-review/discovery/worker/request.json')
     result=rt._read_json(attempt/'rule-review/discovery/worker/result.json')
-    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest() != HR_REQUEST_SOURCE
+    profile=manifest.get('runtime',{}).get('shared_rule_source_repair')
+    if profile is None:
+        expected_source=HR_REQUEST_SOURCE;message='无法输出证据类型：time'
+    elif profile==HR_V1_MARKER:
+        expected_source=HR_V1_REQUEST_SOURCE;message='Object of type time is not JSON serializable'
+    else:
+        raise ValueError('HR_TIME_FAILURE_PROFILE_INVALID')
+    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest() != expected_source
             or request.get('rule_review') != {'schema_version':'wildclawbench.general-e2e-rule-review-worker/v1',
                 'profile':'hr-fields-and-sources-semantic-review/v1','mode':'discover','decisions':{}}
             or result.get('ok') is not False or result.get('result') is not None
             or result.get('error',{}).get('type') != 'TypeError'
-            or result.get('error',{}).get('message') != '无法输出证据类型：time'):
+            or result.get('error',{}).get('message') != message):
         raise ValueError('HR_TIME_FAILURE_SIGNATURE_INVALID')
     return result
 
@@ -38,6 +49,11 @@ def partial_evidence_paths(attempt, task_id):
         return []
     base=attempt/'rule-review/discovery/runtime/workspace/评分证据'
     names=['01候选分析全文.json','02候选核对记录.json','03部门及身份对照.json']
+    manifest=attempt/'attempt-manifest.json'
+    if manifest.is_file():
+        profile=json.loads(manifest.read_text(encoding='utf-8')).get('runtime',{}).get('shared_rule_source_repair')
+        if profile==HR_V1_MARKER:
+            names+=['00证据说明.json','04规则诊断及材料摘要.json','05异常类别与样本.json']
     if base.is_symlink() or not base.is_dir() or sorted(p.name for p in base.iterdir()) != sorted(names):
         raise ValueError('HR_TIME_PARTIAL_EVIDENCE_INVALID')
     paths=[base/name for name in names]

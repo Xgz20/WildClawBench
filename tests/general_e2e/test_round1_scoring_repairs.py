@@ -112,6 +112,17 @@ class Round1ScoringRepairTests(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     m.evidence(rt, root, manifest, contract, task)
             self.assertEqual(m.expected_phase(HR), 'RULES_RUNNING')
+            request['automated_checks'] = original
+            result['error']['message'] = 'Object of type time is not JSON serializable'
+            self.write_json = lambda p, v: p.write_text(json.dumps(v), encoding='utf-8')
+            self.write_json(worker / 'request.json', request)
+            self.write_json(worker / 'result.json', result)
+            manifest['runtime']['shared_rule_source_repair'] = dict(m.HR_V1_MARKER)
+            with patch.object(m, 'HR_V1_REQUEST_SOURCE', hashlib.sha256(original.encode()).hexdigest()):
+                self.assertEqual(m.evidence(rt, root, manifest, contract, task), result)
+                manifest['runtime']['shared_rule_source_repair']['current_source_sha256'] = '0' * 64
+                with self.assertRaisesRegex(ValueError, 'PROFILE'):
+                    m.evidence(rt, root, manifest, contract, task)
 
     def test_partial_hr_resources_are_retained_without_claiming_completeness(self):
         m = self.failure_module()
@@ -139,9 +150,21 @@ class Round1ScoringRepairTests(unittest.TestCase):
         with self.assertRaisesRegex(TypeError, 'object'):
             new['to_jsonable'](object())
         a = {n.name: ast.dump(n) for n in ast.parse(source(HR, True)).body if isinstance(n, ast.FunctionDef)}
-        b = {n.name: ast.dump(n) for n in ast.parse(source(HR)).body if isinstance(n, ast.FunctionDef)}
+        current_ast = ast.parse(source(HR))
+        grade = next(n for n in current_ast.body if isinstance(n, ast.FunctionDef) and n.name == 'grade')
+        returned = grade.body[-1]
+        self.assertIsInstance(returned, ast.Return)
+        self.assertEqual(ast.unparse(returned.value),
+                         'json.loads(json.dumps(scores, ensure_ascii=False, allow_nan=False, default=to_jsonable))')
+        # Peel only the JSON transport wrapper; all original numeric computation
+        # and diagnostic construction must remain structurally identical.
+        grade.body[-1] = ast.Return(value=ast.Name(id='scores', ctx=ast.Load()))
+        b = {n.name: ast.dump(n) for n in current_ast.body if isinstance(n, ast.FunctionDef)}
         self.assertEqual({k: v for k, v in a.items() if k != 'to_jsonable'},
                          {k: v for k, v in b.items() if k != 'to_jsonable'})
+        result = json.loads(json.dumps({'overall_score': 0.25, '诊断': {'clock': value}},
+                                       default=new['to_jsonable'], allow_nan=False))
+        self.assertEqual(result['overall_score'], 0.25)
 
     def workbook(self, *, dimension='全期', wrong_count=False, duplicate=False, extra=False):
         w = openpyxl.Workbook()
