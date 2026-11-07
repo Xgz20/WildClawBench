@@ -6,12 +6,64 @@ canonical CWM-only initial-input audit. Business changes remain forbidden.
 import argparse
 import json
 import os
+import re
 from pathlib import Path
 import stat
 import zipfile
 import uuid
 from prepare_quota_retry import inventory, tree_sha, sha, encoded, require, safe, live_unit, check_entries
 from initial_office_metadata import audit as audit_initial_office
+
+
+def control_snapshot(unit, controls, original_controls, state):
+    """Keep only hash-bound, same-attempt, zero-send preparation ancestry."""
+    entries=inventory(controls)
+    expected={'automation-state.json','execution-record.json'}
+    history=state.get('history',[])
+    require(isinstance(history,list),'PRE_SEND_HISTORY_TYPE')
+    refs=[]; seen=set()
+    for index,event in enumerate(history):
+        if event.get('event')!='ZERO_SEND_PREPARATION_RESUMED':
+            continue
+        digest=event.get('previous_state_sha256'); record_digest=event.get('previous_record_sha256')
+        require(isinstance(digest,str) and re.fullmatch('[a-f0-9]{64}',digest)
+                and isinstance(record_digest,str) and re.fullmatch('[a-f0-9]{64}',record_digest)
+                and digest not in seen,'PRE_SEND_HISTORY_HASH')
+        seen.add(digest)
+        names=[f'pre-send-failures/{digest}.json',f'pre-send-failures/{digest}.execution-record.json']
+        require(event.get('previous_state_path')==(original_controls/names[0]).relative_to(unit).as_posix()
+                and event.get('previous_record_path')==(original_controls/names[1]).relative_to(unit).as_posix(),
+                'PRE_SEND_HISTORY_REFERENCE')
+        paths=[controls/name for name in names]
+        require(all(path.is_file() and not path.is_symlink() and path.resolve()==path for path in paths),
+                'PRE_SEND_HISTORY_SOURCE')
+        bodies=[path.read_bytes() for path in paths]
+        require(sha(bodies[0])==digest and sha(bodies[1])==record_digest,'PRE_SEND_HISTORY_SOURCE_SHA')
+        previous,record=[json.loads(body) for body in bodies]
+        require(previous.get('identity')==state['identity'] and record.get('identity')==state['identity'],
+                'PRE_SEND_HISTORY_IDENTITY')
+        require(previous.get('history')==history[:index],'PRE_SEND_HISTORY_PREFIX')
+        prompt_sha=previous.get('prompt',{}).get('sha256')
+        require(all(previous.get(key)==state.get(key) for key in ('dataset','task_root','candidate_workspace','run_config'))
+                and isinstance(prompt_sha,str) and re.fullmatch('[a-f0-9]{64}',prompt_sha)
+                and prompt_sha==state.get('prompt',{}).get('sha256'),
+                'PRE_SEND_HISTORY_INPUT_BINDING')
+        send=previous.get('send',{}); session=previous.get('session',{}); execution=previous.get('execution',{})
+        require(previous.get('phase')=='FAILED' and record.get('phase')=='FAILED'
+                and previous.get('prompt',{}).get('send_status')=='not_sent'
+                and send.get('dispatch_attempt_count')==0
+                and send.get('dispatch_armed_at') is None and send.get('dispatch_completed_at') is None
+                and session.get('verified') is False
+                and all(session.get(key) is None for key in ('thread_id','turn_id','session_id'))
+                and execution.get('business_status')=='infrastructure_error'
+                and (execution.get('error') or {}).get('code')=='PRE_SEND_DRIVER_ERROR',
+                'PRE_SEND_HISTORY_BOUNDARY')
+        expected.update(['pre-send-failures',*names])
+        refs.append({'state_path':names[0],'state_sha256':digest,'record_path':names[1],
+                     'record_sha256':record_digest,'event_index':index})
+    require({entry['path'] for entry in entries}==expected
+            and all(entry['kind'] in ('file','directory') for entry in entries),'UNEXPECTED_CONTROL_FILES')
+    return entries,refs
 
 
 def archive(unit, auth_path, verify=False):
@@ -39,6 +91,14 @@ def archive(unit, auth_path, verify=False):
         require(sha((root/'failed-control/automation-state.json').read_bytes())==auth['old_state_sha256'],'OLD_STATE_SHA')
         require(sha((root/'failed-control/execution-record.json').read_bytes())==auth['old_record_sha256'],'OLD_RECORD_SHA')
         require(sha((root/'human-source.json').read_bytes())==auth['human_source']['sha256'],'HUMAN_SOURCE_SHA')
+        frozen_state=json.loads((root/'failed-control/automation-state.json').read_bytes())
+        controls,lineage=control_snapshot(unit,root/'failed-control',unit/'.general-e2e/execution'/task_id,frozen_state)
+        require(record.get('pre_send_failure_history',[])==lineage,'ARCHIVED_CONTROL_HISTORY')
+        expected_control=[entry for entry in record['entries'] if entry['archive_path'].startswith('failed-control/')]
+        require({entry['path'] for entry in controls}=={entry['path'] for entry in expected_control},'ARCHIVED_CONTROL_SCOPE')
+        for current in controls:
+            reference=next(entry for entry in expected_control if entry['path']==current['path'])
+            require(all(current[key]==reference[key] for key in ('kind','size','sha256')),'ARCHIVED_CONTROL_SHA')
         return dict(status='VERIFIED',archive_sha256=record['archive_sha256'])
     controls=unit/'.general-e2e/execution'/task_id; workspace=unit/str(safe(task['workspace']['path']))
     require(controls.resolve()==controls and workspace.resolve()==workspace,'SOURCE_PATH')
@@ -66,7 +126,7 @@ def archive(unit, auth_path, verify=False):
     else:
         require(tree_sha(entries)==auth['old_workspace_sha256'],'WORKSPACE_SHA')
         check_entries(workspace,task['workspace']['entries'])
-    require({e['path'] for e in inventory(controls)}=={'automation-state.json','execution-record.json'},'UNEXPECTED_CONTROL_FILES')
+    control_entries,pre_send_history=control_snapshot(unit,controls,controls,state)
     source_rows=[]
     for label,source in [('failed-control',controls),('failed-workspace',workspace)]:
         for e in inventory(source):
@@ -88,10 +148,20 @@ def archive(unit, auth_path, verify=False):
             info.external_attr=(int(r['mode'],8)|(stat.S_IFDIR if r['kind']=='directory' else stat.S_IFREG))<<16
             z.writestr(info,b)
     require(inventory(workspace)==entries,'WORKSPACE_MOVED_DURING_ARCHIVE')
+    require(inventory(controls)==control_entries,'CONTROL_MOVED_DURING_ARCHIVE')
     (root/'failed-control').mkdir()
     human=Path(auth['human_source']['path']).read_bytes()
     require(sha(human)==auth['human_source']['sha256'],'HUMAN_SOURCE_SHA')
-    for name,b in [('failed-control/automation-state.json',old),('failed-control/execution-record.json',record),('human-source.json',human)]:
+    frozen_controls=[]
+    for entry in control_entries:
+        target=root/'failed-control'/entry['path']
+        if entry['kind']=='directory':
+            target.mkdir(parents=True,exist_ok=True)
+            continue
+        body=(controls/entry['path']).read_bytes()
+        require(len(body)==entry['size'] and sha(body)==entry['sha256'],'CONTROL_CHANGED_DURING_COPY')
+        frozen_controls.append(('failed-control/'+entry['path'],body))
+    for name,b in [*frozen_controls,('human-source.json',human)]:
         target=root/name
         with target.open('xb') as f:f.write(b)
         target.chmod(0o400)
@@ -100,6 +170,7 @@ def archive(unit, auth_path, verify=False):
     result=dict(schema_version='general-e2e.unaccepted-dispatch-archive/v1',authorization_sha256=sha(raw),
                 archive_sha256=sha(zpath.read_bytes()),observed_workspace_sha256=tree_sha(entries),
                 initial_workspace_sha256=tree_sha(initial),initial_office_metadata=variance,
+                pre_send_failure_history=pre_send_history,
                 entries=[{k:v for k,v in r.items() if k!='source'} for r in source_rows])
     with (root/'archive-manifest.json').open('xb') as f:f.write(encoded(result))
     return dict(status='ARCHIVED',archive_sha256=result['archive_sha256'])

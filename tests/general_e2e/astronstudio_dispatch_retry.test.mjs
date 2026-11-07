@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,writeFile,readFile,rm,realpath} from 'node:fs/promises';
-import {join} from 'node:path';
+import {join,relative} from 'node:path';
 import {tmpdir} from 'node:os';
 import {spawnSync} from 'node:child_process';
 import {randomUUID} from 'node:crypto';
@@ -58,6 +58,53 @@ test('immutable archive survives subsequent selected-workspace changes and leave
 test('changed candidate cannot be relabeled as pristine before the retry',async t=>{
   const f=await archiveFixture(t);await writeFile(join(f.workspace,'input.txt'),'unexpected write');
   await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/WORKSPACE_/);
+});
+
+async function withPreSendHistory(f,kind='valid') {
+  const current=JSON.parse(await readFile(join(f.controls,'automation-state.json'))),promptSha=hash(Buffer.from('frozen prompt'));
+  const prefix=[{phase:'PENDING',event:'ATTEMPT_CREATED'},{phase:'FAILED',event:'PRE_SEND_DRIVER_ERROR'}];
+  Object.assign(current,{candidate_workspace:f.workspace,task_root:join(f.workspace,'..'),dataset:{id:'dataset',digest:'a'.repeat(64)},run_config:{config_digest:'config'}});
+  current.prompt.sha256=promptSha;
+  const previous={...structuredClone(current),phase:'FAILED',prompt:{sha256:promptSha,send_status:'not_sent'},
+    send:{dispatch_attempt_count:0,dispatch_armed_at:null,dispatch_completed_at:null},
+    session:{verified:false,thread_id:null,turn_id:null,session_id:null},
+    execution:{business_status:'infrastructure_error',error:{code:'PRE_SEND_DRIVER_ERROR'}},history:prefix};
+  if(kind==='prior-sent')previous.send.dispatch_attempt_count=1;
+  if(kind==='other-attempt')previous.identity.attempt_id='foreign';
+  const previousBytes=Buffer.from(JSON.stringify(previous)),digest=hash(previousBytes);
+  const previousRecord=Buffer.from(JSON.stringify({identity:previous.identity,phase:'FAILED'}));
+  const folder=join(f.controls,'pre-send-failures'),statePath=join(folder,digest+'.json'),recordPath=join(folder,digest+'.execution-record.json');
+  await mkdir(folder);await writeFile(statePath,previousBytes,{mode:0o600});await writeFile(recordPath,previousRecord,{mode:0o600});
+  const event={phase:'PENDING',event:'ZERO_SEND_PREPARATION_RESUMED',previous_state_sha256:digest,
+    previous_state_path:relative(f.unit,statePath),previous_record_path:relative(f.unit,recordPath),previous_record_sha256:hash(previousRecord)};
+  current.history=[...structuredClone(prefix),event,{phase:'NEEDS_ATTENTION',event:'NATIVE_IDENTITY_UNAVAILABLE_AFTER_SEND'}];
+  if(kind==='foreign-path')event.previous_state_path='outside.json';
+  if(kind==='changed-history-prefix')current.history[0].event='changed';
+  if(kind==='state-sha')await writeFile(statePath,previousBytes.toString()+' ');
+  if(kind==='record-sha')await writeFile(recordPath,previousRecord.toString()+' ');
+  if(kind==='unregistered-file')await writeFile(join(folder,'unknown.json'),'unregistered');
+  const bytes=Buffer.from(JSON.stringify(current));await writeFile(join(f.controls,'automation-state.json'),bytes);
+  const auth=JSON.parse(await readFile(f.authPath));auth.old_state_sha256=hash(bytes);await writeFile(f.authPath,JSON.stringify(auth));
+  return {digest,statePath,recordPath,previousBytes,previousRecord,currentBytes:bytes};
+}
+
+test('archive preserves hash-bound zero-send history in both frozen control copy and immutable ZIP',async t=>{
+  const f=await archiveFixture(t),h=await withPreSendHistory(f);const result=await archiveDispatchAttempt(f.unit,f.authPath);
+  assert.equal(result.status,'ARCHIVED');
+  assert.deepEqual(await readFile(join(f.root,'failed-control/pre-send-failures',h.digest+'.json')),h.previousBytes);
+  assert.deepEqual(await readFile(join(f.root,'failed-control/pre-send-failures',h.digest+'.execution-record.json')),h.previousRecord);
+  assert.deepEqual(await readFile(join(f.controls,'automation-state.json')),h.currentBytes);
+  const manifest=JSON.parse(await readFile(join(f.root,'archive-manifest.json')));
+  assert.equal(manifest.pre_send_failure_history.length,1);
+  assert.ok(manifest.entries.some(row=>row.archive_path==='failed-control/pre-send-failures/'+h.digest+'.json'));
+  await writeFile(join(f.workspace,'input.txt'),'new selected output');
+  assert.equal((await archiveDispatchAttempt(f.unit,f.authPath,true)).status,'VERIFIED');
+});
+for(const kind of ['prior-sent','other-attempt','foreign-path','changed-history-prefix','state-sha','record-sha','unregistered-file'])
+test('pre-send history rejects '+kind+' without dropping original records',async t=>{
+  const f=await archiveFixture(t),h=await withPreSendHistory(f,kind);
+  await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/PRE_SEND_HISTORY_|UNEXPECTED_CONTROL_FILES/);
+  assert.deepEqual(await readFile(join(f.controls,'automation-state.json')),h.currentBytes);
 });
 
 async function standingFixture(t) {

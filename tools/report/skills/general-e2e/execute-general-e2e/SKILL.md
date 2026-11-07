@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.64` 未受理发送的归档保留已登记零发送准备历史：逐项核验原history索引、路径、前序SHA、同attempt/输入、完整历史前缀和send0/无armed边界，原状态/回执同时进入完整ZIP与不可变failed-control副本。未知控制文件、受理记录或历史漂移继续拒绝，不删历史、不改旧计数、不发送或赋分。
+
+
 `0.14.63` 为原生空连接清理保留独立stopped-bootstrap证明：必须完整已知载荷、明确provider.stopRuntimeSession且停止不早于原拒绝、active turn显式null、原请求已not-submitted及无turn/排队/交互。保留缺失emptyPrewarm原样，不从SDK文件缺失推断空闲，不重发、不重启或赋分。
 
 
