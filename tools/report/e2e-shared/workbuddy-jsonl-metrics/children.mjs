@@ -2,7 +2,7 @@
 // are evidence sidecars, never synthetic events in the primary transcript.
 import { createHash } from "node:crypto";
 import { lstat, readdir } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import { safeRead, equal, artifact } from "./index.mjs";
 
 export const CHILD_SDK_SCHEMA = "wildclawbench.workbuddy-linked-child-sdk/v1";
@@ -125,8 +125,17 @@ export function bindChildSdk(primaryBytes, snapshot, session, childSources, { ti
     if (!Number.isFinite(sdkStart) || !Number.isFinite(start) || !Number.isFinite(end)
         || start > end || sdkStart > end) fail("PARENT_TIME_INVALID");
     const callMap = new Map(), resultIds = new Set(), responseIds = new Set(), incompleteResults = new Set();
-    const users = [];
+    const users = [], metadata = [];
     for (const row of child) {
+      if (row.type === "session-meta") {
+        if (!equal(Object.keys(row).sort(), ["id", "meta", "sessionId", "timestamp", "type"])
+            || row.sessionId !== source.name.slice(0, -6)
+            || !equal(row.meta, { "codebuddy.ai/hostKind": "unopted", "codebuddy.ai/agentRuntime": "local-agent" })
+            || !Number.isFinite(row.timestamp) || row.timestamp < start || row.timestamp > end) fail("SESSION_META_UNBOUND");
+        metadata.push({ id: row.id, timestamp: row.timestamp, session_alias: row.sessionId,
+          profile: "native-local-agent-session-meta/v1" });
+        continue;
+      }
       if (!["message", "function_call", "function_call_result", "model-usage"].includes(row.type)) fail("EVENT_TYPE_UNSUPPORTED");
       const bound = baggage(row);
       if (row.cwd !== session.cwd || row.sessionId !== sid
@@ -164,12 +173,34 @@ export function bindChildSdk(primaryBytes, snapshot, session, childSources, { ti
     for (const attachment of source.attachments || []) {
       if (!attachment.name.startsWith(attachmentPrefix) || attachmentNames.has(attachment.name)) fail("AUXILIARY_PATH_INVALID");
       const file = attachment.name.slice(attachmentPrefix.length);
-      if (!/^call_[A-Za-z0-9_-]+(?:-render)?\.txt$/u.test(file)) fail("AUXILIARY_PATH_INVALID");
-      const callId = file.endsWith("-render.txt") ? file.slice(0, -11) : file.slice(0, -4);
-      if (!callMap.has(callId)) fail("AUXILIARY_CALL_UNBOUND");
+      let binding;
+      if (/^call_[A-Za-z0-9_-]+(?:-render)?\.txt$/u.test(file)) {
+        const callId = file.endsWith("-render.txt") ? file.slice(0, -11) : file.slice(0, -4);
+        if (!callMap.has(callId)) fail("AUXILIARY_CALL_UNBOUND");
+        binding = { call_id: callId,
+          binding_basis: "native child tool-results directory and exact SDK call ID; no inferred content equivalence" };
+      } else if (/^mcp-[A-Za-z0-9_-]+-\d{13}-[0-9a-f]{6}\.txt$/u.test(file)) {
+        const originalPath = attachment.source_path;
+        if (typeof originalPath !== "string" || !isAbsolute(originalPath) || originalPath.includes("\0")
+            || originalPath.split("/").includes("..") || !originalPath.endsWith("/" + attachment.name)) fail("MCP_OUTPUT_PATH_INVALID");
+        const references = [];
+        for (const row of child.filter(x => x.type === "function_call_result")) {
+          const toolPrefix = String(row.name || "").replaceAll("__", "-");
+          if (!file.startsWith(toolPrefix + "-")) continue;
+          const values = [["output", row.output], ["providerData.toolResult", row.providerData?.toolResult]];
+          const fields = values.filter(([, value]) => {
+            const body = JSON.stringify(value); return typeof body === "string" && body.includes(originalPath);
+          }).map(([name]) => name);
+          if (fields.length) references.push({ event_id: row.id, call_id: row.callId, tool_name: row.name, path_fields: fields });
+        }
+        if (!references.length) fail("MCP_OUTPUT_REFERENCE_MISSING");
+        const ids = [...new Set(references.map(x => x.call_id))];
+        binding = { call_id: ids.length === 1 ? ids[0] : null, native_source_path: originalPath,
+          native_result_references: references,
+          binding_basis: "native MCP result explicitly references original absolute output path; no inferred content equivalence" };
+      } else fail("AUXILIARY_PATH_INVALID");
       attachmentNames.add(attachment.name);
-      attachments.push({ call_id: callId, raw: artifact(PREFIX + attachment.name, attachment.bytes),
-        binding_basis: "native child tool-results directory and exact SDK call ID; no inferred content equivalence" });
+      attachments.push({ ...binding, raw: artifact(PREFIX + attachment.name, attachment.bytes) });
     }
     bindings.push({ parent_tool_call_id: tool.toolCallId, agent_type: first.providerData.agent,
       session_id: sid, conversation_request_id: requestId, prompt_sha256: hash(text(first.content)),
@@ -187,6 +218,7 @@ export function bindChildSdk(primaryBytes, snapshot, session, childSources, { ti
       transcript_status: !missing.length && !incompleteResults.size && finalPresent ? "complete" : "partial",
       missing_result_call_ids: missing, final_assistant_present: finalPresent,
       incomplete_result_call_ids: [...incompleteResults],
+      ...(metadata.length ? { session_metadata_records: metadata } : {}),
       auxiliary_tool_results: attachments.sort((a, b) => a.raw.path.localeCompare(b.raw.path)),
       // No usage admission is implied by the archival or the counts above.
       token_usage_scope: "not-included-in-primary-resource-metrics" });
@@ -227,6 +259,7 @@ export async function discoverChildSdk(primaryNative, snapshot, session) {
         for (const file of files.sort((a, b) => a.name.localeCompare(b.name))) attachments.push({
           name: name.slice(0, -6) + "/tool-results/" + file.name,
           bytes: await boundedRead(join(toolDir, file.name)),
+          source_path: join(toolDir, file.name),
         });
       }
     }
@@ -274,6 +307,7 @@ export async function verifyChildSdkArchive(traceRoot, index, identity, session)
     const attachments = [];
     for (const file of allChildren.filter(x => x.path.startsWith(prefix))) attachments.push({
       name: file.path.slice(PREFIX.length), bytes: await read(file),
+      source_path: proof.children.find(x => x.raw.path === child.path)?.auxiliary_tool_results?.find(x => x.raw.path === file.path)?.native_source_path,
     });
     sources.push({ name: basename(child.path), bytes: await read(child), attachments });
   }

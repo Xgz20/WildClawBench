@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.70` 同步子SDK原生session-meta取证组件；执行/队列仍不变，不迁移在途执行。
+
 `0.14.69` 同步子SDK派发时点来源核验组件；执行和队列代码不变，既有队列不迁移或重发。
 
 `0.14.68` 同步独立子SDK取证组件；不改变WorkBuddy执行、发送、队列或权限恢复代码。已冻结执行继续沿用原发行，子日志由新collect在终态后独立收口。

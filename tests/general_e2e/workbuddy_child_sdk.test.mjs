@@ -177,3 +177,65 @@ test("old SDK-timestamp proofs replay unchanged and unknown time profiles fail c
       { timeProfile: "unknown-time-profile/v1" }), /TIME_PROFILE_UNSUPPORTED/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test("exact native local-agent session metadata is preserved with its filename alias", () => {
+  const f = fixture();
+  const meta = { id: "native-session-metadata", type: "session-meta", sessionId: "agent-fixture", timestamp: 250,
+    meta: { "codebuddy.ai/hostKind": "unopted", "codebuddy.ai/agentRuntime": "local-agent" } };
+  f.child.splice(2, 0, meta);
+  const before = f.bytes(f.child), result = f.bind()[0];
+  assert.deepEqual(result.session_metadata_records, [{ id: meta.id, timestamp: 250,
+    session_alias: "agent-fixture", profile: "native-local-agent-session-meta/v1" }]);
+  assert.equal(result.observed_tool_call_count, 1);
+  assert.equal(result.transcript_status, "complete");
+  assert.deepEqual(before, f.bytes(f.child));
+});
+
+test("metadata cannot hide another user message, foreign session, unknown runtime or out-of-bound time", () => {
+  for (const mutate of [
+    row => { row.role = "user"; row.content = "unbound input"; },
+    row => { row.sessionId = "agent-foreign"; },
+    row => { row.meta["codebuddy.ai/agentRuntime"] = "foreign-runtime"; },
+    row => { row.timestamp = 1001; },
+    row => { row.providerData = { conversationRequestId: "foreign" }; },
+  ]) {
+    const f = fixture(), row = { id: "native-meta", type: "session-meta", sessionId: "agent-fixture", timestamp: 250,
+      meta: { "codebuddy.ai/hostKind": "unopted", "codebuddy.ai/agentRuntime": "local-agent" } };
+    mutate(row);f.child.splice(2, 0, row);assert.throws(() => f.bind(), /SESSION_META_UNBOUND/);
+  }
+});
+
+test("generated MCP output files require an exact absolute-path reference in a native tool result", () => {
+  const f = fixture(), name = "mcp-sheetagent-run_command-1794065902594-707bf7.txt";
+  const path = "/native/sdk/agent-fixture/tool-results/" + name;
+  f.child[1].name = f.child[2].name = "mcp__sheetagent__run_command";
+  f.child[2].output.text = "Full output saved to: " + path;
+  const sources = f.sources(); sources[0].attachments = [{ name: "agent-fixture/tool-results/" + name,
+    source_path: path, bytes: Buffer.from("Original native MCP output.") }];
+  const result = bindChildSdk(f.bytes(f.primary), f.snapshot, f.session, sources)[0];
+  assert.equal(result.auxiliary_tool_results[0].call_id, "call_child");
+  assert.deepEqual(result.auxiliary_tool_results[0].native_result_references,
+    [{ event_id: "child-result", call_id: "call_child", tool_name: "mcp__sheetagent__run_command", path_fields: ["output"] }]);
+  f.child[2].output.text = "Filename only: " + name;
+  sources[0].bytes = f.bytes(f.child);
+  assert.throws(() => bindChildSdk(f.bytes(f.primary), f.snapshot, f.session, sources), /MCP_OUTPUT_REFERENCE_MISSING/);
+  f.child[3].content = "Assistant claims: " + path;
+  sources[0].bytes = f.bytes(f.child);
+  assert.throws(() => bindChildSdk(f.bytes(f.primary), f.snapshot, f.session, sources), /MCP_OUTPUT_REFERENCE_MISSING/);
+});
+
+test("generated MCP path bindings replay offline without following the original absolute path", async () => {
+  const root = await mkdtemp(join(tmpdir(), "workbuddy-child-mcp-path-"));
+  try {
+    const f = fixture(), name = "mcp-sheetagent-run_command-1794065902594-707bf7.txt";
+    const path = "/original/native/agent-fixture/tool-results/" + name;
+    f.child[1].name = f.child[2].name = "mcp__sheetagent__run_command";
+    f.child[2].output.text = "Full output saved to: " + path;
+    f.sources = () => [{ name: "agent-fixture.jsonl", bytes: f.bytes(f.child), attachments: [
+      { name: "agent-fixture/tool-results/" + name, source_path: path, bytes: Buffer.from("Frozen output.") },
+    ] }];
+    const index = await archive(root, f), proof = await verifyChildSdkArchive(root, index, f.identity, f.session);
+    assert.equal(proof.children[0].auxiliary_tool_results[0].native_source_path, path);
+    assert.equal(proof.children[0].auxiliary_tool_results[0].native_result_references[0].event_id, "child-result");
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
