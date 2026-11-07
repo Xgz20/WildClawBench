@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.67` WorkBuddy5.9.3的已确认单次错误页刷新可能回到空白助理首页。新增`drivers/workbuddy/resume-ui-task-mode.mjs`：保留原失败刷新回执和SHA，重验原owner死亡、全局原生闲、同进程/会话集合、无草稿/锁，最多一次进入唯一原生“新建任务”，再回读冻结Task模型和权限。不刷新、不选择模型/权限、不发送Prompt；已armed只观察，不重复点击。新Task视图配置漂移仍拒绝，不能把助理配置当Task配置。
+
 `0.14.66` 明确预热连接停止后可保留陈旧ready投影：严格已知完整载荷、原emptyPrewarm=true不改、emptyPrewarmDispatch/active显式null、原生stop晚于拒绝及accepted错误回执/无turn/未提交投递闭合。原错误态证明回放不变，未知活动拒绝，不修改Harness/评分。
 
 

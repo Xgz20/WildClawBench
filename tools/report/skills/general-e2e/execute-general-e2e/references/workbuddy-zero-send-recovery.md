@@ -20,6 +20,17 @@ invocation的argv必须是原队列完整命令。入口校验owner已退出、�
 完全相同的原生session集合、空编辑器和唯一“新建任务”控件后，返回PASS_UI_RECOVERED_WITHOUT_PROMPT。
 失败保留审计目录；不要用新目录盲目重复刷新。未知页面、活动任务、锁和身份漂移均失败关闭。
 
+WorkBuddy5.9.3刷新后可能回到空白“本地助理”首页，其“快速/default-sandbox”属于另一视图，不能拿来核验Task配置。
+若原回执严格为一次confirmed刷新后的`REFRESH_NOT_VERIFIED_DO_NOT_REPEAT`，可用新发行的只读入口先核验：
+
+```text
+node drivers/workbuddy/resume-ui-task-mode.mjs --invocation ABS_ORIGINAL_LAUNCH_JSON --audit-root SAME_ORIGINAL_UI_AUDIT --expected-owner-pid OLD_PID --verify-only
+```
+
+只在同一5.9.3进程/原生会话集合、原owner已死、全局闲、无锁或草稿、唯一新建任务入口均通过时，省略`--verify-only`才最多点击一次原生“新建任务”。
+入口不再刷新、不选择模型或权限、不选择Workspace、不发送Prompt；进入Task视图后必须回读原冻结模型/权限。
+原`recovery.json`字节不改，新证明另存同目录`task-mode-resume.json`并引用原SHA。已armed的导航只观察，未准入不重击；未知首页、Task配置漂移或新活动仍拒绝。
+
 ## 显式队列恢复
 
 创建新的JSON恢复清单，schema_version固定为`wildclawbench.workbuddy-zero-send-queue-repair/v1`，包含：
