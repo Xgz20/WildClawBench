@@ -31,16 +31,17 @@ def profile_for(contract, contract_sha=None, *, frozen_profile=None):
         import escrow_grouped_review_v2
         import escrow_problem_review
         import escrow_marker_review
-        if frozen_profile in {escrow_state_review.PROFILE,escrow_grouped_review_v2.PROFILE,escrow_grouped_review.PROFILE,escrow_problem_review.PROFILE,escrow_marker_review.PROFILE}:
+        import escrow_frontier_review
+        if frozen_profile in {escrow_state_review.PROFILE,escrow_grouped_review_v2.PROFILE,escrow_grouped_review.PROFILE,escrow_problem_review.PROFILE,escrow_marker_review.PROFILE,escrow_frontier_review.PROFILE}:
             return frozen_profile
-        return escrow_marker_review.PROFILE
+        return escrow_frontier_review.PROFILE
     return None
 
 
 def worker_configuration(mode, decisions=None, *, profile=PROFILE):
     if mode not in {'discover','apply'}:
         raise ValueError('RULE_REVIEW_MODE_INVALID')
-    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','escrow-status-equivalence-review/v4','escrow-status-equivalence-review/v5','warranty-recovery-reason-semantic-review/v1'}:
+    if profile not in {PROFILE, 'office001-numeric-extraction-semantic-review/v1','escrow-status-equivalence-review/v1','escrow-status-equivalence-review/v2','escrow-status-equivalence-review/v3','escrow-status-equivalence-review/v4','escrow-status-equivalence-review/v5','escrow-status-equivalence-review/v6','warranty-recovery-reason-semantic-review/v1'}:
         raise ValueError('RULE_REVIEW_PROFILE_MISMATCH')
     return {'schema_version': WORKER_SCHEMA, 'profile': profile, 'mode': mode, 'decisions': decisions or {}}
 

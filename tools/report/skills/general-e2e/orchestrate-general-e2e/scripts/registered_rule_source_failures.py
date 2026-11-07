@@ -14,30 +14,44 @@ HR_V1_MARKER = {'profile':'hr-native-time-evidence-serialization/v1',
 ESCROW_TASK = '03_Data_Analysis_task_010_contract_escrow_refund_reconciliation'
 
 def _escrow_locator_evidence(rt,attempt,manifest,contract,task):
+    profile=manifest.get('runtime',{}).get('rule_review_profile')
+    repair=manifest.get('runtime',{}).get('shared_rule_source_repair')
+    locator_marker={'profile':'escrow-equivalent-row-prefix-locators/v1',
+        'source_sha256':'a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d',
+        'current_source_sha256':'47656f9572199c91454cd69bf31a8dc2506e621be645c4eea654c3a585b2a40e'}
+    if profile=='escrow-status-equivalence-review/v4' and repair is None:
+        expected_source='229174ad3b86aed9a62f7e9281ceddcb4b55334b21c7df1df108c49231bc3f27'
+        expected_error='b1e634110ac6aae1a2a0118edd1c0de788cbf229180987f626cc8ec079c065c1';count=1081
+    elif profile=='escrow-status-equivalence-review/v5' and repair==locator_marker:
+        expected_source='11d32fde4844d264db3f1c7e15d351dc3ca5bdd40344bd468541f7e04275a981'
+        expected_error='d82a1f4d2da4ce881ecd39f77e01b635267ebb398d279933e3bdfbbcb6e7d3af';count=1127
+    else:
+        raise ValueError('ESCROW_LOCATOR_FAILURE_PROFILE_INVALID')
     if (manifest.get('identity',{}).get('task_id')!=ESCROW_TASK
             or manifest.get('digests',{}).get('contract_sha256')!='c93e50e83a8ac8eb9d6ba9e02510a762952b4011e8495c763073029a42bfff75'
             or manifest.get('dataset')!={'id':'general-custom70-v4','digest':'914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff'}
             or hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()!='a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'
-            or manifest.get('runtime',{}).get('rule_review_profile')!='escrow-status-equivalence-review/v4'
-            or manifest.get('runtime',{}).get('shared_rule_source_repair') is not None
             or (task.get('thread') or {}).get('status')!='COMPLETED' or task.get('score') is not None
             or any((attempt/p).exists() for p in ['score.json','rule-component.json','semantic/semantic-component.json'])):
         raise ValueError('ESCROW_LOCATOR_FAILURE_IDENTITY_OR_PHASE_INVALID')
     request=rt._read_json(attempt/'worker/request.json');result=rt._read_json(attempt/'worker/result.json')
     audit=rt._read_json(attempt/'rule-audit.json');review=rt._read_json(attempt/'rule-review/audit.json')
     blocker=rt._read_json(attempt/'scoring-infrastructure-blocker.json')
-    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest()!='229174ad3b86aed9a62f7e9281ceddcb4b55334b21c7df1df108c49231bc3f27'
+    blocker_identity=(blocker if count==1081 else blocker.get('identity',{}))
+    blocker_error=(blocker.get('error_code') if count==1081 else blocker.get('error',{}).get('code'))
+    blocker_unpublished=(blocker.get('formal_score_generated') if count==1081 else blocker.get('formal_score_completed'))
+    if (hashlib.sha256(request.get('automated_checks','').encode()).hexdigest()!=expected_source
             or result.get('ok') is not False or result.get('result') is not None
             or result.get('error',{}).get('type')!='RuntimeError'
-            or hashlib.sha256(result.get('error',{}).get('message','').encode()).hexdigest()!='b1e634110ac6aae1a2a0118edd1c0de788cbf229180987f626cc8ec079c065c1'
+            or hashlib.sha256(result.get('error',{}).get('message','').encode()).hexdigest()!=expected_error
             or audit.get('status')!='failed' or audit.get('identity')!=manifest['identity']
             or audit.get('worker',{}).get('request_sha256')!=rt._sha256_file(attempt/'worker/request.json')
             or audit.get('worker',{}).get('process_tree_cleanup',{}).get('remaining') is not False
             or review.get('status')!='completed' or review.get('numeric_score_assigned') is not False
-            or review.get('reviewed_context_count')!=1081 or review.get('unresolved_context_ids')!=[]
-            or review.get('identity')!=manifest['identity'] or review.get('profile')!='escrow-status-equivalence-review/v4'
-            or blocker.get('task_id')!=ESCROW_TASK or blocker.get('scoring_attempt_id')!=manifest['identity']['scoring_attempt_id']
-            or blocker.get('error_code')!='RULE_WORKER_FAILED' or blocker.get('formal_score_generated') is not False):
+            or review.get('reviewed_context_count')!=count or review.get('unresolved_context_ids')!=[]
+            or review.get('identity')!=manifest['identity'] or review.get('profile')!=profile
+            or blocker_identity.get('task_id')!=ESCROW_TASK or blocker_identity.get('scoring_attempt_id')!=manifest['identity']['scoring_attempt_id']
+            or blocker_error!='RULE_WORKER_FAILED' or blocker_unpublished is not False):
         raise ValueError('ESCROW_LOCATOR_FAILURE_SIGNATURE_INVALID')
     for key,name in [('request_sha256','request.json'),('response_sha256','response.json'),
                      ('query_log_sha256','query-log.json'),('discovery_audit_sha256','discovery-audit.json')]:

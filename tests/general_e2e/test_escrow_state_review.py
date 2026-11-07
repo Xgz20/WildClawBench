@@ -94,7 +94,7 @@ class ExactEscrowSourceTests(unittest.TestCase):
                 self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA,frozen_profile=profile),profile)
         profile=RUNTIME.escrow_grouped_review.PROFILE
         self.assertEqual(profile,'escrow-status-equivalence-review/v3')
-        self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA),'escrow-status-equivalence-review/v5')
+        self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA),'escrow-status-equivalence-review/v6')
         self.assertEqual(RUNTIME.rule_review.profile_for(contract,REVIEW.CONTRACT_SHA,frozen_profile=profile),profile)
         manifest['runtime']['rule_review_profile']=profile
         code,receipt=RUNTIME._effective_rule_source(manifest,source)
