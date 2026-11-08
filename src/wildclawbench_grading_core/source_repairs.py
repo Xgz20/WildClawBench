@@ -267,8 +267,8 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    "item['_raw_values']=raw_values")],
                                                                       'current_source_sha256': '3e1acfa74c962ac8ac1b1bd6f66fc8ddcea06170e1a49ab184f086ad989ff0a4'},
  '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b': {'task_id': '02_Office_task_015_procurement_reconciliation',
-                                                                      'profile': 'procurement-date-and-section-extraction/v4',
-                                                                      'reason': '仅在明确加法说明和已识别笔数/混合金额表头下核验两类未匹配合计；分别保留计数与金额、隐藏单元格、原值和来源位置，不把净额当合计，不改原分母、容差或80/20权重。',
+                                                                      'profile': 'procurement-date-and-section-extraction/v5',
+                                                                      'reason': '保留候选自定优先级的原文本分组，不预设枚举、不映射高为P1或判断排序；既有P1/P2/P3/跟踪计数只按原文字面核对。未知数值汇总、重复表头、原值/来源、分母、容差和80/20权重保持。',
                                                                       'changes': [('json.dumps(chunks[i],ensure_ascii=False)',
                                                                                    'json.dumps(chunks[i],ensure_ascii=False,default=str)'),
                                                                                   ("tol=MONEY_TOLERANCE+Decimal('0.00000001') "
@@ -282,9 +282,9 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    '    global _PS_ROOT\n'
                                                                                    '    '
                                                                                    'root=Path(workspace_path).resolve();_PS_ROOT=root;truth,facts,metrics=reference(root)')],
-                                                                      'current_source_sha256': '5dbc6a6431a8dd4c4692e28fbe52051d7599a4038ab5aae347712e6ff4f4d561',
+                                                                      'current_source_sha256': 'b1f84cb81347e51f0c00f10881fa1c63141e06537687922e2367d0e69cc677f7',
                                                                       'append_source': 'procurement_sections.py',
-                                                                      'append_source_sha256': 'ca08c23cf2c297a7d943803983cb0bbbd0307ffe19b86f553d2821f42861d5f5'}}
+                                                                      'append_source_sha256': '9bd5afb23b0e5e8f93deda6de780f31d52843b7dace5eeaa57e9092762c88328'}}
 
 _PROFILES.update({'13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a': {'task_id': '03_Data_Analysis_task_001_hr_worktime_reconciliation',
                                                                       'profile': 'hr-native-time-evidence-serialization/v1',
@@ -334,7 +334,7 @@ _PROFILES['a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'] = 
 @lru_cache(maxsize=1)
 def _history():
     raw=Path(__file__).with_name('source_repair_history.json').read_bytes()
-    if hashlib.sha256(raw).hexdigest()!='a16e90b6ddfbd21987dd73c378bf6d381a2ae2ad2e0b060d7a4a961ed540ffd4':
+    if hashlib.sha256(raw).hexdigest()!='78ef302d31e04362fe996cb6032147bda198acf9c640fa2eb381b84791cb15ac':
         raise ValueError('RULE_SOURCE_REPAIR_HISTORY_DRIFT')
     return json.loads(raw)
 

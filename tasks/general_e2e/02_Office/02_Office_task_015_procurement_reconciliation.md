@@ -781,8 +781,10 @@ def _ps_sections(tables, records, metrics, numeric, truth, root):
         col=columns[0];rows={r['row']:r for r in table['rows']}
         for item in table.get('records',[]):
             vals=rows[item['row']]['values'];value=literal(vals[col] if col<len(vals) else None)
-            if value in {'p1','p2','p3','跟踪'}:priorities[kind][value].add(item['id'])
-            elif value:raise EvaluationError('Unrecognized priority literal: '+value)
+            # Priority labels are candidate text, not a prescribed enum.
+            # Preserve exact categories without inferring 高=P1 or a business rank.
+            # Only explicitly supported summary claims are interpreted below.
+            if value:priorities[kind][value].add(item['id'])
 
     def total(kind, role, subset=None, absolute=False):
         if not complete[kind]:return None

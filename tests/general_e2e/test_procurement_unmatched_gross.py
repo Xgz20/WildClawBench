@@ -1,5 +1,8 @@
 """Explicit additive summaries retain both original numeric obligations."""
 import csv
+import ast
+import hashlib
+import json
 from decimal import Decimal
 from pathlib import Path
 import tempfile
@@ -139,6 +142,71 @@ class UnmatchedGrossTests(unittest.TestCase):
         # Numeric correctness is a separate original rule obligation. A matching
         # subtotal is compared with the submitted column, without a second charge.
         self.assertTrue(self.claims(self.evaluate())['汇总!C8']['matches'])
+
+    def current_priority_scope(self):
+        from src.wildclawbench_grading_core import source_repairs
+        digest = '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b'
+        task = ROOT / 'tasks/general_e2e/02_Office' / (TASK + '.md')
+        index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
+        row = json.loads(index.read_text())['files'][task.relative_to(ROOT).as_posix()]
+        _, sections, _ = _parse_task_source(index.parent / row['snapshot'])
+        original = _strip_codeblock(sections['Automated Checks'])
+        self.assertEqual(hashlib.sha256(original.encode()).hexdigest(), digest)
+        historical, _ = source_repairs.effective_source(
+            TASK, original, profile='procurement-date-and-section-extraction/v4')
+        self.assertEqual(hashlib.sha256(historical.encode()).hexdigest(),
+                         '5dbc6a6431a8dd4c4692e28fbe52051d7599a4038ab5aae347712e6ff4f4d561')
+        current, receipt = source_repairs.effective_source(TASK, original)
+        self.assertEqual(receipt['correction_id'], 'procurement-date-and-section-extraction/v5')
+        funcs = lambda code: {n.name: ast.dump(n) for n in ast.parse(code).body if isinstance(n, ast.FunctionDef)}
+        previous, changed = funcs(historical), funcs(current)
+        for name in ['grade', 'population', 'numeric_score', 'summary_key', 'direction']:
+            self.assertEqual(previous[name], changed[name], name)
+        self.scope = {}
+        exec(current, self.scope)
+        self.scope['_PS_ROOT'] = self.root
+
+    def priority_table(self, label='高'):
+        return {'sheet': '数量差异', 'kind': 'qty', 'header_row': 1,
+                'rows': [{'row': 1, 'values': ['单号', '优先级']},
+                         {'row': 2, 'values': ['A', label]}],
+                'records': [{'id': 'A', 'row': 2}]}
+
+    def test_custom_priority_text_does_not_invent_p1_membership(self):
+        self.current_priority_scope()
+        detail = self.priority_table()
+        summary = {'sheet': '汇总', 'kind': 'summary', 'rows': [
+            {'row': 1, 'values': ['项目', 'P1', 'P2', 'P3', '跟踪']},
+            {'row': 2, 'values': ['数量差异', 0, 0, 0, 0]}]}
+        result = self.scope['summary_diagnostics'](
+            [detail, summary], self.records, self.metrics, self.numeric, self.truth)
+        self.assertEqual(result['unrecognized_numeric_rows'], [])
+        self.assertEqual(len(result['claims']), 4)
+        self.assertTrue(all(c['expected'] == '0' and c['matches'] for c in result['claims']))
+        self.assertEqual(detail['rows'][1]['values'][1], '高')
+        detail['rows'][1]['values'][1] = 'P1'
+        result = self.scope['summary_diagnostics'](
+            [detail, summary], self.records, self.metrics, self.numeric, self.truth)
+        self.assertEqual(result['claims'][0]['expected'], '1')
+        self.assertFalse(result['claims'][0]['matches'])
+
+    def test_custom_priority_keeps_unknown_numeric_claims_for_review(self):
+        self.current_priority_scope()
+        row = {'row': 3, 'values': ['未知总额', 666]}
+        result = self.scope['summary_diagnostics'](
+            [self.priority_table(), {'sheet': '汇总', 'kind': 'summary', 'rows': [row]}],
+            self.records, self.metrics, self.numeric, self.truth)
+        self.assertEqual(result['unrecognized_numeric_rows'], [{'sheet': '汇总', **row}])
+        self.assertEqual(result['claims'], [])
+
+    def test_custom_priority_does_not_resolve_duplicate_priority_columns(self):
+        self.current_priority_scope()
+        detail = self.priority_table()
+        detail['rows'][0]['values'].append('复核优先级')
+        detail['rows'][1]['values'].append('P1')
+        with self.assertRaisesRegex(self.scope['EvaluationError'], 'Ambiguous priority columns'):
+            self.scope['summary_diagnostics'](
+                [detail], self.records, self.metrics, self.numeric, self.truth)
 
 
 if __name__ == '__main__':
