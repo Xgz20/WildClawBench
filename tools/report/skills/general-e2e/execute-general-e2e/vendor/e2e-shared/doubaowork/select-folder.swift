@@ -239,37 +239,16 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         )
         try focusPathField(pathField, application: application)
 
-        let pasteboard = NSPasteboard.general
-        let savedItems = pasteboard.pasteboardItems?.map { item in
-            Dictionary(uniqueKeysWithValues: item.types.compactMap { type in
-                item.data(forType: type).map { (type, $0) }
-            })
-        } ?? []
-        defer {
-            pasteboard.clearContents()
-            let restored = savedItems.map { values in
-                let item = NSPasteboardItem()
-                for (type, data) in values { item.setData(data, forType: type) }
-                return item
-            }
-            if !restored.isEmpty { pasteboard.writeObjects(restored) }
+        try setAttribute(
+            pathField,
+            name: kAXValueAttribute,
+            value: folderPath as CFString,
+            action: "写入原生文件夹完整路径"
+        )
+        let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "原生路径值完整回读") {
+            return stringAttribute(pathField, kAXValueAttribute) == folderPath ? true : nil
         }
-        pasteboard.clearContents()
-        pasteboard.setString(folderPath, forType: .string)
-        try postShortcut(
-            processIdentifier: application.processIdentifier,
-            key: 0,
-            flags: [.maskCommand],
-            global: true
-        )
-        RunLoop.current.run(until: Date().addingTimeInterval(0.1))
-        try postShortcut(
-            processIdentifier: application.processIdentifier,
-            key: 9,
-            flags: [.maskCommand],
-            global: true
-        )
-        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        phase("PATH_VALUE_ASSIGNED")
 
         let currentRoot = AXUIElementCreateApplication(application.processIdentifier)
         let currentSheets = descendants(currentRoot, role: kAXSheetRole)
