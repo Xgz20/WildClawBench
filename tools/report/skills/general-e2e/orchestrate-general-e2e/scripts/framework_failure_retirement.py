@@ -28,7 +28,8 @@ def failure_kind(rt,root,state,task):
                 or (attempt/'semantic/semantic-component.json').exists() or not (attempt/'rule-component.json').exists()
                 or rt._read_json(attempt/'rule-audit.json').get('status')!='completed'):
             raise ValueError('QUOTE_LAYOUT_NATIVE_FAILURE_INVALID')
-        sterilization_quote_layout.validate_blocker(attempt,m,contract,rt._read_json(attempt/'scoring-infrastructure-blocker.json'))
+        blocker=sterilization_quote_layout.blocker_paths(attempt,m,contract)[0]
+        sterilization_quote_layout.validate_blocker(attempt,m,contract,rt._read_json(blocker))
         return sterilization_quote_layout.ERROR_KIND
     if contract.get('task_id')==public_snapshot_sidecar.TASK and (attempt/'rule-audit.json').exists():
         audit=rt._read_json(attempt/'rule-audit.json')
@@ -83,7 +84,9 @@ def locks(rt,root,task):
     if m.get('digests',{}).get('contract_sha256')==release_baseline_text.V4_CONTRACT:
         blocker=attempt/'scoring-infrastructure-blocker.json'
         if blocker.exists():paths.append(blocker)
-    if task['task_id']==sterilization_quote_layout.TASK:paths.append(attempt/'scoring-infrastructure-blocker.json')
+    if task['task_id']==sterilization_quote_layout.TASK:
+        m=rt._read_json(attempt/'attempt-manifest.json');contract=rt._read_json(attempt/m['paths']['contract'])
+        paths.extend(sterilization_quote_layout.blocker_paths(attempt,m,contract))
     if task['task_id']==native_writer_cleanup_failure.TASK:
         m=rt._read_json(attempt/'attempt-manifest.json');contract=rt._read_json(attempt/m['paths']['contract'])
         paths.extend(native_writer_cleanup_failure.evidence(rt,attempt,m,contract))
