@@ -50,6 +50,10 @@
     "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
       "snapshot": "tasks/02_Office_task_026_work_order_labor_reconciliation.md",
       "sha256": "a961efa58db227500e33ca324c9ad82a82e9c277354607261088323334527120"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
+      "snapshot": "tasks/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md",
+      "sha256": "a4910132cafad1a8beaaec32f00589d6f7b8a59d3a7d18db5a9cebb82dcbcdc7"
     }
   },
   "excluded_paths": [

@@ -70,6 +70,10 @@
     "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
       "snapshot": "tasks/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md",
       "sha256": "c2805e46d0dc0a7e884e85d81351b926436753d7c7cbc69c31f865a2450c988d"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
+      "snapshot": "tasks/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md",
+      "sha256": "a4910132cafad1a8beaaec32f00589d6f7b8a59d3a7d18db5a9cebb82dcbcdc7"
     }
   },
   "excluded_paths": [

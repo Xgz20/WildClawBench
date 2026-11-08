@@ -138,9 +138,24 @@ def same(a,b,field='',row=None):
     return token(a)==token(b)
 
 def read_candidate(path,headers):
-    wb=load_workbook(path,data_only=True,read_only=True);tables={};evidence={};unrecognized=[];formula_checks=[];source_index_locations={}
+    wb=load_workbook(path,data_only=True,read_only=True);tables={};evidence={};unrecognized=[];formula_checks=[];source_index_locations={};supplementary=[]
     try:
         for ws in wb.worksheets:
+            if ws.title=='差异汇总':
+                aux_headers={norm(v) for v in ['差异类别','收款账户','原币','目标币','数量（批次/记录）','差额合计','跨期到账金额','涉及编号','补证建议','证据位置']}
+                aux_rows=[(rn,list(values)) for rn,values in enumerate(ws.iter_rows(values_only=True),1)]
+                header_matches=[]
+                for rn,values in aux_rows:
+                    labels=[norm(v) for v in values]
+                    while labels and labels[-1]=='':labels.pop()
+                    if len(labels)==len(aux_headers) and set(labels)==aux_headers:header_matches.append(rn)
+                if len(header_matches)==1:
+                    hr_aux=header_matches[0]
+                    supplementary.append({'sheet':ws.title,'sheet_state':ws.sheet_state,'header_row':hr_aux,
+                        'headers':aux_rows[hr_aux-1][1],'max_row':ws.max_row,'max_column':ws.max_column,
+                        'rows':[{'row':rn,'values':values} for rn,values in aux_rows if any(v is not None for v in values)]})
+                    formula_checks.extend((ws.title,rn,i+1) for rn,values in aux_rows for i,v in enumerate(values) if v is None)
+                    continue
             name=ALIASES.get(ws.title,ws.title)
             expected=set(headers[name]) if name in headers else set();hr=None;cols={};data=[];raw=[];plausible=False
             for rn,values in enumerate(ws.iter_rows(values_only=True),1):
@@ -175,6 +190,11 @@ def read_candidate(path,headers):
             tables.setdefault(name,[]).extend(data)
             if name in ('分析说明','验收记录','分类汇总'):evidence.setdefault(name,[]).extend(raw)
     finally:wb.close()
+    if supplementary:
+        core_summary=tables.get('分类汇总',[])
+        if not core_summary or not all(set(headers.get('分类汇总',[]))<=set(row) for row in core_summary):
+            unrecognized.extend(item['sheet'] for item in supplementary)
+        else:evidence['补充差异汇总']=supplementary
     if unrecognized:raise EvaluationReviewRequired('候选结构可能等价但无法安全识别，需按公开规则人工复核：'+','.join(unrecognized))
     # 来源索引引用是公开允许的等价表示。只展开其来源列，不执行动态表达式。
     for tab,rows in tables.items():
@@ -310,7 +330,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         if len(text)>18000:
             wrapper={'source':wrapper['source'],'candidate':str(candidate),'complete':False,'truncated':True,'reason':'超过单文件18000字符作者预算；需回读原工作簿，未补齐前该内容不可判定','preview':text[:15000]};text=json.dumps(wrapper,ensure_ascii=False,default=str,separators=(',',':'))
         (ed/name).write_text(text,encoding='utf-8')
-    evidence_file('分析与分类.json',{'分析说明':ev.get('分析说明',[]),'分类汇总':ev.get('分类汇总',[]),'coverage':diagnostics.get('coverage',{}),'candidate_error':error})
+    evidence_file('分析与分类.json',{'补充视图存在':bool(ev.get('补充差异汇总')),'分析说明':ev.get('分析说明',[]),'分类汇总':ev.get('分类汇总',[]),'补充差异汇总':ev.get('补充差异汇总',[]),'coverage':diagnostics.get('coverage',{}),'candidate_error':error})
     evidence_file('验收与缺口.json',{'验收记录':ev.get('验收记录',[]),'待补凭证':[r for r in actual.get('待补凭证',[])][:35],'待补凭证总行数':len(actual.get('待补凭证',[])),'缺口清单仅前35行':len(actual.get('待补凭证',[]))>35,'必须结合完整原件':'差异分析涉及其他缺口时必须补读对应行，不能把抽取未展示当作未交付','transcript_available':bool(transcript)})
     evidence_file('规则与参考摘要.json',{'rule_scores':{k:result[k] for k in WEIGHTS},'ratios':diagnostics['ratios'],'counts':diagnostics.get('counts',{}),'requires_review':diagnostics['requires_review'],'expected_summary':expected['分类汇总'],'expected_issue_counts':dict(Counter(r['问题类型'] for r in expected['待补凭证'])),'score_status':'仅规则组；C1b/C7无真实轨迹不可判定，不得合成正式总分'})
     return result

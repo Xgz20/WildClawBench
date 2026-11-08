@@ -1,6 +1,7 @@
 """Close a completed native judge's declared unresolved review without a score."""
 import hashlib
 import stat
+import re
 
 ERROR_KIND = 'native-declared-rule-review-unresolved/v1'
 LOCK_KEYS = ('candidate_original_sha256', 'contract_sha256', 'task_sha256', 'private_gt_workspace_sha256',
@@ -16,14 +17,23 @@ def _declared_source_review(rt,attempt,manifest,audit):
     if (manifest.get('identity',{}).get('task_id')!=SOURCE_TASK
         or manifest.get('runtime',{}).get('rule_review_profile')!='escrow-status-equivalence-review/v6'
         or manifest.get('digests',{}).get('contract_sha256')!=SOURCE_CONTRACT
-        or audit.get('status')!='completed' or audit.get('reviewed_context_count')!=2276):return None
+        or audit.get('status')!='completed'):return None
+    request_contexts=rt._read_json(attempt/'rule-review/request.json').get('contexts')
+    if (not isinstance(request_contexts,list) or not request_contexts
+        or audit.get('reviewed_context_count')!=len(request_contexts)):return None
     contract=rt._read_json(attempt/manifest['paths']['contract'])
     if hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()!=SOURCE_SHA:return None
     worker=rt._read_json(attempt/'worker/result.json');request=rt._read_json(attempt/'worker/request.json')
     failed=rt._read_json(attempt/'rule-audit.json');error=worker.get('error') or {}
-    if (audit.get('status')!='completed' or audit.get('reviewed_context_count')!=2276
+    error_sha=hashlib.sha256(error.get('message','').encode()).hexdigest()
+    legacy=(len(request_contexts)==2276 and error_sha==SOURCE_ERROR)
+    prefix='评测不可判定，禁止形成正式综合分：'
+    parts=error.get('message','').removeprefix(prefix).split('；')
+    ellipsis=(error.get('message','').startswith(prefix) and parts
+        and all(re.fullmatch(r'无法安全识别来源等价表示：…另[1-9][0-9]*处（见来源索引）',part) for part in parts))
+    if (audit.get('status')!='completed'
         or audit.get('unresolved_context_ids')!=[] or worker.get('ok') is not False or worker.get('result') is not None
-        or error.get('type')!='RuntimeError' or hashlib.sha256(error.get('message','').encode()).hexdigest()!=SOURCE_ERROR
+        or error.get('type')!='RuntimeError' or not (legacy or ellipsis)
         or hashlib.sha256(request.get('automated_checks','').encode()).hexdigest()!=SOURCE_WORKER
         or failed.get('status')!='failed' or failed.get('identity')!=manifest['identity']
         or failed.get('worker',{}).get('request_sha256')!=rt._sha256_file(attempt/'worker/request.json')
@@ -53,12 +63,15 @@ def _declared_source_review(rt,attempt,manifest,audit):
     walk(workspace)
     if digest.hexdigest()!=manifest['digests']['runtime_initial_sha256']:
         raise ValueError('DECLARED_SOURCE_REVIEW_BUSINESS_RUNTIME_DRIFT')
-    attention=rt._read_json(attempt/'scoring-attention-report.json')
-    if (attention.get('task_id')!=SOURCE_TASK or attention.get('scoring_attempt_id')!=manifest['identity']['scoring_attempt_id']
-        or attention.get('formal_score_published') is not False or attention.get('candidate_original_modified') is not False):
-        raise ValueError('DECLARED_SOURCE_REVIEW_NATIVE_REPORT_INVALID')
-    return {'profile':'declared-source-locator-ambiguity/v1','worker_source_sha256':SOURCE_WORKER,
-            'worker_error_sha256':SOURCE_ERROR,'source_reference_ambiguity_count':3,
+    if legacy:
+        attention=rt._read_json(attempt/'scoring-attention-report.json')
+        if (attention.get('task_id')!=SOURCE_TASK or attention.get('scoring_attempt_id')!=manifest['identity']['scoring_attempt_id']
+            or attention.get('formal_score_published') is not False or attention.get('candidate_original_modified') is not False):
+            raise ValueError('DECLARED_SOURCE_REVIEW_NATIVE_REPORT_INVALID')
+    return {'profile':'declared-source-locator-ambiguity/v1' if legacy else 'ellipsis-source-locator-ambiguity/v1',
+            **({} if legacy else {'record_origin':'deterministic controller proof of the bound original worker error; not a native agent message or score'}),
+            'worker_source_sha256':SOURCE_WORKER,
+            'worker_error_sha256':SOURCE_ERROR if legacy else error_sha,'source_reference_ambiguity_count':3 if legacy else len(parts),
             'business_runtime_unchanged_sha256':digest.hexdigest(),'original_runtime_drift_flag':failed['runtime_workspace']['drifted'],
             'declared_grader_output_files':output_locks}
 
@@ -128,7 +141,9 @@ def evidence(rt, root, state, task):
     paths = [attempt / 'attempt-manifest.json', root / task['prompt_path']]
     paths += [p for p in folder.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(folder).parts]
     if source_review:
-        paths += [attempt/name for name in ['rule-audit.json','rule-source-correction.json','scoring-attention-report.json']]
+        paths += [attempt/name for name in ['rule-audit.json','rule-source-correction.json']]
+        if source_review['profile']=='declared-source-locator-ambiguity/v1':
+            paths.append(attempt/'scoring-attention-report.json')
         paths += [p for p in (attempt/'worker').rglob('*') if p.is_file()]
         paths += [attempt/x['path'] for x in source_review['declared_grader_output_files']]
     locks = []

@@ -412,3 +412,47 @@ _PROFILES['0df6363a8bb5cc0f1f27fc30e6c62f02a84212e67cc43351eee5767ec6dc87c7'] = 
               '(_LocalExcelValueError,ZeroDivisionError,TypeError,OverflowError):return ev(n.args[1])\n'
               '                    finally:self._iferror_depth=previous_depth')],
  'current_source_sha256': 'e70fa8f963704f5f48d4957abb8986d0ecc6145d0fc8142e252dc7896dcad8de'}
+
+
+_PROFILES['07928b5aaf640eb0f55173fbe1c3d2fec0530b5b7011e74295f526d08bd1fedd'] = {'task_id': '03_Data_Analysis_task_009_cross_currency_receipts_bank_fees',
+ 'profile': 'cross-currency-supplemental-difference-view/v1',
+ 'reason': '仅在完整核心分类汇总独立识别后保留精确十列差异汇总为辅助视图；所有原值/行号/列/工作表状态留给原Rubric裁判，不替代核心表、不补自动分。缺核心、未知列及未缓存公式仍复核，六表数值算法/分母/权重不变。',
+ 'changes': [('wb=load_workbook(path,data_only=True,read_only=True);tables={};evidence={};unrecognized=[];formula_checks=[];source_index_locations={}',
+              'wb=load_workbook(path,data_only=True,read_only=True);tables={};evidence={};unrecognized=[];formula_checks=[];source_index_locations={};supplementary=[]'),
+             ('            name=ALIASES.get(ws.title,ws.title)',
+              "            if ws.title=='差异汇总':\n"
+              '                aux_headers={norm(v) for v in '
+              "['差异类别','收款账户','原币','目标币','数量（批次/记录）','差额合计','跨期到账金额','涉及编号','补证建议','证据位置']}\n"
+              '                aux_rows=[(rn,list(values)) for rn,values in '
+              'enumerate(ws.iter_rows(values_only=True),1)]\n'
+              '                header_matches=[]\n'
+              '                for rn,values in aux_rows:\n'
+              '                    labels=[norm(v) for v in values]\n'
+              "                    while labels and labels[-1]=='':labels.pop()\n"
+              '                    if len(labels)==len(aux_headers) and '
+              'set(labels)==aux_headers:header_matches.append(rn)\n'
+              '                if len(header_matches)==1:\n'
+              '                    hr_aux=header_matches[0]\n'
+              '                    '
+              "supplementary.append({'sheet':ws.title,'sheet_state':ws.sheet_state,'header_row':hr_aux,\n"
+              '                        '
+              "'headers':aux_rows[hr_aux-1][1],'max_row':ws.max_row,'max_column':ws.max_column,\n"
+              "                        'rows':[{'row':rn,'values':values} for rn,values in aux_rows if any(v "
+              'is not None for v in values)]})\n'
+              '                    formula_checks.extend((ws.title,rn,i+1) for rn,values in aux_rows for i,v '
+              'in enumerate(values) if v is None)\n'
+              '                    continue\n'
+              '            name=ALIASES.get(ws.title,ws.title)'),
+             ('    if unrecognized:raise '
+              "EvaluationReviewRequired('候选结构可能等价但无法安全识别，需按公开规则人工复核：'+','.join(unrecognized))",
+              '    if supplementary:\n'
+              "        core_summary=tables.get('分类汇总',[])\n"
+              "        if not core_summary or not all(set(headers.get('分类汇总',[]))<=set(row) for row in "
+              'core_summary):\n'
+              "            unrecognized.extend(item['sheet'] for item in supplementary)\n"
+              "        else:evidence['补充差异汇总']=supplementary\n"
+              '    if unrecognized:raise '
+              "EvaluationReviewRequired('候选结构可能等价但无法安全识别，需按公开规则人工复核：'+','.join(unrecognized))"),
+             ("evidence_file('分析与分类.json',{'分析说明':ev.get('分析说明',[]),'分类汇总':ev.get('分类汇总',[]),'coverage':diagnostics.get('coverage',{}),'candidate_error':error})",
+              "evidence_file('分析与分类.json',{'补充视图存在':bool(ev.get('补充差异汇总')),'分析说明':ev.get('分析说明',[]),'分类汇总':ev.get('分类汇总',[]),'补充差异汇总':ev.get('补充差异汇总',[]),'coverage':diagnostics.get('coverage',{}),'candidate_error':error})")],
+ 'current_source_sha256': '6fd36ee578f1c487d269b2944211c3cb31ca5102c0c16f0d385211c4062d6e6e'}
