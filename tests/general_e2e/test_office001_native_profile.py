@@ -64,5 +64,28 @@ class OfficeNativeProfileTests(unittest.TestCase):
     def test_unrelated_contract_never_discovers_a_native_runtime(self):
         self.assertIsNone(NATIVE.marker({'task_id':'other','automated_checks':''},'0'*64))
 
+    def test_cold_start_profile_pins_actual_source_and_preserves_old_profiles(self):
+        actual=Path(NATIVE.native_writer_runtime.__file__).parent/'native_writer/NativeDocxEditProbe.java'
+        self.assertEqual(NATIVE.sha(actual),NATIVE.JAVA_SOURCE_SHA_V3)
+        self.assertNotEqual(NATIVE.JAVA_SOURCE_SHA,NATIVE.JAVA_SOURCE_SHA_V3)
+        for profile,runner,java in [
+            (NATIVE.PROFILE,NATIVE.RUNTIME_SOURCE_SHA,NATIVE.JAVA_SOURCE_SHA),
+            (NATIVE.PROFILE_V2,NATIVE.RUNTIME_SOURCE_SHA_V2,NATIVE.JAVA_SOURCE_SHA),
+            (NATIVE.PROFILE_V3,NATIVE.RUNTIME_SOURCE_SHA_V2,NATIVE.JAVA_SOURCE_SHA_V3),
+        ]:
+            manifest=self.manifest();frozen=manifest['runtime']['office001_native_profile']
+            frozen['profile']=profile
+            frozen['configuration']['runner']['sha256']=runner
+            frozen['configuration']['java_source']['sha256']=java
+            frozen['configuration_content_sha256']=NATIVE.canonical(frozen['configuration'])
+            fixed,receipt=RUNTIME._effective_rule_source(manifest,self.source())
+            self.assertEqual(receipt['correction_id'],profile)
+            if profile!=NATIVE.PROFILE:
+                self.assertIn('_ge2e_shutdown_valid(receipt',fixed)
+            frozen['configuration']['java_source']['sha256']=(NATIVE.JAVA_SOURCE_SHA if profile==NATIVE.PROFILE_V3 else NATIVE.JAVA_SOURCE_SHA_V3)
+            frozen['configuration_content_sha256']=NATIVE.canonical(frozen['configuration'])
+            with self.assertRaises(RUNTIME.ScoringRuntimeError):
+                RUNTIME._effective_rule_source(manifest,self.source())
+
 
 if __name__=='__main__':unittest.main()

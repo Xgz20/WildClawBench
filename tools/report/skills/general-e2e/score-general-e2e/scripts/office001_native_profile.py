@@ -14,6 +14,7 @@ import native_writer_runtime
 
 PROFILE='office001-validated-native-writer-api/v1'
 PROFILE_V2='office001-validated-native-writer-api/v2'
+PROFILE_V3='office001-validated-native-writer-api/v3'
 TASK='02_Office_task_001_multi_source_project_report'
 CONTRACT_SHA='f6386914c4ab0208f66feb75dbce2a61eccf7a384c289cc3a138ce61b048d11e'
 SOURCE_SHA='98d2e59396ce97e43333ce6b164cd1c0073ff023f70e39a3ff90d0272716cec1'
@@ -21,6 +22,7 @@ EVIDENCE='evaluator_evidence/office001-native'
 RUNTIME_SOURCE_SHA='ad10b76ad2ba4cdc9b5f295b01b05c86b51e24f04ba0578a542fcf4162ec906d'
 RUNTIME_SOURCE_SHA_V2='86b2af4182f0a974b94df84dd099e2e3c485e5c0eb66c5b2533654e3e0114698'
 JAVA_SOURCE_SHA='0fad706f4fdd35940659c311d36e5e784a958c08bd435faa1d88623af28b7348'
+JAVA_SOURCE_SHA_V3='4946e7f9d7caf37264030c7eb79387a551802eb25ecda19c116f3eafdcce0bc4'
 
 
 from source_identities import accepted_contracts
@@ -47,7 +49,7 @@ def marker(contract,contract_sha256):
     configuration=json.loads(Path(record['configuration']['path']).read_text(encoding='utf-8'))
     native_writer_runtime.validate_configuration(configuration)
     source=Path(native_writer_runtime.__file__).parent/'native_writer/NativeDocxEditProbe.java'
-    if (configuration['java_source']['sha256']!=sha(source) or sha(source)!=JAVA_SOURCE_SHA
+    if (configuration['java_source']['sha256']!=sha(source) or sha(source)!=JAVA_SOURCE_SHA_V3
             or configuration['runner']['sha256']!=RUNTIME_SOURCE_SHA_V2
             or configuration['jar']['sha256']!=native_writer_runtime.JAR_SHA256):
         raise ValueError('OFFICE001_NATIVE_IMPLEMENTATION_MISMATCH')
@@ -57,7 +59,7 @@ def marker(contract,contract_sha256):
             or smoke.get('native_facts',{}).get('body_persisted')!='true'
             or int(smoke.get('native_facts',{}).get('table_edits_persisted','0'))<2):
         raise ValueError('OFFICE001_NATIVE_API_SMOKE_INVALID')
-    return {'profile':PROFILE_V2,'contract_sha256':contract_sha256,'source_sha256':SOURCE_SHA,
+    return {'profile':PROFILE_V3,'contract_sha256':contract_sha256,'source_sha256':SOURCE_SHA,
             'configuration_file':record['configuration'],'configuration':configuration,
             'configuration_content_sha256':canonical(configuration),'launcher':record['launcher'],
             'validation':record['validation'],'evidence_directory':EVIDENCE}
@@ -68,7 +70,7 @@ def policy(manifest,source=None):
     if frozen is None:return None
     if (not isinstance(frozen,dict) or manifest.get('identity',{}).get('task_id')!=TASK
             or manifest.get('digests',{}).get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
-            or frozen.get('profile') not in {PROFILE,PROFILE_V2} or frozen.get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
+            or frozen.get('profile') not in {PROFILE,PROFILE_V2,PROFILE_V3} or frozen.get('contract_sha256') not in accepted_contracts(CONTRACT_SHA)
             or frozen.get('source_sha256')!=SOURCE_SHA or frozen.get('evidence_directory')!=EVIDENCE
             or not isinstance(frozen.get('configuration'),dict)
             or frozen.get('configuration_content_sha256')!=canonical(frozen.get('configuration'))
@@ -76,8 +78,9 @@ def policy(manifest,source=None):
         raise ValueError('OFFICE001_NATIVE_FROZEN_PROFILE_MISMATCH')
     config=frozen['configuration']
     expected_runner=RUNTIME_SOURCE_SHA if frozen['profile']==PROFILE else RUNTIME_SOURCE_SHA_V2
+    expected_java=JAVA_SOURCE_SHA_V3 if frozen['profile']==PROFILE_V3 else JAVA_SOURCE_SHA
     if (config.get('runner',{}).get('sha256')!=expected_runner
-            or config.get('java_source',{}).get('sha256')!=JAVA_SOURCE_SHA
+            or config.get('java_source',{}).get('sha256')!=expected_java
             or config.get('jar',{}).get('sha256')!=native_writer_runtime.JAR_SHA256):
         raise ValueError('OFFICE001_NATIVE_FROZEN_IMPLEMENTATION_MISMATCH')
     return frozen
