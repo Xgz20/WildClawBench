@@ -1571,6 +1571,8 @@ def _remove_import_staging(staging: Path) -> None:
     if staging.is_symlink() or not staging.name.startswith(".") or ".pending-" not in staging.name:
         raise FlowError("IMPORT_STAGING_NOT_OWNED")
     for directory, dirs, files in os.walk(staging, followlinks=False):
+        if sys.platform == "darwin":
+            os.chflags(directory, Path(directory).stat().st_flags & ~stat.UF_IMMUTABLE, follow_symlinks=False)
         os.chmod(directory, Path(directory).stat().st_mode | stat.S_IWUSR | stat.S_IXUSR)
         dirs[:] = [name for name in dirs if not (Path(directory) / name).is_symlink()]
         for name in files:
@@ -1579,6 +1581,20 @@ def _remove_import_staging(staging: Path) -> None:
             if sys.platform == "darwin":
                 os.chflags(path, path.stat().st_flags & ~stat.UF_IMMUTABLE, follow_symlinks=False)
     shutil.rmtree(staging)
+
+
+def _seal_imported_directories(root: Path, *, include_root: bool) -> None:
+    if sys.platform != "darwin":
+        return
+    for directory, dirs, files in os.walk(root, topdown=False, followlinks=False):
+        path=Path(directory)
+        if path==root and not include_root:
+            continue
+        if path.is_symlink():
+            raise FlowError("IMPORTED_DIRECTORY_UNSAFE")
+        flags=path.stat().st_flags
+        if not flags & stat.UF_IMMUTABLE:
+            os.chflags(path, flags | stat.UF_IMMUTABLE, follow_symlinks=False)
 
 
 def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> None:
@@ -1747,7 +1763,9 @@ def import_return(args: argparse.Namespace) -> dict[str, Any]:
             )
             validate_contract(receipt, RECEIPT_SCHEMA)
             write_new_json(staging / "receipts/import-return-receipt.json", receipt)
+            _seal_imported_directories(staging, include_root=False)
             os.replace(staging, target)
+            _seal_imported_directories(target, include_root=True)
         except BaseException:
             if staging.exists():
                 _remove_import_staging(staging)

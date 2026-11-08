@@ -23,6 +23,22 @@ class ReturnOfficeProtectionTests(unittest.TestCase):
             finally:MODULE._remove_import_staging(stage)
             self.assertFalse(stage.exists())
 
+    def test_owned_import_directories_are_sealed_and_owned_staging_cleanup_can_unlock(self):
+        with tempfile.TemporaryDirectory() as d:
+            stage=Path(d).resolve()/'.fixture.pending-directory';stage.mkdir()
+            child=stage/'unit/evidence';child.mkdir(parents=True);(child/'payload.json').write_text('{}')
+            MODULE._seal_imported_directories(stage,include_root=False)
+            if hasattr(os,'chflags'):
+                self.assertTrue(child.stat().st_flags & stat.UF_IMMUTABLE)
+                self.assertFalse(stage.stat().st_flags & stat.UF_IMMUTABLE)
+            moved=stage.parent/'.fixture.pending-moved'
+            os.replace(stage,moved)
+            stage=moved
+            MODULE._seal_imported_directories(stage,include_root=True)
+            if hasattr(os,'chflags'):self.assertTrue(stage.stat().st_flags & stat.UF_IMMUTABLE)
+            MODULE._remove_import_staging(stage)
+            self.assertFalse(stage.exists())
+
     def test_cleanup_refuses_published_tree_and_never_unlocks_symlink_target(self):
         with tempfile.TemporaryDirectory() as d:
             root=Path(d);published=root/'published';published.mkdir();outside=published/'input.bin';outside.write_bytes(b'original')
