@@ -2,6 +2,12 @@
 import hashlib
 
 PROFILE='work-order-complete-evidence-budget/v1'
+SERVICE_PROFILE='service-report-complete-evidence-budget/v1'
+SERVICE_TASK='02_Office_task_012_service_channel_ticket_daily'
+SERVICE_CONTRACT='b440485348ee72c7ab58b6f212a05cbc16691d8e6ece9a286661f981fa13358a'
+SERVICE_SOURCE='64ac633a83d579fa4f099aca687c3aa1bde8477273e0e93ad31cf28b043a9956'
+SERVICE_OLD="    if any(len(v)>19000 for v in encoded.values()) or sum(map(len,encoded.values()))>74000:raise EvaluationError('Evidence would be truncated; evaluation invalid')"
+SERVICE_NEW="    if any(len(v.encode('utf-8'))>1048576 for v in encoded.values()) or sum(len(v.encode('utf-8')) for v in encoded.values())>16777216:raise EvaluationError('Evidence would be truncated; evaluation invalid')"
 PACK_PROFILE='communication-pack-complete-evidence-budget/v1'
 PACK_TASK='02_Office_task_018_targeted_repair_communication_pack'
 PACK_CONTRACT='303328777610178aab42baa175aa2e3c65dd0ccf868b5200d200a0597704e107'
@@ -22,6 +28,10 @@ SOURCE_SHA='fab46597d51de9869feeef882eaa222b9ced1ecc8809ad10c7a8fa1be697bfac'
 from source_identities import accepted_contracts
 
 def marker(contract,contract_sha):
+    if (contract.get('task_id')==SERVICE_TASK and contract_sha==SERVICE_CONTRACT
+            and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SERVICE_SOURCE):
+        return {'profile':SERVICE_PROFILE,'contract_sha256':SERVICE_CONTRACT,'source_sha256':SERVICE_SOURCE,
+                'file_utf8_bytes':1048576,'total_utf8_bytes':16777216,'truncation_allowed':False}
     extra=EXTRA.get(contract.get('task_id'))
     if extra and contract_sha==extra[0] and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==extra[1]:
         return {'profile':EXTRA_PROFILE,'contract_sha256':extra[0],'source_sha256':extra[1],'total_utf8_bytes':16777216,'truncation_allowed':False,'original_total_chars':extra[3]}
@@ -41,6 +51,15 @@ def effective_source(manifest,original,current,prior):
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest['identity']['task_id'],'automated_checks':original},manifest['digests']['contract_sha256'])
     if expected is None or frozen!=expected:raise ValueError('WORK_ORDER_BUDGET_PROFILE_MISMATCH')
+    if frozen['profile']==SERVICE_PROFILE:
+        if current.count(SERVICE_OLD)!=1:raise ValueError('SERVICE_REPORT_EVIDENCE_BUDGET_SOURCE_MISMATCH')
+        effective=current.replace(SERVICE_OLD,SERVICE_NEW)
+        receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':SERVICE_PROFILE,
+            'task_id':SERVICE_TASK,'contract_sha256':SERVICE_CONTRACT,'original_source_sha256':SERVICE_SOURCE,
+            'effective_source_sha256':hashlib.sha256(effective.encode()).hexdigest(),'evidence_budget':expected,
+            'candidate_rewritten':False,'reason':'仅将完整JSON取证存储上限明确为单文件1MiB、合计16MiB UTF8字节；原报告30000字符门禁、文件名、分页、字段、序列化字节和安全检查全部保留，全部数值算法、语义标准及70/30权重不变。超限仍异常，不截断或补零。'}
+        if prior:receipt['prior_correction']=prior
+        return effective,receipt
     communication=frozen['profile']==PACK_PROFILE
     prd=frozen['profile']==PRD_PROFILE
     extra=frozen['profile']==EXTRA_PROFILE
