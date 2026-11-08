@@ -1777,6 +1777,60 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
                 fixture.initialize(now=self.t0)
         self.assertFalse(any(self.root.rglob("*.staging-*")))
 
+    def test_prepare_cleanup_failure_keeps_original_error_and_staging_path(self) -> None:
+        fixture = Fixture(self.root, task_ids=("task-one",))
+        with (
+            patch.object(ORCHESTRATOR, "_run_score_command", side_effect=ValueError("original admission error")),
+            patch.object(ORCHESTRATOR, "_remove_staging", side_effect=PermissionError("cleanup denied")),
+        ):
+            with self.assertRaisesRegex(ValueError, "original admission error") as caught:
+                fixture.initialize(now=self.t0)
+        remaining = list(self.root.rglob("*.staging-*"))
+        self.assertEqual(len(remaining), 1)
+        self.assertIn(str(remaining[0]), caught.exception.__notes__[0])
+        self.assertIn("cleanup denied", caught.exception.__notes__[0])
+
+    @unittest.skipUnless(hasattr(os, "chflags"), "requires native immutable flags")
+    def test_owned_immutable_cleanup_does_not_follow_external_symlink(self) -> None:
+        staging = self.root / "owned.staging-test"
+        staging.mkdir()
+        source = self.root / "source.xlsx"
+        source.write_bytes(b"preserved source")
+        source.chmod(0o444)
+        os.chflags(source, stat.UF_IMMUTABLE)
+        try:
+            protected = staging / "candidate.xlsx"
+            protected.write_bytes(b"owned candidate copy")
+            protected.chmod(0o444)
+            os.chflags(protected, stat.UF_IMMUTABLE)
+            (staging / "external").symlink_to(source)
+            (staging / "external-directory").symlink_to(self.root, target_is_directory=True)
+            staging.chmod(0o500)
+            before = source.stat()
+            ORCHESTRATOR._remove_staging(staging)
+            self.assertFalse(staging.exists())
+            self.assertEqual(source.read_bytes(), b"preserved source")
+            self.assertEqual(source.stat().st_flags, before.st_flags)
+            self.assertEqual(source.stat().st_mode, before.st_mode)
+        finally:
+            os.chflags(source, 0)
+
+    @unittest.skipUnless(hasattr(os, "chflags"), "requires native immutable flags")
+    def test_owned_cleanup_preserves_immutable_hardlink_source(self) -> None:
+        staging = self.root / "owned.staging-test"
+        staging.mkdir()
+        source = self.root / "source.xlsx"
+        source.write_bytes(b"preserved source")
+        os.link(source, staging / "linked.xlsx")
+        os.chflags(source, stat.UF_IMMUTABLE)
+        try:
+            with self.assertRaisesRegex(OSError, "STAGING_HARDLINK_PROTECTION_PRESERVED"):
+                ORCHESTRATOR._remove_staging(staging)
+            self.assertTrue(source.stat().st_flags & stat.UF_IMMUTABLE)
+            self.assertEqual(source.read_bytes(), b"preserved source")
+        finally:
+            os.chflags(source, 0)
+
     def test_rescore_orchestration_uses_new_attempt_and_preserves_source(self) -> None:
         fixture = Fixture(
             self.root / "source",

@@ -416,10 +416,37 @@ def _run_score_command(
 
 def _remove_staging(path: Path) -> None:
     # Only unpublished, controller-owned staging trees reach this function.
-    # Candidate directories inside them are deliberately read-only.
-    for directory, _children, _files in os.walk(path, followlinks=False):
-        os.chmod(directory, stat.S_IMODE(os.stat(directory).st_mode) | 0o700)
+    # Candidate copies can be read-only and UF_IMMUTABLE. Never follow links
+    # or change flags on a hard-linked source outside this owned tree.
+    def make_removable(entry: Path) -> None:
+        metadata = entry.lstat()
+        if stat.S_ISLNK(metadata.st_mode):
+            return
+        immutable = getattr(stat, "UF_IMMUTABLE", 0)
+        flags = getattr(metadata, "st_flags", 0)
+        if flags & immutable:
+            if stat.S_ISREG(metadata.st_mode) and metadata.st_nlink != 1:
+                raise OSError(f"STAGING_HARDLINK_PROTECTION_PRESERVED: {entry}")
+            os.chflags(entry, flags & ~immutable, follow_symlinks=False)
+        if stat.S_ISDIR(metadata.st_mode):
+            entry.chmod(stat.S_IMODE(metadata.st_mode) | 0o700)
+            with os.scandir(entry) as children:
+                for child in children:
+                    make_removable(Path(child.path))
+
+    if path.is_symlink():
+        raise OSError(f"STAGING_ROOT_SYMLINK_REJECTED: {path}")
+    make_removable(path)
     shutil.rmtree(path)
+
+
+def _rollback_staging(path: Path, original_error: BaseException) -> None:
+    if path.exists():
+        try:
+            _remove_staging(path)
+        except Exception as cleanup_error:
+            # Retain the original admission error and the exact recovery path.
+            original_error.add_note(f"STAGING_CLEANUP_FAILED: {path}: {cleanup_error}")
 
 
 def _execution_record_map(values: Sequence[str]) -> dict[str, Path]:
@@ -1201,9 +1228,8 @@ def initialize(
         state["queue_digest"] = _queue_digest(state)
         _write_new_json(staging / "orchestration-state.json", state)
         os.replace(staging, final_root)
-    except BaseException:
-        if staging.exists():
-            _remove_staging(staging)
+    except BaseException as error:
+        _rollback_staging(staging, error)
         raise
     return status(final_root, now=created)
 
@@ -1476,9 +1502,8 @@ def initialize_rescore(
         state["queue_digest"] = _queue_digest(state)
         _write_new_json(staging / "orchestration-state.json", state)
         os.replace(staging, final_root)
-    except BaseException:
-        if staging.exists():
-            _remove_staging(staging)
+    except BaseException as error:
+        _rollback_staging(staging, error)
         raise
     return status(final_root, now=created)
 
