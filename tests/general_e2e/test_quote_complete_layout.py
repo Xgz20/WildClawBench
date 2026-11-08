@@ -2,6 +2,8 @@ from copy import deepcopy
 from pathlib import Path
 import hashlib
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 import openpyxl
@@ -11,6 +13,15 @@ from tests.general_e2e.test_local_scoring_runtime import RUNTIME,REPO_ROOT
 import sterilization_quote_complete_layout as P
 
 class QuoteCompleteLayoutTests(unittest.TestCase):
+    def test_orchestration_verifier_copy_imports_in_isolation(self):
+        scripts=REPO_ROOT/'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts'
+        score=REPO_ROOT/'tools/report/skills/general-e2e/score-general-e2e/scripts'
+        for name in ['sterilization_quote_layout.py','sterilization_quote_complete_layout.py']:
+            self.assertEqual((scripts/name).read_bytes(),(score/name).read_bytes())
+        code="import sys;from pathlib import Path;sys.path.insert(0,sys.argv[1]);import sterilization_quote_layout as p;import sterilization_quote_complete_layout as c;assert Path(p.__file__).parent==Path(sys.argv[1]);assert callable(p.blocker_paths);assert c.PROFILE.endswith('/v3')"
+        result=subprocess.run([sys.executable,'-I','-c',code,str(scripts)],capture_output=True,text=True)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def setUp(self):
         _,sections,_=_parse_task_source(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{P.TASK}.md')
         self.source=_strip_codeblock(sections['Automated Checks'])

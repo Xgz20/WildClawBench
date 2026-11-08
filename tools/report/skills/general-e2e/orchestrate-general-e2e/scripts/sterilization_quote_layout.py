@@ -16,6 +16,9 @@ HEADINGS={'Est. Total incl. goods (USD)':'grand','Estimated Delivery (from order
 def normalized(value):return re.sub(r'[\s\W_]+','',unicodedata.normalize('NFKC',str(value or '')).lower())
 
 def marker(contract,contract_sha,dataset):
+    import sterilization_quote_complete_layout
+    complete=sterilization_quote_complete_layout.marker(contract,contract_sha,dataset)
+    if complete is not None:return complete
     if (contract.get('task_id')==TASK and contract_sha==CONTRACT_SHA
             and {k:dataset.get(k) for k in DATASET}==DATASET
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE_SHA):
@@ -24,6 +27,10 @@ def marker(contract,contract_sha,dataset):
     return sterilization_quote_domain.marker(contract,contract_sha,dataset)
 
 def effective_source(manifest,original,current,prior):
+    import sterilization_quote_complete_layout
+    complete=manifest.get('runtime',{}).get('sterilization_quote_layout_profile')
+    if (complete or {}).get('profile')==sterilization_quote_complete_layout.PROFILE:
+        return sterilization_quote_complete_layout.effective_source(manifest,original,current,prior)
     import sterilization_quote_domain
     frozen=manifest.get('runtime',{}).get('sterilization_quote_layout_profile')
     if (frozen or {}).get('profile')==sterilization_quote_domain.PROFILE:return sterilization_quote_domain.effective_source(manifest,original,current,prior)
@@ -42,6 +49,9 @@ def effective_source(manifest,original,current,prior):
     return effective,receipt
 
 def validate_blocker(attempt,manifest,contract,blocker):
+    import sterilization_quote_complete_layout
+    if sterilization_quote_complete_layout.marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is not None:
+        return sterilization_quote_complete_layout.validate_blocker(attempt,manifest,contract,blocker)
     import sterilization_quote_domain
     if sterilization_quote_domain.marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is not None:
         return sterilization_quote_domain.validate_blocker(attempt,manifest,contract,blocker)
@@ -73,3 +83,9 @@ def validate_blocker(attempt,manifest,contract,blocker):
     finally:workbook.close()
     if any(blocker.get('actions',{}).get(k) is not False for k in ['rules_rerun','candidate_modified','rule_component_modified','semantic_response_imported','finalize_run','verify_score_passed']):raise ValueError('QUOTE_LAYOUT_BLOCKER_ACTIONS_INVALID')
     return True
+
+def blocker_paths(attempt,manifest,contract):
+    import sterilization_quote_complete_layout
+    if sterilization_quote_complete_layout.marker(contract,manifest['digests']['contract_sha256'],manifest['dataset']) is not None:
+        return sterilization_quote_complete_layout.blocker_files(attempt)
+    return [Path(attempt)/'scoring-infrastructure-blocker.json']
