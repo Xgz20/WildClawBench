@@ -3,7 +3,7 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
-`0.7.15` 回传导入在保留原字节、权限和 SHA 的同时保护新解包的 Office 及 opaque .bin 副本，防止宿主追加水印；失败仅解除本次未发布 staging 的保护，不解锁源证据或已发布导入。
+`0.7.16` 规范回传ZIP可通过 scripts/materialize_canonical_report_batch.py 独立还原已明确选择的报告输入；校验原索引的ZIP SHA/包ID/范围后逐包严格导入。旧宿主变体与原包不改，新导入副本在macOS同步保护DS_Store元数据，分数/业务字节和原哈希不变；不把漂移缓存冒称原件。
 
 
 `0.7.14` 研发包保留APFS克隆继承的只读保护，权限已符合冻结成员记录时不重复chmod；不解除源文件保护或改原件。

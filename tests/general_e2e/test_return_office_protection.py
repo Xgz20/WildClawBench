@@ -11,14 +11,14 @@ class ReturnOfficeProtectionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             stage=Path(d).resolve()/'.fixture.pending-test';stage.mkdir();data=b'PK\x03\x04canonical frozen bytes'
             members={};entries=[]
-            for name in ('unit/evidence/input.xlsx','scoring/trace/bindings/01-original.bin','unit/evidence/native.jsonl'):
+            for name in ('unit/evidence/input.xlsx','scoring/trace/bindings/01-original.bin','unit/evidence/.DS_Store','unit/evidence/native.jsonl'):
                 info=zipfile.ZipInfo(name);info.external_attr=(stat.S_IFREG|0o444)<<16
                 members[name]=(info,data);entries.append({'path':name,'kind':'file'})
             try:
                 MODULE.extract_verified_return({'members':members,'manifest':{'entries':entries},'manifest_bytes':b'{}','receipt_bytes':b'{}'},stage)
                 for name in members:
                     path=stage/name;self.assertEqual(path.read_bytes(),data);self.assertEqual(stat.S_IMODE(path.stat().st_mode),0o444)
-                    if hasattr(os,'chflags') and path.suffix in ('.xlsx','.bin'):
+                    if hasattr(os,'chflags') and (path.suffix in ('.xlsx','.bin') or path.name=='.DS_Store'):
                         self.assertTrue(path.stat().st_flags & stat.UF_IMMUTABLE)
             finally:MODULE._remove_import_staging(stage)
             self.assertFalse(stage.exists())

@@ -1559,7 +1559,7 @@ def load_import_index(batch_root: Path, batch_manifest: Mapping[str, Any]) -> di
 
 
 def _seal_imported_office_copy(path: Path, expected_bytes: bytes) -> None:
-    if sys.platform != "darwin" or path.suffix.lower() not in {".docx", ".xlsx", ".pptx", ".docm", ".xlsm", ".pptm", ".bin"}:
+    if sys.platform != "darwin" or (path.name != ".DS_Store" and path.suffix.lower() not in {".docx", ".xlsx", ".pptx", ".docm", ".xlsm", ".pptm", ".bin"}):
         return
     os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE, follow_symlinks=False)
     if path.read_bytes() != expected_bytes:
