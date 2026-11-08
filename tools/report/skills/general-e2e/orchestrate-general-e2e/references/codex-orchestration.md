@@ -145,6 +145,8 @@ python <skill-dir>/scripts/orchestrate_general_e2e.py record-wait \
 
 允许状态为 `RUNNING / POLL_TIMEOUT / NEEDS_ATTENTION / COMPLETED / FAILED / CANCELLED / INTERRUPTED`。`POLL_TIMEOUT` 只是本次等待没有变化；`NEEDS_ATTENTION` 应按 `INSPECT_THREAD` 读取原任务，必要时在同一线程继续，不得新建替代任务。
 
+批量`wait_threads`的即时快照可能只包含部分请求目标。每次保存请求的thread/host/cursor与原始响应，按thread ID比较请求与返回集合；省略的目标分别执行同一thread的单目标快照，沿用原cursor。仍未返回时读取原thread检查，不把缺项当作RUNNING、失败或完成，也不释放其槽位。只有实际返回且有明确cursor的状态才按原sequence登记；COMPLETED仍须完整SDK身份/终态验证与verify-score后补位。此回查不发送任何新Prompt，不创建替代线程，不切模型。
+
 `Selected model is at capacity. Please try a different model.` 属于当前 Codex 任务内部的容量重试，Codex 本身最多重试 5 次。看到该消息时保持原 thread/attempt 和槽位，继续 `WAIT_EXISTING_THREAD` 或按现有 cursor 检查；不得新建评分会话、切换模型或发送一条重复评分 Prompt。容量重试耗尽后的明确 FAILED 才按线程失败处理。
 
 候选本身没有产物或产物不符合题意不是控制器故障。评分线程必须按冻结 rubric 和已有证据完成评分；控制任务不得因此中止整个 orchestration、取消其它评分或重跑被测 Harness。只有评分项目、候选绑定、证据索引、Skill 身份等基础设施不可信时，才进入评测异常/未评分路径。
