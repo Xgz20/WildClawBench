@@ -46,4 +46,24 @@ class ProcurementExplicitLabelsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'PROFILE_MISMATCH'):
             P.effective_source(self.manifest,self.source,base+'\n',prior)
 
+    def test_historical_v1_and_current_v2_keep_separate_exact_base_sources(self):
+        legacy=deepcopy(self.manifest)
+        legacy['runtime']['shared_rule_source_repair']=RUNTIME.shared_source_repairs.marker(
+            self.contract,profile='procurement-date-and-section-extraction/v4')
+        old_base,old_prior=RUNTIME._effective_rule_source(legacy,self.source)
+        self.assertEqual(hashlib.sha256(old_base.encode()).hexdigest(),P.LEGACY_BASE)
+        legacy['runtime']['procurement_explicit_labels_profile']=P.marker(
+            self.contract,P.CONTRACT,profile=P.LEGACY_PROFILE)
+        old_fixed,old_receipt=RUNTIME._effective_rule_source(legacy,self.source)
+        self.assertEqual(old_fixed,old_base+P.BRIDGE)
+        self.assertEqual(old_receipt['correction_id'],P.LEGACY_PROFILE)
+        self.assertEqual(old_receipt['prior_correction'],old_prior)
+        current_base,current_prior=RUNTIME._effective_rule_source(self.manifest,self.source)
+        with self.assertRaisesRegex(ValueError,'PROFILE_MISMATCH'):
+            P.effective_source(legacy,self.source,current_base,current_prior)
+        current=deepcopy(self.manifest)
+        current['runtime']['procurement_explicit_labels_profile']=P.marker(self.contract,P.CONTRACT)
+        with self.assertRaisesRegex(ValueError,'PROFILE_MISMATCH'):
+            P.effective_source(current,self.source,old_base,old_prior)
+
 if __name__=='__main__':unittest.main()
