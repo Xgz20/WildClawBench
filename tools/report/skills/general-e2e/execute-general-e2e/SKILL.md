@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.77` 同步原生图片源HTTP567安全拦截的显式缺失证据回放；只影响采集和离线核验，既有执行/队列/发送保持原发行。
+
 `0.14.76` 同步环球网web.fetch原生图片来源准入：绑定同一SDK调用的HTTPS官网页面与原image_link_list，仅接收已核验CDN目录；不变更已冻结在途队列或发送语义。
 
 `0.14.75` 同步金融搜索原生图片标识的证据解析：仅从同一SDK结果的唯一reference_id/uri原文对应关系取得受限HTTPS图片，不拼接来源。既有在途执行保持原发行，不迁移队列或重发Prompt。

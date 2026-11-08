@@ -3,7 +3,7 @@ import { moaProfileForVersion } from './runtime-moa.mjs';
 import { normalizeRuntimeMessages } from './runtime-messages.mjs';
 import { normalizeNativeToolEvents } from './runtime-tools.mjs';
 import { verifyNativeMainAssignment } from './bound-evidence.mjs';
-import { verifyMoaSdkProtocol, countMoaSdkTools } from './moa-sdk-protocol.mjs';
+import { verifyMoaSdkProtocol, countMoaSdkTools, verifyMoaUnavailableAttachment } from './moa-sdk-protocol.mjs';
 import { readFile, lstat } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { dirname, resolve, sep } from 'node:path';
@@ -107,6 +107,8 @@ export async function recountArchivedTools({stateFile, traceIndex}) {
       &&item.native_image_reference===expected.native_image_reference
       &&JSON.stringify(item.resolution??null)===JSON.stringify(expected.resolution??null),'SDK_MEDIA_BINDING');
     const bytes=await bound(item.path);ensure(hash(bytes)===item.sha256&&bytes.length===item.size,'SDK_MEDIA_DRIFT');
+    if(item.status==='unavailable')verifyMoaUnavailableAttachment(item,expected,bytes);
+    else ensure(item.status===undefined,'SDK_MEDIA_STATUS_UNSUPPORTED');
   }
   return countMoaSdkTools(protocol,transcript,index);
  }

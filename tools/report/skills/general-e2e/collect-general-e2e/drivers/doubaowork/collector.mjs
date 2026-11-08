@@ -49,6 +49,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     if (!raw.some(row => row.path === item.path)) raw.push(await write(item.path, item.bytes));
     const { bytes, ...metadata } = item; sdkMedia.push(metadata);
   }
+  const sdkUnavailableMedia = sdkMedia.filter(item => item.status === 'unavailable');
   if (nativeSdkProtocol) {
     const proof = { ...nativeSdkProtocol, attachments: sdkMedia };
     raw.push(await write("raw/native-moa-sdk-protocol.json", json(proof)));
@@ -98,6 +99,8 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
         cancellation,
         native_failure: failure,
         recovered_send_acknowledgement: recoveryAcknowledgement,
+        native_sdk_media_unavailable: sdkUnavailableMedia.map(item => ({ call_id: item.call_id, image_index: item.image_index,
+          reason: item.reason, http_status: item.http_response.status, path: item.path, sha256: item.sha256 })),
         tool_trace_scope: nativeTools?.scope ?? null, tool_trace_status: nativeTools?.status ?? "partial" } },
   };
   const events = [], calls = new Map();
@@ -138,7 +141,10 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
       call.result_sequence = events.length;
       const media = sdkMedia.filter(item => item.call_id === e.call_id);
       add("tool_result", null, null, ref, { ...sourceMetadata,
-        ...(media.length ? { native: { ...(sourceMetadata.native || {}), image_attachments: media } } : {}),
+        ...(media.length ? { native: { ...(sourceMetadata.native || {}),
+          image_attachments: media.filter(item => item.status !== 'unavailable'),
+          ...(media.some(item => item.status === 'unavailable')
+            ? { unavailable_image_attachments: media.filter(item => item.status === 'unavailable') } : {}) } } : {}),
         tool: { call_id: e.call_id, name: events[call.call_sequence].tool.name, arguments: null, result: e.content, status: "unknown" } });
     } else if (e.kind === "assistant_message" && e.content !== native.final_text) add("assistant_message", "assistant", e.content, ref);
   }
@@ -147,8 +153,10 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
   const index = { schema_id: "urn:wildclawbench:schema:general-e2e:trace-index:v2", schema_version: 2, identity,
     adapter: { id: ADAPTER, version: VERSION, source: "Bound native IM messages and explicit session trajectory" }, session,
     transcript: { ...transcript, event_count: events.length }, raw_trace: raw, binding_evidence: bindings,
-    completeness: { status: completeToolTrace ? "complete" : "partial", omitted_event_count: 0,
-      missing: completeToolTrace ? [] : [...(cancellation ? ["native-task-cancelled-before-complete-trace"] : failure ? ["native-task-failed-before-complete-trace"] : []), ...(!trajectory ? ["native-trajectory-unavailable"] : []),
+    completeness: { status: completeToolTrace && !sdkUnavailableMedia.length ? "complete" : "partial", omitted_event_count: 0,
+      missing: completeToolTrace && !sdkUnavailableMedia.length ? [] : [
+        ...(sdkUnavailableMedia.length ? ["native-sdk-tool-image-source-http-blocked"] : []),
+        ...(cancellation ? ["native-task-cancelled-before-complete-trace"] : failure ? ["native-task-failed-before-complete-trace"] : []), ...(!trajectory ? ["native-trajectory-unavailable"] : []),
         ...(multimodalBypassCount ? ["multimodal-tool-result-content-unverified"] : []),
         ...(nativeToolCoverageDiagnostic ? [nativeToolCoverageDiagnostic.reason] : []),
         ...(trajectoryPromptBinding.status !== "verified" ? [trajectoryPromptBinding.reason] : []),

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHash } from 'node:crypto';
 import { MOA_SOURCE_SHA256, moaProfileForVersion } from '../../tools/report/e2e-shared/doubaowork/runtime-moa.mjs';
-import { verifyMoaSdkProtocol, countMoaSdkTools, fetchMoaSdkAttachments, parseMacSystemHttpsProxy } from '../../tools/report/e2e-shared/doubaowork/moa-sdk-protocol.mjs';
+import { verifyMoaSdkProtocol, countMoaSdkTools, fetchMoaSdkAttachments, parseMacSystemHttpsProxy, verifyMoaUnavailableAttachment } from '../../tools/report/e2e-shared/doubaowork/moa-sdk-protocol.mjs';
 const sha=s=>createHash('sha256').update(s).digest('hex');
 function fixture(rows) {
  const installed='2026-11-05T00:00:00.000Z';
@@ -111,4 +111,29 @@ test('Huanqiu SDK image links require the original HTTPS Huanqiu web.fetch page'
  }
  assert.equal(p.attachments[0].resolution.source,'same-native-sdk-image-link-list');
  assert.throws(()=>verifyMoaSdkProtocol(fixture([web,{...native,image_link_list:['https://img.huanqiucdn.cn/private/other.png']}])) ,/MEDIA_SOURCE_PAGE_UNVERIFIED/);
+});
+
+test('a bound Huanqiu HTTP567 block preserves HTML as missing pixels and rejects fabricated availability',async()=>{
+ const url='https://img.huanqiucdn.cn/dp/api/files/imageDir/047268e4cd108c655404402c4e9c7690.png';
+ const web=structuredClone(call);web.tool_calls[0].function={name:'web.fetch',arguments:{url:'https://china.huanqiu.com/article/source'}};
+ const protocol=verifyMoaSdkProtocol(fixture([web,{...result,image_link_list:[url]}]));
+ const original=globalThis.fetch;
+ const html='<html>请求已被站点的安全策略拦截。本次访问已被限制。</html>';
+ try {
+  globalThis.fetch=async()=>new Response(html,{status:567,headers:{'content-type':'text/html; charset=UTF-8'}});
+  const files=await fetchMoaSdkAttachments(protocol,{disableSystemProxy:true});
+  assert.equal(files.length,1);const item=files[0];
+  assert.equal(item.status,'unavailable');assert.equal(item.mime_type,'text/html');
+  assert.ok(item.path.endsWith('.html'));assert.equal(item.bytes.toString(),html);
+  assert.equal(verifyMoaUnavailableAttachment(item,protocol.attachments[0],item.bytes),true);
+  assert.throws(()=>verifyMoaUnavailableAttachment({...item,http_response:{...item.http_response,status:200}},protocol.attachments[0],item.bytes),/MEDIA_UNAVAILABLE_PROOF_INVALID/);
+  assert.throws(()=>verifyMoaUnavailableAttachment(item,{...protocol.attachments[0],url_sha256:'other'},item.bytes),/MEDIA_UNAVAILABLE_PROOF_INVALID/);
+  const altered=Buffer.from('Unknown HTML');
+  assert.throws(()=>verifyMoaUnavailableAttachment({...item,sha256:sha(altered),size:altered.length,
+    path:'raw/native-tool-attachments/unavailable/'+sha(altered)+'.html'},protocol.attachments[0],altered),/MEDIA_UNAVAILABLE_BODY_UNVERIFIED/);
+  const other={attachments:[{url:'https://p3-flow-sign.byteimg.com/a',url_sha256:'unrelated'}]};
+  await assert.rejects(fetchMoaSdkAttachments(other,{disableSystemProxy:true}),/MEDIA_FETCH_FAILED/);
+  globalThis.fetch=async()=>new Response(html,{headers:{'content-type':'text/html'}});
+  await assert.rejects(fetchMoaSdkAttachments(protocol,{disableSystemProxy:true}),/MEDIA_TYPE_UNVERIFIED/);
+ }finally{globalThis.fetch=original;}
 });

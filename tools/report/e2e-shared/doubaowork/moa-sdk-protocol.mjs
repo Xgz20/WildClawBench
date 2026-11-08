@@ -142,6 +142,34 @@ async function proxyResponse(url, proxy) {
     ['content-type','location'].map(k => [k,get(k)]).filter(([,v]) => v)) });
 }
 
+async function boundedResponseBytes(response, limit) {
+  const reader = response.body.getReader(), chunks = []; let size = 0;
+  try {
+    while (true) { const { done, value } = await reader.read(); if (done) break;
+      size += value.length; check(size <= limit, 'MEDIA_TOO_LARGE'); chunks.push(Buffer.from(value)); }
+  } catch (error) { await reader.cancel().catch(() => {}); throw error; }
+  finally { reader.releaseLock(); }
+  return Buffer.concat(chunks);
+}
+
+export function verifyMoaUnavailableAttachment(item, expected, bytes) {
+  check(expected.resolution?.profile === 'native-web-fetch-huanqiu-image/v1'
+    && new URL(expected.url).hostname === 'img.huanqiucdn.cn'
+    && item.status === 'unavailable' && item.reason === 'origin-http-security-block'
+    && item.http_response?.status === 567 && item.http_response.content_type === 'text/html'
+    && item.http_response.final_url_sha256 === expected.url_sha256 && item.url_sha256 === expected.url_sha256
+    && item.mime_type === 'text/html' && item.redirects?.length === 0 && bytes.length <= 1024 * 1024
+    && sha(bytes) === item.sha256 && bytes.length === item.size
+    && item.path === 'raw/native-tool-attachments/unavailable/' + sha(bytes) + '.html'
+    && Number.isFinite(Date.parse(item.retrieved_at))
+    && ['existing-macos-loopback-https-proxy/v1','node-fetch-https/v1'].includes(item.transport?.profile),
+    'MEDIA_UNAVAILABLE_PROOF_INVALID');
+  const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+  check(text.includes('请求已被站点的安全策略拦截') && text.includes('本次访问已被限制'),
+    'MEDIA_UNAVAILABLE_BODY_UNVERIFIED');
+  return true;
+}
+
 export async function fetchMoaSdkAttachments(protocol, { disableSystemProxy = false } = {}) {
   const output = [];
   if (!protocol.attachments.length) return output;
@@ -158,23 +186,29 @@ export async function fetchMoaSdkAttachments(protocol, { disableSystemProxy = fa
       redirects.push({ from_sha256: sha(url), to_sha256: sha(target.href), status: response.status });
       await response.body?.cancel(); url = target.href;
     }
-    check(response.status === 200, 'MEDIA_FETCH_FAILED');
     const mime = (response.headers.get('content-type') || '').split(';')[0];
+    const transport = proxy ? { profile: 'existing-macos-loopback-https-proxy/v1', endpoint_sha256: sha(proxy) }
+      : { profile: 'node-fetch-https/v1' };
+    if (response.status === 567 && item.resolution?.profile === 'native-web-fetch-huanqiu-image/v1') {
+      check(mime === 'text/html' && redirects.length === 0, 'MEDIA_UNAVAILABLE_RESPONSE_UNVERIFIED');
+      const bytes = await boundedResponseBytes(response, 1024 * 1024), digest = sha(bytes);
+      const missing = { ...item, url: undefined, bytes, status: 'unavailable', reason: 'origin-http-security-block',
+        path: 'raw/native-tool-attachments/unavailable/' + digest + '.html', sha256: digest, size: bytes.length,
+        mime_type: mime, redirects, http_response: { status: response.status, content_type: mime, final_url_sha256: sha(url) },
+        transport, retrieved_at: new Date().toISOString() };
+      verifyMoaUnavailableAttachment(missing, item, bytes);
+      output.push(missing); continue;
+    }
+    check(response.status === 200, 'MEDIA_FETCH_FAILED');
     check(['image/png','image/jpeg','image/webp','image/gif'].includes(mime), 'MEDIA_TYPE_UNVERIFIED');
-    const reader = response.body.getReader(), chunks = []; let size = 0;
-    try {
-      while (true) { const { done, value } = await reader.read(); if (done) break;
-        size += value.length; check(size <= 16 * 1024 * 1024, 'MEDIA_TOO_LARGE'); chunks.push(Buffer.from(value)); }
-    } catch (error) { await reader.cancel().catch(() => {}); throw error; }
-    finally { reader.releaseLock(); }
-    const bytes = Buffer.concat(chunks), png = bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),
+    const bytes = await boundedResponseBytes(response, 16 * 1024 * 1024), png = bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])),
       jpeg = bytes[0] === 255 && bytes[1] === 216, webp = bytes.subarray(0,4).toString() === 'RIFF' && bytes.subarray(8,12).toString() === 'WEBP',
       gif = ['GIF87a','GIF89a'].includes(bytes.subarray(0,6).toString());
     check(mime === 'image/png' && png || mime === 'image/jpeg' && jpeg || mime === 'image/webp' && webp || mime === 'image/gif' && gif, 'MEDIA_BYTES_UNVERIFIED');
     const ext = mime === 'image/jpeg' ? 'jpg' : mime.split('/')[1], digest = sha(bytes);
     output.push({ ...item, url: undefined, bytes, path: `raw/native-tool-attachments/${digest}.${ext}`,
       sha256: digest, size: bytes.length, mime_type: mime, redirects,
-      transport: proxy ? { profile: 'existing-macos-loopback-https-proxy/v1', endpoint_sha256: sha(proxy) } : { profile: 'node-fetch-https/v1' },
+      transport,
       retrieved_at: new Date().toISOString() });
   }
   return output;
