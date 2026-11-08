@@ -9,6 +9,24 @@ PRESERVED='infrastructure-evidence/complete-business-evidence-budget'
 PRD_TASK='02_Office_task_019_prd_system_design_breakdown'
 PRD_CONTRACT='2a473675b08481052bc5808a5387e85fa0152bdcf4ed5448e922e9023a4097d5'
 PRD_SOURCE='4ab6e8cd79ecc6aeeb8fc6294dc4f7257947365162c8cba1511a202b89989035'
+CUSTOMER_TASK='02_Office_task_013_customer_remediation_pack'
+CUSTOMER_CONTRACT='af1f136e9c417075c20e6e694af74eadbe14fd24f623356f08960af17b8da5e3'
+CUSTOMER_SOURCE='3cc8ca96c44618391fad974313fc84ac83e15532c525acff4d1d20fd8cc97955'
+
+def customer_failure(manifest,contract,audit,worker):
+    error=worker.get('error') or {}
+    match=re.fullmatch(r'EVALUATOR_EVIDENCE_BUDGET_EXCEEDED: (\d+); no candidate truncation performed',error.get('message',''))
+    return (contract.get('task_id')==CUSTOMER_TASK
+        and manifest.get('identity',{}).get('task_id')==CUSTOMER_TASK
+        and manifest.get('digests',{}).get('contract_sha256')==CUSTOMER_CONTRACT
+        and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==CUSTOMER_SOURCE
+        and audit.get('status')=='failed' and audit.get('identity')==manifest.get('identity')
+        and audit.get('runtime_workspace',{}).get('drifted') is False
+        and audit.get('worker',{}).get('return_code')==1
+        and audit.get('worker',{}).get('process_tree_cleanup',{}).get('remaining') is False
+        and worker.get('ok') is False and worker.get('result') is None
+        and error.get('type')=='EvaluatorEvidenceError' and match is not None and int(match.group(1))>74000)
+
 EXTRA={
  '02_Office_task_029_monitoring_weekly_docx':('967f54a181a67fe91b7513b6d81d61a6badd7d7def1c6fcc1033d5d69fae762a','93859e60892a717a0adfb8e3d1feb78a7baa6bdd0f33ea707b520e5c3a5af309',55000,'evidence_error: exported evidence exceeds reserved 55000 characters; expand collection/review manually, not a candidate zero'),
  '02_Office_task_030_service_center_consolidation':('1cf27d0d5844d40d08824e606bc92e1efb9514bc0d780051793d85b270d586cc','f29d880bb031209ecca324e32f1761598adf407f354ae8975d2a288d805d2378',74000,'evaluator_error: complete evidence exceeds 74000 reserved characters; collect supplement before semantic scoring, never candidate zero'),

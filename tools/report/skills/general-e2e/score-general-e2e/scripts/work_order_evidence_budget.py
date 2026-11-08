@@ -8,6 +8,10 @@ SERVICE_CONTRACT='b440485348ee72c7ab58b6f212a05cbc16691d8e6ece9a286661f981fa1335
 SERVICE_SOURCE='64ac633a83d579fa4f099aca687c3aa1bde8477273e0e93ad31cf28b043a9956'
 SERVICE_OLD="    if any(len(v)>19000 for v in encoded.values()) or sum(map(len,encoded.values()))>74000:raise EvaluationError('Evidence would be truncated; evaluation invalid')"
 SERVICE_NEW="    if any(len(v.encode('utf-8'))>1048576 for v in encoded.values()) or sum(len(v.encode('utf-8')) for v in encoded.values())>16777216:raise EvaluationError('Evidence would be truncated; evaluation invalid')"
+CUSTOMER_PROFILE='customer-remediation-complete-evidence-budget/v1'
+CUSTOMER_TASK='02_Office_task_013_customer_remediation_pack'
+CUSTOMER_CONTRACT='af1f136e9c417075c20e6e694af74eadbe14fd24f623356f08960af17b8da5e3'
+CUSTOMER_SOURCE='3cc8ca96c44618391fad974313fc84ac83e15532c525acff4d1d20fd8cc97955'
 PACK_PROFILE='communication-pack-complete-evidence-budget/v1'
 PACK_TASK='02_Office_task_018_targeted_repair_communication_pack'
 PACK_CONTRACT='303328777610178aab42baa175aa2e3c65dd0ccf868b5200d200a0597704e107'
@@ -28,6 +32,10 @@ SOURCE_SHA='fab46597d51de9869feeef882eaa222b9ced1ecc8809ad10c7a8fa1be697bfac'
 from source_identities import accepted_contracts
 
 def marker(contract,contract_sha):
+    if (contract.get('task_id')==CUSTOMER_TASK and contract_sha==CUSTOMER_CONTRACT
+            and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==CUSTOMER_SOURCE):
+        return {'profile':CUSTOMER_PROFILE,'contract_sha256':CUSTOMER_CONTRACT,'source_sha256':CUSTOMER_SOURCE,
+                'total_utf8_bytes':16777216,'part_characters':17000,'truncation_allowed':False}
     if (contract.get('task_id')==SERVICE_TASK and contract_sha==SERVICE_CONTRACT
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SERVICE_SOURCE):
         return {'profile':SERVICE_PROFILE,'contract_sha256':SERVICE_CONTRACT,'source_sha256':SERVICE_SOURCE,
@@ -51,6 +59,19 @@ def effective_source(manifest,original,current,prior):
     if frozen is None:return current,prior
     expected=marker({'task_id':manifest['identity']['task_id'],'automated_checks':original},manifest['digests']['contract_sha256'])
     if expected is None or frozen!=expected:raise ValueError('WORK_ORDER_BUDGET_PROFILE_MISMATCH')
+    if frozen['profile']==CUSTOMER_PROFILE:
+        pairs=[('MAX_TOTAL_TEXT = 74000','MAX_TOTAL_TEXT = 16777216'),
+               ('    if total > MAX_TOTAL_TEXT:', '    if sum(len(line.encode("utf-8")) for line in lines) > MAX_TOTAL_TEXT:')]
+        effective=current
+        for old,new in pairs:
+            if effective.count(old)!=1:raise ValueError('CUSTOMER_EVIDENCE_BUDGET_SOURCE_MISMATCH')
+            effective=effective.replace(old,new)
+        receipt={'schema_version':'wildclawbench.general-e2e-rule-source-correction/v1','correction_id':CUSTOMER_PROFILE,
+            'task_id':CUSTOMER_TASK,'contract_sha256':CUSTOMER_CONTRACT,'original_source_sha256':CUSTOMER_SOURCE,
+            'effective_source_sha256':hashlib.sha256(effective.encode()).hexdigest(),'evidence_budget':expected,
+            'candidate_rewritten':False,'reason':'仅为完整业务取证冻结16MiB UTF8总资源上限，保留原17000字符分页、逐记录拒绝截断、返回字符计数、文件及路径安全边界；候选、全部字段、数值规则、语义标准和权重不变。'}
+        if prior:receipt['prior_correction']=prior
+        return effective,receipt
     if frozen['profile']==SERVICE_PROFILE:
         if current.count(SERVICE_OLD)!=1:raise ValueError('SERVICE_REPORT_EVIDENCE_BUDGET_SOURCE_MISMATCH')
         effective=current.replace(SERVICE_OLD,SERVICE_NEW)

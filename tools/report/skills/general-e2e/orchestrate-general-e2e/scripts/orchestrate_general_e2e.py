@@ -3039,6 +3039,7 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
         and dataset_error.get("message") == context_guard
         and context_guard in str(contract.get("automated_checks", "")))
     allowed_error = dataset_error.get("type") in {"EvaluationError", "EvaluationReviewRequired", "ReviewRequired"}
+    allowed_error = allowed_error or communication_evidence_failure.customer_failure(manifest,contract,audit,result)
     allowed_error = allowed_error or (dataset_error.get("type") == "EvidenceError" and dataset_error.get("message") ==
         "Required text evidence exceeds collector budget; do not report a valid semantic/capability score")
     allowed_error = allowed_error or (dataset_error.get("type") == "RuntimeError" and dataset_error.get("message") ==
