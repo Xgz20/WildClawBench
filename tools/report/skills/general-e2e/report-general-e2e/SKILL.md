@@ -3,7 +3,7 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
-`0.8.42` 同源回放原生空预热连接清理的明确停止证明，保留真实true标志和原陈旧ready来源，原失败计分仍须人类政策与完整SDK/原生门禁，不将评测未知值补零。
+`0.8.43` 失败政策回放支持已选scoring/execution-records副本：仅按完整身份定位唯一原正式证据目录，并要求原execution-record字节与已选副本完全一致；原Node/SDK/状态/人类政策门禁保持。未知定位或内容差异继续拒绝，不改原分、原件或哈希。
 
 
 `0.8.41` 同源回放原生空SDK线程初始化通知的合法先后差异，不将MCP初始化当模型执行，不放宽真实turn/待派发/身份与原生拒绝门禁，Rubric和未知资源保持原样。

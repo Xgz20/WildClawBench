@@ -83,6 +83,12 @@ class ReportFailurePolicyTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'selected unscored'):
                 self.normalize()
 
+    def test_selected_execution_copy_replays_original_formal_native_state(self):
+        folder=self.root/'scoring/execution-records';folder.mkdir(parents=True,exist_ok=True)
+        selected=folder/'task.json';selected.write_bytes(self.record_path.read_bytes())
+        self.row['lineage']['source_execution_record']=str(selected)
+        self.assertEqual(self.normalize()[0]['failure_policy_score'],0)
+
     def test_wrong_attempt_or_human_scope_is_rejected(self):
         self.decision['identity'] = {**self.record['identity'], 'attempt_id': 'foreign'}
         with self.assertRaisesRegex(ValueError, 'selected collected'):

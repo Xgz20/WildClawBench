@@ -4,6 +4,7 @@ The policy changes the end-to-end disposition, never the source cause or Rubric.
 """
 from __future__ import annotations
 import json
+from execution_evidence_root import frozen_execution_evidence_root
 import hashlib
 from pathlib import Path
 import shutil
@@ -55,7 +56,7 @@ def normalize(policy_reference, rows, refs, node=None):
         index = json.loads(index_path.read_bytes())
         if record['execution']['business_status'] == 'candidate_error' and index.get('runtime_interruption_profile', {}).get('id') != 'bound-native-runtime-watchdog-failure/v1':
             continue
-        state_path = Path(record_ref['path']).parent / 'execution/automation-state.json'
+        state_path = frozen_execution_evidence_root(unit,record_ref['path'],record) / 'execution/automation-state.json'
         executable = node or shutil.which('node')
         require(executable, 'Node required for native interruption replay')
         module = Path(__file__).resolve().parents[1] / 'vendor/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs'

@@ -9,6 +9,7 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+from execution_evidence_root import frozen_execution_evidence_root
 
 
 def require(value, detail):
@@ -73,8 +74,8 @@ def normalize(items, rows, refs, node=None):
                 and record.get('prompt', {}).get('sha256') == decision.get('prompt_sha256'),
                 'decision native proof binding')
         unit = Path(lineage['source_unit_root']).absolute()
-        # The formal evidence root is the parent of execution-record.json.
-        state = Path(record_ref['path']).parent / 'execution/automation-state.json'
+        evidence_root=frozen_execution_evidence_root(unit,record_ref['path'],record)
+        state = evidence_root / 'execution/automation-state.json'
         executable = node or shutil.which('node')
         require(executable, 'Node required for frozen native proof replay')
         module = Path(__file__).resolve().parents[1] / 'vendor/e2e-shared/astronstudio-start-rejection/index.mjs'
