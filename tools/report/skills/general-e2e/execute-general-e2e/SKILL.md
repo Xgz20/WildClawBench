@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.14.74` 将已获用户授权的 CGEData 企业DLP登录窗口关闭纳入控制层恢复：只点击该登录窗口左上角关闭，随后重验被测前台、模型/权限、原生活动与发送边界；不再重复要求用户登录。具体识别、单次操作和队列接续见下方流程，不改变执行器发送语义。
+
 `0.14.73` 原生目录辅助器在有界激活等待后重新核对精确前台PID，兼容激活异步完成；不接受其它应用为前台，不绕过原生面板/完整路径回读，超时仍停止。
 
 `0.14.72` 豆包目录全文校验后明确提交Go确认，使用有界按键保持并验证路径框消失及目标目录位置，不以面板数量代替提交。沿用AXValue、所有原生身份/全路径门禁，未知仍拒绝，不改变发送或模型行为。
@@ -185,6 +187,10 @@ python -m eval_general_e2e skills --name execute-general-e2e --json
 ```
 
 只有 `implementation_status` 为 `operational` 时才发送 Prompt。当前 `0.13.8/operational` 支持 AstronStudio macOS 只读探针、单题执行和持久化并发队列，以及 WorkBuddy/QwenWork macOS 的默认三路后台队列入口；UI Prompt发送固定单槽。AstronStudio/WorkBuddy/QwenWork默认3个后台槽，队列算法支持1–8，并按可信终态动态补位。AstronStudio 切换 Workspace 时先确认项目选择菜单已关闭，再使用侧边栏添加路径；若项目选择控件已经出现但绝对路径尚未显示，会转入原生项目 ID、目标项目行和新对话路由核验，确认 route→project→cwd 一致后才接受；未完成身份回读时不发送 Prompt。QwenWork 单题入口会从已完成会话语义导航到唯一“新任务”页，允许未发送 attempt 精确复用已经落库的同名同 Workspace 项目，在终态观察时刷新同一 session 的 Prompt/transcript provenance，并在恢复观察前把 UI 路由精确导航到目标项目任务。应用路径通过 vendored `desktop-app-discovery` 按显式路径、当前进程、系统登记和标准目录发现并冻结，恢复只复核原路径。不要用 Web E2E Driver 或旧 `eval_e2e` 替代，因为它们的终态、证据和恢复语义不同。
+
+## 桌面外部登录窗口恢复
+
+原生前台激活超时或出现外部登录窗口时，先辨明窗口身份。对于用户已明确授权关闭的 **CGEData 企业DLP登录窗口**，按 [CGEData窗口恢复](references/cgedata-login-recovery.md) 点击左上角关闭并自动接续核验；授权在当前会话持续有效，无须再次要求用户登录或手动置前台。此流程适用于各端的控制层编排，不将外部弹窗计为模型能力失败，不更改或重发未知发送。
 
 ## DoubaoWork macOS 开发入口
 
