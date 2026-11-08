@@ -56,6 +56,28 @@ def locked_rescore_owner(root, previous, score_sha, *, frozen, native_required=T
     return owner
 
 
+def verified_presentation_admission_repair(original, attempt, execution, root):
+    """A replayed complete SDK proof can repair an old projection-only rejection."""
+    profile='bound-native-moa-presentation-completeness/v1'
+    old=original.get('execution',{})
+    if (old.get('scorable') is not False
+        or (old.get('failure') or {}).get('code')!='EXECUTION_NOT_SCORABLE'
+        or attempt.get('evidence_admission')!=profile
+        or execution.get('harness',{}).get('id')!='doubaowork'):
+        return False
+    path=root/'private/evidence-admission.json'
+    if path.is_symlink() or not path.is_file() or digest(path)!=attempt.get('reviewed_evidence_receipt_sha256'):
+        return False
+    receipt=json.loads(path.read_text(encoding='utf-8'))
+    proof=receipt.get('proof',{})
+    return (receipt.get('profile')==profile and receipt.get('original_execution_changed') is False
+        and receipt.get('original_trace_changed') is False and proof.get('all_display_blocks_accounted') is True
+        and proof.get('original_evidence_completeness')=='partial'
+        and bool(proof.get('original_missing'))
+        and set(proof['original_missing'])<={'unmapped-native-message-block','resource_metrics_complete_coverage'}
+        and 'unmapped-native-message-block' in proof['original_missing'])
+
+
 def compose(args, *, frozen):
     source = args.source_orchestration_root.resolve(strict=True)
     state = frozen._verify_state(source)
@@ -145,6 +167,7 @@ def compose(args, *, frozen):
             elif (previous['score_status']!='unscored'
                     or (original.get('framework_failure',{}).get('kind') not in frozen.framework_failure_retirement.KINDS
                     and original.get('rule_review_unscored',{}).get('kind') != frozen.unscored_rule_review.ERROR_KIND
+                    and not verified_presentation_admission_repair(original,attempt,execution,root)
                     and original.get('scoring_error',{}).get('kind') not in {'dataset-rule-evaluation-error/v1',
                         'evaluator-public-context-setup-error/v1','office001-declared-numeric-review/v1',
                         frozen.private_reference_guard.ERROR_KIND,frozen.generated_evidence_globs.ERROR_KIND,
