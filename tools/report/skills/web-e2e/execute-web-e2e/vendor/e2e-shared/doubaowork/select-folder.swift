@@ -131,6 +131,7 @@ private func postShortcut(
     keyUp.flags = flags
     if global {
         keyDown.post(tap: .cghidEventTap)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.08))
         keyUp.post(tap: .cghidEventTap)
     } else {
         keyDown.postToPid(processIdentifier)
@@ -250,21 +251,20 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
         }
         phase("PATH_VALUE_ASSIGNED")
 
-        let currentRoot = AXUIElementCreateApplication(application.processIdentifier)
-        let currentSheets = descendants(currentRoot, role: kAXSheetRole)
-        if currentSheets.count > 1 {
-            let nested = children(outerSheet).flatMap { descendants($0, role: kAXSheetRole) }
-            guard nested.count == 1, let freshField = firstDescendant(nested[0], role: kAXTextFieldRole),
-                  stringAttribute(freshField, kAXValueAttribute) == folderPath else {
-                throw SelectionError.missingElement("目标文件夹完整路径回读不一致")
-            }
-            try postShortcut(processIdentifier: application.processIdentifier, key: 36, global: true)
+        guard stringAttribute(pathField, kAXValueAttribute) == folderPath else {
+            throw SelectionError.missingElement("目标文件夹完整路径回读不一致")
         }
         phase("PATH_READBACK_VERIFIED")
+        try postShortcut(processIdentifier: application.processIdentifier, key: 36, global: true)
+        phase("GO_CONFIRM_KEY_POSTED")
         let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "前往文件夹面板关闭") {
             let freshRoot = AXUIElementCreateApplication(application.processIdentifier)
-            return descendants(freshRoot, role: kAXSheetRole).count == 1 ? true : nil
+            let pathFields = descendants(freshRoot, role: kAXTextFieldRole).filter {
+                stringAttribute($0, kAXIdentifierAttribute) == "PathTextField"
+            }
+            return pathFields.isEmpty && uniqueOpenPanel(freshRoot) != nil ? true : nil
         }
+        phase("GO_TO_FOLDER_CLOSED")
         let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "目标目录位置回读") {
             let freshRoot = AXUIElementCreateApplication(application.processIdentifier)
             guard let (_, currentSheet) = uniqueOpenPanel(freshRoot) else { return nil }
