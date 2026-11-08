@@ -665,6 +665,16 @@ def _requires_rule_evidence(attempt: Path) -> bool:
     )
 
 
+PRESENTATION_ADMISSION_NOTICE = '若 evidence_admission 为 bound-native-moa-presentation-completeness/v1，先读取 private/evidence-admission.json：这是由冻结原件重算的展示适配证明，原执行/索引仍保留partial；原SDK调用、结果和媒体已完整对账。按原Rubric继续核验全部过程证据，不把学术占位卡解释为空结果，不因展示映射缺口拒绝整题；这不豁免过程评分，也不允许推断缺失媒体。'
+
+
+def _prompt_matches_known_rendering(actual: str, current: str) -> bool:
+    if actual == current:
+        return True
+    marker = PRESENTATION_ADMISSION_NOTICE + '\n\n'
+    return current.count(marker) == 1 and actual == current.replace(marker, '', 1)
+
+
 def _prompt_text(
     task_id: str,
     attempt_id: str,
@@ -860,7 +870,7 @@ def _prompt_text(
 
 若 attempt-manifest.json 的 evidence_admission 为 reviewed-output-evidence/v1，先读取 private/evidence-admission.json：该题冻结 rubric 已逐项确认以候选产物或最终回复为评分输入，工具/中间消息轨迹 partial 已单独保留。必须按原 rubric 评价所需证据，不因可选工具轨迹 partial 拒绝整题、不增加过程评分项；网页题仍须独立验证交互。无法核验的过程行为不作未发生断言。
 
-若 evidence_admission 为 bound-native-moa-presentation-completeness/v1，先读取 private/evidence-admission.json：这是由冻结原件重算的展示适配证明，原执行/索引仍保留partial；原SDK调用、结果和媒体已完整对账。按原Rubric继续核验全部过程证据，不把学术占位卡解释为空结果，不因展示映射缺口拒绝整题；这不豁免过程评分，也不允许推断缺失媒体。
+{PRESENTATION_ADMISSION_NOTICE}
 
 使用分页查询逐 criterion 查找支持证据和反例，把结构化判定写入新的响应文件并导入；必要证据不足时保留 `unresolved`，不得补零。提交响应前逐项执行以下自检：每个 `evidence_id` 都必须出现在对应 `query_ids` 的实际返回集合中；每个 `judged` criterion 都必须同时标记已检查支持证据和反例；任何“未发生”结论都必须使用无过滤条件分页覆盖完整 transcript，并将 `absence_claim` 与 `complete_event_range_checked` 都设为 `true`。若自检失败，先修正本题响应文件，不要提交会触发 `SEMANTIC_CITATION_NOT_QUERIED` 或 `SEMANTIC_ABSENCE_COVERAGE_REQUIRED` 的响应。只有 `verify-score` 通过后才把评分任务报告为完成。
 
@@ -2014,8 +2024,9 @@ def _verify_state(
             prompt.is_symlink()
             or not prompt.is_file()
             or _sha256_file(prompt) != task.get("prompt_sha256")
-            or prompt.read_text(encoding="utf-8")
-            != _prompt_text(
+            or not _prompt_matches_known_rendering(
+                prompt.read_text(encoding="utf-8"),
+                _prompt_text(
                 str(task.get("task_id")),
                 str(task.get("scoring_attempt_id")),
                 state["judge"],
@@ -2027,7 +2038,8 @@ def _verify_state(
                 rule_review_required=task.get('rule_review_required',False),
                 independent_validity_required=task.get('independent_validity_required',False),
                 native_writer_evidence_required=task.get('native_writer_evidence_required',False),
-                terminal_projection_required=task.get('terminal_projection_required',False),
+                    terminal_projection_required=task.get('terminal_projection_required',False),
+                ),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
