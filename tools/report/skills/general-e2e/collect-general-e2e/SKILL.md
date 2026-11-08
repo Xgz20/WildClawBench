@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.53` 对已绑定www.stats.gov.cn的HTTPS web.fetch原SDK图片列表中RFC1918 IPv4引用，不请求内网、不改成推测的公网URL；封存原引用摘要及network_request_performed=false的独立缺失回执，图片unavailable、轨迹partial、HTTP状态null。公开图片照常逐项验证，离线回放同时重验原页面/SDK列表和缺失回执；不推断模型未看图，不扣分或重发。其它来源/地址形状仍拒绝，所有旧字节和旧失败保留。
+
 `0.11.52` 对已绑定环球网web.fetch图片且原地址直接返回HTTP567、text/html和已知站点安全拦截正文时，封存响应正文、状态、来源摘要与时点，显式记图片unavailable及轨迹partial；HTML不冒充像素，不执行其脚本，不推断候选未看图或赋0。正式回放重验原SDK图片/页面/结果及拦截正文/传输证明，调用数仍按原SDK核验。其它状态/来源/未知正文继续拒绝；不绕过拦截、不重发题目，旧失败及采集原件保留。
 
 `0.11.51` 支持原生web.fetch从环球网HTTPS页面返回的img.huanqiucdn.cn图片，严格绑定SDK原image_link_list、原调用页面、结果摘要和CDN目录，保留传输字段与正文分别承载图片/文字的事实；不要求图片URL出现在正文中，不从候选补图。未知来源、凭据/端口、重定向、MIME和字节门禁继续严格核验，旧采集及错误保留，新目录独立收口，不重发题目。

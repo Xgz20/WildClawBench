@@ -137,3 +137,26 @@ test('a bound Huanqiu HTTP567 block preserves HTML as missing pixels and rejects
   await assert.rejects(fetchMoaSdkAttachments(protocol,{disableSystemProxy:true}),/MEDIA_TYPE_UNVERIFIED/);
  }finally{globalThis.fetch=original;}
 });
+
+test('Stats SDK private image references are preserved without any network request or guessed public host',async()=>{
+ const web=structuredClone(call);web.tool_calls[0].function={name:'web.fetch',arguments:{url:'https://www.stats.gov.cn/hd/source.html'}};
+ const original=globalThis.fetch;let requests=0;
+ globalThis.fetch=async()=>{requests+=1;throw Error('Must not request a private image');};
+ try {
+  for(const host of ['10.6.130.72','172.16.1.2','192.168.1.2']){
+   const url='https://'+host+'/hd/original.jpg';
+   const p=verifyMoaSdkProtocol(fixture([web,{...result,image_link_list:[url]}]));
+   const files=await fetchMoaSdkAttachments(p,{disableSystemProxy:true});const item=files[0];
+   assert.equal(item.status,'unavailable');assert.equal(item.http_response,null);
+   assert.equal(item.reason,'private-source-not-requested');assert.equal(item.url,undefined);
+   assert.equal(item.transport.profile,'no-network-request/v1');
+   assert.equal(JSON.parse(item.bytes).network_request_performed,false);
+   assert.equal(verifyMoaUnavailableAttachment(item,p.attachments[0],item.bytes),true);
+   assert.throws(()=>verifyMoaUnavailableAttachment({...item,transport:{profile:'node-fetch-https/v1'}},p.attachments[0],item.bytes),/MEDIA_PRIVATE_UNAVAILABLE_PROOF_INVALID/);
+  }
+  assert.equal(requests,0);
+  const other=structuredClone(web);other.tool_calls[0].function.arguments.url='https://unrelated.example/source';
+  assert.throws(()=>verifyMoaSdkProtocol(fixture([other,{...result,image_link_list:['https://10.6.130.72/a.jpg']}])) ,/MEDIA_PRIVATE_REFERENCE_UNVERIFIED/);
+  assert.throws(()=>verifyMoaSdkProtocol(fixture([web,{...result,image_link_list:['https://8.8.8.8/a.jpg']}])) ,/MEDIA_ORIGIN_UNVERIFIED/);
+ }finally{globalThis.fetch=original;}
+});

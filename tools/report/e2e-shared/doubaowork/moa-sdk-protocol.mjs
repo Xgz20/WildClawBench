@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { isIP } from 'node:net';
 import { moaProfileForVersion, validateMoaBackendProof } from './runtime-moa.mjs';
 import { normalizeNativeToolEvents } from './runtime-tools.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
@@ -10,6 +11,10 @@ const allowedImageOrigin = parsed => parsed.protocol === 'https:' && !parsed.use
   && (/^p[0-9]+-flow-(?:imagex-)?sign\.byteimg\.com$/u.test(parsed.hostname)
     || /^p[0-9]+-doubao-search-sign\.byteimg\.com$/u.test(parsed.hostname)
     || ['aka.doubaocdn.com','ar5iv.labs.arxiv.org','arxiv.org','img.huanqiucdn.cn'].includes(parsed.hostname));
+const privateIPv4 = host => isIP(host) === 4 && (() => {
+  const [a,b] = host.split('.').map(Number);
+  return a === 10 || a === 172 && b >= 16 && b <= 31 || a === 192 && b === 168;
+})();
 
 // Finance search persists opaque image references beside literal, matching
 // reference_id/uri pairs in the same SDK result. Never invent a CDN URL.
@@ -17,6 +22,17 @@ function sdkImageLocation(reference, call, content) {
   if (!/^labis\/image\/[0-9a-f]{32}$/u.test(reference)) {
     let parsed;
     try { parsed = new URL(reference); } catch { check(false, 'MEDIA_REFERENCE_UNVERIFIED'); }
+    if (privateIPv4(parsed.hostname)) {
+      let page;
+      try { page = new URL(call.arguments.url); } catch { check(false, 'MEDIA_PRIVATE_REFERENCE_UNVERIFIED'); }
+      check(call.name === 'web.fetch' && parsed.protocol === 'https:' && parsed.href === reference
+        && !parsed.username && !parsed.password && !parsed.port && page.protocol === 'https:'
+        && page.hostname === 'www.stats.gov.cn' && !page.username && !page.password && !page.port,
+        'MEDIA_PRIVATE_REFERENCE_UNVERIFIED');
+      return { url: reference, availability: 'unavailable', resolution: {
+        profile: 'native-stats-web-fetch-private-image/v1', source: 'same-native-sdk-image-link-list',
+        content_sha256: sha(content), source_page_url_sha256: sha(call.arguments.url), address_class: 'rfc1918-ipv4' } };
+    }
     check(allowedImageOrigin(parsed), 'MEDIA_ORIGIN_UNVERIFIED');
     if (parsed.hostname === 'img.huanqiucdn.cn') {
       let page;
@@ -153,6 +169,22 @@ async function boundedResponseBytes(response, limit) {
 }
 
 export function verifyMoaUnavailableAttachment(item, expected, bytes) {
+  if (expected.resolution?.profile === 'native-stats-web-fetch-private-image/v1') {
+    check(expected.availability === 'unavailable' && privateIPv4(new URL(expected.url).hostname)
+      && item.availability === 'unavailable' && item.status === 'unavailable' && item.reason === 'private-source-not-requested'
+      && item.http_response === null && item.transport?.profile === 'no-network-request/v1'
+      && item.url_sha256 === expected.url_sha256 && item.mime_type === 'application/json'
+      && item.path === 'raw/native-tool-attachments/unavailable/' + sha(bytes) + '.json'
+      && bytes.length <= 16384 && sha(bytes) === item.sha256 && bytes.length === item.size
+      && Number.isFinite(Date.parse(item.recorded_at)), 'MEDIA_PRIVATE_UNAVAILABLE_PROOF_INVALID');
+    const proof = JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(bytes));
+    check(proof.schema === 'doubaowork-native-private-image-unavailable/v1' && proof.network_request_performed === false
+      && proof.url_sha256 === expected.url_sha256 && proof.call_id === expected.call_id
+      && proof.image_index === expected.image_index && proof.result_line === expected.result_line
+      && proof.recorded_at === item.recorded_at && JSON.stringify(proof.resolution) === JSON.stringify(expected.resolution),
+      'MEDIA_PRIVATE_UNAVAILABLE_RECEIPT_INVALID');
+    return true;
+  }
   check(expected.resolution?.profile === 'native-web-fetch-huanqiu-image/v1'
     && new URL(expected.url).hostname === 'img.huanqiucdn.cn'
     && item.status === 'unavailable' && item.reason === 'origin-http-security-block'
@@ -175,6 +207,18 @@ export async function fetchMoaSdkAttachments(protocol, { disableSystemProxy = fa
   if (!protocol.attachments.length) return output;
   const proxy = disableSystemProxy ? null : await readSystemProxy();
   for (const item of protocol.attachments) {
+    if (item.availability === 'unavailable') {
+      const recordedAt = new Date().toISOString();
+      const proof = { schema: 'doubaowork-native-private-image-unavailable/v1', network_request_performed: false,
+        call_id: item.call_id, image_index: item.image_index, result_line: item.result_line, url_sha256: item.url_sha256,
+        resolution: item.resolution, recorded_at: recordedAt };
+      const bytes = Buffer.from(JSON.stringify(proof, null, 2) + '\n'), digest = sha(bytes);
+      const missing = { ...item, url: undefined, bytes, status: 'unavailable', reason: 'private-source-not-requested',
+        path: 'raw/native-tool-attachments/unavailable/' + digest + '.json', sha256: digest, size: bytes.length,
+        mime_type: 'application/json', http_response: null, redirects: [], transport: { profile: 'no-network-request/v1' },
+        recorded_at: recordedAt };
+      verifyMoaUnavailableAttachment(missing, item, bytes); output.push(missing); continue;
+    }
     let url = item.url, response; const redirects = [];
     for (let hops = 0; hops < 5; hops += 1) {
       check(allowedImageOrigin(new URL(url)), 'MEDIA_ORIGIN_UNVERIFIED');

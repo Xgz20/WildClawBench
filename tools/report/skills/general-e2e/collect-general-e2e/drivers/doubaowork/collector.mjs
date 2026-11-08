@@ -100,7 +100,7 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
         native_failure: failure,
         recovered_send_acknowledgement: recoveryAcknowledgement,
         native_sdk_media_unavailable: sdkUnavailableMedia.map(item => ({ call_id: item.call_id, image_index: item.image_index,
-          reason: item.reason, http_status: item.http_response.status, path: item.path, sha256: item.sha256 })),
+          reason: item.reason, http_status: item.http_response?.status ?? null, path: item.path, sha256: item.sha256 })),
         tool_trace_scope: nativeTools?.scope ?? null, tool_trace_status: nativeTools?.status ?? "partial" } },
   };
   const events = [], calls = new Map();
@@ -155,7 +155,8 @@ export async function collectDoubaoGeneral({ unitRoot, journalFile, outputRoot }
     transcript: { ...transcript, event_count: events.length }, raw_trace: raw, binding_evidence: bindings,
     completeness: { status: completeToolTrace && !sdkUnavailableMedia.length ? "complete" : "partial", omitted_event_count: 0,
       missing: completeToolTrace && !sdkUnavailableMedia.length ? [] : [
-        ...(sdkUnavailableMedia.length ? ["native-sdk-tool-image-source-http-blocked"] : []),
+        ...[...new Set(sdkUnavailableMedia.map(item => item.reason === 'private-source-not-requested'
+          ? 'native-sdk-tool-image-private-source-not-requested' : 'native-sdk-tool-image-source-http-blocked'))],
         ...(cancellation ? ["native-task-cancelled-before-complete-trace"] : failure ? ["native-task-failed-before-complete-trace"] : []), ...(!trajectory ? ["native-trajectory-unavailable"] : []),
         ...(multimodalBypassCount ? ["multimodal-tool-result-content-unverified"] : []),
         ...(nativeToolCoverageDiagnostic ? [nativeToolCoverageDiagnostic.reason] : []),
