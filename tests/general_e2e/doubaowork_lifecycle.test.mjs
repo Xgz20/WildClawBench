@@ -74,6 +74,37 @@ test("Context occupancy and subscription display never become token consumption 
   assert.equal(candidate.token_accounting.status, "unavailable"); assert.equal(candidate.token_accounting.candidates.length, 1);
 });
 
+test("an unbound empty stale checkpoint with one matching current request withholds timing without rebinding",()=>{
+ const previous=globalThis.window;globalThis.window={};
+ let state={mainTaskDataMap:{}};
+ const listeners=new Set(),store={getState:()=>state,subscribe(fn){listeners.add(fn);return()=>listeners.delete(fn);}};
+ const host={stores:[store]},cfg={attemptId:"a",workspace:"/task",prompt:"prompt",profileSha:"b".repeat(64)};
+ const task=workspace=>({sentMessages:{u:{extra:{message_id:"u",text:"prompt",workspace}}},receivedMessages:{}});
+ try{
+  operateLifecycleObserver.call(host,{...cfg,operation:"install"});
+  state={mainTaskDataMap:{provisional:task("/task")}};
+  for(const fn of listeners)fn(state);
+  state={mainTaskDataMap:{current:task("/task")}};
+  const observer=window.__wcbDoubaoLifecycleObserver.observers.get("a");
+  const result=operateLifecycleObserver.call(host,{...cfg,operation:"bind",nativeRequestId:"current"});
+  assert.equal(result.status,"unavailable");assert.equal(result.bound,false);
+  assert.equal(result.reason,"native-lifecycle-empty-stale-binding");
+  assert.equal(observer.native_request_session_id,"provisional");assert.equal(observer.bound_at,undefined);
+  for(const mutate of [
+   ()=>{state={mainTaskDataMap:{provisional:task("/task"),current:task("/task")}};},
+   ()=>{state={mainTaskDataMap:{current:task("/elsewhere")}};},
+   ()=>{state={mainTaskDataMap:{current:task("/task"),second:task("/task")}};},
+   ()=>{state={mainTaskDataMap:{current:task("/task")}};observer.bound_at=new Date().toISOString();},
+  ]){
+   observer.bound_at=undefined;mutate();
+   assert.throws(()=>operateLifecycleObserver.call(host,{...cfg,operation:"bind",nativeRequestId:"current"}),/LIFECYCLE_REQUEST_BINDING_DRIFT/);
+  }
+  observer.bound_at=undefined;state={mainTaskDataMap:{current:task("/task")}};
+  observer.samples.set("old-sample","preserved");
+  assert.throws(()=>operateLifecycleObserver.call(host,{...cfg,operation:"bind",nativeRequestId:"current"}),/LIFECYCLE_REQUEST_BINDING_DRIFT/);
+ }finally{if(previous===undefined)delete globalThis.window;else globalThis.window=previous;}
+});
+
 test("Final SDK data mutated in place is captured before native deletion and the native method is restored", () => {
   const previous = globalThis.window; globalThis.window = {};
   let state = { mainTaskDataMap: {} }, calls = 0;

@@ -134,6 +134,22 @@ export function operateLifecycleObserver(cfg) {
   if (o.workspace !== cfg.workspace) throw new Error("LIFECYCLE_WORKSPACE_DRIFT");
   if (cfg.operation === "bind") {
     if (cfg.nativeRequestId && o.native_request_session_id && o.native_request_session_id !== cfg.nativeRequestId
+        && !o.bound_at && o.samples.size === 0 && o.errors.length === 0) {
+      const maps = root.stores.map(store => store.getState().mainTaskDataMap || {});
+      const matching = new Set(maps.flatMap(map => Object.entries(map)
+        .filter(([,task]) => matches(task.sentMessages, o)).map(([id]) => id)));
+      if (maps.every(map => !Object.hasOwn(map, o.native_request_session_id))
+          && matching.size === 1 && matching.has(cfg.nativeRequestId)) {
+        // Admission verification can replace a provisional checkpoint before
+        // any primary binding or timing sample. Keep both identities; the
+        // supplemental observer must not block independently verified IM.
+        return { bound: false, status: "unavailable", reason: "native-lifecycle-empty-stale-binding",
+          native_request_session_id: o.native_request_session_id,
+          expected_native_request_session_id: cfg.nativeRequestId, samples_captured: 0,
+          old_checkpoint_present: false, matching_current_request_ids: [...matching] };
+      }
+    }
+    if (cfg.nativeRequestId && o.native_request_session_id && o.native_request_session_id !== cfg.nativeRequestId
         && o.samples.size === 0 && o.errors.length > 0
         && o.errors.every(error => error === "LIFECYCLE_REQUEST_AMBIGUOUS")) {
       // A supplemental observer may have seen an unrelated request before
