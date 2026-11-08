@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.44` 领导版Markdown支持同源端到端计分表，明确Rubric与经核验的用户失败政策分数分别展示；未知值及原评分保持不变。
+
 `0.8.43` 失败政策回放支持已选scoring/execution-records副本：仅按完整身份定位唯一原正式证据目录，并要求原execution-record字节与已选副本完全一致；原Node/SDK/状态/人类政策门禁保持。未知定位或内容差异继续拒绝，不改原分、原件或哈希。
 
 

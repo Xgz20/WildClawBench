@@ -492,6 +492,25 @@ class ReportGeneralE2ETests(unittest.TestCase):
         self.assertEqual(REPORT.fixed_number(1234.565, grouping=True), "1,234.57")
         self.assertEqual(REPORT.fixed_number(-95.625), "-95.63")
 
+    def test_markdown_renders_secondary_failure_policy_without_filling_rubric(self) -> None:
+        data = self.data()
+        row = next(row for row in data['tasks'] if row['score_status'] == 'unscored')
+        policy = REPORT.report_run_audit.report_failure_policy
+        policy.prepare(data, {'units': [{'failure_zero_decisions': [{
+            'unit_id': self.fixture.unit_id, 'task_id': row['task_id'],
+            'failure_policy_score': 0, 'basis': 'explicit-human-policy/native-unsubmitted-start-rejection'}]}]})
+        label = data['presentation']['tables']['总览']['rows'][0][0]
+        policy.attach_views(data, data['presentation']['tables'], {self.fixture.unit_id: label})
+        data['presentation']['sheet_order'].append('端到端计分')
+        before = copy.deepcopy(data)
+        markdown = REPORT.render_markdown(data)
+        self.assertIn('## 端到端计分', markdown)
+        self.assertIn('Rubric评分状态', markdown)
+        self.assertIn('unscored', markdown)
+        self.assertEqual(data, before)
+        self.assertIsNone(row['total_score'])
+        self.assertEqual(row['e2e_score'], 0)
+
     def test_resource_summary_distinguishes_full_and_fully_missing(self) -> None:
         complete_rows = []
         missing_rows = []
