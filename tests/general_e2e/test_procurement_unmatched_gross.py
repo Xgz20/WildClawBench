@@ -157,7 +157,7 @@ class UnmatchedGrossTests(unittest.TestCase):
         self.assertEqual(hashlib.sha256(historical.encode()).hexdigest(),
                          '5dbc6a6431a8dd4c4692e28fbe52051d7599a4038ab5aae347712e6ff4f4d561')
         current, receipt = source_repairs.effective_source(TASK, original)
-        self.assertEqual(receipt['correction_id'], 'procurement-date-and-section-extraction/v5')
+        self.assertEqual(receipt['correction_id'], 'procurement-date-and-section-extraction/v6')
         funcs = lambda code: {n.name: ast.dump(n) for n in ast.parse(code).body if isinstance(n, ast.FunctionDef)}
         previous, changed = funcs(historical), funcs(current)
         for name in ['grade', 'population', 'numeric_score', 'summary_key', 'direction']:

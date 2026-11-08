@@ -267,8 +267,8 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    "item['_raw_values']=raw_values")],
                                                                       'current_source_sha256': '3e1acfa74c962ac8ac1b1bd6f66fc8ddcea06170e1a49ab184f086ad989ff0a4'},
  '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b': {'task_id': '02_Office_task_015_procurement_reconciliation',
-                                                                      'profile': 'procurement-date-and-section-extraction/v5',
-                                                                      'reason': '保留候选自定优先级的原文本分组，不预设枚举、不映射高为P1或判断排序；既有P1/P2/P3/跟踪计数只按原文字面核对。未知数值汇总、重复表头、原值/来源、分母、容差和80/20权重保持。',
+                                                                      'profile': 'procurement-date-and-section-extraction/v6',
+                                                                      'reason': '严格投影明确来源合计、互斥分类小计与已声明加减勾稽算式；逐格保留原值和来源位置，缺明细保持未知、隐藏不可授正确，未知数值仍拒绝；原数字规则、容差、分母和80/20不变。',
                                                                       'changes': [('json.dumps(chunks[i],ensure_ascii=False)',
                                                                                    'json.dumps(chunks[i],ensure_ascii=False,default=str)'),
                                                                                   ("tol=MONEY_TOLERANCE+Decimal('0.00000001') "
@@ -282,9 +282,9 @@ _PROFILES = {'b80e8169171e514cc4902613e1cda020fb99076c6fe412d7c45b907f1dc29afe':
                                                                                    '    global _PS_ROOT\n'
                                                                                    '    '
                                                                                    'root=Path(workspace_path).resolve();_PS_ROOT=root;truth,facts,metrics=reference(root)')],
-                                                                      'current_source_sha256': 'b1f84cb81347e51f0c00f10881fa1c63141e06537687922e2367d0e69cc677f7',
+                                                                      'current_source_sha256': 'b2ea6ca9c67a605e6ec95322a9d952d7bf7321488a5507ec3347a25fe79e26e2',
                                                                       'append_source': 'procurement_sections.py',
-                                                                      'append_source_sha256': '9bd5afb23b0e5e8f93deda6de780f31d52843b7dace5eeaa57e9092762c88328'}}
+                                                                      'append_source_sha256': 'afda1e1f780b5369dfaa767d354e745bd72c75f255135a2b9915105fc6c4e35e'}}
 
 _PROFILES.update({'13c5130e0292799e066d59c2076f3ed2a050650c61572fa3cec3266d97dca69a': {'task_id': '03_Data_Analysis_task_001_hr_worktime_reconciliation',
                                                                       'profile': 'hr-native-time-evidence-serialization/v1',
@@ -334,7 +334,7 @@ _PROFILES['a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'] = 
 @lru_cache(maxsize=1)
 def _history():
     raw=Path(__file__).with_name('source_repair_history.json').read_bytes()
-    if hashlib.sha256(raw).hexdigest()!='78ef302d31e04362fe996cb6032147bda198acf9c640fa2eb381b84791cb15ac':
+    if hashlib.sha256(raw).hexdigest()!='ff75b1581a0960dea29dc7f4ae32d25d00124446eb3b1d60c55f2736fa9ac67e':
         raise ValueError('RULE_SOURCE_REPAIR_HISTORY_DRIFT')
     return json.loads(raw)
 
@@ -367,3 +367,48 @@ def effective_source(task_id, original, effective=None, prior=None, *, profile=N
       'reason':entry['reason'],'candidate_rewritten':False,'rubric_and_weights_changed':False}
     if prior is not None:receipt['prior_correction']=prior
     return source,receipt
+
+
+_PROFILES['0df6363a8bb5cc0f1f27fc30e6c62f02a84212e67cc43351eee5767ec6dc87c7'] = {'task_id': '02_Office_task_026_work_order_labor_reconciliation',
+ 'profile': 'work-order-lazy-iferror-reader/v1',
+ 'reason': '对受支持表达式惰性求值IFERROR，区分原生Excel错误、空单元格和合法0；记录已缓存错误以保持后续引用正确。未知函数、外部引用、循环及评测异常不被fallback掩盖；原字段、数字算法、分母和权重不变。',
+ 'changes': [('class Reader:',
+              'class _LocalExcelValueError(ArithmeticError):\n'
+              '    """An Excel value error in a supported local expression."""\n'
+              '    pass\n'
+              '\n'
+              'class Reader:'),
+             ('        self.cache={};self.stack=set()',
+              '        self.cache={};self.stack=set()\n'
+              '        self._formula_errors=set();self._iferror_depth=0'),
+             ('        if key in self.cache:return self.cache[key]',
+              '        if key in self.cache:\n'
+              '            if key in self._formula_errors and self._iferror_depth:raise '
+              '_LocalExcelValueError()\n'
+              '            return self.cache[key]'),
+             ("        if c.data_type=='e':return None",
+              "        if c.data_type=='e':\n"
+              '            self._formula_errors.add(key)\n'
+              '            if self._iferror_depth:raise _LocalExcelValueError()\n'
+              '            return None'),
+             ('        except ZeroDivisionError:v=None',
+              '        except (ZeroDivisionError,_LocalExcelValueError):\n'
+              '            self._formula_errors.add(key)\n'
+              '            if self._iferror_depth:raise _LocalExcelValueError()\n'
+              '            v=None'),
+             ('            if isinstance(n,ast.Constant):return n.value',
+              '            if isinstance(n,ast.Constant):\n'
+              '                if n.value is None:raise _LocalExcelValueError()\n'
+              '                return n.value'),
+             ("                if fun=='IF':return ev(n.args[1] if ev(n.args[0]) else n.args[2])",
+              "                if fun=='IF':return ev(n.args[1] if ev(n.args[0]) else n.args[2])\n"
+              "                if fun=='IFERROR':\n"
+              "                    if len(n.args)!=2:raise EvaluationError('IFERROR requires two "
+              "arguments')\n"
+              '                    previous_depth=self._iferror_depth;self._iferror_depth+=1\n'
+              '                    try:\n'
+              '                        try:return ev(n.args[0])\n'
+              '                        except '
+              '(_LocalExcelValueError,ZeroDivisionError,TypeError,OverflowError):return ev(n.args[1])\n'
+              '                    finally:self._iferror_depth=previous_depth')],
+ 'current_source_sha256': 'e70fa8f963704f5f48d4957abb8986d0ecc6145d0fc8142e252dc7896dcad8de'}

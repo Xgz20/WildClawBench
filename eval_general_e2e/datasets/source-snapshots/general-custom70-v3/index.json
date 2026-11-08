@@ -46,6 +46,10 @@
     "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
       "snapshot": "tasks/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md",
       "sha256": "c2805e46d0dc0a7e884e85d81351b926436753d7c7cbc69c31f865a2450c988d"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
+      "snapshot": "tasks/02_Office_task_026_work_order_labor_reconciliation.md",
+      "sha256": "a961efa58db227500e33ca324c9ad82a82e9c277354607261088323334527120"
     }
   },
   "excluded_paths": [

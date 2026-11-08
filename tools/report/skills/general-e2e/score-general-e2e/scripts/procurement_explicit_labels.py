@@ -5,9 +5,11 @@ TASK='02_Office_task_015_procurement_reconciliation'
 CONTRACT='64ba6743b737870353efc5aebec923ae82f018b6d8bf36583709b142d5515a34'
 SOURCE='7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b'
 LEGACY_BASE='5dbc6a6431a8dd4c4692e28fbe52051d7599a4038ab5aae347712e6ff4f4d561'
-BASE='b1f84cb81347e51f0c00f10881fa1c63141e06537687922e2367d0e69cc677f7'
+PREVIOUS_BASE='b1f84cb81347e51f0c00f10881fa1c63141e06537687922e2367d0e69cc677f7'
+BASE='b2ea6ca9c67a605e6ec95322a9d952d7bf7321488a5507ec3347a25fe79e26e2'
 LEGACY_PROFILE='procurement-explicit-order-count-labels/v1'
-PROFILE='procurement-explicit-order-count-labels/v2'
+PREVIOUS_PROFILE='procurement-explicit-order-count-labels/v2'
+PROFILE='procurement-explicit-order-count-labels/v3'
 BRIDGE='''
 
 # Exact public synonyms only. Ambiguous matching and grand totals remain unknown.
@@ -26,7 +28,7 @@ for _ge2e_proc_key,_ge2e_proc_labels in {
 
 def marker(contract,contract_sha,*,profile=None):
     profile=PROFILE if profile is None else profile
-    bases={LEGACY_PROFILE:LEGACY_BASE,PROFILE:BASE}
+    bases={LEGACY_PROFILE:LEGACY_BASE,PREVIOUS_PROFILE:PREVIOUS_BASE,PROFILE:BASE}
     if profile not in bases:return None
     if (contract.get('task_id')==TASK and contract_sha==CONTRACT
         and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE):

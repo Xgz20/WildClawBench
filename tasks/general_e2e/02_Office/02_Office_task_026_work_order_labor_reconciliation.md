@@ -228,6 +228,10 @@ def flatten(x):
         for y in x:yield from flatten(y)
     else:yield x
 
+class _LocalExcelValueError(ArithmeticError):
+    """An Excel value error in a supported local expression."""
+    pass
+
 class Reader:
     """Use cached values; safely interpret common uncached scalar Excel formulas."""
     def __init__(self,path):
@@ -237,16 +241,25 @@ class Reader:
         except (zipfile.BadZipFile,KeyError,OSError,ValueError) as exc:
             raise CandidateInvalid('Unreadable workbook: '+str(exc)) from exc
         self.cache={};self.stack=set()
+        self._formula_errors=set();self._iferror_depth=0
     def value(self,s,addr):
         key=(s,addr)
-        if key in self.cache:return self.cache[key]
+        if key in self.cache:
+            if key in self._formula_errors and self._iferror_depth:raise _LocalExcelValueError()
+            return self.cache[key]
         c=self.wb[s][addr]; f=self.form[s][addr]
-        if c.data_type=='e':return None
+        if c.data_type=='e':
+            self._formula_errors.add(key)
+            if self._iferror_depth:raise _LocalExcelValueError()
+            return None
         if c.value is not None or f.data_type!='f':return c.value
         if key in self.stack:raise CandidateInvalid('Circular formula '+str(key))
         self.stack.add(key)
         try:v=self.formula(str(f.value),s)
-        except ZeroDivisionError:v=None
+        except (ZeroDivisionError,_LocalExcelValueError):
+            self._formula_errors.add(key)
+            if self._iferror_depth:raise _LocalExcelValueError()
+            v=None
         finally:self.stack.remove(key)
         self.cache[key]=v
         return v
@@ -280,7 +293,9 @@ class Reader:
         try:node=ast.parse(code,mode='eval').body
         except SyntaxError as exc:raise EvaluationError('Unsupported formula '+f) from exc
         def ev(n):
-            if isinstance(n,ast.Constant):return n.value
+            if isinstance(n,ast.Constant):
+                if n.value is None:raise _LocalExcelValueError()
+                return n.value
             if isinstance(n,ast.UnaryOp):return -ev(n.operand) if isinstance(n.op,ast.USub) else ev(n.operand)
             if isinstance(n,ast.BinOp):
                 a,b=ev(n.left),ev(n.right);a=0 if a=='' else a;b=0 if b=='' else b
@@ -300,6 +315,13 @@ class Reader:
             if isinstance(n,ast.Call) and isinstance(n.func,ast.Name):
                 fun=n.func.id
                 if fun=='IF':return ev(n.args[1] if ev(n.args[0]) else n.args[2])
+                if fun=='IFERROR':
+                    if len(n.args)!=2:raise EvaluationError('IFERROR requires two arguments')
+                    previous_depth=self._iferror_depth;self._iferror_depth+=1
+                    try:
+                        try:return ev(n.args[0])
+                        except (_LocalExcelValueError,ZeroDivisionError,TypeError,OverflowError):return ev(n.args[1])
+                    finally:self._iferror_depth=previous_depth
                 args=[ev(a) for a in n.args]
                 if fun=='R':return self.ref(args[0],s)
                 vals=list(flatten(args))

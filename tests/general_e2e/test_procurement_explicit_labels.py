@@ -66,4 +66,18 @@ class ProcurementExplicitLabelsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError,'PROFILE_MISMATCH'):
             P.effective_source(current,self.source,old_base,old_prior)
 
+    def test_previous_v2_replays_priority_v5_without_declared_total_projection(self):
+        manifest=deepcopy(self.manifest)
+        manifest['runtime']['shared_rule_source_repair']=RUNTIME.shared_source_repairs.marker(
+            self.contract,profile='procurement-date-and-section-extraction/v5')
+        base,prior=RUNTIME._effective_rule_source(manifest,self.source)
+        self.assertEqual(hashlib.sha256(base.encode()).hexdigest(),P.PREVIOUS_BASE)
+        manifest['runtime']['procurement_explicit_labels_profile']=P.marker(
+            self.contract,P.CONTRACT,profile=P.PREVIOUS_PROFILE)
+        fixed,receipt=RUNTIME._effective_rule_source(manifest,self.source)
+        self.assertEqual(fixed,base+P.BRIDGE)
+        self.assertEqual(receipt['correction_id'],P.PREVIOUS_PROFILE)
+        self.assertEqual(receipt['prior_correction'],prior)
+        self.assertNotIn('procurement-declared-source-totals/v1',fixed)
+
 if __name__=='__main__':unittest.main()

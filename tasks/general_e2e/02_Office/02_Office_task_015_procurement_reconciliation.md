@@ -1005,6 +1005,164 @@ def _pl_matrix_view(tables,records,metrics,numeric,truth,*args):
     converted,extra,new_locations,audit=_ps_sections(converted,records,metrics,numeric,truth,_PS_ROOT)
     expected.update(extra);locations.update(new_locations);projections.extend(audit)
     return converted,expected,locations,projections
+
+
+_pt_previous_matrix_view = _pl_matrix_view
+
+
+def _pl_matrix_view(tables, records, metrics, numeric, truth, *args):
+    """Project explicit source totals and declared arithmetic; retain raw locations."""
+    import csv
+    from decimal import Decimal
+
+    converted, expected, locations, audit = _pt_previous_matrix_view(
+        tables, records, metrics, numeric, truth, *args)
+    by_kind = {k: {r['id']: r for r in rows} for k, rows in records.items()}
+    complete = {k: set(rows) == set(truth[k]) for k, rows in by_kind.items()}
+
+    def total(kind, role, subset=None):
+        if not complete[kind]:
+            return None
+        selected = set(by_kind[kind]) if subset is None else set(subset)
+        values = [number(by_kind[kind][key]['values'].get(role)) for key in selected]
+        return None if any(v is None for v in values) else sum(values, Decimal(0))
+
+    def count(kind, subset=None):
+        return None if not complete[kind] else Decimal(len(by_kind[kind] if subset is None else subset))
+
+    def calc(left, right, subtract=False):
+        return None if left is None or right is None else left-right if subtract else left+right
+
+    with (_PS_ROOT/'input/采购订单.csv').open(encoding='utf-8-sig', newline='') as stream:
+        orders = list(csv.DictReader(stream))
+    with (_PS_ROOT/'input/入库记录.csv').open(encoding='utf-8-sig', newline='') as stream:
+        receipts = list(csv.DictReader(stream))
+    # The preceding section verifier binds source identities/counts/money.
+    def source_quantity(rows, field):
+        values = [number(row[field]) for row in rows]
+        if any(v is None for v in values):
+            raise EvaluationError('Invalid source quantity for declared totals')
+        return sum(values, Decimal(0))
+
+    oq = source_quantity(orders, 'ORDER_QTY')
+    rq = source_quantity(receipts, 'RECV_QTY')
+    missing_amount = total('missing', 'oa')
+    orphan_amount = total('orphan', 'ra')
+    amount_difference = total('amount', 'da')
+    detail_net = calc(calc(amount_difference, orphan_amount), missing_amount, True)
+    source_net = metrics['receipts_amount']-metrics['orders_amount']
+    matched_oq = calc(oq, total('missing', 'oq'), True)
+    matched_rq = calc(rq, total('orphan', 'rq'), True)
+    price_ids = set(by_kind['amount'])-set(by_kind['qty'])
+    price_count = count('amount', price_ids) if complete['qty'] else None
+    price_amount = total('amount', 'da', price_ids) if complete['qty'] else None
+
+    def text(value):
+        value = str(value or '').strip().casefold()
+        value = value.replace('＝', '=').replace('＋', '+').replace('－', '-')
+        return re.sub(r'[\s\u3000:：()（）,，。;；]', '', value)
+
+    ordinal_values = {
+        ('①', text('已匹配金额差额（金额差异表净差额）')): ('amount_detail', amount_difference, True),
+        ('②', text('加：无对应订单入库金额')): ('orphan_detail', orphan_amount, True),
+        ('③', text('减：未入库订单金额（取绝对值）')): ('missing_detail', missing_amount, True),
+        ('④', text('明细推算总差额 =①+②-③')): ('detail_net', detail_net, True),
+        ('⑤', text('源表总差额 = 入库总额-订单总额')): ('source_net', source_net, True),
+        ('⑥', text('校验差异 =⑤-④（应为 0.00）')): ('source_detail_difference', calc(source_net, detail_net, True), True),
+        ('⑦', text('数量勾稽：已匹配两侧数量差（应为 0）')): ('matched_quantity_difference', calc(matched_rq, matched_oq, True), False),
+    }
+    output = []
+    for table in converted:
+        if table['kind'] != 'summary':
+            output.append(table)
+            continue
+        rows = []
+        context = None
+        header_hidden = set()
+        cause_parts = set()
+        for row in table['rows']:
+            vals = row['values']
+            names = [text(v) for v in vals]
+            contexts = {
+                ('项目', '笔数', '数量', '金额元', '备注'): 'source',
+                ('成因', '笔数', '金额差额元', '说明'): 'cause',
+                ('类别', '订单状态', '笔数', '金额元', '处理提示'): 'status',
+                ('勾稽项', '', '', '数值', '校验说明'): 'reconcile',
+            }
+            if tuple(names) in contexts:
+                context = contexts[tuple(names)]
+                header_hidden = set(row.get('hidden_columns', []))
+                cause_parts = set()
+                rows.append(row)
+                continue
+            if len(vals) == 1 and isinstance(vals[0], str) and re.match(r'^[一二三四五六七八九十]+[、.]', vals[0]):
+                context = None
+                cause_parts = set()
+            claims = None
+            label = names[0] if names else ''
+            if context == 'source':
+                if label == text('采购订单（源表）'):
+                    claims = [(1, 'orders_count', metrics['orders'], False),
+                              (2, 'orders_quantity', oq, False),
+                              (3, 'orders_amount', metrics['orders_amount'], True)]
+                elif label == text('入库记录（源表）'):
+                    claims = [(1, 'receipts_count', metrics['receipts'], False),
+                              (2, 'receipts_quantity', rq, False),
+                              (3, 'receipts_amount', metrics['receipts_amount'], True)]
+                elif label == text('其中：已匹配入库'):
+                    claims = [(1, 'matched_receipts_count', calc(metrics['receipts'], count('orphan'), True), False),
+                              (2, 'matched_receipts_quantity', matched_rq, False),
+                              (3, 'matched_receipts_amount', calc(metrics['receipts_amount'], orphan_amount, True), True)]
+                elif label == text('差额合计（入库-订单）'):
+                    claims = [(2, 'source_quantity_difference', rq-oq, False),
+                              (3, 'source_amount_difference', source_net, True)]
+            elif context == 'cause':
+                if label == text('数量差异导致（单价一致）'):
+                    cause_parts.add('qty')
+                    claims = [(1, 'qty_cause_count', count('qty'), False),
+                              (2, 'qty_cause_amount', total('qty', 'da'), True)]
+                elif label == text('单价差异导致（数量一致）'):
+                    cause_parts.add('price')
+                    claims = [(1, 'price_cause_count', price_count, False),
+                              (2, 'price_cause_amount', price_amount, True)]
+                elif label == '合计' and cause_parts == {'qty', 'price'}:
+                    claims = [(1, 'cause_total_count', count('amount'), False),
+                              (2, 'cause_total_amount', amount_difference, True)]
+            elif context == 'status' and label == text('未入库订单 小计'):
+                claims = [(2, 'missing_subtotal_count', count('missing'), False),
+                          (3, 'missing_subtotal_amount', missing_amount, True)]
+            elif context == 'reconcile' and vals and isinstance(vals[0], str):
+                raw = vals[0].lstrip()
+                item = ordinal_values.get((raw[:1], text(raw[1:])))
+                if item is not None:
+                    key, value, money = item
+                    claims = [(3, key, value, money)]
+            if not claims:
+                rows.append(row)
+                continue
+            allowed = {col for col, _, _, _ in claims}
+            if (any(number(v) is not None and i not in allowed for i, v in enumerate(vals))
+                    or any(col >= len(vals) or number(vals[col]) is None for col in allowed)):
+                rows.append(row)
+                continue
+            for col, key, value, money in claims:
+                key = 'pt_'+key
+                expected[key] = value
+                if money:
+                    MONEY_KEYS.add(key)
+                projected_label = '_pt/'+key+'/'+str(col)
+                SUMMARY_LABELS.setdefault(key, []).append(projected_label)
+                projected = {**row, 'values': [projected_label, vals[col]]}
+                if 0 in row.get('hidden_columns', []) or col in row.get('hidden_columns', []) or 0 in header_hidden or col in header_hidden:
+                    projected['hidden_columns'] = [1]
+                rows.append(projected)
+                location = table['sheet']+'!'+get_column_letter(col+1)+str(row['row'])
+                locations[(table['sheet'], row['row'], projected_label)] = {
+                    'value_location': location, 'extraction_profile': 'procurement-declared-source-totals/v1'}
+                audit.append({'location': location, 'key': key, 'expected_unavailable': value is None,
+                              'candidate_statement_synthesized': False})
+        output.append({**table, 'rows': rows})
+    return output, expected, locations, audit
 ```
 
 ## LLM Judge Rubric
