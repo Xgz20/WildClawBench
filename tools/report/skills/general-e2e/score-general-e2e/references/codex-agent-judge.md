@@ -14,6 +14,8 @@
 
 新建 `prepare` 或 `prepare-rescore` attempt 时，显式选择 `--judge-protocol codex-agent-judge-v1` 后，省略模型和推理参数即冻结 `gpt-6.1-sol/high`；attempt ID 仍必填。显式模型/档位优先，已有 attempt 读取原冻结配置，API Judge 不使用这些默认值。控制器调用 `create_thread` 时必须同时传入冻结的 `model` 和 `thinking`。
 
+若 evidence_admission 为 bound-native-moa-presentation-completeness/v1，先读取 private/evidence-admission.json：这是由冻结原件重算的展示适配证明，原执行/索引仍保留partial；原SDK调用、结果和媒体已完整对账。按原Rubric继续核验全部过程证据，不把学术占位卡解释为空结果，不因展示映射缺口拒绝整题；这不豁免过程评分，也不允许推断缺失媒体。
+
 ## 独立业务与能力有效性
 
 新 SPY/VOO attempt 的 `runtime.business_capability_profile=independent-business-capability/v1` 精确绑定原 contract 和源码。仍逐项返回原全部6个语义 key；同时完整填写模板新增的 run_validity 和 capability_evidence_statuses，不能以业务分替代过程能力证据。

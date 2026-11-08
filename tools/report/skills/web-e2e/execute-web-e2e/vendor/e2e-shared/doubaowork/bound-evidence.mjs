@@ -14,7 +14,7 @@ import { inspectNativeAuthorizationHistory } from "./interactions.mjs";
 import { verifyCancellationEvidence, verifyFailureEvidence } from "./terminal-evidence.mjs";
 import { DISPATCHER_PROFILE, DISPATCHER_SOURCE_SHA256, isSupportedDispatcherSource } from "./runtime-dispatcher.mjs";
 import { moaProfileForVersion, moaProfileForSource, validateMoaBackendProof } from "./runtime-moa.mjs";
-import { reconcileNativeSearchDisplays, reconcileNativeGuiDisplays } from "./search-displays.mjs";
+import { reconcileNativeSearchDisplays, reconcileNativeGuiDisplays, reconcileNativePlatformNotices } from "./search-displays.mjs";
 import { verifyMoaSdkProtocol } from "./moa-sdk-protocol.mjs";
 
 const sha = bytes => createHash("sha256").update(bytes).digest("hex");
@@ -348,8 +348,11 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
       throw new Error('DOUBAOWORK_TOOL_DISPLAY_WITHOUT_NATIVE_EVENTS');
     }
   }
-  let searchDisplayProof = null, guiDisplayProof = null;
+  let searchDisplayProof = null, guiDisplayProof = null, platformNoticeProof = null;
   if (assignmentBytes) {
+    platformNoticeProof = reconcileNativePlatformNotices(unknownBlocks);
+    const notices = new Set(platformNoticeProof.matched_block_ids);
+    unknownBlocks = unknownBlocks.filter(block => !notices.has(block.block_id));
     searchDisplayProof = reconcileNativeSearchDisplays(unknownBlocks, legacy.events);
     const matched = new Set(searchDisplayProof.matched_block_ids);
     unknownBlocks = unknownBlocks.filter(block => !matched.has(block.block_id));
@@ -393,5 +396,5 @@ export async function readBoundNativeEvidence({ journalFile, journal, workspace 
   }
   const crossSourceOrderUnknown = !timeline.order_verified;
   if (crossSourceOrderUnknown) completeToolTrace = false;
-  return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, assignmentBytes, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown, searchDisplayProof, guiDisplayProof, nativeSdkProtocol };
+  return { control, runtimeBytes, runtime, native, cancellation, failure, cancellationIntentBytes, terminalObservationBytes, nonSuccess, recoveryAckBytes, recoveryAcknowledgement, lifecycleBytes, lifecycle, nativeResourceObservations, finalBytes, nativeTools, nativeToolBytes, nativeToolCoverageDiagnostic, assistant, unknownBlocks, completeToolTrace, multimodalBypassCount, missingToolDisplays, discovery, evidence, source, trajectoryPath, trajectory, assignmentBytes, snapshots, archiveRaw, archiveRoot, archiveIndexPath, archiveIndexBytes, currentEvents, allNativeEvents, legacy, trajectoryPromptBinding, nativeCalls, remoteCalls, observedToolNames, localNames, displayedRemoteNames, remoteCoverageVerified, timeline, crossSourceOrderUnknown, searchDisplayProof, guiDisplayProof, platformNoticeProof, nativeSdkProtocol };
 }

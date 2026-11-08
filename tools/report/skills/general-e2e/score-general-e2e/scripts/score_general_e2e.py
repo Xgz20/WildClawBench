@@ -32,6 +32,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
 import trace_handoff
 import native_moa_assistant_view
+import moa_presentation_admission
 import shared_source_repairs
 import dataset_rule_corrections
 import rule_review
@@ -1355,6 +1356,8 @@ def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping
         evidence.get("completeness") == "partial" and missing <= {"resource_metrics_complete_coverage"}
     ):
         return "standard"
+    if moa_presentation_admission.candidate(execution):
+        return moa_presentation_admission.ADMISSION
     profile = _reviewed_output_profile(contract)
     if (profile and evidence.get("completeness") == "partial"
         and missing and missing <= OPTIONAL_PROCESS_EVIDENCE
@@ -1658,6 +1661,12 @@ def prepare_attempt(
     if evidence_admission.startswith("reviewed-output-evidence/v1:"):
         reviewed_files = _reviewed_evidence_files(unit_root, execution)
         reviewed_receipt = _validate_reviewed_evidence(execution, contract, reviewed_files)
+    if evidence_admission == moa_presentation_admission.ADMISSION:
+        reviewed_files = _reviewed_evidence_files(unit_root, execution)
+        try:
+            reviewed_receipt = moa_presentation_admission.validate(execution,contract,reviewed_files)
+        except (ValueError,KeyError,TypeError,OSError,subprocess.SubprocessError) as exc:
+            raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE","native presentation reconciliation rejected: "+str(exc)) from exc
 
     if evidence_admission == failure_evidence.ADMISSION:
         reviewed_files = failure_evidence.read_files(unit_root, execution)
@@ -2037,7 +2046,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         )
         if admitted != manifest["evidence_admission"]:
             raise ScoringRuntimeError("EVIDENCE_ADMISSION_DRIFT")
-        if admitted.startswith("reviewed-output-evidence/v1:") or admitted == failure_evidence.ADMISSION:
+        if admitted.startswith("reviewed-output-evidence/v1:") or admitted in {failure_evidence.ADMISSION,moa_presentation_admission.ADMISSION}:
             receipt_path = root / "private/evidence-admission.json"
             if _sha256_file(receipt_path) != manifest.get("reviewed_evidence_receipt_sha256"):
                 raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_DRIFT")
@@ -2050,7 +2059,8 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
                 files[row["path"]] = source.read_bytes()
                 if len(files[row["path"]]) != row["size"] or _sha256_bytes(files[row["path"]]) != row["sha256"]:
                     raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_DRIFT")
-            recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else _validate_reviewed_evidence)(
+            recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else
+                moa_presentation_admission.validate if admitted == moa_presentation_admission.ADMISSION else _validate_reviewed_evidence)(
                 _read_json(root / paths["execution_record"], code="EXECUTION_RECORD_INVALID"),
                 _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID"), files)
             if not require_runtime and "policy_sha256" in recomputed:

@@ -128,7 +128,7 @@
     },
     {
       "name": "doubaowork",
-      "version": "0.8.24",
+      "version": "0.8.25",
       "source_root": "tools/report/e2e-shared/doubaowork",
       "vendor_root": "vendor/e2e-shared/doubaowork",
       "entrypoints": [
@@ -139,7 +139,8 @@
         "probe.mjs",
         "process-cleanup.mjs",
         "select-folder.swift",
-        "tool-counts.mjs"
+        "tool-counts.mjs",
+        "presentation-proof.mjs"
       ]
     },
     {

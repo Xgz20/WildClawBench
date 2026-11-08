@@ -3,7 +3,7 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
-`0.10.87` 对精确Office024新建v3表域读取Profile，识别明确有效期/总交期表头；仅在横向运输方案内读取Total (USD)为方案总价，保留原产品行价含义。扫描至表末或下个明确多方式表头，旧v1/v2不变；原公式、时间/金额比较、EXW/CIP等重大事件及60/40保持，原候选不改，独立新attempt重评。
+`0.10.88` 新增bound-native-moa-presentation-completeness/v1，只在缺口为原生展示映射时逐字核验冻结原SDK调用/结果、全部媒体、Prompt/会话及最终回复；保持原partial记录和SHA，生成可复验派生证明。未知展示、缺图、缺调用/结果仍拒绝；原Rubric、分值及历史attempt不变。
 
 `0.10.86` 精确绑定Office015及原v4提取器，仅识别“无单入库”和明确的数量/金额差异订单笔数等同义名称。只读取原单元格，不补值、不改数字规则；“匹配成功”“合计”等含义未定汇总仍走原未决门禁。旧attempt不改，从同执行独立验证修复范围。
 
@@ -224,6 +224,8 @@ python3 -m eval_general_e2e skills --name score-general-e2e --json
 ## 责任边界
 
 `0.10.8` 在契约评分准入前核验 AstronStudio HTTP 402 `astron_points_exhausted` 的原生失败证明、原记录/状态/候选/Prompt SHA、完整会话身份及错误绑定。核验通过返回独立阻断错误 `EXECUTION_EXTERNAL_QUOTA_EXHAUSTED`，停止评测等待人工恢复和明确恢复指令；不得进入普通 `EXECUTION_NOT_SCORABLE → UNSCORED` 继续路径，不记能力零分、不创建 Judge、不自动重发。证明损坏继续返回 `EXTERNAL_QUOTA_EVIDENCE_INVALID` 并停止。其他原生失败仍走原审核契约；历史候选、评分、回执和冻结发行保持不变。
+
+展示映射派生准入通过 scripts/moa_presentation_admission.py 重算；只允许 unmapped-native-message-block 与可选资源覆盖缺口，完整核验原SDK/媒体及全部未知块。原partial不改为complete，任何其它缺口继续使用原有严格准入。
 
 partial 执行证据必须显式列出缺失项，空列表不得按 standard 准入。`native-tool-capture-incomplete` 仅能由已经验证的 Workspace-only automated 规则按 `automated-workspace-only/v1` 使用；不得因此放行 hybrid、llm_judge 或消费轨迹的自动规则。身份、候选稳定性、原始文件和 SHA 门禁保持有效；旧冻结评分 attempt 不重写。
 
