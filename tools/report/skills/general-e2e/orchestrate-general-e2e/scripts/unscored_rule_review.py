@@ -1,7 +1,66 @@
 """Close a completed native judge's declared unresolved review without a score."""
+import hashlib
+import stat
+
 ERROR_KIND = 'native-declared-rule-review-unresolved/v1'
 LOCK_KEYS = ('candidate_original_sha256', 'contract_sha256', 'task_sha256', 'private_gt_workspace_sha256',
              'transcript_sha256', 'execution_record_sha256', 'judge_config_sha256')
+
+SOURCE_TASK='03_Data_Analysis_task_010_contract_escrow_refund_reconciliation'
+SOURCE_CONTRACT='c93e50e83a8ac8eb9d6ba9e02510a762952b4011e8495c763073029a42bfff75'
+SOURCE_SHA='a16b0e1b172dd17536f754d1f5c506a3220facfec584a0d6efc16ed85006c22d'
+SOURCE_WORKER='71b0371f8a5aacc70126ca5d962d5cf18daea1280f0150fcf3c176e779f50b58'
+SOURCE_ERROR='3ad48f9061f30c6aeb4b6b2365d1b58949b2d00b438a849a1311503f2922ea51'
+
+def _declared_source_review(rt,attempt,manifest,audit):
+    if (manifest.get('identity',{}).get('task_id')!=SOURCE_TASK
+        or manifest.get('runtime',{}).get('rule_review_profile')!='escrow-status-equivalence-review/v6'
+        or manifest.get('digests',{}).get('contract_sha256')!=SOURCE_CONTRACT
+        or audit.get('status')!='completed' or audit.get('reviewed_context_count')!=2276):return None
+    contract=rt._read_json(attempt/manifest['paths']['contract'])
+    if hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()!=SOURCE_SHA:return None
+    worker=rt._read_json(attempt/'worker/result.json');request=rt._read_json(attempt/'worker/request.json')
+    failed=rt._read_json(attempt/'rule-audit.json');error=worker.get('error') or {}
+    if (audit.get('status')!='completed' or audit.get('reviewed_context_count')!=2276
+        or audit.get('unresolved_context_ids')!=[] or worker.get('ok') is not False or worker.get('result') is not None
+        or error.get('type')!='RuntimeError' or hashlib.sha256(error.get('message','').encode()).hexdigest()!=SOURCE_ERROR
+        or hashlib.sha256(request.get('automated_checks','').encode()).hexdigest()!=SOURCE_WORKER
+        or failed.get('status')!='failed' or failed.get('identity')!=manifest['identity']
+        or failed.get('worker',{}).get('request_sha256')!=rt._sha256_file(attempt/'worker/request.json')
+        or failed.get('worker',{}).get('return_code')!=1
+        or failed.get('worker',{}).get('process_tree_cleanup',{}).get('remaining') is not False):
+        raise ValueError('DECLARED_SOURCE_REVIEW_FAILURE_SIGNATURE_INVALID')
+    workspace=attempt/manifest['runtime']['workspace_argument']
+    output=workspace/'评分证据'
+    expected={'分析与验收.json','汇总与差异.json','规则核验.json'}
+    if output.is_symlink() or not output.is_dir() or {p.name for p in output.iterdir()}!=expected:
+        raise ValueError('DECLARED_SOURCE_REVIEW_OUTPUT_SCOPE_INVALID')
+    output_locks=[]
+    for p in sorted(output.iterdir()):
+        if p.is_symlink() or not p.is_file():raise ValueError('DECLARED_SOURCE_REVIEW_OUTPUT_UNSAFE')
+        rt._read_json(p)
+        output_locks.append({'path':p.relative_to(attempt).as_posix(),'sha256':rt._sha256_file(p)})
+    digest=hashlib.sha256()
+    def walk(directory,prefix=''):
+        for p in sorted(directory.iterdir(),key=lambda p:p.name):
+            relative=prefix+p.name
+            if not prefix and p.name=='评分证据':continue
+            mode=p.lstat().st_mode
+            if stat.S_ISDIR(mode):walk(p,relative+'/')
+            elif stat.S_ISREG(mode):
+                digest.update(relative.encode());digest.update(b'\0file\0');digest.update(rt._sha256_file(p).encode());digest.update(b'\n')
+            else:raise ValueError('DECLARED_SOURCE_REVIEW_RUNTIME_UNSAFE')
+    walk(workspace)
+    if digest.hexdigest()!=manifest['digests']['runtime_initial_sha256']:
+        raise ValueError('DECLARED_SOURCE_REVIEW_BUSINESS_RUNTIME_DRIFT')
+    attention=rt._read_json(attempt/'scoring-attention-report.json')
+    if (attention.get('task_id')!=SOURCE_TASK or attention.get('scoring_attempt_id')!=manifest['identity']['scoring_attempt_id']
+        or attention.get('formal_score_published') is not False or attention.get('candidate_original_modified') is not False):
+        raise ValueError('DECLARED_SOURCE_REVIEW_NATIVE_REPORT_INVALID')
+    return {'profile':'declared-source-locator-ambiguity/v1','worker_source_sha256':SOURCE_WORKER,
+            'worker_error_sha256':SOURCE_ERROR,'source_reference_ambiguity_count':3,
+            'business_runtime_unchanged_sha256':digest.hexdigest(),'original_runtime_drift_flag':failed['runtime_workspace']['drifted'],
+            'declared_grader_output_files':output_locks}
 
 
 def evidence(rt, root, state, task):
@@ -15,8 +74,9 @@ def evidence(rt, root, state, task):
     request = rt._read_json(folder / 'request.json')
     response = rt._read_json(folder / 'response.json')
     audit = rt._read_json(folder / 'audit.json')
+    source_review = _declared_source_review(rt,attempt,manifest,audit)
     expected_locks = {k: manifest['digests'][k] for k in LOCK_KEYS}
-    if (audit.get('status') != 'unresolved' or audit.get('numeric_score_assigned') is not False
+    if (audit.get('status') != ('completed' if source_review else 'unresolved') or audit.get('numeric_score_assigned') is not False
             or audit.get('identity') != manifest['identity']
             or request.get('identity') != manifest['identity'] or response.get('identity') != manifest['identity']
             or request.get('judge') != manifest['judge'] or response.get('judge') != manifest['judge']
@@ -54,7 +114,8 @@ def evidence(rt, root, state, task):
             unresolved.append(decision['context_id'])
         elif decision.get('status') != 'judged' or not isinstance(decision.get('passed'), bool):
             raise ValueError('UNRESOLVED_REVIEW_DECISION_INVALID')
-    if not unresolved or sorted(unresolved) != sorted(audit.get('unresolved_context_ids', [])):
+    if (not source_review and not unresolved or source_review and unresolved
+            or sorted(unresolved) != sorted(audit.get('unresolved_context_ids', []))):
         raise ValueError('UNRESOLVED_REVIEW_UNRESOLVED_IDS_INVALID')
     discovery = rt._read_json(folder / 'discovery-audit.json')
     if (discovery.get('identity') != manifest['identity'] or discovery.get('profile') != request['profile']
@@ -66,13 +127,18 @@ def evidence(rt, root, state, task):
             raise ValueError('UNRESOLVED_REVIEW_DISCOVERY_HASH_INVALID')
     paths = [attempt / 'attempt-manifest.json', root / task['prompt_path']]
     paths += [p for p in folder.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(folder).parts]
+    if source_review:
+        paths += [attempt/name for name in ['rule-audit.json','rule-source-correction.json','scoring-attention-report.json']]
+        paths += [p for p in (attempt/'worker').rglob('*') if p.is_file()]
+        paths += [attempt/x['path'] for x in source_review['declared_grader_output_files']]
     locks = []
     for path in sorted(set(paths)):
         if path.is_symlink() or not path.resolve().is_relative_to(root.resolve()):
             raise ValueError('UNRESOLVED_REVIEW_UNSAFE_EVIDENCE')
         locks.append({'path': path.relative_to(root).as_posix(), 'sha256': rt._sha256_file(path)})
     return {'identity': manifest['identity'], 'profile': request['profile'], 'locks': locks,
-            'reviewed_context_count': len(expected), 'unresolved_context_count': len(unresolved)}
+            'reviewed_context_count': len(expected), 'unresolved_context_count': len(unresolved),
+            **({'declared_source_review':source_review} if source_review else {})}
 
 
 def verify(rt, root, state, task):

@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[2]
 PATH = ROOT / 'tools/report/skills/general-e2e/orchestrate-general-e2e/scripts/unscored_rule_review.py'
@@ -105,6 +106,55 @@ class UnscoredReviewTests(unittest.TestCase):
         self.write(self.folder / 'response.json', response)
         self.write(self.folder / 'audit.json', {**self.audit, 'response_sha256': self.sha(self.folder / 'response.json')})
         with self.assertRaises(ValueError): self.evidence()
+
+    def test_declared_source_failure_keeps_only_owned_grader_output_drift(self):
+        workspace=self.attempt/'runtime/workspace';workspace.mkdir(parents=True)
+        business=workspace/'business.txt';business.write_bytes(b'original')
+        output=workspace/'评分证据';output.mkdir()
+        for name in ['分析与验收.json','汇总与差异.json','规则核验.json']:self.write(output/name,{'synthetic':'complete'})
+        contract=self.attempt/'contract.json';self.write(contract,{'automated_checks':'synthetic source'})
+        worker_folder=self.attempt/'worker';worker_folder.mkdir()
+        request={'automated_checks':'synthetic applied rule'};self.write(worker_folder/'request.json',request)
+        message='评测不可判定，禁止形成正式综合分：'+'；'.join('无法安全识别来源等价表示：托收服务结算.xlsx|结算_TG01_合同|'+x+'...' for x in ['125','126','131'])
+        self.write(worker_folder/'result.json',{'ok':False,'result':None,'error':{'type':'RuntimeError','message':message}})
+        audit={'status':'failed','identity':{'task_id':MODULE.SOURCE_TASK,'scoring_attempt_id':'synthetic'},
+               'worker':{'request_sha256':self.sha(worker_folder/'request.json'),'return_code':1,'process_tree_cleanup':{'remaining':False}},
+               'runtime_workspace':{'drifted':True}}
+        self.write(self.attempt/'rule-audit.json',audit)
+        self.write(self.attempt/'scoring-attention-report.json',{'task_id':MODULE.SOURCE_TASK,'scoring_attempt_id':'synthetic','formal_score_published':False,'candidate_original_modified':False})
+        baseline=hashlib.sha256(b'business.txt\0file\0'+self.sha(business).encode()+b'\n').hexdigest()
+        manifest={'identity':audit['identity'],'runtime':{'rule_review_profile':'escrow-status-equivalence-review/v6','workspace_argument':'runtime/workspace'},
+                  'digests':{'contract_sha256':MODULE.SOURCE_CONTRACT,'runtime_initial_sha256':baseline},'paths':{'contract':'contract.json'}}
+        review={'status':'completed','reviewed_context_count':2276,'unresolved_context_ids':[]}
+        with (patch.object(MODULE,'SOURCE_SHA',hashlib.sha256(b'synthetic source').hexdigest()),
+              patch.object(MODULE,'SOURCE_WORKER',hashlib.sha256(b'synthetic applied rule').hexdigest())):
+            proof=MODULE._declared_source_review(self.rt,self.attempt,manifest,review)
+            self.assertEqual(proof['source_reference_ambiguity_count'],3)
+            self.assertTrue(proof['original_runtime_drift_flag'])
+            self.assertEqual(len(proof['declared_grader_output_files']),3)
+            business.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError,'BUSINESS_RUNTIME_DRIFT'):
+                MODULE._declared_source_review(self.rt,self.attempt,manifest,review)
+            business.write_bytes(b'original')
+            self.write(worker_folder/'result.json',{'ok':False,'result':None,'error':{'type':'RuntimeError','message':message+' different'}})
+            with self.assertRaisesRegex(ValueError,'FAILURE_SIGNATURE_INVALID'):
+                MODULE._declared_source_review(self.rt,self.attempt,manifest,review)
+
+    def test_completed_review_without_context_uncertainty_requires_registered_source_blocker(self):
+        response=deepcopy(self.response);response['decisions'][1].update(status='judged',passed=False)
+        self.write(self.folder/'response.json',response)
+        audit={**self.audit,'status':'completed','unresolved_context_ids':[],
+               'response_sha256':self.sha(self.folder/'response.json')}
+        self.write(self.folder/'audit.json',audit)
+        with self.assertRaisesRegex(ValueError,'IDENTITY_OR_STATUS_INVALID'):self.evidence()
+        for name in ['rule-audit.json','rule-source-correction.json','scoring-attention-report.json']:
+            self.write(self.attempt/name,{'synthetic':'source retention'})
+        (self.attempt/'worker').mkdir()
+        with patch.object(MODULE,'_declared_source_review',return_value={'profile':'synthetic declared source','declared_grader_output_files':[]}):
+            proof=self.evidence()
+        self.assertEqual(proof['unresolved_context_count'],0)
+        self.assertEqual(proof['declared_source_review']['profile'],'synthetic declared source')
+        self.assertFalse((self.attempt/'score.json').exists())
 
 
 if __name__ == '__main__':
