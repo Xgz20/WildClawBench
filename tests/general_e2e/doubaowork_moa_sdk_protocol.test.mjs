@@ -96,3 +96,19 @@ test('finance opaque images resolve only to the literal matching SDK reference_i
  assert.throws(()=>verifyMoaSdkProtocol(fixture([finance,{...native,image_link_list:['../labis/image/ea3fe5e963b6ff6bba5f65c5c64bcfab']}])) ,/MEDIA_REFERENCE_UNVERIFIED/);
  assert.throws(()=>verifyMoaSdkProtocol(fixture([finance,{...native,content:content.replaceAll('ea3fe5e963b6ff6bba5f65c5c64bcfab','00000000000000000000000000000000')}])) ,/MEDIA_REFERENCE_AMBIGUOUS_OR_MISSING/);
 });
+
+test('Huanqiu SDK image links require the original HTTPS Huanqiu web.fetch page',()=>{
+ const url='https://img.huanqiucdn.cn/dp/api/files/imageDir/047268e4cd108c655404402c4e9c7690.png';
+ const web=structuredClone(call);web.tool_calls[0].function={name:'web.fetch',arguments:{url:'https://china.huanqiu.com/article/source'}};
+ const native={...result,content:'Original native text; image is transported in image_link_list',image_link_list:[url]};
+ const p=verifyMoaSdkProtocol(fixture([web,native]));
+ assert.equal(p.attachments[0].resolution.source_page_url_sha256,sha(web.tool_calls[0].function.arguments.url));
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([call,native])),/MEDIA_SOURCE_PAGE_UNVERIFIED/);
+ for(const source of ['https://other.example/article','http://china.huanqiu.com/a','https://huanqiu.com.attacker.example/a',
+   'https://user:secret@china.huanqiu.com/a','https://china.huanqiu.com:8443/a']){
+  const bad=structuredClone(web);bad.tool_calls[0].function.arguments.url=source;
+  assert.throws(()=>verifyMoaSdkProtocol(fixture([bad,native])),/MEDIA_SOURCE_PAGE_UNVERIFIED/);
+ }
+ assert.equal(p.attachments[0].resolution.source,'same-native-sdk-image-link-list');
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([web,{...native,image_link_list:['https://img.huanqiucdn.cn/private/other.png']}])) ,/MEDIA_SOURCE_PAGE_UNVERIFIED/);
+});

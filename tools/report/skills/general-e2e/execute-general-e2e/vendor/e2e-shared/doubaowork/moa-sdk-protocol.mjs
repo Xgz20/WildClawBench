@@ -9,7 +9,7 @@ const run = promisify(execFile);
 const allowedImageOrigin = parsed => parsed.protocol === 'https:' && !parsed.username && !parsed.password && !parsed.port
   && (/^p[0-9]+-flow-(?:imagex-)?sign\.byteimg\.com$/u.test(parsed.hostname)
     || /^p[0-9]+-doubao-search-sign\.byteimg\.com$/u.test(parsed.hostname)
-    || ['aka.doubaocdn.com','ar5iv.labs.arxiv.org','arxiv.org'].includes(parsed.hostname));
+    || ['aka.doubaocdn.com','ar5iv.labs.arxiv.org','arxiv.org','img.huanqiucdn.cn'].includes(parsed.hostname));
 
 // Finance search persists opaque image references beside literal, matching
 // reference_id/uri pairs in the same SDK result. Never invent a CDN URL.
@@ -18,6 +18,15 @@ function sdkImageLocation(reference, call, content) {
     let parsed;
     try { parsed = new URL(reference); } catch { check(false, 'MEDIA_REFERENCE_UNVERIFIED'); }
     check(allowedImageOrigin(parsed), 'MEDIA_ORIGIN_UNVERIFIED');
+    if (parsed.hostname === 'img.huanqiucdn.cn') {
+      let page;
+      try { page = new URL(call.arguments.url); } catch { check(false, 'MEDIA_SOURCE_PAGE_UNVERIFIED'); }
+      check(call.name === 'web.fetch' && page.protocol === 'https:' && !page.username && !page.password && !page.port
+        && /^(?:[a-z0-9-]+\.)*huanqiu\.com$/u.test(page.hostname)
+        && parsed.href === reference && parsed.pathname.startsWith('/dp/api/files/imageDir/'), 'MEDIA_SOURCE_PAGE_UNVERIFIED');
+      return { url: reference, resolution: { profile: 'native-web-fetch-huanqiu-image/v1',
+        source: 'same-native-sdk-image-link-list', content_sha256: sha(content), source_page_url_sha256: sha(call.arguments.url) } };
+    }
     return { url: reference };
   }
   check(call.name === 'seed_finance_search', 'MEDIA_REFERENCE_TOOL_UNVERIFIED');
