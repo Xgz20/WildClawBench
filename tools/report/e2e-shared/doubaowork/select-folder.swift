@@ -139,8 +139,15 @@ private func postShortcut(
     }
 }
 
+private func activateVerified(_ application: NSRunningApplication, timeoutSeconds: Double) throws {
+    let _: Bool = try waitUntil(timeoutSeconds: timeoutSeconds, description: "已核验应用进入前台") {
+        application.activate(options: [.activateAllWindows])
+        return NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier ? true : nil
+    }
+}
+
 private func focusPathField(_ field: AXUIElement, application: NSRunningApplication) throws {
-    application.activate(options: [])
+    try activateVerified(application, timeoutSeconds: 10)
     RunLoop.current.run(until: Date().addingTimeInterval(0.2))
     guard NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier else {
         throw SelectionError.missingElement("DoubaoWork 未处于前台，拒绝发送全局按键")
@@ -202,7 +209,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
     let application = matchingApplications[0]
     phase("APPLICATION_VERIFIED")
 
-    application.activate(options: [])
+    try activateVerified(application, timeoutSeconds: timeoutSeconds)
     RunLoop.current.run(until: Date().addingTimeInterval(0.3))
     let root = AXUIElementCreateApplication(application.processIdentifier)
     let (window, outerSheet) = try waitUntil(timeoutSeconds: timeoutSeconds, description: "唯一原生文件夹选择面板") {
@@ -212,7 +219,7 @@ private func selectFolder(bundleID: String, folderPath: String, timeoutSeconds: 
     do {
         let raised = AXUIElementPerformAction(window, kAXRaiseAction as CFString)
         guard raised == .success else { throw SelectionError.actionFailed("激活已确认的文件夹窗口", raised) }
-        application.activate(options: [])
+        try activateVerified(application, timeoutSeconds: timeoutSeconds)
         RunLoop.current.run(until: Date().addingTimeInterval(0.3))
         guard NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier else {
             throw SelectionError.missingElement("文件夹窗口未处于前台，拒绝发送全局快捷键")
