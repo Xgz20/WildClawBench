@@ -75,3 +75,24 @@ test('native media retrieval verifies type and bytes and refuses an unapproved r
   await assert.rejects(fetchMoaSdkAttachments(protocol,{disableSystemProxy:true}),/MEDIA_REDIRECT_UNVERIFIED/);
  } finally {globalThis.fetch=original;}
 });
+
+test('finance opaque images resolve only to the literal matching SDK reference_id and uri',()=>{
+ const reference='labis/image/ea3fe5e963b6ff6bba5f65c5c64bcfab';
+ const url='https://p3-doubao-search-sign.byteimg.com/'+reference+'~tplv-be4g95zd3a-image.jpeg?lk3s=opaque&x-signature=original';
+ const content='<finance_search><image reference_id="'+url.replaceAll('&','&amp;')+'"><pixel_size width="1000" height="728" /><uri>'+url+'</uri></image></finance_search>';
+ const finance=structuredClone(call);finance.tool_calls[0].function={name:'seed_finance_search',arguments:{query:'original query'}};
+ const native={...result,content,image_link_list:[reference]};
+ const p=verifyMoaSdkProtocol(fixture([finance,native]));
+ assert.equal(p.attachments[0].url,url);
+ assert.equal(p.attachments[0].native_image_reference,reference);
+ assert.equal(p.attachments[0].url_sha256,sha(url));
+ assert.equal(p.attachments[0].resolution.content_sha256,sha(content));
+ assert.equal(p.attachments[0].resolution.image_block_index,0);
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([call,native])),/MEDIA_REFERENCE_TOOL_UNVERIFIED/);
+ for(const text of ['',content+content,content.replace('<uri>'+url,'<uri>'+url+'-changed'),
+   content.replaceAll('p3-doubao-search-sign.byteimg.com','127.0.0.1')]){
+  assert.throws(()=>verifyMoaSdkProtocol(fixture([finance,{...native,content:text}])),/MEDIA_REFERENCE_/);
+ }
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([finance,{...native,image_link_list:['../labis/image/ea3fe5e963b6ff6bba5f65c5c64bcfab']}])) ,/MEDIA_REFERENCE_UNVERIFIED/);
+ assert.throws(()=>verifyMoaSdkProtocol(fixture([finance,{...native,content:content.replaceAll('ea3fe5e963b6ff6bba5f65c5c64bcfab','00000000000000000000000000000000')}])) ,/MEDIA_REFERENCE_AMBIGUOUS_OR_MISSING/);
+});

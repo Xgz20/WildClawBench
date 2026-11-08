@@ -8,7 +8,41 @@ const check = (ok, code) => { if (!ok) throw Error('DOUBAOWORK_MOA_SDK_' + code)
 const run = promisify(execFile);
 const allowedImageOrigin = parsed => parsed.protocol === 'https:' && !parsed.username && !parsed.password && !parsed.port
   && (/^p[0-9]+-flow-(?:imagex-)?sign\.byteimg\.com$/u.test(parsed.hostname)
+    || /^p[0-9]+-doubao-search-sign\.byteimg\.com$/u.test(parsed.hostname)
     || ['aka.doubaocdn.com','ar5iv.labs.arxiv.org','arxiv.org'].includes(parsed.hostname));
+
+// Finance search persists opaque image references beside literal, matching
+// reference_id/uri pairs in the same SDK result. Never invent a CDN URL.
+function sdkImageLocation(reference, call, content) {
+  if (!/^labis\/image\/[0-9a-f]{32}$/u.test(reference)) {
+    let parsed;
+    try { parsed = new URL(reference); } catch { check(false, 'MEDIA_REFERENCE_UNVERIFIED'); }
+    check(allowedImageOrigin(parsed), 'MEDIA_ORIGIN_UNVERIFIED');
+    return { url: reference };
+  }
+  check(call.name === 'seed_finance_search', 'MEDIA_REFERENCE_TOOL_UNVERIFIED');
+  const blocks = [...content.matchAll(/<image reference_id="([^"]+)">([\s\S]*?)<\/image>/gu)];
+  const matches = [];
+  for (const [index, block] of blocks.entries()) {
+    const uris = [...block[2].matchAll(/<uri>([^<]*)<\/uri>/gu)];
+    // Native finance XML escapes the attribute's ampersands, while uri text
+    // retains the literal signed URL. Decode that known attribute form once.
+    const referenceUrl = block[1].replaceAll('&amp;', '&');
+    if (uris.length !== 1 || uris[0][1] !== referenceUrl) continue;
+    const uri = uris[0][1];
+    let parsed;
+    try { parsed = new URL(uri); } catch { continue; }
+    if (parsed.pathname !== '/' + reference + '~tplv-be4g95zd3a-image.jpeg') continue;
+    check(allowedImageOrigin(parsed) && /^p[0-9]+-doubao-search-sign\.byteimg\.com$/u.test(parsed.hostname)
+      && parsed.href === uri, 'MEDIA_REFERENCE_ORIGIN_UNVERIFIED');
+    matches.push({ url: uri, native_image_reference: reference,
+      resolution: { profile: 'seed-finance-search-labis-image/v1', source: 'same-native-sdk-tool-result',
+        content_sha256: sha(content), image_block_index: index, image_block_sha256: sha(block[0]),
+        reference_id_decoding: 'xml-amp-once/v1' } });
+  }
+  check(matches.length === 1, 'MEDIA_REFERENCE_AMBIGUOUS_OR_MISSING');
+  return matches[0];
+}
 
 // This is the original SDK-written model protocol, not a reconstruction from
 // candidate files or UI text. Keep the unused legacy JS observer as evidence;
@@ -55,11 +89,11 @@ export function verifyMoaSdkProtocol({ trajectoryBytes, assignmentProof, snapsho
       if (voidPresentation) { call.result_kind = 'native-empty-presentation-ack'; call.result_sha256 = null; }
       else call.result_sha256 = sha(row.content);
       check(row.image_link_list == null || Array.isArray(row.image_link_list), 'MEDIA_UNSUPPORTED');
-      for (const [n,url] of (row.image_link_list || []).entries()) {
-        check(typeof url === 'string', 'MEDIA_UNSUPPORTED');
-        const parsed = new URL(url);
-        check(allowedImageOrigin(parsed), 'MEDIA_ORIGIN_UNVERIFIED');
-        attachments.push({ call_id: call.call_id, result_line: i + 1, image_index: n, url, url_sha256: sha(url) });
+      for (const [n,reference] of (row.image_link_list || []).entries()) {
+        check(typeof reference === 'string' && typeof row.content === 'string', 'MEDIA_UNSUPPORTED');
+        const location = sdkImageLocation(reference, call, row.content);
+        attachments.push({ call_id: call.call_id, result_line: i + 1, image_index: n,
+          ...location, url_sha256: sha(location.url) });
       }
     }
   }

@@ -103,7 +103,9 @@ export async function recountArchivedTools({stateFile, traceIndex}) {
   for(const [i,item]of proof.attachments.entries()) {
     const expected=protocol.attachments[i];
     ensure(item.call_id===expected.call_id&&item.image_index===expected.image_index&&item.result_line===expected.result_line
-      &&item.url_sha256===expected.url_sha256,'SDK_MEDIA_BINDING');
+      &&item.url_sha256===expected.url_sha256
+      &&item.native_image_reference===expected.native_image_reference
+      &&JSON.stringify(item.resolution??null)===JSON.stringify(expected.resolution??null),'SDK_MEDIA_BINDING');
     const bytes=await bound(item.path);ensure(hash(bytes)===item.sha256&&bytes.length===item.size,'SDK_MEDIA_DRIFT');
   }
   return countMoaSdkTools(protocol,transcript,index);
