@@ -37,3 +37,5 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 取消沿原身份停止派发，采集并封存已派发任务后释放沙箱。采集或进程清理尚未核验时保留 NEEDS_ATTENTION。Windows 清理回执在进程变更前落盘，恢复复用已观察的 PID、创建时间和路径，补充收口已记录的工作区服务。观察中断与取消分别记录，`resume` 接续原远端 job。
 
 执行器发行使用只读版本目录部署。批次保存 root、Python、Git revision、api_version 和冻结参数。该路径在批次生命周期内需保留原发行，平台默认发行的更新仅影响新批次。
+
+当前默认模板 winarena-pc-20261104-a 发布已验证的 Auto/High 与 Spark-X2.5/High。2026-11-09 的 Max 配置两次在 controller select_reasoning 阶段被拒绝，默认目录已收口到 high，预检会拒绝未发布档位。新增可用组合通过执行器能力文件发布。
