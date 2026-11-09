@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.80` init --reviewed-media-authorization 只接受显式选定的豆包原执行，在精确授权后由冻结 Score 决定原回合文字证据准入。保留原媒体缺失状态和独立裁判流程。
+
 `0.11.79` 新 `init --sdk-final-authorization` 只在显式指定任务及原执行记录时，将 AStudio 单一原生终稿前缀缺口交给冻结 Score 的精确授权校验。继续使用独立单题裁判并保留原执行和历史未评分记录。
 
 `0.11.78` 登记通用70题v5的冻结身份，延续v4已审核的取证兼容。Info002及Info004使用独立新版私有参考。

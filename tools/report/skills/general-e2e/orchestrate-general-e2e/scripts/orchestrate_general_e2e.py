@@ -494,6 +494,7 @@ def _execution_summary(
     unit_id: str,
     task_id: str,
     sdk_final_authorized: bool = False,
+    reviewed_media_authorized: bool = False,
 ) -> dict[str, Any]:
     record = _read_json(record_path, "EXECUTION_RECORD_INVALID")
     identity = record.get("identity")
@@ -572,7 +573,15 @@ def _execution_summary(
         sdk_final_candidate = (sdk_final_authorized and record.get("harness", {}).get("id") == "astronstudio"
                                and evidence.get("completeness") == "partial"
                                and missing == ["native-final-prefix-divergence"])
-        if not (partial_admission_candidate or sdk_final_candidate):
+        text_media_candidate = (
+            reviewed_media_authorized and record.get("harness", {}).get("id") == "doubaowork"
+            and evidence.get("completeness") == "partial" and isinstance(missing, list)
+            and set(missing) - {"resource_metrics_complete_coverage"} in (
+                {"native-sdk-tool-image-source-http-blocked"},
+                {"native-sdk-tool-image-private-source-not-requested"},
+            )
+        )
+        if not (partial_admission_candidate or sdk_final_candidate or text_media_candidate):
             failure = {
                 "code": "EXECUTION_EVIDENCE_INCOMPLETE",
                 "message": "complete execution evidence is required for scoring",
@@ -983,6 +992,7 @@ def initialize(
     score_slots: int = DEFAULT_SCORE_SLOTS,
     protect_runtime_office_inputs: bool = False,
     sdk_final_authorization: Path | None = None,
+    reviewed_media_authorization: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     # General E2E deliberately has no task-level scoring deadline.  Keep the
@@ -1016,6 +1026,10 @@ def initialize(
         sdk_final_authorization = _regular_file(sdk_final_authorization, "SDK_FINAL_AUTHORIZATION_INVALID")
         if not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1":
             raise OrchestrationError("SDK_FINAL_AUTHORIZATION_INVALID", "explicit task and execution record selection required")
+    if reviewed_media_authorization is not None:
+        reviewed_media_authorization = _regular_file(reviewed_media_authorization, "TEXT_MEDIA_AUTHORIZATION_INVALID")
+        if sdk_final_authorization is not None or not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1":
+            raise OrchestrationError("TEXT_MEDIA_AUTHORIZATION_INVALID", "explicit task and execution record selection required")
     if set(explicit) - set(selected):
         raise OrchestrationError(
             "EXECUTION_RECORD_TASK_UNSELECTED", repr(sorted(set(explicit) - set(selected)))
@@ -1038,6 +1052,7 @@ def initialize(
                 unit_id=identity["unit_id"],
                 task_id=task_id,
                 sdk_final_authorized=sdk_final_authorization is not None,
+                reviewed_media_authorized=reviewed_media_authorization is not None,
             )
             frozen_record = staging / "execution-records" / f"{task_id}.json"
             frozen_record.parent.mkdir(parents=True, exist_ok=True)
@@ -1108,6 +1123,8 @@ def initialize(
                 prepare_arguments.append("--protect-runtime-office-inputs")
             if sdk_final_authorization is not None:
                 prepare_arguments.extend(["--sdk-final-authorization", str(sdk_final_authorization)])
+            if reviewed_media_authorization is not None:
+                prepare_arguments.extend(["--reviewed-media-authorization", str(reviewed_media_authorization)])
             if api_runtime_config is not None:
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
@@ -3492,6 +3509,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     init.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
     init.add_argument("--sdk-final-authorization", type=Path)
+    init.add_argument("--reviewed-media-authorization", type=Path)
     init.add_argument("--protect-runtime-office-inputs", action="store_true")
 
     init_rescore = subparsers.add_parser("init-rescore")
@@ -3647,6 +3665,7 @@ def main(argv: list[str] | None = None) -> int:
                 task_ids=args.task_id,
                 execution_records=_execution_record_map(args.execution_record),
                 sdk_final_authorization=args.sdk_final_authorization,
+                reviewed_media_authorization=args.reviewed_media_authorization,
                 api_runtime_config=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
