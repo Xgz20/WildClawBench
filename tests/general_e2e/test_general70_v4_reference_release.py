@@ -111,6 +111,13 @@ class General70V4ReferenceReleaseTests(unittest.TestCase):
             if tid == INFO004:
                 continue
             profiles = [self.profiles(raw, dataset) for dataset in datasets]
+            if tid == RUNTIME.sterilization_quote_layout.TASK:
+                # This compatibility repair was admitted after the v4 reference release.
+                # Compare the original profiles separately from the v4-only repair.
+                self.assertNotIn('sterilization_quote_layout_profile', profiles[0])
+                marker = profiles[1].pop('sterilization_quote_layout_profile')
+                from sterilization_quote_complete_layout import PROFILE
+                self.assertEqual(marker['profile'], PROFILE)
             clean = lambda data: {k: ({a: b for a, b in v.items() if a != 'catalog_sha256'} if isinstance(v, dict) else v)
                                   for k, v in data.items()}
             self.assertEqual(clean(profiles[0]), clean(profiles[1]), tid)
