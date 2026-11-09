@@ -58,6 +58,10 @@
     "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
       "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md",
       "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md": {
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md",
+      "sha256": "3bc8309ad4cc8dcc7e24142631a7ef4a2901ec73b5cabf5788170d61332d06e0"
     }
   },
   "excluded_paths": [

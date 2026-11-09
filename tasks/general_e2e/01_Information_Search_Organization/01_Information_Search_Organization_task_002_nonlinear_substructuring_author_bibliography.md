@@ -68,7 +68,7 @@ def grade(transcript: list, workspace_path: str) -> dict:
         raise RuntimeError("Evaluator reference must not be a symlink")
     payload = reference.read_bytes()
     digest = sha256(payload).hexdigest()
-    expected = "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70"
+    expected = "5b29d21f9c153249ca1e813ab65df6bc4bf6b362db50e7daeb2d8327ab35c9ab"
     if digest != expected:
         raise RuntimeError("Evaluator reference version mismatch; review GT and rubric together")
     content = payload.decode("utf-8")
