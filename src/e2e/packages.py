@@ -11,8 +11,10 @@ import zipfile
 
 from .artifacts import _members, _protect, extract_zip, freeze_metadata_files, import_execution, inventory, quarantine_local_metadata, remove_temporary_tree, verify_backup, verify_execution
 from .common import E2EError, atomic_json, digest, file_sha256, inside, load_script, read_json, utc_now
+from .compatibility import verify_installed
 from .engine import load_batch
 from .handoff import export_scoring_context
+from .preparation import _revision
 from .store import BatchStore
 
 
@@ -68,6 +70,54 @@ def _local_report_inputs(batch: Path, stage: Path, manifest: dict, exported: lis
                         "task_ids": [entry["execution"]["task_id"]],
                         "path": location.relative_to(stage).as_posix()})
     return reports
+
+
+def _parent_general_report_inputs(batch: Path, stage: Path, manifest: dict, rows: list[dict], exported: list[dict]) -> list[dict]:
+    assets = manifest.get("compatibility", {}).get("general")
+    if not assets:
+        return []
+    verify_installed(batch, "general", assets)
+    installed = inside(batch, assets["installed_skills"])
+    prepare = load_script(installed / "prepare-general-e2e-workspaces/scripts/prepare_general_e2e_workspaces.py", "sandbox_parent_report_prepare")
+    configs = {}
+    for entry in exported:
+        context = entry.get("scoring_context")
+        if context and context["scene"] == "general":
+            config = read_json(inside(stage, context["context_root"]) / "report-config.json")
+            configs.setdefault(entry["execution"]["unit_id"], config["units"][0])
+    units = []
+    for unit in manifest["units"]:
+        if unit["scene"] != "general":
+            continue
+        public = configs.get(unit["unit_id"]) or {
+            "unit_id": unit["unit_id"], "harness": {"id": unit["harness"], "platform": "windows-x86_64", "version": None},
+            "model": {"requested_id": unit["model"], "reasoning_effort": unit.get("reasoning_effort")}, "execution_mode": "automatic"}
+        units.append({**public, "task_ids": unit["task_ids"]})
+    task_ids = [task["task_id"] for task in manifest["tasks"] if task["scene"] == "general"]
+    result = []
+    unit_ids = {unit["unit_id"] for unit in units}
+    for run in sorted({row["run_index"] for row in rows if row["unit_id"] in unit_ids}):
+        config = {"schema_id": prepare.CONFIG_SCHEMA_ID, "schema_version": 1,
+                  "contract_version": prepare.CONTRACT_VERSION, "bundle_protocol": prepare.BUNDLE_PROTOCOL,
+                  "batch_id": batch.name + f"-r{run:04d}", "task_ids": task_ids, "units": units,
+                  "judge": dict(prepare.DEFAULT_CODEX_JUDGE), "report": {"title": "General E2E 沙箱执行评测"}}
+        parent = stage / "parent-reports/general" / f"run-{run:04d}"
+        parent.mkdir(parents=True)
+        path = parent / "prepare-plan.json"
+        atomic_json(path, config)
+        prepared = prepare.prepare_batch(inside(batch, assets["dataset_bundle"]), inside(batch, assets["release_suite"]), path, parent)
+        root = Path(prepared["batch_root"])
+        # Preserve the verified manifest's historical artifact locks. Report-only
+        # consumers use explicit return packages, keeping subset exports scoped.
+        shutil.rmtree(root / "packages")
+        expected = [row["key"] for row in rows if row["unit_id"] in unit_ids and row["run_index"] == run]
+        materialized = [entry["execution"]["key"] for entry in exported if entry.get("scoring_context", {}).get("scene") == "general"
+                        and entry["execution"]["run_index"] == run]
+        result.append({"scene": "general", "run_index": run, "path": root.relative_to(stage).as_posix(),
+                       "task_ids": task_ids, "unit_ids": [unit["unit_id"] for unit in units], "report_only": True,
+                       "expected_execution_keys": expected, "materialized_execution_keys": materialized,
+                       "coverage_status": "complete" if set(expected) == set(materialized) else "partial"})
+    return result
 
 
 def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results", include_unsealed=False) -> dict:
@@ -128,7 +178,7 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
                 scene = context["scene"]
                 if scene not in skill_roots:
                     target = stage / "skills" / scene
-                    shutil.copytree(skill_source, target)
+                    shutil.copytree(skill_source, target, ignore=shutil.ignore_patterns("__pycache__", "node_modules"))
                     skill_roots[scene] = target.relative_to(stage).as_posix()
                 entry["scoring_context"] = {**context, "context_root": context_root.relative_to(stage).as_posix(),
                                              "installed_skills": skill_roots[scene]}
@@ -149,6 +199,8 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
                                             if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}],
                  "not_exported": [row["key"] for row in rows if row["key"] not in {entry["execution"]["key"] for entry in rows_exported}]}
         index["local_reports"] = _local_report_inputs(batch, stage, manifest, rows_exported) if purpose == "scoring" else []
+        index["parent_reports"] = _parent_general_report_inputs(batch, stage, manifest, rows, rows_exported) if purpose == "scoring" else []
+        index["exporter_revision"] = _revision(Path(__file__).resolve().parents[2])
         atomic_json(stage / "package-index.json", index)
         (stage / "LOCAL_START.md").write_text(
             "# 本地评分与报告接续\n\n"
@@ -168,6 +220,10 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
             "parent_scope 和 not_exported 检查覆盖。General 多个单题来源使用 report-general-e2e 的"
             " selected_report.py 显式选择来源包，Web 分单元、run 与 Profile 生成报告。"
             "成功题与未封存题的覆盖分别记录，不将缺失材料补作有效分数。\n\n"
+            "parent_reports 提供按 run 分组的完整父 General 范围报告元数据。"
+            "将单题标准回传导入为显式来源后，使用其 path 作为 selected_report.py 的 batch-root，"
+            "按 task_ids 和 expected_execution_keys 检查完整范围。report_only 元数据保留历史输入制品锁，"
+            "各单题的完整评分输入位于 scoring_contexts。\n\n"
             "purpose=results 只提供原始执行资料。purpose=scoring 另提供成功题的标准评分输入和冻结 Skill。"
             "失败题的 scoring_unavailable_reason、部分轨迹和原始失败资料随包保留。\n",
             encoding="utf-8")
@@ -291,6 +347,7 @@ def import_package(archive: Path, receipt_path: Path | None, workspace: Path) ->
                  "parent_batch_id": index["parent_batch_id"], "purpose": index["purpose"],
                  "execution_count": len(index["exported"]), "scoring_contexts": contexts,
                  "local_reports": [{**row, "path": str(inside(destination, row["path"]))} for row in index.get("local_reports", [])],
+                 "parent_reports": [{**row, "path": str(inside(destination, row["path"]))} for row in index.get("parent_reports", [])],
                  "imported_at": utc_now()}
         atomic_json(temporary / "import-receipt.json", local)
         temporary.rename(destination)

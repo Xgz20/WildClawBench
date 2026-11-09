@@ -89,6 +89,7 @@ def describe(repo: Path) -> dict:
             "cancel",
             "restore",
             "offline-export",
+            "offline-parent-report-inputs",
         ],
         "scenarios": [
             {"id": "general", "display_name": "通用场景", "dataset_required": True},

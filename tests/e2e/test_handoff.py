@@ -24,7 +24,7 @@ class GeneralImportTests(unittest.TestCase):
             task_id = "02_Code_Intelligence_task_001_temperature_cli_fix"
             batch = prepare_batch(repo, root, {
                 "batch_id": "general-file-import", "selection": {"scenario": "general",
-                    "dataset": "general-custom60-v1", "task_ids": [task_id]},
+                    "dataset": "general-custom60-v1", "task_ids": [task_id, "03_Social_Interaction_task_003_colleague_leave_reply"]},
                 "units": [{"harness": "astronstudio", "model": "spark-x2.6", "reasoning_effort": "high"}]})
             provider = Provider()
 
@@ -51,7 +51,12 @@ class GeneralImportTests(unittest.TestCase):
                 archive = root / "result.zip"
                 export_package(batch, archive, purpose="scoring")
                 imported = import_package(archive, None, root / "recipient")
-                context = imported["scoring_contexts"][0]
+                context = next(c for c in imported["scoring_contexts"]
+                               if read_json(Path(c["context_root"]) / "unit/manifest.json")["task_ids"] == [task_id])
+                parent_report = imported["parent_reports"][0]
+                self.assertEqual(parent_report["coverage_status"], "complete")
+                self.assertEqual(len(read_json(Path(parent_report["path"]) / "manifest.json")["task_ids"]), 2)
+                self.assertTrue(parent_report["report_only"])
                 context_root = Path(context["context_root"])
                 project = next((context_root / "unit").glob("evidence/tasks/*/*/candidate/workspace/project"))
                 self.assertEqual(project.stat().st_mode & 0o777, 0o555)
