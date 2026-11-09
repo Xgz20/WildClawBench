@@ -31,7 +31,9 @@ DEFAULT_PROFILE = {
         {"id": "auto", "display_name": "Auto（实际模型以原生回读为准）"},
         {"id": "spark-x2.5", "display_name": "Spark-X2.5"},
     ],
-    "reasoning_efforts": ["none", "high", "max"],
+    # Publish combinations verified on this template. The controller currently
+    # cannot select Max. Operators may publish newly verified capabilities.
+    "reasoning_efforts": ["high"],
 }
 
 

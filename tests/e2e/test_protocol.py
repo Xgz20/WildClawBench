@@ -164,6 +164,10 @@ class ProtocolTests(unittest.TestCase):
         self.assertTrue(result["valid"])
         self.assertEqual(result["planned_execution_count"], 2)
         create.assert_not_called()
+        raw["units"][0]["reasoning_effort"] = "max"
+        unavailable = preflight(root, raw)
+        self.assertFalse(unavailable["valid"])
+        self.assertIn("REASONING_NOT_PUBLISHED", {issue["code"] for issue in unavailable["issues"]})
 
     def test_inline_and_plan_invocations_resolve_identical_scope(self):
         repo = Path(__file__).resolve().parents[2]
