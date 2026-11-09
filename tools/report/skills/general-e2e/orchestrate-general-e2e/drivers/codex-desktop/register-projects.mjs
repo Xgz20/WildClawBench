@@ -235,11 +235,20 @@ export async function confirmProjectTrust(page, project, timeout) {
   return true;
 }
 
-async function dismissStaleProjectDialog(page, timeout) {
+export async function dismissStaleProjectDialog(page, timeout) {
   const dialogs = await visible(page.getByRole("dialog"));
   if (!dialogs.length) return;
   if (dialogs.length !== 1) {
     throw new Error("Codex Desktop 存在未知对话框，拒绝继续注册项目");
+  }
+  if (await dialogs[0].evaluate(dialog => dialog.classList.contains("bg-coachmark"))) {
+    const close = dialogs[0].getByRole("button", { name: "关闭工具提示", exact: true });
+    if (await close.count() !== 1 || await dialogs[0].getByRole("button").count() !== 1) {
+      throw new Error("工具提示缺少唯一已知关闭按钮");
+    }
+    await close.click({ timeout, noWaitAfter: true });
+    await dialogs[0].waitFor({ state: "hidden", timeout });
+    return;
   }
   const dialogText = await dialogs[0].innerText();
   if (/将设备连接到此 Mac|Connect (?:a )?device to this Mac/i.test(dialogText)) {

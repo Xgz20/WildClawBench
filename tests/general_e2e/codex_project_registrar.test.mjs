@@ -9,9 +9,34 @@ import {
   clickNewProjectControl,
   openProjectWithOfficialCli,
   confirmProjectTrust,
+  dismissStaleProjectDialog,
   waitForExactProjectTrust,
 } from "../../tools/report/skills/general-e2e/orchestrate-general-e2e/drivers/codex-desktop/register-projects.mjs";
 import { clickNewProjectControl as clickWebNewProjectControl } from "../../tools/report/skills/web-e2e/orchestrate-web-e2e/drivers/codex-desktop/register-projects.mjs";
+
+test("registration clears only the recognized single-button coachmark", async () => {
+  let clicks = 0;
+  const page = (coachmark, buttons) => ({
+    getByRole: () => ({
+      count: async () => 1,
+      nth: () => ({
+        isVisible: async () => true,
+        evaluate: async () => coachmark,
+        innerText: async () => "Unrecognized dialog",
+        getByRole: (_role, options) => ({
+          count: async () => options?.name === "关闭工具提示" ? 1 : buttons,
+          click: async () => { clicks++; },
+        }),
+        waitFor: async options => assert.equal(options.state, "hidden"),
+      }),
+    }),
+  });
+  await assert.rejects(dismissStaleProjectDialog(page(false, 1), 1000), /未知对话框/);
+  await assert.rejects(dismissStaleProjectDialog(page(true, 2), 1000), /唯一已知关闭按钮/);
+  assert.equal(clicks, 0);
+  await dismissStaleProjectDialog(page(true, 1), 1000);
+  assert.equal(clicks, 1);
+});
 
 test("General E2E folder trust requires the exact requested absolute path", () => {
   const project = "/tmp/general-score/tasks/task-one";
