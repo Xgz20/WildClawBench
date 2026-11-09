@@ -3,7 +3,10 @@ import hashlib
 
 TASK = "03_Data_Analysis_task_010_contract_escrow_refund_reconciliation"
 CONTRACT = "c93e50e83a8ac8eb9d6ba9e02510a762952b4011e8495c763073029a42bfff75"
-PROFILE = "escrow-declared-settlement-source-index/v1"
+LEGACY_PROFILE = "escrow-declared-settlement-source-index/v1"
+PROFILE = "escrow-declared-settlement-source-index/v2"
+PRISTINE_SHA256 = "93fd20bf692b0ab1ee9a9a98fd3ac7b916a6073be7d608b117a1e689e7481515"
+WORKBUDDY_METADATA_VARIANT_SHA256 = "df72a4d5fad91ad7623db7bd6f829a7a6001e2af6175ab08dfcf8b7cd477031d"
 
 BRIDGE = r'''
 def _escrow_declared_batch_source_index(base, rows):
@@ -76,10 +79,10 @@ def _escrow_expand_declared_batch_source(value,row,index_cells,base,source_rows,
 '''
 
 
-def marker(contract, contract_sha):
-    if contract.get("task_id") != TASK or contract_sha != CONTRACT:
+def marker(contract, contract_sha, *, profile=PROFILE):
+    if contract.get("task_id") != TASK or contract_sha != CONTRACT or profile not in (LEGACY_PROFILE, PROFILE):
         return None
-    return {"profile": PROFILE, "contract_sha256": CONTRACT,
+    return {"profile": profile, "contract_sha256": CONTRACT,
             "source_sha256": hashlib.sha256(contract["automated_checks"].encode()).hexdigest()}
 
 
@@ -88,7 +91,7 @@ def effective_source(manifest, original, current, prior):
     if frozen is None:
         return current, prior
     expected = marker({"task_id": manifest["identity"]["task_id"], "automated_checks": original},
-                      manifest["digests"]["contract_sha256"])
+                      manifest["digests"]["contract_sha256"], profile=frozen.get("profile"))
     anchor = "    index_cells={r['_source_ref']:r.get('来源定位') for r in actual['来源索引'] if '_source_ref' in r}\n"
     locate = "gotloc=locations(row.get('来源'),index_cells)"
     if expected is None or frozen != expected or current.count(anchor) != 1 or current.count(locate) != 1:
@@ -100,13 +103,23 @@ def effective_source(manifest, original, current, prior):
     current = current.replace(locate, """gotloc=(_escrow_expand_declared_batch_source(
                         row.get('来源'),row,index_cells,base,actual['来源索引'],_escrow_batch_index_cache,_escrow_batch_index_audit)
                         if name=='结算银行核对' else locations(row.get('来源'),index_cells))""", 1)
-    effective = current + BRIDGE
+    bridge = BRIDGE
+    allowed = [PRISTINE_SHA256]
+    if frozen["profile"] == PROFILE and manifest["identity"].get("unit_id") == "workbuddy-macos":
+        # This exact native variant differs only by the Office custom-property
+        # XML part and its package declarations; worksheet contents were compared.
+        allowed.append(WORKBUDDY_METADATA_VARIANT_SHA256)
+        bridge = bridge.replace(f"sha256(source.read_bytes()).hexdigest()!={PRISTINE_SHA256!r}",
+                                f"sha256(source.read_bytes()).hexdigest() not in {tuple(allowed)!r}")
+    effective = current + bridge
     receipt = {"schema_version": "wildclawbench.general-e2e-rule-source-correction/v1",
-               "correction_id": PROFILE, "task_id": TASK, "contract_sha256": CONTRACT,
+               "correction_id": frozen["profile"], "task_id": TASK, "contract_sha256": CONTRACT,
                "original_source_sha256": expected["source_sha256"],
                "effective_source_sha256": hashlib.sha256(effective.encode()).hexdigest(),
                "candidate_rewritten": False, "numeric_decisions_assigned": False,
                "reason": "按候选来源索引的纳入记录、原公开结算表物理行、流水号和四字段批次身份验证省略；不用GT补候选引用，不把重复或范围外行补入批次。"}
+    if frozen["profile"] == PROFILE:
+        receipt["allowed_public_settlement_workbook_sha256"] = allowed
     if prior:
         receipt["prior_correction"] = prior
     return effective, receipt
