@@ -8,6 +8,8 @@ CATALOG_SHA = "1c78f388a4a476e43141fa08426b21381acfa3335d7ea3e58b90e0d5b163c449"
 V3_CATALOG_SHA = "276294a05a2fe85774dac7c917b916bab771ad1dbdfe5ecfd6647b966518060f"
 V4_CATALOG_SHA = "3d2de4b3c947ee18cd759343f8645554f3f1c4d1e0773356376220de49894eca"
 
+V5_CATALOG_SHA = "8474d972c8a4a094fe21fb514f2cb777fd95b70b04df7d8825b78680bc9b0250"
+
 def registry():
     data=(Path(__file__).resolve().parents[1]/'data/general70-source-identities-v2.json').read_bytes()
     if hashlib.sha256(data).hexdigest()!=CATALOG_SHA:raise ValueError('SOURCE_IDENTITY_CATALOG_DRIFT')
@@ -18,8 +20,10 @@ def accepted_contracts(original):
     values={original,row['contract_sha256']} if row else {original}
     revisions=revision_registry()
     values |= {revisions[key]['contract_sha256'] for key in values if key in revisions}
-    releases = reference_release_registry()
-    return values | {releases[key]['contract_sha256'] for key in values if key in releases}
+    for catalog in (_reference_release_catalog(), _next_reference_release_catalog()):
+        releases = catalog['profiles']
+        values |= {releases[key]['contract_sha256'] for key in values if key in releases}
+    return values
 
 def accepted_source_hashes(original):
     rows=[row for row in registry().values() if row.get('original_automated_source_sha256')==original]
@@ -28,8 +32,11 @@ def accepted_source_hashes(original):
         *[revisions[row['contract_sha256']]['automated_source_sha256'] for row in rows if row['contract_sha256'] in revisions]}
     contracts = {row['contract_sha256'] for row in rows}
     contracts |= {revisions[key]['contract_sha256'] for key in contracts if key in revisions}
-    releases = reference_release_registry()
-    return values | {releases[key]['automated_source_sha256'] for key in contracts if key in releases}
+    for catalog in (_reference_release_catalog(), _next_reference_release_catalog()):
+        releases = catalog['profiles']
+        values |= {releases[key]['automated_source_sha256'] for key in contracts if key in releases}
+        contracts |= {releases[key]['contract_sha256'] for key in contracts if key in releases}
+    return values
 
 
 def revision_registry():
@@ -42,6 +49,13 @@ def _reference_release_catalog():
     data = (Path(__file__).resolve().parents[1] / 'data/general70-source-identities-v4.json').read_bytes()
     if hashlib.sha256(data).hexdigest() != V4_CATALOG_SHA:
         raise ValueError('SOURCE_V4_IDENTITY_CATALOG_DRIFT')
+    return json.loads(data)
+
+
+def _next_reference_release_catalog():
+    data = (Path(__file__).resolve().parents[1] / 'data/general70-source-identities-v5.json').read_bytes()
+    if hashlib.sha256(data).hexdigest() != V5_CATALOG_SHA:
+        raise ValueError('SOURCE_V5_IDENTITY_CATALOG_DRIFT')
     return json.loads(data)
 
 
@@ -76,23 +90,23 @@ def registry_variants(rows):
             if key in value:value[key]=variant['automated_source_sha256']
         if 'dataset' in value:value['dataset']=variant['dataset']
         if value not in result:result.append(value)
-    catalog = _reference_release_catalog()
-    releases = catalog['profiles']
-    for row in list(result):
-        # Only carry the baseline release's active dataset-bound profiles.
-        # Equal contract bytes alone must not revive an older v1/v2 profile.
-        if 'dataset' in row and row['dataset'] != catalog['baseline_dataset']:
-            continue
-        variant = releases.get(row.get('contract_sha256'))
-        if variant is None or variant['task_id'] != row['task_id']:
-            continue
-        value = deepcopy(row)
-        value['contract_sha256'] = variant['contract_sha256']
-        for key in ('source_sha256', 'automated_source_sha256'):
-            if key in value:
-                value[key] = variant['automated_source_sha256']
-        if 'dataset' in value:
-            value['dataset'] = variant['dataset']
-        if value not in result:
-            result.append(value)
+    for catalog in (_reference_release_catalog(), _next_reference_release_catalog()):
+        releases = catalog['profiles']
+        for row in list(result):
+            # Only carry the baseline release's active dataset-bound profiles.
+            # Equal contract bytes alone must not revive an older v1/v2 profile.
+            if 'dataset' in row and row['dataset'] != catalog['baseline_dataset']:
+                continue
+            variant = releases.get(row.get('contract_sha256'))
+            if variant is None or variant['task_id'] != row['task_id']:
+                continue
+            value = deepcopy(row)
+            value['contract_sha256'] = variant['contract_sha256']
+            for key in ('source_sha256', 'automated_source_sha256'):
+                if key in value:
+                    value[key] = variant['automated_source_sha256']
+            if 'dataset' in value:
+                value['dataset'] = variant['dataset']
+            if value not in result:
+                result.append(value)
     return result

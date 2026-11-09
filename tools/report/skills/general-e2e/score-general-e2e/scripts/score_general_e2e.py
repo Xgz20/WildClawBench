@@ -2808,7 +2808,7 @@ def _effective_rule_source(
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
-        if manifest.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4'}:
+        if manifest.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4','general-custom70-v5'}:
             current_contract=manifest['digests']['contract_sha256']
             def bind(value):
                 result=dict(value)

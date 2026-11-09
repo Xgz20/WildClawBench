@@ -18,9 +18,14 @@ def _relative(value: str) -> PurePosixPath:
 
 
 class FrozenSources:
-    def __init__(self, repo: Path, index: str | None = None):
+    def __init__(self, repo: Path, index: str | None = None, current_paths: tuple[str, ...] = ()):
         self.repo = repo.resolve()
         self.overrides: dict[str, bytes] = {}
+        current = tuple(_relative(path) for path in current_paths)
+
+        def use_current(path: PurePosixPath) -> bool:
+            return any(path == root or root in path.parents for root in current)
+
         self.excluded: tuple[PurePosixPath, ...] = ()
         if index is None:
             return
@@ -29,7 +34,8 @@ class FrozenSources:
         if doc.get("schema_version") != "general-e2e-frozen-source-index/v1":
             raise ValueError("FROZEN_SOURCE_INDEX_INVALID")
         for relative, row in doc["files"].items():
-            _relative(relative)
+            if use_current(_relative(relative)):
+                continue
             snapshot = target.parent / _relative(row["snapshot"])
             if snapshot.is_symlink() or not snapshot.resolve().is_relative_to(target.parent.resolve()):
                 raise ValueError("FROZEN_SOURCE_SNAPSHOT_ESCAPE")
@@ -37,7 +43,8 @@ class FrozenSources:
             if hashlib.sha256(data).hexdigest() != row["sha256"]:
                 raise ValueError("FROZEN_SOURCE_SNAPSHOT_DRIFT: " + relative)
             self.overrides[relative] = data
-        self.excluded = tuple(_relative(p) for p in doc.get("excluded_paths", []))
+        excluded = (_relative(path) for path in doc.get("excluded_paths", []))
+        self.excluded = tuple(path for path in excluded if not use_current(path))
 
     def read_bytes(self, path: Path) -> bytes:
         relative = path.resolve().relative_to(self.repo).as_posix()
@@ -48,9 +55,11 @@ class FrozenSources:
         return any(relative == excluded or excluded in relative.parents for excluded in self.excluded)
 
 
-def dataset_task_path(repo: Path, relative: str, index: str | None = None) -> Path:
+def dataset_task_path(
+    repo: Path, relative: str, index: str | None = None, current_paths: tuple[str, ...] = (),
+) -> Path:
     """Expose the exact archived task to CLI consumers without rewriting it."""
-    frozen = FrozenSources(repo, index)
+    frozen = FrozenSources(repo, index, current_paths)
     _relative(relative)
     if relative not in frozen.overrides:
         return repo / relative

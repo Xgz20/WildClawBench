@@ -58,6 +58,7 @@ class DatasetDefinition:
     source_revision: Optional[str] = None
     frozen_source_index: Optional[str] = None
     task_ids: tuple[str, ...] = ()
+    current_source_paths: tuple[str, ...] = ()
 
 
 DEFAULT_DEFINITION = DatasetDefinition(
@@ -130,6 +131,15 @@ GENERAL70_V4_DEFINITION = replace(
     created_at=_GENERAL70_V4["created_at"], source_revision=_GENERAL70_V4["source_revision"],
     frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json",
 )
+GENERAL70_V5_DEFINITION = replace(
+    GENERAL70_V4_DEFINITION, dataset_id="general-custom70-v5",
+    created_at="2026-11-09T00:00:00+08:00", source_revision="03757ecf88511a9ff29f5e9a1908da814a2b3895",
+    current_source_paths=(
+        "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
+        "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt",
+        "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt",
+    ),
+)
 INFO004_OPEN_DEFINITION = replace(
     GENERAL70_V3_DEFINITION, dataset_id="general-info004-open-v1", created_at="2026-11-04T00:00:00+08:00",
     source_revision="4bc133fd3b8e710f8bd8e163bac97a5bcb4c06d3",
@@ -149,7 +159,7 @@ INFO004_OPEN_V3_DEFINITION = replace(
     source_revision="df8ff3b4530e1d93e65f3ec83d401c2990745a51",
     frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-info004-open-v3/index.json",
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, GENERAL70_V4_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, INFO004_OPEN_V3_DEFINITION)}
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, GENERAL70_V4_DEFINITION, GENERAL70_V5_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, INFO004_OPEN_V3_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -463,7 +473,7 @@ def compile_dataset(
 ) -> tuple[dict[str, Any], list[BundleMember]]:
     """Compile source tasks into a manifest plus deterministic archive members."""
     repo_root = repo_root.resolve()
-    sources = FrozenSources(repo_root, definition.frozen_source_index)
+    sources = FrozenSources(repo_root, definition.frozen_source_index, definition.current_source_paths)
     tasks_root = repo_root / definition.task_root
     registry_path = tasks_root / "task_sources.yaml"
     schema_path = default_schema_path()
@@ -533,7 +543,7 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, GENERAL70_V4_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, GENERAL70_V4_DEFINITION.dataset_id, GENERAL70_V5_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

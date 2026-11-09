@@ -14,12 +14,13 @@ CATALOG_SHA='edb3f823f536d9d0ab25fd3f0147582e95cbb1dc42af8723623501e455f0dac4'
 CATALOG_V2_SHA='7bb0e0d8a5877c2406ffd575d42adacbbdf31223e9dc5b894eaaa3851f76054b'
 CATALOG_V3_SHA='7cb950bb8610663cf22d85f9fc62bdbbbeab0bbaee04149bc48ea3e1711fc8c1'
 CATALOG_V4_SHA='b7945f7ee10d477c89cb06ace410e97ad7c4b00443d04fc3ec5d1b6faaa79452'
+CATALOG_V5_SHA='9e1c02bb6433c697641416574b375e908df330de9ceddc040f5f2895cbc71416'
 ERROR_KIND='declared-evidence-glob-implementation-repair/v1'
 
 
 def registry(dataset_id=None):
-    version={'general-custom70-v2':'v2','general-custom70-v3':'v3','general-custom70-v4':'v4'}.get(dataset_id,'v1')
-    expected={'v1':CATALOG_SHA,'v2':CATALOG_V2_SHA,'v3':CATALOG_V3_SHA,'v4':CATALOG_V4_SHA}[version]
+    version={'general-custom70-v2':'v2','general-custom70-v3':'v3','general-custom70-v4':'v4','general-custom70-v5':'v5'}.get(dataset_id,'v1')
+    expected={'v1':CATALOG_SHA,'v2':CATALOG_V2_SHA,'v3':CATALOG_V3_SHA,'v4':CATALOG_V4_SHA,'v5':CATALOG_V5_SHA}[version]
     raw=(Path(__file__).resolve().parents[1]/('data/reviewed-generated-file-globs-'+version+'.json')).read_bytes()
     if hashlib.sha256(raw).hexdigest()!=expected:raise ValueError('EVIDENCE_GLOB_CATALOG_DRIFT')
     return json.loads(raw)['profiles']
@@ -41,7 +42,7 @@ def policy(manifest,contract):
 
 def descriptor(manifest,contract):
     row=policy(manifest,contract)
-    catalog_sha={'general-custom70-v2':CATALOG_V2_SHA,'general-custom70-v3':CATALOG_V3_SHA,'general-custom70-v4':CATALOG_V4_SHA}.get(manifest.get('dataset',{}).get('id'),CATALOG_SHA)
+    catalog_sha={'general-custom70-v2':CATALOG_V2_SHA,'general-custom70-v3':CATALOG_V3_SHA,'general-custom70-v4':CATALOG_V4_SHA,'general-custom70-v5':CATALOG_V5_SHA}.get(manifest.get('dataset',{}).get('id'),CATALOG_SHA)
     return None if row is None else {'profile':PROFILE,'catalog_sha256':catalog_sha,
         'contract_sha256':row['contract_sha256'],'source_sha256':row['source_sha256'],'patterns':row['patterns']}
 
