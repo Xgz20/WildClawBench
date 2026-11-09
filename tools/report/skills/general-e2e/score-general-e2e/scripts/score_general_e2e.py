@@ -58,6 +58,7 @@ import escrow_state_review
 import work_order_final_policy
 import domain_details_diagnostics
 import escrow_grouped_review
+import escrow_batch_sources
 import release_baseline_text
 import declared_public_snapshots
 import public_snapshot_sidecar
@@ -1890,6 +1891,8 @@ def prepare_attempt(
                 **({'rule_review_profile':escrow_grouped_review.PROFILE}
                    if escrow_state_review.matches(contract,_sha256_bytes(contract_bytes))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'escrow_declared_batch_sources_profile':escrow_batch_sources.marker(contract,_sha256_bytes(contract_bytes))}
+                   if escrow_batch_sources.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'rule_review_profile':_new_native_rule_review_profile(contract,_sha256_bytes(contract_bytes),judge_config)}
                    if _new_native_rule_review_profile(contract,_sha256_bytes(contract_bytes),judge_config) is not None else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(contract,_sha256_bytes(contract_bytes))}
@@ -2837,6 +2840,7 @@ def _effective_rule_source(
         corrected, receipt = grade_wrapper_normalization.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = escrow_state_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = escrow_grouped_review.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = escrow_batch_sources.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = release_baseline_text.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = declared_public_snapshots.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_snapshot_sidecar.effective_source(manifest,source,corrected,receipt)
@@ -6407,6 +6411,8 @@ def prepare_rescore_attempt(
                 **({'rule_review_profile':escrow_grouped_review.PROFILE}
                    if escrow_state_review.matches(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'escrow_declared_batch_sources_profile':escrow_batch_sources.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
+                   if escrow_batch_sources.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'rule_review_profile':_new_native_rule_review_profile(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),judge_config)}
                    if _new_native_rule_review_profile(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),judge_config) is not None else {}),
                 **({'semantic_score_range_profile':office001_semantic_ranges.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}

@@ -24,7 +24,7 @@ class ProcurementExplicitLabelsTests(unittest.TestCase):
         marked=deepcopy(self.manifest)
         marked['runtime']['procurement_explicit_labels_profile']=P.marker(self.contract,P.CONTRACT)
         fixed,receipt=RUNTIME._effective_rule_source(marked,self.source)
-        self.assertEqual(fixed,base+P.BRIDGE)
+        self.assertEqual(fixed,base+P.BRIDGE+P.SECTION_BRIDGE)
         self.assertEqual(receipt['correction_id'],P.PROFILE)
         self.assertEqual(receipt['prior_correction'],prior)
         self.assertFalse(receipt['candidate_rewritten']);self.assertFalse(receipt['numeric_decisions_assigned'])
