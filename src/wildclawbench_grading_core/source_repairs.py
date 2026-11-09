@@ -456,3 +456,42 @@ _PROFILES['07928b5aaf640eb0f55173fbe1c3d2fec0530b5b7011e74295f526d08bd1fedd'] = 
              ("evidence_file('分析与分类.json',{'分析说明':ev.get('分析说明',[]),'分类汇总':ev.get('分类汇总',[]),'coverage':diagnostics.get('coverage',{}),'candidate_error':error})",
               "evidence_file('分析与分类.json',{'补充视图存在':bool(ev.get('补充差异汇总')),'分析说明':ev.get('分析说明',[]),'分类汇总':ev.get('分类汇总',[]),'补充差异汇总':ev.get('补充差异汇总',[]),'coverage':diagnostics.get('coverage',{}),'candidate_error':error})")],
  'current_source_sha256': '6fd36ee578f1c487d269b2944211c3cb31ca5102c0c16f0d385211c4062d6e6e'}
+
+
+_INDICATOR_HEADER_READER = '''def indicator_header(value):
+    parts = str(value or '').strip().splitlines()
+    if len(parts) != 2:
+        return named(value, FIELDS)
+    field, label = (part.strip() for part in parts)
+    if field not in FIELDS:
+        return named(value, FIELDS)
+    # Workbook display captions that are equivalent to the canonical field.
+    display_labels = {
+        'trade_date': '交易日期', 'prev_trade_date': '前一开市日',
+        'session_label': '时段标签', 'source_status': '行情状态',
+        'source_refs': '来源引用', 'policy_id': '适用规程',
+        'signal_reason': '判定理由', 'threshold_case': '门槛情形',
+        'override_reason': '覆盖理由', 'summary_key': '统计项',
+        'summary_value': '统计值', 'before_value': '底稿前值',
+        'after_value': '修订后值', 'source_ref': '依据位置',
+        'impact': '影响字段', 'follow_up': '待确认/后续',
+    }
+    equivalent = [field, *FIELDS[field], display_labels.get(field, field)]
+    if norm(label) in {norm(caption) for caption in equivalent}:
+        return field
+    return named(value, FIELDS)
+
+'''
+
+
+_PROFILES['e2143d3977f9e0a9812134e6e891101b39471a806bacffc08e17ec947b0b5a3b'] = {
+    'task_id': '02_Office_task_025_indicator_window_rules',
+    'profile': 'indicator-bilingual-workbook-headers/v1',
+    'reason': '识别已知字段名及对应换行展示表头，保留原单元格、位置、重复列门禁、评分权重及上限。',
+    'changes': [
+        ('def read_tables(path):', _INDICATOR_HEADER_READER + 'def read_tables(path):'),
+        ('headers=[named(c.value,FIELDS) for c in row]',
+         'headers=[indicator_header(c.value) for c in row]'),
+    ],
+    'current_source_sha256': '7435dcfc89a3c650323ada70e291a4314de473c6fe3a35d9522ab9e57b408c6b',
+}
