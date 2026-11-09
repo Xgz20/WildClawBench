@@ -33,6 +33,7 @@ import failure_evidence
 import trace_handoff
 import native_moa_assistant_view
 import moa_presentation_admission
+import astronstudio_sdk_final_admission as sdk_final
 import shared_source_repairs
 import dataset_rule_corrections
 import rule_review
@@ -1061,6 +1062,20 @@ def _formal_completion_rule_input(root: Path, manifest: Mapping[str, Any], trans
     body = _completion_payload(execution, receipt, data, receipt["source_paths"], execution_path.read_bytes())
     messages = [r for r in transcript if r.get("type") == "assistant_message" and r.get("role") == "assistant" and _instruction_text(r)]
     normalization = None
+    sdk_selection = None
+    if manifest.get("evidence_admission") == sdk_final.ADMISSION:
+        admission_path = root / "private/evidence-admission.json"
+        admission_sha = _sha256_file(admission_path)
+        admission = _read_json(admission_path)
+        selected = _instruction_text(messages[-1]) if messages else ""
+        if (admission_sha != manifest.get("reviewed_evidence_receipt_sha256")
+                or _sha256_bytes(selected.encode("utf-8")) != admission["scoring_reply_sha256"]
+                or _sha256_bytes(data["final_response"]) != admission["native_reply_document_sha256"]
+                or messages[-1].get("event_id") != admission["scoring_reply_event_id"]):
+            raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "authorized SDK final mismatch")
+        body = selected
+        sdk_selection = {"profile": sdk_final.ADMISSION, "admission_sha256": admission_sha,
+                         "scoring_reply_sha256": admission["scoring_reply_sha256"]}
     if (messages and body != _instruction_text(messages[-1])
             and receipt.get("final_response_text_profile") == "astronstudio-appended-document-lf/v1"
             and execution.get("harness", {}).get("id") == "astronstudio"
@@ -1078,6 +1093,8 @@ def _formal_completion_rule_input(root: Path, manifest: Mapping[str, Any], trans
         "candidate_content_synthesized":False}
     if normalization is not None:
         proof["final_response_transport_normalization"] = normalization
+    if sdk_selection is not None:
+        proof["sdk_final_selection"] = sdk_selection
     event = {"type":"task_complete", "last_agent_message":body, "identity":manifest["identity"],
         "source":{"adapter":FORMAL_COMPLETION_PROFILE,"receipt_path":descriptor["path"],"receipt_sha256":descriptor["sha256"]}}
     return [*transcript, event], proof
@@ -1345,7 +1362,12 @@ def _reviewed_output_profile(contract: Mapping[str, Any]) -> tuple[str, dict[str
     return digest, profile
 
 
-def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping[str, Any]) -> str:
+def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping[str, Any], *,
+                                 sdk_final_authorized: bool = False) -> str:
+    if sdk_final_authorized:
+        if not sdk_final.candidate(execution):
+            raise ScoringRuntimeError("SDK_FINAL_AUTHORIZATION_INVALID", "unexpected execution evidence scope")
+        return sdk_final.ADMISSION
     if execution.get("failure_evidence") is not None:
         return failure_evidence.profile(execution, contract)
     evidence = execution["evidence"]
@@ -1514,7 +1536,7 @@ def _verify_partial_trace_bundle(unit_root: Path, execution: Mapping[str, Any], 
     index_path = _resolve_within(unit_root, execution["evidence"]["trace_index_path"], "trace_index_path")
     index = _read_json(index_path, code="TRACE_INDEX_INVALID")
     profile = _reviewed_output_profile(contract) if contract is not None else None
-    astron_v1 = (profile is not None and profile[1].get("harness") == "astronstudio"
+    astron_v1 = ((profile is not None and profile[1].get("harness") == "astronstudio" or sdk_final.candidate(execution))
                  and index.get("schema_id") == "urn:wildclawbench:schema:general-e2e:trace-index:v1"
                  and index.get("adapter", {}).get("id") == "astronstudio-provider-runtime-events")
     if (not astron_v1 and index.get("schema_id") != "urn:wildclawbench:schema:general-e2e:trace-index:v2"
@@ -1548,6 +1570,7 @@ def prepare_attempt(
     acceptance_id: str | None = None,
     require_trace_bundle: bool = False,
     protect_runtime_office_inputs: bool = False,
+    sdk_final_authorization: Path | None = None,
 ) -> dict[str, Any]:
     if protect_runtime_office_inputs and sys.platform != "darwin":
         raise ScoringRuntimeError("RUNTIME_OFFICE_PROTECTION_PLATFORM_UNSUPPORTED", sys.platform)
@@ -1653,7 +1676,7 @@ def prepare_attempt(
             "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED",
             "Pause evaluation for human quota recovery and explicit resumption; preserve the failed execution and do not skip, score zero or resend automatically",
         )
-    evidence_admission = _validate_evidence_admission(execution, contract)
+    evidence_admission = _validate_evidence_admission(execution, contract, sdk_final_authorized=sdk_final_authorization is not None)
     if evidence_admission not in {"standard", failure_evidence.ADMISSION}:
         _verify_partial_trace_bundle(unit_root, execution, contract)
     reviewed_files = None
@@ -1667,6 +1690,16 @@ def prepare_attempt(
             reviewed_receipt = moa_presentation_admission.validate(execution,contract,reviewed_files)
         except (ValueError,KeyError,TypeError,OSError,subprocess.SubprocessError) as exc:
             raise ScoringRuntimeError("EXECUTION_NOT_SCORABLE","native presentation reconciliation rejected: "+str(exc)) from exc
+
+    if evidence_admission == sdk_final.ADMISSION:
+        reviewed_files = _reviewed_evidence_files(unit_root, execution)
+        try:
+            if not sdk_final_authorization.is_file() or sdk_final_authorization.is_symlink():
+                raise ValueError("authorization must be a regular file")
+            reviewed_files[sdk_final.AUTHORIZATION] = sdk_final_authorization.read_bytes()
+            reviewed_receipt = sdk_final.validate(execution, execution_record_path.read_bytes(), contract_bytes, reviewed_files)
+        except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as exc:
+            raise ScoringRuntimeError("SDK_FINAL_AUTHORIZATION_INVALID", str(exc)) from exc
 
     if evidence_admission == failure_evidence.ADMISSION:
         reviewed_files = failure_evidence.read_files(unit_root, execution)
@@ -1762,6 +1795,8 @@ def prepare_attempt(
 
         shutil.copyfile(execution_record_path, private_root / "execution-record.json")
         formal_completion = _freeze_formal_completion(staging, unit_root, execution_record_path, execution)
+        if evidence_admission == sdk_final.ADMISSION and formal_completion is None:
+            raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "SDK final requires original collected reply")
         trace_bundle = trace_handoff.freeze(unit_root, execution, staging,
             required=require_trace_bundle and evidence_admission != failure_evidence.ADMISSION)
         if reviewed_files is not None:
@@ -2043,10 +2078,11 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         admitted = _validate_evidence_admission(
             _read_json(_resolve_within(root, paths["execution_record"], "execution_record"), code="EXECUTION_RECORD_INVALID"),
             _read_json(_resolve_within(root, paths["contract"], "contract"), code="SCORING_CONTRACT_INVALID"),
+            sdk_final_authorized=manifest["evidence_admission"] == sdk_final.ADMISSION,
         )
         if admitted != manifest["evidence_admission"]:
             raise ScoringRuntimeError("EVIDENCE_ADMISSION_DRIFT")
-        if admitted.startswith("reviewed-output-evidence/v1:") or admitted in {failure_evidence.ADMISSION,moa_presentation_admission.ADMISSION}:
+        if admitted.startswith("reviewed-output-evidence/v1:") or admitted in {failure_evidence.ADMISSION, moa_presentation_admission.ADMISSION, sdk_final.ADMISSION}:
             receipt_path = root / "private/evidence-admission.json"
             if _sha256_file(receipt_path) != manifest.get("reviewed_evidence_receipt_sha256"):
                 raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_DRIFT")
@@ -2059,10 +2095,18 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
                 files[row["path"]] = source.read_bytes()
                 if len(files[row["path"]]) != row["size"] or _sha256_bytes(files[row["path"]]) != row["sha256"]:
                     raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_DRIFT")
-            recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else
-                moa_presentation_admission.validate if admitted == moa_presentation_admission.ADMISSION else _validate_reviewed_evidence)(
-                _read_json(root / paths["execution_record"], code="EXECUTION_RECORD_INVALID"),
-                _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID"), files)
+            if admitted == sdk_final.ADMISSION:
+                try:
+                    record = root / paths["execution_record"]
+                    recomputed = sdk_final.validate(_read_json(record), record.read_bytes(),
+                                                     (root / paths["contract"]).read_bytes(), files)
+                except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as exc:
+                    raise ScoringRuntimeError("SDK_FINAL_AUTHORIZATION_INVALID", str(exc)) from exc
+            else:
+                recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else
+                    moa_presentation_admission.validate if admitted == moa_presentation_admission.ADMISSION else _validate_reviewed_evidence)(
+                    _read_json(root / paths["execution_record"], code="EXECUTION_RECORD_INVALID"),
+                    _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID"), files)
             if not require_runtime and "policy_sha256" in recomputed:
                 # Archived receipt bytes are already locked by the original
                 # manifest. Revalidate all evidence under current rules while
@@ -3529,6 +3573,8 @@ def _semantic_reference_inputs(
     completion_proof = attempt_root / "rule-input-completion.json"
     if completion_proof.is_file():
         add_file("rule_audit", completion_proof)
+    if manifest.get("evidence_admission") == sdk_final.ADMISSION:
+        add_file("rule_audit", attempt_root / "private/evidence-admission.json")
     completion = manifest.get("runtime", {}).get("formal_completion_receipt")
     if completion:
         completion_path = attempt_root / completion["path"]
@@ -6666,6 +6712,7 @@ def main(argv: list[str] | None = None) -> int:
     prepare.add_argument("--judge-attempt-id")
     prepare.add_argument("--api-runtime-config", type=Path)
     prepare.add_argument("--acceptance-id")
+    prepare.add_argument("--sdk-final-authorization", type=Path)
     prepare.add_argument("--legacy-transcript-only", action="store_true", help="Only for frozen legacy evidence without a raw trace index")
     prepare.add_argument("--protect-runtime-office-inputs", action="store_true", help="macOS only; explicit read-only candidate Office inputs, after reviewing that rules never rewrite them")
 
@@ -6786,6 +6833,7 @@ def main(argv: list[str] | None = None) -> int:
                 api_runtime_config_path=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
                 require_trace_bundle=not args.legacy_transcript_only,
+                sdk_final_authorization=args.sdk_final_authorization,
                 protect_runtime_office_inputs=args.protect_runtime_office_inputs,
             )
         elif args.command == "prepare-rescore":

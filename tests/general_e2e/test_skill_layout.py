@@ -73,14 +73,14 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("orchestrate-general-e2e").version,
                 get_skill_spec("orchestrate-general-e2e").implementation_status,
             ),
-            ("0.11.78", "operational"),
+            ("0.11.79", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("score-general-e2e").version,
                 get_skill_spec("score-general-e2e").implementation_status,
             ),
-            ("0.10.94", "operational"),
+            ("0.10.95", "operational"),
         )
         self.assertEqual(
             (

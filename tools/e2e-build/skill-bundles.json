@@ -122,6 +122,9 @@
         "general-contracts",
         "independent-validity",
         "doubaowork",
+        "resource-metrics",
+        "general-resource-supplements",
+        "sqlite-snapshot",
         "desktop-gui"
       ]
     },

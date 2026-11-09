@@ -493,6 +493,7 @@ def _execution_summary(
     batch_id: str,
     unit_id: str,
     task_id: str,
+    sdk_final_authorized: bool = False,
 ) -> dict[str, Any]:
     record = _read_json(record_path, "EXECUTION_RECORD_INVALID")
     identity = record.get("identity")
@@ -568,7 +569,10 @@ def _execution_summary(
             and (set(missing) <= {"resource_metrics_complete_coverage"}
                  or (evidence.get("transcript_path") and evidence.get("trace_index_path")))
         )
-        if not partial_admission_candidate:
+        sdk_final_candidate = (sdk_final_authorized and record.get("harness", {}).get("id") == "astronstudio"
+                               and evidence.get("completeness") == "partial"
+                               and missing == ["native-final-prefix-divergence"])
+        if not (partial_admission_candidate or sdk_final_candidate):
             failure = {
                 "code": "EXECUTION_EVIDENCE_INCOMPLETE",
                 "message": "complete execution evidence is required for scoring",
@@ -978,6 +982,7 @@ def initialize(
     score_timeout_seconds: int | None = None,
     score_slots: int = DEFAULT_SCORE_SLOTS,
     protect_runtime_office_inputs: bool = False,
+    sdk_final_authorization: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     # General E2E deliberately has no task-level scoring deadline.  Keep the
@@ -1007,6 +1012,10 @@ def initialize(
     elif api_runtime_config is not None:
         raise OrchestrationError("API_JUDGE_CONFIG_UNEXPECTED")
     explicit = execution_records or {}
+    if sdk_final_authorization is not None:
+        sdk_final_authorization = _regular_file(sdk_final_authorization, "SDK_FINAL_AUTHORIZATION_INVALID")
+        if not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1":
+            raise OrchestrationError("SDK_FINAL_AUTHORIZATION_INVALID", "explicit task and execution record selection required")
     if set(explicit) - set(selected):
         raise OrchestrationError(
             "EXECUTION_RECORD_TASK_UNSELECTED", repr(sorted(set(explicit) - set(selected)))
@@ -1028,6 +1037,7 @@ def initialize(
                 batch_id=identity["batch_id"],
                 unit_id=identity["unit_id"],
                 task_id=task_id,
+                sdk_final_authorized=sdk_final_authorization is not None,
             )
             frozen_record = staging / "execution-records" / f"{task_id}.json"
             frozen_record.parent.mkdir(parents=True, exist_ok=True)
@@ -1096,6 +1106,8 @@ def initialize(
                 prepare_arguments.append("--legacy-transcript-only")
             if protect_runtime_office_inputs:
                 prepare_arguments.append("--protect-runtime-office-inputs")
+            if sdk_final_authorization is not None:
+                prepare_arguments.extend(["--sdk-final-authorization", str(sdk_final_authorization)])
             if api_runtime_config is not None:
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
@@ -3479,6 +3491,7 @@ def main(argv: list[str] | None = None) -> int:
         help="兼容旧脚本的参数；General E2E 评分不设置任务级超时，传入值会被忽略",
     )
     init.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
+    init.add_argument("--sdk-final-authorization", type=Path)
     init.add_argument("--protect-runtime-office-inputs", action="store_true")
 
     init_rescore = subparsers.add_parser("init-rescore")
@@ -3633,6 +3646,7 @@ def main(argv: list[str] | None = None) -> int:
                 orchestration_id=args.orchestration_id,
                 task_ids=args.task_id,
                 execution_records=_execution_record_map(args.execution_record),
+                sdk_final_authorization=args.sdk_final_authorization,
                 api_runtime_config=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
