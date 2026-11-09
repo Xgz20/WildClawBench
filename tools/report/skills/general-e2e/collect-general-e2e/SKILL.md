@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.57` 独立 AStudio 补测队列因冻结的失败停止策略而关闭时，可保留前段终态，另起精确未发送尾队列。终态尾队列收口显式传原关闭队列ID和SHA，逐项核验两段互斥、合计范围及实际选中attempt。详见[正式收口](references/astronstudio-finalization.md)。
+
 `0.11.56` 对独立 AStudio 补测单元支持按明确终态原生队列发布采集回执。逐题 finalize 后用 `scripts/publish_astronstudio_queue_collection.mjs --unit-root ABS --queue-id ID` 核验队列和已选 attempt，再发布仅覆盖队列题目的回执。该回执用于独立补测和评分，完整单元回执仍要求原 manifest 的全部任务。详见[正式收口](references/astronstudio-finalization.md)。
 
 `0.11.55` 严格对账无URL预览、折叠fetch卡、学术占位卡与原SDK调用/结果；精确投资提示保留为平台提示。缺图、缺调用/结果、未知块仍partial；历史回执不重写。

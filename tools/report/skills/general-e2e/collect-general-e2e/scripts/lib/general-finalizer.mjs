@@ -963,9 +963,45 @@ function canonicalQueueJson(value) {
   return JSON.stringify(value);
 }
 
-// A targeted native queue can close only its explicit scope. The execution
-// package manifest and the original round's collection remain separate.
-export async function publishAstronStudioQueueCollection({ unitRoot: root, queueId }) {
+async function closedFailedQueuePrefix(unitRoot, manifestSource, queueId, expectedSha256, tailScope) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(queueId)
+      || !/^[0-9a-f]{64}$/.test(expectedSha256)) throw new Error("INVALID_FAILED_QUEUE_REFERENCE");
+  const root = join(unitRoot, ".general-e2e", "queues", queueId);
+  if (await realpath(root) !== root) throw new Error("UNSAFE_COLLECTION_QUEUE_ROOT");
+  await assertOutputAbsent(join(root, "worker.lock"));
+  await assertOutputAbsent(join(root, "queue-receipt.json"));
+  const source = await readJsonFile(join(root, "queue-state.json"));
+  const state = source.value;
+  const manifest = manifestSource.value;
+  const scope = state.configuration?.task_ids;
+  if (source.sha256 !== expectedSha256 || state.phase !== "FAILED"
+      || !state.error?.startsWith("任务失败，未启用继续策略")
+      || state.active_task_ids?.length !== 0 || state.configuration?.continue_on_terminal_failure !== false
+      || state.identity?.queue_id !== queueId || state.identity?.batch_id !== manifest.batch_id
+      || state.identity?.unit_id !== manifest.unit_id
+      || state.dataset?.id !== manifest.dataset?.id || state.dataset?.digest !== manifest.dataset?.digest
+      || state.configuration?.manifest_sha256 !== manifestSource.sha256
+      || state.identity?.queue_digest !== sha256(canonicalQueueJson(state.configuration))
+      || !Array.isArray(scope) || !scope.length || new Set(scope).size !== scope.length
+      || scope.some(id => !manifest.task_ids.includes(id))
+      || canonicalQueueJson(state.tasks?.map(row => row.task_id)) !== canonicalQueueJson(scope)) {
+    throw new Error("FAILED_QUEUE_PREFIX_PROOF_INVALID");
+  }
+  const prefix = state.tasks.filter(row => row.phase !== "PENDING");
+  const unattempted = state.tasks.filter(row => row.phase === "PENDING");
+  if (!prefix.some(row => row.phase === "FAILED")
+      || prefix.some(row => !["COMPLETED", "FAILED"].includes(row.phase) || !row.selected_attempt_id)
+      || unattempted.some(row => row.dispatch_attempt_count !== 0 || row.selected_attempt_id
+        || row.attempts?.length !== 0 || row.session?.session_id)
+      || canonicalQueueJson(unattempted.map(row => row.task_id)) !== canonicalQueueJson(tailScope)) {
+    throw new Error("FAILED_QUEUE_TAIL_SCOPE_MISMATCH");
+  }
+  return { root, source, scope, prefix };
+}
+
+// A targeted native queue closes its explicit scope. A separately frozen
+// tail may cover only the never-dispatched remainder of a closed failed queue.
+export async function publishAstronStudioQueueCollection({ unitRoot: root, queueId, failedQueueId, failedQueueSha256 }) {
   if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(queueId)) {
     throw new Error("INVALID_COLLECTION_QUEUE_ID");
   }
@@ -983,7 +1019,7 @@ export async function publishAstronStudioQueueCollection({ unitRoot: root, queue
   const manifest = manifestSource.value;
   const state = stateSource.value;
   const queueReceipt = queueReceiptSource.value;
-  const scope = state.configuration?.task_ids;
+  const tailScope = state.configuration?.task_ids;
   if (manifest.unit?.harness?.id !== "astronstudio"
       || queueReceipt.schema_version !== "wildclawbench.general-e2e-astronstudio-execution-queue-receipt/v1"
       || !["COMPLETED", "COMPLETED_WITH_FAILURES"].includes(state.phase)
@@ -998,18 +1034,26 @@ export async function publishAstronStudioQueueCollection({ unitRoot: root, queue
         "no_duplicate_dispatch"].every(key => queueReceipt.integrity?.[key] === true)) {
     throw new Error("COLLECTION_QUEUE_PROOF_INVALID");
   }
-  if (!Array.isArray(scope) || !scope.length || new Set(scope).size !== scope.length
-      || scope.some(taskId => !manifest.task_ids.includes(taskId))
-      || state.tasks?.length !== scope.length || queueReceipt.tasks?.length !== scope.length) {
+  if (!Array.isArray(tailScope) || !tailScope.length || new Set(tailScope).size !== tailScope.length
+      || tailScope.some(taskId => !manifest.task_ids.includes(taskId))
+      || state.tasks?.length !== tailScope.length || queueReceipt.tasks?.length !== tailScope.length) {
     throw new Error("COLLECTION_QUEUE_SCOPE_INVALID");
   }
+  if (Boolean(failedQueueId) !== Boolean(failedQueueSha256) || failedQueueId === queueId) {
+    throw new Error("INVALID_FAILED_QUEUE_REFERENCE");
+  }
+  const previous = failedQueueId
+    ? await closedFailedQueuePrefix(unitRoot, manifestSource, failedQueueId, failedQueueSha256, tailScope)
+    : null;
+  const scope = previous?.scope ?? tailScope;
+  const selection = new Map(tailScope.map((id, i) => [id, [state.tasks[i], queueReceipt.tasks[i]]]));
+  for (const row of previous?.prefix ?? []) selection.set(row.task_id, [row, row]);
   const receipt = await buildUnitReceipt(unitRoot, { ...manifest, task_ids: scope }, new Date().toISOString());
   if (!receipt) throw new Error("COLLECTION_QUEUE_EVIDENCE_INCOMPLETE");
   const bytes = prettyJson(receipt);
   const receiptSource = { value: receipt, sha256: sha256(bytes) };
   for (const [index, taskId] of scope.entries()) {
-    const selected = state.tasks[index];
-    const queued = queueReceipt.tasks[index];
+    const [selected, queued] = selection.get(taskId);
     const row = receipt.tasks[index];
     if (selected.task_id !== taskId || queued.task_id !== taskId
         || !["COMPLETED", "FAILED"].includes(selected.phase) || queued.phase !== selected.phase
@@ -1028,17 +1072,20 @@ export async function publishAstronStudioQueueCollection({ unitRoot: root, queue
     await verifyCollectionWithReceipt({ taskId }, unitRoot, receiptSource);
   }
   if ((await hashRegularFile(stateSource.absolute)).sha256 !== stateSource.sha256
-      || (await hashRegularFile(queueReceiptSource.absolute)).sha256 !== queueReceiptSource.sha256) {
+      || (await hashRegularFile(queueReceiptSource.absolute)).sha256 !== queueReceiptSource.sha256
+      || (previous && (await hashRegularFile(previous.source.absolute)).sha256 !== previous.source.sha256)) {
     throw new Error("COLLECTION_QUEUE_CHANGED_DURING_VERIFICATION");
   }
   await assertOutputAbsent(join(queueRoot, "worker.lock"));
+  if (previous) await assertOutputAbsent(join(previous.root, "worker.lock"));
   await writeAtomic(output, bytes);
   return {
     status: "PASS",
-    scope: "selected-native-queue",
+    scope: previous ? "selected-native-queue-with-closed-prefix" : "selected-native-queue",
     task_ids: scope,
     queue_state_sha256: stateSource.sha256,
     queue_receipt_sha256: queueReceiptSource.sha256,
+    ...(previous ? { failed_queue_id: failedQueueId, failed_queue_sha256: previous.source.sha256 } : {}),
     receipt_path: output,
     receipt_sha256: receiptSource.sha256,
   };

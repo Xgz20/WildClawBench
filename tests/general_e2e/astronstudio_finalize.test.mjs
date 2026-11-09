@@ -89,6 +89,82 @@ test("completed native subset publishes only its verified collection scope", asy
   }
 });
 
+test("failed prefix plus disjoint unsubmitted tail retains both collected attempts", async () => {
+  const tail = await fixture();
+  const prefix = await fixture({
+    taskId: "prior-task", attemptId: "prior-attempt", businessStatus: "infrastructure_error",
+    includeTrace: false, includeResource: false,
+  });
+  try {
+    const manifestPath = join(tail.root, "manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    const oldManifest = JSON.parse(await readFile(join(prefix.root, "manifest.json"), "utf8"));
+    manifest.task_ids = [prefix.taskId, tail.taskId, "outside-supplement"];
+    manifest.tasks = [...oldManifest.tasks, ...manifest.tasks];
+    await writeJson(manifestPath, manifest);
+    for (const dir of [join("execution", "tasks", prefix.taskId), join(".general-e2e", "execution", prefix.taskId)]) {
+      await cp(join(prefix.root, dir), join(tail.root, dir), { recursive: true, preserveTimestamps: true });
+    }
+    const prefixState = prefix.statePath.replace(prefix.root, tail.root);
+    const text = await readFile(prefixState, "utf8");
+    await writeFile(prefixState, text.replaceAll(prefix.root, tail.root));
+    const cleanup = { terminateProcesses: async () => successfulCleanup() };
+    await finalizeAstronStudioExecution({ ...options(tail), stateFile: prefixState, traceIndex: "", resourceMetrics: "" }, cleanup);
+    await finalizeAstronStudioExecution(options(tail), cleanup);
+    const queues = join(tail.root, ".general-e2e", "queues");
+    const manifestSha = digest(await readFile(manifestPath));
+    const finished = { task_id: prefix.taskId, phase: "FAILED", selected_attempt_id: prefix.attemptId, dispatch_attempt_count: 1 };
+    const pending = { task_id: tail.taskId, phase: "PENDING", selected_attempt_id: null,
+      dispatch_attempt_count: 0, attempts: [], session: { session_id: null } };
+    const completed = { task_id: tail.taskId, phase: "COMPLETED", selected_attempt_id: tail.attemptId, dispatch_attempt_count: 1 };
+    const oldCfg = { continue_on_terminal_failure: false, manifest_sha256: manifestSha, task_ids: [prefix.taskId, tail.taskId] };
+    const newCfg = { manifest_sha256: manifestSha, task_ids: [tail.taskId] };
+    const identity = (queue_id, configuration) => ({
+      batch_id: manifest.batch_id, unit_id: manifest.unit_id, queue_id,
+      queue_digest: digest(JSON.stringify(configuration)),
+    });
+    const oldRoot = join(queues, "prior");
+    const newRoot = join(queues, "tail");
+    await mkdir(oldRoot, { recursive: true });
+    await mkdir(newRoot);
+    const oldStatePath = join(oldRoot, "queue-state.json");
+    const oldState = {
+      identity: identity("prior", oldCfg), configuration: oldCfg, dataset: manifest.dataset,
+      phase: "FAILED", active_task_ids: [], error: "任务失败，未启用继续策略：prior-task",
+      tasks: [finished, { ...pending, dispatch_attempt_count: 1 }],
+    };
+    await writeJson(oldStatePath, oldState);
+    const tailIdentity = identity("tail", newCfg);
+    await writeJson(join(newRoot, "queue-state.json"), {
+      identity: tailIdentity, configuration: newCfg, dataset: manifest.dataset,
+      phase: "COMPLETED", active_task_ids: [], tasks: [completed],
+    });
+    await writeJson(join(newRoot, "queue-receipt.json"), {
+      schema_version: "wildclawbench.general-e2e-astronstudio-execution-queue-receipt/v1",
+      identity: tailIdentity, phase: "COMPLETED", tasks: [completed],
+      integrity: { valid: true, queue_digest_matches: true, all_tasks_terminal: true,
+        attempts_explicit_and_unique: true, no_duplicate_dispatch: true },
+    });
+    const args = { unitRoot: tail.root, queueId: "tail", failedQueueId: "prior" };
+    await assert.rejects(publishAstronStudioQueueCollection({
+      ...args, failedQueueSha256: digest(await readFile(oldStatePath)),
+    }), /FAILED_QUEUE_TAIL_SCOPE_MISMATCH/);
+    oldState.tasks[1] = pending;
+    await writeJson(oldStatePath, oldState);
+    const published = await publishAstronStudioQueueCollection({
+      ...args, failedQueueSha256: digest(await readFile(oldStatePath)),
+    });
+    assert.deepEqual(published.task_ids, [prefix.taskId, tail.taskId]);
+    const receipt = JSON.parse(await readFile(published.receipt_path, "utf8"));
+    assert.equal(receipt.status, "partial");
+    assert.equal((await verifyAstronStudioCollection({ unitRoot: tail.root, taskId: prefix.taskId })).attempt_id, prefix.attemptId);
+    assert.equal((await verifyAstronStudioCollection({ unitRoot: tail.root, taskId: tail.taskId })).attempt_id, tail.attemptId);
+  } finally {
+    await rm(prefix.root, { recursive: true, force: true });
+    await rm(tail.root, { recursive: true, force: true });
+  }
+});
+
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
 }

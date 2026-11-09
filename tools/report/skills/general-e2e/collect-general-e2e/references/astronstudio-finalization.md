@@ -60,3 +60,5 @@
 unit receipt 只有在 manifest 的所有 task 都已各自完成正式收口时生成。当前 `0.4.0` 要求每个 task 恰好一个正式 attempt；多 attempt 的选择、废弃和优胜规则属于后续编排阶段，不在 collect 内隐式决定。
 
 独立补测单元使用明确子集的 AStudio 原生队列时，逐题收口后可运行 `node scripts/publish_astronstudio_queue_collection.mjs --unit-root ABS --queue-id ID`。该入口要求队列已终态、owner 锁已释放，校验 manifest 与队列摘要、回执、原生选中 attempt 及发送次数，并在发布前逐题复验不可变候选及证据。回执的范围是完整的显式队列子集，适用于该补测范围的独立评分。完整单元的回传和报告仍使用完整范围的正式回执。
+
+补测原队列因冻结的“失败后停止”策略关闭时，只把其尚未创建任何 attempt 的剩余题目交给新尾队列。在尾队列正式终态后，向同一入口另传 `--closed-failed-queue-id ORIGINAL --closed-failed-queue-sha256 SHA`。原队列应保持失败终态和原始字节，尾队列的范围须精确等于原队列未派发范围。回执按照原队列题序登记前段与尾段的实际采集记录，含已证实的失败题。
