@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.11.56` 对独立 AStudio 补测单元支持按明确终态原生队列发布采集回执。逐题 finalize 后用 `scripts/publish_astronstudio_queue_collection.mjs --unit-root ABS --queue-id ID` 核验队列和已选 attempt，再发布仅覆盖队列题目的回执。该回执用于独立补测和评分，完整单元回执仍要求原 manifest 的全部任务。详见[正式收口](references/astronstudio-finalization.md)。
+
 `0.11.55` 严格对账无URL预览、折叠fetch卡、学术占位卡与原SDK调用/结果；精确投资提示保留为平台提示。缺图、缺调用/结果、未知块仍partial；历史回执不重写。
 
 `0.11.53` 对已绑定www.stats.gov.cn的HTTPS web.fetch原SDK图片列表中RFC1918 IPv4引用，不请求内网、不改成推测的公网URL；封存原引用摘要及network_request_performed=false的独立缺失回执，图片unavailable、轨迹partial、HTTP状态null。公开图片照常逐项验证，离线回放同时重验原页面/SDK列表和缺失回执；不推断模型未看图，不扣分或重发。其它来源/地址形状仍拒绝，所有旧字节和旧失败保留。

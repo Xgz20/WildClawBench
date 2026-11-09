@@ -719,6 +719,10 @@ async function verifyArtifactPath(unitRoot, row) {
 export async function verifyGeneralCollection(options) {
   const unitRoot = await realpath(resolve(options.unitRoot));
   const receiptSource = await readJsonFile(join(unitRoot, "receipts", "collect-evidence-receipt.json"));
+  return verifyCollectionWithReceipt(options, unitRoot, receiptSource);
+}
+
+async function verifyCollectionWithReceipt(options, unitRoot, receiptSource) {
   const receipt = receiptSource.value;
   if (receipt?.schema_id !== RECEIPT_SCHEMA || receipt?.stage !== "collect-evidence") {
     throw new Error("COLLECT_RECEIPT_UNSUPPORTED");
@@ -947,6 +951,96 @@ async function buildUnitReceipt(unitRoot, manifest, collectedAt) {
       valid: true,
     },
     error: null,
+  };
+}
+
+function canonicalQueueJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalQueueJson).join(",")}]`;
+  if (value !== null && typeof value === "object") {
+    return `{${Object.keys(value).sort().map(key =>
+      `${JSON.stringify(key)}:${canonicalQueueJson(value[key])}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
+// A targeted native queue can close only its explicit scope. The execution
+// package manifest and the original round's collection remain separate.
+export async function publishAstronStudioQueueCollection({ unitRoot: root, queueId }) {
+  if (!/^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$/.test(queueId)) {
+    throw new Error("INVALID_COLLECTION_QUEUE_ID");
+  }
+  const unitRoot = await realpath(resolve(root));
+  const queueRoot = join(unitRoot, ".general-e2e", "queues", queueId);
+  if (await realpath(queueRoot) !== queueRoot) throw new Error("UNSAFE_COLLECTION_QUEUE_ROOT");
+  await assertOutputAbsent(join(queueRoot, "worker.lock"));
+  const output = join(unitRoot, "receipts", "collect-evidence-receipt.json");
+  await assertOutputAbsent(output);
+  const [manifestSource, stateSource, queueReceiptSource] = await Promise.all([
+    readJsonFile(join(unitRoot, "manifest.json")),
+    readJsonFile(join(queueRoot, "queue-state.json")),
+    readJsonFile(join(queueRoot, "queue-receipt.json")),
+  ]);
+  const manifest = manifestSource.value;
+  const state = stateSource.value;
+  const queueReceipt = queueReceiptSource.value;
+  const scope = state.configuration?.task_ids;
+  if (manifest.unit?.harness?.id !== "astronstudio"
+      || queueReceipt.schema_version !== "wildclawbench.general-e2e-astronstudio-execution-queue-receipt/v1"
+      || !["COMPLETED", "COMPLETED_WITH_FAILURES"].includes(state.phase)
+      || queueReceipt.phase !== state.phase || state.active_task_ids?.length !== 0
+      || state.identity?.queue_id !== queueId || state.identity?.batch_id !== manifest.batch_id
+      || state.identity?.unit_id !== manifest.unit_id
+      || state.dataset?.id !== manifest.dataset?.id || state.dataset?.digest !== manifest.dataset?.digest
+      || state.configuration?.manifest_sha256 !== manifestSource.sha256
+      || state.identity?.queue_digest !== sha256(canonicalQueueJson(state.configuration))
+      || canonicalQueueJson(state.identity) !== canonicalQueueJson(queueReceipt.identity)
+      || !["valid", "queue_digest_matches", "all_tasks_terminal", "attempts_explicit_and_unique",
+        "no_duplicate_dispatch"].every(key => queueReceipt.integrity?.[key] === true)) {
+    throw new Error("COLLECTION_QUEUE_PROOF_INVALID");
+  }
+  if (!Array.isArray(scope) || !scope.length || new Set(scope).size !== scope.length
+      || scope.some(taskId => !manifest.task_ids.includes(taskId))
+      || state.tasks?.length !== scope.length || queueReceipt.tasks?.length !== scope.length) {
+    throw new Error("COLLECTION_QUEUE_SCOPE_INVALID");
+  }
+  const receipt = await buildUnitReceipt(unitRoot, { ...manifest, task_ids: scope }, new Date().toISOString());
+  if (!receipt) throw new Error("COLLECTION_QUEUE_EVIDENCE_INCOMPLETE");
+  const bytes = prettyJson(receipt);
+  const receiptSource = { value: receipt, sha256: sha256(bytes) };
+  for (const [index, taskId] of scope.entries()) {
+    const selected = state.tasks[index];
+    const queued = queueReceipt.tasks[index];
+    const row = receipt.tasks[index];
+    if (selected.task_id !== taskId || queued.task_id !== taskId
+        || !["COMPLETED", "FAILED"].includes(selected.phase) || queued.phase !== selected.phase
+        || ![0, 1].includes(selected.dispatch_attempt_count)
+        || queued.dispatch_attempt_count !== selected.dispatch_attempt_count
+        || row.attempt_id !== selected.selected_attempt_id || row.attempt_id !== queued.selected_attempt_id) {
+      throw new Error(`COLLECTION_QUEUE_ATTEMPT_MISMATCH: ${taskId}`);
+    }
+    const collectedState = (await readJsonFile(join(unitRoot, "evidence", "tasks", taskId,
+      row.attempt_id, "execution", "automation-state.json"))).value;
+    if (collectedState.identity?.attempt_id !== row.attempt_id
+        || collectedState.phase !== selected.phase
+        || collectedState.send?.dispatch_attempt_count !== selected.dispatch_attempt_count) {
+      throw new Error(`COLLECTION_QUEUE_STATE_MISMATCH: ${taskId}`);
+    }
+    await verifyCollectionWithReceipt({ taskId }, unitRoot, receiptSource);
+  }
+  if ((await hashRegularFile(stateSource.absolute)).sha256 !== stateSource.sha256
+      || (await hashRegularFile(queueReceiptSource.absolute)).sha256 !== queueReceiptSource.sha256) {
+    throw new Error("COLLECTION_QUEUE_CHANGED_DURING_VERIFICATION");
+  }
+  await assertOutputAbsent(join(queueRoot, "worker.lock"));
+  await writeAtomic(output, bytes);
+  return {
+    status: "PASS",
+    scope: "selected-native-queue",
+    task_ids: scope,
+    queue_state_sha256: stateSource.sha256,
+    queue_receipt_sha256: queueReceiptSource.sha256,
+    receipt_path: output,
+    receipt_sha256: receiptSource.sha256,
   };
 }
 

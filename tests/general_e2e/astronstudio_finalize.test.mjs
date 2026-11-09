@@ -24,6 +24,7 @@ import { deriveTerminalProjection, TERMINAL_PROJECTION_STATE, TERMINAL_PROJECTIO
 import {
   finalizeAstronStudioExecution,
   parseArgs,
+  publishAstronStudioQueueCollection,
   verifyAstronStudioCollection,
 } from "../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs";
 import {
@@ -33,6 +34,60 @@ import {
 } from "../../tools/report/skills/general-e2e/collect-general-e2e/scripts/lib/macos-task-processes.mjs";
 
 const DATASET_DIGEST = "1".repeat(64);
+
+test("completed native subset publishes only its verified collection scope", async () => {
+  const value = await fixture();
+  try {
+    const manifestPath = join(value.root, "manifest.json");
+    const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+    manifest.task_ids.push("unselected-task");
+    await writeJson(manifestPath, manifest);
+    const finalized = await finalizeAstronStudioExecution(options(value), {
+      terminateProcesses: async () => successfulCleanup(),
+    });
+    assert.equal(finalized.receipt_path, null);
+    const configuration = {
+      manifest_sha256: digest(await readFile(manifestPath)),
+      task_ids: [value.taskId],
+    };
+    const queueId = "supplement-fixture";
+    const queueRoot = join(value.root, ".general-e2e", "queues", queueId);
+    await mkdir(queueRoot, { recursive: true });
+    const queueIdentity = {
+      batch_id: manifest.batch_id, unit_id: manifest.unit_id, queue_id: queueId,
+      queue_digest: digest(JSON.stringify(configuration)),
+    };
+    const task = {
+      task_id: value.taskId, phase: "COMPLETED",
+      selected_attempt_id: value.attemptId, dispatch_attempt_count: 1,
+    };
+    await writeJson(join(queueRoot, "queue-state.json"), {
+      identity: queueIdentity, configuration, dataset: manifest.dataset,
+      phase: "COMPLETED", active_task_ids: [], tasks: [task],
+    });
+    const receipt = {
+      schema_version: "wildclawbench.general-e2e-astronstudio-execution-queue-receipt/v1",
+      identity: queueIdentity, phase: "COMPLETED",
+      tasks: [{ ...task, selected_attempt_id: "foreign-attempt" }],
+      integrity: {
+        valid: true, queue_digest_matches: true, all_tasks_terminal: true,
+        attempts_explicit_and_unique: true, no_duplicate_dispatch: true,
+      },
+    };
+    const receiptPath = join(queueRoot, "queue-receipt.json");
+    await writeJson(receiptPath, receipt);
+    await assert.rejects(publishAstronStudioQueueCollection({ unitRoot: value.root, queueId }),
+      /COLLECTION_QUEUE_ATTEMPT_MISMATCH/);
+    receipt.tasks = [task];
+    await writeJson(receiptPath, receipt);
+    const published = await publishAstronStudioQueueCollection({ unitRoot: value.root, queueId });
+    assert.deepEqual(published.task_ids, [value.taskId]);
+    const verification = await verifyAstronStudioCollection({ unitRoot: value.root, taskId: value.taskId });
+    assert.equal(verification.receipt_sha256, published.receipt_sha256);
+  } finally {
+    await rm(value.root, { recursive: true, force: true });
+  }
+});
 
 function digest(bytes) {
   return createHash("sha256").update(bytes).digest("hex");
