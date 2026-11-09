@@ -1,7 +1,7 @@
 {
   "schema_version": "general-e2e-reference-sources/v1",
   "task_id": "01_Information_Search_Organization_task_004_luxun_national_character_source_comparison",
-  "reference_version": "2026-11-05.open-reference.3",
+  "reference_version": "2026-11-09.open-reference.4",
   "role": "evaluator_reference_not_candidate_output",
   "policy": {
     "fulltext_required": false,
@@ -70,6 +70,54 @@
       "sha256": "e16001b237ed93ec6bbc198f1e0567b18ae261057733ad4b37a18b6ba2b370cd",
       "coverage": "complete_target_article_text",
       "role": "evaluator_reference_not_candidate_output"
+    },
+    {
+      "source_id": "S1J-original-pdf",
+      "path": "source_evidence/S1J-dong-bingyue-wenyiyanjiu-2025-03.pdf",
+      "sha256": "6414945c859d36ae9a556c6d44997d7ee7e4e746e476dad5a5fef20a104f77eb",
+      "size": 1680824,
+      "coverage": "original_publisher_pdf",
+      "role": "evaluator_reference_not_candidate_output",
+      "title": "董炳月《“国民”的建构与扬弃——论鲁迅留日时期的文学启蒙思想》",
+      "url": "https://lycpys.dps.qikan.cn/pc/maga/text-read?id=wyyj20250306",
+      "locator": "《文艺研究》2025年第3期刊页79—92。PDF物理页1—14。由国家哲学社会科学文献中心取得原刊。",
+      "retrieved_on": "2026-11-09"
+    },
+    {
+      "source_id": "S1J-paged-text",
+      "path": "source_evidence/S1J-dong-bingyue-wenyiyanjiu-2025-03.pages.txt",
+      "sha256": "cde65c8c2e2d29338b2bef304ab2b9d88dc956fd481422b3fc7bf0b801c67a9a",
+      "size": 53368,
+      "coverage": "complete_target_article_text",
+      "role": "evaluator_reference_not_candidate_output",
+      "title": "董炳月《“国民”的建构与扬弃——论鲁迅留日时期的文学启蒙思想》",
+      "url": "https://lycpys.dps.qikan.cn/pc/maga/text-read?id=wyyj20250306",
+      "locator": "《文艺研究》2025年第3期刊页79—92。PDF物理页1—14。由国家哲学社会科学文献中心取得原刊。",
+      "retrieved_on": "2026-11-09"
+    },
+    {
+      "source_id": "W1-original-pdf",
+      "path": "source_evidence/W1-wang-jipeng-jing-yaping-2002.pdf",
+      "sha256": "b39fc6785ec2660e3905220bde0917bbf08786775ae203f3168500088c87ac66",
+      "size": 416627,
+      "coverage": "original_publisher_pdf",
+      "role": "evaluator_reference_not_candidate_output",
+      "title": "王吉鹏、荆亚平《鲁迅留日时期思想转变价值论》",
+      "url": "https://lxyj.cbpt.cnki.net/portal/journal/portal/client/paper/7666bf93f94d281d186fd47dc3cb5c82",
+      "locator": "《鲁迅研究月刊》2002年第11期刊页19—22、30。PDF物理页1—5，末页仅本文续页属于目标文章。",
+      "retrieved_on": "2026-11-09"
+    },
+    {
+      "source_id": "W1-paged-text",
+      "path": "source_evidence/W1-wang-jipeng-jing-yaping-2002.pages.txt",
+      "sha256": "780a56b5e7068d7b19a36e6e1a9d3a0679402b3a784bfca043c7c095bab205b8",
+      "size": 20244,
+      "coverage": "complete_target_article_text",
+      "role": "evaluator_reference_not_candidate_output",
+      "title": "王吉鹏、荆亚平《鲁迅留日时期思想转变价值论》",
+      "url": "https://lxyj.cbpt.cnki.net/portal/journal/portal/client/paper/7666bf93f94d281d186fd47dc3cb5c82",
+      "locator": "《鲁迅研究月刊》2002年第11期刊页19—22、30。PDF物理页1—5，末页仅本文续页属于目标文章。",
+      "retrieved_on": "2026-11-09"
     }
   ],
   "known_unresolved_claims": [],
@@ -88,6 +136,6 @@
     }
   ],
   "remaining_reference_limitations": [
-    "S1-dong-bingyue仍未取得正文，不将本次Y1补证外推到董文或其他研究"
+    "早稻田文集版沿用旧参考定位。已冻结《文艺研究》原刊，其刊页79—92不能与文集页码直接互换。"
   ]
 }

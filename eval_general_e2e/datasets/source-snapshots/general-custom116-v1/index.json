@@ -294,6 +294,10 @@
     "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json": {
       "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json",
       "sha256": "6cfce8873a004659fd96bf3e9dc0ef2cc5aa2c5f075ecf1005a5bb45a3a01e15"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md",
+      "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70"
     }
   },
   "excluded_paths": [

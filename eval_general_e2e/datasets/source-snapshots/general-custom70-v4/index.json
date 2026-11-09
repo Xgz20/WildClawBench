@@ -2,7 +2,12 @@
   "schema_version": "general-e2e-frozen-source-index/v1",
   "dataset_id": "general-custom70-v4",
   "dataset_digest": "914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff",
-  "excluded_paths": [],
+  "excluded_paths": [
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1J-dong-bingyue-wenyiyanjiu-2025-03.pdf",
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1J-dong-bingyue-wenyiyanjiu-2025-03.pages.txt",
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/W1-wang-jipeng-jing-yaping-2002.pdf",
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/W1-wang-jipeng-jing-yaping-2002.pages.txt"
+  ],
   "files": {
     "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md": {
       "snapshot": "tasks/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md",
@@ -35,6 +40,22 @@
     "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
       "snapshot": "tasks/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md",
       "sha256": "a4910132cafad1a8beaaec32f00589d6f7b8a59d3a7d18db5a9cebb82dcbcdc7"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md",
+      "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md",
+      "sha256": "fd8a8cba558880edb24609dd0ca2454d283cb3a2d5bbe8d28d0b7a90cce9e101"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json": {
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json",
+      "sha256": "8569af1b50bef32baefc2231c07aec63785af69425f4244e25ca1660e3107a67"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
+      "sha256": "ed024ca7dc6fc6d245cc6a4f7f82b09d4bff432998d04d820ece183ba82e65f3"
     }
   }
 }

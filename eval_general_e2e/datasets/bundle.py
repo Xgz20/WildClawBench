@@ -146,7 +146,8 @@ INFO004_OPEN_V2_DEFINITION = replace(
 )
 INFO004_OPEN_V3_DEFINITION = replace(
     INFO004_OPEN_V2_DEFINITION, dataset_id="general-info004-open-v3", created_at="2026-11-05T00:00:00+08:00",
-    source_revision="df8ff3b4530e1d93e65f3ec83d401c2990745a51", frozen_source_index=None,
+    source_revision="df8ff3b4530e1d93e65f3ec83d401c2990745a51",
+    frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-info004-open-v3/index.json",
 )
 DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, GENERAL70_V4_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, INFO004_OPEN_V3_DEFINITION)}
 
