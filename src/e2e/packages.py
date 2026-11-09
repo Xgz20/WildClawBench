@@ -19,6 +19,20 @@ from .store import BatchStore
 PACKAGE_SCHEMA = "wildclawbench.sandbox-result-package/v1"
 
 
+def _protect_scoring_contexts(root: Path, index: dict):
+    for entry in index["exported"]:
+        context = entry.get("scoring_context")
+        if not context:
+            continue
+        context_root = inside(root, context["context_root"])
+        unit = context_root / "unit"
+        candidates = [context_root / "execution-source", *unit.glob("*/tasks/*/workspace"),
+                      *unit.glob("evidence/tasks/*/*/candidate/workspace")]
+        for path in candidates:
+            if path.is_dir():
+                _protect(path)
+
+
 def _local_report_inputs(batch: Path, stage: Path, manifest: dict, exported: list[dict]) -> list[dict]:
     """Freeze report inputs using the same preparation code as local Skills."""
     reports = []
@@ -70,7 +84,7 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
     output.parent.mkdir(parents=True, exist_ok=True)
     directory = tempfile.mkdtemp(prefix=".sandbox-export-", dir=output.parent)
     try:
-        stage = Path(directory)
+        stage = Path(directory).resolve()
         rows_exported = []
         skill_roots = {}
         task_inputs = []
@@ -248,17 +262,12 @@ def import_package(archive: Path, receipt_path: Path | None, workspace: Path) ->
                 capsule_receipt = read_json(inside(destination, capsule_entry["capsule"]) / "receipt.json")
                 if imported_receipt["identity"] != capsule_entry["identity"] or imported_receipt["archive_sha256"] != capsule_receipt["archive_sha256"]:
                     raise E2EError("IMPORTED_CAPSULE_BINDING_DRIFT")
+        _protect_scoring_contexts(destination, index)
         return {**previous, "status": "already_imported"}
     temporary = imports / (".import-" + uuid.uuid4().hex)
     try:
         extract_zip(archive, temporary, readonly_data=True)
-        for entry in index["exported"]:
-            context = entry.get("scoring_context")
-            if context:
-                context_root = inside(temporary, context["context_root"])
-                for path in [context_root / "execution-source", *(context_root / "unit").glob("*/tasks/*/workspace")]:
-                    if path.is_dir():
-                        _protect(path)
+        _protect_scoring_contexts(temporary, index)
         with zipfile.ZipFile(archive) as source:
             expected = json.loads(source.read("package-integrity.json"))["entries"]
         expected_files = {row["path"] for row in expected if row["kind"] == "file"} | {"package-integrity.json"}
