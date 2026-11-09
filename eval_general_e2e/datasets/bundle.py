@@ -133,8 +133,9 @@ GENERAL70_V4_DEFINITION = replace(
 )
 GENERAL70_V5_DEFINITION = replace(
     GENERAL70_V4_DEFINITION, dataset_id="general-custom70-v5",
-    created_at="2026-11-09T00:00:00+08:00", source_revision="03757ecf88511a9ff29f5e9a1908da814a2b3895",
+    created_at="2026-11-09T00:00:00+08:00", source_revision="2d71f7aeef8359127251280960c39ea278b625e1",
     current_source_paths=(
+        "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md",
         "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
         "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt",
         "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt",

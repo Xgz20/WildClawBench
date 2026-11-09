@@ -2,7 +2,7 @@
   "bundle_protocol": "general-e2e-package-v1",
   "contract_version": "general-e2e-contract-v1",
   "created_at": "2026-11-09T00:00:00+08:00",
-  "dataset_digest": "0800a4bf98afaf02381ef2132abf4f59ec1037e6a5a303e0ffa1984dd6780488",
+  "dataset_digest": "8503a341fc496b88e1b8e368105e2d700360e026fa5c22578a819f0beb748a6d",
   "dataset_id": "general-custom70-v5",
   "digest_algorithm": "wildclawbench.dataset-manifest-sha256/v1",
   "generated_by": "eval_general_e2e.datasets.bundle/1",
@@ -19,7 +19,7 @@
     "task_root": "tasks/general_e2e"
   },
   "source": {
-    "revision": "03757ecf88511a9ff29f5e9a1908da814a2b3895",
+    "revision": "2d71f7aeef8359127251280960c39ea278b625e1",
     "revision_scope": [
       "tasks/general_e2e",
       "workspace/general_e2e"
@@ -221,8 +221,8 @@
         "execution_contract_sha256": "7fe684eded1b6ccc8f18737258e7109b6aae0154d7c37e820b4b515b54e7fbfb",
         "private_scoring_sha256": "aaceb5d83e0b918e00486c3ce5845a1aef7f3e008195bf7bca94d41c2fd8f492",
         "prompt_sha256": "bdf0b71548d4cfab0586d8440dc1d674540174defb897dd1a9e8e1b08657d1e3",
-        "scoring_contract_sha256": "d42b2e37fcba6eed2a78620790aaaabaad705b12aaf95718367493b086c3fa08",
-        "task_sha256": "3bc8309ad4cc8dcc7e24142631a7ef4a2901ec73b5cabf5788170d61332d06e0",
+        "scoring_contract_sha256": "3d14bbb7b884712dc56ea5bfec61c45940e9b5d7d2cc4cba69f9af42b3a0ba19",
+        "task_sha256": "aa631a0eb1fb7daa3ddc6816344a6c46c6271bbf55ca5c7b987653811eebf89f",
         "workspace_exec_sha256": "c7ba8e2e84ecdca3846ba7e15a15e6c95d59865204a3dc03dfa33c604bf2b93e"
       },
       "grading_type": "hybrid",

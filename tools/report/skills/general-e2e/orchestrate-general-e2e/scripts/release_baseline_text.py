@@ -9,7 +9,7 @@ CATALOG_SHA='f1a1bcb18b3ae18defef018ba180c02b7620c21cfd208ed7730dcc726456a6c4'
 V4_CONTRACT='57338e91bd87b3cff8f034d5da7340fa95d19dbeae701db8a3a57afa95252c45'
 V4_SOURCE='ec04d3539c64efaf0909e4c0772164e39fa30c835d389eff46d2c5becaa59fe1'
 V4_DATASET={'id':'general-custom70-v4','digest':'914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff'}
-V5_DATASET={'id': 'general-custom70-v5', 'digest': '0800a4bf98afaf02381ef2132abf4f59ec1037e6a5a303e0ffa1984dd6780488'}
+V5_DATASET={'id': 'general-custom70-v5', 'digest': '8503a341fc496b88e1b8e368105e2d700360e026fa5c22578a819f0beb748a6d'}
 V3_DATASET={'id':'general-custom70-v3','digest':'2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7'}
 
 def registry(contract_sha=None):

@@ -39,7 +39,7 @@ class General70V4ReferenceReleaseTests(unittest.TestCase):
                        and any(isinstance(k, ast.Constant) and k.value == 'evaluator_input_profile' for k in n.keys))
         cls.profile_expressions = [ast.Expression(value) for key, value in zip(runtime.keys, runtime.values)
                                   if key is None and any(isinstance(k, ast.Constant) and isinstance(k.value, str)
-                                                        and k.value.endswith('_profile')
+                                                        and (k.value.endswith('_profile') or k.value == 'shared_rule_source_repair')
                                                         for node in ast.walk(value) if isinstance(node, ast.Dict)
                                                         for k in node.keys)]
 

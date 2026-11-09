@@ -8,7 +8,7 @@ CATALOG_SHA = "1c78f388a4a476e43141fa08426b21381acfa3335d7ea3e58b90e0d5b163c449"
 V3_CATALOG_SHA = "276294a05a2fe85774dac7c917b916bab771ad1dbdfe5ecfd6647b966518060f"
 V4_CATALOG_SHA = "3d2de4b3c947ee18cd759343f8645554f3f1c4d1e0773356376220de49894eca"
 
-V5_CATALOG_SHA = "8474d972c8a4a094fe21fb514f2cb777fd95b70b04df7d8825b78680bc9b0250"
+V5_CATALOG_SHA = "aae395aa749b4b958fa4e47142f0a3e7197250794b93ba1d9d6dfd9c9f6f564f"
 
 def registry():
     data=(Path(__file__).resolve().parents[1]/'data/general70-source-identities-v2.json').read_bytes()
