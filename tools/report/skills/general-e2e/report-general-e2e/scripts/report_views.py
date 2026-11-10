@@ -163,7 +163,30 @@ def checkpoints(score, score_path, resolve_file, sha256_file):
     return result
 
 
-def trace_tools(root, execution, resolve_file, sha256_file):
+def workbuddy_persisted_calls(calls, execution, resource_metrics):
+    if execution.get("harness", {}).get("id") != "workbuddy" or not resource_metrics:
+        return calls, []
+    collection = resource_metrics.get("collection", {})
+    marker = "WORKBUDDY_CANCELLED_ORPHAN_TOOL_V1: "
+    warnings = [warning for warning in collection.get("warnings", []) if warning.startswith(marker)]
+    if not warnings:
+        return calls, []
+    if len(warnings) != 1 or resource_metrics.get("identity") != execution.get("identity"):
+        raise ValueError("REPORT_WORKBUDDY_TOOL_PROJECTION_BINDING")
+    ids = json.loads(warnings[0][len(marker):].split("; ", 1)[0])
+    count = collection.get("metrics", {}).get("call_count", {})
+    coverage = collection.get("coverage", {}).get("call_count", {})
+    subtotal = collection.get("known_subtotals", {}).get("call_count")
+    if (not isinstance(ids, list) or not ids or not all(isinstance(call_id, str) for call_id in ids)
+            or len(set(ids)) != len(ids) or not set(ids) <= calls.keys()
+            or count.get("status") != "partial" or coverage.get("unit") != "tool_call"
+            or len(calls) != coverage.get("total") or len(calls) - len(ids) != subtotal
+            or coverage.get("known") != subtotal):
+        raise ValueError("REPORT_WORKBUDDY_TOOL_PROJECTION_COVERAGE")
+    return {key: name for key, name in calls.items() if key not in ids}, ids
+
+
+def trace_tools(root, execution, resolve_file, sha256_file, *, resource_metrics=None):
     rel = execution.get("evidence", {}).get("trace_index_path")
     if not rel or not (root / rel).exists():
         return {"status": "unavailable", "by_tool": {}, "total": None, "basis": "归档中没有可读取的标准轨迹"}
@@ -220,10 +243,15 @@ def trace_tools(root, execution, resolve_file, sha256_file):
                 "transcript_path": transcript.relative_to(root).as_posix(), "basis": proof["basis"],
                 "trace_index_sha256": sha256_file(path), "transcript_sha256": ref["sha256"],
                 "count_proof_sha256": count_refs[0]["sha256"], "process_trace_status": status}
-    return {"status": status, "by_tool": dict(sorted(Counter(calls.values()).items())), "total": len(calls),
-            "transcript_path": transcript.relative_to(root).as_posix(),
-            "basis": "标准轨迹 tool_call 按单题 call_id 去重，不从 completed 推断工具成功",
-            "trace_index_sha256": sha256_file(path), "transcript_sha256": ref["sha256"]}
+    calls, omitted = workbuddy_persisted_calls(calls, execution, resource_metrics)
+    result = {"status": status, "by_tool": dict(sorted(Counter(calls.values()).items())), "total": len(calls),
+              "transcript_path": transcript.relative_to(root).as_posix(),
+              "basis": "标准轨迹 tool_call 按单题 call_id 去重，不从 completed 推断工具成功",
+              "trace_index_sha256": sha256_file(path), "transcript_sha256": ref["sha256"]}
+    if omitted:
+        result.update(status="partial", process_trace_status=status, excluded_projection_call_ids=omitted,
+                      basis="WorkBuddy 已持久化调用的小计，排除资源回执核实的取消投影")
+    return result
 
 
 def number(value):

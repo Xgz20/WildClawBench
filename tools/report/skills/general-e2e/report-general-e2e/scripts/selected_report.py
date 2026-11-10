@@ -184,7 +184,8 @@ def selected_task_row(*, unit: dict, meta: dict, unit_root: Path, record_path: P
     resource = {field: report.metric_observation(metrics, field) for field, _, _ in report.RESOURCE_FIELDS}
     try:
         checkpoint_values = report.report_views.checkpoints(score, score_path, report.resolve_file, report.sha256_file)
-        tool_calls = report.report_views.trace_tools(unit_root, execution, report.resolve_file, report.sha256_file)
+        tool_calls = report.report_views.trace_tools(unit_root, execution, report.resolve_file, report.sha256_file,
+                                                          resource_metrics=metrics)
         task_definition = report.report_case_views.frozen_task_definition(
             meta, execution, score, score_path, report.resolve_file, report.sha256_file)
     except (ValueError, KeyError, OSError) as exc:

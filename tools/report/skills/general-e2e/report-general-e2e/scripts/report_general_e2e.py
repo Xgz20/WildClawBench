@@ -799,12 +799,14 @@ def build_task_row(selected: Mapping[str, Any], task_meta: Mapping[str, Any], su
     result = score.get("result") if score else None
     try:
         checkpoint_values = report_views.checkpoints(score, score_path, resolve_file, sha256_file)
-        tool_calls = report_views.trace_tools(root / "unit", execution, resolve_file, sha256_file)
+        tool_calls = report_views.trace_tools(root / "unit", execution, resolve_file, sha256_file,
+                                                   resource_metrics=metrics)
         if general_supplement:
             view_execution = copy.deepcopy(execution)
             for field in ("trace_index_path", "transcript_path"):
                 view_execution["evidence"][field] = general_supplement[field]
-            tool_calls = report_views.trace_tools(root / "unit", view_execution, resolve_file, sha256_file)
+            tool_calls = report_views.trace_tools(root / "unit", view_execution, resolve_file, sha256_file,
+                                                       resource_metrics=metrics)
             counted = general_supplement["metrics"].get("tool_counts")
             if counted:
                 tool_calls.update(status=counted["status"], by_tool=counted["by_tool"], total=counted["total"], basis=counted["basis"])
