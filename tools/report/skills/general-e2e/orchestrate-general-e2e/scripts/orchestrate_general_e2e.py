@@ -495,6 +495,7 @@ def _execution_summary(
     task_id: str,
     sdk_final_authorized: bool = False,
     reviewed_media_authorized: bool = False,
+    reviewed_interruption_authorized: bool = False,
 ) -> dict[str, Any]:
     record = _read_json(record_path, "EXECUTION_RECORD_INVALID")
     identity = record.get("identity")
@@ -545,7 +546,11 @@ def _execution_summary(
         # Missing proof cannot turn an apparent quota incident into the generic
         # UNSCORED-and-continue route. Stop conservatively for human inspection.
         raise OrchestrationError("EXTERNAL_QUOTA_EVIDENCE_INVALID", "Native quota error without a bound failure proof; pause for human inspection")
-    if business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
+    interruption_candidate = (
+        reviewed_interruption_authorized and record.get("harness", {}).get("id") == "astronstudio"
+        and record.get("phase") == "FAILED" and business_status in {"cancelled", "candidate_error"}
+    )
+    if interruption_candidate or business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
         pass  # Frozen score Skill independently verifies every native source.
     elif business_status != "completed":
         failure = {
@@ -881,6 +886,7 @@ def _prompt_text(
 {native_moa_instruction}
 {rule_instruction}
 
+若 attempt-manifest.json 的 evidence_admission 为 authorized-astronstudio-native-interruption/v1，先核对 private/evidence-admission.json。执行状态保留原生中断；使用原冻结目录、标准轨迹和同一回合SDK逐项按原Rubric判断。没有正式终稿，不把进度、压缩交接、计划或工具返回冒充用户交付。根据原规则区分已证实的未交付、已执行的可核验过程和评测侧缺证。必须核验的检查点如果无法判定，按原契约记录缺证并保留空分。不将中断本身换成统一0分，不改权重。
 若 attempt-manifest.json 的 evidence_admission 为 reviewed-output-evidence/v1，先读取 private/evidence-admission.json：该题冻结 rubric 已逐项确认以候选产物或最终回复为评分输入，工具/中间消息轨迹 partial 已单独保留。必须按原 rubric 评价所需证据，不因可选工具轨迹 partial 拒绝整题、不增加过程评分项；网页题仍须独立验证交互。无法核验的过程行为不作未发生断言。
 
 {PRESENTATION_ADMISSION_NOTICE}
@@ -993,6 +999,7 @@ def initialize(
     protect_runtime_office_inputs: bool = False,
     sdk_final_authorization: Path | None = None,
     reviewed_media_authorization: Path | None = None,
+    reviewed_interruption_authorization: Path | None = None,
     now: datetime | None = None,
 ) -> dict[str, Any]:
     # General E2E deliberately has no task-level scoring deadline.  Keep the
@@ -1030,6 +1037,13 @@ def initialize(
         reviewed_media_authorization = _regular_file(reviewed_media_authorization, "TEXT_MEDIA_AUTHORIZATION_INVALID")
         if sdk_final_authorization is not None or not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1":
             raise OrchestrationError("TEXT_MEDIA_AUTHORIZATION_INVALID", "explicit task and execution record selection required")
+    if reviewed_interruption_authorization is not None:
+        reviewed_interruption_authorization = _regular_file(
+            reviewed_interruption_authorization, "NATIVE_INTERRUPTION_AUTHORIZATION_INVALID")
+        if (sdk_final_authorization is not None or reviewed_media_authorization is not None
+            or not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1"):
+            raise OrchestrationError("NATIVE_INTERRUPTION_AUTHORIZATION_INVALID",
+                                     "explicit task and execution record selection required")
     if set(explicit) - set(selected):
         raise OrchestrationError(
             "EXECUTION_RECORD_TASK_UNSELECTED", repr(sorted(set(explicit) - set(selected)))
@@ -1053,6 +1067,7 @@ def initialize(
                 task_id=task_id,
                 sdk_final_authorized=sdk_final_authorization is not None,
                 reviewed_media_authorized=reviewed_media_authorization is not None,
+                reviewed_interruption_authorized=reviewed_interruption_authorization is not None,
             )
             frozen_record = staging / "execution-records" / f"{task_id}.json"
             frozen_record.parent.mkdir(parents=True, exist_ok=True)
@@ -1125,6 +1140,8 @@ def initialize(
                 prepare_arguments.extend(["--sdk-final-authorization", str(sdk_final_authorization)])
             if reviewed_media_authorization is not None:
                 prepare_arguments.extend(["--reviewed-media-authorization", str(reviewed_media_authorization)])
+            if reviewed_interruption_authorization is not None:
+                prepare_arguments.extend(["--reviewed-interruption-authorization", str(reviewed_interruption_authorization)])
             if api_runtime_config is not None:
                 prepare_arguments.extend(
                     ["--api-runtime-config", str(api_runtime_config)]
@@ -3510,6 +3527,7 @@ def main(argv: list[str] | None = None) -> int:
     init.add_argument("--score-slots", type=int, default=DEFAULT_SCORE_SLOTS)
     init.add_argument("--sdk-final-authorization", type=Path)
     init.add_argument("--reviewed-media-authorization", type=Path)
+    init.add_argument("--reviewed-interruption-authorization", type=Path)
     init.add_argument("--protect-runtime-office-inputs", action="store_true")
 
     init_rescore = subparsers.add_parser("init-rescore")
@@ -3666,6 +3684,7 @@ def main(argv: list[str] | None = None) -> int:
                 execution_records=_execution_record_map(args.execution_record),
                 sdk_final_authorization=args.sdk_final_authorization,
                 reviewed_media_authorization=args.reviewed_media_authorization,
+                reviewed_interruption_authorization=args.reviewed_interruption_authorization,
                 api_runtime_config=args.api_runtime_config,
                 acceptance_id=args.acceptance_id,
                 score_timeout_seconds=args.score_timeout_seconds,
