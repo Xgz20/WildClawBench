@@ -195,6 +195,14 @@ class GeneralReportViewsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "TRANSCRIPT_IDENTITY_MISMATCH"):
             VIEWS.trace_tools(self.root, execution, REPORT.resolve_file, sha256)
 
+    def test_harness_execution_error_counts_native_interruption_and_candidate_error(self):
+        row = {"harness": {"id": "astronstudio"}, "execution_status": "cancelled",
+               "execution_error": {"code": "ASTRONSTUDIO_TURN_INTERRUPTED"}}
+        self.assertTrue(VIEWS.harness_execution_error(row))
+        self.assertFalse(VIEWS.harness_execution_error({**row, "execution_error": None}))
+        self.assertFalse(VIEWS.harness_execution_error({**row, "execution_status": "infrastructure_error"}))
+        self.assertTrue(VIEWS.harness_execution_error({**row, "execution_status": "candidate_error"}))
+
     def test_workbuddy_projection_is_excluded_only_by_frozen_call_id(self):
         identity = {"batch_id": "batch", "unit_id": "unit", "task_id": "task", "attempt_id": "attempt"}
         execution = {"identity": identity, "harness": {"id": "workbuddy"}}

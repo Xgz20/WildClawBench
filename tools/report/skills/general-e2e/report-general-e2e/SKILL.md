@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.47` 总览「执行错误数」按用例统计 Harness 执行报错及经冻结执行记录明确识别的原生中断。AstronStudio 的 cancelled 与 ASTRONSTUDIO_TURN_INTERRUPTED 联合识别原生中断，其他取消状态沿用原分类。评分覆盖、有效零分及空分分别核验。
+
 `0.8.46` 统一 WorkBuddy 工具总数与分工具明细。按冻结资源回执的精确调用 ID 对账，取消投影仅保留在原始轨迹，分工具明细统计已持久化调用。已知小计及覆盖状态按原资源回执，原执行、评分与原始证据继续封存。
 
 `0.8.44` 领导版Markdown支持同源端到端计分表，明确Rubric与经核验的用户失败政策分数分别展示；未知值及原评分保持不变。

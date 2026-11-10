@@ -470,6 +470,15 @@ def scoring_coverage(tasks, labels):
             "valid_task_sets_identical": identical, "units": units, "note": note}
 
 
+def harness_execution_error(row):
+    status = row["execution_status"]
+    return status == "candidate_error" or (
+        status == "cancelled"
+        and row.get("harness", {}).get("id") == "astronstudio"
+        and (row.get("execution_error") or {}).get("code") == "ASTRONSTUDIO_TURN_INTERRUPTED"
+    )
+
+
 def build_views(data, references):
     import report_case_views
     import report_display
@@ -520,7 +529,7 @@ def build_views(data, references):
         total = lambda key: display_metrics[key]["value"]
         n = len(rows)
         completed = sum(row["execution_status"] == "completed" for row in rows)
-        errors = sum(row["execution_status"] == "candidate_error" for row in rows)
+        errors = sum(harness_execution_error(row) for row in rows)
         anomalies = sum(row["execution_status"] == "infrastructure_error" or row["score_status"] == "evaluation_error" for row in rows)
         overview.append([label, score["mean_score"] * 100 if score["mean_score"] is not None else None,
                          n, completed, errors, anomalies, completed/n if n else None,
@@ -570,7 +579,7 @@ def build_views(data, references):
                        "总 Token", "总请求数", "工具调用数", "总任务耗时(s)", "流程耗时(s)"], overview,
                       {"1": "0.00", "6": "0.00%", "12": "#,##0.000", "13": "#,##0.000"},
                       ["得分为百分制，均值只含有效评分；真实零分保留，评测异常和未评分不补零。",
-                       "完成率=原生正常完成数/冻结用例数；执行情况与评分状态分别统计，异常数按任务去重，各列不要求相加等于用例数。",
+                       "执行错误数统计被测 Harness 执行报错及已识别的原生中断，按用例去重。完成率=原生正常完成数/冻结用例数。执行状态和评分状态分别统计。",
                        "任务耗时=原生主任务时长之和；新流程计时 Profile 从 Prompt 发送至本机确认终态，包含发送、排队与观察等待，排除发送前准备及评分、报告。历史不同边界须按补充审计复算。总请求数按客户端可观测模型响应/请求口径；AstronStudio 为 usage 更新推算，不是 HTTP 尝试次数。",
                        "星号或浅黄色背景表示部分统计的已知小计，完整总量仍未知；覆盖用例数见下表。缺失部分不按 0 填充，无任何可用数据时显示 -。"]),
         "效率对比": table(["模型@Harness", "总 Token", "平均 Token", "输入 Token（含缓存）", "普通输入 Token", "缓存命中输入 Token", "缓存写入输入 Token", "输出 Token", "缓存命中率"],
