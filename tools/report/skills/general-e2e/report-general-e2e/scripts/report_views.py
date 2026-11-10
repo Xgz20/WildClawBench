@@ -174,12 +174,13 @@ def workbuddy_persisted_calls(calls, execution, resource_metrics):
     if len(warnings) != 1 or resource_metrics.get("identity") != execution.get("identity"):
         raise ValueError("REPORT_WORKBUDDY_TOOL_PROJECTION_BINDING")
     ids = json.loads(warnings[0][len(marker):].split("; ", 1)[0])
-    count = collection.get("metrics", {}).get("call_count", {})
+    count = resource_metrics.get("metrics", {}).get("tools", {}).get("call_count", {})
     coverage = collection.get("coverage", {}).get("call_count", {})
     subtotal = collection.get("known_subtotals", {}).get("call_count")
     if (not isinstance(ids, list) or not ids or not all(isinstance(call_id, str) for call_id in ids)
             or len(set(ids)) != len(ids) or not set(ids) <= calls.keys()
-            or count.get("status") != "partial" or coverage.get("unit") != "tool_call"
+            or count.get("status") != "partial" or count.get("value") is not None
+            or coverage.get("unit") != "tool_call"
             or len(calls) != coverage.get("total") or len(calls) - len(ids) != subtotal
             or coverage.get("known") != subtotal):
         raise ValueError("REPORT_WORKBUDDY_TOOL_PROJECTION_COVERAGE")

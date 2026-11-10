@@ -195,6 +195,26 @@ class GeneralReportViewsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "TRANSCRIPT_IDENTITY_MISMATCH"):
             VIEWS.trace_tools(self.root, execution, REPORT.resolve_file, sha256)
 
+    def test_workbuddy_projection_is_excluded_only_by_frozen_call_id(self):
+        identity = {"batch_id": "batch", "unit_id": "unit", "task_id": "task", "attempt_id": "attempt"}
+        execution = {"identity": identity, "harness": {"id": "workbuddy"}}
+        metrics = {
+            "identity": identity,
+            "metrics": {"tools": {"call_count": {"status": "partial", "value": None}}},
+            "collection": {
+                "warnings": ['WORKBUDDY_CANCELLED_ORPHAN_TOOL_V1: ["cancelled"]; verified'],
+                "known_subtotals": {"call_count": 2},
+                "coverage": {"call_count": {"known": 2, "total": 3, "unit": "tool_call"}},
+            },
+        }
+        calls = {"first": "Bash", "actual": "present", "cancelled": "present"}
+        persisted, omitted = VIEWS.workbuddy_persisted_calls(calls, execution, metrics)
+        self.assertEqual(persisted, {"first": "Bash", "actual": "present"})
+        self.assertEqual(omitted, ["cancelled"])
+        metrics["collection"]["known_subtotals"]["call_count"] = 1
+        with self.assertRaisesRegex(ValueError, "REPORT_WORKBUDDY_TOOL_PROJECTION_COVERAGE"):
+            VIEWS.workbuddy_persisted_calls(calls, execution, metrics)
+
     def test_unknown_models_and_repeated_display_names_do_not_merge_units(self):
         unit = copy.deepcopy(self.data["units"][0]); unit["unit_id"] = "other"
         new_rows = copy.deepcopy(self.data["tasks"])
