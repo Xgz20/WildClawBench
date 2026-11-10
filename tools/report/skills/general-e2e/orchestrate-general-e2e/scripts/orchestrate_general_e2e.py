@@ -2207,7 +2207,7 @@ def _verify_state(
         scoring_error = task.get("scoring_error")
         if scoring_error is not None:
             if (task.get("phase") != "UNSCORED" or task.get("thread") is not None or task.get("score") is not None
-                    or scoring_error.get("kind") not in {"dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND, generated_evidence_globs.ERROR_KIND, grade_wrapper_normalization.ERROR_KIND, typed_rule_diagnostics.ERROR_KIND, public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND,work_order_final_policy.ERROR_KIND,domain_details_diagnostics.ERROR_KIND}):
+                    or scoring_error.get("kind") not in {NATIVE_INTERRUPTION_FINAL_MISSING, "dataset-rule-evaluation-error/v1", "evaluator-public-context-setup-error/v1", "office001-declared-numeric-review/v1", private_reference_guard.ERROR_KIND, generated_evidence_globs.ERROR_KIND, grade_wrapper_normalization.ERROR_KIND, typed_rule_diagnostics.ERROR_KIND, public_text_profiles.ERROR_KIND,escrow_state_review.ERROR_KIND,work_order_final_policy.ERROR_KIND,domain_details_diagnostics.ERROR_KIND}):
                 raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", str(task.get("task_id")))
             keys=('rule_audit',) if scoring_error.get('kind')==grade_wrapper_normalization.ERROR_KIND else ('rule_audit','worker_result')
             for key in keys:
@@ -2236,6 +2236,13 @@ def _verify_state(
                     elif scoring_error['kind']==domain_details_diagnostics.ERROR_KIND:allowed=domain_details_diagnostics.original_failure(fm,fc,fa,fw)
                     else:allowed=public_text_profiles.original_failure(attempt,fm,fc,fa,fw)
                 if not allowed:raise OrchestrationError('RULE_ERROR_DEFERRAL_INVALID','unregistered structural adapter failure')
+            if scoring_error.get("kind") == NATIVE_INTERRUPTION_FINAL_MISSING:
+                worker = _read_json(root / scoring_error["worker_result_path"], "RULE_ERROR_DEFERRAL_INVALID")
+                manifest = _read_json(attempt / "attempt-manifest.json", "RULE_ERROR_DEFERRAL_INVALID")
+                contract = _read_json(attempt / manifest["paths"]["contract"], "RULE_ERROR_DEFERRAL_INVALID")
+                error = worker.get("error", {})
+                if error != scoring_error.get("error") or not _native_interruption_final_missing(attempt, manifest, contract, error):
+                    raise OrchestrationError("RULE_ERROR_DEFERRAL_INVALID", "native interruption final-answer guard drift")
             if scoring_error.get("kind") == "evaluator-public-context-setup-error/v1":
                 failure = _read_json(root / scoring_error["worker_result_path"], "RULE_ERROR_DEFERRAL_INVALID")
                 frozen_manifest = _read_json(attempt / "attempt-manifest.json", "RULE_ERROR_DEFERRAL_INVALID")
@@ -3072,6 +3079,28 @@ def record_unscored_evidence_glob_error(orchestration_root,*,task_id,verifier_sc
     return _save(root,state,now or _now())
 
 
+NATIVE_INTERRUPTION_FINAL_MISSING = "native-interruption-required-final-missing/v1"
+
+
+def _native_interruption_final_missing(attempt, manifest, contract, error):
+    guard = "EVALUATOR_EVIDENCE_MISSING: final answer cannot be determined"
+    if (manifest.get("evidence_admission") != "authorized-astronstudio-native-interruption/v1"
+            or error.get("type") != "ValueError" or error.get("message") != guard
+            or guard not in str(contract.get("automated_checks", ""))):
+        return False
+    path = _regular_file(attempt / "private/evidence-admission.json", "RULE_ERROR_DEFERRAL_INVALID")
+    receipt = _read_json(path, "RULE_ERROR_DEFERRAL_INVALID")
+    identity = manifest["identity"]
+    return (
+        _sha256_file(path) == manifest.get("reviewed_evidence_receipt_sha256")
+        and receipt.get("identity") == {
+            "batch_id": identity["batch_id"], "unit_id": identity["unit_id"], "task_id": identity["task_id"],
+            "attempt_id": identity["execution_attempt_id"],
+        }
+        and receipt.get("final_response_present") is False
+    )
+
+
 def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason: str, now: datetime | None = None) -> dict[str, Any]:
     root = _state_root(orchestration_root)
     state = _verify_state(root)
@@ -3099,6 +3128,8 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
         and dataset_error.get("message") == context_guard
         and context_guard in str(contract.get("automated_checks", "")))
     allowed_error = dataset_error.get("type") in {"EvaluationError", "EvaluationReviewRequired", "ReviewRequired"}
+    native_final_missing = _native_interruption_final_missing(attempt, manifest, contract, dataset_error)
+    allowed_error = allowed_error or native_final_missing
     allowed_error = allowed_error or communication_evidence_failure.customer_failure(manifest,contract,audit,result)
     allowed_error = allowed_error or (dataset_error.get("type") == "EvidenceError" and dataset_error.get("message") ==
         "Required text evidence exceeds collector budget; do not report a valid semantic/capability score")
@@ -3120,7 +3151,8 @@ def record_unscored_rule_error(orchestration_root: Path, *, task_id: str, reason
             or (attempt / "semantic/semantic-component.json").exists()):
         raise OrchestrationError("RULE_ERROR_DEFERRAL_NOT_ALLOWED", "requires explicit dataset evaluation/review error without a judge")
     event_time = now or _now()
-    kind = (work_order_final_policy.ERROR_KIND if final_policy_failure else
+    kind = (NATIVE_INTERRUPTION_FINAL_MISSING if native_final_missing else
+        work_order_final_policy.ERROR_KIND if final_policy_failure else
         domain_details_diagnostics.ERROR_KIND if details_failure else
         escrow_state_review.ERROR_KIND if declared_status_review else
         typed_rule_diagnostics.ERROR_KIND if typed_diagnostic_failure else
