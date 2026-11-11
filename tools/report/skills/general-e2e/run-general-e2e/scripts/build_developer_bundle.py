@@ -297,7 +297,13 @@ def main(argv=None):
     parser.add_argument("--task-index", type=Path)
     parser.add_argument("--resource-root", type=Path, help="Optional explicit external immutable resource-supplement manifest root")
     parser.add_argument("--canonical-report-archive", type=Path, help="Use verified sealed report members; preserve separate host-modified files as variants")
+    parser.add_argument("--selected-only", action="store_true",
+                        help="Export only exact report-selected execution/scoring attempts from a SHA-bound task index")
     args=parser.parse_args(argv)
+    if args.selected_only:
+        import selected_developer_bundle
+        return selected_developer_bundle.build(args, sys.modules[__name__])
+
     UNITS = {}
     ROOT=args.workspace_root.resolve(); REPORT=args.report_dir.resolve()
     SOURCE_INDEX=(args.source_index or REPORT/"developer-source-index.json").resolve()
