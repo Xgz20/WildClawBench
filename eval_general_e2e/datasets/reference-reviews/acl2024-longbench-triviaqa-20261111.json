@@ -1,0 +1,406 @@
+{
+  "review_date": "2026-11-11",
+  "status": "include",
+  "conclusion": "当前参考闭集遗漏LongBench的TriviaQA。应按原公开规则新增该QA参考记录；这是一项冻结正式论文可验证的文档阅读理解任务，不能仅因Few-shot Learning标签或文档位于Input I而排除。",
+  "public_rule_application": [
+    {
+      "rule_source": "materials/筛选规则.md，第1项；materials/original-task.md Prompt第27行",
+      "rule": "ACL 2024主会长论文，重要贡献包含用于长上下文/长文档理解的新基准，长按正式论文研究目标和任务定义判断，无统一token门槛。",
+      "application": "LongBench本篇及其基准符合论文级资格。子任务采用旧数据集适配，不等于该论文本身只是用既有基准评价新方法。",
+      "evidence_ids": [
+        "paper_qualification",
+        "construction"
+      ]
+    },
+    {
+      "rule_source": "materials/筛选规则.md，第2项",
+      "rule": "依据文档文本作答；同一基准中符合定义的短输入对照任务也纳入。排除摘要、纯填空、代码、字符串/键值检索、仅返回段落位置或检索排名、仅依赖对话历史的记忆任务。",
+      "application": "TriviaQA的目标I显式包含证据段落与问题，A是该问题答案，提示要求基于given passage作答；不触发所列排除项。规则没有要求证据必须存放在C，也没有一概排除few-shot任务。即使目标段落较短也不因没有统一长输入门槛而失格；但不把示例筛选门槛当作目标长度事实。",
+      "evidence_ids": [
+        "general_definition",
+        "table7",
+        "prompt",
+        "construction"
+      ]
+    },
+    {
+      "rule_source": "materials/筛选规则.md，第3项",
+      "rule": "文档单位优先论文定义；否则按一个问题是否必须联合多份原始文档作答，干扰文档不计。拼接不自动决定单/多文档。",
+      "application": "目标证据为I中的passage，单文档为由Table 7及模板得到的明确标注推断；C中的2–24个示范不是该问题的联合证据，不以其数量判多文档。LongBench整篇原有单、多文档任务均保留，论文问答分类仍为兼有。",
+      "evidence_ids": [
+        "table7",
+        "prompt",
+        "construction"
+      ]
+    },
+    {
+      "rule_source": "materials/original-task.md，第29行Prompt及第54行参考更新流程",
+      "rule": "列全QA子任务并保留单位、统计范围、适用条件、未披露项和URL/页节表；集合外有效候选须据正式原文复核、更新参考后重评，不因不在GT最终否定。",
+      "application": "本结论需要更新参考，不能把冻结56行本身当作排除理由。记录必须区分200测试实例、8209 words长上下文统计、<1000 words示例段落门槛、2–24示例数和目标证据段落长度未单独披露。",
+      "evidence_ids": [
+        "table1",
+        "construction",
+        "table7",
+        "evaluation_setup"
+      ]
+    }
+  ],
+  "input_context_answer": {
+    "I": "Passage&Question：当前待答证据段落和问题",
+    "C": "Few-shot examples：从训练集抽样的示范实例拼接成长上下文",
+    "A": "Answer：当前问题的事实答案",
+    "key_distinction": "long context C的用途是in-context示范；当前问题依据的文档在I。文档QA应按实际给模型的证据与待输出内容判断，不能只在C列寻找Document字样。",
+    "evidence_ids": [
+      "general_definition",
+      "table7",
+      "construction",
+      "prompt"
+    ]
+  },
+  "supporting_evidence": {
+    "paper_qualification": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=1",
+      "pdf_page_1_based": 1,
+      "printed_page": 3119,
+      "section_or_table": "标题、摘要、Introduction及页脚出版信息",
+      "finding": "正式ACL 2024主会长论文，印刷页3119–3137；提出LongBench长上下文理解基准，而非只用旧基准评方法。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "general_definition": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=3",
+      "pdf_page_1_based": 3,
+      "printed_page": 3121,
+      "section_or_table": "§3.1 Problem Definition",
+      "finding": "模型接收(I,C)输出A；通常I、A较短，C较长。QA的一般例子是I为问题、C为文档，但各任务实例化以Table 7为准。该一般例子不能覆盖并抹去TriviaQA的特殊I结构。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "table1": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=4",
+      "pdf_page_1_based": 4,
+      "printed_page": 3122,
+      "section_or_table": "Table 1，Few-shot Learning中TriviaQA行及完整表注",
+      "finding": "TriviaQA ID=4-2；Source=Wikipedia, Web；Avg len=8,209；Metric=F1；Language=English；#data=200。表注说明Source为context来源，英文长度按words、中文按characters计，故本行单位为words而非tokens。表中未单独给出TriviaQA待答证据段落的平均/最大长度。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "construction": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=5",
+      "pdf_page_1_based": 5,
+      "printed_page": 3123,
+      "section_or_table": "§3.2.1 Few-shot Learning（承接PDF p4末段）",
+      "finding": "正文明确把TriviaQA用作阅读理解任务，源数据是带证据段落的问答对。少于1,000 words的passages被筛选为examples；从训练集随机选2–24个样例拼接形成C。这个门槛明确修饰示例段落，不应擅自扩展为测试目标段落I的长度上限。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "evaluation_setup": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=6",
+      "pdf_page_1_based": 6,
+      "printed_page": 3124,
+      "section_or_table": "§3.2.2末段；§4.1 Experimental Setup",
+      "finding": "LongBench从源数据测试集抽取评测数据；few-shot任务的训练集示例作为long context的一部分提供。其他任务通常zero-shot。few-shot/code使用completion样式。长度超过模型窗口时执行中部截断；这类窗口限制不是源文档长度。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "evaluation_metric": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=7",
+      "pdf_page_1_based": 7,
+      "printed_page": 3125,
+      "section_or_table": "§4.1左栏开头（承接PDF p6末段）",
+      "finding": "few-shot学习任务仅提取回复第一行评测。结合Table 1，TriviaQA指标为F1，而非分类Accuracy或检索位置命中率。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "table7": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=13",
+      "pdf_page_1_based": 13,
+      "printed_page": 3131,
+      "section_or_table": "Appendix A，Table 7，TriviaQA行及相邻任务行",
+      "finding": "TriviaQA的Input I=Passage&Question，Context C=Few-shot examples，Answer A=Answer。待答证据段落在I内，C是示范。相邻TREC是Question→Class label，SAMSum是Dialogue→Summary，LSHT是News document→Class label，不能因同属few-shot就作同一纳入/排除决定。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "table8": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=14",
+      "pdf_page_1_based": 14,
+      "printed_page": 3132,
+      "section_or_table": "Appendix A，Table 8；Appendix B起始说明",
+      "finding": "LongBench-E的TriviaQA在0–4k、4–8k、8k+三个长度桶各100个实例，共300；这是长度平衡的同任务子集/设置，不是另一篇论文或新增独立QA。§3.2.2（PDF p6）说明其长度分桶使用word count。这些桶同样不能充当目标证据段落的独立长度统计。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "prompt": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=16",
+      "pdf_page_1_based": 16,
+      "printed_page": 3134,
+      "section_or_table": "Appendix B Evaluation Setups，TriviaQA提示模板",
+      "finding": "模板要求根据给定passage回答问题、只输出答案，并先给examples，然后按{context}、{input}顺序插入。与Table 7交叉核验，{context}=few-shot示例，{input}=待答段落和问题；答案需要文档事实，不是只预测问题类型。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    },
+    "output_length": {
+      "file": "materials/2024.acl-long.172.pdf",
+      "url": "https://aclanthology.org/2024.acl-long.172.pdf#page=17",
+      "pdf_page_1_based": 17,
+      "printed_page": 3135,
+      "section_or_table": "Appendix B Maximum Output Length，ID 4-2列",
+      "finding": "TriviaQA列的最大输出长度设置值为32。该处表头未明列单位，不用这一生成上限冒充输入文档长度，也无需把它当作QA长度必填值。",
+      "method": "冻结PDF整页渲染后目视核验；文本层大部分为空，未把空文本层当作未披露的证据"
+    }
+  },
+  "counterarguments_and_controls": [
+    {
+      "argument": "Table 1和Table 7把TriviaQA放在Few-shot Learning，不在Single-/Multi-Document QA小节。",
+      "assessment": "这是应核对的反向线索，但大类描述评测情境；公开规则依实际文档问答定义筛选。Table 7和模板证明它的待答输入含证据段落，类别标签不足以推翻。"
+    },
+    {
+      "argument": "Table 7的C是示例而非Document，所以它不是文档QA。",
+      "assessment": "遗漏了I列的Passage&Question。原公开规则未限定文档只能在C中，完整(I,C,A)和模板合起来支持纳入。"
+    },
+    {
+      "argument": "TriviaQA使用短段落，长上下文只是堆积示例。",
+      "assessment": "必须承认长上下文主要用于few-shot示范，不能把它写成单篇长文档阅读。公开规则允许同基准符合定义的短输入任务，故不构成排除；目标段落长度仍需标未单独披露。"
+    },
+    {
+      "argument": "Table 1的8209 words、正文<1000 words、LongBench-E的8k+可作为待答文档长度。",
+      "assessment": "这些分别是few-shot任务长上下文统计、示例段落筛选门槛和长度平衡设置分桶，均不足以证明目标证据段落独立长度。拟议记录逐项保留口径，禁止替代。"
+    },
+    {
+      "argument": "有问题或有自然语言输出就应纳入。",
+      "assessment": "不成立。反例为QMSum：I=Query但A=Summary（Table 7、PDF p13和p16模板），按公开规则排除；SAMSum同为few-shot但输出Summary，也排除。TREC没有目标证据段落，只有Question和类别标签，不能从TriviaQA的结论类推；LSHT输出新闻类别也不能仅因有News document而自动视作文档事实QA。这里只裁决TriviaQA。"
+    },
+    {
+      "argument": "多段示例应让TriviaQA算多文档问答。",
+      "assessment": "示范用于学习任务格式，不是当前问题必须联合取证的原始文档。按公开文档单位规则不能以示例拼接数量决定多文档。单文档分类为任务结构推断，原文未另给目标原始文档数分布。"
+    },
+    {
+      "argument": "还应把LongBench-E的TriviaQA再增一行。",
+      "assessment": "不需要。§3.2.2与Table 8说明它是同任务的长度平衡设置；在本条补充300及分桶条件即可，不把200与300相加。"
+    }
+  ],
+  "current_reference": {
+    "workbook": "materials/reference_answer.xlsx",
+    "paper_count": 11,
+    "qa_record_count": 56,
+    "count_verified_from": {
+      "papers": "论文索引!A5:A15：11个非空且唯一的论文标识",
+      "qa_records": "问答明细!A5:A60：QA001–QA056，56个非空且唯一的QA编号",
+      "cross_check": "论文索引!E5:E15求和为56；论文索引!A2文字为11篇、56条"
+    },
+    "longbench_paper_row": "论文索引!A6:H6",
+    "longbench_classification": "兼有",
+    "longbench_qa_count": 8,
+    "longbench_qa_rows": "问答明细!A8:O15",
+    "longbench_qa_ids": [
+      "QA004",
+      "QA005",
+      "QA006",
+      "QA007",
+      "QA008",
+      "QA009",
+      "QA010",
+      "QA011"
+    ],
+    "longbench_subtasks": [
+      "2WikiMultihopQA",
+      "DuReader",
+      "HotpotQA",
+      "MuSiQue",
+      "MultiFieldQA-en",
+      "MultiFieldQA-zh",
+      "NarrativeQA",
+      "Qasper"
+    ],
+    "longbench_triviaqa_present": false,
+    "identity_guard": "按论文标识+基准+子任务查重。别的基准即使也有名为TriviaQA的行，也不代表LongBench的TriviaQA已被覆盖；未用其统计补全本行。",
+    "source_pdf_hash_cell": "PDF来源!G6与manifest中的冻结PDF SHA-256一致"
+  },
+  "proposed_qa_record": {
+    "qa_id_proposed": "QA057",
+    "paper_id": "2024.acl-long.172",
+    "paper_title": "LongBench: A Bilingual, Multitask Benchmark for Long Context Understanding",
+    "version": "冻结ACL 2024正式发表版，SHA-256见integrity_check；不采用LongBench v2或当前代码/数据替换它",
+    "benchmark": "LongBench",
+    "subtask": "TriviaQA",
+    "paper_dataset_id": "4-2",
+    "source": {
+      "upstream_dataset": "TriviaQA (Joshi et al., 2017)，带证据段落的问答对",
+      "table1_source": "Wikipedia, Web",
+      "source_scope": "Table 1表注把Source定义为context来源。未另给目标I中各类文档来源的分项数量或比例。",
+      "construction": "few-shot示例从源训练集随机采样并拼接；评测样本依§3.2.2从源测试集抽取",
+      "evidence_ids": [
+        "table1",
+        "construction",
+        "evaluation_setup"
+      ]
+    },
+    "language": {
+      "value": "English",
+      "evidence_ids": [
+        "table1"
+      ]
+    },
+    "size": {
+      "value": 200,
+      "unit": "test instances",
+      "scope": "Table 1中LongBench的TriviaQA评测实例数；不是源TriviaQA总规模、训练样例数或LongBench-E样本数",
+      "evidence_ids": [
+        "table1",
+        "evaluation_setup"
+      ],
+      "longbench_e_setting": {
+        "value": 300,
+        "unit": "test instances",
+        "per_bin": {
+          "0–4k words": 100,
+          "4–8k words": 100,
+          "8k+ words": 100
+        },
+        "scope": "Table 8的LongBench-E长度平衡设置；作为同一QA记录的补充条件，不与主表200相加，不另计独立QA",
+        "evidence_ids": [
+          "table8",
+          "evaluation_setup"
+        ]
+      }
+    },
+    "length": {
+      "reported_average": {
+        "value": 8209,
+        "unit": "words",
+        "statistic": "Table 1 Avg len",
+        "scope": "LongBench TriviaQA在few-shot长上下文设置下的数据项平均长度统计；C由few-shot示例组成。不得标成单独待答文档/证据段落的平均长度。",
+        "exact_decomposition": "表1未把该平均数分解为目标I、示例C和提示词各自长度；本复核不额外断言8209严格只计C，或断言它等于完整提示的I+C长度。可以保留原值并明确该限制。",
+        "evidence_ids": [
+          "table1",
+          "table7",
+          "construction"
+        ]
+      },
+      "target_evidence_passage_in_I": {
+        "average": null,
+        "minimum": null,
+        "maximum": null,
+        "disclosure_status": "冻结论文未单独披露待答证据段落的平均值、最小值或最大值",
+        "evidence_ids": [
+          "table1",
+          "construction",
+          "table7",
+          "prompt"
+        ]
+      },
+      "few_shot_example_passage_filter": {
+        "operator": "<",
+        "value": 1000,
+        "unit": "words",
+        "scope": "被筛选为few-shot示例的passages，不推定为测试目标证据段落I的上限",
+        "evidence_ids": [
+          "construction"
+        ]
+      },
+      "few_shot_count": {
+        "minimum": 2,
+        "maximum": 24,
+        "unit": "examples per test instance",
+        "scope": "训练集示例拼接形成C，不是待答问题需要联合的证据文档数",
+        "evidence_ids": [
+          "construction"
+        ]
+      },
+      "maximum_long_context_length": "Table 1未给TriviaQA单项最大值；模型上下文窗口、输出上限、LongBench-E分桶界限均不得替代此值"
+    },
+    "metric": {
+      "name": "F1",
+      "applicable_output": "目标问题答案；few-shot评测仅取模型回复第一行，采用completion样式",
+      "not_applicable": [
+        "分类Accuracy",
+        "只返回段落位置/检索排名的指标"
+      ],
+      "evidence_ids": [
+        "table1",
+        "evaluation_setup",
+        "evaluation_metric"
+      ]
+    },
+    "document_type": {
+      "value": "单文档",
+      "basis": "按待答实例的单一evidence passage判定：Table 7写Passage&Question，对应模板写given passage。此为依据任务实例化和模板的分类推断；论文把它放在Few-shot Learning大类，未另明确冠以Single-Document QA标题。",
+      "caveat": "论文未另披露每个目标passage背后原始文档数的分布。不把2–24个示范实例当作当前问题必须联合的多文档证据。若后续正式原始证据证明目标输入含必须联合的多原始文档，应复核此分类；不影响当前文档QA纳入结论。",
+      "evidence_ids": [
+        "table7",
+        "prompt"
+      ]
+    },
+    "url": "https://aclanthology.org/2024.acl-long.172.pdf",
+    "locations": [
+      "PDF p3 / 印刷页3121 §3.1",
+      "PDF p4 / 印刷页3122 Table 1，TriviaQA ID 4-2及表注",
+      "PDF p5 / 印刷页3123 §3.2.1 Few-shot Learning；§3.2.2",
+      "PDF pp6–7 / 印刷页3124–3125 §4.1评测说明",
+      "PDF p13 / 印刷页3131 Appendix A Table 7",
+      "PDF p14 / 印刷页3132 Table 8（仅LongBench-E补充）",
+      "PDF p16 / 印刷页3134 Appendix B TriviaQA提示模板"
+    ]
+  },
+  "proposed_workbook_row_by_existing_headers": {
+    "QA编号": "QA057（建议追加，保留现有QA001–QA056身份）",
+    "论文标识": "2024.acl-long.172",
+    "基准": "LongBench",
+    "问答子任务": "TriviaQA (ID 4-2)",
+    "文档类型": "单文档（由Table 7的Passage&Question和提示模板given passage推断；few-shot示例不计证据文档数）",
+    "数据来源": "TriviaQA (Joshi et al., 2017)带证据段落的问答对；Table 1 Source=Wikipedia, Web（该列定义为context来源）；示例从训练集采样，目标评测数据依§3.2.2取自测试集。",
+    "语言": "English",
+    "规模原值": 200,
+    "规模单位与范围": "test instances；LongBench TriviaQA，Table 1；源数据总数未在该行披露。LongBench-E另为0–4k、4–8k、8k+ words每桶100，共300，非新增独立QA，不与200相加。",
+    "长度原值": 8209,
+    "长度单位与范围": "words；Table 1 Avg len，few-shot长上下文设置的数据项统计，C是示例。该数值并非待答文档独立平均长度；表1未拆分I/C/提示词。待答证据段落I的均值/最小/最大长度未单独披露。正文<1000 words仅明确用于示例passage筛选；C拼接2–24个训练示例；单项最大长上下文长度未披露。",
+    "指标及适用条件": "F1；按§4.1只取回复第一行，few-shot采用completion样式。",
+    "版本差异与补充": "冻结ACL 2024正式版。I=Passage&Question，C=Few-shot examples，A=Answer；按文档事实作答。LongBench-E作为同任务条件补充，不另增论文/QA行；不采用后来的LongBench v2。",
+    "引用URL": "https://aclanthology.org/2024.acl-long.172.pdf",
+    "页／节／表定位": "PDF p3 / 印刷页3121 §3.1；PDF p4 / 印刷页3122 Table 1，TriviaQA ID 4-2及表注；PDF p5 / 印刷页3123 §3.2.1 Few-shot Learning；§3.2.2；PDF pp6–7 / 印刷页3124–3125 §4.1评测说明；PDF p13 / 印刷页3131 Appendix A Table 7；PDF p14 / 印刷页3132 Table 8（仅LongBench-E补充）；PDF p16 / 印刷页3134 Appendix B TriviaQA提示模板"
+  },
+  "reference_change": {
+    "required": true,
+    "applied": false,
+    "reason": "原公开规则与冻结正式原文共同证明该子任务有效，而当前LongBench参考8条无此身份。",
+    "new_qa_record_count": 1,
+    "qa_count_before": 56,
+    "qa_count_after": 57,
+    "longbench_qa_count_before": 8,
+    "longbench_qa_count_after": 9,
+    "paper_count_before": 11,
+    "paper_count_after": 11,
+    "paper_set_changed": false,
+    "paper_classification_changed": false,
+    "paper_pdf_set_changed": false,
+    "only_new_semantic_record": "本次复核只需新增LongBench/TriviaQA一条QA参考。LongBench-E仅作该条条件补充，原11篇论文身份集合不变。",
+    "consequential_metadata_updates": [
+      "追加稳定QA编号（建议QA057），避免重编号已有56条",
+      "论文索引!E6由8改为9",
+      "论文索引!A2及其他参考总数说明由56改为57",
+      "同步参考集合版本、manifest/哈希和评测载体中依赖Q=56的快照，使其明确指向57条集合"
+    ],
+    "preserve": "保留原公开任务、筛选规则、既有56条参考身份、11篇论文集合、冻结论文内容及历史参考版本；这份报告不直接修改materials。"
+  },
+  "uniform_rescoring_impact": {
+    "action": "先以本复核完成题源参考修订与版本冻结，再让三端同题统一使用同一57条QA参考重评，并重新生成相应参考证据。",
+    "coverage": "QA覆盖共同分母由56改为57；是否匹配新增TriviaQA应由各端实际交付证据另行判断，本复核不读取也不预判。不能只对某一端临时认可集合外记录。",
+    "paper_scope": "论文集合仍11篇，论文身份覆盖分母不变；LongBench分类仍兼有。",
+    "fact_checks": "新增条目的事实核验须使用本报告限定的200、8209 words统计口径、I/C/A及未单独披露项；不能用示例总长冒充目标文档长度。涉及该条的事实/比较结论由后续统一重评据实际证据处理。",
+    "process_boundary": "新增私有参考不构成对历史执行过程的自动新增义务，不能反向假定各端当时已经发现该任务；过程结论须按当时公开任务、可见材料和真实行动另行核验。",
+    "history": "保留原参考及旧评分记录，另存新参考版本与统一重评结果；不改写候选产物，不改公开规则或权重。",
+    "performed_here": false,
+    "candidate_scores": "未计算、未提供、未读取"
+  },
+  "limitations": [
+    "待答证据段落I的独立长度统计在冻结论文中未单独披露；不借助其他任务、当前数据版本或示例总长补数。",
+    "单文档分类由Table 7和单一passage模板推断，未冒称论文将该few-shot子任务明确归入Single-Document QA栏目。",
+    "仅对被提出的LongBench TriviaQA作独立复核；本报告不宣称对其他参考记录进行了全面事实审计。"
+  ],
+  "source_pdf_sha256": "410776768ed1a2867ddc438277b8de6f3838b313f906344081175d95446d29d4",
+  "original_reference_sha256": "022335549ad378169cef92bbb45626e5443d73fbf65763f28f079cb570c7794c",
+  "corrected_reference_sha256": "82c43afc4e4807361feb8fd03179dbb505eff6206651b58554a5fbf6d4fa261b",
+  "independent_reviewer_model": "gpt-6.1-sol/high",
+  "independent_review_thread": "01a1ca39-3a05-76a3-b027-2f3ed38536ac",
+  "review_is_not_candidate_grading": true
+}
