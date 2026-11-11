@@ -101,3 +101,27 @@ class ExecutionSupplementTests(unittest.TestCase):
         self.assertEqual(len(files),2)
         self.assertEqual(files[1].read_bytes(),self.raw.read_bytes())
         self.assertEqual(json.loads(files[0].read_bytes())['identity'],manifest['identity'])
+
+    def test_full_rescore_retains_native_admission_and_registered_sdk_prefix(self):
+        RT.execution_supplement.register(RT,attempt_root=self.attempt,source_manifest=self.source)
+        RT.prepare_semantics_attempt(attempt_root=self.attempt)
+        queried=RT.query_evidence_attempt(attempt_root=self.attempt,mode='catalog',offset=0,limit=1000)
+        response=json.loads((self.attempt/'semantic/response-template.json').read_bytes())
+        for criterion in response['criteria']:
+            criterion.update(status='judged',score=1.,reason='合成测试仅验证证据准入和重评分传递，不评价生产候选。',
+                evidence_ids=[queried['items'][0]['id']],review={'query_ids':[queried['query_id']],
+                'supporting_evidence_checked':True,'contradicting_evidence_checked':True,
+                'absence_claim':False,'complete_event_range_checked':False})
+        supplied=self.attempt/'synthetic-response.json';supplied.write_bytes(encoded(response))
+        RT.record_semantics_attempt(attempt_root=self.attempt,response_path=supplied)
+        RT.finalize_score_attempt(attempt_root=self.attempt)
+        before=json.loads((self.attempt/'attempt-manifest.json').read_bytes())
+        result=RT.prepare_rescore_attempt(source_attempt_root=self.attempt,scoring_attempt_id='new-rescore',
+            output_root=self.base/'rescores',judge_protocol='codex-agent-judge-v1',judge_model='gpt-fixture',
+            judge_reasoning_effort='high',judge_attempt_id='new-rescore')
+        target=Path(result['attempt_root']);after=json.loads((target/'attempt-manifest.json').read_bytes())
+        self.assertEqual(after['evidence_admission'],before['evidence_admission'])
+        self.assertEqual(after['reviewed_evidence_receipt_sha256'],before['reviewed_evidence_receipt_sha256'])
+        self.assertEqual((target/'private/evidence-admission.json').read_bytes(),(self.attempt/'private/evidence-admission.json').read_bytes())
+        self.assertEqual((target/'execution-supplement/native-sdk-prefix.jsonl').read_bytes(),self.raw.read_bytes())
+        self.assertEqual(RT.verify_attempt(target,require_runtime=False)['status'],'PASS')

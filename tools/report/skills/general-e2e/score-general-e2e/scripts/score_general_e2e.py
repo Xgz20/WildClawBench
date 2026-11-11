@@ -6482,6 +6482,10 @@ def prepare_rescore_attempt(
         formal_completion = source_manifest.get("runtime", {}).get("formal_completion_receipt")
         if formal_completion:
             shutil.copytree(source_root / "private/completion", private_root / "completion", symlinks=False)
+        if source_manifest.get('reviewed_evidence_receipt_sha256') is not None:
+            shutil.copyfile(source_root/'private/evidence-admission.json', private_root/'evidence-admission.json')
+            shutil.copytree(source_root/'private/admission-evidence', private_root/'admission-evidence', symlinks=False)
+            _make_read_only(private_root/'admission-evidence')
         runtime_lock, runtime_lock_sha = _load_runtime_lock(
             private_root / "runtime-lock.json"
         )
@@ -6526,6 +6530,8 @@ def prepare_rescore_attempt(
                 "execution_attempt_id": execution_attempt_id,
                 "scoring_attempt_id": scoring_attempt_id,
             },
+            **({key: source_manifest[key] for key in ('evidence_admission', 'reviewed_evidence_receipt_sha256')
+                if key in source_manifest}),
             "dataset": dict(source_manifest.get("dataset") or {}),
             "grading": dict(grading),
             "source": dict(source_manifest.get("source") or {}),
