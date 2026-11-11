@@ -209,6 +209,11 @@ def build(args, shared):
             if len(tasks) % 10 == 0:
                 print(json.dumps({"stage": "selected-attempts-copied", "runs": len(tasks), "scope": len(selected)}), flush=True)
 
+        for diagnostic in index.get("diagnostics", []):
+            source = Path(diagnostic["source"])
+            assert sha(source) == diagnostic["sha256"]
+            copy_file(source, diagnostic["path"])
+
         report_names = ["general_e2e_report_data.json", data["artifact_filenames"]["excel"],
                         data["artifact_filenames"]["leader_markdown"], data["artifact_filenames"]["audit_markdown"],
                         "composite-report-receipt.json", "data/score-verification-index.json"]
