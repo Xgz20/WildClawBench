@@ -299,9 +299,13 @@ def main(argv=None):
     parser.add_argument("--canonical-report-archive", type=Path, help="Use verified sealed report members; preserve separate host-modified files as variants")
     parser.add_argument("--selected-only", action="store_true",
                         help="Export only exact report-selected execution/scoring attempts from a SHA-bound task index")
+    parser.add_argument("--resume-staging", type=Path,
+                        help="Resume a previously owned selected-only staging directory after verifying its source hashes")
     args=parser.parse_args(argv)
     if args.selected_only:
         import selected_developer_bundle
+        if args.resume_staging:
+            return selected_developer_bundle.resume(args, sys.modules[__name__])
         return selected_developer_bundle.build(args, sys.modules[__name__])
 
     UNITS = {}

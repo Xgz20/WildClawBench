@@ -1,11 +1,9 @@
 """Export only the exact execution and scoring attempts selected by a report."""
-from collections import Counter
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path, PurePosixPath
 from zoneinfo import ZoneInfo
 import csv
-import io
 import json
 import os
 import shutil
@@ -37,7 +35,6 @@ def safe(value):
 
 def build(args, shared):
     assert args.canonical_report_archive and args.task_index, "selected export requires a frozen report and explicit selection"
-    report_dir = args.report_dir.resolve()
     index_path = args.task_index.resolve()
     prefix, sealed = shared.canonical_report_files(args.canonical_report_archive.resolve())
     with zipfile.ZipFile(args.canonical_report_archive) as report_zip:
@@ -91,6 +88,8 @@ def build(args, shared):
             assert source.is_dir() and not source.is_symlink()
             excluded = flow.judge_dependency_exclusions(source, PurePosixPath(relative)) if score else []
             skip = {entry["attempt_relative_path"] for entry in excluded}
+            for entry in excluded:
+                entry["path"] = relative + "/" + entry["attempt_relative_path"]
             exclusions.extend(excluded)
             if score and (source / "runtime").exists():
                 exclusions.append({"path": relative + "/runtime", "reason": "disposable scoring runtime; frozen inputs retained"})
@@ -214,6 +213,7 @@ def build(args, shared):
             assert sha(source) == diagnostic["sha256"]
             copy_file(source, diagnostic["path"])
 
+        copy_file(index_path, "SOURCE_SELECTION.json")
         report_names = ["general_e2e_report_data.json", data["artifact_filenames"]["excel"],
                         data["artifact_filenames"]["leader_markdown"], data["artifact_filenames"]["audit_markdown"],
                         "composite-report-receipt.json", "data/score-verification-index.json"]
@@ -270,55 +270,129 @@ def build(args, shared):
             assert read(r['native_prefix']), 'missing archived native prefix'
 """, 1)
         (staging / "VERIFY.py").write_text(verifier, encoding="utf-8")
-        entries = []
-        for directory, dirs, files in os.walk(staging, followlinks=False):
-            for name in sorted(dirs + files):
-                p = Path(directory) / name
-                relative = p.relative_to(staging).as_posix()
-                info = p.lstat()
-                if p.is_symlink():
-                    raw = os.readlink(p).encode("utf-8", errors="surrogateescape")
-                    entries.append({"path": relative, "kind": "symlink", "size": len(raw),
-                                    "sha256": sha256(raw).hexdigest(), "link_target": os.readlink(p), "mode": f"{stat.S_IMODE(info.st_mode):04o}"})
-                elif p.is_dir():
-                    entries.append({"path": relative, "kind": "directory", "size": 0, "mode": f"{stat.S_IMODE(info.st_mode):04o}"})
+        return finalize(staging, destination, archive, now, len(selected), index["scoring_results"], summaries)
+
+
+def finalize(staging, destination, archive, now, selected_runs, valid_scores, summaries):
+    output = destination.parent
+    bundle_name = destination.name
+    entries = []
+    for directory, dirs, files in os.walk(staging, followlinks=False):
+        for name in sorted(dirs + files):
+            p = Path(directory) / name
+            relative = p.relative_to(staging).as_posix()
+            if relative == "INTEGRITY.json" or name == ".DS_Store" or name.startswith("._"):
+                continue
+            info = p.lstat()
+            if p.is_symlink():
+                raw = os.readlink(p).encode("utf-8", errors="surrogateescape")
+                entries.append({"path": relative, "kind": "symlink", "size": len(raw),
+                                "sha256": sha256(raw).hexdigest(), "link_target": os.readlink(p), "mode": f"{stat.S_IMODE(info.st_mode):04o}"})
+            elif p.is_dir():
+                entries.append({"path": relative, "kind": "directory", "size": 0, "mode": f"{stat.S_IMODE(info.st_mode):04o}"})
+            else:
+                entries.append({"path": relative, "kind": "file", "size": info.st_size, "sha256": sha(p),
+                                "mode": f"{stat.S_IMODE(info.st_mode):04o}"})
+        dirs[:] = [n for n in dirs if not (Path(directory) / n).is_symlink()]
+    entries.sort(key=lambda x: x["path"])
+    write(staging / "INTEGRITY.json", {"schema_version": 1, "entries": entries})
+    temporary = output / ("." + bundle_name + ".zip.partial")
+    print(json.dumps({"stage": "compressing", "files": sum(e["kind"] == "file" for e in entries),
+                      "uncompressed_bytes": sum(e["size"] for e in entries)}), flush=True)
+    if temporary.exists():
+        preserved = output / ("." + bundle_name + ".failed-" + now.strftime("%Y%m%d_%H%M%S") + ".zip")
+        assert not preserved.exists()
+        temporary.rename(preserved)
+    with zipfile.ZipFile(temporary, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=4, allowZip64=True) as z:
+        for e in [*entries, {"path": "INTEGRITY.json", "kind": "file", "mode": "0644"}]:
+            relative = e["path"]
+            p = staging / relative
+            info = zipfile.ZipInfo(bundle_name + "/" + relative + ("/" if e["kind"] == "directory" else ""), now.timetuple()[:6])
+            mode = {"directory": stat.S_IFDIR, "file": stat.S_IFREG, "symlink": stat.S_IFLNK}[e["kind"]]
+            info.create_system = 3
+            info.external_attr = (mode | int(e["mode"], 8)) << 16
+            info.compress_type = zipfile.ZIP_STORED if e["kind"] == "directory" else zipfile.ZIP_DEFLATED
+            if e["kind"] == "directory":
+                z.writestr(info, b"")
+            elif e["kind"] == "symlink":
+                z.writestr(info, os.readlink(p).encode())
+            else:
+                with p.open("rb") as src, z.open(info, "w", force_zip64=True) as dst:
+                    shutil.copyfileobj(src, dst, 4 * 1024 * 1024)
+    print(json.dumps({"stage": "verifying-zip", "archive_bytes": temporary.stat().st_size}), flush=True)
+    verified = subprocess.run([sys.executable, str(staging / "VERIFY.py"), str(temporary)],
+                              capture_output=True, text=True)
+    assert verified.returncode == 0, verified.stdout + verified.stderr
+    result = json.loads(verified.stdout)
+    assert result["selected_runs"] == selected_runs and result["valid_scores"] == valid_scores
+    staging.rename(destination)
+    temporary.rename(archive)
+    archive_hash = sha(archive)
+    archive.with_suffix(".zip.sha256").write_text(archive_hash + "  " + archive.name + "\n")
+    result.update(archive=str(archive), bundle_directory=str(destination), archive_sha256=archive_hash,
+                  archive_size_bytes=archive.stat().st_size, summaries=summaries)
+    write(archive.with_suffix(".verification.json"), result)
+    print(json.dumps(result, ensure_ascii=False), flush=True)
+    return result
+
+
+def resume(args, shared):
+    assert args.task_index and args.canonical_report_archive
+    staging = args.resume_staging.resolve()
+    output = args.output_root.resolve()
+    assert staging.parent == output and staging.name.startswith(".general-e2e-selected-") and staging.name.endswith(".pending")
+    bundle_name = staging.name[1:-len(".pending")]
+    destination = output / bundle_name
+    archive = output / (bundle_name + ".zip")
+    assert not destination.exists() and not archive.exists()
+    selection = read(staging / "SELECTION.json")
+    index = read(args.task_index)
+    assert sha(args.task_index) == selection["source_selection_sha256"]
+    assert sha(staging / "Reports/general_e2e_report_data.json") == index["report_data_sha256"] == selection["report_data_sha256"]
+    prefix, sealed = shared.canonical_report_files(args.canonical_report_archive)
+    assert sealed["general_e2e_report_data.json"]["sha256"] == index["report_data_sha256"]
+    origins = read(staging / "SOURCE_MAP.json")
+    for item in origins["files"]:
+        path = staging / safe(item["path"])
+        assert path.stat().st_size == item["size"] and sha(path) == item["sha256"], item["path"]
+    source_selection = staging / "SOURCE_SELECTION.json"
+    if not source_selection.exists():
+        shutil.copy2(args.task_index, source_selection)
+    assert sha(source_selection) == selection["source_selection_sha256"]
+    data = read(staging / "Reports/general_e2e_report_data.json")
+    with zipfile.ZipFile(args.canonical_report_archive) as report_zip:
+        material = data.get("publication_materials", {})
+        wanted = [material[k] for k in ("feedback", "feedback_zip") if material.get(k)]
+        for relative in list(sealed):
+            include = any(relative == value or relative.startswith(str(PurePosixPath(value).parent) + "/")
+                          for value in wanted if "/" in value) or relative in wanted
+            if include:
+                path = staging / "Reports" / safe(relative)
+                raw = report_zip.read(prefix + relative)
+                assert sha256(raw).hexdigest() == sealed[relative]["sha256"]
+                if path.exists():
+                    assert sha(path) == sealed[relative]["sha256"]
                 else:
-                    entries.append({"path": relative, "kind": "file", "size": info.st_size, "sha256": sha(p),
-                                    "mode": f"{stat.S_IMODE(info.st_mode):04o}"})
-            dirs[:] = [n for n in dirs if not (Path(directory) / n).is_symlink()]
-        entries.sort(key=lambda x: x["path"])
-        write(staging / "INTEGRITY.json", {"schema_version": 1, "entries": entries})
-        temporary = output / ("." + bundle_name + ".zip.partial")
-        print(json.dumps({"stage": "compressing", "files": sum(e["kind"] == "file" for e in entries),
-                          "uncompressed_bytes": sum(e["size"] for e in entries)}), flush=True)
-        with zipfile.ZipFile(temporary, "x", compression=zipfile.ZIP_DEFLATED, compresslevel=4, allowZip64=True) as z:
-            for e in [*entries, {"path": "INTEGRITY.json", "kind": "file", "mode": "0644"}]:
-                relative = e["path"]
-                p = staging / relative
-                info = zipfile.ZipInfo(bundle_name + "/" + relative + ("/" if e["kind"] == "directory" else ""), now.timetuple()[:6])
-                mode = {"directory": stat.S_IFDIR, "file": stat.S_IFREG, "symlink": stat.S_IFLNK}[e["kind"]]
-                info.create_system = 3
-                info.external_attr = (mode | int(e["mode"], 8)) << 16
-                info.compress_type = zipfile.ZIP_STORED if e["kind"] == "directory" else zipfile.ZIP_DEFLATED
-                if e["kind"] == "directory":
-                    z.writestr(info, b"")
-                elif e["kind"] == "symlink":
-                    z.writestr(info, os.readlink(p).encode())
-                else:
-                    with p.open("rb") as src, z.open(info, "w", force_zip64=True) as dst:
-                        shutil.copyfileobj(src, dst, 4 * 1024 * 1024)
-        print(json.dumps({"stage": "verifying-zip", "archive_bytes": temporary.stat().st_size}), flush=True)
-        verified = subprocess.run([sys.executable, str(staging / "VERIFY.py"), str(temporary)],
-                                  capture_output=True, text=True)
-        assert verified.returncode == 0, verified.stdout + verified.stderr
-        result = json.loads(verified.stdout)
-        assert result["selected_runs"] == len(selected) and result["valid_scores"] == index["scoring_results"]
-        staging.rename(destination)
-        temporary.rename(archive)
-        archive_hash = sha(archive)
-        archive.with_suffix(".zip.sha256").write_text(archive_hash + "  " + archive.name + "\n")
-        result.update(archive=str(archive), bundle_directory=str(destination), archive_sha256=archive_hash,
-                      archive_size_bytes=archive.stat().st_size, summaries=summaries)
-        write(archive.with_suffix(".verification.json"), result)
-        print(json.dumps(result, ensure_ascii=False), flush=True)
-        return result
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_bytes(raw)
+    exclusion_path = staging / "PACKAGE_EXCLUSIONS.json"
+    exclusions = read(exclusion_path)
+    for entry in exclusions["entries"]:
+        if entry["path"].startswith(("scoring/AStudio/", "scoring/WorkBuddy/", "scoring/DoubaoWork/")):
+            entry["path"] = entry["path"][len("scoring/"):]
+    write(exclusion_path, exclusions)
+    tasks = read(staging / "TASK_INDEX.json")["tasks"]
+    expected = {(r["unit_id"], r["task_id"]):r for r in index["selected_tasks"]}
+    assert len(tasks) == len(expected) == index["selected_runs"]
+    for task in tasks:
+        row = expected[task["unit_id"], task["task_id"]]
+        assert task["execution_attempt_id"] == row["execution_attempt_id"]
+        assert task["scoring_attempt_id"] == row["scoring_attempt_id"] and task["score_status"] == row["score_status"]
+    summaries = [{"unit_id": uid, "harness": h, "selected_runs": sum(t["unit_id"] == uid for t in tasks),
+                  "valid_scores": sum(t["unit_id"] == uid and t["score_status"] == "valid" for t in tasks),
+                  "raw_trace_present": sum(t["unit_id"] == uid and bool(t["raw_trace_directory"] or t["native_prefix"]) for t in tasks)}
+                 for uid,h in {(t["unit_id"],t["harness"]) for t in tasks}]
+    print(json.dumps({"stage":"verified-staging-resume","selected_runs":len(tasks),
+                      "source_files_verified":len(origins["files"])}),flush=True)
+    return finalize(staging,destination,archive,datetime.now(ZoneInfo("Asia/Shanghai")),
+                    index["selected_runs"],index["scoring_results"],summaries)
