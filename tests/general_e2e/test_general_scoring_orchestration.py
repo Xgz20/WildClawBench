@@ -720,9 +720,11 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
              "entrypoint_sha256": "b" * 64, "runtime_lock_sha256": "c" * 64},
             prompt_protocol="general-e2e-codex-scoring-prompt/v5",
         )
-        # Captured from the unchanged 0.11.4 distribution, not regenerated.
+        # Captured from the pre-accountability source at 03c6ac5c. That source
+        # already differed from the older 0.11.4 fixture; new policy must not
+        # change its legacy v5 rendering or retrofit new instructions into it.
         self.assertEqual(sha256_bytes(prompt.encode("utf-8")),
-                         "b3ddd5c252bd484608f3a1666c70301efb0c77685467b490c919ad480e9d5968")
+                         "84af1eb138192b3ada5f3b0cc1d53ed701a4eb32ea4cefd3a25955710ebfca01")
 
     def test_score_command_uses_frozen_python_without_path_aliases(self) -> None:
         skill = self.root / "评分 包"
@@ -1678,7 +1680,7 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
             self.assertEqual(completed["evaluation_error_count"], 1)
             self.assertEqual(completed["unscored_count"], 1)
             self.assertEqual(
-                completed["recommended_actions"][0]["action"], "BUILD_SUBMISSION"
+                completed["recommended_actions"][0]["action"], "REQUEST_USER_DECISION"
             )
             built = ORCHESTRATOR.build_submission(root, now=self.t0)
             repeated = ORCHESTRATOR.build_submission(root, now=self.t0)

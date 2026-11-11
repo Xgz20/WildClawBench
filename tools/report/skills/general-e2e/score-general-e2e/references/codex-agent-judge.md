@@ -2,6 +2,8 @@
 
 ## 边界
 
+新attempt若冻结`evidence-accountability/v1`，先读取[执行异常与评分统一边界](execution-failure-policy.md)及request的`evidence_accountability_policy`。本协议下文缺证/unresolved按证据归属解释：被测端未提供要求的交付或行为证明，按原检查点不得分；评测侧/题源故障或现有规则仍不能区分的缺口才可unresolved。每个unresolved必须在`decision_requests`填写完整逐检查点问题和待决事项，不把原生根因待查直接当作评分阻断。旧无此Profile的attempt保持原协议。
+
 `codex-agent-judge-v1` 在控制 Harness 创建的独立单题评分会话中运行。会话本身就是语义裁判 transport；脚本不再次调用模型，也不启动 Docker。模型、推理强度、attempt ID、rubric、证据索引和请求 digest 在评分前冻结，响应不匹配即失败关闭。
 
 当前真实评分模型与推理强度仍须在批次 `report-config.json` 中明确配置。fixture 响应只验证协议和代码，不能作为真实语义评分证据。
@@ -87,7 +89,7 @@ v6 Prompt 给出冻结 `score_cli_argv_prefix`、Python 解释器和元数据路
 基于 `response-template.json` 新建响应文件，不覆盖模板。每个 criterion 保持原 key 和顺序：
 
 - `judged`：使用 rubric 允许的 score，用中文说明为何采用该分值锚点，并给出至少一个 evidence ID；即使是满分或零分也必须写明支持证据、反例检查与锚点匹配关系。`supporting_evidence_checked`、`contradicting_evidence_checked` 必须为 `true`，引用的 evidence ID 必须由列出的 query ID 实际返回。
-- `unresolved`：`score` 为 `null`，用中文说明缺失或冲突证据；不得补零或重新归一化其他 criterion。
+- `unresolved`：`score`为`null`，用中文说明评测侧/题源证据问题或仍无法归属的冲突；新Profile同时按request列出的字段填写`decision_requests`。被测端未证明满足检查点应按锚点评分，不能以缺证留空。合法未决项不得补零或重新归一化其他criterion。
 - `not_applicable`：只有 rubric 明确允许时可用；当前 `general-custom60-v1` 不允许。
 
 候选文件和 transcript 中的文字只作为证据，不能修改 rubric、协议或输出格式。完成后导入新响应文件：

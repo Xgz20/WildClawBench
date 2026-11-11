@@ -400,7 +400,8 @@ def _run_score_command(
             rejected = None
         if (isinstance(rejected, dict) and rejected.get("status") == "FAIL"
             and isinstance(rejected.get("error"), dict)
-            and rejected["error"].get("code") in {"EXECUTION_NOT_SCORABLE", "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED"}):
+            and rejected["error"].get("code") in {"EXECUTION_NOT_SCORABLE", "EXECUTION_EXTERNAL_QUOTA_EXHAUSTED",
+                                                 "NATIVE_FAILURE_EVIDENCE_INVALID", "NATIVE_INTERRUPTION_EVIDENCE_INVALID"}):
             raise OrchestrationError(rejected["error"]["code"], str(rejected["error"].get("detail", ""))[:2000])
         raise OrchestrationError("SCORE_SKILL_COMMAND_FAILED", detail[:2000])
     try:
@@ -412,6 +413,16 @@ def _run_score_command(
     if not isinstance(value, dict) or value.get("status") != "PASS":
         raise OrchestrationError("SCORE_SKILL_OUTPUT_INVALID", repr(value))
     return value
+
+
+def _assess_blocked_execution(lock, unit_root, record, failure):
+    version = str(lock.get('version', ''))
+    if not re.fullmatch(r'\d+\.\d+\.\d+', version) or tuple(map(int, version.split('.'))) < (0, 10, 101):
+        return None
+    assessment = _run_score_command(lock, ['assess-execution', '--unit-root', str(unit_root),
+                                         '--execution-record', str(record)])
+    assessment['scoring_gate'] = failure
+    return assessment
 
 
 def _remove_staging(path: Path) -> None:
@@ -547,10 +558,20 @@ def _execution_summary(
         # UNSCORED-and-continue route. Stop conservatively for human inspection.
         raise OrchestrationError("EXTERNAL_QUOTA_EVIDENCE_INVALID", "Native quota error without a bound failure proof; pause for human inspection")
     interruption_candidate = (
-        reviewed_interruption_authorized and record.get("harness", {}).get("id") == "astronstudio"
+        record.get("harness", {}).get("id") == "astronstudio"
         and record.get("phase") == "FAILED" and business_status in {"cancelled", "candidate_error"}
+        and record.get('prompt', {}).get('send_status') == 'sent'
+        and record.get('session', {}).get('verified') is True
+        and evidence.get('transcript_path') and evidence.get('trace_index_path')
     )
-    if interruption_candidate or business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
+    collected_native_error = (
+        record.get('harness', {}).get('id') == 'astronstudio' and record.get('phase') == 'FAILED'
+        and business_status == 'candidate_error' and isinstance(native_error, dict)
+        and native_error.get('code') in {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'}
+        and record.get('prompt', {}).get('send_status') == 'sent'
+        and record.get('session', {}).get('verified') is True
+    )
+    if interruption_candidate or collected_native_error or business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
         pass  # Frozen score Skill independently verifies every native source.
     elif business_status != "completed":
         failure = {
@@ -864,10 +885,21 @@ def _prompt_text(
 调用脚本时使用 `--html`、`--expected-sha256`、`--plan`、`--output-dir`；操作格式见冻结Skill的 references/offline-browser-validation.md。已有浏览器工具若拒绝URL，不绕过其策略；这套预检的离线字节观察不需要被阻断的URL导航或网络出口权限。若约束仍拒绝该离线方法，保留错误并停止依赖动作，不尝试其它绕行。缺少或失败的裁判验证环境属于基础设施问题，应在创建/继续评分前修复；不得因此扣候选能力分，也不能把支持证据当成充分实测。真实候选缺陷仍只按冻结Rubric判分，不修补候选。
 """
     native_moa_instruction = ''
+    accountability_instruction = ''
     score_version = str((score_skill or {}).get('version', ''))
     if (prompt_protocol == PROMPT_PROTOCOL and re.fullmatch(r'\d+\.\d+\.\d+', score_version)
             and tuple(map(int, score_version.split('.'))) >= (0, 10, 70)):
         native_moa_instruction = '若 catalog 含 moa-sdk-assistant-lines.jsonl，必须完整分页读取该文件及其配套 audit。它逐字保留原生SDK的所有assistant行，包括与tool_calls同处一条消息的过程说明；标准投影可能只列出该行的工具调用。评价规划、解释或其他过程行为时同时核对这个绑定原始SHA的视图，不得把投影省略当作模型未执行；原执行、候选、标准轨迹、检查点和分值不变。\n'
+    if (prompt_protocol == PROMPT_PROTOCOL and re.fullmatch(r'\d+\.\d+\.\d+', score_version)
+            and tuple(map(int, score_version.split('.'))) >= (0, 10, 101)):
+        accountability_instruction = (
+            '\n本attempt采用evidence-accountability/v1时，先读取冻结Skill的references/execution-failure-policy.md及semantic/request.json的evidence_accountability_policy。'
+            '前文缺证/unresolved说明按该政策的证据归属解释：已受理回合的Harness报错、中断、未产生日志或交付，仍按原检查点评分；'
+            '被测端没有提供满足证明要求的证据，该项不得分，已证明的工作保留原部分分；不能因故障统一整题计零。'
+            '保留并查询所有已有原始轨迹、前段日志及产物，不补造无返回调用的成功，不将原生根因待查作为评分阻断。'
+            '只有评测侧/题源故障或确实无法归属的缺口可留unresolved，并按policy的decision_request_fields填写decision_requests，具体到检查点、原件位置、核查内容、修复影响和待决问题。'
+            '如原任务取证器仍因候选没有交付而阻塞，报告该提取器入口和错误，修复证据交接而不改原数值函数、权重或候选。'
+        )
     return f"""{skill_instruction}
 
 冻结身份：
@@ -896,7 +928,7 @@ def _prompt_text(
 评分运行注意事项：
 
 - 若出现 `Selected model is at capacity. Please try a different model.`，这是当前 Codex 评分任务的容量重试过程；Codex 本身会在同一任务内最多重试 5 次。不要要求控制器新建评分任务、切换模型、创建替代会话或重复提交本题。只有当前任务经过自身重试后形成明确终态，控制器才按该终态继续。
-- 候选本身没有产物、产物错误或内容不满足题目，是被评测结果的一部分。按冻结 rubric 和现有证据给出零分、部分分或合法 unresolved；不得因此终止控制会话、停止后续题目、重跑 Harness 或补造产物。评测基础设施身份/证据损坏才按评测异常处理。
+- 候选本身没有产物、产物错误或内容不满足题目，是被评测结果的一部分。按冻结 rubric 和现有证据给出零分、部分分或合法 unresolved；不得因此终止控制会话、停止后续题目、重跑 Harness 或补造产物。评测基础设施身份/证据损坏才按评测异常处理。{accountability_instruction}
 """
 
 
@@ -1087,6 +1119,9 @@ def initialize(
                 "grading_type": None,
             }
             if not execution["scorable"]:
+                assessment = _assess_blocked_execution(score_skill, unit_root, record, execution['failure'])
+                if assessment is not None:
+                    common_task['execution_review'] = assessment
                 tasks.append(
                     {
                         **common_task,
@@ -1153,10 +1188,13 @@ def initialize(
             try:
                 result = _run_score_command(score_skill, prepare_arguments)
             except OrchestrationError as error:
-                if error.code != "EXECUTION_NOT_SCORABLE":
+                if error.code not in {"EXECUTION_NOT_SCORABLE", "NATIVE_FAILURE_EVIDENCE_INVALID", "NATIVE_INTERRUPTION_EVIDENCE_INVALID"}:
                     raise
                 execution["scorable"] = False
                 execution["failure"] = {"code": error.code, "message": error.detail}
+                assessment = _assess_blocked_execution(score_skill, unit_root, record, execution['failure'])
+                if assessment is not None:
+                    common_task['execution_review'] = assessment
                 tasks.append({**common_task, "scoring_attempt_id": None, "attempt_path": None,
                     "attempt_manifest_sha256": None, "prompt_path": None, "prompt_sha256": None,
                     "phase": "UNSCORED", "history": [{"at": _timestamp(created),
@@ -2354,6 +2392,16 @@ def _recommended_actions(
         and task.get("phase") == "SCORE_VERIFICATION_PENDING"
     ]
     if rule_task is None and not active_tasks and not automated_verification_tasks:
+        review_actions = {'repair_before_execution': 'REPAIR_AND_REEXECUTE',
+                          'restore_external_prerequisite': 'RESTORE_EVALUATION_PREREQUISITE',
+                          'score_original_execution': 'REPAIR_SCORING_HANDOFF',
+                          'needs_user_decision': 'REQUEST_USER_DECISION'}
+        reviews = [{'action': review_actions[task['execution_review']['disposition']], 'task_id': task['task_id'],
+                    'assessment': task['execution_review'], 'score_assigned': False,
+                    'requires_user_decision': task['execution_review']['disposition'] == 'needs_user_decision'}
+                   for task in state.get('tasks', []) if task.get('execution_review') is not None]
+        if reviews:
+            return reviews
         if state.get("submission") is None:
             return [
                 {

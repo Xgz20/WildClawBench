@@ -66,6 +66,8 @@ class RegisteredIndependentValidityTests(unittest.TestCase):
         return value
 
     def publish(self,value):
+        from tests.general_e2e.test_general_semantic_scoring import fixture_evaluator_decision_requests
+        value['decision_requests'] = fixture_evaluator_decision_requests(value)
         path=self.attempt/'native-response.json';path.write_text(json.dumps(value,ensure_ascii=False),encoding='utf-8')
         checked=RUNTIME.semantic_aggregation.check(RUNTIME,attempt_root=self.attempt,response_path=path,runtime_python=Path(sys.executable))
         self.assertEqual(checked['status'],'PASS')

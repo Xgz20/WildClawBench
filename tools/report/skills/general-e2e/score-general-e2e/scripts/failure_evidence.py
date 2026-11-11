@@ -8,6 +8,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
+import execution_accountability
 
 ADMISSION = "verified-failed-output-evidence/v1"
 POLICY_PATH = Path(__file__).resolve().parents[1] / "references/reviewed-failure-evidence-policy.json"
@@ -151,3 +152,108 @@ def validate(execution, contract, files):
             "original_failure_preserved": True, "candidate_required": True,
             "tool_history_required_by_rubric": False,
             "files": [{"path": name, "sha256": sha(value), "size": len(value)} for name, value in sorted(files.items())]}
+
+
+def accountable_profile(execution):
+    """Admission by verified native provenance, independent of task allowlists."""
+    require(native_candidate(execution), 'EXECUTION_INVALID')
+    require(not is_external_quota(execution), "EXTERNAL_QUOTA_REQUIRES_RECOVERY")
+    return execution_accountability.FAILED_ADMISSION
+
+
+def native_candidate(execution):
+    error = execution.get('execution', {}).get('error')
+    return (execution.get('harness', {}).get('id') == 'astronstudio'
+            and execution.get('phase') == 'FAILED'
+            and execution.get('execution', {}).get('business_status') == 'candidate_error'
+            and isinstance(error, dict) and error.get('code') in {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'}
+            and isinstance(error.get('message'), str) and bool(error['message'])
+            and execution.get('prompt', {}).get('send_status') == 'sent'
+            and execution.get('session', {}).get('verified') is True
+            and execution.get('candidate', {}).get('drift_status') == 'stable')
+
+
+def read_collected_files(unit_root, record_path, execution):
+    """Bind an existing native-error collection without rewriting its record."""
+    root = Path(unit_root).resolve()
+    record_path = Path(record_path)
+    def read(path):
+        require(path.resolve().is_relative_to(root) and path.is_file() and not path.is_symlink(), 'SOURCE_PATH')
+        return path.read_bytes()
+    files = {'original-execution-record.json': read(record_path),
+             'original-evidence-manifest.json': read(record_path.with_name('evidence-manifest.json'))}
+    manifest = json.loads(files['original-evidence-manifest.json'])
+    states = [row for row in manifest['artifacts'] if row['path'].endswith('/execution/automation-state.json')]
+    require(len(states) == 1, 'ASTRON_STATE_BINDING')
+    files['original-state.json'] = read(root / states[0]['path'])
+    state = json.loads(files['original-state.json'])
+    files['PROMPT.md'] = read(Path(state['prompt']['path']))
+    return files
+
+
+def validate_collected(execution, contract, files):
+    accountable_profile(execution)
+    original = json.loads(files['original-execution-record.json'])
+    state = json.loads(files['original-state.json'])
+    manifest = json.loads(files['original-evidence-manifest.json'])
+    require(original == execution and original['identity'] == state['identity'] == manifest['identity'], 'SOURCE_IDENTITY')
+    states = [row for row in manifest['artifacts'] if row['path'].endswith('/execution/automation-state.json')]
+    require(len(states) == 1 and states[0]['sha256'] == sha(files['original-state.json'])
+            and states[0]['size'] == len(files['original-state.json']), 'ASTRON_STATE_BINDING')
+    require(state.get('phase') == 'FAILED' and state['session'].get('verified') is True
+            and state['send'].get('dispatch_attempt_count') == 1
+            and state['prompt'].get('send_status') == 'sent'
+            and state['prompt'].get('sha256') == execution['prompt']['sha256'] == sha(files['PROMPT.md']), 'TERMINAL_BINDING')
+    for key in ('thread_id', 'turn_id', 'session_id', 'cwd'):
+        value = execution['session'].get(key)
+        require(isinstance(value, str) and bool(value) and value == state['session'].get(key), 'NATIVE_SESSION_BINDING')
+    require(state['execution'].get('error') == execution['execution']['error'], 'NATIVE_ERROR_BINDING')
+    history = state.get('history') or []
+    terminal = history[-1] if history else {}
+    native_turn = terminal.get('turn_state') or terminal.get('native_status')
+    require(terminal.get('phase') == 'FAILED' and terminal.get('event') == 'NATIVE_TERMINAL_OBSERVED'
+            and native_turn in {'error', 'failed'}
+            and execution['execution']['error']['code'] == 'ASTRONSTUDIO_TURN_' + native_turn.upper(), 'NATIVE_TERMINAL_OBSERVED')
+    # native_status is a periodically refreshed projection. The bound native
+    # TURN_ERROR and FAILED record remain authoritative if it still says running.
+    return {'schema_version': execution_accountability.FAILED_ADMISSION,
+            'identity': execution['identity'], 'profile': execution_accountability.PROFILE,
+            'source_kind': 'collected-native-turn-error',
+            'source_record_sha256': sha(files['original-execution-record.json']),
+            'contract_canonical_sha256': sha(json.dumps(dict(contract), ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()),
+            'original_failure_preserved': True, 'numeric_decisions_assigned': False,
+            'sdk_terminal_required_for_admission': False,
+            'native_terminal_observed': True, 'native_turn_state': native_turn,
+            'native_session_status_projection': state['session'].get('native_status'),
+            'missing_evidence': execution['evidence'].get('missing', []), 'policy': execution_accountability.POLICY,
+            'files': [{'path': name, 'sha256': sha(value), 'size': len(value)} for name, value in sorted(files.items())]}
+
+
+def validate_accountable(execution, contract, files):
+    accountable_profile(execution)
+    proof, original, state = _validate_sources(execution, files)
+    require(proof.get("schema") == ADMISSION, "PROOF_SCHEMA")
+    require(original.get("phase") == "FAILED"
+            and original["execution"].get("business_status") == "candidate_error"
+            and original["session"].get("verified") is True, "ORIGINAL_TERMINAL")
+    manifest = json.loads(files["original-evidence-manifest.json"])
+    require(manifest.get("identity") == execution["identity"], "EVIDENCE_IDENTITY")
+    for key in ("thread_id", "turn_id", "session_id", "cwd"):
+        value = execution["session"].get(key)
+        require(isinstance(value, str) and bool(value)
+                and value == original["session"].get(key) == state["session"].get(key), "NATIVE_SESSION_BINDING")
+    require(execution["execution"].get("error") == original["execution"].get("error")
+            == state["execution"].get("error"), "NATIVE_ERROR_BINDING")
+    return {
+        "schema_version": execution_accountability.FAILED_ADMISSION,
+        "identity": execution["identity"],
+        "profile": execution_accountability.PROFILE,
+        "contract_canonical_sha256": sha(json.dumps(dict(contract), ensure_ascii=False, sort_keys=True, separators=(",", ":")).encode()),
+        "original_failure_preserved": True,
+        "numeric_decisions_assigned": False,
+        "candidate_required": True,
+        "sdk_terminal_required_for_admission": False,
+        "missing_evidence": execution["evidence"].get("missing", []),
+        "policy": execution_accountability.POLICY,
+        "files": [{"path": name, "sha256": sha(value), "size": len(value)} for name, value in sorted(files.items())],
+    }

@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 
 from astronstudio_sdk_final_admission import sha
+import execution_accountability
 
 ADMISSION = "authorized-astronstudio-native-interruption/v1"
 AUTHORIZATION = "reviewed-interruption-authorization.json"
@@ -77,22 +78,23 @@ process.stdout.write(JSON.stringify(proof));
         return json.loads(result.stdout)
 
 
-def validate(execution, record_bytes, contract_bytes, files):
+def validate(execution, record_bytes, contract_bytes, files, *, require_authorization=True):
     _require(candidate(execution), "expected a verified native interruption without a final response")
-    authority = json.loads(files[AUTHORIZATION])
     identity = execution["identity"]
-    _require(authority.get("schema_version") == ADMISSION
-             and isinstance(authority.get("authorization_reference"), str)
-             and authority["authorization_reference"].strip(), "authorization required")
-    approved = [row for row in authority["tasks"] if row["identity"] == identity]
     binding = {
         "execution_record_sha256": sha(record_bytes), "contract_sha256": sha(contract_bytes),
         "trace_index_sha256": sha(files["trace-index.json"]), "sdk_sha256": sha(files[SDK]),
         "proof_sha256": sha(files[PROOF]), "candidate_sha256": execution["candidate"]["frozen_sha256"],
         "prompt_sha256": execution["prompt"]["sha256"],
     }
-    _require(len(approved) == 1 and all(approved[0].get(key) == value for key, value in binding.items()),
-             "authorization binding drift")
+    if require_authorization:
+        authority = json.loads(files[AUTHORIZATION])
+        _require(authority.get("schema_version") == ADMISSION
+                 and isinstance(authority.get("authorization_reference"), str)
+                 and authority["authorization_reference"].strip(), "authorization required")
+        approved = [row for row in authority["tasks"] if row["identity"] == identity]
+        _require(len(approved) == 1 and all(approved[0].get(key) == value for key, value in binding.items()),
+                 "authorization binding drift")
     index = json.loads(files["trace-index.json"])
     _require(index.get("identity") == identity
              and index.get("schema_id") == "urn:wildclawbench:schema:general-e2e:trace-index:v1"
@@ -118,9 +120,12 @@ def validate(execution, record_bytes, contract_bytes, files):
              and events[-1]["status"]["type"] == "turn_aborted"
              and events[-1]["status"]["turn_id"] == execution["session"]["turn_id"]
              and not any(row.get("final") is True for row in events), "canonical interruption transcript is incomplete")
+    admission = ADMISSION if require_authorization else execution_accountability.INTERRUPTED_ADMISSION
     return {
-        "schema_version": ADMISSION, "profile": ADMISSION, "identity": identity, **binding,
-        "authorization_reference": authority["authorization_reference"], "proof": proof,
+        "schema_version": admission, "profile": admission, "identity": identity, **binding,
+        **({"authorization_reference": authority["authorization_reference"]} if require_authorization else
+           {"evidence_accountability_profile": execution_accountability.PROFILE, "numeric_decisions_assigned": False}),
+        "proof": proof,
         "matched_tool_call_results": len(calls), "final_response_present": False,
         "original_execution_changed": False, "original_trace_changed": False,
         "files": [{"path": name, "sha256": sha(raw), "size": len(raw)} for name, raw in sorted(files.items())],

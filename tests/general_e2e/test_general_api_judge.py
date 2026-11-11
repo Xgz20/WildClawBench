@@ -8,7 +8,7 @@ import unittest
 from unittest.mock import patch
 
 from tests.general_e2e.test_general_semantic_scoring import RUBRIC
-from tests.general_e2e.test_local_scoring_runtime import Fixture, LOCK_PATH, RUNTIME
+from tests.general_e2e.test_local_scoring_runtime import Fixture, LOCK_PATH, RUNTIME, SUCCESS_RULE
 
 
 class GeneralApiJudgeTests(unittest.TestCase):
@@ -63,7 +63,7 @@ class GeneralApiJudgeTests(unittest.TestCase):
         )
         fixture = Fixture(
             self.root / name,
-            rule="" if grading_type == "llm_judge" else None,
+            rule="" if grading_type == "llm_judge" else SUCCESS_RULE,
             grading_type=grading_type,
             grading_weights=weights,
             llm_judge_rubric=RUBRIC,

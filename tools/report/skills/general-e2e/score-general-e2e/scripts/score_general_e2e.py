@@ -30,6 +30,7 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import failure_evidence
+import execution_accountability
 import trace_handoff
 import native_moa_assistant_view
 import moa_presentation_admission
@@ -1368,7 +1369,8 @@ def _reviewed_output_profile(contract: Mapping[str, Any]) -> tuple[str, dict[str
 
 def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping[str, Any], *,
                                  sdk_final_authorized: bool = False, reviewed_media_authorized: bool = False,
-                                 interruption_authorized: bool = False) -> str:
+                                 interruption_authorized: bool = False,
+                                 accountable_evidence: bool = False) -> str:
     if interruption_authorized:
         if sdk_final_authorized or reviewed_media_authorized or not interruption.candidate(execution):
             raise ScoringRuntimeError("NATIVE_INTERRUPTION_AUTHORIZATION_INVALID", "unexpected execution evidence scope")
@@ -1382,7 +1384,13 @@ def _validate_evidence_admission(execution: Mapping[str, Any], contract: Mapping
             raise ScoringRuntimeError("SDK_FINAL_AUTHORIZATION_INVALID", "unexpected execution evidence scope")
         return sdk_final.ADMISSION
     if execution.get("failure_evidence") is not None:
+        if accountable_evidence:
+            return failure_evidence.accountable_profile(execution)
         return failure_evidence.profile(execution, contract)
+    if accountable_evidence and failure_evidence.native_candidate(execution):
+        return failure_evidence.accountable_profile(execution)
+    if accountable_evidence and interruption.candidate(execution):
+        return execution_accountability.INTERRUPTED_ADMISSION
     evidence = execution["evidence"]
     missing = set(evidence.get("missing") or [])
     if evidence.get("completeness") == "partial" and not missing:
@@ -1570,6 +1578,51 @@ def _verify_partial_trace_bundle(unit_root: Path, execution: Mapping[str, Any], 
         raise ScoringRuntimeError("TRACE_TRANSCRIPT_BINDING_MISMATCH")
 
 
+def assess_execution(*, unit_root: Path, execution_record_path: Path) -> dict[str, Any]:
+    """Read-only triage. A positive assessment is not a numeric score."""
+    unit_root = unit_root.expanduser().resolve(strict=True)
+    execution_record_path = execution_record_path.expanduser().resolve(strict=True)
+    if not execution_record_path.is_relative_to(unit_root):
+        raise ScoringRuntimeError('EXECUTION_RECORD_OUTSIDE_UNIT')
+    execution = _read_json(execution_record_path, code='EXECUTION_RECORD_INVALID')
+    result = {'status': 'PASS', 'profile': execution_accountability.PROFILE, 'identity': execution.get('identity'),
+              'execution_record': str(execution_record_path), 'execution_record_sha256': _sha256_file(execution_record_path),
+              'score_assigned': False, 'original_execution_changed': False}
+    failure = {'code': 'EXECUTION_REVIEW_REQUIRED', 'message': '尚无充分证明区分被测端问题与评测侧问题'}
+    if execution.get('prompt', {}).get('send_status') == 'not_sent' and execution.get('phase') == 'FAILED':
+        return {**result, 'disposition': 'repair_before_execution', 'origin': 'evaluation_setup',
+                'reason': '题目未送达被测端，尚无可评分的本题作答；修复投递/准备后使用新执行，保留旧attempt。'}
+    try:
+        candidate = execution.get('candidate', {})
+        if candidate.get('drift_status') != 'stable':
+            raise ValueError('缺少稳定原候选快照；空工作目录也应按实际内容冻结，不能伪造产物')
+        path = _resolve_within(unit_root, candidate.get('path'), 'candidate.path')
+        if not path.is_dir() or path.is_symlink() or _inventory_tree(path)[1] != candidate.get('frozen_sha256'):
+            raise ValueError('候选快照缺失或摘要不一致')
+        if failure_evidence.is_external_quota(execution):
+            failure_evidence.validate_external_quota(execution, failure_evidence.read_files(unit_root, execution))
+            return {**result, 'disposition': 'restore_external_prerequisite', 'origin': 'evaluation_setup',
+                    'reason': '已核验原生额度耗尽；先恢复评测条件，不能当作候选能力0分或自动重发。'}
+        if execution.get('failure_evidence') or failure_evidence.native_candidate(execution):
+            files = (failure_evidence.read_files(unit_root, execution) if execution.get('failure_evidence') else
+                     failure_evidence.read_collected_files(unit_root, execution_record_path, execution))
+            receipt = (failure_evidence.validate_accountable if execution.get('failure_evidence') else failure_evidence.validate_collected)(execution, {}, files)
+            return {**result, 'disposition': 'score_original_execution', 'origin': 'accepted_native_failure',
+                    'admission': receipt['schema_version'], 'reason': '原生受理与失败证明已核验；按原检查点评价全部保留材料，缺被测端证明的项不得分，归因另行记录。'}
+        if interruption.candidate(execution):
+            files = _reviewed_evidence_files(unit_root, execution, native_interruption=True)
+            receipt = interruption.validate(execution, execution_record_path.read_bytes(), b'{}', files, require_authorization=False)
+            return {**result, 'disposition': 'score_original_execution', 'origin': 'accepted_native_failure',
+                    'admission': receipt['schema_version'], 'reason': '已核验原生受理后的中断；逐项评价原产物和过程，不直接整题计零。'}
+        if execution.get('phase') == 'COMPLETED' and execution.get('execution', {}).get('business_status') == 'completed' and execution.get('evidence', {}).get('completeness') == 'complete':
+            return {**result, 'disposition': 'score_original_execution', 'origin': 'completed_execution',
+                    'reason': '终态及候选摘要具备评分准备条件；正式prepare继续核验题源、身份、轨迹和参考。'}
+    except (ValueError, KeyError, TypeError, OSError, ScoringRuntimeError, subprocess.SubprocessError) as exc:
+        failure['message'] = str(exc)
+    return {**result, 'disposition': 'needs_user_decision',
+            'decision_request': execution_accountability.decision_request(execution, failure)}
+
+
 def prepare_attempt(
     *,
     unit_root: Path,
@@ -1619,7 +1672,8 @@ def prepare_attempt(
     if (
         not (execution.get("phase") == "COMPLETED" and execution.get("execution", {}).get("business_status") == "completed"
              or execution.get("phase") == "FAILED" and execution.get("execution", {}).get("business_status") == "candidate_error" and execution.get("failure_evidence")
-             or reviewed_interruption_authorization is not None and interruption.candidate(execution))
+             or failure_evidence.native_candidate(execution)
+             or interruption.candidate(execution))
         or not isinstance(execution.get("execution"), dict)
         or not isinstance(execution.get("evidence"), dict)
     ):
@@ -1699,8 +1753,9 @@ def prepare_attempt(
     evidence_admission = _validate_evidence_admission(
         execution, contract, sdk_final_authorized=sdk_final_authorization is not None,
         reviewed_media_authorized=reviewed_media_authorization is not None,
-        interruption_authorized=reviewed_interruption_authorization is not None)
-    if evidence_admission not in {"standard", failure_evidence.ADMISSION}:
+        interruption_authorized=reviewed_interruption_authorization is not None,
+        accountable_evidence=True)
+    if evidence_admission not in {"standard", failure_evidence.ADMISSION, *execution_accountability.NATIVE_ADMISSIONS}:
         _verify_partial_trace_bundle(unit_root, execution, contract,
                                      native_interruption=evidence_admission == interruption.ADMISSION)
     reviewed_files = None
@@ -1750,6 +1805,22 @@ def prepare_attempt(
     if evidence_admission == failure_evidence.ADMISSION:
         reviewed_files = failure_evidence.read_files(unit_root, execution)
         reviewed_receipt = failure_evidence.validate(execution, contract, reviewed_files)
+
+    if evidence_admission == execution_accountability.FAILED_ADMISSION:
+        try:
+            reviewed_files = (failure_evidence.read_files(unit_root, execution) if execution.get('failure_evidence') else
+                              failure_evidence.read_collected_files(unit_root, execution_record_path, execution))
+            reviewed_receipt = (failure_evidence.validate_accountable if execution.get('failure_evidence') else
+                                failure_evidence.validate_collected)(execution, contract, reviewed_files)
+        except (ValueError, KeyError, TypeError, OSError) as exc:
+            raise ScoringRuntimeError("NATIVE_FAILURE_EVIDENCE_INVALID", str(exc)) from exc
+    if evidence_admission == execution_accountability.INTERRUPTED_ADMISSION:
+        try:
+            reviewed_files = _reviewed_evidence_files(unit_root, execution, native_interruption=True)
+            reviewed_receipt = interruption.validate(execution, execution_record_path.read_bytes(), contract_bytes,
+                                                      reviewed_files, require_authorization=False)
+        except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as exc:
+            raise ScoringRuntimeError("NATIVE_INTERRUPTION_EVIDENCE_INVALID", str(exc)) from exc
 
     transcript_source: Path | None = None
     transcript_count = 0
@@ -1844,7 +1915,7 @@ def prepare_attempt(
         if evidence_admission == sdk_final.ADMISSION and formal_completion is None:
             raise ScoringRuntimeError("FORMAL_COMPLETION_BINDING_INVALID", "SDK final requires original collected reply")
         trace_bundle = trace_handoff.freeze(unit_root, execution, staging,
-            required=require_trace_bundle and evidence_admission != failure_evidence.ADMISSION)
+            required=require_trace_bundle and evidence_admission not in {failure_evidence.ADMISSION, execution_accountability.FAILED_ADMISSION})
         if reviewed_files is not None:
             for relative_name, content in reviewed_files.items():
                 relative_path = _safe_relative(relative_name, "reviewed_evidence")
@@ -1917,6 +1988,7 @@ def prepare_attempt(
                 **({"storage": gt_storage} if gt_storage else {}),
             },
             "runtime": {
+                "evidence_accountability_profile": execution_accountability.PROFILE,
                 "kind": "local-managed-python-worker",
                 **({'post_rule_office_guard_profile':'completed-runtime-office-byte-guard/v1'} if sys.platform=='darwin' else {}),
                 "logical_workspace_root": "/tmp_workspace",
@@ -2132,10 +2204,12 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
             sdk_final_authorized=manifest["evidence_admission"] == sdk_final.ADMISSION,
             reviewed_media_authorized=manifest["evidence_admission"] == text_media.ADMISSION,
             interruption_authorized=manifest["evidence_admission"] == interruption.ADMISSION,
+            accountable_evidence=(manifest['evidence_admission'] in execution_accountability.NATIVE_ADMISSIONS
+                                  and manifest.get("runtime", {}).get("evidence_accountability_profile") == execution_accountability.PROFILE),
         )
         if admitted != manifest["evidence_admission"]:
             raise ScoringRuntimeError("EVIDENCE_ADMISSION_DRIFT")
-        if admitted.startswith("reviewed-output-evidence/v1:") or admitted in {failure_evidence.ADMISSION, moa_presentation_admission.ADMISSION, sdk_final.ADMISSION, text_media.ADMISSION, interruption.ADMISSION}:
+        if admitted.startswith("reviewed-output-evidence/v1:") or admitted in {failure_evidence.ADMISSION, moa_presentation_admission.ADMISSION, sdk_final.ADMISSION, text_media.ADMISSION, interruption.ADMISSION, *execution_accountability.NATIVE_ADMISSIONS}:
             receipt_path = root / "private/evidence-admission.json"
             if _sha256_file(receipt_path) != manifest.get("reviewed_evidence_receipt_sha256"):
                 raise ScoringRuntimeError("EVIDENCE_ADMISSION_RECEIPT_DRIFT")
@@ -2149,7 +2223,14 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
                 if len(files[row["path"]]) != row["size"] or _sha256_bytes(files[row["path"]]) != row["sha256"]:
                     raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_DRIFT")
             validators = {module.ADMISSION: module for module in (sdk_final, text_media, interruption)}
-            if admitted in validators:
+            if admitted == execution_accountability.INTERRUPTED_ADMISSION:
+                try:
+                    record = root / paths["execution_record"]
+                    recomputed = interruption.validate(_read_json(record), record.read_bytes(),
+                        (root / paths["contract"]).read_bytes(), files, require_authorization=False)
+                except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as exc:
+                    raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_INVALID", str(exc)) from exc
+            elif admitted in validators:
                 validator = validators[admitted]
                 try:
                     record = root / paths["execution_record"]
@@ -2158,7 +2239,9 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
                 except (ValueError, KeyError, TypeError, OSError, subprocess.SubprocessError) as exc:
                     raise ScoringRuntimeError("EVIDENCE_ADMISSION_ARTIFACT_INVALID", str(exc)) from exc
             else:
-                recomputed = (failure_evidence.validate if admitted == failure_evidence.ADMISSION else
+                recomputed = ((failure_evidence.validate_accountable if 'proof.json' in files else failure_evidence.validate_collected)
+                    if admitted == execution_accountability.FAILED_ADMISSION else
+                    failure_evidence.validate if admitted == failure_evidence.ADMISSION else
                     moa_presentation_admission.validate if admitted == moa_presentation_admission.ADMISSION else _validate_reviewed_evidence)(
                     _read_json(root / paths["execution_record"], code="EXECUTION_RECORD_INVALID"),
                     _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID"), files)
@@ -3630,8 +3713,11 @@ def _semantic_reference_inputs(
     completion_proof = attempt_root / "rule-input-completion.json"
     if completion_proof.is_file():
         add_file("rule_audit", completion_proof)
-    if manifest.get("evidence_admission") in {sdk_final.ADMISSION, text_media.ADMISSION, interruption.ADMISSION}:
+    if manifest.get("evidence_admission") in {sdk_final.ADMISSION, text_media.ADMISSION, interruption.ADMISSION, *execution_accountability.NATIVE_ADMISSIONS}:
         add_file("rule_audit", attempt_root / "private/evidence-admission.json")
+        if manifest.get("evidence_admission") in execution_accountability.NATIVE_ADMISSIONS:
+            for path in _regular_evidence_files(attempt_root / "private/admission-evidence"):
+                add_file("raw_trace", path)
     completion = manifest.get("runtime", {}).get("formal_completion_receipt")
     if completion:
         completion_path = attempt_root / completion["path"]
@@ -3825,6 +3911,11 @@ def _build_api_input(
         "evidence": packet_entries,
         "required_response": response_contract,
     }
+    if request_document.get('evidence_accountability_policy') is not None:
+        system_prompt += " Apply evidence_accountability_policy when interpreting missing-evidence clauses. Candidate non-demonstration is graded by original anchors; only evaluator/source faults or unresolved origin may remain unresolved with an actionable decision request."
+        user_document['evidence_accountability_policy'] = {key: request_document['evidence_accountability_policy'][key]
+            for key in ('profile', 'judge_instruction', 'decision_request_fields', 'unresolved_origins')}
+        response_contract['decision_requests'] = []
 
     def serialized_user() -> str:
         return json.dumps(user_document, ensure_ascii=False, sort_keys=True)
@@ -4074,6 +4165,9 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                 },
             }
             independent_policy=business_capability.policy(manifest,contract)
+            accountability_policy = execution_accountability.policy(manifest)
+            if accountability_policy is not None:
+                request['evidence_accountability_policy'] = accountability_policy
             if independent_policy is not None:
                 request['completion_policy']=independent_policy
             interrupted_delivery_policy=interrupted_answer_delivery.policy(manifest,contract)
@@ -4103,6 +4197,7 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "identity": manifest["identity"],
                     "judge": request["judge"],
                     "locks": response_locks,
+                    **({'decision_requests': []} if accountability_policy is not None else {}),
                     "criteria": [
                         {
                             "key": criterion["key"],
@@ -4510,11 +4605,17 @@ def _validate_api_candidate(
     top_keys={"criteria", "notes"}
     if request_document.get('claim_review_policy'):
         top_keys.add('claim_reviews')
+    if request_document.get('evidence_accountability_policy') is not None and 'decision_requests' in candidate:
+        top_keys.add('decision_requests')
     if set(candidate) != top_keys or not isinstance(candidate.get("notes"), str):
         raise ApiJudgeAttemptError(
             "API_JUDGE_RESPONSE_CONTRACT_INVALID", "top-level keys", retryable=True
         )
     rows = candidate.get("criteria")
+    try:
+        execution_accountability.validate_response(request_document, candidate)
+    except ValueError as exc:
+        raise ApiJudgeAttemptError("EVIDENCE_ACCOUNTABILITY_INVALID", str(exc), retryable=True) from exc
     expected = request_document["rubric"]["criteria"]
     if not isinstance(rows, list) or len(rows) != len(expected):
         raise ApiJudgeAttemptError(
@@ -5329,6 +5430,8 @@ def record_semantics_attempt(
             raise parse_error
         if not isinstance(response, dict) or response.get("schema_version") != SEMANTIC_RESPONSE_SCHEMA:
             raise ScoringRuntimeError("SEMANTIC_RESPONSE_INVALID", "schema")
+        if request.get('evidence_accountability_policy') != execution_accountability.policy(manifest):
+            raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_POLICY_DRIFT')
         expected_locks = {
             "request_sha256": _sha256_file(paths["request"]),
             "evidence_catalog_sha256": _sha256_file(paths["catalog"]),
@@ -5426,6 +5529,10 @@ def record_semantics_attempt(
                 }
             )
 
+        try:
+            execution_accountability.validate_response(request, response)
+        except ValueError as exc:
+            raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_INVALID', str(exc)) from exc
         _validate_declared_claim_reviews(contract,request,response)
         core_criteria = [
             {
@@ -5870,6 +5977,8 @@ def _verify_semantic_terminal(
             raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "automated source")
     else:
         _verify_semantic_score_ranges(root,manifest,_read_json(paths['request']))
+        if _read_json(paths['request']).get('evidence_accountability_policy') != execution_accountability.policy(manifest):
+            raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_POLICY_DRIFT')
         judge = _load_judge_config(root, manifest)
         expected_judge = (
             judge["protocol"],
@@ -5884,6 +5993,10 @@ def _verify_semantic_terminal(
             if audit.get(key) != _sha256_file(paths[path_key]):
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", key)
         if audit.get('status')=='completed':
+            try:
+                execution_accountability.validate_response(_read_json(paths['request']), _read_json(paths['response']))
+            except ValueError as exc:
+                raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_INVALID', str(exc)) from exc
             _validate_declared_claim_reviews(_read_json(root/manifest['paths']['contract']),
                 _read_json(paths['request']),_read_json(paths['response']))
         if judge["protocol"] == "codex-agent-judge-v1":
@@ -6452,6 +6565,7 @@ def prepare_rescore_attempt(
                 **({"storage": gt_storage} if gt_storage else {}),
             },
             "runtime": {
+                "evidence_accountability_profile": execution_accountability.PROFILE,
                 "kind": "local-managed-python-worker",
                 **({'post_rule_office_guard_profile':'completed-runtime-office-byte-guard/v1'} if sys.platform=='darwin' else {}),
                 "logical_workspace_root": "/tmp_workspace",
@@ -6770,6 +6884,10 @@ def main(argv: list[str] | None = None) -> int:
     )
     subparsers = parser.add_subparsers(dest="command", required=True)
 
+    assess = subparsers.add_parser('assess-execution')
+    assess.add_argument('--unit-root', required=True, type=Path)
+    assess.add_argument('--execution-record', required=True, type=Path)
+
     prepare = subparsers.add_parser("prepare")
     prepare.add_argument("--unit-root", required=True, type=Path)
     prepare.add_argument("--execution-record", required=True, type=Path)
@@ -6891,7 +7009,9 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(argv)
     try:
-        if args.command == "prepare":
+        if args.command == 'assess-execution':
+            result = assess_execution(unit_root=args.unit_root, execution_record_path=args.execution_record)
+        elif args.command == "prepare":
             result = prepare_attempt(
                 unit_root=args.unit_root,
                 execution_record_path=args.execution_record,

@@ -42,6 +42,22 @@ RUBRIC = """Judge only the declared criteria. Each score must use a declared anc
 """
 
 
+def fixture_evaluator_decision_requests(response):
+    """These fixtures simulate evaluator input loss, not candidate omission."""
+    keys = {row['key'] for row in response['criteria'] if row.get('status') == 'unresolved'}
+    for field in ('criterion_evidence_statuses', 'capability_evidence_statuses'):
+        keys.update(key for key, value in response.get(field, {}).items()
+                    if value.get('status') in {'evidence_insufficient', 'blocked_external', 'not_observed', 'evaluator_error'})
+    if response.get('run_validity', {}).get('status') == 'evidence_insufficient': keys.add('run_validity')
+    return [{'criterion_key': key, 'origin': 'task_source' if key == 'tool_call_contract' else 'evaluator',
+             'problem': '合成评测输入缺少原接口定义或原始证据', 'missing_evidence': '评测侧未保留的必要原始证据或参照',
+             'evidence_checked': '已查合成候选与保留轨迹；本例模拟评测方丢证，不代表候选未提供证明',
+             'why_rules_cannot_decide': '不能将合成评测输入缺口归因给候选',
+             'repair_execution_impact': '本例只修复评测输入，保留合成原作答',
+             'proposed_actions': ['恢复缺失参考或原轨迹后独立重评'], 'decision_question': '请确认可恢复的评测输入版本'}
+            for key in sorted(keys)]
+
+
 class GeneralSemanticScoringTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(prefix="general-e2e-semantic-test-")
@@ -417,6 +433,14 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         )
         attempt = fixture.prepare("score-unresolved")
         response, _, _ = self._prepare_and_query(attempt)
+        response['decision_requests'] = [{
+            'criterion_key': row['key'], 'origin': 'evaluator',
+            'problem': '合成评测输入缺少必要参考', 'missing_evidence': '用于判定本项的完整参考正文',
+            'evidence_checked': '已查测试候选及测试轨迹，不能恢复缺失参考',
+            'why_rules_cannot_decide': '此处模拟评测方缺参考，不是候选未满足要求',
+            'repair_execution_impact': '测试参考修复不影响原作答，使用原作答重评',
+            'proposed_actions': ['补齐评分参考后独立重评'], 'decision_question': '请确认可用的参考版本'}
+            for row in response['criteria']]
         response_path = attempt / "semantic-response-input.json"
         response_path.write_text(json.dumps(response), encoding="utf-8")
         semantic = RUNTIME.record_semantics_attempt(

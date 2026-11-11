@@ -61,6 +61,8 @@ class IndependentBusinessCapabilityTests(unittest.TestCase):
         return value
 
     def publish(self,response):
+        from tests.general_e2e.test_general_semantic_scoring import fixture_evaluator_decision_requests
+        response['decision_requests'] = fixture_evaluator_decision_requests(response)
         path=self.attempt/'response-input.json';path.write_text(json.dumps(response,ensure_ascii=False),encoding='utf-8')
         imported=RUNTIME.record_semantics_attempt(attempt_root=self.attempt,response_path=path)
         final=RUNTIME.finalize_score_attempt(attempt_root=self.attempt)
