@@ -33,6 +33,11 @@ def safe(value):
     assert value and not path.is_absolute() and ".." not in path.parts and "\\" not in value
     return path
 
+def protect_office_copy(path):
+    if sys.platform == "darwin" and path.suffix.lower() in {".xlsx", ".docx", ".pptx", ".bin"}:
+        os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE)
+
+
 def build(args, shared):
     assert args.canonical_report_archive and args.task_index, "selected export requires a frozen report and explicit selection"
     index_path = args.task_index.resolve()
@@ -79,6 +84,7 @@ def build(args, shared):
                 subprocess.run(["/bin/cp", "-c", str(source), str(target)], check=True)
             else:
                 shutil.copy2(source, target)
+            protect_office_copy(target)
             assert sha(target) == before and sha(source) == before, relative
             written.add(relative)
             source_files.append({"path": relative, "source": str(source), "sha256": before,
@@ -223,6 +229,7 @@ def build(args, shared):
             p = staging / "Reports" / relative
             p.parent.mkdir(parents=True, exist_ok=True)
             p.write_bytes(raw)
+            protect_office_copy(p)
         write(staging / "TASK_INDEX.json", {"schema_version": 1, "tasks": tasks})
         write(staging / "SELECTION.json", {"schema_version": 1, "selected_runs": len(tasks),
               "unique_tasks": data["scope"]["unique_task_count"], "report_data_sha256": index["report_data_sha256"],
@@ -375,6 +382,11 @@ def resume(args, shared):
                 else:
                     path.parent.mkdir(parents=True, exist_ok=True)
                     path.write_bytes(raw)
+    for relative in ("general_e2e_report_data.json", data["artifact_filenames"]["excel"],
+                     data["artifact_filenames"]["leader_markdown"], data["artifact_filenames"]["audit_markdown"]):
+        path = staging / "Reports" / relative
+        assert sha(path) == sealed[relative]["sha256"]
+        protect_office_copy(path)
     exclusion_path = staging / "PACKAGE_EXCLUSIONS.json"
     exclusions = read(exclusion_path)
     for entry in exclusions["entries"]:
