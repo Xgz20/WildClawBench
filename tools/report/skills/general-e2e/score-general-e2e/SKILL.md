@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.102` 已受理失败回合可在语义证据冻结前通过`register-execution-supplement`登记同回合原始SDK前段。按原执行/候选SHA、session/cwd、唯一turn和原Prompt字节核验；以原始行为证据纳入raw_trace，不冒充GT、完整轨迹、成功回执或候选交付。缺终态及无返回调用原样保留，原执行记录和Rubric不改。见[SDK前段交接](references/native-execution-supplement.md)。
+
 `0.10.101` 新attempt统一冻结`evidence-accountability/v1`。先区分评测框架/题源问题与已受理后的Harness异常；后者按原检查点评分，被测端未提供交付或行为证明的项不得分，已证实工作保留部分分。失败准入按原生证明核验，不按题号白名单；真实通信失败不再要求完整SDK终态。所有空分须有可操作的逐检查点决策说明。失败评分前读取[统一边界](references/execution-failure-policy.md)，本政策解释后文历史版本中的缺证条款；旧冻结attempt仍按原Profile复放。
 
 `0.10.100` 对已授权、精确绑定契约且完整验证的原生中断回合，交接“正式答复未交付”的事实。零权重取证Worker可导出明确缺失状态及原过程，独立裁判按原Rubric判分。日志末段缺失的通信错误继续保留未判。旧attempt按原冻结Profile重放。
