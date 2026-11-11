@@ -725,6 +725,12 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         # change its legacy v5 rendering or retrofit new instructions into it.
         self.assertEqual(sha256_bytes(prompt.encode("utf-8")),
                          "84af1eb138192b3ada5f3b0cc1d53ed701a4eb32ea4cefd3a25955710ebfca01")
+        historical = prompt.replace(ORCHESTRATOR.NATIVE_INTERRUPTION_ADMISSION_NOTICE + '\n', '', 1).replace(ORCHESTRATOR.PRESENTATION_ADMISSION_NOTICE + '\n\n', '', 1)
+        # The original 0.11.4 archive predates the added native-interruption notice.
+        self.assertEqual(sha256_bytes(historical.encode()), 'b3ddd5c252bd484608f3a1666c70301efb0c77685467b490c919ad480e9d5968')
+        self.assertTrue(ORCHESTRATOR._prompt_matches_known_rendering(historical, prompt, score_version='0.10.4'))
+        self.assertFalse(ORCHESTRATOR._prompt_matches_known_rendering(historical, prompt, score_version='0.10.99'))
+        self.assertFalse(ORCHESTRATOR._prompt_matches_known_rendering(historical.replace('task-one', 'other-task'), prompt, score_version='0.10.4'))
 
     def test_score_command_uses_frozen_python_without_path_aliases(self) -> None:
         skill = self.root / "评分 包"

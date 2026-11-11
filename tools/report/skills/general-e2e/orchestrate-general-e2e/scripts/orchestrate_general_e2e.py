@@ -705,13 +705,21 @@ def _requires_rule_evidence(attempt: Path) -> bool:
 
 
 PRESENTATION_ADMISSION_NOTICE = '若 evidence_admission 为 bound-native-moa-presentation-completeness/v1，先读取 private/evidence-admission.json：这是由冻结原件重算的展示适配证明，原执行/索引仍保留partial；原SDK调用、结果和媒体已完整对账。按原Rubric继续核验全部过程证据，不把学术占位卡解释为空结果，不因展示映射缺口拒绝整题；这不豁免过程评分，也不允许推断缺失媒体。'
+NATIVE_INTERRUPTION_ADMISSION_NOTICE = '若 attempt-manifest.json 的 evidence_admission 为 authorized-astronstudio-native-interruption/v1，先核对 private/evidence-admission.json。执行状态保留原生中断；使用原冻结目录、标准轨迹和同一回合SDK逐项按原Rubric判断。没有正式终稿，不把进度、压缩交接、计划或工具返回冒充用户交付。根据原规则区分已证实的未交付、已执行的可核验过程和评测侧缺证。必须核验的检查点如果无法判定，按原契约记录缺证并保留空分。不将中断本身换成统一0分，不改权重。'
 
 
-def _prompt_matches_known_rendering(actual: str, current: str) -> bool:
+def _prompt_matches_known_rendering(actual: str, current: str, *, score_version: str | None = None) -> bool:
     if actual == current:
         return True
-    marker = PRESENTATION_ADMISSION_NOTICE + '\n\n'
-    return current.count(marker) == 1 and actual == current.replace(marker, '', 1)
+    markers = [PRESENTATION_ADMISSION_NOTICE + '\n\n']
+    # This notice did not exist before the native-interruption Score release.
+    # Bind compatibility to frozen producer metadata, never task IDs or scores.
+    if isinstance(score_version, str) and re.fullmatch(r'\d+\.\d+\.\d+', score_version) and tuple(map(int, score_version.split('.'))) < (0, 10, 99):
+        markers.append(NATIVE_INTERRUPTION_ADMISSION_NOTICE + '\n')
+    variants = {current}
+    for marker in markers:
+        variants.update(value.replace(marker, '', 1) for value in tuple(variants) if value.count(marker) == 1)
+    return actual in variants
 
 
 def _prompt_text(
@@ -918,7 +926,7 @@ def _prompt_text(
 {native_moa_instruction}
 {rule_instruction}
 
-若 attempt-manifest.json 的 evidence_admission 为 authorized-astronstudio-native-interruption/v1，先核对 private/evidence-admission.json。执行状态保留原生中断；使用原冻结目录、标准轨迹和同一回合SDK逐项按原Rubric判断。没有正式终稿，不把进度、压缩交接、计划或工具返回冒充用户交付。根据原规则区分已证实的未交付、已执行的可核验过程和评测侧缺证。必须核验的检查点如果无法判定，按原契约记录缺证并保留空分。不将中断本身换成统一0分，不改权重。
+{NATIVE_INTERRUPTION_ADMISSION_NOTICE}
 若 attempt-manifest.json 的 evidence_admission 为 reviewed-output-evidence/v1，先读取 private/evidence-admission.json：该题冻结 rubric 已逐项确认以候选产物或最终回复为评分输入，工具/中间消息轨迹 partial 已单独保留。必须按原 rubric 评价所需证据，不因可选工具轨迹 partial 拒绝整题、不增加过程评分项；网页题仍须独立验证交互。无法核验的过程行为不作未发生断言。
 
 {PRESENTATION_ADMISSION_NOTICE}
@@ -2124,6 +2132,7 @@ def _verify_state(
                 native_writer_evidence_required=task.get('native_writer_evidence_required',False),
                     terminal_projection_required=task.get('terminal_projection_required',False),
                 ),
+                score_version=str(state.get('score_skill', {}).get('version', '')),
             )
         ):
             raise OrchestrationError("SCORING_PROMPT_DRIFT", str(task.get("task_id")))
