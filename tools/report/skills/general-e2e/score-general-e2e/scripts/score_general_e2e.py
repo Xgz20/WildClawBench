@@ -72,6 +72,7 @@ import service_report_layout
 import procurement_explicit_labels
 import data_table_representations
 import answer_delivery
+import interrupted_answer_delivery
 import quadrant_metric_layout
 import native_response_transport
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
@@ -1979,6 +1980,9 @@ def prepare_attempt(
                    if procurement_explicit_labels.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'data_table_representation_profile':data_table_representations.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if data_table_representations.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'interrupted_answer_delivery_profile':interrupted_answer_delivery.marker(
+                    contract,_sha256_bytes(contract_bytes),dataset,evidence_admission)}
+                   if interrupted_answer_delivery.marker(contract,_sha256_bytes(contract_bytes),dataset,evidence_admission) is not None else {}),
                 **({'answer_delivery_profile':answer_delivery.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if answer_delivery.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'quadrant_metric_layout_profile':quadrant_metric_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
@@ -2897,6 +2901,7 @@ def _effective_rule_source(
         corrected, receipt = service_report_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = data_table_representations.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = answer_delivery.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = interrupted_answer_delivery.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = quadrant_metric_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = namc_inline_distances.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = shared_source_repairs.effective_source(manifest,source,corrected,receipt)
@@ -4071,6 +4076,9 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
             independent_policy=business_capability.policy(manifest,contract)
             if independent_policy is not None:
                 request['completion_policy']=independent_policy
+            interrupted_delivery_policy=interrupted_answer_delivery.policy(manifest,contract)
+            if interrupted_delivery_policy is not None:
+                request['interrupted_answer_delivery_policy']=interrupted_delivery_policy
             delivery_policy=answer_delivery.policy(manifest,contract)
             if delivery_policy is not None:
                 request['answer_delivery_policy']=delivery_policy
@@ -5436,6 +5444,8 @@ def record_semantics_attempt(
             }
 
         auxiliary=None
+        if request.get('interrupted_answer_delivery_policy')!=interrupted_answer_delivery.policy(manifest,contract):
+            raise ScoringRuntimeError('SEMANTIC_REQUEST_DRIFT','interrupted answer delivery policy')
         if request.get('answer_delivery_policy')!=answer_delivery.policy(manifest,contract):
             raise ScoringRuntimeError('ANSWER_DELIVERY_POLICY_DRIFT')
         if independent_policy is not None:
@@ -5780,6 +5790,8 @@ def _verified_independent_capabilities(root,manifest,contract,component):
     if expected_policy is None:return None
     paths=_semantic_paths(root);request=_read_json(paths['request']);response=_read_json(paths['response'])
     response,_=native_response_transport.normalize(manifest,response,_sha256_file(paths['response']))
+    if request.get('interrupted_answer_delivery_policy')!=interrupted_answer_delivery.policy(manifest,contract):
+        raise ScoringRuntimeError('SEMANTIC_REQUEST_DRIFT','interrupted answer delivery policy')
     if request.get('answer_delivery_policy')!=answer_delivery.policy(manifest,contract):
         raise ScoringRuntimeError('ANSWER_DELIVERY_POLICY_DRIFT')
     if request.get('completion_policy')!=expected_policy:
@@ -6503,6 +6515,12 @@ def prepare_rescore_attempt(
                    if procurement_explicit_labels.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'data_table_representation_profile':data_table_representations.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if data_table_representations.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'interrupted_answer_delivery_profile':interrupted_answer_delivery.marker(
+                    _read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),
+                    source_manifest['dataset'],source_manifest.get('evidence_admission'))}
+                   if interrupted_answer_delivery.marker(_read_json(staging/source_paths['contract']),
+                    _sha256_file(staging/source_paths['contract']),source_manifest['dataset'],
+                    source_manifest.get('evidence_admission')) is not None else {}),
                 **({'answer_delivery_profile':answer_delivery.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if answer_delivery.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'quadrant_metric_layout_profile':quadrant_metric_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
