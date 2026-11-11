@@ -82,7 +82,13 @@ class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
         before = copy.deepcopy(data["tables"])
         data["score_coverage"] = {"valid_task_sets_identical": False,
                                   "note": "本版保留 30 项任务运行：有效评分 15 项，评测异常 2 项，未评分 13 项。"}
+        data["dimension_coverage"] = [[data["target"]["label"], name, "维度甲", 5, 6]
+                                      for name in LEADER.DIMENSIONS]
         text = LEADER.summaries(data)
+        for name in LEADER.DIMENSIONS:
+            self.assertIn(data["target"]["label"], text[name])
+            self.assertIn("维度甲 90.00 分", text[name])
+            self.assertIn("有效样本 5/6 题", text[name])
         for key in ["总览", *LEADER.DIMENSIONS]:
             self.assertNotIn("相较", text[key])
             self.assertNotIn("总体均分最高", text[key])

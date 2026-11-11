@@ -397,6 +397,7 @@ def extract(workbook, data, target_unit_id):
               "tables": tables, "dimensions": {}, "narratives": {}}
     result["comparison_context"] = comparison_context(data, target_unit_id)
     result["score_coverage"] = deepcopy(data["presentation"].get("score_coverage", {}))
+    result["dimension_coverage"] = deepcopy(data["presentation"].get("dimension_coverage", []))
     result['judge_configurations'] = deepcopy(data.get('overall', {}).get('judge_groups', []))
     if len(units) == 1:
         result['report_mode'] = 'single-unit-leadership'
@@ -439,8 +440,13 @@ def summaries(data):
     if context.get('primary_scope') == 'single-unit':
         out['总览'] = f"{label} 有效均分为{num(o[1])}分。执行完成情况与有效评分分母分别统计，真实零分保留；待核验与未评分不补零。"
     if not same_valid_scope:
-        out["总览"] = f"{label} 的当前有效评分均分为 {num(o[1])}。各单元有效题目子集不同，本版不据此判定完整冻结题集的优劣；有效评分数与未评分数见表。"
-    clean = lambda h: re.sub(r"平均分.*$", "", re.sub(r"^\d+_", "", h))
+        out["总览"] = f"{label} 的当前有效评分均分为 {num(o[1])}。"
+        if len(o) >= 9:
+            out["总览"] += (f"有效评分 {int(o[7])}/{int(o[2])} 题，正常完成 {int(o[3])}/{int(o[2])} 题，"
+                            f"执行错误 {int(o[4])} 题，未评分 {int(o[8])} 题。")
+        out["总览"] += "各单元有效题目子集不同，本版不据此判定完整冻结题集的优劣。"
+
+    clean = lambda h: re.sub(r"平均分.*$", "", re.sub(r"^[A-Za-z0-9-]+_", "", h))
     def gaps(name, peer):
         row = target(name)
         values = []
@@ -450,7 +456,22 @@ def summaries(data):
         return sorted(values, key=lambda x: x[1], reverse=True)
     for name in DIMENSIONS:
         if not same_valid_scope:
-            out[name] = "各单元当前有效评分的分层结果见表；有效题目子集不同，分层均分不作为完整评测集的受控排名。"
+            row = target(name)
+            coverage = {item[2]: (item[3], item[4]) for item in data.get("dimension_coverage", [])
+                        if item[0] == label and item[1] == name}
+            values = []
+            for i, heading in enumerate(tables[name]["headers"][2:], 2):
+                if not numeric(row[i]):
+                    continue
+                dimension = clean(heading)
+                value = f"{dimension} {num(row[i])} 分"
+                if dimension in coverage:
+                    known, total = coverage[dimension]
+                    value += f"（有效样本 {known}/{total} 题）"
+                values.append(value)
+            out[name] = (f"{label} 当前有效评分中，" + "、".join(values) + "。"
+                         if values else f"{label} 本维度的有效评分暂不可用。")
+            out[name] += "各单元有效题目子集不同，分层结果须结合样本覆盖解读。"
             continue
         descriptions = []
         for peer in peers(name):
