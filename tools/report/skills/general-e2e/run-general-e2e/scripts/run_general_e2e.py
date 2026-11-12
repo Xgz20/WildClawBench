@@ -960,7 +960,7 @@ def walk_tree(
 
 
 def judge_dependency_exclusions(attempt: Path, relative: PurePosixPath) -> list[dict[str, Any]]:
-    """Exclude only uncited dependencies in the two known judge namespaces."""
+    """Exclude only uncited dependencies in known judge runtime namespaces."""
     def referenced(value: Any,prefixes: Sequence[str]) -> bool:
         if isinstance(value,str):
             text=value.replace('\\','/')
@@ -970,8 +970,9 @@ def judge_dependency_exclusions(attempt: Path, relative: PurePosixPath) -> list[
         if isinstance(value,list):return any(referenced(v,prefixes) for v in value)
         return False
     results=[]
-    for dependency_path in ['node_modules','judge-review/node_modules']:
-        if dependency_path.startswith('judge-review/') and (attempt/'judge-review').is_symlink():
+    for dependency_path in ['node_modules','judge-review/node_modules','judge-observations/node_modules']:
+        parent=PurePosixPath(dependency_path).parent
+        if parent!=PurePosixPath('.') and (attempt/parent).is_symlink():
             continue  # An arbitrary parent link is never treated as disposable.
         dependency=attempt/dependency_path
         if not os.path.lexists(dependency):continue
