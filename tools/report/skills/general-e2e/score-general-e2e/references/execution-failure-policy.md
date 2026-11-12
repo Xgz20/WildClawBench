@@ -39,4 +39,6 @@
 
 每项必须填写：`criterion_key`、`origin`、`problem`、`missing_evidence`、`evidence_checked`、`why_rules_cannot_decide`、`repair_execution_impact`、非空`proposed_actions`和`decision_question`。问题应包含原件路径/行号、哪些事实已确认、哪些不能确认、是否需要重执行、保留原作答能否修复，以及具体需要用户选择的处理。不得只写“缺证”“根因不明”或“是否授权评分”。
 
+`evidence_checked`可为非空文字或非空文字列表，便于逐条保留已核查材料；其他上述说明字段为非空文字，`proposed_actions`为非空文字列表。该字段只记录审计说明，允许列表表示不改变任何判分。已经锁定的旧协议错误不原地修补，应由新attempt重新独立评分。
+
 报告区分执行异常与评分有效性。正式0分计入有效评分；评测框架/题源问题或确实未决项保持null，披露范围和原因，不补零、不删项重归一化。旧结果不原地改写；需要修复/重评时使用新attempt并显式选择来源。

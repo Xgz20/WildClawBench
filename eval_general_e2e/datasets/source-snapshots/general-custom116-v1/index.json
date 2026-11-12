@@ -1,307 +1,311 @@
 {
-  "schema_version": "general-e2e-frozen-source-index/v1",
   "dataset_id": "general-custom116-v1",
-  "source_revision": "870714beb53dbb68aa9714c0eddb183226e2c882",
-  "files": {
-    "tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md",
-      "sha256": "5b115ecd5a3a30d9e8cdddd4aff46c88a5b2100f12bb9bf3fd9117a46f1c6b1f"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_005_xiaohongshu_psychology_note_pack.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_005_xiaohongshu_psychology_note_pack.md",
-      "sha256": "767985ee47ad91fd91d79204c7cf10e29fb74a827a0bcf8a27822b3fc666abe5"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_028_inspection_notice_provenance.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_028_inspection_notice_provenance.md",
-      "sha256": "6e2e30f918866b986dcad4f76d17e1732c808ab2509bcedcf9e40ff498e6be62"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_021_alphabet_2024q1_presentation.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_021_alphabet_2024q1_presentation.md",
-      "sha256": "b902e664a5d9bff442c1753f29b24685aa2f57aa4215fec0d7ca15d3f1ae5e9d"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md",
-      "sha256": "bb996a690b4b21a6c3fe6c8f6fdaba1760a0b9b343f16270f1a8bde1ab2dfbb3"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_022_namc_interview_schedule.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_022_namc_interview_schedule.md",
-      "sha256": "d16dd5c0c1b08a494dc6c87ec9d758a2a55edefb8829b1419e0d5630d08c251e"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_002_html_report_quadrant_ppt.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_002_html_report_quadrant_ppt.md",
-      "sha256": "6766e47ed607864e6da51ee3007ac25f384bb997d4d280e13cd0e3040adb19b5"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md",
-      "sha256": "c635bdb09cd1812e3ba86e3fabf77d26b4558607b40acc4722245a3dc2d9bef0"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_001_multi_source_project_report.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_001_multi_source_project_report.md",
-      "sha256": "6453597b7d8ca1a1306be4c91799fdddc75019e9981c62b69ddf2f102a1569ac"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_025_indicator_window_rules.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_025_indicator_window_rules.md",
-      "sha256": "8d90bc592096af3ea26aac5a0e7e9825c2d3c2bc8cfed7251490f0763417c786"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_013_customer_remediation_pack.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_013_customer_remediation_pack.md",
-      "sha256": "ec449d8748f02ec641a5b11d01139044d7056bb5aebf93786d170717abcd5161"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_011_safety_inspection_extract.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_011_safety_inspection_extract.md",
-      "sha256": "fa391b9cd3c9f261dd613fb7df9377b042db732fa3d87f69045e86c407ae95ba"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_004_xmind_screenshot_template_ppt.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_004_xmind_screenshot_template_ppt.md",
-      "sha256": "f1fa1099d34617d63cc160eb410da2857d9e3818c568efa6b43cbca811b76b25"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_017_ipad_product_presentation.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_017_ipad_product_presentation.md",
-      "sha256": "0f7de616b7b9d1d878686cd6191c9ed7587e60a129d5d8fa0d401e24841105a2"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_027_channel_period_compare.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_027_channel_period_compare.md",
-      "sha256": "f47c6f00c2bc5ad3ea8fa3771e077cdfb7b2a3fb5c888c59b806709e8c8cbdcf"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_009_fund_product_table_normalize.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_009_fund_product_table_normalize.md",
-      "sha256": "3fddbfab54d5f82f48be818f43978034974adb8192e32c8c37db1428dce93ab8"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md",
-      "sha256": "9d33ebdcaaf05b60d908299b38789ae42dfe25bb3bd44dd16af8501e204d6a39"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md",
-      "sha256": "269987817093bbbfe953d5cede38b85e85d8fd9e68fa95452bdc9dc2efe7382f"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_006_wechat_tech_topic_board.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_006_wechat_tech_topic_board.md",
-      "sha256": "6e2e761af358d1ddcfcaf3b52936589237061f72255dfb695cdf4bb1866c0769"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md",
-      "sha256": "882553bcf0f74e51e5e993c9e0888a3392c4ea3f5fb18d73c872980f2c68055e"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md",
-      "sha256": "2bb8fe019fc1e823264dc9583bf72735b8b0ff566e580e3154e21507298dd4ba"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md",
-      "sha256": "94b084980e7bbb465f8673b8844679c8db4df8422a47fa0f36b1224a191b6914"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_012_service_channel_ticket_daily.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_012_service_channel_ticket_daily.md",
-      "sha256": "cc7eb2fd8d753a81445948c999f95dd2ff1cf4acb138552cd742d682cdb1271e"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_007_release_phase_gate_progression.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_007_release_phase_gate_progression.md",
-      "sha256": "5df6218f903e2522c5722901f89d45f0f85347b844a77e69e874d6a0c6f7f199"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_008_furniture_refinish_extract.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_008_furniture_refinish_extract.md",
-      "sha256": "4a03381ab3ca462d73d57d5402bfb441aab1e5b3832ed6803ffe512cdecee36b"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_023_bridgemind_monthly_report.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_023_bridgemind_monthly_report.md",
-      "sha256": "f3de1de6138dbee613561ddda305826bb3beb47b506d08a806f4326dd48b003e"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md",
-      "sha256": "88665644481f92bbf68d05fccd45e60fc308528dade05bad1ebddc8c8e9ed33e"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_020_research_factor_table_extract.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_020_research_factor_table_extract.md",
-      "sha256": "18e183e727dc4678cc38e5a294cd12a60529553f0c493b83da4459cfb32215f1"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_016_board_material_update_timeline_excel.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_016_board_material_update_timeline_excel.md",
-      "sha256": "b8eff8bbc16d4ef52412fccb53db5e46d19f7205b7c6ee032b1996f681197d8c"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_014_invoice_email_archive_manifest.md": {
-      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_014_invoice_email_archive_manifest.md",
-      "sha256": "38f23fc5714bcbe856c1aedfc871d51a1d9bb8bd08238ab5f4ea3909f6479df0"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison.md",
-      "sha256": "f9eea8ecc1a0ed007c9352bc7043adbeaaaf9bf6ddccd84e5b3d48db88754c07"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
-      "sha256": "d4751f98d4528cc363e18e08d28dd37e3e774dfd157ccbee045210871cada710"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_003_batch_normalization_claim_verification.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_003_batch_normalization_claim_verification.md",
-      "sha256": "dab3be743d100b121366cd5aa5b8333d7dfd0697043abbede58a2d6dc8c6ba01"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials.md",
-      "sha256": "27ff873a19f3704b6168b526b910eb5d5e48809f88bba80153908f3475490113"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison.md",
-      "sha256": "0e84243d4461913d49f2012078e5f33dd85cff23e90be2b22caf23e2da03248f"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_007_rice_awd_field_trials.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_007_rice_awd_field_trials.md",
-      "sha256": "8a1c12f6cf83d1a3362d3f9785d94d84cb9a93085d081ef1e0aefbb471f959a9"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md",
-      "sha256": "061960dca8fd96cba3df1693dbe54f88abe2fe1a7d9a62678ab913963ca07dd4"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison.md",
-      "sha256": "fc5c575b1bedf60b2e61f65bde5c10ed13cf3f098e55f376861313fb467e4f09"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening.md",
-      "sha256": "0e362f2c7b033a22ac6be973a3e9c7c169f536e470cc92831beab32cd8b2e11a"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_010_perovskite_stability_verification.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_010_perovskite_stability_verification.md",
-      "sha256": "a916de2719c8993908f8fd738ab8630999b93af8ba683497f402e0caab220255"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint.md",
-      "sha256": "2eed91971f65b5b9efc3a2aace09e2753052ba7b4f4f2b85ecc639d181fd5281"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_008_human_cell_atlas_verification.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_008_human_cell_atlas_verification.md",
-      "sha256": "2845da9f81b3f7fd8725505c7ca7c49c8f7b51c3f63f17c3fdf9262f1226f3f7"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md",
-      "sha256": "ede3244234b63da577d27894c6a2a5e81d6256be1e5175dae9755c97269b59c1"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_005_raptor_migration_monitoring_review.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_005_raptor_migration_monitoring_review.md",
-      "sha256": "0f73600f43c27355ebb8e61c4d2d342019438e0734e37766b98b42ab37824d89"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_009_global_methane_budget_revision.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_009_global_methane_budget_revision.md",
-      "sha256": "57f97acdd518e8332ddfedef2581cb7793c17d74b3d454b6221425ad68618d79"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_016_balance_of_payments_reconciliation.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_016_balance_of_payments_reconciliation.md",
-      "sha256": "8e3e4c5bd056e001453c756575e41da997f81d17d5999df3bf132cf9ce3e49b8"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison.md",
-      "sha256": "d97b2a73e212f9989e76b1476b582ba65cad875a5301f9f0912a34cf62b830a3"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_020_treasury_yield_rising_intervals.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_020_treasury_yield_rising_intervals.md",
-      "sha256": "2bdfb07e018e9c42bcdab8c41e614e79e0b9fe1eb41f334a460f3145d1c2107e"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison.md",
-      "sha256": "95ce7d2edfe0b0147d3f945fe6af3b234445b502bb951b97a163114a123d1be0"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening.md": {
-      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening.md",
-      "sha256": "086334ddb220f4868287f8b2c2991e151de0479d94a95c0d6e5b7df60432c142"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_007_promotion_discounts_sales_margin/03_Data_Analysis_task_007_promotion_discounts_sales_margin.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_007_promotion_discounts_sales_margin/03_Data_Analysis_task_007_promotion_discounts_sales_margin.md",
-      "sha256": "c245a4ecd92522d8268a9475c0ea12e64cf2f2aa25622e89fa62e50bab18c9e9"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation.md",
-      "sha256": "3c6d2c9637ab0644d8627b33cf81e30598947c05d16bd1f0a9e233ce8df21bcc"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention.md",
-      "sha256": "ce1c1f6c6fb6a7fb8dd578c647e8f76b748038fbc8f7f0aae6446d83cd57acd3"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability.md",
-      "sha256": "23c9746b0fe8d29781f0a33236cf75fb423e17eb1c3fd601c28bc9caf2e81733"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_008_payment_channel_settlement_reserves/03_Data_Analysis_task_008_payment_channel_settlement_reserves.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_008_payment_channel_settlement_reserves/03_Data_Analysis_task_008_payment_channel_settlement_reserves.md",
-      "sha256": "415bc8ff6c4a34827dc7bfb3c856829b08e8faa930871e58eedc79d9374155da"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md",
-      "sha256": "633c2657b9a705082128bd310e89fbeb74520722e051cf672b43492fcf5f50ff"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi.md",
-      "sha256": "4508f3b61802107805a4dbf0b6f6fc61c1f6f65985352f24bc2d8abc0933b746"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md",
-      "sha256": "60bcddd10880fb155fd45fb868e7659bb15a4884ab6c3da5926ebfad0e9d3bf3"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention.md",
-      "sha256": "f99cd83cbb5a273ec12d2fb3f670a8569a20a6c1538a208a82a10e8cf850b2d5"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts.md",
-      "sha256": "f8e5396eec32895a4a843a85e4983d0dcf17b1ce2104e07978493e85d555983d"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_006_collaborative_sales_customer_attribution/03_Data_Analysis_task_006_collaborative_sales_customer_attribution.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_006_collaborative_sales_customer_attribution/03_Data_Analysis_task_006_collaborative_sales_customer_attribution.md",
-      "sha256": "c4585fd0068f4b9e0f2a5e63c11bbf80a1f3b7b55f1be9e17c26ac6078c98393"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_017_service_redesign_stratified_weighting/03_Data_Analysis_task_017_service_redesign_stratified_weighting.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_017_service_redesign_stratified_weighting/03_Data_Analysis_task_017_service_redesign_stratified_weighting.md",
-      "sha256": "6d932606403d3c281ac8016d344490a3917fc9d30a3ee2caeee2ec8fe8f74e84"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_012_learning_product_activation_retention/03_Data_Analysis_task_012_learning_product_activation_retention.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_012_learning_product_activation_retention/03_Data_Analysis_task_012_learning_product_activation_retention.md",
-      "sha256": "d513334906e5e47dc6a62f5441615bc747654ab8ce51d29520601218bd517338"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition.md",
-      "sha256": "e5b6b07ceaa8ef1706132f6d8ffbd7968e783a44b014b91b7922bd032d57fed9"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/03_Data_Analysis_task_003_batch_quality_available_inventory.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/03_Data_Analysis_task_003_batch_quality_available_inventory.md",
-      "sha256": "5ad851d30719068eb7461a4ba19fb875b76a919f89a52f5be148115433c7792a"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback.md",
-      "sha256": "62d6ea9fde326752e3d209c54152843bf1cd100d9f7cf3cc563403ca3c6b7577"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_005_cross_month_returns_regional_sales/03_Data_Analysis_task_005_cross_month_returns_regional_sales.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_005_cross_month_returns_regional_sales/03_Data_Analysis_task_005_cross_month_returns_regional_sales.md",
-      "sha256": "f9bdec5a1615463776604e18271bc8ee4b14075e3b0fac18dc8216036e2b5472"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_020_cross_system_customer_identity_resolution/03_Data_Analysis_task_020_cross_system_customer_identity_resolution.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_020_cross_system_customer_identity_resolution/03_Data_Analysis_task_020_cross_system_customer_identity_resolution.md",
-      "sha256": "541003bcf7ae9e2634663fa573d416370e51555d130cac900c11c11531f40473"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_004_inventory_count_aging_obsolescence/03_Data_Analysis_task_004_inventory_count_aging_obsolescence.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_004_inventory_count_aging_obsolescence/03_Data_Analysis_task_004_inventory_count_aging_obsolescence.md",
-      "sha256": "8085e53fc43eaae82a002b175e0a10ae52736db7ca9330d33b0a5a597bd69e12"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md": {
-      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md",
-      "sha256": "5c810ffe355dd5d405d3790731e8bc0dfaa7e91aed421830324298403bf7c57b"
-    },
-    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
-      "snapshot": "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md",
-      "sha256": "f8147c864b19f5601a038e44aa718405f5594eb61bc4cc5f0117ef85a4c4c209"
-    },
-    "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json": {
-      "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json",
-      "sha256": "bb87b076e1af2cf1e2feaa5b93bc0790d64fffdf0d3b60823c2030ebef33223c"
-    },
-    "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json": {
-      "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json",
-      "sha256": "6cfce8873a004659fd96bf3e9dc0ef2cc5aa2c5f075ecf1005a5bb45a3a01e15"
-    },
-    "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
-      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md",
-      "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70"
-    }
-  },
   "excluded_paths": [
     "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json",
     "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence"
-  ]
+  ],
+  "files": {
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md": {
+      "sha256": "ede3244234b63da577d27894c6a2a5e81d6256be1e5175dae9755c97269b59c1",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md": {
+      "sha256": "061960dca8fd96cba3df1693dbe54f88abe2fe1a7d9a62678ab913963ca07dd4",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_003_batch_normalization_claim_verification.md": {
+      "sha256": "dab3be743d100b121366cd5aa5b8333d7dfd0697043abbede58a2d6dc8c6ba01",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_003_batch_normalization_claim_verification.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
+      "sha256": "d4751f98d4528cc363e18e08d28dd37e3e774dfd157ccbee045210871cada710",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_005_raptor_migration_monitoring_review.md": {
+      "sha256": "0f73600f43c27355ebb8e61c4d2d342019438e0734e37766b98b42ab37824d89",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_005_raptor_migration_monitoring_review.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials.md": {
+      "sha256": "27ff873a19f3704b6168b526b910eb5d5e48809f88bba80153908f3475490113",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_006_post_thrombectomy_bp_trials.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_007_rice_awd_field_trials.md": {
+      "sha256": "8a1c12f6cf83d1a3362d3f9785d94d84cb9a93085d081ef1e0aefbb471f959a9",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_007_rice_awd_field_trials.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_008_human_cell_atlas_verification.md": {
+      "sha256": "2845da9f81b3f7fd8725505c7ca7c49c8f7b51c3f63f17c3fdf9262f1226f3f7",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_008_human_cell_atlas_verification.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_009_global_methane_budget_revision.md": {
+      "sha256": "57f97acdd518e8332ddfedef2581cb7793c17d74b3d454b6221425ad68618d79",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_009_global_methane_budget_revision.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_010_perovskite_stability_verification.md": {
+      "sha256": "a916de2719c8993908f8fd738ab8630999b93af8ba683497f402e0caab220255",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_010_perovskite_stability_verification.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening.md": {
+      "sha256": "0e362f2c7b033a22ac6be973a3e9c7c169f536e470cc92831beab32cd8b2e11a",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_011_pientzehuang_multiyear_financial_screening.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison.md": {
+      "sha256": "fc5c575b1bedf60b2e61f65bde5c10ed13cf3f098e55f376861313fb467e4f09",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_012_credit_suisse_at1_regulatory_comparison.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison.md": {
+      "sha256": "95ce7d2edfe0b0147d3f945fe6af3b234445b502bb951b97a163114a123d1be0",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_013_spy_voo_2024_return_fee_comparison.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison.md": {
+      "sha256": "0e84243d4461913d49f2012078e5f33dd85cff23e90be2b22caf23e2da03248f",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_014_motor_insurance_water_damage_clause_comparison.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison.md": {
+      "sha256": "d97b2a73e212f9989e76b1476b582ba65cad875a5301f9f0912a34cf62b830a3",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_015_boc_mortgage_repricing_comparison.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_016_balance_of_payments_reconciliation.md": {
+      "sha256": "8e3e4c5bd056e001453c756575e41da997f81d17d5999df3bf132cf9ce3e49b8",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_016_balance_of_payments_reconciliation.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint.md": {
+      "sha256": "2eed91971f65b5b9efc3a2aace09e2753052ba7b4f4f2b85ecc639d181fd5281",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_017_hkd_cny_monthly_midpoint.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening.md": {
+      "sha256": "086334ddb220f4868287f8b2c2991e151de0479d94a95c0d6e5b7df60432c142",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_018_urban_rural_cpi_sign_screening.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison.md": {
+      "sha256": "f9eea8ecc1a0ed007c9352bc7043adbeaaaf9bf6ddccd84e5b3d48db88754c07",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_019_shfe_contract_notional_margin_comparison.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_020_treasury_yield_rising_intervals.md": {
+      "sha256": "2bdfb07e018e9c42bcdab8c41e614e79e0b9fe1eb41f334a460f3145d1c2107e",
+      "snapshot": "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_020_treasury_yield_rising_intervals.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_001_multi_source_project_report.md": {
+      "sha256": "6453597b7d8ca1a1306be4c91799fdddc75019e9981c62b69ddf2f102a1569ac",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_001_multi_source_project_report.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_002_html_report_quadrant_ppt.md": {
+      "sha256": "6766e47ed607864e6da51ee3007ac25f384bb997d4d280e13cd0e3040adb19b5",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_002_html_report_quadrant_ppt.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md": {
+      "sha256": "269987817093bbbfe953d5cede38b85e85d8fd9e68fa95452bdc9dc2efe7382f",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_004_xmind_screenshot_template_ppt.md": {
+      "sha256": "f1fa1099d34617d63cc160eb410da2857d9e3818c568efa6b43cbca811b76b25",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_004_xmind_screenshot_template_ppt.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_005_xiaohongshu_psychology_note_pack.md": {
+      "sha256": "767985ee47ad91fd91d79204c7cf10e29fb74a827a0bcf8a27822b3fc666abe5",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_005_xiaohongshu_psychology_note_pack.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_006_wechat_tech_topic_board.md": {
+      "sha256": "6e2e761af358d1ddcfcaf3b52936589237061f72255dfb695cdf4bb1866c0769",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_006_wechat_tech_topic_board.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_007_release_phase_gate_progression.md": {
+      "sha256": "5df6218f903e2522c5722901f89d45f0f85347b844a77e69e874d6a0c6f7f199",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_007_release_phase_gate_progression.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_008_furniture_refinish_extract.md": {
+      "sha256": "4a03381ab3ca462d73d57d5402bfb441aab1e5b3832ed6803ffe512cdecee36b",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_008_furniture_refinish_extract.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_009_fund_product_table_normalize.md": {
+      "sha256": "3fddbfab54d5f82f48be818f43978034974adb8192e32c8c37db1428dce93ab8",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_009_fund_product_table_normalize.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md": {
+      "sha256": "9d33ebdcaaf05b60d908299b38789ae42dfe25bb3bd44dd16af8501e204d6a39",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_011_safety_inspection_extract.md": {
+      "sha256": "fa391b9cd3c9f261dd613fb7df9377b042db732fa3d87f69045e86c407ae95ba",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_011_safety_inspection_extract.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_012_service_channel_ticket_daily.md": {
+      "sha256": "cc7eb2fd8d753a81445948c999f95dd2ff1cf4acb138552cd742d682cdb1271e",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_012_service_channel_ticket_daily.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_013_customer_remediation_pack.md": {
+      "sha256": "ec449d8748f02ec641a5b11d01139044d7056bb5aebf93786d170717abcd5161",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_013_customer_remediation_pack.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_014_invoice_email_archive_manifest.md": {
+      "sha256": "38f23fc5714bcbe856c1aedfc871d51a1d9bb8bd08238ab5f4ea3909f6479df0",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_014_invoice_email_archive_manifest.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md": {
+      "sha256": "94b084980e7bbb465f8673b8844679c8db4df8422a47fa0f36b1224a191b6914",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_016_board_material_update_timeline_excel.md": {
+      "sha256": "b8eff8bbc16d4ef52412fccb53db5e46d19f7205b7c6ee032b1996f681197d8c",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_016_board_material_update_timeline_excel.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_017_ipad_product_presentation.md": {
+      "sha256": "0f7de616b7b9d1d878686cd6191c9ed7587e60a129d5d8fa0d401e24841105a2",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_017_ipad_product_presentation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md": {
+      "sha256": "88665644481f92bbf68d05fccd45e60fc308528dade05bad1ebddc8c8e9ed33e",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_018_targeted_repair_communication_pack.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md": {
+      "sha256": "2bb8fe019fc1e823264dc9583bf72735b8b0ff566e580e3154e21507298dd4ba",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_019_prd_system_design_breakdown.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_020_research_factor_table_extract.md": {
+      "sha256": "18e183e727dc4678cc38e5a294cd12a60529553f0c493b83da4459cfb32215f1",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_020_research_factor_table_extract.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_021_alphabet_2024q1_presentation.md": {
+      "sha256": "b902e664a5d9bff442c1753f29b24685aa2f57aa4215fec0d7ca15d3f1ae5e9d",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_021_alphabet_2024q1_presentation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_022_namc_interview_schedule.md": {
+      "sha256": "d16dd5c0c1b08a494dc6c87ec9d758a2a55edefb8829b1419e0d5630d08c251e",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_022_namc_interview_schedule.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_023_bridgemind_monthly_report.md": {
+      "sha256": "f3de1de6138dbee613561ddda305826bb3beb47b506d08a806f4326dd48b003e",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_023_bridgemind_monthly_report.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md": {
+      "sha256": "5b115ecd5a3a30d9e8cdddd4aff46c88a5b2100f12bb9bf3fd9117a46f1c6b1f",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_024_sterilization_quote.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_025_indicator_window_rules.md": {
+      "sha256": "8d90bc592096af3ea26aac5a0e7e9825c2d3c2bc8cfed7251490f0763417c786",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_025_indicator_window_rules.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
+      "sha256": "882553bcf0f74e51e5e993c9e0888a3392c4ea3f5fb18d73c872980f2c68055e",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_027_channel_period_compare.md": {
+      "sha256": "f47c6f00c2bc5ad3ea8fa3771e077cdfb7b2a3fb5c888c59b806709e8c8cbdcf",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_027_channel_period_compare.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_028_inspection_notice_provenance.md": {
+      "sha256": "6e2e30f918866b986dcad4f76d17e1732c808ab2509bcedcf9e40ff498e6be62",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_028_inspection_notice_provenance.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md": {
+      "sha256": "bb996a690b4b21a6c3fe6c8f6fdaba1760a0b9b343f16270f1a8bde1ab2dfbb3",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_029_monitoring_weekly_docx.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md": {
+      "sha256": "c635bdb09cd1812e3ba86e3fabf77d26b4558607b40acc4722245a3dc2d9bef0",
+      "snapshot": "tasks/general_e2e/02_Office/02_Office_task_030_service_center_consolidation.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md": {
+      "sha256": "5c810ffe355dd5d405d3790731e8bc0dfaa7e91aed421830324298403bf7c57b",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation.md": {
+      "sha256": "3c6d2c9637ab0644d8627b33cf81e30598947c05d16bd1f0a9e233ce8df21bcc",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/03_Data_Analysis_task_003_batch_quality_available_inventory.md": {
+      "sha256": "5ad851d30719068eb7461a4ba19fb875b76a919f89a52f5be148115433c7792a",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/03_Data_Analysis_task_003_batch_quality_available_inventory.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_004_inventory_count_aging_obsolescence/03_Data_Analysis_task_004_inventory_count_aging_obsolescence.md": {
+      "sha256": "8085e53fc43eaae82a002b175e0a10ae52736db7ca9330d33b0a5a597bd69e12",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_004_inventory_count_aging_obsolescence/03_Data_Analysis_task_004_inventory_count_aging_obsolescence.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_005_cross_month_returns_regional_sales/03_Data_Analysis_task_005_cross_month_returns_regional_sales.md": {
+      "sha256": "f9bdec5a1615463776604e18271bc8ee4b14075e3b0fac18dc8216036e2b5472",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_005_cross_month_returns_regional_sales/03_Data_Analysis_task_005_cross_month_returns_regional_sales.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_006_collaborative_sales_customer_attribution/03_Data_Analysis_task_006_collaborative_sales_customer_attribution.md": {
+      "sha256": "c4585fd0068f4b9e0f2a5e63c11bbf80a1f3b7b55f1be9e17c26ac6078c98393",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_006_collaborative_sales_customer_attribution/03_Data_Analysis_task_006_collaborative_sales_customer_attribution.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_007_promotion_discounts_sales_margin/03_Data_Analysis_task_007_promotion_discounts_sales_margin.md": {
+      "sha256": "c245a4ecd92522d8268a9475c0ea12e64cf2f2aa25622e89fa62e50bab18c9e9",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_007_promotion_discounts_sales_margin/03_Data_Analysis_task_007_promotion_discounts_sales_margin.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_008_payment_channel_settlement_reserves/03_Data_Analysis_task_008_payment_channel_settlement_reserves.md": {
+      "sha256": "415bc8ff6c4a34827dc7bfb3c856829b08e8faa930871e58eedc79d9374155da",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_008_payment_channel_settlement_reserves/03_Data_Analysis_task_008_payment_channel_settlement_reserves.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
+      "sha256": "633c2657b9a705082128bd310e89fbeb74520722e051cf672b43492fcf5f50ff",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
+      "sha256": "60bcddd10880fb155fd45fb868e7659bb15a4884ab6c3da5926ebfad0e9d3bf3",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention.md": {
+      "sha256": "f99cd83cbb5a273ec12d2fb3f670a8569a20a6c1538a208a82a10e8cf850b2d5",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention/03_Data_Analysis_task_011_new_customer_purchase_funnel_retention.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_012_learning_product_activation_retention/03_Data_Analysis_task_012_learning_product_activation_retention.md": {
+      "sha256": "d513334906e5e47dc6a62f5441615bc747654ab8ce51d29520601218bd517338",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_012_learning_product_activation_retention/03_Data_Analysis_task_012_learning_product_activation_retention.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention.md": {
+      "sha256": "ce1c1f6c6fb6a7fb8dd578c647e8f76b748038fbc8f7f0aae6446d83cd57acd3",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention/03_Data_Analysis_task_013_collaboration_team_activation_seat_retention.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi.md": {
+      "sha256": "4508f3b61802107805a4dbf0b6f6fc61c1f6f65985352f24bc2d8abc0933b746",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi/03_Data_Analysis_task_014_ecommerce_multitouch_attribution_refund_roi.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts.md": {
+      "sha256": "f8e5396eec32895a4a843a85e4983d0dcf17b1ce2104e07978493e85d555983d",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts/03_Data_Analysis_task_015_b2b_long_cycle_conversion_mature_cohorts.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability.md": {
+      "sha256": "23c9746b0fe8d29781f0a33236cf75fb423e17eb1c3fd601c28bc9caf2e81733",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability/03_Data_Analysis_task_016_store_campaign_cost_allocation_comparability.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_017_service_redesign_stratified_weighting/03_Data_Analysis_task_017_service_redesign_stratified_weighting.md": {
+      "sha256": "6d932606403d3c281ac8016d344490a3917fc9d30a3ee2caeee2ec8fe8f74e84",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_017_service_redesign_stratified_weighting/03_Data_Analysis_task_017_service_redesign_stratified_weighting.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition.md": {
+      "sha256": "e5b6b07ceaa8ef1706132f6d8ffbd7968e783a44b014b91b7922bd032d57fed9",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition/03_Data_Analysis_task_018_collaboration_trial_paired_changes_attrition.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback.md": {
+      "sha256": "62d6ea9fde326752e3d209c54152843bf1cd100d9f7cf3cc563403ca3c6b7577",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback/03_Data_Analysis_task_019_enterprise_feature_votes_conditional_feedback.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_020_cross_system_customer_identity_resolution/03_Data_Analysis_task_020_cross_system_customer_identity_resolution.md": {
+      "sha256": "541003bcf7ae9e2634663fa573d416370e51555d130cac900c11c11531f40473",
+      "snapshot": "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_020_cross_system_customer_identity_resolution/03_Data_Analysis_task_020_cross_system_customer_identity_resolution.md"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_001_acl2024_long_context_qa/gt/reference_answer.xlsx": {
+      "sha256": "022335549ad378169cef92bbb45626e5443d73fbf65763f28f079cb570c7794c",
+      "snapshot": "workspace/general_e2e/01_Information_Search_Organization/task_001_acl2024_long_context_qa/gt/reference_answer.xlsx"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
+      "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70",
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
+      "sha256": "f8147c864b19f5601a038e44aa718405f5594eb61bc4cc5f0117ef85a4c4c209",
+      "snapshot": "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md"
+    },
+    "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json": {
+      "sha256": "bb87b076e1af2cf1e2feaa5b93bc0790d64fffdf0d3b60823c2030ebef33223c",
+      "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_002_interwarehouse_transfer_inventory_reconciliation/gt/公开输入哈希.json"
+    },
+    "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json": {
+      "sha256": "6cfce8873a004659fd96bf3e9dc0ef2cc5aa2c5f075ecf1005a5bb45a3a01e15",
+      "snapshot": "workspace/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_003_batch_quality_available_inventory/gt/标准答案与来源.json"
+    }
+  },
+  "schema_version": "general-e2e-frozen-source-index/v1",
+  "source_revision": "870714beb53dbb68aa9714c0eddb183226e2c882"
 }

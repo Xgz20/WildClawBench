@@ -1,0 +1,20 @@
+{
+  "schema_version": "general-e2e-reviewed-reference-revision/v1",
+  "profile": "acl2024-qa-reference-57/v1",
+  "task_id": "01_Information_Search_Organization_task_001_acl2024_long_context_qa",
+  "original_contract_sha256": "e9917777a34520b691e3d9ef8cc23887c712a11a3baca8e7108df3d2ec7aadfe",
+  "original_reference_sha256": "022335549ad378169cef92bbb45626e5443d73fbf65763f28f079cb570c7794c",
+  "corrected_reference_sha256": "82c43afc4e4807361feb8fd03179dbb505eff6206651b58554a5fbf6d4fa261b",
+  "independent_review_sha256": "e0f0360b68234c316935f3501634a46b88ed267c79ea9a1f6ac3601ecb3ccc73",
+  "original_Q": 56,
+  "corrected_Q": 57,
+  "paper_count": 11,
+  "new_identity": [
+    "2024.acl-long.172",
+    "LongBench",
+    "TriviaQA"
+  ],
+  "public_task_changed": false,
+  "rubric_formula_changed": false,
+  "grading_weights_changed": false
+}

@@ -76,6 +76,10 @@ def validate_response(request, response):
             raise ValueError("CANDIDATE_EVIDENCE_ABSENCE_IS_NOT_UNRESOLVED: " + issue["criterion_key"])
         for key in ("problem", "missing_evidence", "evidence_checked", "why_rules_cannot_decide",
                     "repair_execution_impact", "decision_question"):
+            if key == 'evidence_checked' and isinstance(issue.get(key), list):
+                if issue[key] and all(isinstance(value, str) and value.strip() for value in issue[key]):
+                    continue
+                raise ValueError('EVIDENCE_DECISION_REQUEST_INCOMPLETE: evidence_checked')
             if not isinstance(issue.get(key), str) or not issue[key].strip():
                 raise ValueError("EVIDENCE_DECISION_REQUEST_INCOMPLETE: " + issue["criterion_key"] + "/" + key)
         actions = issue.get("proposed_actions")

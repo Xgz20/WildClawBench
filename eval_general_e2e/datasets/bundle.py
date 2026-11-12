@@ -141,6 +141,14 @@ GENERAL70_V5_DEFINITION = replace(
         "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt",
     ),
 )
+GENERAL70_V6_DEFINITION = replace(
+    GENERAL70_V5_DEFINITION, dataset_id="general-custom70-v6",
+    created_at="2026-11-11T00:00:00+08:00", source_revision="5340d1ed09ac0b59b6d67853aca26aec9e21441d",
+    current_source_paths=GENERAL70_V5_DEFINITION.current_source_paths + (
+        "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md",
+        "workspace/general_e2e/01_Information_Search_Organization/task_001_acl2024_long_context_qa/gt",
+    ),
+)
 INFO004_OPEN_DEFINITION = replace(
     GENERAL70_V3_DEFINITION, dataset_id="general-info004-open-v1", created_at="2026-11-04T00:00:00+08:00",
     source_revision="4bc133fd3b8e710f8bd8e163bac97a5bcb4c06d3",
@@ -160,7 +168,7 @@ INFO004_OPEN_V3_DEFINITION = replace(
     source_revision="df8ff3b4530e1d93e65f3ec83d401c2990745a51",
     frozen_source_index="eval_general_e2e/datasets/source-snapshots/general-info004-open-v3/index.json",
 )
-DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, GENERAL70_V4_DEFINITION, GENERAL70_V5_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, INFO004_OPEN_V3_DEFINITION)}
+DATASETS = {item.dataset_id: item for item in (DEFAULT_DEFINITION, GENERAL116_DEFINITION, GENERAL70_V2_DEFINITION, GENERAL70_V3_DEFINITION, GENERAL70_V4_DEFINITION, GENERAL70_V5_DEFINITION, GENERAL70_V6_DEFINITION, INFO004_OPEN_DEFINITION, INFO004_OPEN_V2_DEFINITION, INFO004_OPEN_V3_DEFINITION)}
 
 
 def dataset_manifest_path(dataset_id: str) -> Path:
@@ -544,7 +552,7 @@ def compile_dataset(
         execution_contract, scoring_contract = _task_contracts(
             task_id, metadata, sections, execution_tree, scoring_tree
         )
-        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, GENERAL70_V4_DEFINITION.dataset_id, GENERAL70_V5_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
+        if definition.dataset_id in {GENERAL116_DEFINITION.dataset_id, GENERAL70_V2_DEFINITION.dataset_id, GENERAL70_V3_DEFINITION.dataset_id, GENERAL70_V4_DEFINITION.dataset_id, GENERAL70_V5_DEFINITION.dataset_id, GENERAL70_V6_DEFINITION.dataset_id, INFO004_OPEN_DEFINITION.dataset_id, INFO004_OPEN_V2_DEFINITION.dataset_id, INFO004_OPEN_V3_DEFINITION.dataset_id}:
             _adapt_imported_contract(scoring_contract)
         execution_bytes = _json_bytes(execution_contract)
         scoring_bytes = _json_bytes(scoring_contract)

@@ -154,6 +154,11 @@ def grade(transcript, workspace_path):
         response = {'criteria': [{'key': 'C7', 'status': 'unresolved', 'score': None}],
                     'decision_requests': [issue]}
         POLICY.validate_response(request, response)
+        listed = copy.deepcopy(response)
+        listed['decision_requests'][0]['evidence_checked'] = ['已查原始SDK首行', '已查全部工具回执，缺少接口参照']
+        POLICY.validate_response(request, listed)
+        listed['decision_requests'][0]['evidence_checked'] = []
+        with self.assertRaises(ValueError): POLICY.validate_response(request, listed)
         for invalid in ('harness', 'empty', 'missing'):
             changed = copy.deepcopy(response)
             if invalid == 'harness': changed['decision_requests'][0]['origin'] = 'harness'

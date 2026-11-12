@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.104` 对原任务明示允许参考复核后更新的Info001，按精确注册的原合同、57条修正参考及独立复核摘要冻结`reference_revision_policy`。只更新当前参考集合参数Q，沿用原25分预算、公式、锚点和其他权重；响应须提交57条范围内的唯一匹配台账，机械复算C3a。新数据集`general-custom70-v6`固化同一修正，旧版本及执行原件保留。空分决策说明的`evidence_checked`支持非空文字列表，避免仅因可审计的列表表示锁定协议失败。见[参考修正交接](references/reference-revision.md)。
+
 `0.10.103` 独立rescore保留原证据准入类型、审核回执及全部绑定原件，并在新目录重新核验；包括同回合SDK终稿、原生中断、失败证明和媒体准入。修复新attempt丢失准入载体后误用普通终稿检查或丢失行为证明的问题。原执行、旧Prompt/分数、授权范围、Rubric和权重不改。
 
 `0.10.102` 已受理失败回合可在语义证据冻结前通过`register-execution-supplement`登记同回合原始SDK前段。按原执行/候选SHA、session/cwd、唯一turn和原Prompt字节核验；以原始行为证据纳入raw_trace，不冒充GT、完整轨迹、成功回执或候选交付。缺终态及无返回调用原样保留，原执行记录和Rubric不改。见[SDK前段交接](references/native-execution-supplement.md)。

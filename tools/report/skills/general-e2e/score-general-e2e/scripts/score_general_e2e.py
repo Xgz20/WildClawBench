@@ -69,6 +69,7 @@ import public_snapshot_sidecar
 import sterilization_quote_layout
 import namc_inline_distances
 import reference_supplement
+import reference_revision
 import warranty_recovery_layout
 import service_report_layout
 import procurement_explicit_labels
@@ -4175,6 +4176,9 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
             accountability_policy = execution_accountability.policy(manifest)
             if accountability_policy is not None:
                 request['evidence_accountability_policy'] = accountability_policy
+            reviewed_reference = reference_revision.policy(root, manifest)
+            if reviewed_reference is not None:
+                request['reference_revision_policy'] = reviewed_reference
             if independent_policy is not None:
                 request['completion_policy']=independent_policy
             interrupted_delivery_policy=interrupted_answer_delivery.policy(manifest,contract)
@@ -4205,6 +4209,8 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "judge": request["judge"],
                     "locks": response_locks,
                     **({'decision_requests': []} if accountability_policy is not None else {}),
+                    **({'reference_revision_review': {'Q':57,'m':None,'matched_qa_ids':[]}}
+                       if reviewed_reference is not None else {}),
                     "criteria": [
                         {
                             "key": criterion["key"],
@@ -5538,6 +5544,10 @@ def record_semantics_attempt(
 
         try:
             execution_accountability.validate_response(request, response)
+            expected_reference = reference_revision.policy(root, manifest)
+            if request.get('reference_revision_policy') != expected_reference:
+                raise ValueError('REFERENCE_REVISION_POLICY_DRIFT')
+            reference_revision.validate_response(expected_reference, response)
         except ValueError as exc:
             raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_INVALID', str(exc)) from exc
         _validate_declared_claim_reviews(contract,request,response)
@@ -6002,6 +6012,10 @@ def _verify_semantic_terminal(
         if audit.get('status')=='completed':
             try:
                 execution_accountability.validate_response(_read_json(paths['request']), _read_json(paths['response']))
+                expected_reference=reference_revision.policy(root,manifest)
+                if _read_json(paths['request']).get('reference_revision_policy') != expected_reference:
+                    raise ValueError('REFERENCE_REVISION_POLICY_DRIFT')
+                reference_revision.validate_response(expected_reference,_read_json(paths['response']))
             except ValueError as exc:
                 raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_INVALID', str(exc)) from exc
             _validate_declared_claim_reviews(_read_json(root/manifest['paths']['contract']),

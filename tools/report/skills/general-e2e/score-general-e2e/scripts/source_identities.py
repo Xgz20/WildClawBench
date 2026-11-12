@@ -9,6 +9,7 @@ V3_CATALOG_SHA = "276294a05a2fe85774dac7c917b916bab771ad1dbdfe5ecfd6647b96651806
 V4_CATALOG_SHA = "3d2de4b3c947ee18cd759343f8645554f3f1c4d1e0773356376220de49894eca"
 
 V5_CATALOG_SHA = "aae395aa749b4b958fa4e47142f0a3e7197250794b93ba1d9d6dfd9c9f6f564f"
+V6_CATALOG_SHA = "463849cec877b7535203097f4663e1efff4119ae8b8b28b76d74adbdced8757b"
 
 def registry():
     data=(Path(__file__).resolve().parents[1]/'data/general70-source-identities-v2.json').read_bytes()
@@ -20,7 +21,7 @@ def accepted_contracts(original):
     values={original,row['contract_sha256']} if row else {original}
     revisions=revision_registry()
     values |= {revisions[key]['contract_sha256'] for key in values if key in revisions}
-    for catalog in (_reference_release_catalog(), _next_reference_release_catalog()):
+    for catalog in (_reference_release_catalog(), _next_reference_release_catalog(), _qa_reference_release_catalog()):
         releases = catalog['profiles']
         values |= {releases[key]['contract_sha256'] for key in values if key in releases}
     return values
@@ -32,7 +33,7 @@ def accepted_source_hashes(original):
         *[revisions[row['contract_sha256']]['automated_source_sha256'] for row in rows if row['contract_sha256'] in revisions]}
     contracts = {row['contract_sha256'] for row in rows}
     contracts |= {revisions[key]['contract_sha256'] for key in contracts if key in revisions}
-    for catalog in (_reference_release_catalog(), _next_reference_release_catalog()):
+    for catalog in (_reference_release_catalog(), _next_reference_release_catalog(), _qa_reference_release_catalog()):
         releases = catalog['profiles']
         values |= {releases[key]['automated_source_sha256'] for key in contracts if key in releases}
         contracts |= {releases[key]['contract_sha256'] for key in contracts if key in releases}
@@ -63,6 +64,13 @@ def reference_release_registry():
     return _reference_release_catalog()['profiles']
 
 
+def _qa_reference_release_catalog():
+    data = (Path(__file__).resolve().parents[1] / 'data/general70-source-identities-v6.json').read_bytes()
+    if hashlib.sha256(data).hexdigest() != V6_CATALOG_SHA:
+        raise ValueError('SOURCE_V6_IDENTITY_CATALOG_DRIFT')
+    return json.loads(data)
+
+
 def materialized_rule_review_profile(contract,contract_sha):
     source=contract.get('automated_checks')
     if not isinstance(source,str):return None
@@ -90,7 +98,7 @@ def registry_variants(rows):
             if key in value:value[key]=variant['automated_source_sha256']
         if 'dataset' in value:value['dataset']=variant['dataset']
         if value not in result:result.append(value)
-    for catalog in (_reference_release_catalog(), _next_reference_release_catalog()):
+    for catalog in (_reference_release_catalog(), _next_reference_release_catalog(), _qa_reference_release_catalog()):
         releases = catalog['profiles']
         for row in list(result):
             # Only carry the baseline release's active dataset-bound profiles.

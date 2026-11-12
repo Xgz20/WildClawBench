@@ -1,7 +1,6 @@
 {
-  "schema_version": "general-e2e-frozen-source-index/v1",
-  "dataset_id": "general-custom70-v4",
   "dataset_digest": "914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff",
+  "dataset_id": "general-custom70-v4",
   "excluded_paths": [
     "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1J-dong-bingyue-wenyiyanjiu-2025-03.pdf",
     "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/source_evidence/S1J-dong-bingyue-wenyiyanjiu-2025-03.pages.txt",
@@ -10,56 +9,61 @@
   ],
   "files": {
     "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md": {
-      "snapshot": "tasks/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md",
-      "sha256": "92fb7989b735b84f5aefff3e69620ba9a8793bad5cf77f9e25357f9f4d6fbf37"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md": {
-      "snapshot": "tasks/02_Office_task_010_warranty_recovery_allocation.md",
-      "sha256": "ba76045b950d232074428ebcf5df5325e9f7c144c96693513ec5419097bd36ed"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md": {
-      "snapshot": "tasks/02_Office_task_015_procurement_reconciliation.md",
-      "sha256": "bff01b1cd354fdc11a1de3650123de2d0ea19ea7121a995bf05edfaafa78b38d"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md": {
-      "snapshot": "tasks/02_Office_task_003_news_event_multifile_extract.md",
-      "sha256": "16130947a3d8f30d8f33fe2516f4eccbfacec4e3897084b45be591c3fb4a041f"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md": {
-      "snapshot": "tasks/03_Data_Analysis_task_001_hr_worktime_reconciliation.md",
-      "sha256": "e50923c9c8ad63ddd8c1a90714a2b87f83c8501c3c9c665c2d487125e149d1cd"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
-      "snapshot": "tasks/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md",
-      "sha256": "c2805e46d0dc0a7e884e85d81351b926436753d7c7cbc69c31f865a2450c988d"
-    },
-    "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
-      "snapshot": "tasks/02_Office_task_026_work_order_labor_reconciliation.md",
-      "sha256": "a961efa58db227500e33ca324c9ad82a82e9c277354607261088323334527120"
-    },
-    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
-      "snapshot": "tasks/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md",
-      "sha256": "a4910132cafad1a8beaaec32f00589d6f7b8a59d3a7d18db5a9cebb82dcbcdc7"
-    },
-    "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
-      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md",
-      "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70"
-    },
-    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
-      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md",
-      "sha256": "fd8a8cba558880edb24609dd0ca2454d283cb3a2d5bbe8d28d0b7a90cce9e101"
-    },
-    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json": {
-      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json",
-      "sha256": "8569af1b50bef32baefc2231c07aec63785af69425f4244e25ca1660e3107a67"
-    },
-    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
-      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md",
-      "sha256": "ed024ca7dc6fc6d245cc6a4f7f82b09d4bff432998d04d820ece183ba82e65f3"
+      "sha256": "92fb7989b735b84f5aefff3e69620ba9a8793bad5cf77f9e25357f9f4d6fbf37",
+      "snapshot": "tasks/01_Information_Search_Organization_task_001_acl2024_long_context_qa.md"
     },
     "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md": {
-      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md",
-      "sha256": "3bc8309ad4cc8dcc7e24142631a7ef4a2901ec73b5cabf5788170d61332d06e0"
+      "sha256": "3bc8309ad4cc8dcc7e24142631a7ef4a2901ec73b5cabf5788170d61332d06e0",
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_002_nonlinear_substructuring_author_bibliography.md"
+    },
+    "tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md": {
+      "sha256": "ed024ca7dc6fc6d245cc6a4f7f82b09d4bff432998d04d820ece183ba82e65f3",
+      "snapshot": "files/tasks/general_e2e/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_003_news_event_multifile_extract.md": {
+      "sha256": "16130947a3d8f30d8f33fe2516f4eccbfacec4e3897084b45be591c3fb4a041f",
+      "snapshot": "tasks/02_Office_task_003_news_event_multifile_extract.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_010_warranty_recovery_allocation.md": {
+      "sha256": "ba76045b950d232074428ebcf5df5325e9f7c144c96693513ec5419097bd36ed",
+      "snapshot": "tasks/02_Office_task_010_warranty_recovery_allocation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_015_procurement_reconciliation.md": {
+      "sha256": "bff01b1cd354fdc11a1de3650123de2d0ea19ea7121a995bf05edfaafa78b38d",
+      "snapshot": "tasks/02_Office_task_015_procurement_reconciliation.md"
+    },
+    "tasks/general_e2e/02_Office/02_Office_task_026_work_order_labor_reconciliation.md": {
+      "sha256": "a961efa58db227500e33ca324c9ad82a82e9c277354607261088323334527120",
+      "snapshot": "tasks/02_Office_task_026_work_order_labor_reconciliation.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_001_hr_worktime_reconciliation/03_Data_Analysis_task_001_hr_worktime_reconciliation.md": {
+      "sha256": "e50923c9c8ad63ddd8c1a90714a2b87f83c8501c3c9c665c2d487125e149d1cd",
+      "snapshot": "tasks/03_Data_Analysis_task_001_hr_worktime_reconciliation.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md": {
+      "sha256": "a4910132cafad1a8beaaec32f00589d6f7b8a59d3a7d18db5a9cebb82dcbcdc7",
+      "snapshot": "tasks/03_Data_Analysis_task_009_cross_currency_receipts_bank_fees.md"
+    },
+    "tasks/general_e2e/03_Data_Analysis_task/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md": {
+      "sha256": "c2805e46d0dc0a7e884e85d81351b926436753d7c7cbc69c31f865a2450c988d",
+      "snapshot": "tasks/03_Data_Analysis_task_010_contract_escrow_refund_reconciliation.md"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_001_acl2024_long_context_qa/gt/reference_answer.xlsx": {
+      "sha256": "022335549ad378169cef92bbb45626e5443d73fbf65763f28f079cb570c7794c",
+      "snapshot": "workspace/general_e2e/01_Information_Search_Organization/task_001_acl2024_long_context_qa/gt/reference_answer.xlsx"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md": {
+      "sha256": "310a93fcc294add179c449eae1491579a099601b34ebc19e22a3484c531e3e70",
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_002_nonlinear_substructuring_author_bibliography/gt/reference_answer.md"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md": {
+      "sha256": "fd8a8cba558880edb24609dd0ca2454d283cb3a2d5bbe8d28d0b7a90cce9e101",
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_answer.md"
+    },
+    "workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json": {
+      "sha256": "8569af1b50bef32baefc2231c07aec63785af69425f4244e25ca1660e3107a67",
+      "snapshot": "files/workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt/reference_sources.json"
     }
-  }
+  },
+  "schema_version": "general-e2e-frozen-source-index/v1"
 }
