@@ -1,7 +1,7 @@
 """Freeze explicitly authorized reference research for a new rescore attempt."""
 from pathlib import Path, PurePosixPath
 from datetime import datetime, timezone
-import hashlib, json, os, re, shutil, uuid
+import hashlib, json, os, re, shutil, stat, sys, uuid
 from urllib.parse import urlsplit
 
 SCHEMA = 'wildclawbench.general-e2e-reference-supplement/v1'
@@ -12,6 +12,17 @@ KINDS = {'publisher_full_text', 'publisher_public_appendices', 'publisher_metada
          'research_note', 'original_source_binary'}
 SHA = re.compile(r'[0-9a-f]{64}')
 NAME = re.compile(r'[A-Za-z0-9][A-Za-z0-9._-]{0,119}')
+OFFICE_SUFFIXES = {'.docx','.docm','.xlsx','.xlsm','.xltx','.xltm','.pptx','.pptm','.potx','.potm','.ppsx','.ppsm'}
+
+
+def guard_office_copy(path, expected_sha256):
+    """Guard only a newly copied, exact reference; never repair historical bytes."""
+    if path.suffix.lower() not in OFFICE_SUFFIXES:
+        return False
+    if sys.platform == 'darwin':
+        os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE, follow_symlinks=False)
+    require(digest(path) == expected_sha256, 'REFERENCE_SUPPLEMENT_COPY_DRIFT')
+    return True
 
 def digest(path):
     h = hashlib.sha256()
@@ -154,13 +165,22 @@ def register(rt, *, attempt_root, source_manifest, authorization_reference):
     stage.mkdir()
     try:
         (stage / 'files').mkdir()
+        guarded = []
         for path, item in documents:
             destination = stage / item['path']
             shutil.copyfile(path, destination, follow_symlinks=False)
             require(digest(destination) == item['sha256'] and digest(path) == item['sha256'],
                     'REFERENCE_SUPPLEMENT_COPY_DRIFT')
+            if destination.suffix.lower() in OFFICE_SUFFIXES:
+                guarded.append({'path':item['path'],'sha256':item['sha256']})
+        if guarded:
+            document['office_byte_guard']={'profile':'reference-supplement-office-byte-guard/v1',
+                'platform':sys.platform,'user_immutable':sys.platform=='darwin','files':guarded,
+                'original_bytes_changed':False}
         (stage / 'manifest.json').write_text(json.dumps(document, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         rt._make_read_only(stage)
+        for item in guarded:
+            guard_office_copy(stage/item['path'],item['sha256'])
         stage.rename(target)
     except BaseException:
         rt._remove_tree(stage)

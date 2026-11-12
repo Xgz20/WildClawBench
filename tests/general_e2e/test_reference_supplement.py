@@ -1,7 +1,7 @@
 from pathlib import Path
 from types import SimpleNamespace
 from copy import deepcopy
-import hashlib, json, tempfile, unittest
+import hashlib, json, os, stat, sys, tempfile, unittest
 
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME, Fixture
 
@@ -11,6 +11,25 @@ SHA = lambda path: hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 class ReferenceSupplementTests(unittest.TestCase):
+    def test_new_office_reference_is_guarded_without_rewriting_bytes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            fixture = self.fixture(Path(folder)); attempt, manifest, request, document, rt = fixture
+            source = request.with_name('source.txt'); office = source.with_suffix('.xlsx')
+            source.rename(office)
+            document['documents'][0].update(name='reference.xlsx',path=office.name)
+            request.write_text(json.dumps(document))
+            try:
+                self.register(fixture)
+                copied = attempt/'reference-supplement/files/reference.xlsx'
+                self.assertEqual(copied.read_bytes(),office.read_bytes())
+                guard=json.loads((attempt/'reference-supplement/manifest.json').read_bytes())['office_byte_guard']
+                self.assertFalse(guard['original_bytes_changed'])
+                if sys.platform=='darwin':
+                    self.assertTrue(copied.stat().st_flags & stat.UF_IMMUTABLE)
+                    with self.assertRaises(PermissionError):copied.write_bytes(b'host metadata mutation')
+                self.assertEqual(len(SUPPLEMENT.validate(attempt,manifest)),2)
+            finally:RUNTIME._remove_tree(attempt)
+
     def fixture(self, root, *, attempt=None):
         source = root / 'research'; source.mkdir()
         (source / 'source.txt').write_text('Public source evidence; not candidate behavior.', encoding='utf-8')
