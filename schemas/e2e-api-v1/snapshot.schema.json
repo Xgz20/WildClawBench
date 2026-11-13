@@ -1,0 +1,102 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:wildclawbench:e2e-api:v1:snapshot",
+  "title": "WildClawBench E2E API v1 snapshot",
+  "type": "object",
+  "required": [
+    "batch_id",
+    "state",
+    "terminal",
+    "executions",
+    "total",
+    "finished",
+    "resource_held",
+    "allowed_actions"
+  ],
+  "properties": {
+    "batch_id": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "terminal": {
+      "type": "boolean"
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "finished": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "resource_held": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "allowed_actions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "executions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "execution_key",
+          "task_id",
+          "unit_id",
+          "run_index",
+          "attempt_id",
+          "stage",
+          "terminal",
+          "resource_held",
+          "trace_completeness",
+          "backup_status",
+          "exportable"
+        ],
+        "properties": {
+          "execution_key": {
+            "type": "string"
+          },
+          "task_id": {
+            "type": "string"
+          },
+          "unit_id": {
+            "type": "string"
+          },
+          "run_index": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "attempt_id": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "terminal": {
+            "type": "boolean"
+          },
+          "resource_held": {
+            "type": "boolean"
+          },
+          "trace_completeness": {
+            "type": "string"
+          },
+          "backup_status": {
+            "type": "string"
+          },
+          "exportable": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}

@@ -187,7 +187,7 @@ def _load_configuration(repo_root: Path) -> tuple[dict[str, dict], dict[str, dic
         if source.name != name or not (source / "SKILL.md").is_file():
             raise BuildError(f"SKILL_SOURCE_INVALID: {name}")
         scene = item.get("scene")
-        if scene not in {"web-e2e", "general-e2e"}:
+        if scene not in {"web-e2e", "general-e2e", "sandbox-e2e"}:
             raise BuildError(f"SKILL_SCENE_INVALID: {name}")
         requested_components = item.get("components")
         if not isinstance(requested_components, list) or len(requested_components) != len(set(requested_components)):
@@ -230,8 +230,9 @@ def _load_configuration(repo_root: Path) -> tuple[dict[str, dict], dict[str, dic
 
     discovered = {
         path.name
-        for scene in ("web-e2e", "general-e2e")
-        for path in (repo_root / "tools/report/skills" / scene).iterdir()
+        for scene in ("web-e2e", "general-e2e", "sandbox-e2e")
+        for path in ((repo_root / "tools/report/skills" / scene).iterdir()
+                     if (repo_root / "tools/report/skills" / scene).is_dir() else [])
         if path.is_dir()
     }
     if set(skills) != discovered:

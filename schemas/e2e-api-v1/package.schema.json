@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:wildclawbench:e2e-api:v1:package",
+  "title": "WildClawBench E2E API v1 package",
+  "type": "object",
+  "required": [
+    "schema",
+    "parent_batch_id",
+    "parent_batch_sha256",
+    "parent_scope",
+    "exported",
+    "not_exported",
+    "purpose"
+  ],
+  "properties": {
+    "schema": {
+      "const": "wildclawbench.sandbox-result-package/v1"
+    },
+    "parent_batch_id": {
+      "type": "string"
+    },
+    "parent_batch_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "purpose": {
+      "type": "string"
+    },
+    "parent_scope": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "exported": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "execution",
+          "capsule",
+          "identity"
+        ],
+        "properties": {},
+        "additionalProperties": true
+      }
+    },
+    "not_exported": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": true
+}

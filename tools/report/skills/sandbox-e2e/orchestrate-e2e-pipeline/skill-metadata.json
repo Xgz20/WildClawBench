@@ -1,0 +1,8 @@
+{
+  "schema_version": "wildclawbench.sandbox-e2e-skill/v1",
+  "name": "orchestrate-e2e-pipeline",
+  "version": "0.1.0",
+  "stages": ["handoff", "orchestrate", "compose", "report"],
+  "supported_metric_profiles": ["general-e2e-contract-v1", "web-e2e-detailed-v1", "artifactsbench-web-v1"],
+  "requires_repository_checkout": true
+}

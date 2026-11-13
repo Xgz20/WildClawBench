@@ -1,0 +1,21 @@
+{
+  "schema_version": "wildclawbench.sandbox-batch-plan/v1",
+  "batch_id": "example",
+  "selection": {
+    "scenario": "general",
+    "dataset": "general-custom60-v1",
+    "task_ids": [
+      "03_Social_Interaction_task_003_colleague_leave_reply"
+    ]
+  },
+  "units": [
+    {
+      "harness": "astronstudio",
+      "model": "auto",
+      "reasoning_effort": "high"
+    }
+  ],
+  "execution_concurrency": 3,
+  "runs": 1,
+  "timeout_override": 10800
+}

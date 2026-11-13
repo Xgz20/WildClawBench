@@ -80,7 +80,14 @@ output_qwen.rar
 !.agents/skills/report-general-e2e
 !.agents/skills/run-general-e2e
 !.agents/skills/wildclawbench-case-generator
+!.agents/skills/execute-sandbox-e2e
+!.agents/skills/orchestrate-e2e-pipeline
 
 # 评测集校验 Skill 及报告工具的运行产物
 report-workspace/
 .superpowers
+
+# AgentCube 沙箱目录只纳入两版接入方案，示例与 POC 资料保留本地。
+docs/design/e2e-sandbox/*
+!docs/design/e2e-sandbox/端到端自动化评测AgentCube沙箱执行阶段接入方案-v1.md
+!docs/design/e2e-sandbox/端到端自动化评测AgentCube沙箱执行阶段接入方案-v2.md

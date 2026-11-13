@@ -39,6 +39,7 @@ import { verifyFinalPrefix } from '../../vendor/e2e-shared/general-resource-supp
 import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.mjs';
 import { readFrozenStartRejection } from '../../vendor/e2e-shared/astronstudio-start-rejection/index.mjs';
 import { verifyChildSdkArchive } from '../../vendor/e2e-shared/workbuddy-jsonl-metrics/children.mjs';
+import { verifyAgentCubeNative } from './agentcube-native-verification.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -817,10 +818,14 @@ async function verifyCollectionWithReceipt(options, unitRoot, receiptSource) {
     await verifyChildSdkArchive(traceRoot, index, record.identity, record.session);
     if (record.harness?.id === 'astronstudio') {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
-      assertRecaptureDeclaration(declaredState.value, index);
-      verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
-      await verifyRuntimeInterruption(index, declaredState.bytes, traceRoot, record);
-      await verifyFinalPrefix(index,declaredState.bytes,traceRoot,record);
+      if (index.adapter?.id === 'agentcube-astudio-native') {
+        await verifyAgentCubeNative({ unitRoot, traceRoot, index, stateBytes: declaredState.bytes, record });
+      } else {
+        assertRecaptureDeclaration(declaredState.value, index);
+        verifyTerminalProjection(index, declaredState.bytes, traceRoot, record);
+        await verifyRuntimeInterruption(index, declaredState.bytes, traceRoot, record);
+        await verifyFinalPrefix(index, declaredState.bytes, traceRoot, record);
+      }
     }
     if (index.native_provider_log_profile) {
       const archivedState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
