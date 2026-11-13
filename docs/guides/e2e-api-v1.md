@@ -2,6 +2,8 @@
 
 平台、Python 脚本与执行 Skill 共用 eval/run_e2e.py。平台在子命令前传入 --api-version 1。响应包含 schema、api_version、type 和 data，type 为 result、event 或 error。
 
+支持 `runtime-preflight` 能力的发行可使用 `preflight --plan PLAN --check-runtime`，额外验证执行进程的 AgentCube Token、User-ID、TTL 和端点域名解析。失败返回 `valid=false` 及具体 issues，不创建沙箱。默认 preflight 仍可离线检查选题和参数；带 `--agentcube-config` 的原调用规则保持兼容。该检查不验证远端账号权限或 VM 可用性，实际执行仍需可访问的公司网络。
+
 ```bash
 python eval/run_e2e.py --api-version 1 describe
 python eval/run_e2e.py --api-version 1 catalog --scenario general --dataset general-custom70-v4

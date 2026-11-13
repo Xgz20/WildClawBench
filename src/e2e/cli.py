@@ -39,6 +39,7 @@ def build_parser() -> argparse.ArgumentParser:
     preflight = commands.add_parser("preflight", help="检查执行计划，返回实际任务范围")
     preflight.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[2])
     preflight.add_argument("--plan", type=Path, required=True)
+    preflight.add_argument("--check-runtime", action="store_true", help="额外检查运行凭据、TTL 和沙箱平台域名解析，不创建沙箱")
     _agentcube(preflight)
     events = commands.add_parser("events", help="按游标只读查询执行事件")
     _batch(events)
@@ -294,7 +295,8 @@ def _public_command(args):
     if args.command == "catalog":
         return protocol.catalog(args.repo_root, args.scenario, args.dataset)
     if args.command == "preflight":
-        return protocol.preflight(args.repo_root, read_json(args.plan), args.agentcube_config)
+        return protocol.preflight(args.repo_root, read_json(args.plan), args.agentcube_config,
+                                  check_runtime=args.check_runtime)
     if args.command == "events":
         return protocol.events(_batch_root(args), args.after_cursor)
     return protocol.artifacts(_batch_root(args), args.path, args.content)

@@ -6,6 +6,8 @@ from collections import Counter
 import json
 import os
 from pathlib import Path
+import socket
+from urllib.parse import urlsplit
 
 from .common import E2EError, digest, file_sha256, inside, read_json
 from .preparation import (
@@ -82,6 +84,7 @@ def describe(repo: Path) -> dict:
         "capabilities": [
             "catalog",
             "preflight",
+            "runtime-preflight",
             "execution",
             "events",
             "artifacts",
@@ -209,7 +212,7 @@ def resolve(
     return plan, selected, members, manifest, web
 
 
-def preflight(repo: Path, raw: dict, config_path: Path | None = None) -> dict:
+def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_runtime: bool = False) -> dict:
     plan, tasks, members, _, _ = resolve(repo, raw)
     issues = []
     published = profiles()
@@ -263,18 +266,47 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None) -> dict:
                             "requirement": key,
                         }
                     )
-    if config_path:
+    runtime_checks = {"credentials": "not_checked", "dns": "not_checked"}
+    config = None
+    if config_path or check_runtime:
         from .agentcube import AgentCubeConfig
 
-        config = AgentCubeConfig.load(config_path)
+        try:
+            config = AgentCubeConfig.load(config_path)
+            runtime_checks["credentials"] = "passed"
+        except E2EError as exc:
+            if not check_runtime:
+                raise
+            runtime_checks["credentials"] = "failed"
+            issues.append({"code": "AGENTCUBE_RUNTIME_CONFIG_INVALID", "message": str(exc)})
+    if config:
         if any(
             unit["timeout_override"] + 2400 > config.expire_ttl
             for unit in plan["units"]
         ):
             issues.append({"code": "PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT"})
+        if check_runtime:
+            runtime_checks["dns"] = "passed"
+            checked = set()
+            for field in ("workload_manager_url", "router_url"):
+                try:
+                    endpoint = urlsplit(getattr(config, field))
+                    host = endpoint.hostname
+                    if host in checked:
+                        continue
+                    checked.add(host)
+                    if not host:
+                        raise OSError("endpoint has no hostname")
+                    socket.getaddrinfo(host, endpoint.port or (443 if endpoint.scheme == "https" else 80),
+                                       type=socket.SOCK_STREAM)
+                except (OSError, ValueError):
+                    runtime_checks["dns"] = "failed"
+                    issues.append({"code": "AGENTCUBE_ENDPOINT_UNRESOLVABLE", "field": field,
+                                   "message": "沙箱平台地址无法解析，请检查地址及公司内网或 VPN 连接"})
     groups = {(task["scene"], task["metric_profile"]) for task in tasks}
     return {
         "valid": not issues,
+        "runtime_checks": runtime_checks,
         "issues": issues,
         "plan": plan,
         "plan_sha256": digest(plan),

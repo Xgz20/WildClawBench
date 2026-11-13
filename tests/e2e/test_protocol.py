@@ -1,6 +1,8 @@
 import contextlib
 import io
 import json
+import os
+import socket
 from pathlib import Path
 import tempfile
 import unittest
@@ -168,6 +170,37 @@ class ProtocolTests(unittest.TestCase):
         unavailable = preflight(root, raw)
         self.assertFalse(unavailable["valid"])
         self.assertIn("REASONING_NOT_PUBLISHED", {issue["code"] for issue in unavailable["issues"]})
+
+    def test_runtime_preflight_rejects_missing_credentials_without_creating_sandbox(self):
+        repo = Path(__file__).resolve().parents[2]
+        raw = {"selection": {"scenario": "general", "dataset": "general-custom60-v1",
+                             "task_ids": ["03_Social_Interaction_task_003_colleague_leave_reply"]},
+               "units": [{"harness": "astronstudio", "model": "auto", "reasoning_effort": "high"}]}
+        with patch.dict(os.environ, {}, clear=True), \
+                patch("src.e2e.agentcube.AgentCubeClient.create_session") as create, \
+                patch("src.e2e.protocol.socket.getaddrinfo") as dns:
+            offline = preflight(repo, raw)
+            runtime = preflight(repo, raw, check_runtime=True)
+        self.assertTrue(offline["valid"])
+        self.assertFalse(runtime["valid"])
+        self.assertEqual(runtime["runtime_checks"]["credentials"], "failed")
+        self.assertIn("AGENTCUBE_RUNTIME_CONFIG_INVALID", {i["code"] for i in runtime["issues"]})
+        create.assert_not_called()
+        dns.assert_not_called()
+
+    def test_runtime_preflight_reports_unresolvable_platform_endpoint(self):
+        repo = Path(__file__).resolve().parents[2]
+        raw = {"selection": {"scenario": "general", "dataset": "general-custom60-v1",
+                             "task_ids": ["03_Social_Interaction_task_003_colleague_leave_reply"]},
+               "units": [{"harness": "astronstudio", "model": "auto", "reasoning_effort": "high"}]}
+        with patch.dict(os.environ, {"AGENTCUBE_AUTH_TOKEN": "synthetic", "AGENTCUBE_USER_ID": "synthetic"}), \
+                patch("src.e2e.protocol.socket.getaddrinfo", side_effect=socket.gaierror("synthetic DNS failure")), \
+                patch("src.e2e.agentcube.AgentCubeClient.create_session") as create:
+            result = preflight(repo, raw, check_runtime=True)
+        self.assertFalse(result["valid"])
+        self.assertEqual(result["runtime_checks"], {"credentials": "passed", "dns": "failed"})
+        self.assertIn("AGENTCUBE_ENDPOINT_UNRESOLVABLE", {i["code"] for i in result["issues"]})
+        create.assert_not_called()
 
     def test_inline_and_plan_invocations_resolve_identical_scope(self):
         repo = Path(__file__).resolve().parents[2]
