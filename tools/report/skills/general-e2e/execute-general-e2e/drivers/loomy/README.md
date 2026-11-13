@@ -53,3 +53,6 @@ session、唯一用户消息、完整 Prompt、cwd、`imodel/spark-x2.6` 与 `va
 
 执行状态是采集前记录。正式候选、轨迹和回执由 `collect-general-e2e` 的 Loomy
 入口生成。安装包、题目、GT、权重和历史批次不由本适配器修改。
+
+全单元执行及原生采集完成后再统一 finalize。后端在已确认缺失且全局无未结算会话时，可由正常首次发送启动；发送计数仍为 1。
+单题仅对无 UI 准备、无发送意图的零发送失败显式加 `--resume --retry-pre-send-failure`，队列使用 `--retry-pre-send-task-id ID`。恢复保留旧状态/journal 原字节，不适用于已 armed 请求。

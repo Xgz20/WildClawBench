@@ -32,3 +32,5 @@ Collector 重新读取只读 SQLite 在线备份中精确绑定的根 session �
 发布与 `verify-only` 都会独立重放 Loomy 归一化、Prompt／模型绑定、完整路径准备
 证明及资源计算；不依赖正在运行的 Loomy 来离线复验。多题 unit 先完成各题收口，
 再使用完整采集回执逐题复验。标准评分与回传继续使用原冻结 rubric。
+
+正式收口顺序为：全单元执行终态 → 全部原生 collector 输出 → 逐题 finalize → 全单元 verify-only。Loomy 后端可能以某题 Workspace 为 cwd，提前 finalize 会影响共享后端，因此入口校验完整屏障与全局原生活动。

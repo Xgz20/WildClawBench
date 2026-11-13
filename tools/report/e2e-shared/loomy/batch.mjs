@@ -68,11 +68,13 @@ export async function runBatch(options, overrides = {}) {
     };
     do {
       for (const row of queue.tasks.filter(item => ['RUNNING', 'DISPATCHING', 'NEEDS_ATTENTION'].includes(item.phase))) {
-        if (row.phase === 'NEEDS_ATTENTION' && row.dispatch_attempt_count !== 1) continue;
+        const retryPreparation = row.dispatch_attempt_count === 0 && options.retryPreSendTaskIds?.includes(row.task_id);
+        if (row.phase === 'NEEDS_ATTENTION' && row.dispatch_attempt_count !== 1 && !retryPreparation) continue;
         requireValue(row.state_file || row.phase !== 'DISPATCHING', 'QUEUE_DISPATCH_RESULT_UNKNOWN');
         try {
           await update(row, await performTask({ ...options, unitRoot, taskId: row.task_id,
-            resume: true, observeOnce: true, detachAfterSubmit: false, allowedSessionIds: await allowed() }));
+            resume: true, observeOnce: !retryPreparation, detachAfterSubmit: retryPreparation,
+            retryPreSendFailure: retryPreparation, allowedSessionIds: await allowed() }));
         } catch (error) { await recordFailure(row, error); }
       }
       if (queue.tasks.every(row => ['COMPLETED', 'FAILED'].includes(row.phase))) {

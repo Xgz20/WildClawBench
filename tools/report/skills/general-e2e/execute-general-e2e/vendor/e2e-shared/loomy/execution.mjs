@@ -85,9 +85,9 @@ export async function sourceRepair(context, journal, path) {
   }
   const registered = journal.source_repair_registrations?.find(row => row.sha256 === sha(bytes)
     && row.attempt_id === journal.identity.attempt_id && row.dispatch_attempt_count === 0
-    && row.component_version === journal.version && journal.sent_at && Date.parse(row.at) <= Date.parse(journal.sent_at));
+    && row.component_version === (journal.dispatch_driver_version || journal.version) && journal.sent_at && Date.parse(row.at) <= Date.parse(journal.sent_at));
   const registeredFirstDispatch = registered && proof.unstarted_task_ids?.includes(context.taskId)
-    && journal.version === proof.new_component_version;
+    && (journal.dispatch_driver_version || journal.version) === proof.new_component_version;
   if (journal.dispatch_attempt_count === 1 && !registeredFirstDispatch) {
     requireValue(proof.armed_attempts?.[context.taskId] === journal.identity.attempt_id, 'SOURCE_REPAIR_ARMED_SCOPE_MISMATCH');
     const previous = proof.archives.find(row => row.role === 'journal:' + context.taskId);
@@ -100,7 +100,7 @@ export async function sourceRepair(context, journal, path) {
     journal.source_repair_registrations ??= [];
     if (!journal.source_repair_registrations.some(row => row.sha256 === sha(bytes))) journal.source_repair_registrations.push({
       sha256: sha(bytes), at: new Date().toISOString(), attempt_id: journal.identity.attempt_id,
-      dispatch_attempt_count: 0, component_version: journal.version,
+      dispatch_attempt_count: 0, component_version: COMPONENT_VERSION,
     });
   }
   const descriptor = artifact(relative(context.unitRoot, absolute), bytes);
@@ -121,7 +121,7 @@ export function buildState(context, journal) {
   const session = journal.session;
   const finished = ['COMPLETED', 'FAILED'].includes(journal.phase);
   return { schema_version: STATE_SCHEMA,
-    driver: { id: 'loomy-macos-general', version: journal.version, harness: 'loomy', platform: 'macos-arm64' },
+    driver: { id: 'loomy-macos-general', version: journal.dispatch_driver_version || journal.version, harness: 'loomy', platform: 'macos-arm64' },
     identity: journal.identity, dataset: { id: context.manifest.dataset.id, digest: context.manifest.dataset.digest },
     phase: journal.phase, task_root: context.taskRoot, candidate_workspace: context.workspace,
     prompt: { path: context.promptPath, sha256: context.locks.prompt, send_status: journal.send_status, sent_at: journal.sent_at ?? null },
@@ -138,6 +138,7 @@ export function buildState(context, journal) {
       model_evidence_sha256: session?.binding_evidence?.[0]?.sha256 ?? null },
       loomy: { profile: 'loomy-opencode-sqlite/v1', runtime: context.config.runtime,
         runtime_rebindings: journal.runtime_rebindings || [],
+        runtime_absence_before_dispatch: journal.runtime_absence_before_dispatch || null,
         final_message_id: journal.final_message_id ?? null, native_finished_at: journal.native_finished_at ?? null,
         attention: journal.attention ?? null, journal_path: relative(context.unitRoot, context.journalPath),
         source_repairs: journal.source_repairs || [], observer_version: journal.observer_version || journal.version,
@@ -155,22 +156,43 @@ export function applyJournalRuntime(context, journal) {
 }
 export async function refreshRuntime(context, journal, allowedSessionIds = []) {
   applyJournalRuntime(context, journal);
-  const previous = context.config.runtime, current = await currentOwnedRuntime(context.config);
+  const previous = context.config.runtime;
+  let current;
+  try { current = await currentOwnedRuntime(context.config); }
+  catch (error) {
+    if (!['LOOMY_RUNTIME_NOT_RUNNING', 'LOOMY_RUNTIME_STARTING'].includes(error.message)) throw error;
+    if (journal.dispatch_attempt_count === 0) {
+      const native = await captureNative({ database: previous.database, python: context.config.python });
+      assertNativeActivity(native);
+      requireValue(sha(await readFile(previous.executable)) === previous.binary_sha256, 'LAZY_RUNTIME_BINARY_CHANGED');
+      journal.runtime_absence_before_dispatch = { observed_at: journal.runtime_absence_before_dispatch?.observed_at || new Date().toISOString(), native,
+        app_process: context.config.process, dispatch_attempt_count: 0, attempt_id: journal.identity.attempt_id,
+        policy: 'normal-client-first-dispatch-starts-runtime; no-extra-prompt' };
+      return false;
+    }
+    if (journal.runtime_absence_before_dispatch && !journal.session) return false;
+    throw error;
+  }
   if (digest(previous) !== digest(current)) {
     const native = await captureNative({ database: current.database, workspace: journal.dispatch_attempt_count === 1 ? context.workspace : null,
       sessionId: journal.session?.id, python: context.config.python });
-    if (journal.dispatch_attempt_count === 1) {
+    const lazyStart = journal.runtime_absence_before_dispatch && !journal.session && journal.sent_at
+      && journal.runtime_absence_before_dispatch.attempt_id === journal.identity.attempt_id
+      && Date.parse(journal.runtime_absence_before_dispatch.observed_at) <= Date.parse(journal.sent_at);
+    if (journal.dispatch_attempt_count === 1 && !lazyStart) {
       const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline,
         sessionId: journal.session?.id, terminal: true });
       checkNativeModel(binding);
       const statuses = await runtimeStatus(current, context.workspace);
       requireValue(binding.session_ids.every(id => !statuses[id] || statuses[id].type === 'idle'), 'RUNTIME_REBIND_NATIVE_STILL_ACTIVE');
-    } else assertNativeActivity(native, allowedSessionIds);
+    } else if (journal.dispatch_attempt_count === 0) assertNativeActivity(native, allowedSessionIds);
     journal.runtime_rebindings = [...(journal.runtime_rebindings || []), { observed_at: new Date().toISOString(),
-      previous, current, native, policy: 'same-main-app-binary-database; armed-execution-native-complete-only' }];
+      previous, current, native, policy: lazyStart ? 'same-main-app-binary-database; initial-dispatch-after-recorded-absence'
+        : 'same-main-app-binary-database; armed-execution-native-complete-only' }];
   }
   journal.runtime_binding = current;
   context.config = { ...context.config, runtime: current };
+  return true;
 }
 
 async function saveState(context, journal) {
@@ -182,7 +204,10 @@ async function saveState(context, journal) {
 
 export async function observe(context, journal, allowedSessionIds = []) {
   requireValue(journal.dispatch_attempt_count === 1, 'OBSERVE_REQUIRES_ARMED_ATTEMPT');
-  await refreshRuntime(context, journal, allowedSessionIds);
+  if (!await refreshRuntime(context, journal, allowedSessionIds)) {
+    journal.phase = 'NEEDS_ATTENTION'; journal.attention = 'WAITING_FOR_NORMAL_CLIENT_RUNTIME_START';
+    journal.send_status = 'uncertain'; return saveState(context, journal);
+  }
   const status = await verifyRuntime(context.config, context.workspace);
   const native = await captureNative({ database: context.config.runtime.database, workspace: context.workspace,
     sessionId: journal.session?.id, python: context.config.python });
@@ -236,7 +261,7 @@ export async function observe(context, journal, allowedSessionIds = []) {
 export async function executeTask(options) {
   const context = await loadTask(options);
   const releaseOwner = await lease(join(context.control, 'owner.lock'));
-  let journal;
+  let journal, shouldPrepare = false;
   try {
     try { journal = JSON.parse(await readFile(context.journalPath, 'utf8')); }
     catch (error) { if (error.code !== 'ENOENT') throw error; }
@@ -247,8 +272,15 @@ export async function executeTask(options) {
         && journal.identity.unit_id === context.manifest.unit_id, 'JOURNAL_IDENTITY_CHANGED');
       await sourceRepair(context, journal, options.sourceRepairManifest);
       if (['COMPLETED', 'FAILED'].includes(journal.phase)) return { state_file: context.statePath, state: buildState(context, journal) };
-      // A resumed controller never sends, including after an uncertain click.
-      requireValue(journal.dispatch_attempt_count === 1, 'ZERO_SEND_ATTEMPT_NEEDS_EXPLICIT_PREPARATION_RECOVERY');
+      if (journal.dispatch_attempt_count === 0 && options.retryPreSendFailure) {
+        requireValue(journal.send_status === 'not_sent' && !journal.sent_at && journal.history.length === 0,
+          'ZERO_SEND_RECOVERY_REQUIRES_NO_UI_ACTION_OR_INTENT');
+        const previous = await Promise.all([context.journalPath, context.statePath].map(async path => {
+          const bytes = await readFile(path); return { ...artifact(relative(context.unitRoot, path), bytes), bytes_base64: bytes.toString('base64') };
+        }));
+        journal.pre_send_recoveries = [...(journal.pre_send_recoveries || []), { at: new Date().toISOString(), originals: previous }];
+        journal.phase = 'PENDING'; journal.attention = null; shouldPrepare = true;
+      } else requireValue(journal.dispatch_attempt_count === 1, 'ZERO_SEND_ATTEMPT_NEEDS_EXPLICIT_PREPARATION_RECOVERY');
     } else {
       requireValue(!options.resume, 'RESUME_WITHOUT_ATTEMPT');
       const baseline = await captureNative({ database: context.config.runtime.database, python: context.config.python });
@@ -258,11 +290,14 @@ export async function executeTask(options) {
         baseline: baseline.session_index.map(row => row.id), history: [] };
       await sourceRepair(context, journal, options.sourceRepairManifest);
       await saveState(context, journal);
+      shouldPrepare = true;
+    }
+    if (shouldPrepare) {
       const releaseUi = await lease(join(homedir(), '.local/state/wildclawbench/ui-locks/loomy-' + context.config.process.pid + '.lock'));
       try {
-        await refreshRuntime(context, journal, options.allowedSessionIds || []);
+        let runtimeReady = await refreshRuntime(context, journal, options.allowedSessionIds || []);
         await saveState(context, journal);
-        assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
+        if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
         assertNativeActivity(await captureNative({ database: context.config.runtime.database, python: context.config.python }), options.allowedSessionIds || []);
         const existing = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
         requireValue(existing.sessions.length === 0, 'WORKSPACE_ALREADY_HAS_NATIVE_SESSION');
@@ -277,8 +312,8 @@ export async function executeTask(options) {
         const taskConfig = { ...context.config, configuration: { ...context.config.configuration,
           permission_label: journal.workspace_selection.configuration.permission_label } };
         await fillPrompt(taskConfig, context.prompt, save);
-        await refreshRuntime(context, journal, options.allowedSessionIds || []);
-        assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
+        runtimeReady = await refreshRuntime(context, journal, options.allowedSessionIds || []);
+        if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
         const finalBaseline = await captureNative({ database: context.config.runtime.database, python: context.config.python });
         assertNativeActivity(finalBaseline, options.allowedSessionIds || []);
         requireValue(!finalBaseline.session_index.some(row => row.directory === context.workspace), 'WORKSPACE_SESSION_APPEARED_BEFORE_SEND');
@@ -288,6 +323,7 @@ export async function executeTask(options) {
         journal.baseline_evidence = artifact(relative(context.unitRoot, baselinePath), baselineBytes);
         journal.allowed_session_ids = options.allowedSessionIds || [];
         journal.sent_at = new Date().toISOString();
+        journal.dispatch_driver_version = COMPONENT_VERSION;
         journal.send_status = 'intent_persisted'; journal.dispatch_attempt_count = 1;
         await saveState(context, journal);
         try { await sendOnce(taskConfig, context.prompt); journal.click_returned_at = new Date().toISOString(); }

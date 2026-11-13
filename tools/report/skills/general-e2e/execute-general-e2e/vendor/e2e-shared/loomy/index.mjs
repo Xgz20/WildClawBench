@@ -9,7 +9,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.5';
+export const COMPONENT_VERSION = '0.1.6';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -107,19 +107,22 @@ export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
   const result = await execute('/bin/ps', ['-axo', 'pid=,ppid=,comm=']);
   const rows = result.stdout.split('\n').map(line => /^\s*(\d+)\s+(\d+)\s+(.+)$/u.exec(line)).filter(Boolean);
   const candidates = rows.filter(row => Number(row[2]) === app.pid && (row[3] === 'opencode' || row[3].endsWith('/opencode')));
+  requireValue(candidates.length > 0, 'RUNTIME_NOT_RUNNING');
   requireValue(candidates.length === 1, 'RUNTIME_PROCESS_AMBIGUOUS');
   const pid = Number(candidates[0][1]);
   const [text, listening, started, ownership] = await Promise.all([
-    execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-d', 'txt', '-Fn']),
-    execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-iTCP', '-sTCP:LISTEN', '-Fpn']),
+    execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-d', 'txt', '-Fn']).catch(() => ({ stdout: '' })),
+    execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-iTCP', '-sTCP:LISTEN', '-Fpn']).catch(() => ({ stdout: '' })),
     execute('/bin/ps', ['-p', String(pid), '-o', 'lstart=']),
-    execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-Fpn', '--', database]),
+    execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-Fpn', '--', database]).catch(() => ({ stdout: '' })),
   ]);
   const binaries = text.stdout.split('\n').filter(line => line.startsWith('n') && line.endsWith('/opencode'));
+  requireValue(binaries.length > 0, 'RUNTIME_STARTING');
   requireValue(binaries.length === 1, 'RUNTIME_BINARY_AMBIGUOUS');
   const executable = await realpath(binaries[0].slice(1));
   requireValue(executable === join(dirname(dirname(app.executable_path)), 'Resources/opencode/darwin-arm64/opencode'), 'RUNTIME_BINARY_NOT_BUNDLED');
   const ports = [...listening.stdout.matchAll(/^n127\.0\.0\.1:(\d+)$/gmu)].map(match => match[1]);
+  requireValue(ports.length > 0 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_STARTING');
   requireValue(ports.length === 1 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_LISTENER_OR_DATABASE_UNOWNED');
   const endpoint = 'http://127.0.0.1:' + ports[0];
   const healthResponse = await fetch(endpoint + '/global/health', { signal: AbortSignal.timeout(5000), redirect: 'error' });
