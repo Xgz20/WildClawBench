@@ -34,6 +34,13 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     bytes('raw/sent-prompt.txt'), bytes(index.transcript.path),
   ]);
   const { config_digest, ...payload } = config;
+  for (const recovery of journal.pre_send_recoveries || []) {
+    requireValue(recovery.prompt_dispatches === 0 || recovery.prompt_dispatches === undefined, 'ARCHIVE_PRE_SEND_RECOVERY_DISPATCH_MISMATCH');
+    for (const original of recovery.originals) {
+      const data = Buffer.from(original.bytes_base64, 'base64');
+      requireValue(sha(data) === original.sha256 && data.length === original.size, 'ARCHIVE_PRE_SEND_RECOVERY_DRIFT');
+    }
+  }
   const runtimeChain = [config.runtime];
   for (const row of journal.runtime_rebindings || []) {
     requireValue(digest(row.previous) === digest(runtimeChain.at(-1))

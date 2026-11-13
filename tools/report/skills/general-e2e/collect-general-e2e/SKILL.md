@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.8` Loomy 对后端启动短暂元数据缺口有界重读，派发前等待原生活动投影稳定。零发送恢复仅清除与本 attempt 冻结 Prompt 完全相同的已留证草稿，保留旧 UI、状态和 journal 原字节并使用独立准备前缀；已 armed 请求仍只观察。
+
+
 `0.12.7` Loomy 主进程由安装路径与唯一原生应用 WebArea 识别；冻结后按精确 PID、启动时间、可执行路径和命令摘要复核，避免 Electron-as-Node MCP 宿主被误当成 GUI 主程序。
 
 

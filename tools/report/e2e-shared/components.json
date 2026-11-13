@@ -210,7 +210,7 @@
     },
     {
       "name": "loomy",
-      "version": "0.1.7",
+      "version": "0.1.8",
       "source_root": "tools/report/e2e-shared/loomy",
       "vendor_root": "vendor/e2e-shared/loomy",
       "entrypoints": [

@@ -4,7 +4,7 @@ import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { artifact, assertIdle, assertNativeActivity, ax, captureNative, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
-  runtimeIdentity, runtimeStatus, statusUrl, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
+  runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
 export const STATE_SCHEMA = 'wildclawbench.general-e2e-execution-state/v1';
@@ -158,12 +158,18 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
   applyJournalRuntime(context, journal);
   const previous = context.config.runtime;
   let current;
-  try { current = await currentOwnedRuntime(context.config); }
+  try {
+    const until = Date.now() + 5000;
+    do {
+      try { current = await currentOwnedRuntime(context.config); break; }
+      catch (error) { if (error.message !== 'LOOMY_RUNTIME_STARTING' || Date.now() >= until) throw error; }
+      await delay(100);
+    } while (true);
+  }
   catch (error) {
     if (!['LOOMY_RUNTIME_NOT_RUNNING', 'LOOMY_RUNTIME_STARTING'].includes(error.message)) throw error;
     if (journal.dispatch_attempt_count === 0) {
-      const native = await captureNative({ database: previous.database, python: context.config.python });
-      assertNativeActivity(native);
+      const native = await waitNativeActivity({ database: previous.database, python: context.config.python });
       requireValue(sha(await readFile(previous.executable)) === previous.binary_sha256, 'LAZY_RUNTIME_BINARY_CHANGED');
       journal.runtime_absence_before_dispatch = { observed_at: journal.runtime_absence_before_dispatch?.observed_at || new Date().toISOString(), native,
         app_process: context.config.process, dispatch_attempt_count: 0, attempt_id: journal.identity.attempt_id,
@@ -171,6 +177,7 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
       return false;
     }
     if (journal.runtime_absence_before_dispatch && !journal.session) return false;
+    if (error.message === 'LOOMY_RUNTIME_STARTING' && journal.runtime_binding) return false;
     throw error;
   }
   if (digest(previous) !== digest(current)) {
@@ -205,8 +212,8 @@ async function saveState(context, journal) {
 export async function observe(context, journal, allowedSessionIds = []) {
   requireValue(journal.dispatch_attempt_count === 1, 'OBSERVE_REQUIRES_ARMED_ATTEMPT');
   if (!await refreshRuntime(context, journal, allowedSessionIds)) {
-    journal.phase = 'NEEDS_ATTENTION'; journal.attention = 'WAITING_FOR_NORMAL_CLIENT_RUNTIME_START';
-    journal.send_status = 'uncertain'; return saveState(context, journal);
+    journal.phase = journal.session ? 'RUNNING' : 'NEEDS_ATTENTION'; journal.attention = 'WAITING_FOR_NORMAL_CLIENT_RUNTIME_START';
+    if (!journal.session) journal.send_status = 'uncertain'; return saveState(context, journal);
   }
   const status = await verifyRuntime(context.config, context.workspace);
   const native = await captureNative({ database: context.config.runtime.database, workspace: context.workspace,
@@ -270,15 +277,32 @@ export async function executeTask(options) {
       requireValue(digest(journal.input_locks) === digest(context.locks), 'FROZEN_INPUT_CHANGED');
       requireValue(journal.identity.task_id === context.taskId && journal.identity.batch_id === context.manifest.batch_id
         && journal.identity.unit_id === context.manifest.unit_id, 'JOURNAL_IDENTITY_CHANGED');
+      if (['COMPLETED', 'FAILED'].includes(journal.phase)) {
+        const state = JSON.parse(await readFile(context.statePath, 'utf8'));
+        requireValue(digest(state.identity) === digest(journal.identity) && state.phase === journal.phase, 'TERMINAL_STATE_IDENTITY_CHANGED');
+        return { state_file: context.statePath, state };
+      }
       await sourceRepair(context, journal, options.sourceRepairManifest);
-      if (['COMPLETED', 'FAILED'].includes(journal.phase)) return { state_file: context.statePath, state: buildState(context, journal) };
       if (journal.dispatch_attempt_count === 0 && options.retryPreSendFailure) {
-        requireValue(journal.send_status === 'not_sent' && !journal.sent_at && journal.history.length === 0,
-          'ZERO_SEND_RECOVERY_REQUIRES_NO_UI_ACTION_OR_INTENT');
-        const previous = await Promise.all([context.journalPath, context.statePath].map(async path => {
+        requireValue(journal.send_status === 'not_sent' && !journal.sent_at, 'ZERO_SEND_RECOVERY_REQUIRES_NO_INTENT');
+        const target = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
+        requireValue(target.sessions.length === 0, 'ZERO_SEND_RECOVERY_NATIVE_SESSION_EXISTS');
+        const previous = await Promise.all([context.journalPath, context.statePath, ...journal.history.map(row => join(context.unitRoot, row.path))].map(async path => {
           const bytes = await readFile(path); return { ...artifact(relative(context.unitRoot, path), bytes), bytes_base64: bytes.toString('base64') };
         }));
-        journal.pre_send_recoveries = [...(journal.pre_send_recoveries || []), { at: new Date().toISOString(), originals: previous }];
+        await ax(context.config.ax_helper, context.config.process.pid, 'activate');
+        const snapshot = await ax(context.config.ax_helper, context.config.process.pid), ui = uiConfiguration(snapshot);
+        requireValue(ui.model_label === context.config.configuration.model_label && ['', context.prompt].includes(ui.composer.value), 'ZERO_SEND_RECOVERY_DRAFT_OR_MODEL_CHANGED');
+        if (ui.composer.value) {
+          requireValue(journal.history.at(-1)?.event === 'prompt-readback' && journal.workspace_selection?.workspace === context.workspace,
+            'ZERO_SEND_RECOVERY_OWN_DRAFT_UNPROVED');
+          const { act } = await import('./index.mjs');
+          await act(context.config, ui.composer, 'set-value', { value: '' });
+          requireValue(uiConfiguration(await ax(context.config.ax_helper, context.config.process.pid)).composer.value === '', 'ZERO_SEND_RECOVERY_DRAFT_NOT_CLEARED');
+        }
+        journal.pre_send_recoveries = [...(journal.pre_send_recoveries || []), { at: new Date().toISOString(), originals: previous,
+          ui_before: snapshot, prompt_dispatches: 0 }];
+        journal.history = []; journal.history_prefix = 'recovery-' + journal.pre_send_recoveries.length + '-';
         journal.phase = 'PENDING'; journal.attention = null; shouldPrepare = true;
       } else requireValue(journal.dispatch_attempt_count === 1, 'ZERO_SEND_ATTEMPT_NEEDS_EXPLICIT_PREPARATION_RECOVERY');
     } else {
@@ -298,11 +322,11 @@ export async function executeTask(options) {
         let runtimeReady = await refreshRuntime(context, journal, options.allowedSessionIds || []);
         await saveState(context, journal);
         if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
-        assertNativeActivity(await captureNative({ database: context.config.runtime.database, python: context.config.python }), options.allowedSessionIds || []);
+        await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python, allowed: options.allowedSessionIds || [] });
         const existing = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
         requireValue(existing.sessions.length === 0, 'WORKSPACE_ALREADY_HAS_NATIVE_SESSION');
         const save = async (label, snapshot) => {
-          const path = join(context.control, String(journal.history.length).padStart(4, '0') + '-' + label + '.json');
+          const path = join(context.control, (journal.history_prefix || '') + String(journal.history.length).padStart(4, '0') + '-' + label + '.json');
           const bytes = jsonBytes(snapshot); await writeFile(path, bytes, { flag: 'wx', mode: 0o600 });
           journal.history.push({ at: new Date().toISOString(), event: label, ...artifact(relative(context.unitRoot, path), bytes) });
           await atomicJson(context.journalPath, journal);
@@ -314,11 +338,10 @@ export async function executeTask(options) {
         await fillPrompt(taskConfig, context.prompt, save);
         runtimeReady = await refreshRuntime(context, journal, options.allowedSessionIds || []);
         if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
-        const finalBaseline = await captureNative({ database: context.config.runtime.database, python: context.config.python });
-        assertNativeActivity(finalBaseline, options.allowedSessionIds || []);
+        const finalBaseline = await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python, allowed: options.allowedSessionIds || [] });
         requireValue(!finalBaseline.session_index.some(row => row.directory === context.workspace), 'WORKSPACE_SESSION_APPEARED_BEFORE_SEND');
         journal.baseline = finalBaseline.session_index.map(row => row.id);
-        const baselinePath = join(context.control, 'pre-send-native-baseline.json'), baselineBytes = jsonBytes(finalBaseline);
+        const baselinePath = join(context.control, (journal.history_prefix || '') + 'pre-send-native-baseline.json'), baselineBytes = jsonBytes(finalBaseline);
         await writeFile(baselinePath, baselineBytes, { flag: 'wx', mode: 0o600 });
         journal.baseline_evidence = artifact(relative(context.unitRoot, baselinePath), baselineBytes);
         journal.allowed_session_ids = options.allowedSessionIds || [];
