@@ -1,7 +1,7 @@
 // Replays archived evidence only; never contacts a running desktop client.
 import { readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
-import { assertNativeActivity, digest, jsonBytes, PROFILE, requireValue, statusUrl, sha, verifyBinding } from './index.mjs';
+import { assertNativeActivity, digest, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
 import { normalizeTrace, resourceMetrics } from './collection.mjs';
 import { checkNativeModel } from './execution.mjs';
 import { assertConfiguration } from './ui.mjs';
@@ -23,6 +23,8 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   };
   const requiredRaw = ['raw/native-scoped-snapshot.json', 'raw/native-part-rows.jsonl', 'raw/native-message-rows.jsonl',
     'raw/driver-state.json', 'raw/dispatch-journal.json', 'raw/sent-prompt.txt', 'raw/frozen-run-config.json', 'raw/terminal-evidence.json', 'raw/pre-send-native-baseline.json'];
+  const version = index.adapter.version.split('.').map(Number);
+  if (version[0] > 0 || version[1] > 1 || version[1] === 1 && version[2] >= 5) requiredRaw.push('raw/current-scoped-snapshot.json');
   requireValue(requiredRaw.every(path => index.raw_trace.some(row => row.path === path))
     && index.binding_evidence.length === 1, 'ARCHIVE_SOURCE_SCOPE_INVALID');
   const load = async path => JSON.parse((await bytes(path)).toString('utf8'));
@@ -32,6 +34,14 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     bytes('raw/sent-prompt.txt'), bytes(index.transcript.path),
   ]);
   const { config_digest, ...payload } = config;
+  const runtimeChain = [config.runtime];
+  for (const row of journal.runtime_rebindings || []) {
+    requireValue(digest(row.previous) === digest(runtimeChain.at(-1))
+      && sameRuntimeInstallation(row.previous, row.current), 'ARCHIVE_RUNTIME_REBIND_MISMATCH');
+    runtimeChain.push(row.current);
+  }
+  const effectiveRuntime = journal.runtime_binding || config.runtime;
+  requireValue(digest(effectiveRuntime) === digest(runtimeChain.at(-1)), 'ARCHIVE_RUNTIME_BINDING_MISMATCH');
   requireValue(config_digest === digest(payload) && config.client.version === '0.9.39'
     && config.runtime.health_version === '1.14.22'
     && config.transport === 'macos-native-accessibility'
@@ -88,7 +98,7 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   requireValue(normalized.binding.final?.id === journal.final_message_id && old.final?.id === journal.final_message_id
     && terminal.observed_at === state.execution.finished_at
     && terminal.runtime_status_scope?.directory === state.session.cwd
-    && terminal.runtime_status_scope?.endpoint === statusUrl(config.runtime, state.session.cwd).href
+    && terminal.runtime_status_scope?.endpoint === statusUrl(effectiveRuntime, state.session.cwd).href
     && normalized.binding.session_ids.every(id => !terminal.runtime_status[id] || terminal.runtime_status[id].type === 'idle'), 'ARCHIVE_NATIVE_TERMINAL_MISMATCH');
   const content = snapshot => digest({ messages: snapshot.messages.map(({ id, session_id, data }) => ({ id, session_id, data })),
     parts: snapshot.parts.map(({ id, message_id, session_id, data }) => ({ id, message_id, session_id, data })) });
@@ -106,16 +116,26 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   for (const row of index.binding_evidence) {
     const proof = await load(row.path);
     requireValue(digest(proof.identity) === digest(state.identity) && proof.prompt_sha256 === sha(promptBytes)
-      && digest(proof.process) === digest(config.process) && digest(proof.runtime) === digest(config.runtime)
+      && digest(proof.process) === digest(config.process) && runtimeChain.some(runtime => digest(proof.runtime) === digest(runtime))
       && proof.pre_send_baseline_sha256 === sha(baselineBytes)
       && digest(proof.allowed_session_ids) === digest(journal.allowed_session_ids)
       && proof.runtime_status_scope?.directory === state.session.cwd
-      && proof.runtime_status_scope?.endpoint === statusUrl(config.runtime, state.session.cwd).href, 'ARCHIVE_INITIAL_BINDING_MISMATCH');
+      && proof.runtime_status_scope?.endpoint === statusUrl(proof.runtime, state.session.cwd).href, 'ARCHIVE_INITIAL_BINDING_MISMATCH');
     const first = verifyBinding(proof.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline, sessionId: state.session.session_id });
     checkNativeModel(first);
     requireValue(first.user.id === normalized.binding.user.id, 'ARCHIVE_NATIVE_USER_REPLACED');
   }
   if (state.phase === 'COMPLETED') requireValue(state.extensions.evidence?.final_response_sha256 === sha(Buffer.from(normalized.final_response)), 'ARCHIVE_FINAL_RESPONSE_MISMATCH');
+  if (requiredRaw.includes('raw/current-scoped-snapshot.json')) {
+    const live = await load('raw/current-scoped-snapshot.json'), scope = new Set(native.sessions.map(row => row.id));
+    requireValue(sameRuntimeInstallation(effectiveRuntime, live.runtime)
+      && live.native.sessions.every(row => !live.runtime_status[row.id] || live.runtime_status[row.id].type === 'idle'), 'ARCHIVE_COLLECTION_RUNTIME_MISMATCH');
+    const content = snapshot => digest({ messages: snapshot.messages.map(({ id, session_id, data }) => ({ id, session_id, data })),
+      parts: snapshot.parts.map(({ id, message_id, session_id, data }) => ({ id, message_id, session_id, data })) });
+    requireValue(content(native) === content({ messages: live.native.messages.filter(row => scope.has(row.session_id)),
+      parts: live.native.parts.filter(row => scope.has(row.session_id)) })
+      && live.native.sessions.filter(row => !scope.has(row.id)).every(row => row.time_created > Date.parse(state.execution.finished_at)), 'ARCHIVE_POST_TERMINAL_SCOPE_MISMATCH');
+  }
   return normalized;
 }
 

@@ -55,7 +55,7 @@ export async function runBatch(options, overrides = {}) {
     };
     const allowed = async () => {
       const ids = [];
-      for (const row of queue.tasks.filter(item => item.session_id && !['COMPLETED', 'FAILED'].includes(item.phase))) {
+      for (const row of queue.tasks.filter(item => item.session_id)) {
         const context = await loadTask({ ...options, unitRoot, taskId: row.task_id });
         const journal = JSON.parse(await readFile(context.journalPath, 'utf8'));
         requireValue(journal.identity.attempt_id === row.attempt_id && journal.session?.id === row.session_id

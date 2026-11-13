@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile, lstat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { artifact, captureNative, iso, jsonBytes, PROFILE, requireValue, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
-import { buildState, checkNativeModel, lease, loadTask, verifyRuntime } from './execution.mjs';
+import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
+import { applyJournalRuntime, buildState, checkNativeModel, lease, loadTask, verifyRuntime } from './execution.mjs';
 
 const lines = rows => Buffer.from(rows.map(row => JSON.stringify(row)).join('\n') + '\n');
 const metric = (value, basis, status = 'observed') => ({ value, status, basis });
@@ -114,22 +114,27 @@ export async function collectTask(options) {
   try {
     const [journalBytes, originalStateBytes] = await Promise.all([readFile(context.journalPath), readFile(context.statePath)]);
     const journal = JSON.parse(journalBytes), originalState = JSON.parse(originalStateBytes);
+    applyJournalRuntime(context, journal);
     requireValue(['COMPLETED', 'FAILED'].includes(originalState.phase) && journal.dispatch_attempt_count === 1
       && journal.send_status === 'sent' && JSON.stringify(journal.input_locks) === JSON.stringify(context.locks), 'COLLECT_EXECUTION_NOT_FROZEN');
     requireValue(sha(jsonBytes(buildState(context, journal))) === sha(originalStateBytes), 'COLLECT_DRIVER_STATE_CHANGED');
-    const statuses = await verifyRuntime(context.config, context.workspace);
-    const native = await captureNative({ database: context.config.runtime.database, sessionId: journal.session.id, python: context.config.python });
-    const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline });
-    requireValue(normalized.binding.session_ids.every(id => !statuses[id] || statuses[id].type === 'idle'), 'COLLECT_NATIVE_STILL_ACTIVE');
-    requireValue(normalized.binding.final?.id === journal.final_message_id, 'COLLECT_FINAL_MESSAGE_CHANGED');
+    const collectionRuntime = await currentOwnedRuntime(context.config);
+    const statuses = await runtimeStatus(collectionRuntime, context.workspace);
+    const currentNative = await captureNative({ database: context.config.runtime.database, sessionId: journal.session.id, python: context.config.python });
     const terminalBytes = await readFile(join(context.unitRoot, journal.terminal_evidence.path));
     requireValue(sha(terminalBytes) === journal.terminal_evidence.sha256 && terminalBytes.length === journal.terminal_evidence.size, 'TERMINAL_EVIDENCE_CHANGED');
-    const terminal = JSON.parse(terminalBytes);
+    const terminal = JSON.parse(terminalBytes), native = terminal.native;
+    const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline });
+    requireValue(currentNative.sessions.every(row => !statuses[row.id] || statuses[row.id].type === 'idle'), 'COLLECT_NATIVE_STILL_ACTIVE');
+    requireValue(normalized.binding.final?.id === journal.final_message_id, 'COLLECT_FINAL_MESSAGE_CHANGED');
     const baselineBytes = await readFile(join(context.unitRoot, journal.baseline_evidence.path));
     requireValue(sha(baselineBytes) === journal.baseline_evidence.sha256 && baselineBytes.length === journal.baseline_evidence.size, 'PRE_SEND_BASELINE_CHANGED');
     const content = snapshot => JSON.stringify({ messages: snapshot.messages.map(({ id, session_id, data }) => ({ id, session_id, data })),
       parts: snapshot.parts.map(({ id, message_id, session_id, data }) => ({ id, message_id, session_id, data })) });
-    requireValue(content(terminal.native) === content(native), 'NATIVE_CONTENT_CHANGED_AFTER_TERMINAL');
+    const scope = new Set(native.sessions.map(row => row.id));
+    const measuredCurrent = { messages: currentNative.messages.filter(row => scope.has(row.session_id)), parts: currentNative.parts.filter(row => scope.has(row.session_id)) };
+    requireValue(content(native) === content(measuredCurrent), 'NATIVE_CONTENT_CHANGED_AFTER_TERMINAL');
+    requireValue(currentNative.sessions.filter(row => !scope.has(row.id)).every(row => row.time_created > Date.parse(journal.finished_at)), 'PRE_TERMINAL_SESSION_OMITTED');
     const outputRoot = resolve(options.outputRoot || join(context.unitRoot, '.general-e2e/collection/loomy', context.taskId, journal.identity.attempt_id));
     requireValue(outputRoot.startsWith(join(context.unitRoot, '.general-e2e/collection') + '/'), 'COLLECTION_OUTPUT_OUTSIDE_SCOPE');
     await mkdir(dirname(outputRoot), { recursive: true, mode: 0o700 });
@@ -140,7 +145,8 @@ export async function collectTask(options) {
       ['raw/native-message-rows.jsonl', lines(native.messages)], ['raw/driver-state.json', originalStateBytes],
       ['raw/dispatch-journal.json', journalBytes], ['raw/sent-prompt.txt', Buffer.from(context.prompt)],
       ['raw/frozen-run-config.json', await readFile(options.runConfig)],
-      ['raw/terminal-evidence.json', terminalBytes], ['raw/pre-send-native-baseline.json', baselineBytes]]);
+      ['raw/terminal-evidence.json', terminalBytes], ['raw/pre-send-native-baseline.json', baselineBytes],
+      ['raw/current-scoped-snapshot.json', jsonBytes({ native: currentNative, runtime: collectionRuntime, runtime_status: statuses })]]);
     for (const [i, receipt] of journal.history.entries()) {
       const bytes = await readFile(join(context.unitRoot, receipt.path));
       requireValue(sha(bytes) === receipt.sha256 && bytes.length === receipt.size, 'UI_PREPARATION_EVIDENCE_CHANGED');

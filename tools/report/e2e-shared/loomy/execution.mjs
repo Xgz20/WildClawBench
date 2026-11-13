@@ -3,7 +3,7 @@ import { mkdir, open, readFile, realpath, rename, unlink, writeFile } from 'node
 import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { artifact, assertIdle, assertNativeActivity, ax, captureNative, command, digest, iso, jsonBytes, requireValue,
+import { artifact, assertIdle, assertNativeActivity, ax, captureNative, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
   runtimeIdentity, runtimeStatus, statusUrl, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
@@ -137,6 +137,7 @@ export function buildState(context, journal) {
       model_verification_status: session ? 'verified' : 'unverified', model_identity_kind: 'native-opencode-user-model-and-variant',
       model_evidence_sha256: session?.binding_evidence?.[0]?.sha256 ?? null },
       loomy: { profile: 'loomy-opencode-sqlite/v1', runtime: context.config.runtime,
+        runtime_rebindings: journal.runtime_rebindings || [],
         final_message_id: journal.final_message_id ?? null, native_finished_at: journal.native_finished_at ?? null,
         attention: journal.attention ?? null, journal_path: relative(context.unitRoot, context.journalPath),
         source_repairs: journal.source_repairs || [], observer_version: journal.observer_version || journal.version,
@@ -149,6 +150,29 @@ export async function verifyRuntime(config, workspace = null) {
   return runtimeStatus(config.runtime, workspace);
 }
 
+export function applyJournalRuntime(context, journal) {
+  if (journal.runtime_binding) context.config = { ...context.config, runtime: journal.runtime_binding };
+}
+export async function refreshRuntime(context, journal, allowedSessionIds = []) {
+  applyJournalRuntime(context, journal);
+  const previous = context.config.runtime, current = await currentOwnedRuntime(context.config);
+  if (digest(previous) !== digest(current)) {
+    const native = await captureNative({ database: current.database, workspace: journal.dispatch_attempt_count === 1 ? context.workspace : null,
+      sessionId: journal.session?.id, python: context.config.python });
+    if (journal.dispatch_attempt_count === 1) {
+      const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline,
+        sessionId: journal.session?.id, terminal: true });
+      checkNativeModel(binding);
+      const statuses = await runtimeStatus(current, context.workspace);
+      requireValue(binding.session_ids.every(id => !statuses[id] || statuses[id].type === 'idle'), 'RUNTIME_REBIND_NATIVE_STILL_ACTIVE');
+    } else assertNativeActivity(native, allowedSessionIds);
+    journal.runtime_rebindings = [...(journal.runtime_rebindings || []), { observed_at: new Date().toISOString(),
+      previous, current, native, policy: 'same-main-app-binary-database; armed-execution-native-complete-only' }];
+  }
+  journal.runtime_binding = current;
+  context.config = { ...context.config, runtime: current };
+}
+
 async function saveState(context, journal) {
   await atomicJson(context.journalPath, journal);
   const state = buildState(context, journal);
@@ -158,6 +182,7 @@ async function saveState(context, journal) {
 
 export async function observe(context, journal, allowedSessionIds = []) {
   requireValue(journal.dispatch_attempt_count === 1, 'OBSERVE_REQUIRES_ARMED_ATTEMPT');
+  await refreshRuntime(context, journal, allowedSessionIds);
   const status = await verifyRuntime(context.config, context.workspace);
   const native = await captureNative({ database: context.config.runtime.database, workspace: context.workspace,
     sessionId: journal.session?.id, python: context.config.python });
@@ -235,6 +260,8 @@ export async function executeTask(options) {
       await saveState(context, journal);
       const releaseUi = await lease(join(homedir(), '.local/state/wildclawbench/ui-locks/loomy-' + context.config.process.pid + '.lock'));
       try {
+        await refreshRuntime(context, journal, options.allowedSessionIds || []);
+        await saveState(context, journal);
         assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
         assertNativeActivity(await captureNative({ database: context.config.runtime.database, python: context.config.python }), options.allowedSessionIds || []);
         const existing = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
@@ -250,6 +277,7 @@ export async function executeTask(options) {
         const taskConfig = { ...context.config, configuration: { ...context.config.configuration,
           permission_label: journal.workspace_selection.configuration.permission_label } };
         await fillPrompt(taskConfig, context.prompt, save);
+        await refreshRuntime(context, journal, options.allowedSessionIds || []);
         assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
         const finalBaseline = await captureNative({ database: context.config.runtime.database, python: context.config.python });
         assertNativeActivity(finalBaseline, options.allowedSessionIds || []);

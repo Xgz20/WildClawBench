@@ -9,7 +9,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.4';
+export const COMPONENT_VERSION = '0.1.5';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -144,6 +144,17 @@ export async function runtimeStatus(runtime, workspace = null) {
   requireValue(result && typeof result === 'object' && !Array.isArray(result), 'RUNTIME_STATUS_UNKNOWN');
   for (const [id, status] of Object.entries(result)) requireValue(/^ses_[A-Za-z0-9]+$/u.test(id) && ['idle', 'busy', 'retry'].includes(status?.type), 'RUNTIME_STATUS_UNKNOWN');
   return result;
+}
+export function sameRuntimeInstallation(before, after) {
+  return ['ppid', 'executable', 'binary_sha256', 'database', 'database_owned', 'health_version']
+    .every(key => before?.[key] === after?.[key]);
+}
+export async function currentOwnedRuntime(config) {
+  const app = await inspectMacDesktopAppProcess({ profile: LOOMY_APP_PROFILE, appPath: config.client.path });
+  requireValue(app?.pid === config.process.pid && app.started_at === config.process.started_at, 'APP_PROCESS_CHANGED');
+  const current = await runtimeIdentity(app, config.runtime.database);
+  requireValue(sameRuntimeInstallation(config.runtime, current), 'RUNTIME_INSTALLATION_CHANGED');
+  return current;
 }
 export function assertIdle(status, allowed = []) {
   const permitted = new Set(allowed);
