@@ -1,11 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, captureNative, PROFILE, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
-import { checkNativeModel, buildState } from '../../tools/report/e2e-shared/loomy/execution.mjs';
+import { assertNativeActivity, captureNative, digest, jsonBytes, PROFILE, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { checkNativeModel, buildState, loadTask } from '../../tools/report/e2e-shared/loomy/execution.mjs';
+import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
 
 const prompt = '仅处理本题 workspace。';
@@ -119,5 +120,41 @@ c.commit();c.close()`;
     assert.equal(sha(await readFile(database)), before);
     assert.ok(!JSON.stringify(result).includes('DO_NOT_EXPORT_CREDENTIALS'));
     assert.ok(!JSON.stringify(result).includes('/private/unrelated'));
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('Loomy batch preserves the first preparation failure without resuming a zero-send attempt', async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'loomy-queue-test-')));
+  try {
+    const taskId = 'task-one', taskRoot = join(root, 'execution/tasks', taskId);
+    await mkdir(join(taskRoot, 'workspace'), { recursive: true });
+    await writeFile(join(taskRoot, 'prompt.txt'), prompt);
+    const manifest = { schema_id: 'urn:wildclawbench:schema:general-e2e:package-manifest:v1', manifest_kind: 'execution',
+      batch_id: 'batch', unit_id: 'loomy-macos', dataset: { id: 'fixture', digest: 'a'.repeat(64) }, task_ids: [taskId],
+      unit: { harness: { id: 'loomy', platform: 'macos-arm64' }, model: { requested_id: 'spark-x2.6', reasoning_effort: 'high' } },
+      tasks: [{ task_id: taskId, workspace: { path: 'execution/tasks/' + taskId + '/workspace' },
+        prompt: { path: 'execution/tasks/' + taskId + '/prompt.txt', sent_sha256: sha(Buffer.from(prompt)) } }] };
+    const config = { schema_version: 'wildclawbench.general-e2e-loomy-run-config/v1', execution_concurrency: 3 };
+    config.config_digest = digest(config);
+    await writeFile(join(root, 'manifest.json'), jsonBytes(manifest)); await writeFile(join(root, 'run-config.json'), jsonBytes(config));
+    let calls = 0;
+    const queue = await runBatch({ unitRoot: root, runConfig: join(root, 'run-config.json'), queueId: 'test', runSlots: 1 }, {
+      executeTask: async options => {
+        calls++; if (options.resume) throw Error('UNEXPECTED_ZERO_SEND_RESUME');
+        const context = await loadTask(options);
+        const journal = { version: '0.1.1', identity: { batch_id: 'batch', unit_id: 'loomy-macos', task_id: taskId, attempt_id: 'original' },
+          input_locks: context.locks, phase: 'NEEDS_ATTENTION', dispatch_attempt_count: 0, send_status: 'not_sent', history: [] };
+        await writeFile(context.journalPath, jsonBytes(journal));
+        throw Error('ORIGINAL_PRE_SEND_FAILURE');
+      },
+    });
+    assert.equal(calls, 1); assert.equal(queue.phase, 'NEEDS_ATTENTION');
+    assert.equal(queue.tasks[0].error, 'ORIGINAL_PRE_SEND_FAILURE');
+    assert.equal(queue.tasks[0].dispatch_attempt_count, 0); assert.equal(queue.tasks[0].attempt_id, 'original');
+    assert.deepEqual(queue.tasks[0].error_history.map(row => row.message), ['ORIGINAL_PRE_SEND_FAILURE']);
+    const context = await loadTask({ unitRoot: root, taskId, runConfig: join(root, 'run-config.json') });
+    context.config.client = { version: '0.9.39' }; context.config.runtime = {};
+    const journal = JSON.parse(await readFile(context.journalPath));
+    assert.equal(buildState(context, journal).driver.version, '0.1.1');
   } finally { await rm(root, { recursive: true, force: true }); }
 });

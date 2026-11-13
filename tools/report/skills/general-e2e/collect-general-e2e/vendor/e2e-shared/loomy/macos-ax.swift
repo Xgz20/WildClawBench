@@ -47,6 +47,10 @@ func main() throws -> [String: Any] {
     guard AXIsProcessTrusted() else { throw Failure.invalid("MACOS_ACCESSIBILITY_NOT_AUTHORIZED") }
     let app = AXUIElementCreateApplication(pid)
     AXUIElementSetMessagingTimeout(app, 5)
+    // Electron exposes a complete AX tree only after assistive access has been
+    // activated. This changes the accessibility presentation, not task state.
+    _ = AXUIElementSetAttributeValue(app, "AXManualAccessibility" as CFString, kCFBooleanTrue)
+    _ = AXUIElementSetAttributeValue(app, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue)
     let action = request["action"] as? String ?? "snapshot"
     if action == "activate" {
         guard running.activate(options: [.activateIgnoringOtherApps]) else { throw Failure.invalid("LOOMY_ACTIVATION_FAILED") }
@@ -67,6 +71,9 @@ func main() throws -> [String: Any] {
             row["url"] = (attribute(element, "AXURL") as? URL)?.absoluteString ?? string(element, "AXURL")
             row["document"] = string(element, "AXDocument")
             row["filename"] = string(element, "AXFilename")
+            row["subrole"] = string(element, kAXSubroleAttribute)
+            row["modal"] = attribute(element, "AXModal") as? Bool ?? false
+            row["role_description"] = string(element, kAXRoleDescriptionAttribute)
             row["enabled"] = attribute(element, kAXEnabledAttribute) as? Bool ?? true
             row["focused"] = attribute(element, kAXFocusedAttribute) as? Bool ?? false
             row["selected"] = attribute(element, kAXSelectedAttribute) as? Bool ?? false

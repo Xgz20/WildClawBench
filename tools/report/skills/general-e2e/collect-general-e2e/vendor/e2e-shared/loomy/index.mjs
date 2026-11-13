@@ -9,7 +9,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.1';
+export const COMPONENT_VERSION = '0.1.2';
 export const PROFILE = 'loomy-opencode-sqlite/v1';
 export const DEFAULT_DATABASE = join(homedir(), '.local/share/loomy/opencode/opencode.db');
 export const MODEL_LABEL = 'Spark-X2.6 正式版 高';
@@ -80,6 +80,8 @@ export async function act(config, node, action = 'press', options = {}) {
 export function uiConfiguration(snapshot) {
   requireValue(snapshot.nodes.filter(n => n.role === 'AXWindow').length === 1, 'UNEXPECTED_NATIVE_WINDOW');
   requireValue(!snapshot.nodes.some(n => n.role === 'AXMenuItem'), 'UNEXPECTED_OPEN_MENU');
+  requireValue(!snapshot.nodes.some(n => n.modal || /Dialog$/u.test(n.subrole || '')
+    || /dialog|对话框/iu.test(n.role_description || '')), 'UNEXPECTED_MODAL_CONTENT');
   const model = uniqueNode(snapshot, n => n.role === 'AXPopUpButton' && nodeLabel(n) === MODEL_LABEL, 'Spark-X2.6/high');
   const permission = uniqueNode(snapshot, n => n.role === 'AXPopUpButton' && ['完全访问', '默认权限', '询问模式'].includes(nodeLabel(n)), 'permission');
   const composer = uniqueNode(snapshot, n => n.role === 'AXTextArea' && n.value_settable, 'composer');

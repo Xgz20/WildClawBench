@@ -72,7 +72,7 @@ export function buildState(context, journal) {
   const session = journal.session;
   const finished = ['COMPLETED', 'FAILED'].includes(journal.phase);
   return { schema_version: STATE_SCHEMA,
-    driver: { id: 'loomy-macos-general', version: COMPONENT_VERSION, harness: 'loomy', platform: 'macos-arm64' },
+    driver: { id: 'loomy-macos-general', version: journal.version, harness: 'loomy', platform: 'macos-arm64' },
     identity: journal.identity, dataset: { id: context.manifest.dataset.id, digest: context.manifest.dataset.digest },
     phase: journal.phase, task_root: context.taskRoot, candidate_workspace: context.workspace,
     prompt: { path: context.promptPath, sha256: context.locks.prompt, send_status: journal.send_status, sent_at: journal.sent_at ?? null },
@@ -225,6 +225,9 @@ export async function executeTask(options) {
     } while (true); // There is no candidate task deadline.
   } catch (error) {
     if (journal && !['COMPLETED', 'FAILED'].includes(journal.phase)) {
+      journal.errors = [...(journal.errors || []), { at: new Date().toISOString(), message: error.message,
+        phase: journal.phase, dispatch_attempt_count: journal.dispatch_attempt_count }];
+      journal.initial_attention ??= error.message;
       journal.phase = 'NEEDS_ATTENTION'; journal.attention = error.message;
       if (journal.dispatch_attempt_count === 1 && journal.send_status !== 'sent') journal.send_status = 'uncertain';
       await saveState(context, journal);

@@ -40,7 +40,7 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     && index.raw_trace.length === requiredRaw.length + journal.history.length, 'ARCHIVE_PREPARATION_SCOPE_INVALID');
   const ui = new Map();
   for (const [i, receipt] of journal.history.entries()) {
-    requireValue(/^[a-z-]+$/u.test(receipt.event) && !ui.has(receipt.event), 'ARCHIVE_PREPARATION_EVENT_INVALID');
+    requireValue(/^[a-z-]+$/u.test(receipt.event) && (!ui.has(receipt.event) || receipt.event.startsWith('promotional-')), 'ARCHIVE_PREPARATION_EVENT_INVALID');
     const path = `raw/ui-preparation/${i}-${receipt.event}.json`, source = await bytes(path);
     requireValue(index.raw_trace.some(row => row.path === path) && sha(source) === receipt.sha256
       && source.length === receipt.size, 'ARCHIVE_PREPARATION_HASH_MISMATCH');

@@ -4,7 +4,8 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { captureNative, digest, requireValue, sha, verifyBinding } from './index.mjs';
 import { atomicJson, executeTask, lease, loadTask } from './execution.mjs';
 
-export async function runBatch(options) {
+export async function runBatch(options, overrides = {}) {
+  const performTask = overrides.executeTask || executeTask;
   const unitRoot = await realpath(resolve(options.unitRoot));
   requireValue(/^[A-Za-z0-9][A-Za-z0-9._-]{0,100}$/u.test(options.queueId || ''), 'QUEUE_ID_INVALID');
   const slots = options.runSlots ?? 1;
@@ -34,8 +35,22 @@ export async function runBatch(options) {
       const state = result.state;
       requireValue(!row.attempt_id || row.attempt_id === state.identity.attempt_id, 'QUEUE_ATTEMPT_REPLACED');
       row.attempt_id = state.identity.attempt_id; row.session_id = state.session.session_id;
+      row.dispatch_attempt_count = state.send.dispatch_attempt_count;
       row.phase = state.phase; row.state_file = result.state_file;
       queue.history.push({ at: new Date().toISOString(), task_id: row.task_id, phase: row.phase, attempt_id: row.attempt_id });
+      await atomicJson(path, queue);
+    };
+    const recordFailure = async (row, error) => {
+      const context = await loadTask({ ...options, unitRoot, taskId: row.task_id });
+      try {
+        const journal = JSON.parse(await readFile(context.journalPath, 'utf8'));
+        requireValue(digest(journal.input_locks) === digest(context.locks)
+          && journal.identity.task_id === row.task_id, 'QUEUE_FAILED_ATTEMPT_BINDING_CHANGED');
+        row.attempt_id = journal.identity.attempt_id; row.session_id = journal.session?.id ?? null;
+        row.dispatch_attempt_count = journal.dispatch_attempt_count; row.state_file = context.statePath;
+      } catch (failure) { if (failure.code !== 'ENOENT') throw failure; }
+      row.phase = 'NEEDS_ATTENTION'; row.error ??= error.message;
+      row.error_history = [...(row.error_history || []), { at: new Date().toISOString(), message: error.message }];
       await atomicJson(path, queue);
     };
     const allowed = async () => {
@@ -53,11 +68,12 @@ export async function runBatch(options) {
     };
     do {
       for (const row of queue.tasks.filter(item => ['RUNNING', 'DISPATCHING', 'NEEDS_ATTENTION'].includes(item.phase))) {
+        if (row.phase === 'NEEDS_ATTENTION' && row.dispatch_attempt_count !== 1) continue;
         requireValue(row.state_file || row.phase !== 'DISPATCHING', 'QUEUE_DISPATCH_RESULT_UNKNOWN');
         try {
-          await update(row, await executeTask({ ...options, unitRoot, taskId: row.task_id,
+          await update(row, await performTask({ ...options, unitRoot, taskId: row.task_id,
             resume: true, observeOnce: true, detachAfterSubmit: false, allowedSessionIds: await allowed() }));
-        } catch (error) { row.phase = 'NEEDS_ATTENTION'; row.error = error.message; await atomicJson(path, queue); }
+        } catch (error) { await recordFailure(row, error); }
       }
       if (queue.tasks.every(row => ['COMPLETED', 'FAILED'].includes(row.phase))) {
         queue.phase = 'COMPLETED'; queue.finished_at = new Date().toISOString(); await atomicJson(path, queue); return queue;
@@ -69,10 +85,10 @@ export async function runBatch(options) {
       if (!attention && !failed && next && active < slots) {
         next.phase = 'DISPATCHING'; await atomicJson(path, queue);
         try {
-          await update(next, await executeTask({ ...options, unitRoot, taskId: next.task_id,
+          await update(next, await performTask({ ...options, unitRoot, taskId: next.task_id,
             resume: false, detachAfterSubmit: true, observeOnce: false, allowedSessionIds: await allowed() }));
         } catch (error) {
-          next.phase = 'NEEDS_ATTENTION'; next.error = error.message; await atomicJson(path, queue);
+          await recordFailure(next, error);
         }
         continue;
       }

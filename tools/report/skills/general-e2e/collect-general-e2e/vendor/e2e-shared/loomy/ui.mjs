@@ -22,14 +22,37 @@ export function assertConfiguration(snapshot, config, { preparingWorkspace = fal
   return ui;
 }
 
+export async function dismissKnownPromotion(config, save) {
+  const snapshot = await ax(config.ax_helper, config.process.pid);
+  const isPromotion = node => node.role === 'AXGroup' && node.subrole === 'AXApplicationDialog' && node.title === '活动详情';
+  const groups = snapshot.nodes.filter(isPromotion);
+  if (groups.length === 0) return false;
+  requireValue(groups.length === 1, 'PROMOTIONAL_DIALOG_AMBIGUOUS');
+  const group = groups[0], nodes = snapshot.nodes.filter(node => group.path.every((part, i) => node.path[i] === part));
+  const owners = snapshot.nodes.filter(node => node.role === 'AXWebArea' && node.path.every((part, i) => group.path[i] === part))
+    .sort((a, b) => b.path.length - a.path.length);
+  requireValue(owners.length > 0 && fileURLToPath(owners[0].url) === config.client.path + '/Contents/Resources/app.asar/dist/index.html', 'PROMOTIONAL_DIALOG_SOURCE_UNVERIFIED');
+  requireValue(!nodes.some(node => ['AXTextField', 'AXTextArea', 'AXComboBox'].includes(node.role))
+    && nodes.filter(node => node.role === 'AXButton' && nodeLabel(node) === '跳转').length === 1, 'PROMOTIONAL_DIALOG_UNRECOGNIZED');
+  const close = uniqueNode({ nodes }, node => node.role === 'AXButton' && nodeLabel(node) === '关闭', 'close-known-promotion');
+  await save('promotional-dialog-before', snapshot);
+  await act(config, close);
+  const after = await waitUi(config, row => !row.nodes.some(isPromotion)
+    && row.nodes.some(node => node.role === 'AXPopUpButton' && nodeLabel(node) === config.configuration.model_label), 'promotion-closed');
+  await save('promotional-dialog-after', after);
+  return true;
+}
+
 export async function newTask(config, save) {
   await ax(config.ax_helper, config.process.pid, 'activate');
   let snapshot = await waitUi(config, row => row.frontmost_pid === config.process.pid, 'foreground');
+  if (await dismissKnownPromotion(config, save)) snapshot = await ax(config.ax_helper, config.process.pid);
   const before = assertConfiguration(snapshot, config, { preparingWorkspace: true });
   requireValue(before.composer.value === '', 'FOREIGN_DRAFT');
   await save('before-new-task', snapshot);
   const button = uniqueNode(snapshot, node => node.role === 'AXButton' && nodeLabel(node) === '新任务 ⌘K', 'new-task');
   await act(config, button);
+  await dismissKnownPromotion(config, save);
   snapshot = await waitUi(config, row => row.nodes.some(node => node.role === 'AXWebArea'
     && /(?:#\/|#\/home)$/u.test(node.url)), 'new-task-route');
   requireValue(assertConfiguration(snapshot, config, { preparingWorkspace: true }).composer.value === '', 'NEW_TASK_NOT_EMPTY');
