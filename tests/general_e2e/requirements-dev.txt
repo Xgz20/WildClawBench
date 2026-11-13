@@ -1,0 +1,6 @@
+# General E2E development/test dependencies, separate from frozen rule runtimes.
+PyYAML>=6
+jsonschema>=4
+python-dotenv
+openpyxl>=3.1
+lxml

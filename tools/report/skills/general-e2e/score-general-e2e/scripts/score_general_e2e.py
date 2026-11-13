@@ -702,6 +702,20 @@ def _remove_tree(path: Path) -> None:
         shutil.rmtree(path, onerror=make_writable_and_retry)
 
 
+def _preserve_symlink_mode(path: Path, mode: int) -> None:
+    if not path.is_symlink():
+        raise ScoringRuntimeError('SYMLINK_MODE_TARGET_INVALID', str(path))
+    if stat.S_IMODE(path.lstat().st_mode) != mode:
+        if hasattr(os, 'lchmod'):
+            os.lchmod(path, mode)
+        elif os.chmod in os.supports_follow_symlinks:
+            os.chmod(path, mode, follow_symlinks=False)
+        else:
+            raise ScoringRuntimeError('SYMLINK_MODE_COPY_UNSUPPORTED', str(path))
+    if stat.S_IMODE(path.lstat().st_mode) != mode:
+        raise ScoringRuntimeError('SYMLINK_MODE_COPY_MISMATCH', str(path))
+
+
 def _copy_inventory(
     source: Path,
     destination: Path,
@@ -723,6 +737,8 @@ def _copy_inventory(
             link_target = os.readlink(source.joinpath(*relative.parts))
             _safe_symlink_target(relative, link_target)
             os.symlink(link_target, target)
+            if isinstance(item.get('mode'), str):
+                _preserve_symlink_mode(target, int(item['mode'], 8))
         else:
             raise ScoringRuntimeError("CANDIDATE_ENTRY_UNSUPPORTED", str(kind))
         mode_text = item.get("mode")
@@ -894,6 +910,7 @@ def _task_package_materials(
 
 def _write_gt(root: Path, entries: Sequence[tuple[Mapping[str, Any], bytes]]) -> None:
     root.mkdir(parents=True, exist_ok=False)
+    directory_modes: list[tuple[Path, int]] = []
     for item, data in entries:
         relative = _safe_relative(item.get("path"), "gt entry")
         target = root.joinpath(*relative.parts)
@@ -909,11 +926,17 @@ def _write_gt(root: Path, entries: Sequence[tuple[Mapping[str, Any], bytes]]) ->
             link_target = data.decode("utf-8", errors="surrogateescape")
             _safe_symlink_target(relative, link_target)
             os.symlink(link_target, target)
+            if isinstance(item.get('mode'), str):
+                _preserve_symlink_mode(target, int(item['mode'], 8))
         else:
             raise ScoringRuntimeError("SCORING_GT_MEMBER_TYPE_MISMATCH", str(kind))
         mode_text = item.get("mode")
-        if kind != "symlink" and isinstance(mode_text, str):
+        if kind == "directory" and isinstance(mode_text, str):
+            directory_modes.append((target, int(mode_text, 8)))
+        elif kind != "symlink" and isinstance(mode_text, str):
             os.chmod(target, int(mode_text, 8))
+    for target, mode in sorted(directory_modes, key=lambda item: len(item[0].parts), reverse=True):
+        os.chmod(target, mode)
 
 
 OFFICE_REFERENCE_SUFFIXES = frozenset({

@@ -64,6 +64,11 @@ def comparison_fixture():
 
 
 class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
+    def test_leader_and_regular_report_share_float_boundary_display(self):
+        self.assertEqual(LEADER.num(86.52499999999999), "86.53")
+        self.assertEqual(LEADER.num(.8652499999999999, percent=True), "86.53%")
+        self.assertEqual(LEADER.num(86.52499999), "86.52")
+
     def test_single_unit_does_not_claim_comparison_to_nonexistent_peers(self):
         source,data,labels=comparison_fixture()
         source['units']=source['units'][:1]

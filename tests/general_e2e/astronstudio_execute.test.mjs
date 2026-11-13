@@ -37,6 +37,13 @@ import {
 
 const TASK_ID = "02_Code_Intelligence_task_001_temperature_cli_fix";
 
+test('an actual blocking dialog prevents even new-task navigation',async()=>{
+  let reads=0;
+  const client={evaluate:async()=>{reads++;return {thread_id:'known',editor_count:1,editor_text:'',dialog_count:1};}};
+  await assert.rejects(createFreshTask(client,1000,'/unused'),/UNKNOWN_DIALOG_BLOCKS_NEW_TASK/);
+  assert.equal(reads,1);
+});
+
 test('owned draft clearing updates native editor selection and waits through a delayed final-character residue',async()=>{
   let reads=0,nativeSelected=false,deleted=false;const calls=[];
   const client={evaluate:async()=>{reads++;if(reads===1)return true;
@@ -556,15 +563,16 @@ test("managed dispatch rejects an active session outside the frozen queue", asyn
       [[{ ...nativeSession("running"), session_id: "foreign-session", thread_id: "foreign-thread" }]],
       clickCounter,
     );
-    await assert.rejects(
-      executeSingleTask({
+    const result = await executeSingleTask({
         ...config,
         detachAfterSubmit: true,
         managedRunSlots: 3,
         allowedActiveSessionIds: ["registered-session"],
-      }, dependencies),
-      /不属于当前队列的活动 session：foreign-session/u,
-    );
+      }, dependencies);
+    assert.equal(result.phase, 'FAILED');
+    assert.match(result.execution.error.message, /不属于当前队列的活动 session：foreign-session/u);
+    assert.equal(isRetryablePreSendFailure(result), true);
+    assert.equal(JSON.parse(await readFile(config.stateFile, 'utf8')).identity.attempt_id, result.identity.attempt_id);
     assert.equal(clickCounter.count, 0);
   } finally {
     await rm(config.unitRoot, { recursive: true, force: true });
@@ -1000,8 +1008,10 @@ test('managed zero-send recovery keeps a verified peer running and preserves the
     const first=commonDependencies(config,[[]],clicks);first.prepareExecutionUi=async()=>{throw Error('owned project form failed');};
     const failed=await executeSingleTask(config,first),old=await readFile(config.stateFile);
     const peer={...nativeSession(),thread_id:'peer-thread',session_id:'peer-session',cwd:'/peer'};
-    const deps=commonDependencies(config,[[]],clicks);let reads=0;
-    deps.queryNativeSessions=async()=>++reads<=3?[peer]:[peer,{...nativeSession(),cwd:config.candidateWorkspace}];
+    const deps=commonDependencies(config,[[]],clicks);
+    // The target cannot exist before the physical send, regardless of how
+    // many fresh identity/foreground checks precede arming it.
+    deps.queryNativeSessions=async()=>clicks.count===0?[peer]:[peer,{...nativeSession(),cwd:config.candidateWorkspace}];
     const result=await executeSingleTask({...config,resume:true,retryPreSendFailure:true,managedRunSlots:3,allowedActiveSessionIds:['peer-session'],detachAfterSubmit:true},deps);
     assert.equal(result.identity.attempt_id,failed.identity.attempt_id);assert.equal(result.send.dispatch_attempt_count,1);assert.equal(clicks.count,1);
     assert.equal(result.phase,'RUNNING');const audit=result.history.find(r=>r.event==='ZERO_SEND_PREPARATION_RESUMED');
@@ -1050,11 +1060,38 @@ test("hidden configuration controls cannot bypass physical failures or foreign s
       deps.probeAstronStudio = async () => ({ ...probeReport(config), ready: false,
         failed_checks: ["MODEL_NOT_READ_FROM_UI", ...(physicalFailure ? ["STATE_DATABASE_OWNER_NOT_VERIFIED"] : [])] });
       deps.createFreshTask = async () => { navigated++; };
-      await assert.rejects(executeSingleTask(config, deps), /未知活动|探针未通过/u);
+      const result = await executeSingleTask(config, deps);
+      assert.equal(result.phase, 'FAILED');
+      assert.match(result.execution.error.message, /未知活动|探针未通过/u);
+      assert.equal(isRetryablePreSendFailure(result), true);
       assert.equal(navigated, 0);
       assert.equal(clicks.count, 0);
     } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
   }
+});
+
+for (const drift of [false, true]) test(`verified completed UI navigation still rereads visible configuration (drift=${drift})`, async () => {
+  const config = await fixture(), clicks = { count: 0 };
+  config.managedRunSlots = 3; config.allowedActiveSessionIds = [];
+  let probes = 0, navigated = 0, prepared = 0;
+  try {
+    const deps = commonDependencies(config, [[]], clicks);
+    deps.probeAstronStudio = async () => {
+      const report = probeReport(config); probes++;
+      if (probes === 1) return { ...report, ready: false, failed_checks: ['MODEL_NOT_READ_FROM_UI'] };
+      if (drift) report.frozen_run_config.tested_model.display_name = 'foreign-model';
+      return report;
+    };
+    deps.currentThreadId = async () => 'verified-completed-thread';
+    deps.knownCompletedUiOwner = async () => true;
+    deps.createFreshTask = async () => { navigated++; };
+    deps.prepareExecutionUi = async () => { prepared++; throw Error('test stops before Prompt'); };
+    const result = await executeSingleTask(config, deps);
+    assert.equal(probes, 2); assert.equal(navigated, 1); assert.equal(prepared, drift ? 0 : 1);
+    assert.equal(result.phase, 'FAILED'); assert.equal(result.send.dispatch_attempt_count, 0);
+    if (drift) assert.match(result.execution.error.message, /model/);
+    assert.equal(clicks.count, 0);
+  } finally { await rm(config.unitRoot, { recursive: true, force: true }); }
 });
 
 test("a bound task can be observed when completed-task UI hides configuration controls", async () => {

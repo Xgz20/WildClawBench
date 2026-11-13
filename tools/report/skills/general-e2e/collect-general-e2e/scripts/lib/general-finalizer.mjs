@@ -9,6 +9,7 @@ import {
   copyFile,
   link,
   lstat,
+  lchmod,
   mkdir,
   readFile,
   readdir,
@@ -442,7 +443,7 @@ function createIntegrity(policy) {
   });
 }
 
-async function copyCandidateTree(sourceRoot, destinationRoot, policy) {
+export async function copyCandidateTree(sourceRoot, destinationRoot, policy) {
   const ignored = new Set(policy.ignored_directories.map((item) => item.name));
   const forbidden = new Set(policy.forbidden_directories.map((item) => item.name));
   const entries = [];
@@ -466,6 +467,14 @@ async function copyCandidateTree(sourceRoot, destinationRoot, policy) {
           throw new Error(`CANDIDATE_SYMLINK_ESCAPES_ROOT: ${relativePath}`);
         }
         await symlink(target, destinationPath);
+        // macOS creates links as0755 even when the source link is0777.
+        // lchmod changes the new link only; never chmod its target.
+        if (((await lstat(destinationPath)).mode & 0o777) !== (info.mode & 0o777)) {
+          await lchmod(destinationPath, info.mode & 0o777);
+        }
+        if (((await lstat(destinationPath)).mode & 0o777) !== (info.mode & 0o777)) {
+          throw new Error(`CANDIDATE_SYMLINK_MODE_COPY_MISMATCH: ${relativePath}`);
+        }
         const bytes = Buffer.from(target, "utf8");
         entries.push({ path: relativePath, type: "symlink", target, sha256: sha256(bytes), size: bytes.length, mode });
       } else if (info.isDirectory()) {
@@ -1166,6 +1175,9 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     await mkdir(staging, { recursive: false });
     const candidateWorkspace = join(staging, "candidate", "workspace");
     const candidateEntries = await copyCandidateTree(workspace, candidateWorkspace, policy);
+    if (JSON.stringify(candidateEntries) !== JSON.stringify(await inventoryCandidateTree(candidateWorkspace, policy))) {
+      throw new Error('CANDIDATE_COPY_METADATA_MISMATCH');
+    }
     const copied = integrity.snapshotWorkspace(candidateWorkspace);
     if (copied.sha256 !== stable.sha256) {
       throw new Error(`CANDIDATE_COPY_MISMATCH: source=${stable.sha256}, copy=${copied.sha256}`);

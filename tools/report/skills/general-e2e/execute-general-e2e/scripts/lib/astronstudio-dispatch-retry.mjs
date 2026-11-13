@@ -67,7 +67,7 @@ export async function verifyDispatchHumanAuthority(auth) {
   return {profile:'standing-human-framework-policy-applied-to-certified-unaccepted-dispatch',files:sources.map(({name,bytes})=>({name,bytes}))};
 }
 export async function archiveDispatchAttempt(unitRoot, authorizationPath, verifyOnly=false) {
-  const argv=[fileURLToPath(new URL('../snapshot_framework_dispatch.py',import.meta.url)),
+  const argv=['-X','utf8',fileURLToPath(new URL('../snapshot_framework_dispatch.py',import.meta.url)),
     '--unit-root',unitRoot,'--authorization',authorizationPath];
   if(verifyOnly)argv.push('--verify-only');
   const r=await new Promise((done,fail)=>{const p=spawn(process.env.GENERAL_E2E_PYTHON||'python3',argv,{stdio:['ignore','pipe','pipe'],env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});let out='',err='';

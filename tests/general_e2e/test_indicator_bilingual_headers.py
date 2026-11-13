@@ -1,6 +1,8 @@
 from pathlib import Path
 import tempfile
 import unittest
+from copy import deepcopy
+import importlib.util
 
 import openpyxl
 
@@ -16,6 +18,22 @@ SOURCE = Path(__file__).resolve().parents[2] / (
 
 
 class IndicatorBilingualHeaderTests(unittest.TestCase):
+    def test_native_bridge_is_opt_in_and_bound_to_the_original_frozen_source(self):
+        path=Path(__file__).resolve().parents[2]/'tools/report/skills/general-e2e/score-general-e2e/scripts/shared_source_repairs.py'
+        spec=importlib.util.spec_from_file_location('indicator_native_bridge',path)
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        original=_strip_codeblock(_parse_task_source(SOURCE)[1]['Automated Checks'])
+        expected,receipt=effective_source(TASK,original)
+        self.assertNotEqual(expected,original)
+        manifest={'identity':{'task_id':TASK},'runtime':{}}
+        self.assertEqual(module.effective_source(manifest,original,original,None),(original,None))
+        marker=module.marker({'task_id':TASK,'automated_checks':original})
+        self.assertEqual(marker['source_sha256'],receipt['original_source_sha256'])
+        manifest['runtime']['shared_rule_source_repair']=marker
+        self.assertEqual(module.effective_source(manifest,original,original,None)[0],expected)
+        bad=deepcopy(manifest);bad['runtime']['shared_rule_source_repair']['source_sha256']='tampered'
+        with self.assertRaises(ValueError):module.effective_source(bad,original,original,None)
+
     def setUp(self):
         original = _strip_codeblock(_parse_task_source(SOURCE)[1]['Automated Checks'])
         repaired, receipt = effective_source(TASK, original)

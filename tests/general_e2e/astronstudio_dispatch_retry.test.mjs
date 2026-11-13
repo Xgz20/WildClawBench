@@ -60,6 +60,42 @@ test('changed candidate cannot be relabeled as pristine before the retry',async 
   await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/WORKSPACE_/);
 });
 
+async function withRegisteredPreparation(f,kind='valid') {
+  const old=JSON.parse(await readFile(join(f.controls,'automation-state.json')));
+  Object.assign(old,{task_root:join(f.unit,'execution/tasks/task'),dataset:{id:'d',digest:'digest'},run_config:{config_digest:'config'}});
+  const manifest=JSON.parse(await readFile(join(f.unit,'manifest.json'))),promptSha='a'.repeat(64);
+  manifest.tasks.push({task_id:'owner',workspace:{path:'execution/tasks/owner/workspace',entries:[]},prompt:{sent_sha256:promptSha}});
+  const manifestBytes=Buffer.from(JSON.stringify(manifest));await writeFile(join(f.unit,'manifest.json'),manifestBytes);
+  const cwd=join(f.unit,'execution/tasks/owner/workspace');
+  const native={thread_id:'thread',turn_id:'turn',latest_turn_id:'turn',session_id:'sid',cwd,status:'completed',turn_state:'completed',session_status:'ready',active_turn_id:null};
+  const owner={identity:{batch_id:'batch',unit_id:'unit',task_id:'owner',attempt_id:'owner-attempt'},dataset:old.dataset,run_config:old.run_config,
+    phase:'COMPLETED',candidate_workspace:cwd,execution:{business_status:'completed',finished_at:'2026-11-11T00:00:00Z'},
+    prompt:{sha256:promptSha,send_status:'sent'},send:{dispatch_attempt_count:1},session:{...native,verified:true}};
+  if(kind==='foreign-owner')owner.identity.unit_id='foreign';
+  const ownerBytes=Buffer.from(JSON.stringify(owner)),prefix='completed-ui-owner-'+randomUUID();
+  const proof={profile:'bound-completed-own-unit-ui-navigation/v1',status:'OWNERSHIP_VERIFIED',target_task_id:'task',owner_task_id:'owner',native,
+    source_state_path:join(f.unit,'.general-e2e/execution/owner/automation-state.json'),source_state_snapshot:prefix+'.state.json',source_state_sha256:hash(ownerBytes),
+    prompt_send_calls:0,dispatch_authorized:false,requires_fresh_visible_probe:true};
+  if(kind==='bad-sha')proof.source_state_sha256='b'.repeat(64);
+  if(kind==='foreign-target')proof.target_task_id='other';
+  await writeFile(join(f.controls,prefix+'.state.json'),ownerBytes);await writeFile(join(f.controls,prefix+'.proof.json'),JSON.stringify(proof));
+  const visible={profile:'owned-native-visible-send/v1',status:'PASS',identity:{batch_id:'batch',unit_id:'unit',task_id:'task'},run_config_digest:'config',
+    original_process_identity_reverified:true,changed:true,before:{visibility:'hidden'},after:{visibility:'visible'},
+    prompt_send_calls:0,app_restart_calls:0,native_open_calls:1,page_bring_to_front_calls:1};
+  await writeFile(join(f.controls,'native-visibility-'+randomUUID()+'.json'),JSON.stringify(visible));
+  const oldRaw=Buffer.from(JSON.stringify(old));await writeFile(join(f.controls,'automation-state.json'),oldRaw);
+  const auth=JSON.parse(await readFile(f.authPath));Object.assign(auth,{old_state_sha256:hash(oldRaw),unit_manifest_sha256:hash(manifestBytes)});await writeFile(f.authPath,JSON.stringify(auth));
+  return prefix;
+}
+test('failed-dispatch archive preserves and revalidates registered UI preparation source closure',async t=>{
+  const f=await archiveFixture(t),prefix=await withRegisteredPreparation(f);assert.equal((await archiveDispatchAttempt(f.unit,f.authPath)).status,'ARCHIVED');
+  const m=JSON.parse(await readFile(join(f.root,'archive-manifest.json')));assert.ok(m.entries.some(e=>e.archive_path==='failed-control/'+prefix+'.state.json'));
+  assert.equal((await archiveDispatchAttempt(f.unit,f.authPath,true)).status,'VERIFIED');
+});
+for(const kind of ['foreign-owner','bad-sha','foreign-target'])test('registered preparation archive rejects '+kind,async t=>{
+  const f=await archiveFixture(t);await withRegisteredPreparation(f,kind);await assert.rejects(archiveDispatchAttempt(f.unit,f.authPath),/PREPARATION_OWNER_/);
+});
+
 async function withPreSendHistory(f,kind='valid') {
   const current=JSON.parse(await readFile(join(f.controls,'automation-state.json'))),promptSha=hash(Buffer.from('frozen prompt'));
   const prefix=[{phase:'PENDING',event:'ATTEMPT_CREATED'},{phase:'FAILED',event:'PRE_SEND_DRIVER_ERROR'}];

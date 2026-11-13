@@ -43,8 +43,9 @@ import { ASTRONSTUDIO_APP_PROFILE } from "../vendor/e2e-shared/desktop-app-disco
 import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTerminal } from "./lib/astronstudio-quota-retry.mjs";
 import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
 import { verifyFrameworkDispatchRecoveries, assertUnacceptedDispatch } from './lib/astronstudio-dispatch-retry.mjs';
+import {ensureExecutionUiVisible} from './lib/astronstudio-visibility.mjs';
 
-export const EXECUTION_DRIVER_VERSION = "0.4.23";
+export const EXECUTION_DRIVER_VERSION = "0.4.30";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -601,6 +602,53 @@ function baselineRows(sessions, workspace) {
     }));
 }
 
+export function isVerifiedCompletedUiOwner(config, native, task, state) {
+  if (!native || !task || !state || resolve(native.cwd || '') === config.candidateWorkspace) return false;
+  if (!['thread_id', 'turn_id', 'session_id', 'cwd'].every(key => typeof native[key] === 'string' && native[key])) return false;
+  if (typeof state.identity?.attempt_id !== 'string' || !state.identity.attempt_id) return false;
+  return native.status === 'completed' && native.turn_state === 'completed'
+    && native.session_status === 'ready' && !native.active_turn_id
+    && native.latest_turn_id === native.turn_id
+    && state.phase === 'COMPLETED' && state.execution?.business_status === 'completed'
+    && state.execution.error == null && native.error == null
+    && Number.isFinite(Date.parse(state.execution.finished_at))
+    && state.identity?.batch_id === config.manifest.batch_id
+    && state.identity?.unit_id === config.manifest.unit_id && state.identity?.task_id === task.task_id
+    && state.dataset?.id === config.manifest.dataset.id && state.dataset?.digest === config.manifest.dataset.digest
+    && state.run_config?.config_digest === config.runConfig.config_digest
+    && state.prompt?.sha256 === task.prompt.sent_sha256 && state.prompt?.send_status === 'sent'
+    && state.send?.dispatch_attempt_count === 1 && state.session?.verified === true
+    && state.session.thread_id === native.thread_id && state.session.turn_id === native.turn_id
+    && state.session.session_id === native.session_id && state.session.cwd === native.cwd
+    && state.candidate_workspace === native.cwd
+    && resolve(config.unitRoot, task.workspace.path) === native.cwd;
+}
+
+async function knownCompletedUiOwner(config, threadId, sessions) {
+  const rows = sessions.filter(row => row.thread_id === threadId);
+  if (rows.length !== 1) return false;
+  const native = rows[0];
+  const tasks = config.manifest.tasks.filter(task => resolve(config.unitRoot, task.workspace.path) === native.cwd);
+  if (tasks.length !== 1 || !/^[A-Za-z0-9_.-]+$/.test(tasks[0].task_id)) return false;
+  const statePath = join(config.unitRoot, '.general-e2e/execution', tasks[0].task_id, 'automation-state.json');
+  try { if (await realpath(statePath) !== statePath) return false; }
+  catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  const bytes = await readFile(statePath), state = JSON.parse(bytes.toString('utf8'));
+  const valid = isVerifiedCompletedUiOwner(config, native, tasks[0], state);
+  if (valid) {
+    const id = randomUUID(), snapshot = `completed-ui-owner-${id}.state.json`;
+    await mkdir(config.controlRoot, { recursive: true });
+    await writeFile(join(config.controlRoot, snapshot), bytes, { flag: 'wx', mode: 0o600 });
+    await writeFile(join(config.controlRoot, `completed-ui-owner-${id}.proof.json`), JSON.stringify({
+      profile: 'bound-completed-own-unit-ui-navigation/v1', status: 'OWNERSHIP_VERIFIED',
+      target_task_id: config.task.task_id, owner_task_id: tasks[0].task_id, native,
+      source_state_path: statePath, source_state_snapshot: snapshot, source_state_sha256: sha256(bytes),
+      prompt_send_calls: 0, dispatch_authorized: false, requires_fresh_visible_probe: true,
+    }, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  }
+  return valid;
+}
+
 async function currentProbe(config, dependencies, fresh) {
   const probeConfig = {
     appPath: config.appPath,
@@ -612,6 +660,22 @@ async function currentProbe(config, dependencies, fresh) {
     timeoutMs: Math.min(config.timeoutMs, 10_000),
   };
   let report = await dependencies.probeAstronStudio(probeConfig, { databaseValidationScope: "runtime" });
+  if (fresh && report.process?.identity_verified && report.gui?.unlocked
+    && report.cdp?.ready && report.cdp.owned_by_main_process) {
+    const visibility = await dependencies.ensureExecutionUiVisible(config, report);
+    if (visibility.changed || visibility.profile==='owned-native-visible-send/v2') {
+      const originalProcess = report.process;
+      report = await dependencies.probeAstronStudio(probeConfig, { databaseValidationScope: 'runtime' });
+      if (report.process?.pid !== originalProcess.pid || report.process.started_at !== originalProcess.started_at
+        || report.process.command_sha256 !== originalProcess.command_sha256) throw Error('ASTRONSTUDIO_APP_CHANGED_DURING_ACTIVATION');
+      await mkdir(config.controlRoot, {recursive:true});
+      await writeFile(join(config.controlRoot, `native-visibility-${randomUUID()}.json`), JSON.stringify({
+        ...visibility, status:'PASS', original_process_identity_reverified:true, captured_at:dependencies.now(),
+        identity:{batch_id:config.manifest.batch_id,unit_id:config.manifest.unit_id,task_id:config.task.task_id},
+        run_config_digest:config.runConfig.config_digest,
+      }, null, 2)+'\n', {flag:'wx',mode:0o600});
+    }
+  }
   const uiChecks = new Set(["MODEL_NOT_READ_FROM_UI", "REASONING_NOT_READ_FROM_UI", "PERMISSION_NOT_READ_FROM_UI"]);
   if (!fresh && !report.ready && report.failed_checks.length
     && report.failed_checks.every((code) => uiChecks.has(code))) {
@@ -624,7 +688,7 @@ async function currentProbe(config, dependencies, fresh) {
     // for a new dispatch and never bypasses physical or database-owner checks.
     return { ...report, native_observation_ready: true, dispatch_ready: false };
   }
-  if (!report.ready && fresh && config.managedRunSlots > 1 && config.allowedActiveSessionIds.length
+  if (!report.ready && fresh && config.managedRunSlots > 1
     && report.failed_checks.length && report.failed_checks.every((code) => uiChecks.has(code))) {
     const allowed = new Set(config.allowedActiveSessionIds);
     const sessions = await dependencies.queryNativeSessions(config.stateDatabase);
@@ -636,11 +700,15 @@ async function currentProbe(config, dependencies, fresh) {
     const client = await dependencies.connectCdp(target.webSocketDebuggerUrl, config.timeoutMs);
     try {
       const current = await dependencies.currentThreadId(client);
-      if (!sessions.some((row) => row.thread_id === current && allowed.has(row.session_id))) {
+      const activeOwned = sessions.some((row) => row.thread_id === current && allowed.has(row.session_id));
+      const completedOwned = !activeOwned && await dependencies.knownCompletedUiOwner(config, current, sessions);
+      if (!activeOwned && !completedOwned) {
         throw new Error("配置控件隐藏的 UI 路由不是已绑定队列任务");
       }
-      // Running tasks can hide their composer controls. Move only from a
-      // verified queue-owned task to a blank route, then recheck every gate.
+      // Running and just-completed tasks can hide composer controls. The
+      // completed branch requires the exact original sent turn, Prompt,
+      // workspace and frozen config; unknown/reused routes remain rejected.
+      // Navigation never grants dispatch: every visible gate is read again.
       await dependencies.createFreshTask(client, config.timeoutMs, config.stateDatabase);
     } finally { client.close(); }
     report = await dependencies.probeAstronStudio(probeConfig, { databaseValidationScope: "runtime" });
@@ -1002,6 +1070,8 @@ export async function executeSingleTask(config, overrides = {}) {
     queryFinalResponse,
     queryTerminalFinalResponse,
     queryNativeStartRejection,
+    knownCompletedUiOwner,
+    ensureExecutionUiVisible,
     verifyPreparedFrameworkRetry,
     waitForThreadStreamLease,
     discoverMainTarget,
@@ -1132,13 +1202,16 @@ export async function executeSingleTask(config, overrides = {}) {
     }
   } else {
     if (config.resume) throw new Error("--resume 要求已有 automation-state.json");
-    await currentProbe(config, dependencies, true);
     state = createInitialState(config, dependencies.now());
     await persist(config, state);
   }
   let client = null;
   let capturedNative = null;
   try {
+    // Persist the zero-send attempt before a fresh environment probe. A probe
+    // rejection must retain PRE_SEND_DRIVER_ERROR evidence for the queue's
+    // existing strict recovery contract, rather than leaving STATE_MISSING.
+    if (!existing && !config.quotaRetryAuthorization) await currentProbe(config, dependencies, true);
     const target = await dependencies.discoverMainTarget(config.endpoint, config.timeoutMs);
     client = await dependencies.connectCdp(target.webSocketDebuggerUrl, config.timeoutMs);
     const prepared = await dependencies.prepareExecutionUi(client, config);
@@ -1167,6 +1240,10 @@ export async function executeSingleTask(config, overrides = {}) {
       admitted_at: new Date(stream.admittedAt).toISOString(),
     });
     await persist(config, state);
+    // Electron's document.hasFocus()/visibility may remain true while another
+    // native application owns the foreground. Revalidate and activate the exact
+    // existing app immediately before arming a physical dispatch.
+    const finalProbe = await currentProbe(config, dependencies, true);
     const sendTarget = await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
     if (config.runConfig.tested_model.custom_mapping || sendTarget.settled_transient_dialog) {
       const lastUi = await dependencies.readUiConfiguration(client, config.stateDatabase);
@@ -1195,7 +1272,8 @@ export async function executeSingleTask(config, overrides = {}) {
 
     let sendResult;
     try {
-      sendResult = await dependencies.clickSend(client, config.prompt, config.candidateWorkspace);
+      sendResult = await dependencies.clickSend(client, config.prompt, config.candidateWorkspace,
+        {expectedNativePid:finalProbe.process?.pid});
       if (!sendResult?.clicked) {
         throw new Error(`AstronStudio 发送前 UI 校验失败：${JSON.stringify(sendResult || null)}`);
       }

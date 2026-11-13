@@ -157,7 +157,10 @@ def score_cell(row):
 
 
 def detail_sheet_names(units, labels):
-    bases = {u["unit_id"]: re.sub(r"[\\/*?:\[\]]", "_", "评分详情_" + labels[u["unit_id"]]).strip("'") for u in units}
+    # Some XLSX exporters treat @ as implicit intersection even inside a quoted
+    # worksheet reference. Keep public model captions intact, but use portable
+    # internal tab identifiers so later cross-sheet formulas survive export.
+    bases = {u["unit_id"]: re.sub(r"[\\/*?:\[\]@]", "_", "评分详情_" + labels[u["unit_id"]]).strip("'") for u in units}
     counts = Counter(name.casefold() for name in bases.values())
     result = {}
     for unit_id, name in bases.items():

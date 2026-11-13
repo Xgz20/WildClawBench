@@ -80,6 +80,8 @@ def policy(manifest, contract):
 
 
 def effective_source(manifest, original, current, prior):
+    if manifest.get("runtime", {}).get("interrupted_answer_delivery_profile") is None:
+        return current, prior
     contract = {"task_id": manifest["identity"]["task_id"], "automated_checks": original}
     if policy(manifest, contract) is None:
         return current, prior

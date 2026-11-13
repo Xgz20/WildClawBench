@@ -914,6 +914,20 @@ def package_entry(source: Path, archive_path: PurePosixPath) -> PackageEntry:
     raise FlowError(f"PACKAGE_ENTRY_TYPE_UNSUPPORTED: {source}")
 
 
+def _preserve_symlink_mode(path: Path, mode: int) -> None:
+    if not path.is_symlink():
+        raise FlowError(f'SYMLINK_MODE_TARGET_INVALID: {path}')
+    if stat.S_IMODE(path.lstat().st_mode) != mode:
+        if hasattr(os, 'lchmod'):
+            os.lchmod(path, mode)
+        elif os.chmod in os.supports_follow_symlinks:
+            os.chmod(path, mode, follow_symlinks=False)
+        else:
+            raise FlowError(f'SYMLINK_MODE_COPY_UNSUPPORTED: {path}')
+    if stat.S_IMODE(path.lstat().st_mode) != mode:
+        raise FlowError(f'SYMLINK_MODE_COPY_MISMATCH: {path}')
+
+
 def walk_tree(
     source: Path,
     archive_prefix: PurePosixPath,
@@ -1643,6 +1657,7 @@ def extract_verified_return(verified: Mapping[str, Any], destination: Path) -> N
         target_path.parent.mkdir(parents=True, exist_ok=True)
         safe_symlink_target(PurePosixPath(relative), row["link_target"])
         os.symlink(row["link_target"], target_path)
+        _preserve_symlink_mode(target_path, stat.S_IMODE(members[relative][0].external_attr >> 16))
     for target_path, mode in sorted(
         directory_modes,
         key=lambda item: len(item[0].relative_to(destination).parts),

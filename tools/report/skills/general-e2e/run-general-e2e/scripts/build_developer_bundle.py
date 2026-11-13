@@ -98,6 +98,29 @@ def entry_bytes(path, kind):
     return path.read_bytes()
 
 
+def _preserve_symlink_mode(path, mode):
+    assert path.is_symlink(), path
+    if stat.S_IMODE(path.lstat().st_mode) != mode:
+        if hasattr(os, 'lchmod'):
+            os.lchmod(path, mode)
+        elif os.chmod in os.supports_follow_symlinks:
+            os.chmod(path, mode, follow_symlinks=False)
+        else:
+            raise RuntimeError('SYMLINK_MODE_COPY_UNSUPPORTED: ' + str(path))
+    assert stat.S_IMODE(path.lstat().st_mode) == mode, path
+
+
+def restore_directory_modes(target_root, entries):
+    directories = [r for r in entries if r['kind'] == 'directory']
+    for row in sorted(directories, key=lambda r: len(safe_rel(r['path']).parts), reverse=True):
+        path = target_root.joinpath(*safe_rel(row['path']).parts)
+        assert path.is_dir() and not path.is_symlink(), path
+        mode = int(row['mode'], 8)
+        if stat.S_IMODE(path.lstat().st_mode) != mode:
+            path.chmod(mode)
+        assert stat.S_IMODE(path.lstat().st_mode) == mode, path
+
+
 def copy_verified(source_root, target_root, row):
     rel = safe_rel(row["path"])
     source, target = source_root.joinpath(*rel.parts), target_root.joinpath(*rel.parts)
@@ -133,6 +156,7 @@ def copy_verified(source_root, target_root, row):
         assert not resolved.startswith("../") and resolved != ".."
         target.parent.mkdir(parents=True, exist_ok=True)
         target.symlink_to(row["link_target"])
+        _preserve_symlink_mode(target, int(row['mode'], 8))
     else:
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(payload)
@@ -379,6 +403,7 @@ def main(argv=None):
         for rel in ["package-manifest.json","receipts/package-receipt.json","receipts/import-return-receipt.json"]:
             if (source/rel).is_file():
                 (target/rel).parent.mkdir(parents=True,exist_ok=True);shutil.copy2(source/rel,target/rel)
+        restore_directory_modes(target, manifest['entries'])
         source_summary.append({"unit_id":uid,"harness":harness,"package_id":index["imports"][uid]["package_id"],
                                "package_manifest_sha256":sha(source/"package-manifest.json"),"bundle_directory":harness})
         print(json.dumps({"stage":"source-copied-and-hash-verified","harness":harness,"manifest_entries":len(manifest["entries"])}),flush=True)

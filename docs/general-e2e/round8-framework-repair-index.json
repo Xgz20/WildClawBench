@@ -1,0 +1,232 @@
+{
+  "schema": "general-e2e-framework-repair-index/v1",
+  "evaluation": "general-custom60 round8",
+  "source_base_revision": "61bba6fd6b6aa25fa78b63d4793ebc31efa0871f",
+  "production_repair_count": 9,
+  "repairs": [
+    {
+      "repair": "001",
+      "problem": "零发送预检恢复",
+      "production_source_revision": "7960908719fb9dee064ab88da6cb25c17a02d22f",
+      "patch_sha256": "564d7a480f146e891225b0a65e6c10a7002147216ce7cc6f9c668ce0b0ed346a",
+      "files": [
+        "eval_general_e2e/stages.py",
+        "tests/general_e2e/astronstudio_execute.test.mjs",
+        "tests/general_e2e/astronstudio_missing_preflight.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/recover_astronstudio_missing_preflight.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_execute.test.mjs",
+        "tests/general_e2e/astronstudio_missing_preflight.test.mjs"
+      ],
+      "scope": "Persist zero-send preflight failures and exact no-attempt recovery only; original five accepted attempts and all frozen inputs unchanged"
+    },
+    {
+      "repair": "002",
+      "problem": "项目路径提交",
+      "production_source_revision": "f9047bbcddb889bf3977248efe4aa70729c817cc",
+      "patch_sha256": "67c046197a2fa5ff7d1d04728f410ca302b866c75d5d68d9810de5bdbe5ea5c8",
+      "files": [
+        "eval_general_e2e/stages.py",
+        "tests/general_e2e/astronstudio_project_path_submit.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_project_path_submit.test.mjs"
+      ],
+      "scope": "Committed exact path and adjacent submit button only; no task Prompt or Workspace content changes"
+    },
+    {
+      "repair": "003",
+      "problem": "项目创建生命周期",
+      "production_source_revision": "55d50fb28d1af0851d92a12e5677e1801f8127bd",
+      "patch_sha256": "49533d79eca19408eb820c030634a6369db60254e269eb3ecdb0a4d165f033af",
+      "files": [
+        "eval_general_e2e/stages.py",
+        "tests/general_e2e/astronstudio_project_path_submit.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_project_path_submit.test.mjs"
+      ],
+      "scope": "Await completed project submission, closed form and stable full Workspace UI before next navigation"
+    },
+    {
+      "repair": "004",
+      "problem": "已完成任务的UI归属",
+      "production_source_revision": "ee58b3a05a77882796d305820e3532c1bc526689",
+      "patch_sha256": "776a72cbb5e49cb148a38c44a6d7a85292a22c77137ec1c02b945b52f52cccb3",
+      "files": [
+        "eval_general_e2e/stages.py",
+        "tests/general_e2e/astronstudio_completed_ui_owner.test.mjs",
+        "tests/general_e2e/astronstudio_execute.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_completed_ui_owner.test.mjs",
+        "tests/general_e2e/astronstudio_execute.test.mjs"
+      ],
+      "scope": "Verified completed own-unit UI route may navigate to pristine task, then reread all visible gates; no foreign/reused/active ownership admission"
+    },
+    {
+      "repair": "005",
+      "problem": "已结束透明提示框",
+      "production_source_revision": "2b83cc71b66bad5545d9a135f7729a445afae093",
+      "patch_sha256": "911c5e804a43028b7bd9032242e4621fa91ce9d86e52831edbfd4356512d12e5",
+      "files": [
+        "eval_general_e2e/stages.py",
+        "tests/general_e2e/astronstudio_ended_toast.test.mjs",
+        "tests/general_e2e/astronstudio_execute.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/prepare_astronstudio_zero_send_ui.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_ended_toast.test.mjs",
+        "tests/general_e2e/astronstudio_execute.test.mjs"
+      ],
+      "scope": "Exclude only exact ended zero-opacity noninteractive completion toast DOM from modal gates; preserve all other dialogs"
+    },
+    {
+      "repair": "006",
+      "problem": "发送前可见性",
+      "production_source_revision": "3a29cac0d973047a96209727547c706342f2da1b",
+      "patch_sha256": "8e7319ca05eeaa6b51bcaa3e27b9b39d2899102f191d27cec1867660a2c706bb",
+      "files": [
+        "eval_general_e2e/stages.py",
+        "tests/general_e2e/astronstudio_dispatch_retry.test.mjs",
+        "tests/general_e2e/astronstudio_visibility.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-dispatch-retry.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-visibility.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/recover_astronstudio_dispatch.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/snapshot_framework_dispatch.py",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_dispatch_retry.test.mjs",
+        "tests/general_e2e/astronstudio_visibility.test.mjs"
+      ],
+      "scope": "Native existing-window activation with PID recheck, hidden-page send prohibition and exact preparation metadata archival"
+    },
+    {
+      "repair": "007",
+      "problem": "原生前台进程身份",
+      "production_source_revision": "cb8a6391f7b5a6af4f6837f119e127cb0f9626b8",
+      "patch_sha256": "3c67ff3c0af13587a891b626cb8052cdfa8e8b8ab61acb74442547a40d34e6ea",
+      "files": [
+        "tests/general_e2e/astronstudio_execute.test.mjs",
+        "tests/general_e2e/astronstudio_native_foreground.test.mjs",
+        "tests/general_e2e/astronstudio_visibility.test.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-cdp.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-native-foreground.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-visibility.mjs",
+        "tools/report/skills/general-e2e/execute-general-e2e/scripts/snapshot_framework_dispatch.py",
+        "tools/report/skills/general-e2e/execute-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/astronstudio_execute.test.mjs",
+        "tests/general_e2e/astronstudio_native_foreground.test.mjs",
+        "tests/general_e2e/astronstudio_visibility.test.mjs"
+      ],
+      "scope": "Native macOS foreground PID identity, exact existing-window activation, complete final pre-arm probe and physical-click foreground recheck; no task or scoring changes"
+    },
+    {
+      "repair": "008",
+      "problem": "符号链接模式复制",
+      "production_source_revision": "ba83306688c6bf37f1bc1d047b4e1f3762ffb223",
+      "patch_sha256": "9ef56325cbc045c025c60d67a3d714e51590fe3b5fdf4a21afd1543b65ddae8f",
+      "files": [
+        "tests/general_e2e/symlink_copy_mode.test.mjs",
+        "tests/general_e2e/test_symlink_copy_modes.py",
+        "tools/report/skills/general-e2e/collect-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/collect-general-e2e/scripts/lib/general-finalizer.mjs",
+        "tools/report/skills/general-e2e/collect-general-e2e/skill-metadata.json",
+        "tools/report/skills/general-e2e/run-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/build_developer_bundle.py",
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/run_general_e2e.py",
+        "tools/report/skills/general-e2e/run-general-e2e/skill-metadata.json",
+        "tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+        "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/symlink_copy_mode.test.mjs",
+        "tests/general_e2e/test_symlink_copy_modes.py"
+      ],
+      "scope": "Copy-only preservation of relative symlink modes in collect, scoring input, return import and developer export; prepublication copied metadata check. Original source Workspace and all task/grader/GT/Rubric/weights unchanged."
+    },
+    {
+      "repair": "009",
+      "problem": "只读目录与独立导出",
+      "production_source_revision": "57b86cbe7c348fb2a21868c38be2adec95d72a30",
+      "patch_sha256": "3e2fc507e3faf04fec837325a9d2f1e19147f7d09467195e380852db26d0c298",
+      "files": [
+        "tests/general_e2e/test_symlink_copy_modes.py",
+        "tools/report/skills/general-e2e/run-general-e2e/SKILL.md",
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/build_developer_bundle.py",
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/selected_developer_bundle.py",
+        "tools/report/skills/general-e2e/run-general-e2e/skill-metadata.json"
+      ],
+      "regression_tests": [
+        "tests/general_e2e/test_symlink_copy_modes.py"
+      ],
+      "scope": "Developer output copying only; restore new-copy directories after materializing children and preserve selected-export symlink modes. Scores, standard return and sealed report remain unchanged."
+    }
+  ],
+  "additional_report_repairs": [
+    {
+      "problem": "工作表引用中的@被导出器移除",
+      "code": "tools/report/skills/general-e2e/report-general-e2e/scripts/report_case_views.py",
+      "test": "tests/general_e2e/test_report_reference_export.py"
+    },
+    {
+      "problem": "聚合浮点值的半分界显示不一致",
+      "code": "tools/report/skills/general-e2e/report-general-e2e/scripts/report_display.py",
+      "tests": [
+        "tests/general_e2e/test_report_general_e2e.py",
+        "tests/general_e2e/test_general_leader_report.py"
+      ]
+    }
+  ],
+  "historical_evidence_policy": "原发行、执行、候选、评分、数据集和规范报告保留；新源码只用于后续构建的新发行。",
+  "integration_followups": [
+    {
+      "problem": "Absent optional profile read required identity before checking activation",
+      "code": "tools/report/skills/general-e2e/score-general-e2e/scripts/interrupted_answer_delivery.py",
+      "test": "tests/general_e2e/test_interrupted_answer_delivery.py",
+      "boundary": "Disabled profile is a no-op; enabled profile still validates bindings."
+    },
+    {
+      "problem": "Private read-only directories were restored before child materialization",
+      "code": "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py::_write_gt",
+      "test": "tests/general_e2e/test_symlink_copy_modes.py"
+    },
+    {
+      "problem": "Legacy test fixtures lagged current profile inputs and materialized reference hashes",
+      "tests": [
+        "tests/general_e2e/test_general70_v4_reference_release.py",
+        "tests/general_e2e/test_info004_open_reference.py",
+        "tests/general_e2e/test_grading_core.py"
+      ],
+      "boundary": "Only test expectations and context change; rule logic and bound GT hashes remain separately verified."
+    }
+  ]
+}

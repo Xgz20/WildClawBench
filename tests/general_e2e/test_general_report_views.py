@@ -365,7 +365,16 @@ class GeneralReportViewsTests(unittest.TestCase):
         self.assertEqual(len({n.casefold() for n in names.values()}), 3)
         for name in names.values():
             self.assertLessEqual(len(name), 31)
-            self.assertNotRegex(name, r"[\\/*?:\[\]]")
+            self.assertNotRegex(name, r"[\\/*?:\[\]@]")
+        self.assertEqual(labels["three"], "valid@Harness")
+        self.assertIn("valid_Harness", names["three"])
+
+    def test_detail_sheet_at_sanitization_keeps_colliding_units_separate(self):
+        units = [{"unit_id": "at"}, {"unit_id": "underscore"}]
+        labels = {"at": "M@Client", "underscore": "M_Client"}
+        names = CASES.detail_sheet_names(units, labels)
+        self.assertEqual(len(set(names.values())), 2)
+        self.assertTrue(all("@" not in name and len(name) <= 31 for name in names.values()))
 
     def test_checkpoint_details_exclude_component_totals_and_diagnostics(self):
         row = {"score_status": "valid", "checkpoints": {"values": {"overall_score": .6, "automated.overall_score": .6,

@@ -38,6 +38,12 @@ def protect_office_copy(path):
         os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE)
 
 
+def copy_selected_symlink(source, target):
+    assert source.is_symlink() and not target.exists() and not target.is_symlink()
+    target.symlink_to(os.readlink(source))
+    flow._preserve_symlink_mode(target, stat.S_IMODE(source.lstat().st_mode))
+
+
 def build(args, shared):
     assert args.canonical_report_archive and args.task_index, "selected export requires a frozen report and explicit selection"
     index_path = args.task_index.resolve()
@@ -100,6 +106,7 @@ def build(args, shared):
             if score and (source / "runtime").exists():
                 exclusions.append({"path": relative + "/runtime", "reason": "disposable scoring runtime; frozen inputs retained"})
                 skip.add("runtime")
+            directory_entries = [{'path':relative,'kind':'directory','mode':f'{stat.S_IMODE(source.lstat().st_mode):04o}'}]
             def walk(directory):
                 for child in sorted(directory.iterdir(), key=lambda p: p.name):
                     rel = child.relative_to(source).as_posix()
@@ -112,6 +119,7 @@ def build(args, shared):
                     mode = child.lstat().st_mode
                     if stat.S_ISDIR(mode):
                         (staging / dest).mkdir(parents=True, exist_ok=True)
+                        directory_entries.append({'path':dest,'kind':'directory','mode':f'{stat.S_IMODE(mode):04o}'})
                         walk(child)
                     elif stat.S_ISLNK(mode):
                         link = os.readlink(child)
@@ -119,7 +127,7 @@ def build(args, shared):
                         target = staging / dest
                         target.parent.mkdir(parents=True, exist_ok=True)
                         assert not target.exists() and dest not in written
-                        target.symlink_to(link)
+                        copy_selected_symlink(child, target)
                         written.add(dest)
                     elif stat.S_ISREG(mode):
                         copy_file(child, dest)
@@ -127,6 +135,7 @@ def build(args, shared):
                         raise ValueError("unsupported selected artifact " + str(child))
             (staging / relative).mkdir(parents=True, exist_ok=True)
             walk(source)
+            shared.restore_directory_modes(staging, directory_entries)
 
         ordinal = {task: i + 1 for i, task in enumerate(data["scope"]["task_ids"])}
         tasks = []

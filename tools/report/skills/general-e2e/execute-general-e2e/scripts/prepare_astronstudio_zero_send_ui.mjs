@@ -3,7 +3,7 @@ import { readFile, writeFile, mkdir, open, unlink, realpath } from 'node:fs/prom
 import { createHash, randomUUID } from 'node:crypto';
 import { resolve, join, relative, isAbsolute } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { discoverMainTarget, CdpClient, renderExpectedPrompt, createFreshTask, clearOwnedComposerDraft } from './lib/astronstudio-cdp.mjs';
+import { discoverMainTarget, CdpClient, renderExpectedPrompt, createFreshTask, clearOwnedComposerDraft, isEndedCompletionToast } from './lib/astronstudio-cdp.mjs';
 import { queryNativeSessions, queryPristineThread, queryProjectForThread } from './lib/astronstudio-state.mjs';
 import { isRetryablePreSendFailure, isBlockingActiveSession } from './execute_astronstudio_macos.mjs';
 
@@ -52,7 +52,7 @@ export async function prepareZeroSendUi({ unitRoot, stateDatabase, endpoint, aud
   try {
     const target = await api.discoverMainTarget(endpoint, 5000);
     client = await api.connect(target.webSocketDebuggerUrl);
-    const ui = await client.evaluate(`(() => {const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(e=>e.getBoundingClientRect().width>0);const e=es[0];return{route:location.hash,count:es.length,text:e?.innerText?.trim(),chips:e?Array.from(e.querySelectorAll('[role="link"][contenteditable="false"]')).map(c=>({title:c.getAttribute('title'),display:c.innerText})):[],workspace:Array.from(document.querySelectorAll('[data-testid="workspace-picker-trigger"],[data-testid="project-picker-trigger"]')).map(e=>e.getAttribute('title')),dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(e=>e.getBoundingClientRect().width>0).map(e=>e.getAttribute('role'))}})()`);
+    const ui = await client.evaluate(`(() => {const isEndedCompletionToast = (${isEndedCompletionToast.toString()});const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(e=>e.getBoundingClientRect().width>0);const e=es[0];return{route:location.hash,count:es.length,text:e?.innerText?.trim(),chips:e?Array.from(e.querySelectorAll('[role="link"][contenteditable="false"]')).map(c=>({title:c.getAttribute('title'),display:c.innerText})):[],workspace:Array.from(document.querySelectorAll('[data-testid="workspace-picker-trigger"],[data-testid="project-picker-trigger"]')).map(e=>e.getAttribute('title')),dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(e=>e.getBoundingClientRect().width>0&&!isEndedCompletionToast(e)).map(e=>e.getAttribute('role'))}})()`);
     proof.before = { route: ui.route, editor_count: ui.count, text_length: ui.text?.length ?? null,
       text_sha256: typeof ui.text === 'string' ? sha(ui.text) : null, dialogs: ui.dialogs };
     const candidates = [];

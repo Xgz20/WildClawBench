@@ -1,5 +1,6 @@
 import { queryExactProjectsForWorkspace, queryProjectForThread, queryNativeSessions, queryPristineThread } from "./astronstudio-state.mjs";
 import { readCurrentCustomModel } from "./astronstudio-custom-model.mjs";
+import {readNativeForegroundApp} from './astronstudio-native-foreground.mjs';
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -128,7 +129,21 @@ export class CdpClient {
   }
 }
 
+export function isEndedCompletionToast(element, readStyle = getComputedStyle) {
+  if (!element || typeof element.getAttribute !== 'function'
+    || element.getAttribute('role') !== 'dialog' || element.getAttribute('aria-modal') !== 'false'
+    || element.getAttribute('data-type') !== 'success' || element.getAttribute('data-position') !== 'top-center'
+    || !element.hasAttribute('data-ending-style') || !element.querySelector('[data-slot="toast-title"]')
+    || !element.querySelector('[data-slot="toast-description"]') || element.querySelectorAll('input,textarea,select').length) return false;
+  const buttons = Array.from(element.querySelectorAll('button'));
+  if (buttons.length !== 2 || buttons.filter(b => b.getAttribute('data-slot') === 'toast-action' && b.getAttribute('aria-label') === '打开').length !== 1
+    || buttons.filter(b => b.getAttribute('data-slot') === 'toast-close' && b.getAttribute('aria-label') === '关闭通知').length !== 1) return false;
+  const style = readStyle(element);
+  return Number(style.opacity) === 0 && style.pointerEvents === 'none';
+}
+
 const HELPERS = `
+  const isEndedCompletionToast = (${isEndedCompletionToast.toString()});
   const visible = (element) => {
     if (!(element instanceof Element)) return false;
     if (element.closest('[inert], [aria-hidden="true"]')) return false;
@@ -136,6 +151,7 @@ const HELPERS = `
     const rect = element.getBoundingClientRect();
     return style.visibility !== "hidden" && style.display !== "none" && rect.width > 0 && rect.height > 0;
   };
+  const blockingDialog = (element) => visible(element) && !isEndedCompletionToast(element);
   const exactText = (selector, pattern) => Array.from(document.querySelectorAll(selector))
     .filter(visible)
     .filter((element) => pattern.test((element.innerText || element.textContent || "").trim()));
@@ -193,6 +209,7 @@ async function editorState(client) {
     return {
       thread_id: threadId(),
       editor_count: editors.length,
+      dialog_count: Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(blockingDialog).length,
       editor_text: editors.length === 1 ? (editors[0].innerText || "").trim() : null,
       link_chips: editors.length === 1
         ? Array.from(editors[0].querySelectorAll('[role="link"][contenteditable="false"]'))
@@ -252,6 +269,7 @@ export async function clickSidebarToggle(client) {
 
 export async function createFreshTask(client, timeoutMs, stateDatabase) {
   const before = await editorState(client);
+  if (before.dialog_count > 0) throw new Error('UNKNOWN_DIALOG_BLOCKS_NEW_TASK');
   if (before.editor_count === 1 && before.editor_text) {
     throw new Error("UNSENT_DRAFT_BLOCKS_NEW_TASK: preserve draft; use the bound zero-send preparation entrypoint before retrying");
   }
@@ -355,6 +373,45 @@ export async function clickProjectsTab(client) {
   return result;
 }
 
+export async function submitExactProjectPath(client, workspace) {
+  return client.evaluate(expression(`
+    const expected = ${JSON.stringify(workspace)};
+    const inputs = Array.from(document.querySelectorAll(
+      'input[aria-label="项目路径"], input[aria-label="Project path"]'
+    )).filter(visible);
+    if (inputs.length !== 1 || inputs[0].value !== expected
+      || inputs[0].getAttribute('value') !== expected) return { clicked: false, reason: 'path-not-committed' };
+    // The native setter can update value before React commits its handler.
+    // Require the rendered value attribute, then use only the adjacent field
+    // submit control. The sidebar toggle has the same accessible label.
+    const row = inputs[0].closest('[data-slot="input-control"]')?.parentElement;
+    if (!row || row.querySelectorAll('input').length !== 1) return { clicked: false, reason: 'path-row-unknown' };
+    const buttons = Array.from(row.querySelectorAll(
+      'button[aria-label="添加项目"], button[aria-label="Add project"]'
+    )).filter(visible).filter(button => !button.disabled);
+    if (buttons.length !== 1) return { clicked: false, count: buttons.length };
+    buttons[0].click(); return { clicked: true, count: 1, workspace: expected, source: 'committed-path-field-submit' };
+  `));
+}
+
+export async function readProjectPathCompletion(client, workspace) {
+  return client.evaluate(expression(`
+    const paths = Array.from(document.querySelectorAll(
+      '[data-testid="workspace-picker-trigger"], [data-testid="project-picker-trigger"]'
+    )).filter(visible).map(element => element.getAttribute('title'));
+    const inputs = Array.from(document.querySelectorAll(
+      'input[aria-label="项目路径"], input[aria-label="Project path"]'
+    )).filter(visible);
+    const cancel = Array.from(document.querySelectorAll(
+      'button[aria-label="取消添加项目"], button[aria-label="Cancel adding project"]'
+    )).filter(visible);
+    const dialogs = Array.from(document.querySelectorAll('[role="dialog"], [role="alertdialog"]')).filter(blockingDialog);
+    return { complete: inputs.length === 0 && cancel.length === 0 && dialogs.length === 0
+      && paths.length === 1 && paths[0] === ${JSON.stringify(workspace)},
+      input_count: inputs.length, cancel_count: cancel.length, dialog_count: dialogs.length, paths };
+  `));
+}
+
 export async function addWorkspace(client, workspace, timeoutMs) {
   await clickProjectsTab(client);
   await resetOwnedProjectPathForm(client,workspace);
@@ -418,19 +475,23 @@ export async function addWorkspace(client, workspace, timeoutMs) {
   );
   if (!typed.typed) throw new Error("AstronStudio 项目路径输入失败");
   const submitted = await waitFor(
-    () => client.evaluate(expression(`
-      const buttons = Array.from(document.querySelectorAll(
-        'button[aria-label="添加项目"], button[aria-label="Add project"]'
-      )).filter(visible).filter((button) => !button.disabled);
-      if (buttons.length !== 1) return { clicked: false, count: buttons.length };
-      buttons[0].click();
-      return { clicked: true, count: 1 };
-    `)),
+    () => submitExactProjectPath(client, workspace),
     (value) => value.clicked,
     timeoutMs,
     "等待 AstronStudio 项目路径提交按钮",
   );
   if (!submitted.clicked) throw new Error("AstronStudio 项目路径提交失败");
+  let settledAt = null;
+  await waitFor(
+    () => readProjectPathCompletion(client, workspace),
+    value => {
+      if (!value.complete) { settledAt = null; return false; }
+      settledAt ??= Date.now();
+      return Date.now() - settledAt >= 200;
+    },
+    timeoutMs,
+    '等待 AstronStudio 项目路径提交完成及完整工作区回显',
+  );
 }
 
 export async function resetOwnedProjectPathForm(client,workspace) {
@@ -438,7 +499,7 @@ export async function resetOwnedProjectPathForm(client,workspace) {
     const inputs=Array.from(document.querySelectorAll('input[aria-label="项目路径"], input[aria-label="Project path"]')).filter(visible);
     if(!inputs.length)return {reset:false,absent:true};
     const cancel=Array.from(document.querySelectorAll('button[aria-label="取消添加项目"], button[aria-label="Cancel adding project"]')).filter(visible);
-    const dialogs=Array.from(document.querySelectorAll('[role="dialog"],dialog')).filter(visible);
+    const dialogs=Array.from(document.querySelectorAll('[role="dialog"],dialog')).filter(blockingDialog);
     if(inputs.length!==1||inputs[0].value!==${JSON.stringify(workspace)}||cancel.length!==1||dialogs.length)
       return {reset:false,unsafe:true};
     cancel[0].click();return {reset:true,owned_workspace:${JSON.stringify(workspace)}};
@@ -469,7 +530,7 @@ export async function reloadIdleProjectProjection(client, stateDatabase, overrid
     const readSafety = () => client.evaluate(expression(`
       const editors = Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible);
       return { editor_count: editors.length, empty: editors.length === 1 && (editors[0].innerText || '').trim() === '',
-        dialogs: Array.from(document.querySelectorAll('[role="dialog"],[aria-modal="true"]')).filter(visible).length,
+        dialogs: Array.from(document.querySelectorAll('[role="dialog"],[aria-modal="true"]')).filter(blockingDialog).length,
         stops: Array.from(document.querySelectorAll('button[aria-label]')).filter(visible)
           .filter((button) => /^(?:停止生成|Stop generating)$/iu.test(button.getAttribute('aria-label') || '')).length };
     `));
@@ -501,7 +562,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
       editor_empty: editors.length === 1 && (editors[0].innerText || '').trim() === '',
       dialog_count: Array.from(document.querySelectorAll(
         '[role="dialog"], [aria-modal="true"]'
-      )).filter(visible).length,
+      )).filter(blockingDialog).length,
       stop_count: buttons.filter((button) => /^(?:停止生成|Stop generating)$/iu.test(
         (button.getAttribute('aria-label') || '').trim()
       )).length };
@@ -619,7 +680,7 @@ export async function openExactProjectConversation(client, workspace, stateDatab
   const clicked = await client.evaluate(expression(`
     const dialogs = Array.from(document.querySelectorAll(
       '[role="dialog"], [aria-modal="true"]'
-    )).filter(visible);
+    )).filter(blockingDialog);
     const stops = Array.from(document.querySelectorAll('button[aria-label]'))
       .filter(visible).filter((button) => /^(?:停止生成|Stop generating)$/iu.test(
         (button.getAttribute('aria-label') || '').trim()
@@ -726,7 +787,7 @@ export async function selectWorkspace(client, workspace, timeoutMs, stateDatabas
         () => client.evaluate(expression(`
           const dialogs = Array.from(document.querySelectorAll(
             '[role="dialog"], [aria-modal="true"]'
-          )).filter(visible);
+          )).filter(blockingDialog);
           const options = Array.from(document.querySelectorAll('[role="option"]'))
             .filter(visible);
           return { dialog_count: dialogs.length, option_count: options.length };
@@ -816,7 +877,7 @@ export async function fillPrompt(client, prompt, timeoutMs) {
 export async function clearOwnedComposerDraft(client, {route, text}, timeoutMs=5000) {
   const focused=await client.evaluate(expression(`
     const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible);
-    const dialogs=Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(visible);
+    const dialogs=Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(blockingDialog);
     if(location.hash!==${JSON.stringify(route)}||es.length!==1||dialogs.length
       ||es[0].innerText?.trim()!==${JSON.stringify(text)})return false;
     es[0].focus();return document.activeElement===es[0];
@@ -833,7 +894,7 @@ export async function clearOwnedComposerDraft(client, {route, text}, timeoutMs=5
     const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(visible),e=es[0];
     return {route:location.hash,count:es.length,text:e?.innerText?.trim(),
       chips:e?.querySelectorAll('[role="link"][contenteditable="false"]').length,
-      dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(visible).length};
+      dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(blockingDialog).length};
   `));const empty=value.route===route&&value.count===1&&value.text===''&&value.chips===0&&value.dialogs===0;
     if(empty&&emptySince===null)emptySince=Date.now();if(!empty)emptySince=null;
     return {...value,empty_stable_ms:emptySince===null?0:Date.now()-emptySince};
@@ -850,7 +911,7 @@ export async function inspectSendTarget(client, prompt, workspace) {
     const workspaces = ['workspace-picker-trigger', 'project-picker-trigger']
       .flatMap((testId) => Array.from(document.querySelectorAll('[data-testid="' + testId + '"]')))
       .filter(visible);
-    const dialogs = Array.from(document.querySelectorAll('[role="dialog"], [aria-modal="true"]')).filter(visible);
+    const dialogs = Array.from(document.querySelectorAll('[role="dialog"], [aria-modal="true"]')).filter(blockingDialog);
     const buttons = Array.from(document.querySelectorAll(
       'button[type="submit"][aria-label="发送消息"], button[type="submit"][aria-label="Send message"]'
     )).filter(visible).filter((button) => !button.disabled);
@@ -866,13 +927,14 @@ export async function inspectSendTarget(client, prompt, workspace) {
       ? (workspaces[0].getAttribute('title') || '').trim() : null;
     if (editors.length !== 1 || !promptMatches
       || workspaces.length !== 1 || workspacePath !== expectedWorkspace
-      || dialogs.length !== 0 || buttons.length !== 1) {
+      || dialogs.length !== 0 || buttons.length !== 1 || document.visibilityState === 'hidden') {
       return {
         ready: false, count: buttons.length, editor_count: editors.length,
         thread_id: threadId(),
         prompt_matches: promptMatches, link_chip_count: linkChips.length,
         workspace_count: workspaces.length, workspace_matches: workspacePath === expectedWorkspace,
         dialog_count: dialogs.length,
+        document_visibility: document.visibilityState || null,
         dialogs: dialogs.map((dialog) => ({ role: dialog.getAttribute('role'),
           label: dialog.getAttribute('aria-label'),
           headings: Array.from(dialog.querySelectorAll('h1,h2,[role="heading"]')).map((e) => e.innerText),
@@ -886,7 +948,7 @@ export async function inspectSendTarget(client, prompt, workspace) {
     if (!hit || (hit !== buttons[0] && !buttons[0].contains(hit))) {
       return { ready: false, count: 1, reason: 'send-button-obscured' };
     }
-    return { ready: true, count: 1, x, y, thread_id: threadId() };
+    return { ready: true, count: 1, x, y, thread_id: threadId(), document_visibility: document.visibilityState || null };
   `));
 }
 
@@ -932,9 +994,13 @@ export async function ensureSendTargetReady(client, prompt, workspace, options =
     dialog_wait_ms: Date.now() - started } : target;
 }
 
-export async function clickSend(client, prompt, workspace) {
+export async function clickSend(client, prompt, workspace, options={}) {
   const target = await inspectSendTarget(client, prompt, workspace);
   if (!target.ready) return { clicked: false, ...target };
+  if (Number.isInteger(options.expectedNativePid)) {
+    const native = await (options.readNativeForegroundApp || readNativeForegroundApp)();
+    if (native.pid !== options.expectedNativePid) return {clicked:false,reason:'native-foreground-owner-changed',native_foreground:native};
+  }
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved", x: target.x, y: target.y,
   });

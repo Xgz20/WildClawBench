@@ -10,7 +10,7 @@ import {parseBatchArgs,resolveBatchPlan,assertQueueIdentity,acquireWorkerLock,pe
 import {queryNativeSessions} from './lib/astronstudio-state.mjs';
 import {queryNativeStartRejection} from './lib/astronstudio-start-rejection.mjs';
 import {probeAstronStudio} from './probe_astronstudio_macos.mjs';
-import {CdpClient,discoverMainTarget,readUiConfiguration,renderExpectedPrompt,currentThreadId,clearOwnedComposerDraft} from './lib/astronstudio-cdp.mjs';
+import {CdpClient,discoverMainTarget,readUiConfiguration,renderExpectedPrompt,currentThreadId,clearOwnedComposerDraft,isEndedCompletionToast} from './lib/astronstudio-cdp.mjs';
 import {readDispatchAuthorization,verifyDispatchHumanAuthority,assertUnacceptedDispatch,archiveDispatchAttempt,verifyFrameworkDispatchRecoveries,hash,requireRetry as check} from './lib/astronstudio-dispatch-retry.mjs';
 
 const json=async p=>JSON.parse(await readFile(p,'utf8'));
@@ -81,7 +81,7 @@ export async function recoverUnacceptedDispatch(options,overrides={}) {
     const uiConfig=await api.readUiConfiguration(client,config.stateDatabase);
     check(uiConfig.model===config.expectedModel&&uiConfig.reasoning===config.expectedReasoning
       &&uiConfig.permission===config.expectedPermission,'UI_CONFIG_DRIFT');
-    const readUi=()=>client.evaluate(`(() => {const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(e=>e.getBoundingClientRect().width>0);const e=es[0];return{route:location.hash,count:es.length,text:e?.innerText?.trim(),chips:e?Array.from(e.querySelectorAll('[role="link"][contenteditable="false"]')).map(c=>({title:c.getAttribute('title'),display:c.innerText})):[],workspace:Array.from(document.querySelectorAll('[data-testid="workspace-picker-trigger"],[data-testid="project-picker-trigger"]')).filter(e=>e.getBoundingClientRect().width>0).map(e=>e.getAttribute('title')),dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(e=>e.getBoundingClientRect().width>0).length}})()`);
+    const readUi=()=>client.evaluate(`(() => {const isEndedCompletionToast = (${isEndedCompletionToast.toString()});const es=Array.from(document.querySelectorAll('[data-testid="composer-editor"]')).filter(e=>e.getBoundingClientRect().width>0);const e=es[0];return{route:location.hash,count:es.length,text:e?.innerText?.trim(),chips:e?Array.from(e.querySelectorAll('[role="link"][contenteditable="false"]')).map(c=>({title:c.getAttribute('title'),display:c.innerText})):[],workspace:Array.from(document.querySelectorAll('[data-testid="workspace-picker-trigger"],[data-testid="project-picker-trigger"]')).filter(e=>e.getBoundingClientRect().width>0).map(e=>e.getAttribute('title')),dialogs:Array.from(document.querySelectorAll('[role="dialog"],[role="alertdialog"],[aria-modal="true"]')).filter(e=>e.getBoundingClientRect().width>0&&!isEndedCompletionToast(e)).length}})()`);
     let ui=await readUi();check(ui.count===1&&ui.dialogs===0&&ui.workspace.length===1&&ui.workspace[0]===config.candidateWorkspace,'UI_SCOPE');
     const cleanupPath=join(root,'cleanup.json');
     if(await exists(cleanupPath)) {

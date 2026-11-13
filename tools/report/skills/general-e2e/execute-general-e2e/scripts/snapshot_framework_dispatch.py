@@ -61,6 +61,71 @@ def control_snapshot(unit, controls, original_controls, state):
         expected.update(['pre-send-failures',*names])
         refs.append({'state_path':names[0],'state_sha256':digest,'record_path':names[1],
                      'record_sha256':record_digest,'event_index':index})
+    # New preparation metadata is copied as original evidence, never dropped.
+    # Only the two exact, independently validated UI profiles are registered.
+    manifest=json.loads((unit/'manifest.json').read_bytes())
+    for entry in entries:
+        name=entry['path']
+        if re.fullmatch(r'completed-ui-owner-[0-9a-f-]{36}\.proof\.json',name):
+            proof_path=controls/name
+            proof=json.loads(proof_path.read_bytes())
+            snapshot_name=name.replace('.proof.json','.state.json')
+            snapshot_path=controls/snapshot_name
+            require(proof.get('profile')=='bound-completed-own-unit-ui-navigation/v1'
+                    and proof.get('status')=='OWNERSHIP_VERIFIED'
+                    and proof.get('target_task_id')==state['identity']['task_id']
+                    and proof.get('source_state_snapshot')==snapshot_name
+                    and proof.get('prompt_send_calls')==0 and proof.get('dispatch_authorized') is False
+                    and proof.get('requires_fresh_visible_probe') is True,
+                    'PREPARATION_OWNER_PROFILE')
+            require(snapshot_path.is_file() and not snapshot_path.is_symlink()
+                    and snapshot_path.resolve()==snapshot_path,'PREPARATION_OWNER_SOURCE')
+            owner_raw=snapshot_path.read_bytes()
+            require(sha(owner_raw)==proof.get('source_state_sha256'),'PREPARATION_OWNER_SHA')
+            owner=json.loads(owner_raw); native=proof.get('native',{})
+            tasks=[t for t in manifest['tasks'] if t['task_id']==proof.get('owner_task_id')]
+            require(len(tasks)==1 and tasks[0]['task_id']!=state['identity']['task_id'],'PREPARATION_OWNER_TASK')
+            task=tasks[0]; source_unit=Path(state['task_root']).parents[2]
+            expected_cwd=str(source_unit/str(safe(task['workspace']['path'])))
+            require(proof.get('source_state_path')==str(source_unit/'.general-e2e/execution'/task['task_id']/'automation-state.json')
+                    and owner.get('identity',{}).get('batch_id')==state['identity']['batch_id']
+                    and owner['identity'].get('unit_id')==state['identity']['unit_id']
+                    and owner['identity'].get('task_id')==task['task_id'] and owner['identity'].get('attempt_id')
+                    and owner.get('dataset')==state.get('dataset')
+                    and owner.get('run_config',{}).get('config_digest')==state.get('run_config',{}).get('config_digest')
+                    and owner.get('phase')=='COMPLETED' and owner.get('execution',{}).get('business_status')=='completed'
+                    and owner['execution'].get('error') is None and owner['execution'].get('finished_at')
+                    and owner.get('prompt',{}).get('send_status')=='sent'
+                    and owner['prompt'].get('sha256')==task['prompt']['sent_sha256']
+                    and owner.get('send',{}).get('dispatch_attempt_count')==1
+                    and owner.get('session',{}).get('verified') is True
+                    and owner.get('candidate_workspace')==expected_cwd and native.get('cwd')==expected_cwd
+                    and all(native.get(k) and native[k]==owner['session'].get(k)
+                            for k in ('thread_id','turn_id','session_id','cwd'))
+                    and native.get('latest_turn_id')==native.get('turn_id')
+                    and native.get('status')=='completed' and native.get('turn_state')=='completed'
+                    and native.get('session_status')=='ready' and native.get('active_turn_id') is None and native.get('error') is None,
+                    'PREPARATION_OWNER_BINDING')
+            expected.update([name,snapshot_name])
+        elif re.fullmatch(r'native-visibility-[0-9a-f-]{36}\.json',name):
+            proof=json.loads((controls/name).read_bytes())
+            v1=proof.get('profile')=='owned-native-visible-send/v1'
+            v2=proof.get('profile')=='owned-native-visible-send/v2'
+            require((v1 or v2) and proof.get('status')=='PASS'
+                    and proof.get('identity')=={k:state['identity'][k] for k in ('batch_id','unit_id','task_id')}
+                    and proof.get('run_config_digest')==state.get('run_config',{}).get('config_digest')
+                    and proof.get('original_process_identity_reverified') is True
+                    and ((v1 and proof.get('changed') is True and proof.get('before',{}).get('visibility')!='visible')
+                         or (v2 and isinstance(proof.get('changed'),bool)
+                             and isinstance(proof.get('app_pid'),int) and proof.get('app_pid')>1
+                             and proof.get('native_after',{}).get('pid')==proof.get('app_pid')
+                             and isinstance(proof.get('native_after',{}).get('bundle_id'),str)))
+                    and proof.get('after',{}).get('visibility')=='visible'
+                    and proof.get('prompt_send_calls')==0 and proof.get('app_restart_calls')==0
+                    and proof.get('native_open_calls') in (0,1)
+                    and (proof.get('page_bring_to_front_calls')==1 if v1 else proof.get('page_bring_to_front_calls') in (0,1)),
+                    'PREPARATION_VISIBILITY_PROFILE')
+            expected.add(name)
     require({entry['path'] for entry in entries}==expected
             and all(entry['kind'] in ('file','directory') for entry in entries),'UNEXPECTED_CONTROL_FILES')
     return entries,refs

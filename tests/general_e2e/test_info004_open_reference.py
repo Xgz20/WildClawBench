@@ -1,4 +1,5 @@
 from copy import deepcopy
+import ast
 import hashlib
 import json
 from pathlib import Path
@@ -71,7 +72,18 @@ class Info004OpenReferenceTests(unittest.TestCase):
         self.assertEqual(current['digests']['prompt_sha256'], old['digests']['prompt_sha256'])
         self.assertEqual(current['digests']['workspace_exec_sha256'], old['digests']['workspace_exec_sha256'])
         contract = next(json.loads(m.data) for m in self.members if m.path.endswith('/private-scoring/contract.json'))
-        self.assertEqual(contract['automated_checks'], self.task['automated_checks'])
+        # Dataset materialization binds the canonical bundled reference bytes;
+        # compare all rule logic exactly while separately checking those hashes.
+        normalize = lambda code: re.sub(r'(EXPECTED_(?:REFERENCE|SOURCE_INDEX)_SHA256 = )"[a-f0-9]{64}"', r'\1"<reference-sha>"', code)
+        self.assertEqual(normalize(contract['automated_checks']), normalize(self.task['automated_checks']))
+        constants = {node.targets[0].id: ast.literal_eval(node.value)
+                     for node in ast.parse(contract['automated_checks']).body
+                     if isinstance(node, ast.Assign) and len(node.targets) == 1 and isinstance(node.targets[0], ast.Name)
+                     and node.targets[0].id in ['EXPECTED_REFERENCE_SHA256', 'EXPECTED_SOURCE_INDEX_SHA256']}
+        for name, filename in [('EXPECTED_REFERENCE_SHA256', 'reference_answer.md'),
+                               ('EXPECTED_SOURCE_INDEX_SHA256', 'reference_sources.json')]:
+            payload = next(m.data for m in self.members if m.path.endswith('/private-scoring/gt/' + filename))
+            self.assertEqual(constants[name], hashlib.sha256(payload).hexdigest())
         self.assertEqual(contract['semantic_weight_scale'], 98.)
         native = RUNTIME._parse_semantic_criteria(contract['llm_judge_rubric'], weight_scale=98.)
         self.assertEqual(len(native), 22)
@@ -92,7 +104,8 @@ class Info004OpenReferenceTests(unittest.TestCase):
             self.assertFalse(index['policy']['required_bibliography'])
             self.assertEqual(index['known_unresolved_claims'], [])
             self.assertEqual({r['claim_id'] for r in index['reference_review_targets']}, {'Y1-C1', 'Y1-C2'})
-            self.assertIn('S1-dong-bingyue', index['remaining_reference_limitations'][0])
+            self.assertIn('早稻田文集版', index['remaining_reference_limitations'][0])
+            self.assertIn('79—92', index['remaining_reference_limitations'][0])
             for row in index['sources']:
                 data = (root / 'evaluator_evidence' / row['path']).read_bytes()
                 self.assertEqual(hashlib.sha256(data).hexdigest(), row['sha256'])

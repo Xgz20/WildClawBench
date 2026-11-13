@@ -492,6 +492,17 @@ class ReportGeneralE2ETests(unittest.TestCase):
         self.assertEqual(REPORT.fixed_number(1234.565, grouping=True), "1,234.57")
         self.assertEqual(REPORT.fixed_number(-95.625), "-95.63")
 
+    def test_display_rounding_handles_float_half_ties_without_loosening_exact_inputs(self) -> None:
+        from decimal import Decimal
+        value = 86.52499999999999
+        self.assertEqual(REPORT.fixed_number(value), "86.53")
+        self.assertEqual(REPORT.fixed_number(-value), "-86.53")
+        self.assertEqual(REPORT.fixed_number(.8652499999999999, multiplier=100), "86.53")
+        self.assertEqual(REPORT.fixed_number(86.52499999), "86.52")
+        self.assertEqual(REPORT.fixed_number("86.52499999999999"), "86.52")
+        self.assertEqual(REPORT.fixed_number(Decimal("86.52499999999999")), "86.52")
+        self.assertEqual(value, 86.52499999999999)
+
     def test_markdown_renders_secondary_failure_policy_without_filling_rubric(self) -> None:
         data = self.data()
         row = next(row for row in data['tasks'] if row['score_status'] == 'unscored')

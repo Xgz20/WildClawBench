@@ -8,6 +8,18 @@ DELIVERY = RUNTIME.interrupted_answer_delivery
 
 
 class InterruptedAnswerDeliveryTests(unittest.TestCase):
+    def test_absent_optional_profile_preserves_legacy_manifest_and_prior_correction(self):
+        prior = {"correction_id": "existing-profile"}
+        for manifest in [{}, {"runtime": {}}, {"runtime": {"interrupted_answer_delivery_profile": None}}]:
+            self.assertEqual(DELIVERY.effective_source(manifest, "original", "current", prior), ("current", prior))
+
+    def test_enabled_profile_still_requires_valid_bound_metadata(self):
+        manifest = {"runtime": {"interrupted_answer_delivery_profile": {"profile": "unknown"}},
+                    "identity": {"task_id": "fixture"}, "digests": {"contract_sha256": "wrong"},
+                    "dataset": {"id": "wrong", "digest": "wrong"}}
+        with self.assertRaises(ValueError):
+            DELIVERY.effective_source(manifest, "original", "current", None)
+
     def extractor(self):
         source = RUNTIME.answer_delivery.FUNCTION
         source_sha = hashlib.sha256(source.encode()).hexdigest()

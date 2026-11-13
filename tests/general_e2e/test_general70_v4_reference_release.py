@@ -48,7 +48,7 @@ class General70V4ReferenceReleaseTests(unittest.TestCase):
         namespace.update(contract=json.loads(contract_bytes), contract_bytes=contract_bytes,
                          dataset=dataset, judge_config={'protocol': 'codex-agent-judge-v1',
                                                         'model': 'gpt-6.1-sol', 'reasoning_effort': 'high'},
-                         protect_runtime_office_inputs=False, validation=None, private_gt_entries=[])
+                         protect_runtime_office_inputs=False, validation=None, private_gt_entries=[], evidence_admission=None)
         result = {}
         for expression in self.profile_expressions:
             result.update(eval(compile(expression, '<actual-prepare-profile-expression>', 'eval'), namespace))

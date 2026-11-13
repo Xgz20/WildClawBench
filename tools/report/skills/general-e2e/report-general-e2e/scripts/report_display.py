@@ -2,13 +2,27 @@
 
 from decimal import Decimal, ROUND_HALF_UP, localcontext
 from collections import Counter
+import math
 
 
 def fixed_number(value, digits=2, *, grouping=False, multiplier=1):
     number = Decimal(str(value)) * multiplier
     with localcontext() as context:
         context.prec = max(28, number.adjusted() + digits + 2)
-        rounded = number.quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP)
+        quantum = Decimal(1).scaleb(-digits)
+        if isinstance(value, float) and math.isfinite(value):
+            # Aggregation can put an exact decimal half-tie one or two binary
+            # ULPs below its boundary (86.525 -> 86.52499999999999). Correct
+            # only that machine-precision ambiguity for display. Explicit
+            # Decimal/string inputs and materially sub-boundary values remain
+            # exact, and the stored score/resource values are never changed.
+            half = quantum / 2
+            steps = (number / half).to_integral_value(rounding=ROUND_HALF_UP)
+            boundary = steps * half
+            tolerance = Decimal(str(math.ulp(value))) * abs(multiplier) * 2
+            if steps % 2 and abs(number - boundary) <= tolerance:
+                number = boundary
+        rounded = number.quantize(quantum, rounding=ROUND_HALF_UP)
     return format(rounded, f"{',' if grouping else ''}.{digits}f")
 
 

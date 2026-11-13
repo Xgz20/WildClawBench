@@ -6,12 +6,25 @@ controlled comparisons when the target model or Harness has no peer.
 from copy import deepcopy
 from decimal import Decimal, ROUND_HALF_UP
 import hashlib
+import importlib.util
 import json
 import math
 from pathlib import Path
 import re
 import xml.etree.ElementTree as ET
 import zipfile
+
+try:
+    from report_display import fixed_number
+except ModuleNotFoundError as exc:
+    if exc.name != "report_display":
+        raise
+    # Also support file-based loading without modifying the caller's sys.path.
+    _display_spec = importlib.util.spec_from_file_location(
+        "general_e2e_leader_display", Path(__file__).with_name("report_display.py"))
+    _display_module = importlib.util.module_from_spec(_display_spec)
+    _display_spec.loader.exec_module(_display_module)
+    fixed_number = _display_module.fixed_number
 
 DIMENSIONS = ["分类对比", "Agent能力对比", "难度对比", "模态对比"]
 
@@ -107,9 +120,7 @@ def column(i):
 
 def num(value, digits=2, percent=False, grouping=False):
     if value is None: return "-"
-    d = Decimal(str(value)) * (100 if percent else 1)
-    d = d.quantize(Decimal(1).scaleb(-digits), rounding=ROUND_HALF_UP)
-    return format(d, ("," if grouping else "") + f".{digits}f") + ("%" if percent else "")
+    return fixed_number(value, digits, grouping=grouping, multiplier=100 if percent else 1) + ("%" if percent else "")
 
 
 def average_token_comparisons(data, peer_labels=None):

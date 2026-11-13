@@ -31,11 +31,20 @@ def sources(tid):
     return a,b,_strip_codeblock(a['Automated Checks']),_strip_codeblock(b['Automated Checks'])
 
 class Round7SourceRepairTests(unittest.TestCase):
+    def historical_profiles(self):
+        # This suite compares the eight materialized v4 repairs. Later runtime-
+        # only profiles use their own frozen sources and behavior regressions.
+        index=ROOT/'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
+        task_ids={Path(path).stem for path in json.loads(index.read_text())['files']}
+        profiles={digest:row for digest,row in _PROFILES.items() if row['task_id'] in task_ids}
+        self.assertEqual(len(profiles),8)
+        return profiles
+
     def test_native_repairs_are_opted_in_and_historical_manifests_keep_old_source(self):
         path=ROOT/'tools/report/skills/general-e2e/score-general-e2e/scripts/shared_source_repairs.py'
         spec=importlib.util.spec_from_file_location('round7_bridge',path)
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
-        for row in _PROFILES.values():
+        for row in self.historical_profiles().values():
             _,_,old,new=sources(row['task_id'])
             contract={'task_id':row['task_id'],'automated_checks':old}
             manifest={'identity':{'task_id':row['task_id']},'runtime':{}}
@@ -99,12 +108,21 @@ class Round7SourceRepairTests(unittest.TestCase):
             with self.assertRaises(ValueError):module.evidence(rt,attempt,manifest,contract,task)
 
     def test_only_exact_sources_change_and_task_meaning_stays_frozen(self):
-        for digest,profile in _PROFILES.items():
+        for digest,profile in self.historical_profiles().items():
             a,b,old,new=sources(profile['task_id'])
             self.assertEqual(hashlib.sha256(old.encode()).hexdigest(),digest)
             self.assertEqual(effective_source(profile['task_id'],old)[0],new)
             for section in ['Prompt','Expected Behavior','Grading Criteria','LLM Judge Rubric']:
-                self.assertEqual(a[section],b[section],section)
+                expected=a[section]
+                if profile['task_id']=='01_Information_Search_Organization_task_001_acl2024_long_context_qa':
+                    # The separately hash-bound reference revision changes Q,
+                    # not the source repair's rule logic, weights or formula.
+                    # Keep every other byte of all four sections constrained.
+                    from tests.general_e2e.test_local_scoring_runtime import RUNTIME
+                    self.assertEqual(RUNTIME.reference_revision.registry()['corrected_Q'],57)
+                    expected=expected.replace('当前11篇论文、56条QA','当前11篇论文、57条QA')
+                    expected=expected.replace('覆盖m/56','覆盖m/57').replace('当前Q=56','当前Q=57')
+                self.assertEqual(expected,b[section],section)
             self.assertEqual(effective_source('other',old),(old,None))
             self.assertEqual(effective_source(profile['task_id'],old+'\n'),(old+'\n',None))
             ast.parse(new)
