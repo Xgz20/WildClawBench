@@ -1,4 +1,12 @@
-<h1 align="center">WildClawBench</h1>
+# AStudio Eval Framework
+
+AStudio 产品线的智能体评测框架，基于 WildClawBench 扩展，支持 AstronCode 等 CLI Harness，以及 AStudio 等桌面客户端的通用、Web 站点端到端评测。工程包含数据集、执行与采集入口、评分与报告能力和各阶段 Skill。
+
+公司仓库为 `astudio-eval-framework`，配套可视化平台为 `astudio-eval-platform`。新地址及多远程配置见[仓库地址与本地配置](docs/git-remotes.md)。
+
+下文保留 WildClawBench 上游基准的介绍、来源与统计。
+
+<h2 align="center">WildClawBench</h2>
 
 <p align="center">
   <img src="assets/lobster_battle.png" alt="WildClawBench Lobster" width="480">

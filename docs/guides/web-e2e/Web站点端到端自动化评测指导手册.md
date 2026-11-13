@@ -216,7 +216,7 @@ QwenWork 执行并发和 Codex Desktop 评分并发都设为 1。
 请使用 $run-web-e2e 完成一次 Web 站点端到端评测的准备、执行、评分、打包回传、收集和报告。
 
 如果本机还没有仓库，请从下面地址下载到指定目录；已经存在时只校验并复用，不要覆盖本地修改。
-仓库：https://code.iflytek.com/CYXH_Agent/astroncode-eval.git
+仓库：ssh://git@code.iflytek.com:30004/CYXH_Agent/AstronStudio-Eval/astudio-eval-framework.git
 本地目录：/Users/tester/Project/WildClawBench
 
 用例：
