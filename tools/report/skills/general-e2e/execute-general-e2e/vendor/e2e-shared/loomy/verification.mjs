@@ -1,0 +1,106 @@
+// Replays archived evidence only; never contacts a running desktop client.
+import { readFile, realpath } from 'node:fs/promises';
+import { isAbsolute, join, resolve } from 'node:path';
+import { digest, jsonBytes, PROFILE, requireValue, sha, verifyBinding } from './index.mjs';
+import { normalizeTrace, resourceMetrics } from './collection.mjs';
+import { checkNativeModel } from './execution.mjs';
+import { assertConfiguration } from './ui.mjs';
+
+export async function verifyArchivedLoomy(index, state, traceRoot) {
+  if (index.adapter?.id !== PROFILE) {
+    requireValue(state.driver?.harness !== 'loomy', 'TRACE_ADAPTER_MISMATCH');
+    return null;
+  }
+  requireValue(state.driver?.harness === 'loomy' && state.driver.platform === 'macos-arm64'
+    && digest(index.identity) === digest(state.identity), 'ARCHIVE_IDENTITY_MISMATCH');
+  traceRoot = await realpath(traceRoot);
+  const bytes = async path => {
+    requireValue(typeof path === 'string' && !isAbsolute(path) && !path.includes('\\')
+      && path.split('/').every(part => part && part !== '.' && part !== '..'), 'ARCHIVE_PATH_INVALID');
+    const target = resolve(traceRoot, path);
+    requireValue(await realpath(target) === target && target.startsWith(traceRoot + '/'), 'ARCHIVE_PATH_UNSAFE');
+    return readFile(target);
+  };
+  const requiredRaw = ['raw/native-scoped-snapshot.json', 'raw/native-part-rows.jsonl', 'raw/native-message-rows.jsonl',
+    'raw/driver-state.json', 'raw/dispatch-journal.json', 'raw/sent-prompt.txt', 'raw/frozen-run-config.json', 'raw/terminal-evidence.json'];
+  requireValue(requiredRaw.every(path => index.raw_trace.some(row => row.path === path))
+    && index.binding_evidence.length === 1, 'ARCHIVE_SOURCE_SCOPE_INVALID');
+  const load = async path => JSON.parse((await bytes(path)).toString('utf8'));
+  const [native, journal, driver, config, terminal, promptBytes, transcript] = await Promise.all([
+    load('raw/native-scoped-snapshot.json'), load('raw/dispatch-journal.json'), load('raw/driver-state.json'),
+    load('raw/frozen-run-config.json'), load('raw/terminal-evidence.json'),
+    bytes('raw/sent-prompt.txt'), bytes(index.transcript.path),
+  ]);
+  const { config_digest, ...payload } = config;
+  requireValue(config_digest === digest(payload) && config.client.version === '0.9.39'
+    && config.transport === 'macos-native-accessibility'
+    && sha(await bytes('raw/frozen-run-config.json')) === journal.input_locks.config, 'ARCHIVE_RUN_CONFIG_INVALID');
+  requireValue(config.permission_policy === 'preserve-workspace-policy' && Array.isArray(journal.history)
+    && index.raw_trace.length === requiredRaw.length + journal.history.length, 'ARCHIVE_PREPARATION_SCOPE_INVALID');
+  const ui = new Map();
+  for (const [i, receipt] of journal.history.entries()) {
+    requireValue(/^[a-z-]+$/u.test(receipt.event) && !ui.has(receipt.event), 'ARCHIVE_PREPARATION_EVENT_INVALID');
+    const path = `raw/ui-preparation/${i}-${receipt.event}.json`, source = await bytes(path);
+    requireValue(index.raw_trace.some(row => row.path === path) && sha(source) === receipt.sha256
+      && source.length === receipt.size, 'ARCHIVE_PREPARATION_HASH_MISMATCH');
+    ui.set(receipt.event, JSON.parse(source));
+  }
+  const selection = journal.workspace_selection;
+  requireValue(selection?.full_path_verified === true && selection.workspace === state.session.cwd
+    && selection.selection_method === 'native-ui-menu-exact-full-path'
+    && ui.get('workspace-full-path-readback')?.nodes?.filter(node => node.help === state.session.cwd).length === 1,
+    'ARCHIVE_WORKSPACE_SELECTION_MISMATCH');
+  const taskConfig = { ...config, configuration: { ...config.configuration, permission_label: selection.configuration.permission_label } };
+  const prepared = ui.get('prompt-readback');
+  requireValue(prepared?.pid === config.process.pid && prepared.frontmost_pid === config.process.pid,
+    'ARCHIVE_PREPARATION_PROCESS_MISMATCH');
+  requireValue(assertConfiguration(prepared, taskConfig).composer.value === promptBytes.toString('utf8'), 'ARCHIVE_PREPARED_PROMPT_MISMATCH');
+  requireValue(digest(driver.identity) === digest(state.identity) && digest(journal.identity) === digest(state.identity)
+    && driver.phase === state.phase && journal.phase === state.phase
+    && digest(driver.execution) === digest(state.execution) && digest(driver.session) === digest(state.session)
+    && journal.dispatch_attempt_count === 1 && state.send.dispatch_attempt_count === 1
+    && journal.send_status === 'sent' && state.prompt.send_status === 'sent'
+    && sha(promptBytes) === state.prompt.sha256 && sha(promptBytes) === journal.input_locks.prompt, 'ARCHIVE_DISPATCH_MISMATCH');
+  requireValue(state.human_assistance.mode === 'automatic' && state.human_assistance.operation_count === 0
+    && state.human_assistance.semantic_intervention_count === 0, 'ARCHIVE_HUMAN_INTERVENTION_UNSUPPORTED');
+  const prompt = promptBytes.toString('utf8');
+  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline });
+  const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
+    sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
+  checkNativeModel(old);
+  requireValue(normalized.binding.final?.id === journal.final_message_id && old.final?.id === journal.final_message_id
+    && terminal.observed_at === state.execution.finished_at
+    && normalized.binding.session_ids.every(id => !terminal.runtime_status[id] || terminal.runtime_status[id].type === 'idle'), 'ARCHIVE_NATIVE_TERMINAL_MISMATCH');
+  const content = snapshot => digest({ messages: snapshot.messages.map(({ id, session_id, data }) => ({ id, session_id, data })),
+    parts: snapshot.parts.map(({ id, message_id, session_id, data }) => ({ id, message_id, session_id, data })) });
+  requireValue(content(native) === content(terminal.native), 'ARCHIVE_NATIVE_CONTENT_CHANGED');
+  requireValue((await bytes('raw/native-part-rows.jsonl')).equals(Buffer.from(native.parts.map(row => JSON.stringify(row)).join('\n') + '\n'))
+    && (await bytes('raw/native-message-rows.jsonl')).equals(Buffer.from(native.messages.map(row => JSON.stringify(row)).join('\n') + '\n')), 'ARCHIVE_NATIVE_ROW_EXPORT_MISMATCH');
+  requireValue(transcript.equals(Buffer.from(normalized.events.map(row => JSON.stringify(row)).join('\n') + '\n'))
+    && digest(index.calls) === digest(normalized.calls)
+    && index.normalization.native_event_count === normalized.native_event_count
+    && index.normalization.normalized_event_count === normalized.events.length
+    && index.normalization.filtered_native_event_count === normalized.filtered_native_event_count
+    && digest(index.completeness.missing) === digest(normalized.missing), 'ARCHIVE_TRACE_REPLAY_MISMATCH');
+  requireValue(index.completeness.status === (normalized.missing.length ? 'partial' : 'complete')
+    && index.completeness.omitted_event_count === 0, 'ARCHIVE_COMPLETENESS_MISMATCH');
+  for (const row of index.binding_evidence) {
+    const proof = await load(row.path);
+    requireValue(digest(proof.identity) === digest(state.identity) && proof.prompt_sha256 === sha(promptBytes)
+      && digest(proof.process) === digest(config.process) && digest(proof.runtime) === digest(config.runtime), 'ARCHIVE_INITIAL_BINDING_MISMATCH');
+    const first = verifyBinding(proof.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline, sessionId: state.session.session_id });
+    checkNativeModel(first);
+    requireValue(first.user.id === normalized.binding.user.id, 'ARCHIVE_NATIVE_USER_REPLACED');
+  }
+  if (state.phase === 'COMPLETED') requireValue(state.extensions.evidence?.final_response_sha256 === sha(Buffer.from(normalized.final_response)), 'ARCHIVE_FINAL_RESPONSE_MISMATCH');
+  return normalized;
+}
+
+export async function verifyLoomyResources(value, state, index, traceRoot) {
+  if (index.adapter?.id !== PROFILE) return;
+  const normalized = await verifyArchivedLoomy(index, state, traceRoot);
+  const expected = resourceMetrics({ state, normalized, sources: value.collection.sources });
+  requireValue(digest(value.metrics) === digest(expected.metrics) && digest(value.collection.coverage) === digest(expected.collection.coverage)
+    && value.collection.status === expected.collection.status
+    && digest(value.collection.warnings) === digest(expected.collection.warnings), 'ARCHIVE_RESOURCE_REPLAY_MISMATCH');
+}

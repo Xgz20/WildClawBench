@@ -61,7 +61,7 @@ def build(args, shared):
         assert by_key.keys() == report_rows.keys()
         names = {u["unit_id"]: shared_name for u in data["units"] for shared_name in
                  [{"astronstudio": "AStudio", "workbuddy": "WorkBuddy", "doubaowork": "DoubaoWork",
-                   "qwenwork": "QwenWork"}.get(u["harness"]["id"], u["unit_id"])]}
+                   "qwenwork": "QwenWork", "loomy": "Loomy"}.get(u["harness"]["id"], u["unit_id"])]}
         assert len(set(names.values())) == len(names)
         for uid in names:
             assert {tid for unit, tid in by_key if unit == uid} == set(data["scope"]["task_ids"])

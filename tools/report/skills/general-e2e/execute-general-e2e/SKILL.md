@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.0` 新增 Loomy 0.9.39 / macOS arm64 的原生辅助功能探针、单题执行和持久化队列；绑定 Spark-X2.6/high、完整工作目录、一次发送和原生 OpenCode 会话。正式包不依赖 CDP，不修改客户端。恢复只观察原 attempt，候选任务没有执行 deadline。入口与验收边界见 [Loomy 驱动](drivers/loomy/README.md)。
+
+
 `0.14.88` 发送前使用macOS原生前台应用PID核对既有AStudio归属，不以Electron可见/焦点字段代替；仅激活已验同一PID/启动身份的现有应用，意图前重新完整预检、物理点击前再次回读原生前台PID。保留v2可见性/前台元数据证明，旧v1仍严格按原格式验证。原一次调用不等于原生受理，未受理恢复仍须冻结授权、原件及独立新attempt，不重发旧attempt；题面、候选、评分及并发合同不改。
 
 `0.14.87` 发送准备只激活已验PID/启动身份的现有原生AStudio窗口（不重启），等待document可见并重新核验同一进程和所有配置；发送意图前及物理点击前都拒绝hidden页面。恢复入口沿用同一已退出toast识别，归档Python显式UTF-8，逐项验证并保留已注册的完成路由/窗口可见性准备原件及SHA。原一次调用不等于原生受理，未受理恢复仍须冻结授权、原件及独立新attempt，不重发旧attempt。

@@ -116,6 +116,18 @@ export const DOUBAOWORK_APP_PROFILE = Object.freeze({
   }),
 });
 
+export const LOOMY_APP_PROFILE = Object.freeze({
+  id: "loomy",
+  displayName: "Loomy",
+  macos: Object.freeze({
+    bundleIds: Object.freeze(["com.loomy.desktop"]),
+    appNames: Object.freeze(["Loomy.app"]),
+    executableNames: Object.freeze(["Loomy"]),
+    requiredRelativePaths: Object.freeze(["Contents/Resources/app.asar"]),
+    standardPaths: Object.freeze(["/Applications/Loomy.app", "{home}/Applications/Loomy.app"]),
+  }),
+});
+
 export const CODEX_DESKTOP_APP_PROFILE = Object.freeze({
   id: "codex-desktop",
   displayName: "Codex Desktop",
@@ -149,6 +161,7 @@ export const BUILTIN_DESKTOP_APP_PROFILES = Object.freeze({
   workbuddy: WORKBUDDY_APP_PROFILE,
   qwenwork: QWENWORK_APP_PROFILE,
   doubaowork: DOUBAOWORK_APP_PROFILE,
+  loomy: LOOMY_APP_PROFILE,
   codex: CODEX_DESKTOP_APP_PROFILE,
   "codex-desktop": CODEX_DESKTOP_APP_PROFILE,
 });

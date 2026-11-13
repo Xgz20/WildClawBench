@@ -26,6 +26,12 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="loomy", version="0.1.0",
+        source_root="tools/report/e2e-shared/loomy",
+        vendor_root="vendor/e2e-shared/loomy",
+        entrypoints=("index.mjs", "ui.mjs", "execution.mjs", "batch.mjs", "collection.mjs", "verification.mjs", "native-state.py", "macos-ax.swift"),
+    ),
+    SharedComponentSpec(
         name="astronstudio-start-rejection", version="1.0.8",
         source_root="tools/report/e2e-shared/astronstudio-start-rejection",
         vendor_root="vendor/e2e-shared/astronstudio-start-rejection", entrypoints=("index.mjs",),
@@ -101,7 +107,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="desktop-app-discovery",
-        version="1.2.0",
+        version="1.3.0",
         source_root="tools/report/e2e-shared/desktop-app-discovery",
         vendor_root="vendor/e2e-shared/desktop-app-discovery",
         entrypoints=("index.mjs", "profiles.mjs", "cli.mjs"),

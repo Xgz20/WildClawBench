@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.0` 新增 Loomy 的会话子树只读 SQLite 备份、trace-index v2、原始 part/message 行和正式 macOS cleanup。正式收口及 verify-only 独立重放原生身份、Prompt、模型/High、终稿、工具和资源来源；未准入的 Token/请求指标保持 null，不修改旧冻结回执。入口见 [Loomy 采集](drivers/loomy/README.md)。
+
+
 `0.11.60` 接入 `agentcube-astudio-native/v1` 沙箱来源校验，绑定原生身份、Prompt、工作区、工具调用与返回、进程收口和备份；`verify-only` 可离线复放。按来源选择校验路径，本地桌面执行继续使用原生终态、中断、终稿分歧及近期采集修复，已有冻结包保持原版本和原件。
 
 `0.11.59` 候选复制在macOS上逐项保留相对符号链接自身的权限，并以lstat复核；只操作新建链接，不跟随或更改目标。修复0777源链接被系统默认为0755后与冻结清单不符的问题。原Workspace、链接目标、内容、树摘要及评分合同不变；既有错误采集须先保留原件，再从同一原作答重新采集，不能改旧清单或伪造验证通过。

@@ -40,6 +40,7 @@ import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.m
 import { readFrozenStartRejection } from '../../vendor/e2e-shared/astronstudio-start-rejection/index.mjs';
 import { verifyChildSdkArchive } from '../../vendor/e2e-shared/workbuddy-jsonl-metrics/children.mjs';
 import { verifyAgentCubeNative } from './agentcube-native-verification.mjs';
+import { verifyArchivedLoomy, verifyLoomyResources } from '../../vendor/e2e-shared/loomy/verification.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -350,6 +351,7 @@ async function loadTraceBundle(indexPath, state, profile, stateBytes) {
   const runtimeInterruption = !profile.generic ? await verifyRuntimeInterruption(index, stateBytes, root) : null;
   if (!profile.generic) await verifyFinalPrefix(index,stateBytes,root);
   await verifyChildSdkArchive(root, index, state.identity, state.session);
+  await verifyArchivedLoomy(index, state, root);
   return { indexSource, index, transcriptSource, transcriptRelative, traceArtifacts, runtimeInterruption };
 
 }
@@ -380,6 +382,7 @@ async function loadResourceMetrics(path, stateSource, traceBundle, profile) {
     if (!expected) throw new Error(`RESOURCE_METRICS_SOURCE_UNKNOWN: ${row.path}`);
     assertArtifact(expected, row, row.path);
   }
+  await verifyLoomyResources(value, stateSource.value, traceBundle.index, dirname(traceBundle.indexSource.absolute));
   return { source, value };
 }
 
@@ -845,6 +848,12 @@ async function verifyCollectionWithReceipt(options, unitRoot, receiptSource) {
       assertArtifact(source, ref, ref.path);
       const artifact = declared.get(relative(unitRoot, path).split(sep).join('/'));
       if (!artifact || artifact.sha256 !== ref.sha256 || artifact.size !== ref.size) throw new Error('TRACE_ARTIFACT_NOT_IN_EVIDENCE_MANIFEST');
+    }
+    if (record.harness?.id === 'loomy') {
+      const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
+      await verifyArchivedLoomy(index, declaredState.value, traceRoot);
+      const resource = await readJsonFile(resolveWithin(unitRoot, record.evidence.resource_metrics_path, 'archived Loomy resources'));
+      await verifyLoomyResources(resource.value, declaredState.value, index, traceRoot);
     }
   }
 

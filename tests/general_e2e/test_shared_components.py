@@ -103,7 +103,7 @@ process.stdout.write(JSON.stringify({{
             payload["components"],
             {
                 "desktop-runtime": "1.0.1",
-                "desktop-app-discovery": "1.2.0",
+                "desktop-app-discovery": "1.3.0",
                 "resource-metrics": "1.1.0",
                 "workspace-integrity": "1.0.0",
             },
