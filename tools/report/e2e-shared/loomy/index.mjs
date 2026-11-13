@@ -9,7 +9,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.6';
+export const COMPONENT_VERSION = '0.1.7';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -76,10 +76,23 @@ export function uniqueNode(snapshot, predicate, label) {
 }
 export const expectedNode = node => Object.fromEntries(
   ['role', 'title', 'description', 'identifier', ...(node.role === 'AXMenuItem' ? ['menu_value'] : [])].map(key => [key, node[key]]));
+export async function inspectPinnedMain(config) {
+  const pid = config.process.pid;
+  const [comm, start, cmd] = await Promise.all([
+    execute('/bin/ps', ['-p', String(pid), '-o', 'comm=']),
+    execute('/bin/ps', ['-p', String(pid), '-o', 'lstart=']),
+    execute('/bin/ps', ['-p', String(pid), '-o', 'command=']),
+  ]);
+  const executable = await realpath(comm.stdout.trim());
+  const startedAt = new Date(Date.parse(start.stdout.trim())).toISOString();
+  requireValue(executable === join(config.client.path, 'Contents/MacOS/Loomy')
+    && startedAt === config.process.started_at
+    && sha(cmd.stdout.trim()) === config.process.command_sha256, 'APP_PROCESS_CHANGED');
+  return { pid, executable_path: executable, started_at: startedAt };
+}
 export async function act(config, node, action = 'press', options = {}) {
   assertMacGuiReady(await inspectMacGuiSession());
-  const current = await inspectMacDesktopAppProcess({ profile: LOOMY_APP_PROFILE, appPath: config.client.path });
-  requireValue(current?.pid === config.process.pid && current.started_at === config.process.started_at, 'APP_PROCESS_CHANGED');
+  const current = await inspectPinnedMain(config);
   return ax(config.ax_helper, current.pid, action, { path: node.path, expected: expectedNode(node), ...options });
 }
 
@@ -153,8 +166,7 @@ export function sameRuntimeInstallation(before, after) {
     .every(key => before?.[key] === after?.[key]);
 }
 export async function currentOwnedRuntime(config) {
-  const app = await inspectMacDesktopAppProcess({ profile: LOOMY_APP_PROFILE, appPath: config.client.path });
-  requireValue(app?.pid === config.process.pid && app.started_at === config.process.started_at, 'APP_PROCESS_CHANGED');
+  const app = await inspectPinnedMain(config);
   const current = await runtimeIdentity(app, config.runtime.database);
   requireValue(sameRuntimeInstallation(config.runtime, current), 'RUNTIME_INSTALLATION_CHANGED');
   return current;
@@ -176,16 +188,34 @@ export function assertNativeActivity(native, allowed = []) {
     || row.status === 'active_or_unknown' && permitted.has(row.session_id)), 'FOREIGN_OR_UNSETTLED_NATIVE_SESSION');
 }
 
+export async function identifyGuiMain(client, helper) {
+  const { stdout } = await execute('/bin/ps', ['-axo', 'pid=,ppid=,comm=']);
+  const candidates = stdout.split('\n').map(line => /^\s*(\d+)\s+(\d+)\s+(.+)$/u.exec(line)).filter(Boolean)
+    .filter(row => row[3] === client.executable_path);
+  const valid = [];
+  for (const row of candidates) {
+    const pid = Number(row[1]);
+    try {
+      const snapshot = await ax(helper, pid);
+      if (snapshot.nodes.some(node => node.role === 'AXWebArea' && node.url?.startsWith('file://' + client.path + '/Contents/Resources/app.asar/dist/index.html'))) valid.push(pid);
+    } catch { /* Electron-as-Node MCP hosts have no application GUI. */ }
+  }
+  requireValue(valid.length === 1, 'GUI_MAIN_PROCESS_AMBIGUOUS');
+  const pid = valid[0];
+  const [started, cmd] = await Promise.all([execute('/bin/ps', ['-p', String(pid), '-o', 'lstart=']), execute('/bin/ps', ['-p', String(pid), '-o', 'command='])]);
+  return { pid, started_at: new Date(Date.parse(started.stdout.trim())).toISOString(), executable_path: client.executable_path, command: cmd.stdout.trim() };
+}
+
 export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRoot, python = 'python3', allowedSessionIds = [] }) {
   requireValue(process.platform === 'darwin' && process.arch === 'arm64', 'REQUIRES_MACOS_ARM64');
   const client = await discoverDesktopApp({ profile: LOOMY_APP_PROFILE, requestedPath: appPath });
   requireValue(client.version === '0.9.39', 'CLIENT_VERSION_UNVERIFIED');
-  const processInfo = await inspectMacDesktopAppProcess({ profile: LOOMY_APP_PROFILE, appPath: client.path });
+  const helper = await buildAxHelper(cacheRoot);
+  const processInfo = await identifyGuiMain(client, helper);
   requireValue(processInfo?.pid && processInfo.started_at, 'APP_NOT_RUNNING');
   const processIdentity = { pid: processInfo.pid, started_at: processInfo.started_at,
     executable_path: processInfo.executable_path, command_sha256: sha(processInfo.command || '') };
   const gui = await inspectMacGuiSession(); assertMacGuiReady(gui);
-  const helper = await buildAxHelper(cacheRoot);
   const [snapshot, runtime, native] = await Promise.all([
     ax(helper, processInfo.pid), runtimeIdentity(processInfo, database), captureNative({ database, python }),
   ]);
