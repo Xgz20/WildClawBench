@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.1` Loomy 状态接口按完整 Workspace 查询，发送前另以全库会话活动投影核验全部未结算会话；原始基线、目录作用域及运行时版本进入独立取证与离线回放。
+
+
 `0.12.0` 新增 Loomy 的会话子树只读 SQLite 备份、trace-index v2、原始 part/message 行和正式 macOS cleanup。正式收口及 verify-only 独立重放原生身份、Prompt、模型/High、终稿、工具和资源来源；未准入的 Token/请求指标保持 null，不修改旧冻结回执。入口见 [Loomy 采集](drivers/loomy/README.md)。
 
 

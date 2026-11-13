@@ -9,7 +9,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.0';
+export const COMPONENT_VERSION = '0.1.1';
 export const PROFILE = 'loomy-opencode-sqlite/v1';
 export const DEFAULT_DATABASE = join(homedir(), '.local/share/loomy/opencode/opencode.db');
 export const MODEL_LABEL = 'Spark-X2.6 正式版 高';
@@ -113,14 +113,24 @@ export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
   requireValue(executable === join(dirname(dirname(app.executable_path)), 'Resources/opencode/darwin-arm64/opencode'), 'RUNTIME_BINARY_NOT_BUNDLED');
   const ports = [...listening.stdout.matchAll(/^n127\.0\.0\.1:(\d+)$/gmu)].map(match => match[1]);
   requireValue(ports.length === 1 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_LISTENER_OR_DATABASE_UNOWNED');
+  const endpoint = 'http://127.0.0.1:' + ports[0];
+  const healthResponse = await fetch(endpoint + '/global/health', { signal: AbortSignal.timeout(5000), redirect: 'error' });
+  requireValue(healthResponse.ok, 'RUNTIME_HEALTH_UNAVAILABLE');
+  const health = await healthResponse.json();
+  requireValue(health.healthy === true && health.version === '1.14.22', 'RUNTIME_VERSION_UNVERIFIED');
   return { pid, ppid: app.pid, executable, started_at: started.stdout.trim(),
-    binary_sha256: sha(await readFile(executable)), endpoint: 'http://127.0.0.1:' + ports[0], database, database_owned: true };
+    binary_sha256: sha(await readFile(executable)), endpoint, database, database_owned: true, health_version: health.version };
 }
 
-export async function runtimeStatus(runtime) {
+export function statusUrl(runtime, workspace = null) {
   const url = new URL(runtime.endpoint);
   requireValue(url.protocol === 'http:' && url.hostname === '127.0.0.1' && url.port && url.pathname === '/' && !url.username && !url.password, 'RUNTIME_ENDPOINT_INVALID');
-  const response = await fetch(new URL('/session/status', url), { signal: AbortSignal.timeout(5000), redirect: 'error' });
+  const target = new URL('/session/status', url);
+  if (workspace !== null) { requireValue(typeof workspace === 'string' && workspace.startsWith('/'), 'STATUS_WORKSPACE_INVALID'); target.searchParams.set('directory', workspace); }
+  return target;
+}
+export async function runtimeStatus(runtime, workspace = null) {
+  const response = await fetch(statusUrl(runtime, workspace), { signal: AbortSignal.timeout(5000), redirect: 'error' });
   requireValue(response.ok, 'RUNTIME_STATUS_UNAVAILABLE');
   const result = await response.json();
   requireValue(result && typeof result === 'object' && !Array.isArray(result), 'RUNTIME_STATUS_UNKNOWN');
@@ -130,6 +140,18 @@ export async function runtimeStatus(runtime) {
 export function assertIdle(status, allowed = []) {
   const permitted = new Set(allowed);
   requireValue(Object.entries(status).every(([id, row]) => row.type === 'idle' || permitted.has(id)), 'FOREIGN_NATIVE_ACTIVITY');
+}
+export function assertNativeActivity(native, allowed = []) {
+  requireValue(Array.isArray(native.session_activity), 'GLOBAL_ACTIVITY_UNAVAILABLE');
+  const permitted = new Set(allowed);
+  const sessions = new Map((native.session_index || []).map(row => [row.id, row]));
+  for (let changed = true; changed;) {
+    changed = false;
+    for (const row of sessions.values()) if (permitted.has(row.parent_id) && !permitted.has(row.id)
+      && sessions.get(row.parent_id)?.directory === row.directory) { permitted.add(row.id); changed = true; }
+  }
+  requireValue(native.session_activity.every(row => row.status === 'settled'
+    || row.status === 'active_or_unknown' && permitted.has(row.session_id)), 'FOREIGN_OR_UNSETTLED_NATIVE_SESSION');
 }
 
 export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRoot, python = 'python3', allowedSessionIds = [] }) {
@@ -146,6 +168,7 @@ export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRo
     ax(helper, processInfo.pid), runtimeIdentity(processInfo, database), captureNative({ database, python }),
   ]);
   const status = await runtimeStatus(runtime); assertIdle(status, allowedSessionIds);
+  assertNativeActivity(native, allowedSessionIds);
   const ui = uiConfiguration(snapshot);
   const config = { schema_version: 'wildclawbench.general-e2e-loomy-run-config/v1', version: COMPONENT_VERSION,
     client, process: processIdentity, runtime, ax_helper: helper, python,

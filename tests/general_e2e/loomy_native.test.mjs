@@ -4,11 +4,26 @@ import { mkdtemp, readFile, realpath, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { captureNative, PROFILE, sha, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { assertNativeActivity, captureNative, PROFILE, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
 import { checkNativeModel, buildState } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
 
 const prompt = '仅处理本题 workspace。';
+test('Loomy status requests preserve the exact workspace directory and loopback owner scope', () => {
+  const url = statusUrl({ endpoint: 'http://127.0.0.1:5072' }, '/fixture/work space');
+  assert.equal(url.pathname, '/session/status'); assert.equal(url.searchParams.get('directory'), '/fixture/work space');
+  assert.throws(() => statusUrl({ endpoint: 'https://example.org' }, '/fixture'));
+  assert.throws(() => statusUrl({ endpoint: 'http://127.0.0.1:5072' }, 'relative'));
+});
+test('Loomy global activity admits only registered peers and their same-directory descendants', () => {
+  const native = { session_index: [{ id: 'parent', parent_id: null, directory: '/one' }, { id: 'child', parent_id: 'parent', directory: '/one' }],
+    session_activity: [{ session_id: 'parent', status: 'active_or_unknown' }, { session_id: 'child', status: 'active_or_unknown' }] };
+  assert.throws(() => assertNativeActivity(native));
+  assert.doesNotThrow(() => assertNativeActivity(native, ['parent']));
+  native.session_index[1].directory = '/foreign';
+  assert.throws(() => assertNativeActivity(native, ['parent']));
+  assert.throws(() => assertNativeActivity({}));
+});
 function fixture({ tool = true, child = false } = {}) {
   const session = (id, parent_id = null) => ({ id, parent_id, directory: '/fixture/workspace', version: 'fixture', time_created: 1000, time_updated: 2000 });
   const message = (id, session_id, data, time_created = 1000) => ({ id, session_id, time_created, time_updated: 2000, data: JSON.stringify(data) });

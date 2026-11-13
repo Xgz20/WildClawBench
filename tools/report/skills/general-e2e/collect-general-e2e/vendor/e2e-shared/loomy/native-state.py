@@ -47,6 +47,24 @@ def capture(request):
                         break
                     scope = expanded
                 selected = [row for row in sessions if row["id"] in scope]
+                activity = []
+                tail_query = "SELECT id,data FROM message WHERE session_id=? ORDER BY time_created DESC,id DESC LIMIT 1"
+                pending_query = "SELECT count(*) FROM part WHERE session_id=? AND json_extract(data,'$.type')='tool' AND coalesce(json_extract(data,'$.state.status'),'') NOT IN ('completed','error')"
+                activity_ids = [row["id"] for row in sessions if not request.get("workspace") and not request.get("session_id") or row["id"] in scope]
+                query += "\n" + tail_query + "\n" + pending_query + json.dumps(activity_ids)
+                for row in sessions:
+                    if (request.get("workspace") or request.get("session_id")) and row["id"] not in scope:
+                        continue
+                    tail = backup.execute(tail_query, (row["id"],)).fetchone()
+                    info = json.loads(tail["data"]) if tail else {}
+                    pending = backup.execute(pending_query, (row["id"],)).fetchone()[0]
+                    completed = info.get("time", {}).get("completed")
+                    settled = (info.get("role") == "assistant" and (info.get("finish") == "stop" or bool(info.get("error")))
+                               and type(completed) is int and completed >= 0 and pending == 0)
+                    activity.append({"session_id": row["id"], "parent_id": row["parent_id"], "directory": row["directory"],
+                                     "status": "settled" if settled else "active_or_unknown", "last_message_id": tail["id"] if tail else None,
+                                     "last_role": info.get("role"), "finish": info.get("finish"), "completed_at": completed,
+                                     "has_error": bool(info.get("error")), "pending_tool_count": pending})
                 messages, parts = [], []
                 if scope:
                     placeholders = ",".join("?" for _ in scope)
@@ -60,6 +78,7 @@ def capture(request):
                 result = {"profile": "loomy-opencode-sqlite/v1", "observed_at": datetime.now(timezone.utc).isoformat(),
                           "session_index": selected if request.get("workspace") or request.get("session_id") else sessions,
                           "sessions": selected, "messages": messages, "parts": parts,
+                          "session_activity": activity,
                           "snapshot": {"database_path": str(path), "method": "readonly-source-sqlite-online-backup",
                                        "quick_check": "ok", "query_sha256": hashlib.sha256(query.encode()).hexdigest()}}
             finally:

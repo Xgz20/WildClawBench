@@ -3,8 +3,8 @@ import { mkdir, open, readFile, realpath, rename, unlink, writeFile } from 'node
 import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { artifact, assertIdle, ax, captureNative, command, digest, iso, jsonBytes, requireValue,
-  runtimeIdentity, runtimeStatus, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
+import { artifact, assertIdle, assertNativeActivity, ax, captureNative, command, digest, iso, jsonBytes, requireValue,
+  runtimeIdentity, runtimeStatus, statusUrl, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
 export const STATE_SCHEMA = 'wildclawbench.general-e2e-execution-state/v1';
@@ -93,10 +93,10 @@ export function buildState(context, journal) {
         workspace_selection: journal.workspace_selection ?? null } } };
 }
 
-export async function verifyRuntime(config) {
+export async function verifyRuntime(config, workspace = null) {
   const observed = await runtimeIdentity({ pid: config.process.pid, executable_path: config.process.executable_path }, config.runtime.database);
   requireValue(digest(observed) === digest(config.runtime), 'RUNTIME_IDENTITY_CHANGED');
-  return runtimeStatus(config.runtime);
+  return runtimeStatus(config.runtime, workspace);
 }
 
 async function saveState(context, journal) {
@@ -108,7 +108,7 @@ async function saveState(context, journal) {
 
 export async function observe(context, journal, allowedSessionIds = []) {
   requireValue(journal.dispatch_attempt_count === 1, 'OBSERVE_REQUIRES_ARMED_ATTEMPT');
-  const status = await verifyRuntime(context.config);
+  const status = await verifyRuntime(context.config, context.workspace);
   const native = await captureNative({ database: context.config.runtime.database, workspace: context.workspace,
     sessionId: journal.session?.id, python: context.config.python });
   const candidates = native.sessions.filter(row => row.parent_id === null && !journal.baseline.includes(row.id));
@@ -125,6 +125,8 @@ export async function observe(context, journal, allowedSessionIds = []) {
   if (!journal.session) {
     const bindingBytes = jsonBytes({ profile: 'loomy-native-dispatch-binding/v1', identity: journal.identity,
       prompt_sha256: context.locks.prompt, baseline_session_ids: journal.baseline, sent_at: journal.sent_at,
+      pre_send_baseline_sha256: journal.baseline_evidence.sha256, allowed_session_ids: journal.allowed_session_ids,
+      runtime_status_scope: { directory: context.workspace, endpoint: statusUrl(context.config.runtime, context.workspace).href },
       native, runtime_status: status, process: context.config.process, runtime: context.config.runtime });
     const path = join(context.control, 'session-binding.json');
     await writeFile(path, bindingBytes, { flag: 'wx', mode: 0o600 });
@@ -145,7 +147,8 @@ export async function observe(context, journal, allowedSessionIds = []) {
     journal.finished_at = new Date().toISOString();
     journal.final_message_id = binding.final.id;
     journal.native_finished_at = iso(binding.final.parsed.time?.completed);
-    const bytes = jsonBytes({ native, runtime_status: status, observed_at: journal.finished_at });
+    const bytes = jsonBytes({ native, runtime_status: status, observed_at: journal.finished_at,
+      runtime_status_scope: { directory: context.workspace, endpoint: statusUrl(context.config.runtime, context.workspace).href } });
     const path = join(context.control, 'native-terminal.json');
     try { await writeFile(path, bytes, { flag: 'wx', mode: 0o600 }); }
     catch (error) { if (error.code !== 'EEXIST') throw error; throw Error('LOOMY_TERMINAL_ALREADY_FROZEN'); }
@@ -180,6 +183,7 @@ export async function executeTask(options) {
       const releaseUi = await lease(join(homedir(), '.local/state/wildclawbench/ui-locks/loomy-' + context.config.process.pid + '.lock'));
       try {
         assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
+        assertNativeActivity(await captureNative({ database: context.config.runtime.database, python: context.config.python }), options.allowedSessionIds || []);
         const existing = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
         requireValue(existing.sessions.length === 0, 'WORKSPACE_ALREADY_HAS_NATIVE_SESSION');
         const save = async (label, snapshot) => {
@@ -194,9 +198,14 @@ export async function executeTask(options) {
           permission_label: journal.workspace_selection.configuration.permission_label } };
         await fillPrompt(taskConfig, context.prompt, save);
         assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
-        const finalBaseline = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
-        requireValue(finalBaseline.sessions.length === 0, 'WORKSPACE_SESSION_APPEARED_BEFORE_SEND');
+        const finalBaseline = await captureNative({ database: context.config.runtime.database, python: context.config.python });
+        assertNativeActivity(finalBaseline, options.allowedSessionIds || []);
+        requireValue(!finalBaseline.session_index.some(row => row.directory === context.workspace), 'WORKSPACE_SESSION_APPEARED_BEFORE_SEND');
         journal.baseline = finalBaseline.session_index.map(row => row.id);
+        const baselinePath = join(context.control, 'pre-send-native-baseline.json'), baselineBytes = jsonBytes(finalBaseline);
+        await writeFile(baselinePath, baselineBytes, { flag: 'wx', mode: 0o600 });
+        journal.baseline_evidence = artifact(relative(context.unitRoot, baselinePath), baselineBytes);
+        journal.allowed_session_ids = options.allowedSessionIds || [];
         journal.sent_at = new Date().toISOString();
         journal.send_status = 'intent_persisted'; journal.dispatch_attempt_count = 1;
         await saveState(context, journal);

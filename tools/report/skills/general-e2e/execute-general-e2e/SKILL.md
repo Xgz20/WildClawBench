@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.1` Loomy 状态接口按完整 Workspace 查询，发送前另以全库会话活动投影核验全部未结算会话；原始基线、目录作用域及运行时版本进入独立取证与离线回放。
+
+
 `0.15.0` 新增 Loomy 0.9.39 / macOS arm64 的原生辅助功能探针、单题执行和持久化队列；绑定 Spark-X2.6/high、完整工作目录、一次发送和原生 OpenCode 会话。正式包不依赖 CDP，不修改客户端。恢复只观察原 attempt，候选任务没有执行 deadline。入口与验收边界见 [Loomy 驱动](drivers/loomy/README.md)。
 
 

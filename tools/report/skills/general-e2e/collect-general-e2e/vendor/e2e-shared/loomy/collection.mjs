@@ -66,7 +66,7 @@ export function normalizeTrace(native, { state, prompt, baseline }) {
       source: { adapter: PROFILE, raw_ref: 'raw/native-message-rows.jsonl#L' + (position + 1), redacted: false } });
   }
   const filtered = [...grouped.values()].reduce((count, rows) => count + rows.length - 1, 0);
-  events.sort((a, b) => Date.parse(a.occurred_at) - Date.parse(b.occurred_at) || a.event_id.localeCompare(b.event_id));
+  events.sort((a, b) => Date.parse(a.occurred_at) - Date.parse(b.occurred_at) || (a.event_id < b.event_id ? -1 : a.event_id > b.event_id ? 1 : 0));
   events.forEach((event, index) => { event.sequence = index; });
   const calls = new Map();
   for (const event of events) if (event.tool?.call_id) {
@@ -115,7 +115,7 @@ export async function collectTask(options) {
     requireValue(['COMPLETED', 'FAILED'].includes(originalState.phase) && journal.dispatch_attempt_count === 1
       && journal.send_status === 'sent' && JSON.stringify(journal.input_locks) === JSON.stringify(context.locks), 'COLLECT_EXECUTION_NOT_FROZEN');
     requireValue(sha(jsonBytes(buildState(context, journal))) === sha(originalStateBytes), 'COLLECT_DRIVER_STATE_CHANGED');
-    const statuses = await verifyRuntime(context.config);
+    const statuses = await verifyRuntime(context.config, context.workspace);
     const native = await captureNative({ database: context.config.runtime.database, sessionId: journal.session.id, python: context.config.python });
     const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline });
     requireValue(normalized.binding.session_ids.every(id => !statuses[id] || statuses[id].type === 'idle'), 'COLLECT_NATIVE_STILL_ACTIVE');
@@ -123,6 +123,8 @@ export async function collectTask(options) {
     const terminalBytes = await readFile(join(context.unitRoot, journal.terminal_evidence.path));
     requireValue(sha(terminalBytes) === journal.terminal_evidence.sha256 && terminalBytes.length === journal.terminal_evidence.size, 'TERMINAL_EVIDENCE_CHANGED');
     const terminal = JSON.parse(terminalBytes);
+    const baselineBytes = await readFile(join(context.unitRoot, journal.baseline_evidence.path));
+    requireValue(sha(baselineBytes) === journal.baseline_evidence.sha256 && baselineBytes.length === journal.baseline_evidence.size, 'PRE_SEND_BASELINE_CHANGED');
     const content = snapshot => JSON.stringify({ messages: snapshot.messages.map(({ id, session_id, data }) => ({ id, session_id, data })),
       parts: snapshot.parts.map(({ id, message_id, session_id, data }) => ({ id, message_id, session_id, data })) });
     requireValue(content(terminal.native) === content(native), 'NATIVE_CONTENT_CHANGED_AFTER_TERMINAL');
@@ -136,7 +138,7 @@ export async function collectTask(options) {
       ['raw/native-message-rows.jsonl', lines(native.messages)], ['raw/driver-state.json', originalStateBytes],
       ['raw/dispatch-journal.json', journalBytes], ['raw/sent-prompt.txt', Buffer.from(context.prompt)],
       ['raw/frozen-run-config.json', await readFile(options.runConfig)],
-      ['raw/terminal-evidence.json', terminalBytes]]);
+      ['raw/terminal-evidence.json', terminalBytes], ['raw/pre-send-native-baseline.json', baselineBytes]]);
     for (const [i, receipt] of journal.history.entries()) {
       const bytes = await readFile(join(context.unitRoot, receipt.path));
       requireValue(sha(bytes) === receipt.sha256 && bytes.length === receipt.size, 'UI_PREPARATION_EVIDENCE_CHANGED');
