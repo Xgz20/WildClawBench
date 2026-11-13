@@ -3,6 +3,9 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.4` Loomy 修复清单在首次派发前登记 attempt、源码版本、时间和零发送边界；后续观察核验同一登记，不把已按该清单首次发送的任务误认为新增 armed 授权。发送计数与旧修复原件不变。
+
+
 `0.12.3` Loomy 按原生 model.variant 核验 High，并保留已核验的客户端记忆前缀与唯一原题文本 part；原生用户消息落库短暂缺失只继续观察原发送。显式 source-repair-manifest 保留旧队列、状态及 journal 原字节，限定已 armed 任务只观察、未发送任务首次派发，原 Prompt/模型/Workspace/评分材料不改。
 
 

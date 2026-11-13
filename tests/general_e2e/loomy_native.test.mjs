@@ -195,6 +195,13 @@ test('Loomy source repair requires exact frozen inputs and never resets an armed
     const repaired = structuredClone(journal); await sourceRepair(context, repaired, path);
     assert.equal(repaired.dispatch_attempt_count, 1); assert.equal(repaired.identity.attempt_id, 'original');
     assert.equal(repaired.version, '0.1.2'); assert.equal(repaired.observer_version, COMPONENT_VERSION);
+    proof.unstarted_task_ids = ['later']; await writeFile(path, jsonBytes(proof));
+    const later = { version: COMPONENT_VERSION, identity: { task_id: 'later', attempt_id: 'first-dispatch' },
+      dispatch_attempt_count: 0, input_locks: context.locks };
+    await sourceRepair({ ...context, taskId: 'later' }, later, path);
+    later.dispatch_attempt_count = 1; later.sent_at = new Date(Date.now() + 1).toISOString();
+    await sourceRepair({ ...context, taskId: 'later' }, later, path);
+    assert.equal(later.dispatch_attempt_count, 1); assert.equal(later.source_repair_registrations.length, 1);
     proof.config_sha256 = '0'.repeat(64); await writeFile(path, jsonBytes(proof));
     await assert.rejects(sourceRepair(context, structuredClone(journal), path), /INPUT_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }

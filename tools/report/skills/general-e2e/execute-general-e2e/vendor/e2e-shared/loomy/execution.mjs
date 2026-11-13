@@ -83,14 +83,26 @@ export async function sourceRepair(context, journal, path) {
     const data = Buffer.from(row.bytes_base64, 'base64');
     requireValue(sha(data) === row.sha256 && data.length === row.size, 'SOURCE_REPAIR_ARCHIVE_DRIFT');
   }
-  if (journal.dispatch_attempt_count === 1) {
+  const registered = journal.source_repair_registrations?.find(row => row.sha256 === sha(bytes)
+    && row.attempt_id === journal.identity.attempt_id && row.dispatch_attempt_count === 0
+    && row.component_version === journal.version && journal.sent_at && Date.parse(row.at) <= Date.parse(journal.sent_at));
+  const registeredFirstDispatch = registered && proof.unstarted_task_ids?.includes(context.taskId)
+    && journal.version === proof.new_component_version;
+  if (journal.dispatch_attempt_count === 1 && !registeredFirstDispatch) {
     requireValue(proof.armed_attempts?.[context.taskId] === journal.identity.attempt_id, 'SOURCE_REPAIR_ARMED_SCOPE_MISMATCH');
     const previous = proof.archives.find(row => row.role === 'journal:' + context.taskId);
     requireValue(previous, 'SOURCE_REPAIR_PRIOR_JOURNAL_MISSING');
     const old = JSON.parse(Buffer.from(previous.bytes_base64, 'base64'));
     requireValue(old.identity.attempt_id === journal.identity.attempt_id && old.dispatch_attempt_count === 1
       && digest(old.input_locks) === digest(context.locks), 'SOURCE_REPAIR_ATTEMPT_REPLACED');
-  } else requireValue(journal.dispatch_attempt_count === 0 && proof.unstarted_task_ids?.includes(context.taskId), 'SOURCE_REPAIR_UNSTARTED_SCOPE_MISMATCH');
+  } else if (journal.dispatch_attempt_count === 0) {
+    requireValue(proof.unstarted_task_ids?.includes(context.taskId), 'SOURCE_REPAIR_UNSTARTED_SCOPE_MISMATCH');
+    journal.source_repair_registrations ??= [];
+    if (!journal.source_repair_registrations.some(row => row.sha256 === sha(bytes))) journal.source_repair_registrations.push({
+      sha256: sha(bytes), at: new Date().toISOString(), attempt_id: journal.identity.attempt_id,
+      dispatch_attempt_count: 0, component_version: journal.version,
+    });
+  }
   const descriptor = artifact(relative(context.unitRoot, absolute), bytes);
   journal.source_repairs ??= [];
   if (!journal.source_repairs.some(row => row.sha256 === descriptor.sha256)) journal.source_repairs.push(descriptor);
