@@ -852,7 +852,7 @@ async function verifyCollectionWithReceipt(options, unitRoot, receiptSource) {
     if (record.harness?.id === 'loomy') {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
       await verifyArchivedLoomy(index, declaredState.value, traceRoot);
-      const resource = await readJsonFile(resolveWithin(unitRoot, record.evidence.resource_metrics_path, 'archived Loomy resources'));
+      const resource = await readJsonFile(resolveWithin(unitRoot, record.resource_metrics_path, 'archived Loomy resources'));
       await verifyLoomyResources(resource.value, declaredState.value, index, traceRoot);
     }
   }

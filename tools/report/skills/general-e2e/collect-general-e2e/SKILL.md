@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.9` Loomy 离线回放按 execution-record 顶层 resource_metrics_path 读取资源文件；兼容已冻结的六题采集回执，不修改原始证据及旧发行。
+
 `0.12.8` Loomy 对后端启动短暂元数据缺口有界重读，派发前等待原生活动投影稳定。零发送恢复仅清除与本 attempt 冻结 Prompt 完全相同的已留证草稿，保留旧 UI、状态和 journal 原字节并使用独立准备前缀；已 armed 请求仍只观察。
 
 
