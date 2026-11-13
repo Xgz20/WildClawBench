@@ -35,13 +35,21 @@ UI 发送固定串行。原生并发能力须另以真实会话区间验收，�
 
 发送意图和次数先持久化，最多调用一次发送。`--detach-after-submit` 只在原生
 session、唯一用户消息、完整 Prompt、cwd、`imodel/spark-x2.6` 与 `variant=high`
-全部绑定后返回。`--resume` 只观察原 attempt，可加 `--observe-once`。不确定发送、
+全部绑定后返回。Loomy 的记忆索引前缀按客户端原生格式单独保留，原题必须唯一且逐字
+匹配，High 同时核对原生用户的 `model.variant` 与主助手的 `variant`。
+`--resume` 只观察原 attempt，可加 `--observe-once`。不确定发送、
 外来活动、配置漂移和未登记恢复均进入关注状态，不能重发旧请求。
 
 任务没有执行 deadline。UI 操作及首次原生身份绑定的观察超时不表示被测模型失败。
 终态由同一运行时的空闲状态、绑定主助手的原生结束字段及全部关联子会话共同确认，
 纯回复任务同样适用。未知交互不自动回答；问题工具需要独立人工介入回执，当前自动
 采集会拒绝这类材料。硬终止遗留的 owner lock 不自动删除。
+
+兼容性修复接续旧发行时，单题及队列可显式传 `--source-repair-manifest ABS`。
+清单位于 unit 的 `.general-e2e/source-repairs/`，冻结原 manifest/config SHA、旧/新
+组件身份、当前八个组件文件 SHA、关键 UI 源码等值证明、旧队列/状态/journal 原字节，
+以及已 armed attempt 和从未发送题目的明确范围。已 armed 任务仍只观察原发送，未发送
+题目才可首次派发；旧输入和旧发行不修改，清单随正式原件归档并离线复验。
 
 执行状态是采集前记录。正式候选、轨迹和回执由 `collect-general-e2e` 的 Loomy
 入口生成。安装包、题目、GT、权重和历史批次不由本适配器修改。

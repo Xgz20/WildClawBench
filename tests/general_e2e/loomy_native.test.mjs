@@ -4,8 +4,8 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, captureNative, digest, jsonBytes, PROFILE, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
-import { checkNativeModel, buildState, loadTask } from '../../tools/report/e2e-shared/loomy/execution.mjs';
+import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, jsonBytes, PROFILE, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
 
@@ -31,8 +31,8 @@ function fixture({ tool = true, child = false } = {}) {
   const part = (id, message_id, data, session_id = 'ses_root', time_created = 1000) => ({ id, message_id, session_id, time_created, time_updated: 2000, data: JSON.stringify(data) });
   const native = { profile: PROFILE, snapshot: { method: 'readonly-source-sqlite-online-backup' },
     sessions: [session('ses_root')],
-    messages: [message('msg_user', 'ses_root', { role: 'user', model: { providerID: 'imodel', modelID: 'spark-x2.6' }, variant: 'high', time: { created: 1000 } }),
-      message('msg_final', 'ses_root', { role: 'assistant', providerID: 'imodel', modelID: 'spark-x2.6', finish: 'stop', time: { created: 1100, completed: 2000 } }, 1100)],
+    messages: [message('msg_user', 'ses_root', { role: 'user', model: { providerID: 'imodel', modelID: 'spark-x2.6', variant: 'high' }, time: { created: 1000 } }),
+      message('msg_final', 'ses_root', { role: 'assistant', providerID: 'imodel', modelID: 'spark-x2.6', variant: 'high', finish: 'stop', time: { created: 1100, completed: 2000 } }, 1100)],
     parts: [part('part_user', 'msg_user', { type: 'text', text: prompt }), part('part_final', 'msg_final', { type: 'text', text: '已完成。' }, 'ses_root', 1900)] };
   if (tool) native.parts.push(part('part_tool', 'msg_final', { type: 'tool', tool: 'read', callID: 'call_read', state: { status: 'completed', input: { path: 'input.txt' }, output: '原文', time: { start: 1200, end: 1300 } } }, 'ses_root', 1200));
   if (child) {
@@ -51,7 +51,7 @@ test('Loomy binds the exact native prompt, root session, model and high variant'
   const result = verifyBinding(fixture(), options); checkNativeModel(result);
   assert.equal(result.user.id, 'msg_user'); assert.equal(result.final.id, 'msg_final');
   for (const edit of [n => { n.sessions[0].directory = '/other'; }, n => { n.parts[0].data = JSON.stringify({ type: 'text', text: 'different' }); },
-    n => { n.messages[0].data = JSON.stringify({ role: 'user', model: { providerID: 'imodel', modelID: 'spark-x2.6' }, variant: 'low' }); },
+    n => { n.messages[0].data = JSON.stringify({ role: 'user', model: { providerID: 'imodel', modelID: 'spark-x2.6', variant: 'low' } }); },
     n => { n.parts.push({ ...n.parts[0] }); }, n => { n.parts[0].session_id = 'ses_foreign'; }]) {
     const native = fixture(); edit(native);
     assert.throws(() => { checkNativeModel(verifyBinding(native, options)); });
@@ -156,5 +156,46 @@ test('Loomy batch preserves the first preparation failure without resuming a zer
     context.config.client = { version: '0.9.39' }; context.config.runtime = {};
     const journal = JSON.parse(await readFile(context.journalPath));
     assert.equal(buildState(context, journal).driver.version, '0.1.1');
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+
+test('Loomy retains its native memory prefix separately from the exact frozen task', () => {
+  const native = fixture();
+  native.parts.unshift({ ...native.parts[0], id: 'part_memory', data: JSON.stringify({ type: 'text', text: EMPTY_MEMORY_CONTEXT }) });
+  const binding = verifyBinding(native, options); checkNativeModel(binding);
+  assert.deepEqual(binding.client_context_part_ids, ['part_memory']);
+  const normalized = normalizeTrace(native, { state: state(), prompt, baseline: [] });
+  assert.equal(normalized.events.filter(row => row.type === 'user_message').length, 1);
+  assert.equal(normalized.events.find(row => row.type === 'user_message').content, prompt);
+  assert.equal(normalized.events.find(row => row.native_type === 'client-memory-context').content, EMPTY_MEMORY_CONTEXT);
+  native.parts[0].data = JSON.stringify({ type: 'text', text: 'unrecognized prefix' });
+  assert.throws(() => verifyBinding(native, options), /PROMPT_MISMATCH/);
+});
+
+test('Loomy source repair requires exact frozen inputs and never resets an armed send counter', async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'loomy-repair-test-')));
+  try {
+    const context = { unitRoot: root, taskId: 'task', config: { version: '0.1.2' },
+      locks: { manifest: 'a'.repeat(64), config: 'b'.repeat(64), prompt: 'c'.repeat(64) } };
+    const journal = { version: '0.1.2', identity: { task_id: 'task', attempt_id: 'original' },
+      dispatch_attempt_count: 1, input_locks: context.locks };
+    await assert.rejects(sourceRepair(context, structuredClone(journal), null), /EXPLICIT_REPAIR_REQUIRED/);
+    const hashes = {};
+    for (const name of ['index.mjs', 'ui.mjs', 'execution.mjs', 'batch.mjs', 'collection.mjs', 'verification.mjs', 'native-state.py', 'macos-ax.swift'])
+      hashes[name] = sha(await readFile(new URL('../../tools/report/e2e-shared/loomy/' + name, import.meta.url)));
+    const archive = (role, value) => { const bytes = jsonBytes(value); return { role, sha256: sha(bytes), size: bytes.length, bytes_base64: bytes.toString('base64') }; };
+    const proof = { profile: 'loomy-source-compatible-repair/v1', old_component_version: '0.1.2', new_component_version: COMPONENT_VERSION,
+      manifest_sha256: context.locks.manifest, config_sha256: context.locks.config,
+      armed_attempts: { task: 'original' }, unstarted_task_ids: [], new_source_hashes: hashes,
+      critical_ui_sources: Object.fromEntries(['ui.mjs', 'macos-ax.swift'].map(name => [name, { old_sha256: hashes[name], new_sha256: hashes[name] }])),
+      archives: [archive('journal:task', journal), archive('state:task', {}), archive('queue', {})] };
+    const path = join(root, '.general-e2e/source-repairs/repair.json'); await mkdir(join(root, '.general-e2e/source-repairs'), { recursive: true });
+    await writeFile(path, jsonBytes(proof));
+    const repaired = structuredClone(journal); await sourceRepair(context, repaired, path);
+    assert.equal(repaired.dispatch_attempt_count, 1); assert.equal(repaired.identity.attempt_id, 'original');
+    assert.equal(repaired.version, '0.1.2'); assert.equal(repaired.observer_version, COMPONENT_VERSION);
+    proof.config_sha256 = '0'.repeat(64); await writeFile(path, jsonBytes(proof));
+    await assert.rejects(sourceRepair(context, structuredClone(journal), path), /INPUT_MISMATCH/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });

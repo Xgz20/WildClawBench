@@ -26,7 +26,9 @@ export function normalizeTrace(native, { state, prompt, baseline }) {
       native_session_id: row.session_id, native_message_id: row.message_id,
       is_subagent: row.session_id !== binding.root.id,
       source: { adapter: PROFILE, raw_ref: 'raw/native-part-rows.jsonl#L' + (position + 1), redacted: false } };
-    if (part.type === 'text' && !part.synthetic && !part.ignored) {
+    if (binding.client_context_part_ids.includes(row.id)) {
+      append({ ...common, type: 'status', native_type: 'client-memory-context', native_role: 'user', content: part.text });
+    } else if (part.type === 'text' && !part.synthetic && !part.ignored) {
       requireValue(typeof part.text === 'string' && ['user', 'assistant'].includes(message.parsed.role), 'NATIVE_TEXT_INVALID');
       const values = grouped.get(row.message_id) || []; values.push({ row, common }); grouped.set(row.message_id, values);
     } else if (part.type === 'tool') {
@@ -144,6 +146,11 @@ export async function collectTask(options) {
       requireValue(sha(bytes) === receipt.sha256 && bytes.length === receipt.size, 'UI_PREPARATION_EVIDENCE_CHANGED');
       requireValue(/^[a-z-]+$/u.test(receipt.event), 'UI_PREPARATION_EVENT_INVALID');
       files.set(`raw/ui-preparation/${i}-${receipt.event}.json`, bytes);
+    }
+    for (const [i, repair] of (journal.source_repairs || []).entries()) {
+      const bytes = await readFile(join(context.unitRoot, repair.path));
+      requireValue(sha(bytes) === repair.sha256 && bytes.length === repair.size, 'SOURCE_REPAIR_RECEIPT_CHANGED');
+      files.set(`raw/source-repairs/${i + 1}.json`, bytes);
     }
     const bindings = [];
     for (const [i, row] of state.session.binding_evidence.entries()) {

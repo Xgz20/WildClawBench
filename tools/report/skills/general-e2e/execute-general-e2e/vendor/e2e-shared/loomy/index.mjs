@@ -9,7 +9,13 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.2';
+export const COMPONENT_VERSION = '0.1.3';
+export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
+export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
+export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
+export const isMemoryContext = text => text === EMPTY_MEMORY_CONTEXT || typeof text === 'string'
+  && text.startsWith(MEMORY_CONTEXT_PREFIX) && text.endsWith(MEMORY_CONTEXT_SUFFIX)
+  && text.slice(MEMORY_CONTEXT_PREFIX.length, -MEMORY_CONTEXT_SUFFIX.length).trim().length > 0;
 export const PROFILE = 'loomy-opencode-sqlite/v1';
 export const DEFAULT_DATABASE = join(homedir(), '.local/share/loomy/opencode/opencode.db');
 export const MODEL_LABEL = 'Spark-X2.6 正式版 高';
@@ -196,8 +202,11 @@ export function verifyBinding(native, { workspace, prompt, baseline = [], sessio
     && parts.every(row => ids.has(row.session_id) && messageMap.get(row.message_id)?.session_id === row.session_id), 'NATIVE_ROWS_INVALID');
   const users = messages.filter(row => row.session_id === root.id && row.parsed.role === 'user');
   requireValue(users.length === 1, 'NATIVE_USER_COUNT_INVALID');
-  const text = parts.filter(row => row.message_id === users[0].id && row.parsed.type === 'text' && !row.parsed.synthetic && !row.parsed.ignored).map(row => row.parsed.text).join('\n');
-  requireValue(text === prompt, 'NATIVE_PROMPT_MISMATCH');
+  const userParts = parts.filter(row => row.message_id === users[0].id && row.parsed.type === 'text' && !row.parsed.synthetic && !row.parsed.ignored);
+  const promptParts = userParts.filter(row => row.parsed.text === prompt);
+  requireValue(promptParts.length === 1 && (userParts.length === 1 || userParts.length === 2
+    && userParts[1].id === promptParts[0].id && isMemoryContext(userParts[0].parsed.text)), 'NATIVE_PROMPT_MISMATCH');
+  const contextParts = userParts.filter(row => row.id !== promptParts[0].id);
   const assistants = messages.filter(row => row.session_id === root.id && row.parsed.role === 'assistant');
   const last = assistants.at(-1);
   if (terminal) {
@@ -208,5 +217,6 @@ export function verifyBinding(native, { workspace, prompt, baseline = [], sessio
       requireValue(tail?.parsed.finish === 'stop' && Number.isSafeInteger(tail.parsed.time?.completed), 'NATIVE_CHILD_NOT_TERMINAL');
     }
   }
-  return { root, messages, parts, user: users[0], final: last, session_ids: [...ids] };
+  return { root, messages, parts, user: users[0], final: last, session_ids: [...ids],
+    prompt_part_ids: promptParts.map(row => row.id), client_context_part_ids: contextParts.map(row => row.id) };
 }

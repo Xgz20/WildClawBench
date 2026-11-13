@@ -60,12 +60,49 @@ export async function lease(path) {
   };
 }
 
+export async function sourceRepair(context, journal, path) {
+  if (!path) {
+    requireValue(journal.version === COMPONENT_VERSION && context.config.version === COMPONENT_VERSION,
+      'SOURCE_VERSION_CHANGED_EXPLICIT_REPAIR_REQUIRED');
+    return;
+  }
+  const absolute = resolve(path);
+  requireValue(absolute.startsWith(join(context.unitRoot, '.general-e2e/source-repairs') + '/')
+    && await realpath(absolute) === absolute, 'SOURCE_REPAIR_PATH_INVALID');
+  const bytes = await readFile(absolute), proof = JSON.parse(bytes);
+  requireValue(proof.profile === 'loomy-source-compatible-repair/v1' && proof.new_component_version === COMPONENT_VERSION
+    && proof.old_component_version === context.config.version && proof.manifest_sha256 === context.locks.manifest
+    && proof.config_sha256 === context.locks.config, 'SOURCE_REPAIR_INPUT_MISMATCH');
+  requireValue(Array.isArray(proof.archives) && proof.archives.length >= 3
+    && Object.values(proof.critical_ui_sources || {}).length >= 2
+    && Object.values(proof.critical_ui_sources).every(row => row.old_sha256 === row.new_sha256), 'SOURCE_REPAIR_UI_CHANGED');
+  for (const name of ['index.mjs', 'ui.mjs', 'execution.mjs', 'batch.mjs', 'collection.mjs', 'verification.mjs', 'native-state.py', 'macos-ax.swift']) {
+    requireValue(sha(await readFile(new URL('./' + name, import.meta.url))) === proof.new_source_hashes?.[name], 'SOURCE_REPAIR_RUNNING_SOURCE_MISMATCH');
+  }
+  for (const row of proof.archives) {
+    const data = Buffer.from(row.bytes_base64, 'base64');
+    requireValue(sha(data) === row.sha256 && data.length === row.size, 'SOURCE_REPAIR_ARCHIVE_DRIFT');
+  }
+  if (journal.dispatch_attempt_count === 1) {
+    requireValue(proof.armed_attempts?.[context.taskId] === journal.identity.attempt_id, 'SOURCE_REPAIR_ARMED_SCOPE_MISMATCH');
+    const previous = proof.archives.find(row => row.role === 'journal:' + context.taskId);
+    requireValue(previous, 'SOURCE_REPAIR_PRIOR_JOURNAL_MISSING');
+    const old = JSON.parse(Buffer.from(previous.bytes_base64, 'base64'));
+    requireValue(old.identity.attempt_id === journal.identity.attempt_id && old.dispatch_attempt_count === 1
+      && digest(old.input_locks) === digest(context.locks), 'SOURCE_REPAIR_ATTEMPT_REPLACED');
+  } else requireValue(journal.dispatch_attempt_count === 0 && proof.unstarted_task_ids?.includes(context.taskId), 'SOURCE_REPAIR_UNSTARTED_SCOPE_MISMATCH');
+  const descriptor = artifact(relative(context.unitRoot, absolute), bytes);
+  journal.source_repairs ??= [];
+  if (!journal.source_repairs.some(row => row.sha256 === descriptor.sha256)) journal.source_repairs.push(descriptor);
+  journal.observer_version = COMPONENT_VERSION;
+}
+
 export function checkNativeModel(binding) {
   requireValue(binding.user.parsed.model?.providerID === 'imodel'
     && binding.user.parsed.model?.modelID === 'spark-x2.6'
-    && binding.user.parsed.variant === 'high', 'ACCEPTED_MODEL_OR_EFFORT_MISMATCH');
+    && binding.user.parsed.model.variant === 'high', 'ACCEPTED_MODEL_OR_EFFORT_MISMATCH');
   requireValue(binding.messages.filter(row => row.session_id === binding.root.id && row.parsed.role === 'assistant')
-    .every(row => row.parsed.providerID === 'imodel' && row.parsed.modelID === 'spark-x2.6'), 'ASSISTANT_MODEL_MISMATCH');
+    .every(row => row.parsed.providerID === 'imodel' && row.parsed.modelID === 'spark-x2.6' && row.parsed.variant === 'high'), 'ASSISTANT_MODEL_MISMATCH');
 }
 
 export function buildState(context, journal) {
@@ -90,6 +127,7 @@ export function buildState(context, journal) {
       loomy: { profile: 'loomy-opencode-sqlite/v1', runtime: context.config.runtime,
         final_message_id: journal.final_message_id ?? null, native_finished_at: journal.native_finished_at ?? null,
         attention: journal.attention ?? null, journal_path: relative(context.unitRoot, context.journalPath),
+        source_repairs: journal.source_repairs || [], observer_version: journal.observer_version || journal.version,
         workspace_selection: journal.workspace_selection ?? null } } };
 }
 
@@ -112,8 +150,9 @@ export async function observe(context, journal, allowedSessionIds = []) {
   const native = await captureNative({ database: context.config.runtime.database, workspace: context.workspace,
     sessionId: journal.session?.id, python: context.config.python });
   const candidates = native.sessions.filter(row => row.parent_id === null && !journal.baseline.includes(row.id));
-  if (candidates.length === 0) {
-    assertIdle(status, allowedSessionIds);
+  const users = candidates.length === 1 ? native.messages.filter(row => row.session_id === candidates[0].id && JSON.parse(row.data).role === 'user') : [];
+  const texts = users.length === 1 ? native.parts.filter(row => row.message_id === users[0].id && JSON.parse(row.data).type === 'text') : [];
+  if (candidates.length === 0 || candidates.length === 1 && (users.length === 0 || users.length === 1 && !texts.some(row => JSON.parse(row.data).text === context.prompt))) {
     journal.phase = 'NEEDS_ATTENTION'; journal.send_status = 'uncertain'; journal.attention = 'NATIVE_ACCEPTANCE_NOT_YET_OBSERVED';
     return saveState(context, journal);
   }
@@ -169,6 +208,7 @@ export async function executeTask(options) {
       requireValue(digest(journal.input_locks) === digest(context.locks), 'FROZEN_INPUT_CHANGED');
       requireValue(journal.identity.task_id === context.taskId && journal.identity.batch_id === context.manifest.batch_id
         && journal.identity.unit_id === context.manifest.unit_id, 'JOURNAL_IDENTITY_CHANGED');
+      await sourceRepair(context, journal, options.sourceRepairManifest);
       if (['COMPLETED', 'FAILED'].includes(journal.phase)) return { state_file: context.statePath, state: buildState(context, journal) };
       // A resumed controller never sends, including after an uncertain click.
       requireValue(journal.dispatch_attempt_count === 1, 'ZERO_SEND_ATTEMPT_NEEDS_EXPLICIT_PREPARATION_RECOVERY');
@@ -179,6 +219,7 @@ export async function executeTask(options) {
         identity: { batch_id: context.manifest.batch_id, unit_id: context.manifest.unit_id, task_id: context.taskId, attempt_id: 'loomy-' + randomUUID() },
         input_locks: context.locks, phase: 'PENDING', dispatch_attempt_count: 0, send_status: 'not_sent',
         baseline: baseline.session_index.map(row => row.id), history: [] };
+      await sourceRepair(context, journal, options.sourceRepairManifest);
       await saveState(context, journal);
       const releaseUi = await lease(join(homedir(), '.local/state/wildclawbench/ui-locks/loomy-' + context.config.process.pid + '.lock'));
       try {

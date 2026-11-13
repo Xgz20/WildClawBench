@@ -3,6 +3,9 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.3` Loomy 按原生 model.variant 核验 High，并保留已核验的客户端记忆前缀与唯一原题文本 part；原生用户消息落库短暂缺失只继续观察原发送。显式 source-repair-manifest 保留旧队列、状态及 journal 原字节，限定已 armed 任务只观察、未发送任务首次派发，原 Prompt/模型/Workspace/评分材料不改。
+
+
 `0.15.2` Loomy 原生 AX 显式激活辅助功能呈现并识别模态子角色；队列保留首次错误与全部错误历史，不对零发送准备失败自动调用恢复。已知活动详情仅按完整原生结构关闭，原执行器版本由 journal 固定，采集升级不改写执行器身份。
 
 

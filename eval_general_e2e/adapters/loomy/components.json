@@ -3,7 +3,7 @@
   "adapter": "loomy",
   "entrypoint": "eval_general_e2e/adapters/loomy/components.mjs",
   "components": {
-    "loomy": "0.1.2",
+    "loomy": "0.1.3",
     "desktop-app-discovery": "1.3.0",
     "desktop-gui": "1.0.0",
     "task-process-cleanup": "0.1.0",

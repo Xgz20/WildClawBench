@@ -37,7 +37,18 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     && config.transport === 'macos-native-accessibility'
     && sha(await bytes('raw/frozen-run-config.json')) === journal.input_locks.config, 'ARCHIVE_RUN_CONFIG_INVALID');
   requireValue(config.permission_policy === 'preserve-workspace-policy' && Array.isArray(journal.history)
-    && index.raw_trace.length === requiredRaw.length + journal.history.length, 'ARCHIVE_PREPARATION_SCOPE_INVALID');
+    && index.raw_trace.length === requiredRaw.length + journal.history.length + (journal.source_repairs || []).length, 'ARCHIVE_PREPARATION_SCOPE_INVALID');
+  for (const [i, receipt] of (journal.source_repairs || []).entries()) {
+    const path = `raw/source-repairs/${i + 1}.json`, source = await bytes(path), repair = JSON.parse(source);
+    requireValue(index.raw_trace.some(row => row.path === path) && sha(source) === receipt.sha256
+      && source.length === receipt.size && repair.profile === 'loomy-source-compatible-repair/v1'
+      && repair.manifest_sha256 === journal.input_locks.manifest && repair.config_sha256 === journal.input_locks.config,
+      'ARCHIVE_SOURCE_REPAIR_MISMATCH');
+    for (const old of repair.archives) {
+      const data = Buffer.from(old.bytes_base64, 'base64');
+      requireValue(sha(data) === old.sha256 && data.length === old.size, 'ARCHIVE_SOURCE_REPAIR_ORIGINAL_DRIFT');
+    }
+  }
   const ui = new Map();
   for (const [i, receipt] of journal.history.entries()) {
     requireValue(/^[a-z-]+$/u.test(receipt.event) && (!ui.has(receipt.event) || receipt.event.startsWith('promotional-')), 'ARCHIVE_PREPARATION_EVENT_INVALID');
