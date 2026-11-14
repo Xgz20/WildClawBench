@@ -13,6 +13,7 @@ import sys
 import zipfile
 
 import run_general_e2e as flow
+from developer_bundle_files import protect_office_copy, write_protected_file
 
 def sha(path):
     digest = sha256()
@@ -32,11 +33,6 @@ def safe(value):
     path = PurePosixPath(value)
     assert value and not path.is_absolute() and ".." not in path.parts and "\\" not in value
     return path
-
-def protect_office_copy(path):
-    if sys.platform == "darwin" and path.suffix.lower() in {".xlsx", ".docx", ".pptx", ".bin"}:
-        os.chflags(path, path.stat().st_flags | stat.UF_IMMUTABLE)
-
 
 def copy_selected_symlink(source, target):
     assert source.is_symlink() and not target.exists() and not target.is_symlink()
@@ -237,8 +233,7 @@ def build(args, shared):
             raw = report_zip.read(prefix + relative)
             p = staging / "Reports" / relative
             p.parent.mkdir(parents=True, exist_ok=True)
-            p.write_bytes(raw)
-            protect_office_copy(p)
+            write_protected_file(p, raw)
         write(staging / "TASK_INDEX.json", {"schema_version": 1, "tasks": tasks})
         write(staging / "SELECTION.json", {"schema_version": 1, "selected_runs": len(tasks),
               "unique_tasks": data["scope"]["unique_task_count"], "report_data_sha256": index["report_data_sha256"],
@@ -390,7 +385,7 @@ def resume(args, shared):
                     assert sha(path) == sealed[relative]["sha256"]
                 else:
                     path.parent.mkdir(parents=True, exist_ok=True)
-                    path.write_bytes(raw)
+                    write_protected_file(path, raw)
     for relative in ("general_e2e_report_data.json", data["artifact_filenames"]["excel"],
                      data["artifact_filenames"]["leader_markdown"], data["artifact_filenames"]["audit_markdown"]):
         path = staging / "Reports" / relative

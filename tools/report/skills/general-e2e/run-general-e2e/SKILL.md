@@ -3,6 +3,8 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.25` 默认研发导出、规范报告成员、宿主报告变体和逐题选择导出共用新副本保护：Office及opaque `.bin` 在落盘后、记录SHA前立即设置macOS user-immutable并复核原字节，不依赖源文件已有保护。新增 `scripts/restore_developer_bundle.py`，只从显式SHA绑定且通过离线核验的研发ZIP恢复新目录；保留文件/目录/链接模式，已有目录必须显式保留为宿主变体且其INTEGRITY与ZIP相同。不执行输入包中的VERIFY.py，不改原ZIP、原清单、旧回执或源文件。
+
 `0.7.24` 回传导入与研发导出按原ZIP/清单保留相对符号链接自身模式，不跟随链接或修改源目标；全部成员复制后再由深到浅恢复原目录权限。独立逐题选择导出器使用同一复制约束，防止只读父目录阻断子成员。评分、原件、选取谱系和旧包不改。
 
 `0.7.23` 研发及回传导出支持排除`judge-observations/node_modules`中未被正式输入、评分或取证索引引用的裁判运行依赖，原链接不删除，实际观察文件完整保留。父目录链接、候选/private依赖、被冻结根覆盖或已被证据引用的依赖继续按原严格门禁处理；不放宽任意绝对链接，不改变执行、评分、资源或既有包。
@@ -91,6 +93,14 @@ python -m eval_general_e2e check-layout
 ## 已实现入口
 
 最终选择已评分且报告生成后，可用`scripts/build_developer_bundle.py --workspace-root ABS --report-dir ABS --output-root ABS`生成研发数据包。默认读取报告目录中的逐题与来源索引；历史索引可通过`--source-index/--task-index`指定，独立资源补采可用`--resource-root`加入。按来源包和显式选择校验，不扫描整个控制目录；保留原件、相对符号链接、资源补充层及离线VERIFY。ZIP顶层名须与导出包名一致，既有包不覆盖。
+
+已封存的研发ZIP通过原SHA校验，但展开目录被宿主改写时，可安全重建目录；保留原目录及差异记录，不改旧SHA。默认拒绝已有目标；确认要保留已有目录再恢复时，显式使用 `--preserve-existing`：
+
+```text
+python -X utf8 /absolute/run-general-e2e/scripts/restore_developer_bundle.py --archive /absolute/developer-bundle.zip --expected-archive-sha256 ORIGINAL_64_HEX_SHA256 --output-root /absolute/restored-output [--preserve-existing]
+```
+
+恢复器核验ZIP全部成员、类型、SHA、目录及相对链接模式，并使用当前发行的可信只读校验器验证执行/评分关联；不执行包内脚本。新副本通过目录校验后才发布，恢复回执单独写在包外。失败staging保留供诊断；不会清理来源或未知目录。此操作不重新执行用例、评分或生成新的成绩选择。
 
 先建立显式状态；`--input role=/absolute/file` 会冻结评分包、报告配置等外部输入，恢复时重算 SHA：
 

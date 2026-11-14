@@ -1,0 +1,60 @@
+{
+  "schema": "general-e2e-framework-repair-index/v1",
+  "evaluation": "general-custom60 round9",
+  "production_source_revision": "eb56928047a12aead6dd3ff07b8db5a862da1050",
+  "integration_base_revision": "2d80bcbdc2548fa079ed9dfd9210a8b6ce18bd90",
+  "production_framework_code_edited": false,
+  "repairs": [
+    {
+      "id": "developer-office-copy-protection",
+      "problem": "Default developer export did not protect newly written canonical report and host variant Office copies before recording hashes.",
+      "implementation": [
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/developer_bundle_files.py",
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/build_developer_bundle.py",
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/selected_developer_bundle.py"
+      ],
+      "tests": [
+        "tests/general_e2e/test_evidence_delivery.py",
+        "tests/general_e2e/test_symlink_copy_modes.py"
+      ],
+      "boundary": "New copies only; source files, selected scope, scores, original ZIPs and receipts unchanged."
+    },
+    {
+      "id": "developer-archive-restoration",
+      "problem": "Host-modified developer directory required a round-specific restoration helper.",
+      "controller_recovery_source": {
+        "name": "restore-rd-from-verified-archive.py",
+        "sha256": "0fa621f5a3ce727474ae8c18c1f824cbe5a4b52e7ff67be31c3fef645e790f28"
+      },
+      "implementation": [
+        "tools/report/skills/general-e2e/run-general-e2e/scripts/restore_developer_bundle.py"
+      ],
+      "tests": [
+        "tests/general_e2e/test_restore_developer_bundle.py"
+      ],
+      "boundary": "Explicit original archive SHA, strict namespace/type/mode/hash checks, trusted shipped verifier only, preserved existing variant and original INTEGRITY; no candidate execution or judging."
+    },
+    {
+      "id": "automatic-judge-display",
+      "problem": "A not-required automated group rendered as None / None independent judge in single-unit leader Markdown.",
+      "implementation": [
+        "tools/report/skills/general-e2e/report-general-e2e/scripts/leader_report.py"
+      ],
+      "tests": [
+        "tests/general_e2e/test_general_leader_report.py"
+      ],
+      "boundary": "Display only; judge grouping, scores and resources are preserved."
+    }
+  ],
+  "versions": {
+    "run-general-e2e": {
+      "before": "0.7.24",
+      "after": "0.7.25"
+    },
+    "report-general-e2e": {
+      "before": "0.8.51",
+      "after": "0.8.52"
+    }
+  },
+  "historical_evidence_policy": "No round9 frozen installation, dataset, Prompt, GT, Rubric, weight, execution, score, return or canonical report is replaced."
+}

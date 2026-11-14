@@ -17,6 +17,7 @@ from tests.general_e2e.test_report_general_e2e import Fixture, REPORT, write_jso
 ROOT = Path(__file__).resolve().parents[2]
 RUN = ROOT / 'tools/report/skills/general-e2e/run-general-e2e/scripts'
 SCRIPTS = ROOT / 'tools/report/skills/general-e2e/report-general-e2e/scripts'
+sys.path.insert(0, str(RUN))
 sys.path.insert(0, str(SCRIPTS))
 from seal_report import seal_report
 
@@ -43,7 +44,17 @@ class EvidenceDeliveryTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        self.addCleanup(self.unprotect_fixture_copies)
         self.fixture = SupplementFixture(self.root)
+
+    def unprotect_fixture_copies(self):
+        if sys.platform == 'darwin':
+            for base, dirs, files in os.walk(self.root, followlinks=False):
+                dirs[:] = [name for name in dirs if not (Path(base) / name).is_symlink()]
+                for name in files:
+                    path = Path(base) / name
+                    if not path.is_symlink():
+                        os.chflags(path, path.stat().st_flags & ~stat.UF_IMMUTABLE)
 
     def report(self):
         validated = REPORT.validate_batch_inputs(self.fixture.batch)
@@ -98,6 +109,12 @@ class EvidenceDeliveryTests(unittest.TestCase):
         self.assertTrue(all(r['score_0_1'] is None for r in tasks if r['score_status'] != 'valid'))
         self.assertEqual((directory / 'Reports/synthetic.xlsx').read_bytes(), original)
         self.assertEqual((directory / 'HostReportVariants/synthetic.xlsx').read_bytes(), b'independent host variant')
+        if sys.platform == 'darwin':
+            for path in [directory / 'Reports/synthetic.xlsx', directory / 'HostReportVariants/synthetic.xlsx']:
+                self.assertTrue(path.stat().st_flags & stat.UF_IMMUTABLE)
+                with self.assertRaises(PermissionError):
+                    path.write_bytes(b'synthetic host rewrite')
+            self.assertFalse((report / 'synthetic.xlsx').stat().st_flags & stat.UF_IMMUTABLE)
         for target in (directory, Path(receipt['archive'])):
             cp = subprocess.run([sys.executable, str(directory / 'VERIFY.py'), str(target)], capture_output=True, text=True)
             self.assertEqual(cp.returncode, 0, cp.stderr)

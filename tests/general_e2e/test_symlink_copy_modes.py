@@ -9,6 +9,7 @@ import unittest
 
 REPO = Path(__file__).resolve().parents[2]
 BASE = REPO / 'tools/report/skills/general-e2e'
+sys.path.insert(0, str(BASE / 'run-general-e2e/scripts'))
 
 
 def module(name, relative):
