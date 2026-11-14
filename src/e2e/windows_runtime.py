@@ -46,11 +46,11 @@ def read_session(path):
     return raw
 
 
-def installer_script(spec, identity=None):
+def installer_script(spec, identity=None, model="auto"):
     # 安装和登录只修改运行环境，脚本与私有备份均位于候选 Workspace 之外。
     values = {"VERSION": spec["version"], "URL": spec["download_url"], "SIZE": str(spec["size"]),
               "SHA": spec["sha512"].lower(), "GUEST": GUEST, "DATA": DATA,
-              "IDENTITY": identity or digest(spec)}
+              "IDENTITY": identity or digest(spec), "MODEL": model}
     script = r'''$ErrorActionPreference='Stop'
 $dir='__GUEST__';$data='__DATA__';$exe='C:\Users\Docker\AppData\Local\Programs\AStudio\AStudio.exe'
 function State($stage,$details){@{stage=$stage;details=$details;identity='__IDENTITY__';version='__VERSION__';utc=(Get-Date).ToUniversalTime().ToString('o')}|ConvertTo-Json -Depth 5 -Compress|Set-Content -Encoding UTF8 "$dir\status.json"}
@@ -60,7 +60,7 @@ function Version(){
 }
 try{
  $before=Version
- if($before -ne '__VERSION__' -or (Test-Path "$dir\session.json")){
+ if($before -ne '__VERSION__' -or (Test-Path "$dir\session.json") -or (Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){
   $apps=@(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})
   State 'quiescing' @{pids=@($apps.ProcessId)}
   if($apps.Count){$p=Start-Process $exe -ArgumentList '--shutdown-for-uninstall' -PassThru -Wait;for($i=0;$i -lt 30;$i++){if(!(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){break};Start-Sleep -Seconds 1}}
@@ -92,7 +92,29 @@ try{
   & icacls "$data\userdata\astron-session.json" /inheritance:r /grant:r "$($who):F" 'SYSTEM:F'|Out-Null
   Remove-Item "$dir\session.json"
  }
- State 'ready' @{before=$before;after=$after;installerSha512='__SHA__'}
+ # 原合同中的 /tmp_workspace 在 Windows 中解析到 C:\tmp_workspace；只建立受控别名，不覆盖已有目录。
+ $workspace='C:\ProgramData\WGUI\workspace\project';New-Item -ItemType Directory -Force $workspace|Out-Null
+ $alias='C:\tmp_workspace'
+ if(Test-Path $alias){$link=Get-Item -Force $alias;if($link.LinkType -ne 'Junction' -or (@($link.Target)[0]).TrimEnd([char]92) -ine $workspace){throw 'WINDOWS_WORKSPACE_ALIAS_CONFLICT'}}else{New-Item -ItemType Junction -Path $alias -Target $workspace|Out-Null}
+ if(Test-Path "$data\userdata\provider-model-catalog-v1.json"){Move-Item "$data\userdata\provider-model-catalog-v1.json" "$dir\previous-provider-model-catalog.json" -Force}
+ State 'warming-model-catalog' @{model='__MODEL__'}
+ $started=[DateTimeOffset]::UtcNow
+ if(!(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){Start-Process $exe|Out-Null}
+ $session=Get-Content -Raw "$data\userdata\astron-session.json"|ConvertFrom-Json
+ $sha=[Security.Cryptography.SHA256]::Create()
+ $scopes=@();foreach($namespace in @('AStudio','AstronStudio')){$key=$namespace+':provider-model-catalog:v1:account'+[char]0+$session.accountId;$scopes+=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($key)))).Replace('-','').ToLower()}
+ $matched=$false;$catalog=$null
+ for($i=0;$i -lt 180;$i++){
+  try{
+   $catalog=Get-Content -Raw "$data\userdata\provider-model-catalog-v1.json"|ConvertFrom-Json
+   $models=@($catalog.models|Where-Object{$_.name -ieq '__MODEL__' -or $_.slug -ieq '__MODEL__'})
+   $fresh=[DateTimeOffset]::Parse($catalog.fetchedAt) -ge $started.AddSeconds(-2)
+   if($scopes -contains $catalog.accountScopeHash -and $fresh -and $models.Count -gt 0){$matched=$true;break}
+  }catch{}
+  Start-Sleep -Seconds 1
+ }
+ if(!$matched){throw 'ASTUDIO_MODEL_CATALOG_NOT_READY'}
+ State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace}
 }catch{State 'failed' @{error=$_.Exception.Message};exit 1}
 '''
     for key, value in values.items():
@@ -106,7 +128,8 @@ def prepare_runtime(driver, sid, wgui, powershell):
         return
     validate_runtime(spec)
     session = read_session(Path(spec["session_file"]).expanduser()) if spec.get("session_file") else None
-    identity = digest({**spec, "session_sha256": hashlib.sha256(session).hexdigest() if session else None})
+    model = getattr(driver, "unit", {}).get("model", "auto")
+    identity = digest({**spec, "model": model, "session_sha256": hashlib.sha256(session).hexdigest() if session else None})
     row = driver.store.get(driver.key)
     state = row.get("runtime_prepare", {})
     if state and state.get("identity") != identity:
@@ -120,7 +143,7 @@ def prepare_runtime(driver, sid, wgui, powershell):
     if not state.get("launch_intent"):
         remote = "/tmp/wcb-runtime-" + row["attempt_id"]
         driver.client.checked(sid, "mkdir -p " + shlex.quote(remote) + " && chmod 700 " + shlex.quote(remote))
-        driver.client.upload(sid, remote + "/prepare.ps1", installer_script(spec, identity).encode())
+        driver.client.upload(sid, remote + "/prepare.ps1", installer_script(spec, identity, model).encode())
         if session:
             driver.client.upload(sid, remote + "/session.json", session)
         secure = "$d='" + GUEST + "';New-Item -ItemType Directory -Force $d|Out-Null;$who=[Security.Principal.WindowsIdentity]::GetCurrent().Name;icacls $d /inheritance:r /grant:r \"$($who):(OI)(CI)F\" 'SYSTEM:(OI)(CI)F'|Out-Null"

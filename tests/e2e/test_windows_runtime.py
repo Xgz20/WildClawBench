@@ -33,7 +33,7 @@ class WindowsRuntimeTests(unittest.TestCase):
     def test_unknown_launch_is_observed_without_installing_again(self):
         with tempfile.TemporaryDirectory() as directory:
             spec = specification()
-            state = {"identity": digest({**spec, "session_sha256": None}), "launch_intent": "earlier"}
+            state = {"identity": digest({**spec, "model": "auto", "session_sha256": None}), "launch_intent": "earlier"}
             driver = SimpleNamespace(config=SimpleNamespace(astudio_runtime=spec), store=Mock(), key="key",
                                      staging=Path(directory), client=Mock(), checkpoint=Mock(), _phase=Mock(), _checked_job=Mock())
             driver.store.get.return_value = {"attempt_id": "exec-test", "runtime_prepare": state}
