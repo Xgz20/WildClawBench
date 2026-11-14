@@ -51,6 +51,31 @@ class WindowsRuntimeTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "INPUT_DRIFT"):
             prepare_runtime(driver, "sid", "wgui", lambda s: s)
 
+    def test_failed_preparation_is_reported_without_being_swallowed_as_json_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            spec = specification()
+            state = {"identity": digest({**spec, "model": "auto", "session_sha256": None}), "launch_intent": "earlier"}
+            driver = SimpleNamespace(config=SimpleNamespace(astudio_runtime=spec), store=Mock(), key="key",
+                                     staging=Path(directory), client=Mock(), checkpoint=Mock(), _phase=Mock())
+            driver.store.get.return_value = {"runtime_prepare": state}
+            driver.client.windows_execute.return_value = {"output": json.dumps({"version": "3.6.3", "identity": state["identity"], "stage": "failed", "details": {"error": "test-error"}})}
+            with self.assertRaisesRegex(E2EError, "PREPARATION_FAILED: test-error"):
+                prepare_runtime(driver, "sid", "wgui", lambda s: s)
+            self.assertEqual(driver.client.windows_execute.call_count, 1)
+
+    def test_windows_script_upload_preserves_unicode_with_utf8_bom(self):
+        with tempfile.TemporaryDirectory() as directory:
+            spec = specification()
+            identity = digest({**spec, "model": "auto", "session_sha256": None})
+            driver = SimpleNamespace(config=SimpleNamespace(astudio_runtime=spec), store=Mock(), key="key",
+                                     staging=Path(directory), client=Mock(), checkpoint=Mock(), _phase=Mock(), _checked_job=Mock())
+            driver.store.get.return_value = {"attempt_id": "exec-test", "phase": "PREPARING"}
+            driver.client.windows_execute.return_value = {"output": json.dumps({"version": "3.6.3", "identity": identity, "stage": "ready"})}
+            prepare_runtime(driver, "sid", "wgui", lambda s: s)
+            raw = driver.client.upload.call_args.args[2]
+            self.assertTrue(raw.startswith(b"\xef\xbb\xbf"))
+            self.assertIn("原合同", raw.decode("utf-8-sig"))
+
     def test_installer_is_verified_before_execution_and_uses_private_backup(self):
         script = installer_script(specification())
         self.assertLess(script.index("ASTUDIO_INSTALLER_DIGEST_MISMATCH"), script.index("Start-Process $file"))

@@ -84,7 +84,7 @@ try{
  if($after -ne '__VERSION__'){throw 'ASTUDIO_INSTALLED_VERSION_MISMATCH'}
  if(Test-Path "$dir\session.json"){
   if(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe}){throw 'ASTUDIO_AUTH_RESTORE_REQUIRES_IDLE_APP'}
-  $s=Get-Content -Raw "$dir\session.json"|ConvertFrom-Json
+  $s=Get-Content -Raw -Encoding UTF8 "$dir\session.json"|ConvertFrom-Json
   if(!$s.uid -or !$s.token -or !$s.modelBearerToken){throw 'ASTRON_SESSION_INVALID'}
   if(Test-Path "$data\userdata\astron-session.json"){Copy-Item "$data\userdata\astron-session.json" "$dir\previous-session.json" -Force}
   Copy-Item "$dir\session.json" "$data\userdata\astron-session.json" -Force
@@ -100,13 +100,13 @@ try{
  State 'warming-model-catalog' @{model='__MODEL__'}
  $started=[DateTimeOffset]::UtcNow
  if(!(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){Start-Process $exe|Out-Null}
- $session=Get-Content -Raw "$data\userdata\astron-session.json"|ConvertFrom-Json
+ $session=Get-Content -Raw -Encoding UTF8 "$data\userdata\astron-session.json"|ConvertFrom-Json
  $sha=[Security.Cryptography.SHA256]::Create()
  $scopes=@();foreach($namespace in @('AStudio','AstronStudio')){$key=$namespace+':provider-model-catalog:v1:account'+[char]0+$session.accountId;$scopes+=([BitConverter]::ToString($sha.ComputeHash([Text.Encoding]::UTF8.GetBytes($key)))).Replace('-','').ToLower()}
  $matched=$false;$catalog=$null
  for($i=0;$i -lt 180;$i++){
   try{
-   $catalog=Get-Content -Raw "$data\userdata\provider-model-catalog-v1.json"|ConvertFrom-Json
+   $catalog=Get-Content -Raw -Encoding UTF8 "$data\userdata\provider-model-catalog-v1.json"|ConvertFrom-Json
    $models=@($catalog.models|Where-Object{$_.name -ieq '__MODEL__' -or $_.slug -ieq '__MODEL__'})
    $fresh=[DateTimeOffset]::Parse($catalog.fetchedAt) -ge $started.AddSeconds(-2)
    if($scopes -contains $catalog.accountScopeHash -and $fresh -and $models.Count -gt 0){$matched=$true;break}
@@ -115,7 +115,7 @@ try{
  }
  if(!$matched){throw 'ASTUDIO_MODEL_CATALOG_NOT_READY'}
  State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace}
-}catch{State 'failed' @{error=$_.Exception.Message};exit 1}
+}catch{State 'failed' @{error=$_.Exception.Message;errorType=$_.Exception.GetType().FullName;errorId=$_.FullyQualifiedErrorId};exit 1}
 '''
     for key, value in values.items():
         script = script.replace("__" + key + "__", value.replace("'", "''"))
@@ -143,7 +143,8 @@ def prepare_runtime(driver, sid, wgui, powershell):
     if not state.get("launch_intent"):
         remote = "/tmp/wcb-runtime-" + row["attempt_id"]
         driver.client.checked(sid, "mkdir -p " + shlex.quote(remote) + " && chmod 700 " + shlex.quote(remote))
-        driver.client.upload(sid, remote + "/prepare.ps1", installer_script(spec, identity, model).encode())
+        # Windows PowerShell 5.1 对无 BOM 脚本按本地代码页读取，中文注释可能吞掉后续行。
+        driver.client.upload(sid, remote + "/prepare.ps1", installer_script(spec, identity, model).encode("utf-8-sig"))
         if session:
             driver.client.upload(sid, remote + "/session.json", session)
         secure = "$d='" + GUEST + "';New-Item -ItemType Directory -Force $d|Out-Null;$who=[Security.Principal.WindowsIdentity]::GetCurrent().Name;icacls $d /inheritance:r /grant:r \"$($who):(OI)(CI)F\" 'SYSTEM:(OI)(CI)F'|Out-Null"
@@ -172,7 +173,7 @@ def prepare_runtime(driver, sid, wgui, powershell):
             if status["stage"] == "ready":
                 driver._phase("PREPARING", runtime_prepare={**state, "ready": True, "completed_at": utc_now()})
                 return
-        except (PlatformError, ValueError, KeyError):
+        except (PlatformError, json.JSONDecodeError, KeyError):
             pass
         time.sleep(2)
     raise PlatformError("ASTUDIO_RUNTIME_PREPARATION_UNRESOLVED", uncertain=True)
