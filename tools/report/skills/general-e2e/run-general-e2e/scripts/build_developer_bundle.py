@@ -19,6 +19,8 @@ import sys
 from urllib.parse import quote
 import zipfile
 
+from developer_bundle_files import copy_protected_file, protect_office_copy, write_protected_file
+
 ROOT = CONTROL = SOURCE_INDEX = TASK_INDEX = REPORT = RESOURCE = OUTPUT_ROOT = None
 UNITS = {}
 load = lambda p: json.loads(p.read_text(encoding="utf-8"))
@@ -144,6 +146,7 @@ def copy_verified(source_root, target_root, row):
         # both original and clone protection intact; never unlock the source.
         if stat.S_IMODE(target.stat().st_mode) != desired_mode:
             target.chmod(desired_mode)
+        protect_office_copy(target)
         assert sha(target) == row["sha256"], target
         return
     payload = entry_bytes(source, row["kind"])
@@ -563,15 +566,17 @@ def main(argv=None):
     if sealed:
         with zipfile.ZipFile(canonical) as z:
             for report_member,ref in sealed[1].items():
-                path=staging/'Reports'/safe_rel(report_member);path.parent.mkdir(parents=True,exist_ok=True);path.write_bytes(z.read(sealed[0]+report_member))
+                path=staging/'Reports'/safe_rel(report_member);path.parent.mkdir(parents=True,exist_ok=True)
+                write_protected_file(path,z.read(sealed[0]+report_member))
         (staging/'CanonicalReportArchive').mkdir();shutil.copy2(canonical,staging/'CanonicalReportArchive'/canonical.name)
         live=REPORT/excel_relative
         if live.is_file() and sha(live)!=receipt['excel_sha256']:
-            (staging/'HostReportVariants').mkdir();shutil.copy2(live,staging/'HostReportVariants'/live.name)
+            (staging/'HostReportVariants').mkdir();copy_protected_file(live,staging/'HostReportVariants'/live.name)
         write_json(staging/'REPORT_AUTHORITY.json',{'authority':'verified sealed ZIP members','canonical_archive_sha256':sha(canonical),
             'canonical_excel_sha256':receipt['excel_sha256'],'separate_live_excel_sha256':sha(live) if live.is_file() else None})
     else:
-        shutil.copytree(REPORT,staging/"Reports",ignore=shutil.ignore_patterns(".DS_Store","__pycache__"))
+        shutil.copytree(REPORT,staging/"Reports",ignore=shutil.ignore_patterns(".DS_Store","__pycache__"),
+                        copy_function=copy_protected_file)
     assert sha(staging/"Reports/general_e2e_report_data.json")==receipt["source_json_sha256"]
     table="\n".join(f'| {x["harness"]} | {x["selected_runs"]} | {x["valid_scores"]} | {x["transcript_present"]} | {x["raw_trace_present"]} |' for x in summaries)
     readme=f"""# General E2E 研发审阅数据包

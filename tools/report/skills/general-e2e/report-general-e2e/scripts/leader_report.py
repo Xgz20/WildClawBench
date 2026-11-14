@@ -561,8 +561,15 @@ def render(data):
                  f"评测范围：本轮{scope['unique_task_count']}题，单一模型与Harness配置。", '',
                  '本报告呈现本轮有效成绩、覆盖范围和可核验资源。', '']
         judges = data.get('judge_configurations', [])
-        if judges:
-            lines += ['独立裁判：' + '；'.join(str(j.get('model')) + ' / ' + str(j.get('reasoning_effort')) for j in judges) + '。', '']
+        semantic_judges = [j for j in judges if j.get('protocol') != 'not-required']
+        if semantic_judges:
+            lines += ['独立裁判：' + '；'.join(str(j.get('model') or '未记录') + ' / ' +
+                       str(j.get('reasoning_effort') or '未记录') for j in semantic_judges) + '。', '']
+        automatic = [j for j in judges if j.get('protocol') == 'not-required']
+        if automatic:
+            counts = [j.get('frozen_task_run_count') for j in automatic]
+            count = str(sum(counts)) + '题，' if all(isinstance(n, int) for n in counts) else ''
+            lines += ['自动规则评分：' + count + '无需语义裁判。', '']
     if data.get("score_coverage", {}).get("note"):
         lines += ["> 评分覆盖：" + data["score_coverage"]["note"], ""]
     titles={"总览":"一、总览","分类对比":"二、分类维度","Agent能力对比":"三、Agent能力","难度对比":"四、难度等级","模态对比":"五、模态对比","效率对比":"六、效率与资源","工具调用对比":"七、工具调用"}

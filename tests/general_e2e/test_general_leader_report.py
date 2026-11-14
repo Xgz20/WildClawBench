@@ -64,6 +64,26 @@ def comparison_fixture():
 
 
 class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
+    def test_single_unit_reports_automatic_group_without_a_null_judge(self):
+        _, data, _ = comparison_fixture()
+        data['scope']['unit_count'] = 1
+        data['narratives'] = LEADER.summaries(data)
+        semantic = {'protocol': 'codex-agent-judge-v1', 'model': 'gpt-6.1-sol',
+                    'reasoning_effort': 'high', 'frozen_task_run_count': 41}
+        automatic = {'protocol': 'not-required', 'model': None,
+                     'reasoning_effort': None, 'frozen_task_run_count': 19}
+        data['judge_configurations'] = [semantic, automatic]
+        original = copy.deepcopy(data['judge_configurations'])
+        text = LEADER.render(data)
+        self.assertIn('独立裁判：gpt-6.1-sol / high。', text)
+        self.assertIn('自动规则评分：19题，无需语义裁判。', text)
+        self.assertNotIn('None / None', text)
+        self.assertEqual(data['judge_configurations'], original)
+        data['judge_configurations'] = [automatic]
+        text = LEADER.render(data)
+        self.assertNotIn('独立裁判：', text)
+        self.assertIn('无需语义裁判', text)
+
     def test_leader_and_regular_report_share_float_boundary_display(self):
         self.assertEqual(LEADER.num(86.52499999999999), "86.53")
         self.assertEqual(LEADER.num(.8652499999999999, percent=True), "86.53%")

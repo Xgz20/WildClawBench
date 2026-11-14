@@ -11,11 +11,12 @@ import subprocess
 import sys
 import tempfile
 import unittest
-from contextlib import redirect_stdout
+from contextlib import contextmanager, redirect_stdout
 from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[2]
 SKILLS=ROOT/'tools/report/skills/general-e2e'
+sys.path.insert(0, str(SKILLS/'run-general-e2e/scripts'))
 def module(name,path):
     spec=importlib.util.spec_from_file_location(name,path);m=importlib.util.module_from_spec(spec);spec.loader.exec_module(m);return m
 LEADER=module('leader_round1',SKILLS/'report-general-e2e/scripts/leader_report.py')
@@ -24,6 +25,18 @@ BUNDLE=module('bundle_round1',SKILLS/'run-general-e2e/scripts/build_developer_bu
 sha=lambda b:hashlib.sha256(b).hexdigest()
 encoded=lambda d:(json.dumps(d,ensure_ascii=False,indent=2)+'\n').encode()
 def write(p,d):p.parent.mkdir(parents=True,exist_ok=True);p.write_bytes(encoded(d))
+
+
+@contextmanager
+def disposable_developer_fixture():
+    with tempfile.TemporaryDirectory() as temp:
+        try:
+            yield temp
+        finally:
+            if sys.platform == 'darwin':
+                for path in Path(temp).rglob('*.xlsx'):
+                    if not path.is_symlink():
+                        os.chflags(path, path.stat().st_flags & ~stat.UF_IMMUTABLE)
 
 
 class Round1IntegrationTests(unittest.TestCase):
@@ -99,7 +112,7 @@ class Round1IntegrationTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError,'EXECUTION_INVALID'):FAILURE.profile(unknown,contract)
 
     def test_developer_zip_root_matches_filename_and_preserves_zero_score_and_symlink(self):
-        with tempfile.TemporaryDirectory() as temp:
+        with disposable_developer_fixture() as temp:
             root=Path(temp).resolve();package=root/'package';report=root/'report';output=root/'out'
             tid='fixture-task';uid='fixture-unit';attempt='attempt';score_attempt='judge'
             base=package/'unit/evidence/tasks'/tid/attempt
