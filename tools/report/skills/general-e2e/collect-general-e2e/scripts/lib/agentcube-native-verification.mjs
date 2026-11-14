@@ -78,7 +78,23 @@ export async function verifyAgentCubeNative({ unitRoot, traceRoot, index, stateB
       && String(record.model.reasoning_effort).toLowerCase() === state.unit.reasoning_effort.toLowerCase(),
     'AGENTCUBE_REASONING_BINDING_MISMATCH');
   }
-  requireValue(sha(Buffer.from(users[0].message, 'utf8')) === record.prompt.sha256
+  let promptText = users[0].message;
+  requireValue(typeof promptText === 'string', 'AGENTCUBE_NATIVE_PROMPT_MISMATCH');
+  if (sha(Buffer.from(promptText, 'utf8')) !== record.prompt.sha256) {
+    // 独立重放长粘贴传输，不信任执行器自报的解码结果，也不改写原始消息。
+    const transport = state.native_binding.prompt_transport;
+    const opening = '<pasted_text>\n', closing = '\n</pasted_text>';
+    requireValue(transport?.kind === 'astudio-single-pasted-text-json'
+      && transport.native_message_sha256 === sha(Buffer.from(promptText, 'utf8'))
+      && promptText.startsWith(opening) && promptText.endsWith(closing), 'AGENTCUBE_NATIVE_PROMPT_MISMATCH');
+    let entries;
+    try { entries = JSON.parse(promptText.slice(opening.length, -closing.length)); } catch {}
+    requireValue(Array.isArray(entries) && entries.length === 1 && entries[0]
+      && Object.keys(entries[0]).length === 1 && typeof entries[0].text === 'string', 'AGENTCUBE_NATIVE_PROMPT_MISMATCH');
+    promptText = entries[0].text;
+    requireValue(transport.decoded_text_sha256 === sha(Buffer.from(promptText, 'utf8')), 'AGENTCUBE_NATIVE_PROMPT_MISMATCH');
+  }
+  requireValue(sha(Buffer.from(promptText, 'utf8')) === record.prompt.sha256
     && record.prompt.sha256 === state.prompt_sha256, 'AGENTCUBE_NATIVE_PROMPT_MISMATCH');
   const transcript = (await child(traceRoot, index.transcript.path)).toString('utf8').split(/\r?\n/).filter(Boolean).map(JSON.parse);
   const calls = rows.filter(item => item.type === 'response_item' && ['function_call', 'custom_tool_call'].includes(item.payload?.type)).map(item => item.payload);

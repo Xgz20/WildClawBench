@@ -108,3 +108,33 @@ test('MCP end metadata must bind to the canonical call and result', async t => {
   await value.rewriteRaw();
   await assert.rejects(value.verify(), /MCP_INVOCATION_MISMATCH/);
 });
+
+test('single pasted prompt is independently decoded and its native bytes stay bound', async t => {
+  const value = await fixture(t);
+  const message = `<pasted_text>\n${JSON.stringify([{ text: 'fixture task' }])}\n</pasted_text>`;
+  value.rows[2].payload.message = message;
+  value.state.native_binding.prompt_transport = { kind: 'astudio-single-pasted-text-json',
+    native_message_sha256: sha(message), decoded_text_sha256: sha('fixture task') };
+  await value.rewriteRaw();
+  assert.equal((await value.verify()).verified, true);
+  value.state.native_binding.prompt_transport.native_message_sha256 = sha('different');
+  await assert.rejects(value.verify(), /PROMPT_MISMATCH/);
+});
+
+test('pasted prompt rejects extra content, entries, fields and changed text', async t => {
+  const value = await fixture(t);
+  for (const [entries, prefix, suffix] of [
+    [[{ text: 'different' }], '', ''],
+    [[{ text: 'fixture task' }, { text: 'extra' }], '', ''],
+    [[{ text: 'fixture task', file: 'extra' }], '', ''],
+    [[{ text: 'fixture task' }], 'extra\n', ''],
+    [[{ text: 'fixture task' }], '', '\nextra'],
+  ]) {
+    const message = `${prefix}<pasted_text>\n${JSON.stringify(entries)}\n</pasted_text>${suffix}`;
+    value.rows[2].payload.message = message;
+    value.state.native_binding.prompt_transport = { kind: 'astudio-single-pasted-text-json',
+      native_message_sha256: sha(message), decoded_text_sha256: sha(entries[0].text) };
+    await value.rewriteRaw();
+    await assert.rejects(value.verify(), /PROMPT_MISMATCH/);
+  }
+});
