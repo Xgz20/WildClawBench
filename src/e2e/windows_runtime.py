@@ -114,7 +114,11 @@ try{
   Start-Sleep -Seconds 1
  }
  if(!$matched){throw 'ASTUDIO_MODEL_CATALOG_NOT_READY'}
- State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace}
+ # 目录预热不能替控制器占有实例；持久化目录后退出本准备步骤启动的客户端。
+ $p=Start-Process $exe -ArgumentList '--shutdown-for-uninstall' -PassThru -Wait
+ for($i=0;$i -lt 30;$i++){if(!(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe})){break};Start-Sleep -Seconds 1}
+ if(Get-CimInstance Win32_Process|Where-Object{$_.ExecutablePath -eq $exe}){throw 'ASTUDIO_WARMUP_STILL_RUNNING'}
+ State 'ready' @{before=$before;after=$after;installerSha512='__SHA__';model='__MODEL__';catalogCount=@($catalog.models).Count;catalogAccountMatched=$true;catalogFetchedAt=$catalog.fetchedAt;workspaceAlias=$alias;workspaceTarget=$workspace;warmupStopped=$true}
 }catch{State 'failed' @{error=$_.Exception.Message;errorType=$_.Exception.GetType().FullName;errorId=$_.FullyQualifiedErrorId};exit 1}
 '''
     for key, value in values.items():
