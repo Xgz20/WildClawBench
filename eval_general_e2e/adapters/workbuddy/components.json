@@ -3,7 +3,7 @@
   "adapter": "workbuddy",
   "entrypoint": "eval_general_e2e/adapters/workbuddy/components.mjs",
   "components": {
-    "desktop-app-discovery": "1.2.0",
+    "desktop-app-discovery": "1.3.0",
     "general-contracts": "1.3.2",
     "workbuddy-evidence": "0.3.1"
   }

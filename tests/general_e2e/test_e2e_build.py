@@ -96,6 +96,7 @@ class E2EBuildTests(unittest.TestCase):
                 "desktop-gui",
                 "doubaowork",
                 "qwenwork-native-state",
+                "loomy",
             },
         )
         self.assertEqual(self.manifest["skill_count"], 15)

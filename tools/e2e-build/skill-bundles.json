@@ -89,7 +89,8 @@
         "doubaowork",
         "qwenwork-native-state",
         "sqlite-snapshot",
-        "astronstudio-start-rejection"
+        "astronstudio-start-rejection",
+        "loomy"
       ]
     },
     {
@@ -109,7 +110,9 @@
         "qwenwork-native-state",
         "general-resource-supplements",
         "sqlite-snapshot",
-        "astronstudio-start-rejection"
+        "astronstudio-start-rejection",
+        "loomy",
+        "desktop-app-discovery"
       ]
     },
     {

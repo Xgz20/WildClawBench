@@ -8,7 +8,7 @@ from pathlib import Path, PurePosixPath
 import argparse, hashlib, importlib.util, json, os, shutil, stat, subprocess, sys, uuid, zipfile
 
 SCHEMA='wildclawbench.general-e2e-round-workspace/v1'
-LABELS={'astronstudio':'AstronStudio','workbuddy':'WorkBuddy','qwenwork':'QwenWork','doubaowork':'DoubaoWork'}
+LABELS={'astronstudio':'AstronStudio','workbuddy':'WorkBuddy','qwenwork':'QwenWork','doubaowork':'DoubaoWork','loomy':'Loomy'}
 load=lambda p:json.loads(Path(p).read_text(encoding='utf-8'))
 
 def require(ok,code):

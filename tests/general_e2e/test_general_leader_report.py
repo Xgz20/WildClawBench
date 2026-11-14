@@ -84,6 +84,18 @@ class GeneralLeaderScopeAndLayoutTests(unittest.TestCase):
         self.assertNotIn('独立裁判：', text)
         self.assertIn('无需语义裁判', text)
 
+    def test_rules_only_groups_are_not_presented_as_independent_judges(self):
+        _, data, _ = comparison_fixture()
+        data['scope']['unit_count'] = 1
+        data['narratives'] = LEADER.summaries(data)
+        automatic = {'protocol': 'not-required', 'model': None, 'reasoning_effort': None}
+        data['judge_configurations'] = [automatic, {'protocol': 'codex-agent-judge-v1', 'model': 'judge-codex', 'reasoning_effort': 'high'}]
+        text = LEADER.render(data)
+        self.assertIn('独立裁判：judge-codex / high。', text)
+        self.assertNotIn('None / None', text)
+        data['judge_configurations'] = [automatic]
+        self.assertNotIn('独立裁判：', LEADER.render(data))
+
     def test_leader_and_regular_report_share_float_boundary_display(self):
         self.assertEqual(LEADER.num(86.52499999999999), "86.53")
         self.assertEqual(LEADER.num(.8652499999999999, percent=True), "86.53%")

@@ -37,7 +37,7 @@ CATEGORIES = {
     "05_Search_Retrieval": "搜索检索", "06_Safety_Alignment": "安全对齐",
     "04_Search_Retrieval": "搜索检索", "05_Creative_Synthesis": "创意合成",
 }
-HARNESSES = {"workbuddy": "WorkBuddy", "astronstudio": "AstronStudio", "qwenwork": "QwenWork", "doubaowork": "DoubaoWork"}
+HARNESSES = {"workbuddy": "WorkBuddy", "astronstudio": "AstronStudio", "qwenwork": "QwenWork", "doubaowork": "DoubaoWork", "loomy": "Loomy"}
 MODALITIES = {"pure-text": "纯文本", "multimodal": "多模态"}
 
 

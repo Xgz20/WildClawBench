@@ -343,7 +343,7 @@ def main(argv=None):
     RESOURCE=args.resource_root.resolve() if args.resource_root else None
     CONTROL=OUTPUT_ROOT/"bundle-receipts"
     report_input=load(REPORT/"general_e2e_report_data.json")
-    display={"astronstudio":"AstronStudio","workbuddy":"WorkBuddy","qwenwork":"QwenWork","doubaowork":"DoubaoWork"}
+    display={"astronstudio":"AstronStudio","workbuddy":"WorkBuddy","qwenwork":"QwenWork","doubaowork":"DoubaoWork","loomy":"Loomy"}
     for unit in report_input["units"]:
         key=unit["unit_id"];label=display.get(unit["harness"]["id"],key)
         if label in UNITS.values():label=key

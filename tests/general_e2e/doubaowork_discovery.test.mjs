@@ -41,7 +41,7 @@ test("DoubaoWork discovers a native macOS bundle without app.asar", async () => 
     assert.equal(result.path, app);
     assert.equal(result.executable_path, join(app, "Contents/MacOS/DoubaoWork"));
     assert.equal(result.bundle_id, "com.work.pc.doubao");
-    assert.equal(result.component_version, "1.2.0");
+    assert.equal(result.component_version, "1.3.0");
   });
 });
 

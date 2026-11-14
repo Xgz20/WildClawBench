@@ -561,7 +561,7 @@ def render(data):
                  f"评测范围：本轮{scope['unique_task_count']}题，单一模型与Harness配置。", '',
                  '本报告呈现本轮有效成绩、覆盖范围和可核验资源。', '']
         judges = data.get('judge_configurations', [])
-        semantic_judges = [j for j in judges if j.get('protocol') != 'not-required']
+        semantic_judges = [j for j in judges if j.get('protocol') not in {None, 'not-required'}]
         if semantic_judges:
             lines += ['独立裁判：' + '；'.join(str(j.get('model') or '未记录') + ' / ' +
                        str(j.get('reasoning_effort') or '未记录') for j in semantic_judges) + '。', '']
