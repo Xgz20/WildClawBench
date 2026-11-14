@@ -35,6 +35,36 @@ def _text(content) -> str:
     return ""
 
 
+def _prompt_binding(actual, expected: str) -> dict:
+    def canonical(value):
+        return value.replace("\r\n", "\n").strip()
+
+    if not isinstance(actual, str):
+        raise E2EError("NATIVE_PROMPT_MISMATCH")
+    kind = "plain-text"
+    decoded = actual
+    if canonical(actual) != canonical(expected):
+        # 新版客户端会折叠长粘贴；只接受单个纯文本块，正文仍须完整匹配冻结题目。
+        # 不丢弃附加正文、多附件或未知字段，原始 user_message 继续按原字节留证。
+        value = canonical(actual)
+        opening, closing = "<pasted_text>\n", "\n</pasted_text>"
+        if not value.startswith(opening) or not value.endswith(closing):
+            raise E2EError("NATIVE_PROMPT_MISMATCH")
+        try:
+            entries = json.loads(value[len(opening):-len(closing)])
+        except json.JSONDecodeError as error:
+            raise E2EError("NATIVE_PROMPT_MISMATCH") from error
+        if (not isinstance(entries, list) or len(entries) != 1 or not isinstance(entries[0], dict)
+                or set(entries[0]) != {"text"} or not isinstance(entries[0]["text"], str)):
+            raise E2EError("NATIVE_PROMPT_MISMATCH")
+        decoded = entries[0]["text"]
+        if canonical(decoded) != canonical(expected):
+            raise E2EError("NATIVE_PROMPT_MISMATCH")
+        kind = "astudio-single-pasted-text-json"
+    return {"kind": kind, "native_message_sha256": hashlib.sha256(actual.encode("utf-8")).hexdigest(),
+            "decoded_text_sha256": hashlib.sha256(decoded.encode("utf-8")).hexdigest()}
+
+
 def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str,
                       requested_model: str, requested_effort: str | None, report: dict) -> dict:
     raw = path.read_bytes()
@@ -62,8 +92,7 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
            for context in [header, *contexts]):
         raise E2EError("NATIVE_WORKSPACE_MISMATCH")
     actual_prompt = users[0][1]["payload"].get("message")
-    if not isinstance(actual_prompt, str) or actual_prompt.replace("\r\n", "\n").strip() != prompt.replace("\r\n", "\n").strip():
-        raise E2EError("NATIVE_PROMPT_MISMATCH")
+    prompt_binding = _prompt_binding(actual_prompt, prompt)
     models = {model_identity(str(context.get("model") or "")) for context in contexts}
     expected_model = "astronclaw-auto" if requested_model.casefold() == "auto" else requested_model
     if len(models) != 1 or next(iter(models)).casefold() != expected_model.casefold():
@@ -168,6 +197,7 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             "actual_model": "auto" if next(iter(models)) == "astronclaw-auto" else next(iter(models)),
             "native_model": next(iter(models)),
             "reasoning_effort": next(iter(efforts)) if len(efforts) == 1 else None,
+            "prompt_transport": prompt_binding,
             "prompt_sha256": hashlib.sha256(prompt.encode()).hexdigest(), "raw_sha256": hashlib.sha256(raw).hexdigest(),
             "user_line": users[0][0], "terminal_line": terminals[0][0],
             "native_event_count": len(rows), "filtered_native_event_count": filtered,

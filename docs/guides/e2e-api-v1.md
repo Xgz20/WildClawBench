@@ -46,6 +46,8 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 
 恢复登录后先启动客户端，等待当前账号范围内的新模型目录包含请求模型，才允许进入控制器选择/派发阶段，避免冷启动的 Auto 回退目录被误当成最终能力。准备阶段还把 `C:\tmp_workspace` 作为执行目录的 Junction，以保留原题 `/tmp_workspace` 语义；如果该路径已有非目标目录或链接则拒绝覆盖。
 
+新版 AStudio 的长粘贴可能在原生 user_message 中保存为单个 `<pasted_text>` JSON 块。绑定仅允许一个仅含 `text` 字段的条目，解码正文必须完整匹配冻结 PROMPT；额外正文、多附件或未知字段均拒绝。原始消息不改写，绑定证据同时记录传输类型及原文、解码正文 SHA-256。恢复继续复用原 session 和 task-run job，不重复发送题目。
+
 当前默认模板 winarena-pc-20261104-a 发布已验证的 Auto/High 与 Spark-X2.5/High。2026-11-09 的 Max 配置两次在 controller select_reasoning 阶段被拒绝，默认目录已收口到 high，预检会拒绝未发布档位。新增可用组合通过执行器能力文件发布。
 
 scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General 范围的 report-only manifest 与 report-config，保留原输入制品锁。接收方将独立单题标准回传导入为显式来源后，可直接将其 path 交给 selected_report.py 的 --batch-root，按 expected_execution_keys 检查全范围。coverage_status 区分完整与部分材料，单题快速评分仍使用 scoring_contexts。包索引记录 exporter_revision，执行发行仍由 parent-batch 的原快照保存。新版只读导出器可在协议 v1 下整理旧批次的封存原件。

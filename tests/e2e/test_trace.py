@@ -36,6 +36,32 @@ class NativeMcpTests(unittest.TestCase):
         meta = next(event for event in value["events"] if event.get("content") == "mcp_tool_call_end")
         self.assertEqual(meta["native_status"], self.end)
 
+    def test_single_pasted_text_binds_without_rewriting_raw_user_event(self):
+        message = '<pasted_text>\n' + json.dumps([{"text": "prompt"}]) + '\n</pasted_text>'
+        user = next(row for row in self.rows if row.get("type") == "event_msg"
+                    and row["payload"].get("type") == "user_message")
+        user["payload"]["message"] = message
+        binding = self.normalize()
+        self.assertEqual(binding["prompt_transport"]["kind"], "astudio-single-pasted-text-json")
+        self.assertEqual(next(event for event in binding["events"] if event["type"] == "user_message")["content"], message)
+        self.assertEqual(binding["missing"], [])
+
+    def test_pasted_text_rejects_different_body_additions_and_multiple_entries(self):
+        user = next(row for row in self.rows if row.get("type") == "event_msg"
+                    and row["payload"].get("type") == "user_message")
+        for entries, prefix, suffix in [
+            ([{"text": "different"}], "", ""),
+            ([{"text": "prompt"}, {"text": "extra"}], "", ""),
+            ([{"text": "prompt", "file": "extra"}], "", ""),
+            ([{"text": "prompt"}], "additional instructions\n", ""),
+            ([{"text": "prompt"}], "", "\nadditional instructions"),
+            ([{"text": {"text": "prompt"}}], "", ""),
+        ]:
+            with self.subTest(entries=entries, prefix=prefix, suffix=suffix):
+                user["payload"]["message"] = prefix + '<pasted_text>\n' + json.dumps(entries) + '\n</pasted_text>' + suffix
+                with self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
+                    self.normalize()
+
     def test_mcp_end_with_wrong_invocation_is_rejected(self):
         self.end["invocation"]["arguments"] = {"operation": "delete"}
         with self.assertRaisesRegex(E2EError, "MCP_INVOCATION_MISMATCH"):
