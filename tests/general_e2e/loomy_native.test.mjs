@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, PROFILE, sameRuntimeInstallation, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, parseNativeHttpError, PROFILE, sameRuntimeInstallation, sha, statusUrl, verifyBinding, verifyNativeHttpFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
@@ -58,6 +58,34 @@ function fixture({ tool = true, child = false } = {}) {
   return native;
 }
 const options = { workspace: '/fixture/workspace', prompt, baseline: [], sessionId: 'ses_root', terminal: true };
+test('Loomy admits a bound primary 502 with an empty completed head, preserving failure and error atoms', () => {
+  const native = fixture({ tool: false }); native.parts = native.parts.filter(row => row.id !== 'part_final');
+  const final = JSON.parse(native.messages[1].data); delete final.finish; native.messages[1].data = JSON.stringify(final);
+  const runtime = { ppid: 10, executable: '/app/opencode', binary_sha256: 'a'.repeat(64), database: '/native.db', database_owned: true, health_version: '1.14.22' };
+  const error = { name: 'AI_APICallError', url: 'https://loomyad.xunfei.cn/api/v1/chat/completions', statusCode: 502,
+    requestBodyValues: { model: 'spark-x2.6', messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }] } };
+  const encodeLine = value => Buffer.from('ERROR 1970-01-01T00:00:01 +1ms service=llm providerID=imodel modelID=spark-x2.6 session.id=ses_root small=false agent=loomy mode=primary error=' + JSON.stringify({ error: value }) + ' trailing=retained');
+  const bytes = encodeLine(error), current = state(); current.phase = 'FAILED';
+  current.execution.business_status = 'candidate_error'; current.execution.error = { code: 'LOOMY_NATIVE_HTTP_ERROR', message: 'Native primary model HTTP 502 after provider retries' };
+  const proof = { profile: 'loomy-native-primary-http-failure/v1', identity: current.identity, prompt_sha256: sha(Buffer.from(prompt)),
+    session_id: 'ses_root', final_message_id: 'msg_final', original_runtime: runtime, observed_runtime: { ...runtime },
+    observed_at: '1970-01-01T00:00:03Z', runtime_status: {},
+    source_lines: [{ bytes_base64: bytes.toString('base64'), sha256: sha(bytes), size: bytes.length, line_number: 1 }] };
+  const scope = { ...options, identity: current.identity, native };
+  assert.equal(verifyNativeHttpFailure(proof, scope).error.code, 'LOOMY_NATIVE_HTTP_ERROR');
+  const normalized = normalizeTrace(native, { state: current, prompt, baseline: [], nativeFailure: proof });
+  assert.equal(normalized.final_response, null); assert.equal(normalized.events.filter(row => row.type === 'error').length, 1);
+  assert.throws(() => normalizeTrace(native, { state: current, prompt, baseline: [] }), /UNPROVED/);
+  for (const mutate of [p => { p.session_id = 'ses_foreign'; }, p => { p.runtime_status.ses_root = { type: 'busy' }; },
+    p => { p.observed_runtime.binary_sha256 = 'b'.repeat(64); }, p => { p.source_lines[0].sha256 = 'b'.repeat(64); }]) {
+    const changed = structuredClone(proof); mutate(changed); assert.throws(() => verifyNativeHttpFailure(changed, scope));
+  }
+  assert.equal(parseNativeHttpError(encodeLine({ ...error, statusCode: 402 }).toString()), null);
+  assert.equal(parseNativeHttpError(bytes.toString().replace('agent=loomy', 'agent=memory_extraction')), null);
+  const changed = structuredClone(proof), wrong = encodeLine({ ...error, requestBodyValues: { ...error.requestBodyValues, messages: [{ role: 'user', content: 'another task' }] } });
+  changed.source_lines[0] = { bytes_base64: wrong.toString('base64'), sha256: sha(wrong), size: wrong.length, line_number: 1 };
+  assert.throws(() => verifyNativeHttpFailure(changed, scope), /BINDING_INVALID/);
+});
 function state() { return { identity: { batch_id: 'batch', unit_id: 'loomy-macos', task_id: 'task', attempt_id: 'attempt' },
   phase: 'COMPLETED', session: { thread_id: 'ses_root', turn_id: 'msg_user', session_id: 'ses_root', cwd: options.workspace },
   execution: { duration_seconds: 1.2 } }; }

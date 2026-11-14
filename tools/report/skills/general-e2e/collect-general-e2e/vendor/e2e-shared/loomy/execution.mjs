@@ -3,7 +3,7 @@ import { mkdir, open, readFile, realpath, rename, unlink, writeFile } from 'node
 import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { artifact, assertIdle, assertNativeActivity, ax, captureNative, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
+import { artifact, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
   runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
@@ -139,6 +139,7 @@ export function buildState(context, journal) {
       loomy: { profile: 'loomy-opencode-sqlite/v1', runtime: context.config.runtime,
         runtime_rebindings: journal.runtime_rebindings || [],
         runtime_absence_before_dispatch: journal.runtime_absence_before_dispatch || null,
+        ...(journal.native_http_failure ? { native_http_failure: journal.native_http_failure } : {}),
         final_message_id: journal.final_message_id ?? null, native_finished_at: journal.native_finished_at ?? null,
         attention: journal.attention ?? null, journal_path: relative(context.unitRoot, context.journalPath),
         source_repairs: journal.source_repairs || [], observer_version: journal.observer_version || journal.version,
@@ -153,6 +154,15 @@ export async function verifyRuntime(config, workspace = null) {
 
 export function applyJournalRuntime(context, journal) {
   if (journal.runtime_binding) context.config = { ...context.config, runtime: journal.runtime_binding };
+}
+async function recordNativeHttpFailure(context, journal, runtime, native) {
+  if (journal.native_http_failure) return JSON.parse(await readFile(join(context.unitRoot, journal.native_http_failure.path), 'utf8'));
+  const proof = await captureNativeHttpFailure(context, journal, runtime, native);
+  if (!proof) return null;
+  const bytes = jsonBytes(proof), path = join(context.control, 'native-http-failure.json');
+  await writeFile(path, bytes, { flag: 'wx', mode: 0o600 });
+  journal.native_http_failure = artifact(relative(context.unitRoot, path), bytes);
+  return proof;
 }
 export async function refreshRuntime(context, journal, allowedSessionIds = []) {
   applyJournalRuntime(context, journal);
@@ -187,14 +197,21 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
       && journal.runtime_absence_before_dispatch.attempt_id === journal.identity.attempt_id
       && Date.parse(journal.runtime_absence_before_dispatch.observed_at) <= Date.parse(journal.sent_at);
     if (journal.dispatch_attempt_count === 1 && !lazyStart) {
-      const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline,
-        sessionId: journal.session?.id, terminal: true });
+      let binding;
+      try { binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline,
+        sessionId: journal.session?.id, terminal: true }); }
+      catch (error) {
+        if (error.message !== 'LOOMY_NATIVE_FINAL_NOT_COMPLETE'
+          || !await recordNativeHttpFailure(context, journal, current, native)) throw error;
+        binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session?.id });
+      }
       checkNativeModel(binding);
       const statuses = await runtimeStatus(current, context.workspace);
       requireValue(binding.session_ids.every(id => !statuses[id] || statuses[id].type === 'idle'), 'RUNTIME_REBIND_NATIVE_STILL_ACTIVE');
     } else if (journal.dispatch_attempt_count === 0) assertNativeActivity(native, allowedSessionIds);
     journal.runtime_rebindings = [...(journal.runtime_rebindings || []), { observed_at: new Date().toISOString(),
-      previous, current, native, policy: lazyStart ? 'same-main-app-binary-database; initial-dispatch-after-recorded-absence'
+      previous, current, native, policy: journal.native_http_failure ? 'same-main-app-binary-database; bound-native-http-failure-idle'
+        : lazyStart ? 'same-main-app-binary-database; initial-dispatch-after-recorded-absence'
         : 'same-main-app-binary-database; armed-execution-native-complete-only' }];
   }
   journal.runtime_binding = current;
@@ -243,9 +260,13 @@ export async function observe(context, journal, allowedSessionIds = []) {
   }
   journal.send_status = 'sent'; journal.phase = 'RUNNING'; journal.attention = null;
   const idle = binding.session_ids.every(id => !status[id] || status[id].type === 'idle');
-  if (idle && binding.final?.parsed.error) {
+  if (idle && !binding.final?.parsed.finish && !binding.final?.parsed.error) await recordNativeHttpFailure(context, journal, context.config.runtime, native);
+  if (idle && (binding.final?.parsed.error || journal.native_http_failure)) {
     journal.phase = 'FAILED'; journal.business_status = 'candidate_error';
-    journal.native_error = { code: 'LOOMY_NATIVE_MODEL_ERROR', message: JSON.stringify(binding.final.parsed.error) };
+    const proof = journal.native_http_failure && JSON.parse(await readFile(join(context.unitRoot, journal.native_http_failure.path), 'utf8'));
+    journal.native_error = proof ? { code: 'LOOMY_NATIVE_HTTP_ERROR', message: 'Native primary model HTTP '
+      + (await import('./index.mjs')).parseNativeHttpError(Buffer.from(proof.source_lines.at(-1).bytes_base64, 'base64').toString('utf8')).error.statusCode + ' after provider retries' }
+      : { code: 'LOOMY_NATIVE_MODEL_ERROR', message: JSON.stringify(binding.final.parsed.error) };
   } else if (idle && binding.final?.parsed.finish === 'stop') {
     verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline,
       sessionId: journal.session.id, terminal: true });

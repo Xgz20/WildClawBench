@@ -1,18 +1,21 @@
 import { mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile, lstat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, COMPONENT_VERSION } from './index.mjs';
+import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, verifyNativeHttpFailure, COMPONENT_VERSION } from './index.mjs';
 import { applyJournalRuntime, buildState, checkNativeModel, lease, loadTask, verifyRuntime } from './execution.mjs';
 
 const lines = rows => Buffer.from(rows.map(row => JSON.stringify(row)).join('\n') + '\n');
 const metric = (value, basis, status = 'observed') => ({ value, status, basis });
 const unavailable = basis => metric(null, basis, 'unavailable');
 
-export function normalizeTrace(native, { state, prompt, baseline }) {
+export function normalizeTrace(native, { state, prompt, baseline, nativeFailure = null }) {
   const binding = verifyBinding(native, { workspace: state.session.cwd, prompt, baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(binding);
   if (state.phase === 'COMPLETED') requireValue(!binding.final.parsed.error, 'COMPLETED_NATIVE_ERROR_CONFLICT');
-  if (state.phase === 'FAILED') requireValue(binding.final?.parsed.error && state.execution.business_status === 'candidate_error', 'NATIVE_FAILURE_UNPROVED');
+  const httpFailure = nativeFailure && verifyNativeHttpFailure(nativeFailure, { native, workspace: state.session.cwd,
+    prompt, baseline, sessionId: state.session.session_id, identity: state.identity });
+  if (state.phase === 'FAILED') requireValue((binding.final?.parsed.error || httpFailure
+    && digestError(httpFailure.error) === digestError(state.execution.error)) && state.execution.business_status === 'candidate_error', 'NATIVE_FAILURE_UNPROVED');
   requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question'), 'HUMAN_QUESTION_REQUIRES_INTERVENTION_RECEIPT');
   const messages = new Map(binding.messages.map(row => [row.id, row]));
   const events = [], grouped = new Map(), missing = [], callIds = new Set();
@@ -67,6 +70,13 @@ export function normalizeTrace(native, { state, prompt, baseline }) {
       content: JSON.stringify(message.parsed.error), native_session_id: message.session_id, native_message_id: message.id,
       source: { adapter: PROFILE, raw_ref: 'raw/native-message-rows.jsonl#L' + (position + 1), redacted: false } });
   }
+  for (const [position, row] of (httpFailure?.errors || []).entries()) {
+    nativeAtoms++;
+    append({ event_id: binding.final.id + '-http-error-' + position, occurred_at: row.occurred_at, type: 'error', role: 'assistant',
+      content: JSON.stringify({ name: row.error.name, statusCode: row.error.statusCode, responseBody: row.error.responseBody }),
+      native_session_id: binding.root.id, native_message_id: binding.final.id,
+      source: { adapter: PROFILE, raw_ref: 'raw/native-http-failure.json#/source_lines/' + position, redacted: false } });
+  }
   const filtered = [...grouped.values()].reduce((count, rows) => count + rows.length - 1, 0);
   events.sort((a, b) => Date.parse(a.occurred_at) - Date.parse(b.occurred_at) || (a.event_id < b.event_id ? -1 : a.event_id > b.event_id ? 1 : 0));
   events.forEach((event, index) => { event.sequence = index; });
@@ -83,6 +93,7 @@ export function normalizeTrace(native, { state, prompt, baseline }) {
   return { events, calls: [...calls.values()], final_response: final?.content ?? null,
     native_event_count: nativeAtoms, filtered_native_event_count: filtered, missing, binding };
 }
+const digestError = value => JSON.stringify(value);
 
 export function resourceMetrics({ state, normalized, sources }) {
   const nativeStart = normalized.binding.user.parsed.time?.created ?? normalized.binding.user.time_created;
@@ -124,7 +135,11 @@ export async function collectTask(options) {
     const terminalBytes = await readFile(join(context.unitRoot, journal.terminal_evidence.path));
     requireValue(sha(terminalBytes) === journal.terminal_evidence.sha256 && terminalBytes.length === journal.terminal_evidence.size, 'TERMINAL_EVIDENCE_CHANGED');
     const terminal = JSON.parse(terminalBytes), native = terminal.native;
-    const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline });
+    const failureBytes = journal.native_http_failure && await readFile(join(context.unitRoot, journal.native_http_failure.path));
+    if (failureBytes) requireValue(sha(failureBytes) === journal.native_http_failure.sha256
+      && failureBytes.length === journal.native_http_failure.size, 'HTTP_FAILURE_PROOF_CHANGED');
+    const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline,
+      nativeFailure: failureBytes && JSON.parse(failureBytes) });
     requireValue(currentNative.sessions.every(row => !statuses[row.id] || statuses[row.id].type === 'idle'), 'COLLECT_NATIVE_STILL_ACTIVE');
     requireValue(normalized.binding.final?.id === journal.final_message_id, 'COLLECT_FINAL_MESSAGE_CHANGED');
     const baselineBytes = await readFile(join(context.unitRoot, journal.baseline_evidence.path));
@@ -147,6 +162,7 @@ export async function collectTask(options) {
       ['raw/frozen-run-config.json', await readFile(options.runConfig)],
       ['raw/terminal-evidence.json', terminalBytes], ['raw/pre-send-native-baseline.json', baselineBytes],
       ['raw/current-scoped-snapshot.json', jsonBytes({ native: currentNative, runtime: collectionRuntime, runtime_status: statuses })]]);
+    if (failureBytes) files.set('raw/native-http-failure.json', failureBytes);
     for (const [i, receipt] of journal.history.entries()) {
       const bytes = await readFile(join(context.unitRoot, receipt.path));
       requireValue(sha(bytes) === receipt.sha256 && bytes.length === receipt.size, 'UI_PREPARATION_EVIDENCE_CHANGED');

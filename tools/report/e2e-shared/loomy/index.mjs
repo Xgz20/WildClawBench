@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { execFile } from 'node:child_process';
-import { access, lstat, mkdir, readFile, realpath } from 'node:fs/promises';
+import { access, lstat, mkdir, readFile, realpath, readdir } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -10,7 +10,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.9';
+export const COMPONENT_VERSION = '0.1.10';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -115,6 +115,100 @@ export async function captureNative({ database = DEFAULT_DATABASE, workspace = n
   const value = JSON.parse(stdout);
   requireValue(value.profile === PROFILE && value.snapshot?.quick_check === 'ok', 'NATIVE_SNAPSHOT_INVALID');
   return value;
+}
+
+// OpenCode can close an empty assistant after retry exhaustion without copying
+// the provider error into message.data. Admit only a bound primary HTTP 5xx log,
+// an empty completed head, terminal tools, and a fresh idle owned runtime.
+export function parseNativeHttpError(line) {
+  const prefix = /^ERROR (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}) .*?service=llm providerID=imodel modelID=spark-x2\.6 session\.id=(ses_[A-Za-z0-9]+) small=false agent=loomy mode=primary error=/u.exec(line);
+  if (!prefix) return null;
+  const source = line.slice(prefix[0].length);
+  let depth = 0, quoted = false, escaped = false, end = -1;
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i];
+    if (quoted) { if (escaped) escaped = false; else if (ch === '\\') escaped = true; else if (ch === '"') quoted = false; }
+    else if (ch === '"') quoted = true;
+    else if (ch === '{' || ch === '[') depth++;
+    else if (ch === '}' || ch === ']') { depth--; if (depth === 0) { end = i + 1; break; } }
+  }
+  if (end < 0) return null;
+  let parsed; try { parsed = JSON.parse(source.slice(0, end)); } catch { return null; }
+  const error = parsed?.error;
+  if (error?.name !== 'AI_APICallError' || error.url !== 'https://loomyad.xunfei.cn/api/v1/chat/completions'
+    || !Number.isInteger(error.statusCode) || error.statusCode < 500 || error.statusCode > 599
+    || error.requestBodyValues?.model !== 'spark-x2.6' || !Array.isArray(error.requestBodyValues.messages)) return null;
+  return { session_id: prefix[2], occurred_at: prefix[1] + 'Z', error };
+}
+const userTexts = value => typeof value === 'string' ? [value] : Array.isArray(value)
+  ? value.flatMap(userTexts) : value && typeof value === 'object' && value.type === 'text' ? userTexts(value.text) : [];
+export function verifyNativeHttpFailure(proof, { native, workspace, prompt, baseline, sessionId, identity }) {
+  requireValue(proof?.profile === 'loomy-native-primary-http-failure/v1'
+    && digest(proof.identity) === digest(identity) && proof.prompt_sha256 === sha(Buffer.from(prompt)), 'HTTP_FAILURE_IDENTITY_INVALID');
+  const binding = verifyBinding(native, { workspace, prompt, baseline, sessionId }); checkEmptyHead(binding);
+  requireValue(binding.user.parsed.model?.providerID === 'imodel' && binding.user.parsed.model?.modelID === 'spark-x2.6'
+    && binding.user.parsed.model?.variant === 'high' && binding.messages.filter(row => row.session_id === binding.root.id && row.parsed.role === 'assistant')
+      .every(row => row.parsed.providerID === 'imodel' && row.parsed.modelID === 'spark-x2.6' && row.parsed.variant === 'high'), 'HTTP_FAILURE_MODEL_INVALID');
+  requireValue(proof.final_message_id === binding.final.id && proof.session_id === binding.root.id
+    && Array.isArray(proof.source_lines) && proof.source_lines.length > 0
+    && sameRuntimeInstallation(proof.original_runtime, proof.observed_runtime)
+    && binding.session_ids.every(id => !proof.runtime_status[id] || proof.runtime_status[id].type === 'idle'), 'HTTP_FAILURE_TERMINAL_INVALID');
+  const start = binding.final.parsed.time.created, finish = binding.final.parsed.time.completed;
+  const errors = proof.source_lines.map(row => {
+    const bytes = Buffer.from(row.bytes_base64, 'base64');
+    requireValue(sha(bytes) === row.sha256 && bytes.length === row.size && Number.isSafeInteger(row.line_number) && row.line_number > 0,
+      'HTTP_FAILURE_LOG_HASH_INVALID');
+    const parsed = parseNativeHttpError(bytes.toString('utf8'));
+    requireValue(parsed?.session_id === sessionId && Date.parse(parsed.occurred_at) >= start - 1000
+      && Date.parse(parsed.occurred_at) <= finish + 1000
+      && parsed.error.requestBodyValues.messages.some(message => message.role === 'user'
+        && userTexts(message.content).some(text => text === prompt || text.includes(prompt))), 'HTTP_FAILURE_LOG_BINDING_INVALID');
+    return parsed;
+  });
+  requireValue(Date.parse(proof.observed_at) >= finish, 'HTTP_FAILURE_OBSERVATION_INVALID');
+  return { binding, errors, error: { code: 'LOOMY_NATIVE_HTTP_ERROR', message: 'Native primary model HTTP ' + errors.at(-1).error.statusCode + ' after provider retries' } };
+}
+function checkEmptyHead(binding) {
+  const final = binding.final?.parsed;
+  requireValue(final && !final.finish && !final.error && Number.isSafeInteger(final.time?.created)
+    && Number.isSafeInteger(final.time.completed) && final.time.completed >= final.time.created
+    && !binding.parts.some(row => row.message_id === binding.final.id)
+    && binding.parts.filter(row => row.parsed.type === 'tool').every(row => ['completed', 'error'].includes(row.parsed.state?.status)), 'HTTP_FAILURE_EMPTY_HEAD_UNPROVED');
+}
+export async function captureNativeHttpFailure(context, journal, runtime, native) {
+  const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session?.id });
+  try { checkEmptyHead(binding); } catch { return null; }
+  const original = journal.runtime_binding || context.config.runtime;
+  const logRoot = join(dirname(original.database), 'log');
+  requireValue(await realpath(logRoot) === logRoot, 'HTTP_FAILURE_LOG_ROOT_UNSAFE');
+  const expectedStart = Date.parse(original.started_at);
+  requireValue(Number.isFinite(expectedStart), 'HTTP_FAILURE_RUNTIME_START_UNPROVED');
+  const names = (await readdir(logRoot)).filter(name => /^\d{4}-\d{2}-\d{2}T\d{6}\.log$/u.test(name));
+  const sourceLines = [];
+  for (const name of names) {
+    const stamp = name.slice(0, 13) + ':' + name.slice(13, 15) + ':' + name.slice(15, 17) + 'Z';
+    if (Math.abs(Date.parse(stamp) - expectedStart) > 2000) continue;
+    const path = join(logRoot, name), info = await lstat(path);
+    requireValue(info.isFile() && !info.isSymbolicLink() && info.size <= 32 * 1024 * 1024, 'HTTP_FAILURE_LOG_UNSAFE');
+    const bytes = await readFile(path);
+    for (const [i, line] of bytes.toString('utf8').split('\n').entries()) {
+      const parsed = parseNativeHttpError(line);
+      if (parsed?.session_id !== binding.root.id || Date.parse(parsed.occurred_at) < binding.final.parsed.time.created - 1000
+        || Date.parse(parsed.occurred_at) > binding.final.parsed.time.completed + 1000) continue;
+      const data = Buffer.from(line);
+      sourceLines.push({ source_path: path, source_sha256: sha(bytes), line_number: i + 1,
+        sha256: sha(data), size: data.length, bytes_base64: data.toString('base64') });
+    }
+  }
+  if (!sourceLines.length) return null;
+  const statuses = await runtimeStatus(runtime, context.workspace);
+  const proof = { profile: 'loomy-native-primary-http-failure/v1', identity: journal.identity,
+    prompt_sha256: context.locks.prompt, session_id: binding.root.id, final_message_id: binding.final.id,
+    observed_at: new Date().toISOString(), original_runtime: original, observed_runtime: runtime,
+    runtime_status: statuses, source_lines: sourceLines };
+  verifyNativeHttpFailure(proof, { native, workspace: context.workspace, prompt: context.prompt,
+    baseline: journal.baseline, sessionId: binding.root.id, identity: journal.identity });
+  return proof;
 }
 
 export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {

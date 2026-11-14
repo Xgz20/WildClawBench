@@ -5,8 +5,10 @@ a successful execution or decides a score. Reviewed candidate failures use the
 ordinary grader/Judge; verified external quota failures require human recovery.
 """
 import hashlib
+import base64
 import json
 import re
+from datetime import datetime
 from pathlib import Path
 import execution_accountability
 
@@ -27,7 +29,7 @@ def require(condition, code):
 
 
 def _native_failure_profile(execution):
-    require(execution.get("harness", {}).get("id") == "astronstudio", "NATIVE_FAILURE_PROFILE_UNSUPPORTED")
+    require(execution.get("harness", {}).get("id") in {"astronstudio", "loomy"}, "NATIVE_FAILURE_PROFILE_UNSUPPORTED")
     require(execution.get("phase") == "FAILED"
             and execution["execution"]["business_status"] == "candidate_error"
             and execution["prompt"]["send_status"] == "sent"
@@ -102,6 +104,12 @@ def _validate_sources(execution, files):
         manifest = json.loads(files["original-evidence-manifest.json"])
         entry = [r for r in manifest["artifacts"] if r["path"].endswith("/execution/automation-state.json")]
         require(len(entry) == 1 and entry[0]["sha256"] == sha(files["original-state.json"]), "ASTRON_STATE_BINDING")
+    elif execution['harness']['id'] == 'loomy':
+        manifest = json.loads(files['original-evidence-manifest.json'])
+        states = [row for row in manifest['artifacts'] if row['path'].endswith('/execution/automation-state.json')]
+        require(len(states) == 1 and states[0]['sha256'] == sha(files['original-state.json'])
+                and states[0]['size'] == len(files['original-state.json']), 'LOOMY_STATE_BINDING')
+        _validate_loomy_sources(execution, state, files)
     else:
         raise ValueError("FAILED_OUTPUT_ADMISSION_HARNESS_UNSUPPORTED")
     return proof, original, state
@@ -163,14 +171,98 @@ def accountable_profile(execution):
 
 def native_candidate(execution):
     error = execution.get('execution', {}).get('error')
-    return (execution.get('harness', {}).get('id') == 'astronstudio'
+    harness = execution.get('harness', {}).get('id')
+    codes = {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'} if harness == 'astronstudio' else {'LOOMY_NATIVE_HTTP_ERROR'} if harness == 'loomy' else set()
+    return (bool(codes)
             and execution.get('phase') == 'FAILED'
             and execution.get('execution', {}).get('business_status') == 'candidate_error'
-            and isinstance(error, dict) and error.get('code') in {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'}
+            and isinstance(error, dict) and error.get('code') in codes
             and isinstance(error.get('message'), str) and bool(error['message'])
             and execution.get('prompt', {}).get('send_status') == 'sent'
             and execution.get('session', {}).get('verified') is True
             and execution.get('candidate', {}).get('drift_status') == 'stable')
+
+
+def _validate_loomy_sources(execution, state, files):
+    """Replay primary-provider failure from retained source bytes, never task IDs."""
+    proof_bytes = files['native-http-failure.json']
+    proof = json.loads(proof_bytes)
+    native = json.loads(files['native-scoped-snapshot.json'])
+    journal = json.loads(files['dispatch-journal.json'])
+    config = json.loads(files['frozen-run-config.json'])
+    manifest = json.loads(files['original-evidence-manifest.json'])
+    require(manifest['identity'] == execution['identity'], 'LOOMY_EVIDENCE_IDENTITY')
+    for name in ('native-http-failure.json', 'native-scoped-snapshot.json', 'dispatch-journal.json', 'frozen-run-config.json'):
+        rows = [row for row in manifest['artifacts'] if row['path'].endswith('/trace/raw/' + name)]
+        require(len(rows) == 1 and rows[0]['sha256'] == sha(files[name]) and rows[0]['size'] == len(files[name]), 'LOOMY_TRACE_BINDING')
+    binding = journal.get('native_http_failure', {})
+    require(binding.get('sha256') == sha(proof_bytes) and binding.get('size') == len(proof_bytes)
+            and state['extensions']['loomy']['native_http_failure'] == binding, 'LOOMY_PROOF_SHA')
+    require(proof.get('profile') == 'loomy-native-primary-http-failure/v1'
+            and proof['identity'] == execution['identity'] == journal['identity']
+            and journal['phase'] == 'FAILED' and journal['dispatch_attempt_count'] == 1
+            and journal['send_status'] == 'sent'
+            and journal['input_locks']['config'] == sha(files['frozen-run-config.json'])
+            and proof['prompt_sha256'] == execution['prompt']['sha256'] == sha(files['PROMPT.md']), 'LOOMY_IDENTITY')
+    require(native['profile'] == 'loomy-opencode-sqlite/v1'
+            and native['snapshot']['method'] == 'readonly-source-sqlite-online-backup'
+            and native['snapshot']['quick_check'] == 'ok', 'LOOMY_SOURCE')
+    sid = execution['session']['session_id']
+    root = [row for row in native['sessions'] if row['id'] == sid and row['parent_id'] is None]
+    require(len(root) == 1 and root[0]['directory'] == execution['session']['cwd']
+            and all(row['directory'] == root[0]['directory'] for row in native['sessions'])
+            and proof['session_id'] == sid, 'LOOMY_SESSION')
+    messages = [(row, json.loads(row['data'])) for row in native['messages']]
+    parts = [(row, json.loads(row['data'])) for row in native['parts']]
+    users = [(row, data) for row, data in messages if row['session_id'] == sid and data.get('role') == 'user']
+    assistants = [(row, data) for row, data in messages if row['session_id'] == sid and data.get('role') == 'assistant']
+    require(len(users) == 1 and bool(assistants), 'LOOMY_MESSAGE_SCOPE')
+    prompt = files['PROMPT.md'].decode('utf-8')
+    require(sum(data.get('text') == prompt for row, data in parts if row['message_id'] == users[0][0]['id']) == 1
+            and users[0][1].get('model') == {'providerID': 'imodel', 'modelID': 'spark-x2.6', 'variant': 'high'}
+            and all(data.get('providerID') == 'imodel' and data.get('modelID') == 'spark-x2.6' and data.get('variant') == 'high'
+                    for _, data in assistants), 'LOOMY_PROMPT_MODEL')
+    head, data = assistants[-1]
+    start, finish = data.get('time', {}).get('created'), data.get('time', {}).get('completed')
+    require(type(start) is int and type(finish) is int and finish >= start
+            and not data.get('finish') and not data.get('error')
+            and head['id'] == proof['final_message_id'] == state['extensions']['loomy']['final_message_id']
+            and not any(row['message_id'] == head['id'] for row, _ in parts)
+            and all(part.get('state', {}).get('status') in {'completed', 'error'} for _, part in parts if part.get('type') == 'tool'), 'LOOMY_EMPTY_COMPLETED_HEAD')
+    require(datetime.fromisoformat(proof['observed_at'].replace('Z', '+00:00')).timestamp() * 1000 >= finish,
+            'LOOMY_FAILURE_OBSERVATION')
+    before, after = proof['original_runtime'], proof['observed_runtime']
+    require(all(before[key] == after[key] for key in ('ppid', 'executable', 'binary_sha256', 'database', 'health_version'))
+            and before['database_owned'] is True and after['database_owned'] is True
+            and after['health_version'] == '1.14.22' and after['ppid'] == config['process']['pid']
+            and state['extensions']['loomy']['runtime'] == after
+            and all(proof['runtime_status'].get(row['id'], {}).get('type', 'idle') == 'idle' for row in native['sessions']), 'LOOMY_RUNTIME')
+    pattern = re.compile(r'^ERROR (\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}) .*?service=llm providerID=imodel modelID=spark-x2\.6 session\.id=(ses_[A-Za-z0-9]+) small=false agent=loomy mode=primary error=')
+    def text_values(content):
+        if isinstance(content, str): return [content]
+        if isinstance(content, list): return [text for item in content for text in text_values(item)]
+        if isinstance(content, dict) and content.get('type') == 'text': return text_values(content.get('text'))
+        return []
+    errors = []
+    require(bool(proof.get('source_lines')), 'LOOMY_LOG_MISSING')
+    for row in proof['source_lines']:
+        raw = base64.b64decode(row['bytes_base64'], validate=True)
+        require(sha(raw) == row['sha256'] and len(raw) == row['size'] and type(row['line_number']) is int and row['line_number'] > 0,
+                'LOOMY_LOG_SHA')
+        line = raw.decode('utf-8'); match = pattern.match(line)
+        require(match is not None and match[2] == sid, 'LOOMY_LOG_SESSION')
+        error = json.JSONDecoder().raw_decode(line[match.end():])[0]['error']
+        timestamp = datetime.fromisoformat(match[1] + '+00:00').timestamp() * 1000
+        require(start - 1000 <= timestamp <= finish + 1000 and error.get('name') == 'AI_APICallError'
+                and error.get('url') == 'https://loomyad.xunfei.cn/api/v1/chat/completions'
+                and type(error.get('statusCode')) is int and 500 <= error['statusCode'] <= 599
+                and error.get('requestBodyValues', {}).get('model') == 'spark-x2.6'
+                and any(message.get('role') == 'user' and any(prompt in text for text in text_values(message.get('content')))
+                        for message in error['requestBodyValues']['messages']), 'LOOMY_LOG_REQUEST')
+        errors.append(error)
+    expected = {'code': 'LOOMY_NATIVE_HTTP_ERROR', 'message': f"Native primary model HTTP {errors[-1]['statusCode']} after provider retries"}
+    require(execution['execution']['error'] == state['execution']['error'] == journal['native_error'] == expected,
+            'LOOMY_NATIVE_ERROR')
 
 
 def read_collected_files(unit_root, record_path, execution):

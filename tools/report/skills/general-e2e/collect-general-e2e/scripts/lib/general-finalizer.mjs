@@ -1295,10 +1295,13 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     };
     const manifestPath = `${evidenceRootRelative}/evidence-manifest.json`;
     const recordPath = `${evidenceRootRelative}/execution-record.json`;
-    if (record.harness.id === "astronstudio" && state.phase === "FAILED"
+    const astronNativeFailure = record.harness.id === 'astronstudio' && ['error', 'failed'].includes(state.session.native_status);
+    const loomyHttpFailure = record.harness.id === 'loomy' && state.execution.error?.code === 'LOOMY_NATIVE_HTTP_ERROR'
+      && state.extensions?.loomy?.native_http_failure && traceBundle?.index?.adapter?.id === 'loomy-opencode-sqlite/v1';
+    if ((astronNativeFailure || loomyHttpFailure) && state.phase === "FAILED"
         && state.execution.business_status === "candidate_error"
         && state.prompt.send_status === "sent" && state.send.dispatch_attempt_count === 1
-        && state.session.verified === true && ["error", "failed"].includes(state.session.native_status)) {
+        && state.session.verified === true) {
       // Freeze a native-failure proof independently of scoring. The scorer
       // decides whether the exact frozen contract permits output-only grading.
       const proofRoot = join(staging, "failure-proof");
@@ -1311,6 +1314,9 @@ export async function finalizeExecution(options, profile, overrides = {}) {
         ["candidate-artifact.json", prettyJson(candidateArtifact)],
         ["PROMPT.md", promptSource.bytes],
       ]);
+      if (loomyHttpFailure) for (const name of ['native-http-failure.json', 'native-scoped-snapshot.json', 'dispatch-journal.json', 'frozen-run-config.json']) {
+        sources.set(name, await readFile(join(staging, 'trace', 'raw', name)));
+      }
       await mkdir(proofRoot);
       const files = [];
       for (const [path, bytes] of sources) {

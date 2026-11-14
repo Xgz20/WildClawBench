@@ -34,6 +34,13 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     bytes('raw/sent-prompt.txt'), bytes(index.transcript.path),
   ]);
   const { config_digest, ...payload } = config;
+  const failureBytes = journal.native_http_failure && await bytes('raw/native-http-failure.json');
+  if (failureBytes) {
+    requiredRaw.push('raw/native-http-failure.json');
+    requireValue(sha(failureBytes) === journal.native_http_failure.sha256 && failureBytes.length === journal.native_http_failure.size,
+      'ARCHIVE_HTTP_FAILURE_HASH_MISMATCH');
+    requireValue(index.raw_trace.some(row => row.path === 'raw/native-http-failure.json'), 'ARCHIVE_HTTP_FAILURE_SOURCE_MISSING');
+  }
   for (const recovery of journal.pre_send_recoveries || []) {
     requireValue(recovery.prompt_dispatches === 0 || recovery.prompt_dispatches === undefined, 'ARCHIVE_PRE_SEND_RECOVERY_DISPATCH_MISMATCH');
     for (const original of recovery.originals) {
@@ -56,6 +63,12 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   }
   const effectiveRuntime = journal.runtime_binding || config.runtime;
   requireValue(digest(effectiveRuntime) === digest(runtimeChain.at(-1)), 'ARCHIVE_RUNTIME_BINDING_MISMATCH');
+  if (failureBytes) {
+    const failure = JSON.parse(failureBytes);
+    requireValue(digest(failure.observed_runtime) === digest(effectiveRuntime)
+      && runtimeChain.some(row => digest(row) === digest(failure.original_runtime))
+      && digest(state.extensions.loomy.runtime) === digest(effectiveRuntime), 'ARCHIVE_HTTP_FAILURE_RUNTIME_MISMATCH');
+  }
   requireValue(config_digest === digest(payload) && config.client.version === '0.9.39'
     && (config.runtime.health_version === '1.14.22' || isAbsentRuntime(config.runtime))
     && config.transport === 'macos-native-accessibility'
@@ -105,7 +118,7 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     && digest(baseline.session_index.map(row => row.id)) === digest(journal.baseline)
     && state.prompt.sent_at === journal.sent_at && Date.parse(baseline.observed_at) <= Date.parse(journal.sent_at), 'ARCHIVE_PRE_SEND_BASELINE_MISMATCH');
   assertNativeActivity(baseline, journal.allowed_session_ids);
-  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline });
+  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline, nativeFailure: failureBytes && JSON.parse(failureBytes) });
   const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(old);
