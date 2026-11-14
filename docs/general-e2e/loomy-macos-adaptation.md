@@ -1,5 +1,8 @@
 # Loomy macOS General E2E 适配
 
+本页保留初始六类执行与采集验证。后续五题真实三并发执行、三并发评分及报告闭环见
+[五题三并发验收](loomy-five-three-validation.md)。
+
 在 Apple Silicon Mac 上验证 Loomy 0.9.39（`com.loomy.desktop`），原生模型身份为
 `imodel/spark-x2.6`、推理强度 `high`。实现包含标准执行、批次队列、原生证据采集、
 候选冻结、正式回执与离线复验。沿用框架既有准备、评分及回传协议。
