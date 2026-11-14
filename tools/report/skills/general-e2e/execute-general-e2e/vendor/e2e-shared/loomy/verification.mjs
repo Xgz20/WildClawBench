@@ -1,7 +1,7 @@
 // Replays archived evidence only; never contacts a running desktop client.
 import { readFile, realpath } from 'node:fs/promises';
 import { isAbsolute, join, resolve } from 'node:path';
-import { assertNativeActivity, digest, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
+import { assertNativeActivity, digest, isAbsentRuntime, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
 import { normalizeTrace, resourceMetrics } from './collection.mjs';
 import { checkNativeModel } from './execution.mjs';
 import { assertConfiguration } from './ui.mjs';
@@ -45,12 +45,19 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   for (const row of journal.runtime_rebindings || []) {
     requireValue(digest(row.previous) === digest(runtimeChain.at(-1))
       && sameRuntimeInstallation(row.previous, row.current), 'ARCHIVE_RUNTIME_REBIND_MISMATCH');
+    if (isAbsentRuntime(row.previous) && Date.parse(row.observed_at) >= Date.parse(journal.sent_at)) {
+      const absence = journal.runtime_absence_before_dispatch;
+      requireValue(absence?.dispatch_attempt_count === 0 && absence.attempt_id === journal.identity.attempt_id
+        && digest(absence.app_process) === digest(config.process)
+        && Date.parse(absence.observed_at) <= Date.parse(journal.sent_at), 'ARCHIVE_COLD_START_ABSENCE_UNPROVED');
+      assertNativeActivity(absence.native);
+    }
     runtimeChain.push(row.current);
   }
   const effectiveRuntime = journal.runtime_binding || config.runtime;
   requireValue(digest(effectiveRuntime) === digest(runtimeChain.at(-1)), 'ARCHIVE_RUNTIME_BINDING_MISMATCH');
   requireValue(config_digest === digest(payload) && config.client.version === '0.9.39'
-    && config.runtime.health_version === '1.14.22'
+    && (config.runtime.health_version === '1.14.22' || isAbsentRuntime(config.runtime))
     && config.transport === 'macos-native-accessibility'
     && sha(await bytes('raw/frozen-run-config.json')) === journal.input_locks.config, 'ARCHIVE_RUN_CONFIG_INVALID');
   requireValue(config.permission_policy === 'preserve-workspace-policy' && Array.isArray(journal.history)

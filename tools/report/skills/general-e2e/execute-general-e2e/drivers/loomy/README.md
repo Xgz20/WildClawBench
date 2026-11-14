@@ -14,6 +14,8 @@ node drivers/loomy/probe.mjs --output /absolute/new-probe.json \
 探针冻结应用 Bundle、精确主进程及启动时间、辅助功能 helper、随包 OpenCode
 进程、二进制摘要、数据库实际持有关系和 loopback 状态接口。数据库通过只读连接
 在线备份查询。未知应用版本、配置、锁屏、进程身份或活动状态会阻断执行。
+后端尚未运行时，探针只冻结随包二进制实测版本/摘要和数据库路径，保留运行状态为空；
+实际 PID、端口、数据库所有权及 health 由首次正常发送后的原生观测建立，不另发启动 Prompt。
 
 使用标准 `prepare-general-e2e-workspaces` 生成并安装的 execution unit：
 

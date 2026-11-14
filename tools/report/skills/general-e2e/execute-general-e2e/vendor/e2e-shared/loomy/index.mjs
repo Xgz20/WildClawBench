@@ -10,7 +10,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.8';
+export const COMPONENT_VERSION = '0.1.9';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -163,8 +163,25 @@ export async function runtimeStatus(runtime, workspace = null) {
   return result;
 }
 export function sameRuntimeInstallation(before, after) {
-  return ['ppid', 'executable', 'binary_sha256', 'database', 'database_owned', 'health_version']
-    .every(key => before?.[key] === after?.[key]);
+  if (!['ppid', 'executable', 'binary_sha256', 'database'].every(key => before?.[key] === after?.[key])) return false;
+  if (before?.state === 'absent') return isAbsentRuntime(before)
+    && after?.database_owned === true && after?.health_version === before.binary_version;
+  return ['database_owned', 'health_version'].every(key => before?.[key] === after?.[key]);
+}
+export const isAbsentRuntime = runtime => runtime?.state === 'absent' && runtime.pid === null
+  && runtime.endpoint === null && runtime.started_at === null && runtime.database_owned === false
+  && runtime.health_version === null && runtime.binary_version === '1.14.22';
+
+async function inspectAbsentRuntime(app, database) {
+  const executable = await realpath(join(dirname(dirname(app.executable_path)), 'Resources/opencode/darwin-arm64/opencode'));
+  const bytes = await readFile(executable);
+  const { stdout } = await command(executable, ['--version']);
+  requireValue(stdout.trim() === '1.14.22', 'RUNTIME_VERSION_UNVERIFIED');
+  requireValue(await realpath(database) === database, 'RUNTIME_DATABASE_PATH_UNSAFE');
+  // No listener, PID, ownership or health response was observed. Keep them absent.
+  return { state: 'absent', pid: null, ppid: app.pid, executable, started_at: null,
+    binary_sha256: sha(bytes), endpoint: null, database, database_owned: false,
+    health_version: null, binary_version: stdout.trim() };
 }
 export async function currentOwnedRuntime(config) {
   const app = await inspectPinnedMain(config);
@@ -229,9 +246,13 @@ export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRo
     executable_path: processInfo.executable_path, command_sha256: sha(processInfo.command || '') };
   const gui = await inspectMacGuiSession(); assertMacGuiReady(gui);
   const [snapshot, runtime, native] = await Promise.all([
-    ax(helper, processInfo.pid), runtimeIdentity(processInfo, database), captureNative({ database, python }),
+    ax(helper, processInfo.pid), runtimeIdentity(processInfo, database).catch(error => {
+      if (error.message !== 'LOOMY_RUNTIME_NOT_RUNNING') throw error;
+      return inspectAbsentRuntime(processInfo, database);
+    }), captureNative({ database, python }),
   ]);
-  const status = await runtimeStatus(runtime); assertIdle(status, allowedSessionIds);
+  const status = isAbsentRuntime(runtime) ? null : await runtimeStatus(runtime);
+  if (status !== null) assertIdle(status, allowedSessionIds);
   assertNativeActivity(native, allowedSessionIds);
   const ui = uiConfiguration(snapshot);
   const config = { schema_version: 'wildclawbench.general-e2e-loomy-run-config/v1', version: COMPONENT_VERSION,

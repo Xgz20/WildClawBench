@@ -4,12 +4,27 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, jsonBytes, PROFILE, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, PROFILE, sameRuntimeInstallation, sha, statusUrl, verifyBinding } from '../../tools/report/e2e-shared/loomy/index.mjs';
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
 
 const prompt = '仅处理本题 workspace。';
+test('Loomy cold start binds the measured binary version without inventing a live runtime', () => {
+  const absent = { state: 'absent', pid: null, ppid: 10, executable: '/app/opencode', started_at: null,
+    binary_sha256: 'a'.repeat(64), endpoint: null, database: '/native.db', database_owned: false,
+    health_version: null, binary_version: '1.14.22' };
+  const live = { ppid: 10, executable: absent.executable, binary_sha256: absent.binary_sha256,
+    database: absent.database, database_owned: true, health_version: '1.14.22' };
+  assert.equal(isAbsentRuntime(absent), true); assert.equal(sameRuntimeInstallation(absent, live), true);
+  for (const change of [{ endpoint: 'http://127.0.0.1:1' }, { database_owned: true }, { health_version: '1.14.22' }, { binary_version: 'unknown' }]) {
+    assert.equal(isAbsentRuntime({ ...absent, ...change }), false);
+    assert.equal(sameRuntimeInstallation({ ...absent, ...change }, live), false);
+  }
+  for (const change of [{ ppid: 20 }, { binary_sha256: 'b'.repeat(64) }, { database: '/foreign.db' }, { health_version: 'unknown' }, { database_owned: false }]) {
+    assert.equal(sameRuntimeInstallation(absent, { ...live, ...change }), false);
+  }
+});
 test('Loomy status requests preserve the exact workspace directory and loopback owner scope', () => {
   const url = statusUrl({ endpoint: 'http://127.0.0.1:5072' }, '/fixture/work space');
   assert.equal(url.pathname, '/session/status'); assert.equal(url.searchParams.get('directory'), '/fixture/work space');
