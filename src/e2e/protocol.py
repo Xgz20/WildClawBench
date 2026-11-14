@@ -95,6 +95,7 @@ def describe(repo: Path) -> dict:
             "offline-export",
             "offline-parent-report-inputs",
             "headless-general-scoring",
+            "canonical-general-reports",
         ],
         "scenarios": [
             {"id": "general", "display_name": "通用场景", "dataset_required": True},

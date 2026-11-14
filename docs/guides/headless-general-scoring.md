@@ -42,3 +42,14 @@ python eval/run_e2e.py --api-version 1 headless-score \
 - 需要独立规则语义复核、原生 Office 特殊环境等任务，必须满足原 Skill 的额外门禁；本入口不绕过它们。Web 使用独立契约，后续接入。
 
 Codex 调用遵循 [OpenAI 官方非交互执行](https://developers.openai.com/codex/noninteractive)；DSH 使用其[官方 headless profile](https://github.com/deepseek-ai/deepseek-harness/tree/master/packages/bundle/headless)。以实际镜像内版本和帮助输出作为发行依据。
+
+
+## 平台开关与报告
+
+平台任务的 `scoring.enabled` 默认为 false。关闭时不校验评分模型、不排评分队列、不创建评分容器；执行、采集、归档照常。开启时将 Harness、模型、协议、推理档位、评分并发（1–8）和超时随新批次冻结；等执行结束且沙箱释放后再启动评分。修改任务配置只影响后续批次。历史批次可手动选择全部或部分执行记录另建评分操作；恢复观察原操作不会自动更换配置或重做已完成评分，明确重评才新建独立操作。
+
+`general-report --source-manifest ... --output-root ...` 接受经 SHA 校验的 headless-score 回执和所选 unit/run，复用 `report-general-e2e` 的指标计算与展示视图。数据来源采用独立 platform-score-source 适配契约，原始执行和评分身份不改写。原计划用例始终保留，部分评分不会缩小分母。多单元必须来自相同数据集 ID 与 digest；重复对同次执行使用不同裁判时，报告明确记录执行复用，评分智能体用量不算被测端资源。
+
+JSON、Markdown、HTML 和 Excel 同源，覆盖总览、效率及任务耗时、分类、难度、Agent 能力、模态、工具、用例对比、各单元检查点详情、资源覆盖与异常及评分配置。合法零分与空值分开；资源覆盖不完整时只显示已知小计和覆盖率。HTML 为离线可排序表格及 SVG 图表，不含模型语义总结；所有候选文本按数据转义。平台 HTML 页面使用相同视图绘图、底色和排序。
+
+评分及报告读取器与执行器独立冻结，更新评分功能不会改变历史批次的执行发行绑定。容器释放后评分 JSON、审计、原始裁判轨迹、日志以及报告四格式可归档到对象存储；凭据、私有参考和容器运行配置不进入公开导出。

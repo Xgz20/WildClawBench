@@ -113,6 +113,9 @@ def build_parser() -> argparse.ArgumentParser:
     score.add_argument("--scorer-config", type=Path, required=True)
     score.add_argument("--output-root", type=Path, required=True)
     score.add_argument("--execution-key", action="append", default=[])
+    report = commands.add_parser("general-report", help="从已验证的无头评分生成同源通用报告")
+    report.add_argument("--source-manifest", type=Path, required=True)
+    report.add_argument("--output-root", type=Path, required=True)
     imported = commands.add_parser("import", help="导入原始执行结果并核验完整性")
     _workspace(imported)
     imported.add_argument("--archive", type=Path, required=True)
@@ -254,6 +257,11 @@ def _headless_score(args):
                               keys=args.execution_key or None)
 
 
+def _general_report(args):
+    from .general_reports import generate_report
+    return generate_report(read_json(args.source_manifest), args.output_root.resolve())
+
+
 def _import(args):
     from .artifacts import import_execution
     from .common import digest
@@ -327,7 +335,7 @@ def main(argv=None) -> int:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
     handlers = {"run": _run, "resume": _resume, "status": _status, "cleanup": _cleanup,
-                "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score,
+                "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "general-report": _general_report,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts")}}
     try:
         result = handlers[args.command](args)
