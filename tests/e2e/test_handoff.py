@@ -49,7 +49,8 @@ class GeneralImportTests(unittest.TestCase):
             try:
                 run_batch(batch, AgentCubeConfig(user_id="synthetic", auth_token="synthetic"), driver_factory=factory)
                 archive = root / "result.zip"
-                export_package(batch, archive, purpose="scoring")
+                export_package(batch, archive, purpose="scoring",
+                               verification_skill=repo / "tools/report/skills/general-e2e/collect-general-e2e")
                 imported = import_package(archive, None, root / "recipient")
                 context = next(c for c in imported["scoring_contexts"]
                                if read_json(Path(c["context_root"]) / "unit/manifest.json")["task_ids"] == [task_id])
@@ -58,6 +59,8 @@ class GeneralImportTests(unittest.TestCase):
                 self.assertEqual(len(read_json(Path(parent_report["path"]) / "manifest.json")["task_ids"]), 2)
                 self.assertTrue(parent_report["report_only"])
                 context_root = Path(context["context_root"])
+                self.assertIsNotNone(context["supplemental_verifier"])
+                self.assertTrue((context_root / context["supplemental_verifier"]["path"]).is_dir())
                 project = next((context_root / "unit").glob("evidence/tasks/*/*/candidate/workspace/project"))
                 self.assertEqual(project.stat().st_mode & 0o777, 0o555)
                 project.chmod(0o755)

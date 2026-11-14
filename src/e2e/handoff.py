@@ -189,7 +189,15 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
             raise E2EError("SUPPLEMENTAL_COLLECTOR_INCOMPATIBLE")
         inventory(verification_skill)
         copied = temporary / "verification-skill/collect-general-e2e"
-        _copy(verification_skill, copied, protect=False)
+        repo = Path(__file__).resolve().parents[2]
+        if verification_skill.resolve() == repo / "tools/report/skills/general-e2e/collect-general-e2e":
+            # 源码目录的 vendor 是开发桥接；用确定性构建器补齐自包含依赖再封存。
+            builder = load_script(repo / "tools/e2e-build/build_skill_packages.py", "supplemental_collector_builder")
+            packages = temporary / "verification-packages"
+            built = builder.build_skill_packages(repo, packages, skill_names=["collect-general-e2e"])
+            extract_zip(packages / built["skills"][0]["archive"], copied, strip_root=True)
+        else:
+            _copy(verification_skill, copied, protect=False)
         verifier = {"path": "verification-skill/collect-general-e2e", "version": metadata["version"],
                     "inventory_sha256": digest(inventory(copied)), "source": str(verification_skill)}
         collector = copied / "scripts/finalize_astronstudio_execution.mjs"
@@ -314,18 +322,21 @@ def prepare_scoring_context(batch: Path, key: str, claim_id: str, *, verificatio
     return result
 
 
-def export_scoring_context(batch: Path, key: str, destination: Path) -> dict:
+def export_scoring_context(batch: Path, key: str, destination: Path, *, verification_skill: Path | None = None) -> dict:
     manifest = load_batch(batch)
     item = BatchStore(batch).get(key)
     ready = verify_ready(batch, item, manifest)
     unit = next(unit for unit in manifest["units"] if unit["unit_id"] == item["unit_id"])
     task = next(task for task in manifest["tasks"] if task["task_id"] == item["task_id"])
-    supplemental = None
+    supplemental = verification_skill
     claims = [row for row in BatchStore(batch).scoring_rows() if row["key"] == key and row.get("context")]
     if claims:
         context = claims[0]["context"]
         verifier = context.get("supplemental_verifier")
         if verifier:
+            # 已有评分交接绑定不能被导出时指定的校验器覆盖。
+            if verification_skill is not None and digest(inventory(verification_skill)) != verifier["inventory_sha256"]:
+                raise E2EError("SUPPLEMENTAL_COLLECTOR_CONFLICT")
             supplemental = inside(Path(context["context_root"]), verifier["path"])
             if digest(inventory(supplemental)) != verifier["inventory_sha256"]:
                 raise E2EError("SUPPLEMENTAL_COLLECTOR_DRIFT")

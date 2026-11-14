@@ -105,6 +105,8 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--unit-id", action="append", default=[])
     export.add_argument("--run-index", type=int)
     export.add_argument("--purpose", choices=("results", "scoring"), default="results")
+    export.add_argument("--verification-skill-dir", type=Path,
+                        help="显式补充 General 采集校验器，保留原批次与评分材料绑定")
     export.add_argument("--output", type=Path, required=True)
     imported = commands.add_parser("import", help="导入原始执行结果并核验完整性")
     _workspace(imported)
@@ -237,7 +239,8 @@ def _export(args):
     if args.api_version:
         from .protocol import snapshot
         include_unsealed = snapshot(root)["terminal"]
-    return export_package(root, args.output.resolve(), keys=keys, purpose=args.purpose, include_unsealed=include_unsealed)
+    return export_package(root, args.output.resolve(), keys=keys, purpose=args.purpose, include_unsealed=include_unsealed,
+                          verification_skill=args.verification_skill_dir)
 
 
 def _import(args):

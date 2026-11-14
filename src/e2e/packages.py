@@ -120,10 +120,13 @@ def _parent_general_report_inputs(batch: Path, stage: Path, manifest: dict, rows
     return result
 
 
-def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results", include_unsealed=False) -> dict:
+def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, purpose="results", include_unsealed=False,
+                   verification_skill: Path | None = None) -> dict:
     manifest = load_batch(batch)
     if purpose not in {"results", "scoring"}:
         raise E2EError("EXPORT_PURPOSE_INVALID")
+    if verification_skill is not None and purpose != "scoring":
+        raise E2EError("SUPPLEMENTAL_COLLECTOR_REQUIRES_SCORING_CONTEXT")
     store = BatchStore(batch)
     rows = store.rows()
     if keys and set(keys) - {row["key"] for row in rows}:
@@ -173,7 +176,7 @@ def export_package(batch: Path, output: Path, *, keys: list[str] | None = None, 
             entry["supplements"] = supplements
             if purpose == "scoring" and (execution / "execution-ready.json").exists():
                 context_root = stage / "contexts" / capsule_id
-                context = export_scoring_context(batch, row["key"], context_root)
+                context = export_scoring_context(batch, row["key"], context_root, verification_skill=verification_skill)
                 skill_source = Path(context["installed_skills"])
                 scene = context["scene"]
                 if scene not in skill_roots:
