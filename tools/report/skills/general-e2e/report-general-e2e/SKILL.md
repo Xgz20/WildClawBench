@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.53` 单一单元的领导版报告不把 not-required 自动规则组显示为 None / None 独立裁判；自动与语义协议分组、原分数、冻结来源和资源覆盖保持原样。
+
 `0.8.52` 新增 Loomy Harness 显示名称，未知资源继续按字段状态和覆盖率展示。
 
 
