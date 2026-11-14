@@ -85,6 +85,7 @@ def describe(repo: Path) -> dict:
             "catalog",
             "preflight",
             "runtime-preflight",
+            "windows-astudio-runtime-bootstrap",
             "execution",
             "events",
             "artifacts",

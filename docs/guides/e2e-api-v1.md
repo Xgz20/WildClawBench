@@ -40,6 +40,10 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 
 执行器发行使用只读版本目录部署。批次保存 root、Python、Git revision、api_version 和冻结参数。该路径在批次生命周期内需保留原发行，平台默认发行的更新仅影响新批次。
 
+支持 `windows-astudio-runtime-bootstrap` 的发行可在 AgentCube 身份 JSON 中显式配置 `astudio_runtime`：`version`、HTTPS `download_url`、`size`、`sha512` 固定官方 Windows 安装包；可选 `session_file` 指向本机 0600 的原生 AStudio 登录快照，`sync_clock` 默认 true。登录快照必须来自用户授权的账号，不包含在输入包、日志或结果导出中。AgentCube Token 仍只从环境注入，两类凭据不能混用。
+
+该准备步骤在题目派发前运行，校验安装包大小及 SHA-512、核验 app.asar 版本，并在候选 Workspace 之外保留受保护的旧状态备份。它按明确运行配置准备克隆沙箱，不改共享模板或既有冻结发行。Windows 时钟与控制器 UTC 偏差超过 120 秒时先校正，原有轨迹不改写。安装和登录恢复意图、配置指纹及状态回执可恢复；启动回执不明时只观察原状态文件，不重复启动安装。恢复时拒绝替换已有运行配置或登录快照。
+
 当前默认模板 winarena-pc-20261104-a 发布已验证的 Auto/High 与 Spark-X2.5/High。2026-11-09 的 Max 配置两次在 controller select_reasoning 阶段被拒绝，默认目录已收口到 high，预检会拒绝未发布档位。新增可用组合通过执行器能力文件发布。
 
 scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General 范围的 report-only manifest 与 report-config，保留原输入制品锁。接收方将独立单题标准回传导入为显式来源后，可直接将其 path 交给 selected_report.py 的 --batch-root，按 expected_execution_keys 检查全范围。coverage_status 区分完整与部分材料，单题快速评分仍使用 scoring_contexts。包索引记录 exporter_revision，执行发行仍由 parent-batch 的原快照保存。新版只读导出器可在协议 v1 下整理旧批次的封存原件。

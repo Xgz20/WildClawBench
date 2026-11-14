@@ -32,6 +32,7 @@ class AgentCubeConfig:
     active_ttl: int = 10800
     expire_ttl: int = 14400
     trust_env: bool = False
+    astudio_runtime: dict | None = None
     auth_token: str = field(default="", repr=False)
 
     @classmethod
@@ -63,12 +64,16 @@ class AgentCubeConfig:
                 raise E2EError("AGENTCUBE_ENDPOINT_INVALID")
         if type(result.active_ttl) is not int or type(result.expire_ttl) is not int or not 0 < result.active_ttl <= result.expire_ttl:
             raise E2EError("AGENTCUBE_TTL_INVALID")
+        if result.astudio_runtime is not None:
+            from .windows_runtime import validate_runtime
+            validate_runtime(result.astudio_runtime)
         identifier(result.template, "template")
         identifier(result.namespace, "namespace")
         return result
 
     def public(self) -> dict:
-        return {key: value for key, value in asdict(self).items() if key != "auth_token"}
+        return {key: value for key, value in asdict(self).items()
+                if key != "auth_token" and not (key == "astudio_runtime" and value is None)}
 
 
 class AgentCubeClient:

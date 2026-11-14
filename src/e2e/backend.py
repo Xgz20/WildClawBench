@@ -366,6 +366,8 @@ class AStudioSandboxDriver:
             self._phase("PREPARING", session_id=sid, created_at=utc_now())
         if not self.store.get(self.key).get("dispatch_armed_at"):
             self._health(sid)
+            from .windows_runtime import prepare_runtime
+            prepare_runtime(self, sid, WGUI, powershell)
             self._upload(sid)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
