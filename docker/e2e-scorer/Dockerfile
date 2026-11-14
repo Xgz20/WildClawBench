@@ -1,0 +1,28 @@
+# 原 CLI 评测镜像可通过 EVAL_BASE_IMAGE 复用；默认底座同时支持 ARM64 和 x86_64。
+ARG EVAL_BASE_IMAGE=python:3.11-bookworm
+ARG NODE_RUNTIME_IMAGE=node:24-bookworm-slim
+FROM ${NODE_RUNTIME_IMAGE} AS node-runtime
+FROM ${EVAL_BASE_IMAGE}
+ARG CODEX_VERSION=0.146.0
+ARG DSH_VERSION=0.1.2-rc.1
+ARG NPM_REGISTRY=https://registry.npmmirror.com
+ARG PIP_INDEX_URL=https://pypi.org/simple
+COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
+COPY --from=node-runtime /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
+COPY runtime-skill /opt/runtime-score-skill
+COPY wcb-dsh /usr/local/bin/wcb-dsh
+RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
+ && ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
+ && chmod 755 /usr/local/bin/wcb-dsh \
+ && pip install --no-cache-dir uv==0.13.6 pyyaml==6.0.3 jsonschema==4.26.0 openpyxl==3.1.5 playwright==1.55.0 \
+ && python -m playwright install-deps chromium \
+ && python /opt/runtime-score-skill/scripts/score_general_e2e.py bootstrap-runtime --venv-root /opt/scoring-runtime \
+ && npm install -g --registry="${NPM_REGISTRY}" "@openai/codex@${CODEX_VERSION}" "@deepseek-ai/dsh@${DSH_VERSION}" \
+ && codex --version && dsh --version \
+ && rm -rf /root/.codex /root/.dsh /var/lib/apt/lists/*
+LABEL org.astron.eval.role="headless-scorer" \
+      org.astron.eval.codex.version="0.146.0" \
+      org.astron.eval.dsh.version="0.1.2-rc.1"
+ENV PYTHONUTF8=1 DSH_TELEMETRY_DISABLED=1 DEEPSEEK_SEARCH_ENABLED=false
+WORKDIR /job
+ENTRYPOINT []

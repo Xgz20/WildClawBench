@@ -108,6 +108,11 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--verification-skill-dir", type=Path,
                         help="显式补充 General 采集校验器，保留原批次与评分材料绑定")
     export.add_argument("--output", type=Path, required=True)
+    score = commands.add_parser("headless-score", help="使用独立 Harness CLI 沙箱评分，不重跑被测端")
+    _batch(score)
+    score.add_argument("--scorer-config", type=Path, required=True)
+    score.add_argument("--output-root", type=Path, required=True)
+    score.add_argument("--execution-key", action="append", default=[])
     imported = commands.add_parser("import", help="导入原始执行结果并核验完整性")
     _workspace(imported)
     imported.add_argument("--archive", type=Path, required=True)
@@ -243,6 +248,12 @@ def _export(args):
                           verification_skill=args.verification_skill_dir)
 
 
+def _headless_score(args):
+    from .headless import run_headless_score
+    return run_headless_score(_batch_root(args), args.output_root.resolve(), read_json(args.scorer_config),
+                              keys=args.execution_key or None)
+
+
 def _import(args):
     from .artifacts import import_execution
     from .common import digest
@@ -316,7 +327,7 @@ def main(argv=None) -> int:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
     handlers = {"run": _run, "resume": _resume, "status": _status, "cleanup": _cleanup,
-                "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline,
+                "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts")}}
     try:
         result = handlers[args.command](args)

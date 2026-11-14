@@ -94,6 +94,7 @@ def describe(repo: Path) -> dict:
             "restore",
             "offline-export",
             "offline-parent-report-inputs",
+            "headless-general-scoring",
         ],
         "scenarios": [
             {"id": "general", "display_name": "通用场景", "dataset_required": True},
