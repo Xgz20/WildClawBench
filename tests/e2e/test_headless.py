@@ -72,6 +72,18 @@ class HeadlessContractTests(unittest.TestCase):
                 with self.assertRaisesRegex(E2EError, 'RESULT_DRIFT'):
                     _result_row(item, {'verified': True, 'verification': {}, 'score_sha256': checksum}, root)
 
+    def test_explicit_score_skill_freezes_complete_inventory_and_rejects_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'skill-metadata.json').write_text(json.dumps({'name': 'score-general-e2e',
+                'contract_version': 'general-e2e-contract-v1', 'version': 'fixture'}))
+            (root / 'grader.py').write_text('original rule reader')
+            configured = self.config(score_skill_dir=str(root))
+            self.assertEqual(len(configured['score_skill_inventory_sha256']), 64)
+            (root / 'grader.py').write_text('changed reader')
+            with self.assertRaisesRegex(E2EError, 'HEADLESS_SCORE_SKILL_DRIFT'):
+                normalize_config(configured)
+
 
 if __name__ == '__main__':
     unittest.main()

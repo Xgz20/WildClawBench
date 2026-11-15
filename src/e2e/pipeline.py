@@ -9,7 +9,8 @@ import subprocess
 import sys
 import time
 
-from .common import E2EError, file_sha256, identifier, inside, read_json, utc_now
+from .common import E2EError, file_sha256, identifier, inside, read_json, utc_now, digest
+from .artifacts import inventory
 from .engine import load_batch, verify_ready
 from .handoff import prepare_scoring_context
 from .store import BatchStore, controller_lock
@@ -52,7 +53,7 @@ def _run(argv: list[str]) -> dict:
         raise E2EError("SCORING_ORCHESTRATOR_OUTPUT_INVALID") from error
 
 
-def init_orchestration(batch: Path, key: str, claim_id: str) -> dict:
+def init_orchestration(batch: Path, key: str, claim_id: str, *, score_python: Path | None = None) -> dict:
     manifest = load_batch(batch)
     store = BatchStore(batch)
     claim = _claim(store, key, claim_id)
@@ -60,18 +61,24 @@ def init_orchestration(batch: Path, key: str, claim_id: str) -> dict:
     root = Path(context["context_root"])
     skills = Path(context["installed_skills"])
     if claim.get("orchestration") and Path(claim["orchestration"]["state_file"]).exists():
+        if score_python is not None:
+            state = read_json(Path(claim["orchestration"]["state_file"]))
+            if state.get('score_skill', {}).get('python', {}).get('executable') != str(score_python.expanduser().absolute()):
+                raise E2EError('SCORING_PYTHON_ALREADY_FROZEN')
         return poll_orchestration(batch, key, claim_id)
     with controller_lock(batch, "scoring-init"):
         item = store.get(key)
         if context["scene"] == "general":
             script = skills / "orchestrate-general-e2e/scripts/orchestrate_general_e2e.py"
             orchestration = root / "orchestrations" / ("pipeline-" + claim_id)
-            argv = [sys.executable, "-X", "utf8", str(script), "init", "--unit-root", str(root / context["unit_root"]),
+            argv = [str(score_python.expanduser().absolute()) if score_python else sys.executable, "-X", "utf8", str(script), "init", "--unit-root", str(root / context["unit_root"]),
                     "--scoring-package", str(root / context["scoring_package"]), "--report-config", str(root / context["report_config"]),
                     "--score-skill-dir", str(skills / "score-general-e2e"), "--output-root", str(orchestration.parent),
                     "--orchestration-id", orchestration.name, "--score-slots", "1", "--task-id", item["task_id"]]
             state_file = orchestration / "orchestration-state.json"
         else:
+            if score_python is not None:
+                raise E2EError('SCORING_PYTHON_REQUIRES_GENERAL_SCENE')
             script = skills / "orchestrate-web-e2e/scripts/scoring-control.mjs"
             orchestration = root / context["unit_root"]
             port = _port(batch.parent.parent, batch.name + "/" + claim_id)
@@ -91,20 +98,47 @@ def init_orchestration(batch: Path, key: str, claim_id: str) -> dict:
         return result
 
 
-def poll_orchestration(batch: Path, key: str, claim_id: str) -> dict:
+def _reader_script(store, key, claim_id, metadata, directory=None, reason=None):
+    registered = metadata.get('supplemental_reader')
+    if directory is not None:
+        root = directory.expanduser().resolve(strict=True)
+        spec = read_json(root / 'skill-metadata.json')
+        script = root / 'scripts/orchestrate_general_e2e.py'
+        if spec.get('name') != 'orchestrate-general-e2e' or not script.is_file() or script.is_symlink():
+            raise E2EError('ORCHESTRATOR_READER_INVALID')
+        binding = {'root': str(root), 'script': str(script), 'inventory_sha256': digest(inventory(root))}
+        if registered and any(registered[k] != v for k, v in binding.items()):
+            raise E2EError('ORCHESTRATOR_READER_CONFLICT')
+        if not registered:
+            if not reason or not reason.strip():
+                raise E2EError('ORCHESTRATOR_READER_REASON_REQUIRED')
+            registered = {**binding, 'reason': reason, 'registered_at': utc_now()}
+            phase = _claim(store, key, claim_id)['phase']
+            store.score_update(key, claim_id, phase, orchestration={**metadata, 'supplemental_reader': registered})
+    if registered:
+        if digest(inventory(Path(registered['root']))) != registered['inventory_sha256']:
+            raise E2EError('ORCHESTRATOR_READER_DRIFT')
+        return registered['script']
+    return metadata['script']
+
+
+def poll_orchestration(batch: Path, key: str, claim_id: str, *, reader_dir=None, reason=None) -> dict:
     store = BatchStore(batch)
     claim = _claim(store, key, claim_id)
     metadata = claim.get("orchestration")
     if not metadata:
         raise E2EError("SCORING_ORCHESTRATION_NOT_INITIALIZED")
     if metadata["scene"] == "general":
-        argv = [sys.executable, "-X", "utf8", metadata["script"], "status", "--orchestration-root", metadata["root"]]
+        script = _reader_script(store, key, claim_id, metadata, reader_dir, reason)
+        argv = [sys.executable, "-X", "utf8", script, "status", "--orchestration-root", metadata["root"]]
     else:
+        if reader_dir is not None:
+            raise E2EError('SUPPLEMENTAL_ORCHESTRATOR_REQUIRES_GENERAL_SCENE')
         argv = ["node", metadata["script"], "status", "--package-root", metadata["root"]]
     return _run(argv)
 
 
-def record_submission(batch: Path, key: str, claim_id: str) -> dict:
+def record_submission(batch: Path, key: str, claim_id: str, *, reader_dir=None, reason=None) -> dict:
     manifest = load_batch(batch)
     store = BatchStore(batch)
     claim = _claim(store, key, claim_id)
@@ -114,8 +148,11 @@ def record_submission(batch: Path, key: str, claim_id: str) -> dict:
     item = store.get(key)
     ready = verify_ready(batch, item, manifest)
     if metadata["scene"] == "general":
-        argv = [sys.executable, "-X", "utf8", metadata["script"], "build-submission", "--orchestration-root", metadata["root"]]
+        script = _reader_script(store, key, claim_id, metadata, reader_dir, reason)
+        argv = [sys.executable, "-X", "utf8", script, "build-submission", "--orchestration-root", metadata["root"]]
     else:
+        if reader_dir is not None:
+            raise E2EError('SUPPLEMENTAL_ORCHESTRATOR_REQUIRES_GENERAL_SCENE')
         skills = Path(claim["context"]["installed_skills"])
         argv = ["node", metadata["script"], "build-submission", "--package-root", metadata["root"],
                 "--score-skill-dir", str(skills / "score-web-e2e")]

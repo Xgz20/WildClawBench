@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import hashlib
+import ctypes
 import errno
 import json
 import os
 from pathlib import Path
 import shutil
 import stat
+import sys
 import re
 import time
 import uuid
@@ -19,6 +21,24 @@ from .common import E2EError, atomic_json, file_sha256, inside, read_json, relat
 SEAL = ".execution-seal.json"
 BACKUP_SCHEMA = "wildclawbench.execution-backup/v2"
 MAX_ARCHIVE_BYTES = 8 * 1024**3
+OFFICE_SUFFIXES = {'.docx', '.xlsx', '.pptx', '.doc', '.xls', '.ppt', '.odt', '.ods', '.odp'}
+
+
+def _protect_office_inode(path: Path, descriptor=None):
+    # Company host metadata agents can replace a chmod-readonly Office file.
+    # A new copy is immutable before its writing descriptor is closed on macOS.
+    if sys.platform == 'darwin' and path.suffix.lower() in OFFICE_SUFFIXES:
+        observed = path.stat().st_flags
+        if observed & stat.UF_IMMUTABLE:
+            return
+        flags = observed | stat.UF_IMMUTABLE
+        if descriptor is not None:
+            libc = ctypes.CDLL(None, use_errno=True)
+            if libc.fchflags(descriptor, flags) != 0:
+                code = ctypes.get_errno()
+                raise OSError(code, os.strerror(code), str(path))
+        else:
+            os.chflags(path, flags, follow_symlinks=False)
 
 
 def copy_stream_readonly(source, destination: Path, mode=0o444):
@@ -28,6 +48,8 @@ def copy_stream_readonly(source, destination: Path, mode=0o444):
     descriptor = os.open(destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, readonly)
     with os.fdopen(descriptor, "wb") as output:
         shutil.copyfileobj(source, output)
+        output.flush()
+        _protect_office_inode(destination, output.fileno())
 
 
 def inventory(root: Path) -> list[dict]:
@@ -62,7 +84,11 @@ def _protect(root: Path) -> None:
     for path in sorted(root.rglob("*"), key=lambda p: len(p.parts), reverse=True):
         if path.is_symlink():
             raise E2EError("UNSUPPORTED_ARTIFACT_LINK")
-        path.chmod(stat.S_IMODE(path.stat().st_mode) & ~0o222)
+        mode = stat.S_IMODE(path.stat().st_mode)
+        if mode & 0o222:
+            path.chmod(mode & ~0o222)
+        if path.is_file():
+            _protect_office_inode(path)
     root.chmod(stat.S_IMODE(root.stat().st_mode) & ~0o222)
 
 
@@ -71,6 +97,10 @@ def remove_temporary_tree(root: Path):
         try:
             for path in [root, *root.rglob("*")]:
                 if not path.is_symlink():
+                    if getattr(path.stat(), 'st_flags', 0) & getattr(stat, 'UF_IMMUTABLE', 0):
+                        if path.is_file() and path.stat().st_nlink != 1:
+                            raise E2EError('TEMPORARY_IMMUTABLE_HARDLINK_UNSUPPORTED')
+                        os.chflags(path, path.stat().st_flags & ~stat.UF_IMMUTABLE, follow_symlinks=False)
                     path.chmod(0o700 if path.is_dir() else 0o600)
             shutil.rmtree(root)
             return

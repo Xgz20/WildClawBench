@@ -132,6 +132,10 @@ def build_parser() -> argparse.ArgumentParser:
     pipeline.add_argument("--reason")
     pipeline.add_argument("--verification-skill-dir", type=Path,
                           help="显式冻结补充 General 收集校验器，保留批次原有 Skill 和评分材料")
+    pipeline.add_argument("--score-python", type=Path,
+                          help="首次初始化 General 评分编排使用的专用解释器；不改变已有编排")
+    pipeline.add_argument("--orchestrator-reader-dir", type=Path,
+                          help="显式绑定旧 General 编排的补充读取器，原脚本保持不变")
     return parser
 
 
@@ -211,12 +215,18 @@ def _restore(args):
     from .artifacts import restore_execution
     from .engine import load_batch
     from .store import BatchStore, controller_lock
+    from .common import digest
     root = _batch_root(args)
     load_batch(root)
     store = BatchStore(root)
     item = store.get(args.execution_key)
-    with controller_lock(root), controller_lock(root, "scoring-queue"):
-        if any(row["key"] == item["key"] and row["phase"] in {"CLAIMED", "RUNNING", "NEEDS_ATTENTION"} for row in store.scoring_rows()):
+    # A sealed completed case is stable while unrelated cases are executing.
+    # Active same-case grading still forbids changing its source pointer.
+    lock_name = 'restore-' + digest(item['key'])[:16] if item['phase'] == 'COMPLETED' else 'execution'
+    with controller_lock(root, lock_name), controller_lock(root, "scoring-queue"):
+        if any(row["key"] == item["key"] and row["phase"] in {"CLAIMED", "RUNNING", "NEEDS_ATTENTION"}
+               and (row.get('orchestration') or row['phase'] != 'CLAIMED')
+               for row in store.scoring_rows()):
             raise E2EError("SCORING_ACTIVE_RESTORE_REQUIRES_QUIESCENT_ATTEMPT")
         parent = inside(root, item["execution_root"]).parent.parent / "restores"
         destination = args.destination.resolve() if args.destination else parent / ("generation-" + uuid.uuid4().hex)
@@ -277,6 +287,10 @@ def _pipeline(args):
     from .handoff import prepare_scoring_context
     from .pipeline import init_orchestration, next_actions, poll_orchestration, record_submission
     root = _batch_root(args)
+    if args.score_python is not None and args.action != 'init-orchestration':
+        raise E2EError('SCORE_PYTHON_REQUIRES_INIT_ORCHESTRATION')
+    if args.orchestrator_reader_dir is not None and args.action not in {'poll', 'record-submission'}:
+        raise E2EError('ORCHESTRATOR_READER_REQUIRES_POLL_OR_SUBMISSION')
     if args.action == "takeover":
         from .engine import load_batch
         from .store import BatchStore
@@ -299,6 +313,12 @@ def _pipeline(args):
     if args.action == "prepare-context":
         return prepare_scoring_context(root, args.execution_key, args.claim_id,
                                        verification_skill=args.verification_skill_dir)
+    if args.action == "init-orchestration":
+        return init_orchestration(root, args.execution_key, args.claim_id, score_python=args.score_python)
+    if args.action in {"poll", "record-submission"}:
+        handler = poll_orchestration if args.action == "poll" else record_submission
+        return handler(root, args.execution_key, args.claim_id,
+                       reader_dir=args.orchestrator_reader_dir, reason=args.reason)
     handlers = {"prepare-context": prepare_scoring_context, "init-orchestration": init_orchestration,
                 "poll": poll_orchestration, "record-submission": record_submission}
     return handlers[args.action](root, args.execution_key, args.claim_id)

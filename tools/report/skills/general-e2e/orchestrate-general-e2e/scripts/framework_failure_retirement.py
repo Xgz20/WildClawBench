@@ -1,6 +1,7 @@
 """Retain two registered infrastructure failures without editing judge evidence."""
 from pathlib import Path
 import subprocess
+import aggregation_runtime_failure
 import escrow_state_review
 import escrow_grouped_review
 import release_baseline_text
@@ -10,12 +11,14 @@ import sterilization_quote_layout
 import native_writer_cleanup_failure
 import registered_rule_source_failures as source_failures
 
-KINDS={source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
+KINDS={aggregation_runtime_failure.ERROR_KIND,source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
+    if aggregation_runtime_failure.matches(rt,root,state,task):
+        return aggregation_runtime_failure.ERROR_KIND
     if source_failures.registered(contract.get('task_id')):
         source_failures.evidence(rt,attempt,m,contract,task)
         return source_failures.ERROR_KIND
@@ -72,8 +75,12 @@ def failure_kind(rt,root,state,task):
         raise ValueError('RELEASE_BASELINE_FAILURE_UNREGISTERED')
     return release_baseline_text.ERROR_KIND
 
-def locks(rt,root,task):
+def locks(rt,root,task,kind=None):
     attempt=root/task['attempt_path'];paths=[attempt/'attempt-manifest.json',root/task['prompt_path']]
+    m=rt._read_json(attempt/'attempt-manifest.json')
+    if (kind or (task.get('framework_failure') or {}).get('kind'))==aggregation_runtime_failure.ERROR_KIND:
+        # Retain unpublished judge drafts and its query exports, not just the semantic folder.
+        paths.extend(p for p in attempt.glob('*.json') if p.is_file())
     for folder in ['worker','semantic','rule-review','infrastructure-evidence']:
         base=attempt/folder
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
@@ -104,6 +111,10 @@ def verify(rt,root,state,task):
             or proof.get('identity')!=rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['identity']
             or proof.get('thread')!=task.get('thread') or proof.get('locks')!=locks(rt,root,task)
             or proof.get('original_evidence_unchanged') is not True):raise ValueError('FRAMEWORK_FAILURE_PROOF_DRIFT')
+    if proof['kind']==aggregation_runtime_failure.ERROR_KIND:
+        if (proof.get('aggregation_runtime')!=aggregation_runtime_failure.evidence(rt,root,state,task)
+                or proof.get('semantic_judging_performed') is not True
+                or proof.get('semantic_result_published') is not False):raise ValueError('AGGREGATION_RUNTIME_FAILURE_PROOF_DRIFT')
     if proof['kind'] in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
         result=(source_failures.evidence(rt,root/task['attempt_path'],rt._read_json(root/task['attempt_path']/'attempt-manifest.json'),
             rt._read_json(root/task['attempt_path']/rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['paths']['contract']),task)
@@ -113,7 +124,7 @@ def verify(rt,root,state,task):
                 raise ValueError('RULE_SOURCE_PREWORKER_OWNER_INVALID')
         elif (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
-    if (proof['kind'] in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
+    if (proof['kind'] in {aggregation_runtime_failure.ERROR_KIND,release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
             or proof['kind']==source_failures.ERROR_KIND and task.get('thread') is not None):
         native=proof.get('native_context',{})
         if (native.get('status')!='PASS' or native.get('unfinished_turns')!=[]
@@ -126,7 +137,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     root=rt._state_root(orchestration_root);state=rt._verify_state(root);task=rt._task_by_id(state,rt._identifier(task_id,'task_id'))
     if task.get('phase') not in {'RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT','RULES_NEEDS_ATTENTION'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
-    expected_phase={source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if source_failures.registered(task_id) else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
+    expected_phase={aggregation_runtime_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if source_failures.registered(task_id) else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
         declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION',
         sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING',native_writer_cleanup_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
@@ -135,8 +146,12 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
         manifest=rt._read_json(attempt/'attempt-manifest.json');contract=rt._read_json(attempt/manifest['paths']['contract'])
         public_snapshot_sidecar.preserve_failure(attempt,manifest,contract,rt._read_json(attempt/'rule-audit.json'),rt._read_json(attempt/'worker/result.json'))
     proof={'kind':kind,'identity':rt._read_json(attempt/'attempt-manifest.json')['identity'],
-        'reason':rt._required_string(reason,'reason'),'thread':task.get('thread'),'locks':locks(rt,root,task),
+        'reason':rt._required_string(reason,'reason'),'thread':task.get('thread'),'locks':locks(rt,root,task,kind),
         'at':rt._timestamp(now or rt._now()),'original_evidence_unchanged':True,'semantic_judging_performed':False}
+    if kind==aggregation_runtime_failure.ERROR_KIND:
+        proof['aggregation_runtime']=aggregation_runtime_failure.evidence(rt,root,state,task)
+        proof['semantic_judging_performed']=True
+        proof['semantic_result_published']=False
     if kind in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
         manifest=rt._read_json(attempt/'attempt-manifest.json')
         result=(source_failures.evidence(rt,attempt,manifest,rt._read_json(attempt/manifest['paths']['contract']),task)
@@ -149,7 +164,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
             process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
             if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
             proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
-    if (kind in {release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
+    if (kind in {aggregation_runtime_failure.ERROR_KIND,release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND}
             or kind==source_failures.ERROR_KIND and task.get('thread') is not None):
         if sdk_file is None:raise ValueError('COMPLETED_NATIVE_SDK_REQUIRED')
         from verify_judge_context import verify_context

@@ -67,6 +67,26 @@ class GeneratedEvidenceGlobTests(unittest.TestCase):
             contract['automated_checks']+='\n# drift'
             self.assertIsNone(GLOBS.policy(manifest,contract))
 
+    def test_v6_catalog_binds_all_four_unchanged_contracts_and_rejects_dataset_drift(self):
+        dataset=json.loads((REPO_ROOT/'eval_general_e2e/datasets/manifests/general-custom70-v6.json').read_text())
+        previous={r['task_id']:r for r in GLOBS.registry('general-custom70-v5')}
+        rows=GLOBS.registry('general-custom70-v6')
+        self.assertEqual(len(rows),4)
+        from src.utils.task_parser import parse_task_md
+        for row in rows:
+            task=next(t for t in dataset['tasks'] if t['task_id']==row['task_id'])
+            self.assertEqual(row['contract_sha256'],task['digests']['scoring_contract_sha256'])
+            self.assertEqual(row['source_sha256'],previous[row['task_id']]['source_sha256'])
+            parsed=parse_task_md(REPO_ROOT/task['source']['task_path'])
+            contract={'task_id':row['task_id'],'automated_checks':parsed['automated_checks'],'judge_evidence':parsed['judge_evidence']}
+            manifest={'identity':{'task_id':row['task_id']},'digests':{'contract_sha256':row['contract_sha256']},'dataset':row['dataset']}
+            self.assertEqual(GLOBS.policy(manifest,contract),row)
+            manifest['dataset']={**row['dataset'],'digest':'0'*64}
+            self.assertIsNone(GLOBS.policy(manifest,contract))
+        skills=REPO_ROOT/'tools/report/skills/general-e2e'
+        for name in ['scripts/generated_evidence_globs.py','data/reviewed-generated-file-globs-v6.json']:
+            self.assertEqual((skills/'score-general-e2e'/name).read_bytes(),(skills/'orchestrate-general-e2e'/name).read_bytes())
+
     def test_managed_producer_collects_every_match_and_archived_score_stays_verifiable(self):
         fixture=Fixture(self.root/'fixture',rule=RULE,contract_overrides={'judge_evidence':DECLARATIONS})
         with patch.object(GLOBS,'policy',side_effect=synthetic_policy):

@@ -2912,6 +2912,13 @@ def preflight(
     if desktop_version != task["project"]["desktop_version"]:
         raise OrchestrationError("DESKTOP_VERSION_MISMATCH")
     attempt = (root / task["attempt_path"]).resolve(strict=True)
+    runtime_manifest = _read_json(attempt / "attempt-manifest.json")
+    if runtime_manifest.get('runtime', {}).get('business_capability_profile') == 'independent-business-capability/v2':
+        runtime_lock = _read_json(attempt / runtime_manifest['paths']['runtime_lock'])
+        expected_python = [runtime_lock['python']['major'], runtime_lock['python']['minor']]
+        if state['score_skill']['python']['version'][:2] != expected_python:
+            raise OrchestrationError('AGGREGATION_SCORING_PYTHON_MISMATCH',
+                'Create a new orchestration with the managed Python runtime; the frozen scoring interpreter must match the rule lock before creating a Judge')
     verification = _run_score_command(
         state["score_skill"], ["verify", "--attempt-root", str(attempt)]
     )

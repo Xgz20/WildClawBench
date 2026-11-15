@@ -5,7 +5,7 @@ import tempfile,unittest
 from unittest.mock import patch
 
 from src.e2e.preparation import prepare_batch
-from src.e2e.artifacts import inventory
+from src.e2e.artifacts import inventory, remove_temporary_tree
 from src.e2e.common import read_json
 
 
@@ -50,5 +50,4 @@ class InputFreezeTests(unittest.TestCase):
                     with self.assertRaises(PermissionError):(root/'execution/workspace/input.xlsx').write_bytes(b'host metadata mutation')
                     with self.assertRaises(PermissionError):(root/'execution/workspace/.DS_Store').write_bytes(b'host metadata')
             finally:
-                for path in base.rglob('*'):
-                    if path.is_dir():path.chmod(0o700)
+                remove_temporary_tree(base)

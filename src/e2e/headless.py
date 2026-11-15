@@ -12,7 +12,7 @@ import subprocess
 import time
 from urllib.parse import urlsplit
 
-from .artifacts import inventory
+from .artifacts import inventory, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json
 from .engine import load_batch, verify_ready
 from .handoff import export_scoring_context
@@ -22,7 +22,8 @@ SCHEMA = 'wildclawbench.headless-score-job/v1'
 LABEL = 'org.astron.eval.score-job'
 SUPPORTED_HARNESSES = {'codex', 'deepseek-harness'}
 CONFIG_KEYS = {'harness', 'model', 'base_url', 'reasoning_effort', 'image', 'image_id',
-               'docker_context', 'concurrency', 'timeout_seconds', 'rule_timeout_seconds', 'memory', 'cpus', 'api_format', 'dns_overrides'}
+               'docker_context', 'concurrency', 'timeout_seconds', 'rule_timeout_seconds', 'memory', 'cpus', 'api_format', 'dns_overrides',
+               'score_skill_dir', 'score_skill_inventory_sha256'}
 
 
 def normalize_config(value: dict) -> dict:
@@ -57,6 +58,17 @@ def normalize_config(value: dict) -> dict:
             raise E2EError('HEADLESS_TIMEOUT_INVALID')
     if result['reasoning_effort'] not in {'none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max', 'ultra'}:
         raise E2EError('HEADLESS_REASONING_INVALID')
+    if result.get('score_skill_dir'):
+        root = Path(result['score_skill_dir']).expanduser().resolve(strict=True)
+        metadata = read_json(root / 'skill-metadata.json')
+        if metadata.get('name') != 'score-general-e2e' or metadata.get('contract_version') != 'general-e2e-contract-v1':
+            raise E2EError('HEADLESS_SCORE_SKILL_INCOMPATIBLE')
+        expected = digest(inventory(root))
+        if result.get('score_skill_inventory_sha256', expected) != expected:
+            raise E2EError('HEADLESS_SCORE_SKILL_DRIFT')
+        result.update(score_skill_dir=str(root), score_skill_inventory_sha256=expected)
+    elif result.get('score_skill_inventory_sha256'):
+        raise E2EError('HEADLESS_SCORE_SKILL_DIRECTORY_REQUIRED')
     return result
 
 
@@ -189,9 +201,21 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
         verify_ready(batch, item, manifest)
         if not (work / 'context/handoff.json').exists():
             repo = Path(__file__).resolve().parents[2]
+            registered = [row.get('context', {}).get('supplemental_verifier')
+                          for row in BatchStore(batch).scoring_rows() if row['key'] == item['key']]
+            verifier = None if any(registered) else repo / 'tools/report/skills/general-e2e/collect-general-e2e'
             context = export_scoring_context(batch, item['key'], work / 'context',
-                       verification_skill=repo / 'tools/report/skills/general-e2e/collect-general-e2e')
+                       verification_skill=verifier)
             shutil.copytree(context['installed_skills'], work / 'skills', ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.DS_Store'))
+            if config.get('score_skill_dir'):
+                source = Path(config['score_skill_dir'])
+                if digest(inventory(source)) != config['score_skill_inventory_sha256']:
+                    raise E2EError('HEADLESS_SCORE_SKILL_DRIFT')
+                target = work / 'skills/score-general-e2e'
+                # Only this job's unused clone changes; batch Skills and prior attempts stay frozen.
+                remove_temporary_tree(target)
+                shutil.copytree(source, target, copy_function=shutil.copyfile,
+                                ignore=shutil.ignore_patterns('__pycache__', '*.pyc', '.DS_Store'))
             request = {**config, 'task_id': item['task_id'], 'scene': 'general',
                        'scoring_attempt_id': 'headless-' + job_id[-32:]}
             atomic_json(work / 'request.json', request, create=True)
