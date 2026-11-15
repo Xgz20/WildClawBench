@@ -191,7 +191,7 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             value = usage.get(report_key)
             if type(value) is not int or value < 0 or not native_usage or value != (native_usage[-1] or {}).get(native_key):
                 usage_valid = False
-    return {"schema": "wildclawbench.agentcube-native-binding/v1", "identity": identity,
+    binding = {"schema": "wildclawbench.agentcube-native-binding/v1", "identity": identity,
             "session": {"thread_id": None, "turn_id": turn_id, "session_id": header["id"],
                         "cwd": contexts[0]["cwd"], "lifecycle_generation": None},
             "actual_model": "auto" if next(iter(models)) == "astronclaw-auto" else next(iter(models)),
@@ -207,6 +207,16 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             "usage": usage if usage_valid else None,
             "usage_warning": None if usage_valid else "report-usage-native-reconciliation-unavailable",
             "native_duration_ms": terminals[0][1]["payload"].get("duration_ms")}
+    # Current clients expose complete native last/cumulative usage; replay the exact
+    # same deduplication/reconciliation profile used by the General report Skill.
+    if any(isinstance(item["payload"].get("info"), dict) and "last_token_usage" in item["payload"]["info"]
+           for _, item in rows if item["payload"].get("type") == "token_count"):
+        from .native_resources import replay_resources
+        try:
+            binding["native_resources"] = replay_resources(path, binding)
+        except E2EError as error:
+            binding["native_resource_error"] = str(error)
+    return binding
 
 
 def write_trace(directory: Path, native_path: Path, binding: dict, *, binding_artifacts: list[dict]) -> dict:
@@ -251,7 +261,7 @@ def resource_metrics(identity: dict, binding: dict, sources: list[dict]) -> dict
     input_tokens, output_tokens = usage.get("input_tokens"), usage.get("output_tokens")
     duration_ms = binding.get("native_duration_ms")
     duration = duration_ms / 1000 if type(duration_ms) in {int, float} and duration_ms >= 0 else None
-    return ensure_resource_coverage({"schema_id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1", "schema_version": 1,
+    document = ensure_resource_coverage({"schema_id": "urn:wildclawbench:schema:general-e2e:resource-metrics:v1", "schema_version": 1,
             "identity": identity,
             "collection": {"collector": ADAPTER, "version": "0.1.0", "status": "partial", "collected_at": utc_now(),
                            "sources": sources, "warnings": [binding["usage_warning"]] if binding.get("usage_warning") else [],
@@ -269,3 +279,27 @@ def resource_metrics(identity: dict, binding: dict, sources: list[dict]) -> dict
                                                 "unique bound native call IDs with paired results")},
                 "timing": {"duration_seconds": metric(None, "same-clock local prompt acceptance time unavailable"),
                            "agent_duration_seconds": metric(duration, "native task_complete.duration_ms")}}})
+
+    native = binding.get('native_resources')
+    if native:
+        for group in ('usage', 'requests'):
+            document['metrics'][group] = native['metrics'][group]
+            for field in native['metrics'][group]:
+                document['collection']['coverage'][field] = native['collection']['coverage'][field]
+        document['collection']['known_subtotals'] = {k: v for k, v in native['collection']['known_subtotals'].items()
+                                                    if k in document['collection']['coverage']}
+        document['collection']['native_usage_reconciliation'] = native['usage_reconciliation']
+        document['collection']['native_parser'] = native['parser']
+        document['collection']['warnings'] += native['collection']['warnings']
+        if native['usage_reconciliation']['reconciled']:
+            document['collection']['warnings'] = [w for w in document['collection']['warnings']
+                if w != 'report-usage-native-reconciliation-unavailable']
+            if not binding.get('usage'):
+                document['collection']['warnings'].append('controller-usage-differs; bound native usage is authoritative; reasoning is included in output')
+    elif binding.get('native_resource_error'):
+        document['collection']['warnings'].append(binding['native_resource_error'])
+        for group in ('usage', 'requests'):
+            for field in document['metrics'][group]:
+                document['metrics'][group][field] = metric(None, 'native usage replay failed; no controller fallback')
+                document['collection']['coverage'][field]['known'] = 0
+    return document

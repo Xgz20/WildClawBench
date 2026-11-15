@@ -17,6 +17,7 @@ from .engine import load_batch, verify_ready
 from .handoff import export_scoring_context
 from .headless import _check_files
 from .store import BatchStore, controller_lock
+from .trace import normalize_rollout, resource_metrics, ADAPTER
 
 REPORT_SCHEMA = 'wildclawbench.platform-general-report/v1'
 SCORE_TABLES = {'总览', '分类对比', '难度对比', 'Agent能力对比', '模态对比'}
@@ -95,12 +96,57 @@ def _source_row(core, source, item, task, original_unit, result, target):
                 'import_receipt_path': target / 'verification-receipt.json', 'submission_path': target / 'submission-view.json'}
     task_meta = next(row for row in unit_manifest['tasks'] if row['task_id'] == item['task_id'])
     row = core.build_task_row(selected, task_meta, submission)
+    _native_resource_projection(core, row, record, target)
     if row_result and not score:
         row.update(score_status='evaluation_error', invalid_reason=row_result.get('error'),
                    evaluation={'status': 'evaluation_error', 'error': row_result.get('error')})
     row['source_execution'] = {'batch_id': result['batch_id'], 'unit_id': item['unit_id'],
                                'run_index': item['run_index'], 'attempt_id': item['attempt_id']}
     return row
+
+
+def _native_resource_projection(core, row, record, target):
+    """Supplement reporting only; original execution, resource and score bytes stay sealed."""
+    unit = target / 'unit'
+    original = inside(unit, record['resource_metrics_path']) if record.get('resource_metrics_path') else None
+    if original is None:
+        return
+    base = read_json(original)
+    if base.get('collection', {}).get('collector') != ADAPTER:
+        return
+    index_file = inside(unit, record['evidence']['trace_index_path'])
+    index = read_json(index_file)
+    if index['identity'] != record['identity'] or len(index['raw_trace']) != 1:
+        raise E2EError('REPORT_NATIVE_RESOURCE_IDENTITY')
+    ref = index['raw_trace'][0]
+    raw = inside(index_file.parent, ref['path'])
+    if file_sha256(raw) != ref['sha256'] or raw.stat().st_size != ref['size']:
+        raise E2EError('REPORT_NATIVE_RESOURCE_DRIFT')
+    task = record['identity']['task_id']
+    prompt = (unit / 'execution/tasks' / task / 'PROMPT.md').read_text(encoding='utf-8')
+    binding = normalize_rollout(raw, identity=record['identity'], prompt=prompt,
+        guest_cwd=record['session']['cwd'], requested_model=record['model']['requested_id'],
+        requested_effort=record['model'].get('reasoning_effort'), report=read_json(original.parent / 'metadata/report.json'))
+    for key in ('session_id', 'turn_id', 'cwd'):
+        if binding['session'][key] != record['session'][key] or index['session'][key] != record['session'][key]:
+            raise E2EError('REPORT_NATIVE_RESOURCE_SESSION')
+    if not binding.get('native_resources') and not binding.get('native_resource_error'):
+        return
+    metrics = resource_metrics(record['identity'], binding, base['collection']['sources'])
+    changes = {}
+    for field in [*metrics['metrics']['usage'], *metrics['metrics']['requests']]:
+        observed = core.metric_observation(metrics, field)
+        changes[field] = {'before': row['resource'][field], 'after': observed}
+        row['resource'][field] = observed
+    supplement = {'schema': 'wildclawbench.platform-native-resource-supplement/v1',
+        'identity': record['identity'], 'original_resource_sha256': file_sha256(original),
+        'trace_index_sha256': file_sha256(index_file), 'raw_rollout_sha256': file_sha256(raw),
+        'metrics': metrics, 'changes': changes}
+    sidecar = target / 'report-resource-supplement.json'
+    atomic_json(sidecar, supplement)
+    row['lineage']['platform_native_resource_supplement'] = {'path': str(sidecar), 'sha256': file_sha256(sidecar),
+        'profile': (binding.get('native_resources') or {}).get('parser', {}).get('profile'),
+        'original_resource_sha256': supplement['original_resource_sha256'], 'raw_rollout_sha256': supplement['raw_rollout_sha256']}
 
 
 def _unavailable_row(core, item, task, unit, outcome):
