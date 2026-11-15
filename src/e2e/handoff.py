@@ -199,7 +199,8 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
         else:
             _copy(verification_skill, copied, protect=False)
         verifier = {"path": "verification-skill/collect-general-e2e", "version": metadata["version"],
-                    "inventory_sha256": digest(inventory(copied)), "source": str(verification_skill)}
+                    "inventory_sha256": digest(inventory(copied)), "source": str(verification_skill),
+                    "source_inventory_sha256": digest(inventory(verification_skill))}
         collector = copied / "scripts/finalize_astronstudio_execution.mjs"
     verification = subprocess.run(["node", str(collector), "--verify-only", "--unit-root", str(unit_root), "--task-id", task["task_id"]],
                                   capture_output=True, text=True, encoding="utf-8")
@@ -335,7 +336,7 @@ def export_scoring_context(batch: Path, key: str, destination: Path, *, verifica
         verifier = context.get("supplemental_verifier")
         if verifier:
             # 已有评分交接绑定不能被导出时指定的校验器覆盖。
-            if verification_skill is not None and digest(inventory(verification_skill)) != verifier["inventory_sha256"]:
+            if verification_skill is not None and digest(inventory(verification_skill)) != verifier.get("source_inventory_sha256", verifier["inventory_sha256"]):
                 raise E2EError("SUPPLEMENTAL_COLLECTOR_CONFLICT")
             supplemental = inside(Path(context["context_root"]), verifier["path"])
             if digest(inventory(supplemental)) != verifier["inventory_sha256"]:

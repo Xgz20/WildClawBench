@@ -5,12 +5,38 @@ import base64
 import hashlib
 import json
 import ntpath
+import re
 from pathlib import Path
 
 from .common import E2EError, atomic_json, file_sha256, utc_now
 
 
 ADAPTER = "agentcube-astudio-native"
+
+
+def mcp_callable_matches(name, server, tool) -> bool:
+    """Replay acode's ASCII connector-name shortening; never relax argument binding."""
+    if not all(isinstance(value, str) and value for value in (name, server, tool)):
+        return False
+    prefix = "mcp__" + server + "__"
+    if name.startswith(prefix) and name.endswith("__" + tool):
+        return True
+    # acode hashes the raw five-part identity before truncating a name to 64 bytes.
+    # Namespace collision hashes, sanitization and Unicode aliases remain unsupported.
+    if server != "acode_apps" or len(name) != 64 or not re.fullmatch(r"[A-Za-z0-9_]+", tool):
+        return False
+    match = re.fullmatch(r"mcp__acode_apps__(connector_[A-Za-z0-9_]+)__(.+)", name)
+    if not match:
+        return False
+    connector = match[1]
+    namespace = server + "__" + connector
+    visible_prefix = "mcp__" + namespace + "__"
+    if len(visible_prefix + tool) <= 64:
+        return False
+    identity = "\0".join((server, namespace, connector, tool, tool))
+    suffix = "_" + hashlib.sha1(identity.encode("ascii")).hexdigest()[:12]
+    keep = 64 - len(visible_prefix) - len(suffix)
+    return keep >= 1 and name == visible_prefix + tool[:keep] + suffix
 
 
 def windows_equal(left: str, right: str) -> bool:
@@ -168,9 +194,7 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
         invocation = end.get("invocation") or {}
         call = events[calls[call_id]]["tool"]
         server, tool = invocation.get("server"), invocation.get("tool")
-        if (not isinstance(server, str) or not isinstance(tool, str)
-                or not call["name"].startswith("mcp__" + server + "__")
-                or not call["name"].endswith("__" + tool)
+        if (not mcp_callable_matches(call["name"], server, tool)
                 or call["arguments"] != invocation.get("arguments")):
             raise E2EError("NATIVE_MCP_INVOCATION_MISMATCH")
     if any(results[key] < calls[key] for key in set(calls) & set(results)):

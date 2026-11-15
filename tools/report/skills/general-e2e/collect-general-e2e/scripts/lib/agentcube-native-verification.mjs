@@ -17,6 +17,21 @@ function canonical(value) {
 const same = (left, right) => JSON.stringify(canonical(left)) === JSON.stringify(canonical(right));
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 
+export function mcpCallableMatches(name, server, tool) {
+  if (![name, server, tool].every(value => typeof value === 'string' && value.length)) return false;
+  if (name.startsWith(`mcp__${server}__`) && name.endsWith(`__${tool}`)) return true;
+  if (server !== 'acode_apps' || name.length !== 64 || !/^[A-Za-z0-9_]+$/.test(tool)) return false;
+  const match = /^mcp__acode_apps__(connector_[A-Za-z0-9_]+)__(.+)$/.exec(name);
+  if (!match) return false;
+  const connector = match[1], namespace = `${server}__${connector}`;
+  const prefix = `mcp__${namespace}__`;
+  if ((prefix + tool).length <= 64) return false;
+  const identity = [server, namespace, connector, tool, tool].join('\0');
+  const suffix = '_' + createHash('sha1').update(identity, 'ascii').digest('hex').slice(0, 12);
+  const keep = 64 - prefix.length - suffix.length;
+  return keep >= 1 && name === prefix + tool.slice(0, keep) + suffix;
+}
+
 async function child(root, name) {
   requireValue(typeof name === 'string' && name && !name.includes('\\'), 'AGENTCUBE_PATH_INVALID');
   const path = resolve(root, name);
@@ -106,9 +121,8 @@ export async function verifyAgentCubeNative({ unitRoot, traceRoot, index, stateB
     let args = call?.arguments ?? call?.input;
     if (typeof args === 'string') { try { args = JSON.parse(args); } catch {} }
     requireValue(call && results.some(item => item.call_id === end.call_id)
-      && typeof invocation.server === 'string' && typeof invocation.tool === 'string'
-      && typeof call.name === 'string' && call.name.startsWith(`mcp__${invocation.server}__`)
-      && call.name.endsWith(`__${invocation.tool}`) && same(args, invocation.arguments),
+      && mcpCallableMatches(call.name, invocation.server, invocation.tool)
+      && same(args, invocation.arguments),
     'AGENTCUBE_MCP_INVOCATION_MISMATCH');
   }
   const normalizedCalls = transcript.filter(item => item.type === 'tool_call');

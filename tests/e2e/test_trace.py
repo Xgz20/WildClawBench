@@ -2,9 +2,10 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
+import subprocess
 
 from src.e2e.common import E2EError, load_script
-from src.e2e.trace import normalize_rollout, resource_metrics, ensure_resource_coverage
+from src.e2e.trace import normalize_rollout, resource_metrics, ensure_resource_coverage, mcp_callable_matches
 from tests.e2e.test_scheduler import GUEST, native_fixture
 
 
@@ -66,6 +67,36 @@ class NativeMcpTests(unittest.TestCase):
         self.end["invocation"]["arguments"] = {"operation": "delete"}
         with self.assertRaisesRegex(E2EError, "MCP_INVOCATION_MISMATCH"):
             self.normalize()
+
+    def test_hashed_connector_alias_preserves_raw_name_and_rejects_tampering(self):
+        alias = "mcp__acode_apps__connector_image_understanding__ima_e439a9fe053a"
+        call = self.rows[3]["payload"]
+        call["name"] = alias
+        self.end["invocation"]["tool"] = "image_understanding"
+        value = self.normalize()
+        self.assertEqual(next(event for event in value["events"] if event["type"] == "tool_call")["tool"]["name"], alias)
+        for name in (alias[:-1] + "b", alias.replace("__ima_", "__img_"), alias + "x"):
+            call["name"] = name
+            with self.assertRaisesRegex(E2EError, "MCP_INVOCATION_MISMATCH"):
+                self.normalize()
+        call["name"] = alias
+        self.end["invocation"]["arguments"] = {"operation": "different"}
+        with self.assertRaisesRegex(E2EError, "MCP_INVOCATION_MISMATCH"):
+            self.normalize()
+
+    def test_independent_collector_replays_same_alias_gate(self):
+        alias = "mcp__acode_apps__connector_image_understanding__ima_e439a9fe053a"
+        cases = [(alias, "acode_apps", "image_understanding"),
+                 (alias[:-1] + "b", "acode_apps", "image_understanding"),
+                 (alias, "other", "image_understanding"),
+                 (alias, "acode_apps", "other"),
+                 ("mcp__acode_apps__connector_sites__manage_site", "acode_apps", "manage_site")]
+        module = Path(__file__).resolve().parents[2] / "tools/report/skills/general-e2e/collect-general-e2e/scripts/lib/agentcube-native-verification.mjs"
+        code = "const {mcpCallableMatches:f}=await import(process.argv[1]);process.stdout.write(JSON.stringify(JSON.parse(process.argv[2]).map(x=>f(...x))));"
+        result = subprocess.run(["node", "--input-type=module", "-e", code, module.as_uri(), json.dumps(cases)],
+                                capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(result.stdout), [True, False, False, False, True])
+        self.assertEqual(json.loads(result.stdout), [mcp_callable_matches(*case) for case in cases])
 
     def test_mcp_end_without_canonical_pair_marks_trace_incomplete(self):
         self.end["call_id"] = "unbound-call"

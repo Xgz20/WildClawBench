@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+import io
 import json
 import re
 from pathlib import Path
@@ -10,7 +11,7 @@ import sys
 import uuid
 
 from . import DEFAULT_EXECUTION_CONCURRENCY
-from .artifacts import inventory
+from .artifacts import inventory, copy_stream_readonly, _protect, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, load_script, read_json, utc_now
 from .store import BatchStore, controller_lock
 
@@ -109,8 +110,8 @@ def _write_general(task: dict, members: dict, destination: Path, prepare) -> dic
             target.mkdir(parents=True, exist_ok=True)
         elif member.kind == "file":
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(member.data)
-            target.chmod(member.mode)
+            with io.BytesIO(member.data) as source:
+                copy_stream_readonly(source, target, mode=member.mode)
         else:
             raise E2EError("WINDOWS_EXECUTION_SYMLINK_UNSUPPORTED: " + path)
     workspace = destination / "execution/workspace"
@@ -244,11 +245,21 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
                 destination = inside(staging, relative)
                 extra = (_write_general(task, members, destination, general_prepare) if task["scene"] == "general"
                          else _write_web(task, destination, repo, web))
+                # Freeze before recording modes/hashes. In particular, Office
+                # inputs must never be exposed as writable host replicas.
+                _protect(destination)
                 prompt = destination / "execution/PROMPT.md"
                 row = {**task, **extra, "input_root": relative, "prompt_sha256": file_sha256(prompt),
                        "public_inventory": inventory(destination / "execution/workspace"),
                        "definition_inventory": inventory(destination)}
-                atomic_json(destination / "task-definition.json", row)
+                # The root itself is not part of its inventory; briefly enable
+                # only that directory to publish the descriptor, then reseal it.
+                destination.chmod(destination.stat().st_mode | 0o200)
+                try:
+                    atomic_json(destination / "task-definition.json", row)
+                    (destination / "task-definition.json").chmod(0o444)
+                finally:
+                    destination.chmod(destination.stat().st_mode & ~0o222)
                 prepared.append(row)
             units = []
             groups = sorted({(task["scene"], task["metric_profile"]) for task in prepared})
@@ -287,7 +298,7 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
             staging.rename(batch)
         except BaseException:
             if staging.exists():
-                shutil.rmtree(staging)
+                remove_temporary_tree(staging)
             raise
     return batch
 
