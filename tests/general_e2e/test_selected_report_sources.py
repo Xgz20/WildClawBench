@@ -43,6 +43,32 @@ class SelectedReportSourcesTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError,"UNIT_CONFIG_DRIFT"):
                 REPORT.verify_source_unit_config({"unit":{**target,key:value}},target)
 
+    def test_partial_units_use_frozen_per_unit_scope_and_never_cartesian_padding(self):
+        batch={"task_ids":["a","b","c"],"units":[{"unit_id":"original","task_ids":["a","c"]},
+                {"unit_id":"recovery","task_ids":["b"]}]}
+        units,scopes,active=REPORT.declared_unit_task_scopes(batch,["original","recovery"])
+        self.assertEqual(active,["a","b","c"])
+        self.assertEqual({(u,t) for u,tasks in scopes.items() for t in tasks},
+                         {("original","a"),("original","c"),("recovery","b")})
+        self.assertEqual(REPORT.declared_unit_task_scopes(batch,["recovery"])[2],["b"])
+        for bad in [["outside"],["c","a"],["a","a"],[]]:
+            batch["units"][0]["task_ids"]=bad
+            with self.assertRaisesRegex(ValueError,"DECLARED_UNIT_TASK_SCOPE"):
+                REPORT.declared_unit_task_scopes(batch,["original"])
+
+    def test_mixed_versions_require_explicit_null_target_and_preserve_other_identity(self):
+        source={"unit_id":"u","harness":{"id":"astronstudio","platform":"windows-x86_64","version":"observed"},
+                "model":{"requested_id":"spark"},"execution_mode":"automatic"}
+        target={**source,"harness":{**source["harness"],"version":None}}
+        with self.assertRaisesRegex(ValueError,"UNIT_CONFIG_DRIFT"):
+            REPORT.verify_source_unit_config({"unit":source},target)
+        REPORT.verify_source_unit_config({"unit":source},target,allow_mixed_version=True)
+        with self.assertRaisesRegex(ValueError,"TARGET_MUST_BE_UNKNOWN"):
+            REPORT.verify_source_unit_config({"unit":source},source,allow_mixed_version=True)
+        changed={**source,"harness":{**source["harness"],"platform":"other"}}
+        with self.assertRaisesRegex(ValueError,"UNIT_CONFIG_DRIFT"):
+            REPORT.verify_source_unit_config({"unit":changed},target,allow_mixed_version=True)
+
     def test_multiple_sources_require_an_explicit_package_for_each_task(self):
         sources = {"original": {"task_ids": ["a", "b"]}, "recovery": {"task_ids": ["b"]}}
         with self.assertRaisesRegex(ValueError, "SOURCE_PACKAGE_REQUIRED"):

@@ -67,9 +67,32 @@ def select_source_package(packages,chosen,task_id):
     require(task_id in source["task_ids"],"SELECTION_TASK_OUTSIDE_SOURCE_SCOPE")
     return source
 
-def verify_source_unit_config(unit_doc,target):
+def verify_source_unit_config(unit_doc,target,*,allow_mixed_version=False):
     source_unit=unit_doc.get("unit",{}) if unit_doc else {}
-    require(source_unit.get("unit_id")==target["unit_id"] and all(source_unit.get(k)==target.get(k) for k in ("harness","model","execution_mode")),"SELECTION_SOURCE_UNIT_CONFIG_DRIFT")
+    source_harness=source_unit.get("harness",{})
+    target_harness=target.get("harness",{})
+    harness_matches=source_harness==target_harness
+    if allow_mixed_version:
+        require(target_harness.get("version") is None,"SELECTION_MIXED_VERSION_TARGET_MUST_BE_UNKNOWN")
+        harness_matches=({k:v for k,v in source_harness.items() if k!="version"}==
+                         {k:v for k,v in target_harness.items() if k!="version"})
+    require(source_unit.get("unit_id")==target["unit_id"] and harness_matches
+            and all(source_unit.get(k)==target.get(k) for k in ("model","execution_mode")),
+            "SELECTION_SOURCE_UNIT_CONFIG_DRIFT")
+
+def declared_unit_task_scopes(batch,imported_units):
+    canonical=batch["task_ids"]
+    require(len(canonical)==len(set(canonical)),"SELECTION_BATCH_TASK_DUPLICATE")
+    units={u["unit_id"]:u for u in batch["units"]}
+    require(set(imported_units)<=set(units) and imported_units,"SELECTION_UNIT_SCOPE")
+    scopes={}
+    for uid in imported_units:
+        tasks=units[uid].get("task_ids",canonical)
+        require(isinstance(tasks,list) and tasks and len(tasks)==len(set(tasks))
+                and tasks==[tid for tid in canonical if tid in tasks],"SELECTION_DECLARED_UNIT_TASK_SCOPE")
+        scopes[uid]=tasks
+    active=[tid for tid in canonical if any(tid in tasks for tasks in scopes.values())]
+    return units,scopes,active
 
 def apply_external_resources(row,args,ref,manifest_sha):
     root=args.resource_root.resolve();path=safe_file(root/ref["path"],root)
@@ -251,6 +274,8 @@ def main(argv=None):
     parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
     parser.add_argument("--seal-output-dir",type=Path,help="Immediately seal a newly generated report into this separate directory")
     parser.add_argument("--data-output-root",type=Path,help="Explicit destination boundary for data-output; source verification still uses workspace-root")
+    parser.add_argument("--allow-mixed-harness-version",action="append",default=[],metavar="UNIT_ID",
+                        help="Explicit report-only version aggregation; target version must be null, source rows stay unchanged")
     leader_report.add_arguments(parser)
     parser.add_argument("--node",default=os.environ.get("GENERAL_E2E_NODE","node"));parser.add_argument("--node-modules",type=Path)
     import maas_model_timing
@@ -260,10 +285,11 @@ def main(argv=None):
     require(not args.data_output_root or args.data_output,"SELECTION_DATA_OUTPUT_ROOT_REQUIRES_DATA_OUTPUT")
     batch=load(safe_file(BATCH/"manifest.json",ROOT));source=load(safe_file(args.source_index,ROOT));selection=load(safe_file(args.task_index,ROOT))
     require(selection["source_index_sha256"]==sha(args.source_index),"SELECTION_SOURCE_INDEX_DRIFT")
-    canonical=batch["task_ids"];units={u["unit_id"]:u for u in batch["units"]}
-    require(set(source["imports"])<=set(units) and source["imports"],"SELECTION_UNIT_SCOPE")
+    units,unit_scopes,canonical=declared_unit_task_scopes(batch,source["imports"])
+    mixed_versions=set(args.allow_mixed_harness_version)
+    require(mixed_versions<=set(source["imports"]),"SELECTION_MIXED_VERSION_UNIT_SCOPE")
     selected={(r["unit_id"],r["task_id"]):r for r in selection["selected_tasks"]}
-    expected={(u,t) for u in source["imports"] for t in canonical}
+    expected={(u,t) for u,tasks in unit_scopes.items() for t in tasks}
     require(len(selected)==len(selection["selected_tasks"]) and set(selected)==expected,"SELECTION_TASK_SCOPE")
     supplements={};supplement_sha=None
     if args.resource_root:
@@ -276,7 +302,7 @@ def main(argv=None):
         packages={}
         for entry in source_package_items(item):
             package=Path(entry["target"]).resolve()
-            manifest,members=verify_source_package(package,entry["package_manifest_sha256"],uid,canonical,allow_subset="packages" in item)
+            manifest,members=verify_source_package(package,entry["package_manifest_sha256"],uid,unit_scopes[uid],allow_subset="packages" in item)
             unit_root=package/"unit";unit_manifest=unit_root/"manifest.json"
             unit_doc=load(unit_manifest) if unit_manifest.is_file() else None
             metas={t["task_id"]:t for t in unit_doc["tasks"]} if unit_doc else None
@@ -284,11 +310,11 @@ def main(argv=None):
             if metas is not None:require(len(metas)==len(unit_doc["tasks"]) and set(metas)==set(scope),"SELECTION_METADATA_SCOPE")
             if "packages" in item:
                 require("unit/manifest.json" in members,"SELECTION_UNIT_MANIFEST_NOT_IN_PACKAGE")
-                verify_source_unit_config(unit_doc,units[uid])
+                verify_source_unit_config(unit_doc,units[uid],allow_mixed_version=uid in mixed_versions)
             require(entry["package_id"] not in packages,"SELECTION_SOURCE_PACKAGE_DUPLICATE")
             packages[entry["package_id"]]={"entry":entry,"package":package,"members":members,"unit_root":unit_root,"metas":metas,"task_ids":scope}
         current=[]
-        for tid in canonical:
+        for tid in unit_scopes[uid]:
             chosen=selected[(uid,tid)];selected_source=select_source_package(packages,chosen,tid)
             entry=selected_source["entry"];package=selected_source["package"];members=selected_source["members"];unit_root=selected_source["unit_root"];metas=selected_source["metas"]
             rp=safe_file(Path(chosen["execution_record"]),package);sp=Path(chosen["score_file"]) if chosen.get("score_file") else None
@@ -312,7 +338,14 @@ def main(argv=None):
                          "source_batch_id":load(rp)["identity"]["batch_id"],"source_unit_id":load(rp)["identity"]["unit_id"],"package_manifest_sha256":entry["package_manifest_sha256"]})
             if (uid,tid) in supplements:apply_external_resources(row,args,supplements[(uid,tid)],supplement_sha)
             current.append(row)
-        rows.extend(current);summaries.append(report.unit_summary(current,units[uid]));imports.append({"unit_id":uid,**item})
+        rows.extend(current)
+        summary=report.unit_summary(current,units[uid])
+        if uid in mixed_versions:
+            versions=[row["harness"].get("version") for row in current]
+            summary["runtime_version_coverage"]={"source_versions":sorted({v for v in versions if v is not None}),
+                "known":sum(v is not None for v in versions),"unknown":sum(v is None for v in versions),
+                "report_only_mixed_version_policy":True}
+        summaries.append(summary);imports.append({"unit_id":uid,**item})
     generated=report.generated_at_value(None)
     data={"schema_version":report.REPORT_DATA_SCHEMA,"generated_at":generated,"title":"通用场景端到端自动化评测报告",
         "batch_id":batch["batch_id"],"dataset":batch["dataset"],"release":batch["release"],
@@ -321,7 +354,9 @@ def main(argv=None):
                    "judge_groups":report.judge_groups(rows),"resources":report.resource_summary(rows),"timing":report.timing_summary(rows)},
         "units":summaries,"tasks":rows,"lineage":{"batch_manifest_sha256":sha(BATCH/"manifest.json"),"report_config_sha256":sha(BATCH/"report-config.json"),
             "import_index_sha256":sha(args.source_index),"selected_imports":imports,"selection_manifest_sha256":sha(args.task_index),
-            "source_mode":"explicit-per-task-multi-source","resource_supplement_manifest_sha256":supplement_sha},
+            "source_mode":"explicit-per-task-multi-source","resource_supplement_manifest_sha256":supplement_sha,
+            "declared_unit_task_scopes":unit_scopes,"requested_batch_task_ids":batch["task_ids"],
+            "explicit_mixed_harness_version_units":sorted(mixed_versions)},
         "semantics":{"score_denominator":"仅有效评分，真实零分保留，评测异常和未评分不补零。","source_selection":"逐题显式选择，原执行批次及attempt身份不改写。"}}
     if args.display_config:
         data["display_overrides"]=load(safe_file(args.display_config,ROOT))
