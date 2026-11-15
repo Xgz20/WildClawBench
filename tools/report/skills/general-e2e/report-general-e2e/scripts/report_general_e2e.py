@@ -394,13 +394,7 @@ def validate_selected_return(
     ):
         raise ReportError(f"RETURN_IDENTITY_MISMATCH: {unit['unit_id']}")
     validate_return_entries(target, package_manifest)
-    for kind in ("resource-supplements", "timing-supplements"):
-        supplements = target / "unit/evidence" / kind
-        if supplements.exists() and (
-            unit.get("harness", {}).get("id") != "workbuddy"
-            or any(p.name not in unit["task_ids"] or not p.is_dir() or p.is_symlink() for p in supplements.iterdir())
-        ):
-            raise ReportError("RESOURCE_SUPPLEMENT_SCOPE_INVALID")
+    validate_return_supplement_scope(target / 'unit', unit)
     sources = package_manifest.get("sources") or {}
     unit_manifest_path = target / "unit/manifest.json"
     collect_receipt_path = target / "unit/receipts/collect-evidence-receipt.json"
@@ -666,6 +660,23 @@ def doubao_resource_projection(unit_root: Path, execution: Mapping[str, Any], me
     if adjustments:
         collection["status"] = "partial"
     return projected, adjustments, comparable
+
+
+def validate_return_supplement_scope(unit_root: Path, unit: Mapping[str, Any]) -> None:
+    for kind in ('resource-supplements', 'timing-supplements'):
+        folder = unit_root / 'evidence' / kind
+        if not folder.exists():
+            continue
+        harness = unit.get('harness', {}).get('id')
+        if folder.is_symlink() or not folder.is_dir() or harness not in {'workbuddy', 'astronstudio'}:
+            raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
+        for path in folder.iterdir():
+            if path.name not in unit['task_ids'] or path.is_symlink() or not path.is_dir():
+                raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
+            if harness == 'astronstudio':
+                manifest = path / 'supplement.json'
+                if kind != 'resource-supplements' or not manifest.is_file() or manifest.is_symlink() or json.loads(manifest.read_text()).get('schema_version') != 'wildclawbench.agentcube-resource-supplement/v1':
+                    raise ReportError('RESOURCE_SUPPLEMENT_SCOPE_INVALID')
 
 
 def general_resource_supplement(root: Path, task_id: str, execution_path: Path) -> dict[str, Any] | None:

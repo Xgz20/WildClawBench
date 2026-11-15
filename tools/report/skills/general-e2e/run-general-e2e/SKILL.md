@@ -3,6 +3,8 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.27` 支持显式 AgentCube 原生资源补充层：独立重验原 Prompt、会话、MCP 调用、终态及清理证明，再按原 last/total 用量复算 Token 和请求数。原执行、资源字节与分数不改，缺失字段不补零；回传、导入和报告须使用支持该 Profile 的冻结发行。
+
 `0.7.26` 整合 Loomy Harness 显示与主线研发副本保护、规范封存恢复；保留既有批次、原ZIP和历史发行，不复用两分支已冻结的0.7.25内容。
 
 `0.7.25` 主线发行：默认研发导出、规范报告成员、宿主报告变体和逐题选择导出共用新副本保护：Office及opaque `.bin` 在落盘后、记录SHA前立即设置macOS user-immutable并复核原字节，不依赖源文件已有保护。新增 `scripts/restore_developer_bundle.py`，只从显式SHA绑定且通过离线核验的研发ZIP恢复新目录；保留文件/目录/链接模式，已有目录必须显式保留为宿主变体且其INTEGRITY与ZIP相同。不执行输入包中的VERIFY.py，不改原ZIP、原清单、旧回执或源文件。

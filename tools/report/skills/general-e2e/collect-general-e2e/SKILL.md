@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.14` 支持显式 AgentCube 原生资源补充层：独立重验原 Prompt、会话、MCP 调用、终态及清理证明，再按原 last/total 用量复算 Token 和请求数。原执行、资源字节与分数不改，缺失字段不补零；回传、导入和报告须使用支持该 Profile 的冻结发行。
+
 `0.12.13` 独立复验 AStudio 新客户端按原始五段身份 SHA1 缩短到 64 字节的 ASCII connector 工具名；仍逐项核对 server、原工具、完整参数、call/result 和原轨迹，不接受未知缩写或哈希。历史取证与原始名称保持不变。
 
 `0.12.11` Loomy HTTP 5xx 原生失败归档原始错误行、空终态消息和运行时谱系，独立复验后冻结失败证明与候选；已核验失败头可通过全单元清理屏障。

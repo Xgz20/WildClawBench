@@ -12,6 +12,7 @@ import { normalizeTraceRows } from "./archive_astronstudio_trace.mjs";
 import { collectAstronStudioResourceMetrics } from "./collect_astronstudio_resource_metrics.mjs";
 import { recountArchivedTools } from "../doubaowork/tool-counts.mjs";
 import { SUPPLEMENT_SCHEMA as ROLLOUT_SCHEMA, verifyRolloutSupplement } from "./astronstudio-rollout.mjs";
+import {AGENTCUBE_RESOURCE_SCHEMA, createAgentCubeResourceSupplement, verifyAgentCubeResourceSupplement} from './agentcube-native-resource.mjs';
 
 export const SCHEMA = "wildclawbench.general-e2e-resource-supplement/v1";
 const ensure = (ok, code) => { if (!ok) throw Error(code); };
@@ -127,6 +128,8 @@ export async function createResourceSupplement({unitRoot,executionRecord,stateFi
 export async function verifyResourceSupplement({unitRoot,taskId,executionRecord}) {
   ensure(/^[A-Za-z0-9][A-Za-z0-9_.-]*$/.test(taskId),"SUPPLEMENT_TASK_ID");
   const root=join(resolve(unitRoot),"evidence/resource-supplements",taskId),manifest=await load(join(root,"supplement.json")),ex=await load(executionRecord);
+  if(manifest.schema_version===AGENTCUBE_RESOURCE_SCHEMA)
+    return verifyAgentCubeResourceSupplement({unitRoot,taskId,executionRecord});
   ensure(await realpath(root)===root&&manifest.metrics_path==="resource-metrics.json"&&manifest.trace_index_path==="trace/trace-index.json","SUPPLEMENT_LAYOUT_INVALID");
   ensure(manifest.schema_version===SCHEMA&&same(manifest.identity,ex.identity)&&manifest.harness===ex.harness.id&&manifest.score_changed===false,"SUPPLEMENT_MANIFEST_IDENTITY");
   ensure((await hashFile(executionRecord)).sha256===manifest.execution_record_sha256,"SUPPLEMENT_ORIGINAL_EXECUTION_DRIFT");
@@ -209,6 +212,9 @@ export async function main(argv=process.argv.slice(2)) {
   if(command==="verify-external"){
     ensure(isAbsolute(v.directory||"")&&isAbsolute(v["workspace-root"]||""),"EXTERNAL_SUPPLEMENT_ABSOLUTE_PATH");
     console.log(JSON.stringify(await verifyExternalResourceSupplement({...options,directory:v.directory,workspaceRoot:v["workspace-root"],sourceMap:v["source-map"]})));return;
+  }
+  if(command==='create-agentcube') {
+    console.log(JSON.stringify(await createAgentCubeResourceSupplement(options)));return;
   }
   ensure(["create","verify"].includes(command),"SUPPLEMENT_COMMAND");
   console.log(JSON.stringify(await(command==="create"?createResourceSupplement(options):verifyResourceSupplement(options))));

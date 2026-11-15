@@ -383,7 +383,8 @@ function buildCoverage(workbook, data) {
   // Native timing adds explicit lifecycle/queue semantics; fit its source text.
   rows.forEach((row, index) => {
     if (["duration_seconds", "agent_duration_seconds"].includes(row[1]) && row[3] === "observed") {
-      sheet.getRange(`K${index + 5}`).format.autofitRows();
+      // Autofitting only the short basis cell can shrink and clip the long run ID.
+      sheet.getRange(`A${index + 5}:M${index + 5}`).format.autofitRows();
     }
   });
   sheet.freezePanes.freezeRows(4);

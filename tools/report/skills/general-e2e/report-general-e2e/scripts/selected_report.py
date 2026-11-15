@@ -45,6 +45,7 @@ def verify_source_package(root,expected,unit_id,task_ids,*,allow_subset=False):
             members[rel]=e;continue
         require(len(b)==e["size"] and hashlib.sha256(b).hexdigest()==e["sha256"],"SELECTION_MEMBER_SHA_DRIFT")
         members[rel]=e
+    report.validate_return_supplement_scope(root / 'unit', load(root / 'unit/manifest.json'))
     return manifest,members
 
 def source_package_items(item):
@@ -182,10 +183,25 @@ def selected_task_row(*, unit: dict, meta: dict, unit_root: Path, record_path: P
         metrics, resource_adjustments, timing_clock_comparable = report.doubao_resource_projection(
             unit_root, execution, metrics, metric_path)
     resource = {field: report.metric_observation(metrics, field) for field, _, _ in report.RESOURCE_FIELDS}
+    original_resource = copy.deepcopy(resource)
+    general_supplement = report.general_resource_supplement(unit_root.parent, task_id, record_path)
+    view_execution = execution
+    if general_supplement:
+        require(general_supplement['identity'] == identity, 'GENERAL_RESOURCE_SUPPLEMENT_IDENTITY')
+        for group in general_supplement['metrics']['metrics'].values():
+            for field in group:
+                require(field in report.RESOURCE_GROUPS, 'GENERAL_RESOURCE_SUPPLEMENT_UNKNOWN_FIELD')
+                resource[field] = report.metric_observation(general_supplement['metrics'], field)
+        view_execution = copy.deepcopy(execution)
+        for field in ('trace_index_path', 'transcript_path'):
+            view_execution['evidence'][field] = general_supplement[field]
     try:
         checkpoint_values = report.report_views.checkpoints(score, score_path, report.resolve_file, report.sha256_file)
-        tool_calls = report.report_views.trace_tools(unit_root, execution, report.resolve_file, report.sha256_file,
+        tool_calls = report.report_views.trace_tools(unit_root, view_execution, report.resolve_file, report.sha256_file,
                                                           resource_metrics=metrics)
+        if general_supplement and general_supplement['metrics'].get('tool_counts'):
+            counted = general_supplement['metrics']['tool_counts']
+            tool_calls.update(status=counted['status'], by_tool=counted['by_tool'], total=counted['total'], basis=counted['basis'])
         task_definition = report.report_case_views.frozen_task_definition(
             meta, execution, score, score_path, report.resolve_file, report.sha256_file)
     except (ValueError, KeyError, OSError) as exc:
@@ -217,7 +233,11 @@ def selected_task_row(*, unit: dict, meta: dict, unit_root: Path, record_path: P
             "lineage": {**lineage, "execution_record_sha256": record_sha,
                         "score_sha256": score_sha,
                         "resource_metrics_sha256": sha(metric_path) if metric_path else None,
-                        "report_resource_adjustments": resource_adjustments}}
+                        "report_resource_adjustments": resource_adjustments,
+                        'general_resource_supplement_sha256': general_supplement['manifest_sha256'] if general_supplement else None,
+                        'general_resource_supplement_changes': {'original_resource': original_resource,
+                            'changed_fields': [key for key in resource if resource[key] != original_resource[key]],
+                            'execution_and_score_preserved': True} if general_supplement else None}}
 
 
 def main(argv=None):

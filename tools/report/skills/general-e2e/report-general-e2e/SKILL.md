@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.55` 支持显式 AgentCube 原生资源补充层：独立重验原 Prompt、会话、MCP 调用、终态及清理证明，再按原 last/total 用量复算 Token 和请求数。原执行、资源字节与分数不改，缺失字段不补零；回传、导入和报告须使用支持该 Profile 的冻结发行。
+
 `0.8.54` 整合 Loomy 模型展示与主线自动规则数量说明：只列出真实语义裁判，not-required 组单独显示，空协议组不冒充独立裁判。原判分、分母、资源覆盖和历史报告不变。
 
 `0.8.53` 单一单元的领导版报告不把 not-required 自动规则组显示为 None / None 独立裁判；自动与语义协议分组、原分数、冻结来源和资源覆盖保持原样。
