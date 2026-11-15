@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import stat
+import sys
 import subprocess
 import tempfile
 import unittest
@@ -9,6 +10,8 @@ from unittest.mock import patch
 
 from src.e2e.common import E2EError, file_sha256
 from src.e2e.headless import normalize_config, inspect_container, owned, _private_environment, _check_files, _result_row
+from src.e2e.headless import _admit_immutable_inputs
+from src.e2e.artifacts import remove_temporary_tree
 
 
 class HeadlessContractTests(unittest.TestCase):
@@ -83,6 +86,31 @@ class HeadlessContractTests(unittest.TestCase):
             (root / 'grader.py').write_text('changed reader')
             with self.assertRaisesRegex(E2EError, 'HEADLESS_SCORE_SKILL_DRIFT'):
                 normalize_config(configured)
+
+    @unittest.skipUnless(sys.platform == 'darwin', 'macOS bind-mount input protection')
+    def test_host_admission_blocks_office_inode_replacement_without_changing_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            original = root / 'result.xlsx'
+            original.write_bytes(b'original frozen bytes')
+            original.chmod(0o444)
+            expected = {'result.xlsx': file_sha256(original)}
+            try:
+                receipt = _admit_immutable_inputs(root, expected)
+                self.assertEqual(receipt['files'], ['result.xlsx'])
+                self.assertEqual(original.read_bytes(), b'original frozen bytes')
+                self.assertTrue(original.stat().st_flags & stat.UF_IMMUTABLE)
+                replacement = root / 'new.xlsx'
+                replacement.write_bytes(b'host metadata replacement')
+                with self.assertRaises(PermissionError):
+                    replacement.replace(original)
+                original2 = root / 'drift.xlsx'
+                original2.write_bytes(b'already changed')
+                with self.assertRaisesRegex(E2EError, 'IMMUTABLE_INPUT_DRIFT'):
+                    _admit_immutable_inputs(root, {'drift.xlsx': expected['result.xlsx']})
+                self.assertFalse(original2.stat().st_flags & stat.UF_IMMUTABLE)
+            finally:
+                remove_temporary_tree(root)
 
 
 if __name__ == '__main__':

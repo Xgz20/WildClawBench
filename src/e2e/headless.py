@@ -9,10 +9,11 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import time
 from urllib.parse import urlsplit
 
-from .artifacts import inventory, remove_temporary_tree
+from .artifacts import inventory, remove_temporary_tree, _protect_office_inode, OFFICE_SUFFIXES
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json
 from .engine import load_batch, verify_ready
 from .handoff import export_scoring_context
@@ -105,6 +106,25 @@ def _check_files(root, entries):
         path = inside(root, name)
         if not path.is_file() or path.is_symlink() or file_sha256(path) != expected:
             raise E2EError('SCORING_IMMUTABLE_INPUT_DRIFT: ' + name)
+
+
+def _admit_immutable_inputs(root, entries):
+    """Bind-mounted Linux inputs also need the macOS host's inode protection."""
+    _check_files(root, entries)
+    protected = []
+    if sys.platform == 'darwin':
+        for name in entries:
+            path = inside(root, name)
+            if path.suffix.lower() in OFFICE_SUFFIXES:
+                if path.stat().st_mode & 0o222:
+                    raise E2EError('SCORING_OFFICE_INPUT_PERMISSIONS_CHANGED: ' + name)
+                _protect_office_inode(path)
+                if path.stat().st_mode & 0o222:
+                    raise E2EError('SCORING_OFFICE_INPUT_PERMISSIONS_CHANGED: ' + name)
+                protected.append(name)
+    _check_files(root, entries)
+    return {'schema': 'wildclawbench.headless-host-input-protection/v1',
+            'host_platform': sys.platform, 'files': protected, 'original_bytes_unchanged': True}
 
 
 def _private_environment(path: Path, key: str):
@@ -264,9 +284,10 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
                     raise E2EError('SCORING_CANCELLED')
                 if (work / 'preparation.json').is_file() and not state.get('immutable'):
                     prepared = read_json(work / 'preparation.json')
-                    _check_files(work, prepared['immutable'])
+                    protection = _admit_immutable_inputs(work, prepared['immutable'])
                     state.update(immutable=prepared['immutable'], phase='judging',
-                                 grading_type=prepared['grading_type'], judge_required=prepared['judge_required'])
+                                 grading_type=prepared['grading_type'], judge_required=prepared['judge_required'],
+                                 host_input_protection=protection)
                     atomic_json(state_file, state)
                     atomic_json(work / 'continue.json', {'request_sha256': request_hash})
                 if info['State']['Status'] == 'exited':
