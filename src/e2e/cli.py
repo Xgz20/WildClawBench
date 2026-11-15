@@ -92,6 +92,12 @@ def build_parser() -> argparse.ArgumentParser:
     resume.add_argument("--unit-id", action="append", default=[])
     resume.add_argument('--task-id', action='append', default=[], help='显式仅恢复所选题；未选资源继续计入全局占用')
     resume.add_argument("--jsonl", action="store_true")
+    recovery = commands.add_parser("recover-native-terminal", help="从同次原生完成证据恢复采集；不重发题目或生成 WGUI 回执")
+    _batch(recovery)
+    recovery.add_argument("--execution-key", required=True)
+    recovery.add_argument("--capsule", type=Path, required=True)
+    recovery.add_argument("--post-cleanup", type=Path, required=True)
+    recovery.add_argument("--expected-capsule-sha256", required=True)
     cleanup = commands.add_parser("cleanup", help="回收本批次登记的沙箱")
     _batch(cleanup)
     _agentcube(cleanup)
@@ -194,6 +200,13 @@ def _status(args):
         return read_json(root / "poc-state.json")
     load_batch(root)
     return BatchStore(root).summary()
+
+
+def _recover_native_terminal(args):
+    from .native_recovery import recover_native_terminal
+    return recover_native_terminal(_batch_root(args), execution_key=args.execution_key,
+        capsule=args.capsule.resolve(), post_cleanup=args.post_cleanup.resolve(),
+        expected_sha256=args.expected_capsule_sha256)
 
 
 def _resume(args):
@@ -360,7 +373,7 @@ def main(argv=None) -> int:
         except (ValueError, FileExistsError, FileNotFoundError, ModuleNotFoundError) as error:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
-    handlers = {"run": _run, "resume": _resume, "status": _status, "cleanup": _cleanup,
+    handlers = {"run": _run, "resume": _resume, "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "general-report": _general_report,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts")}}
     try:

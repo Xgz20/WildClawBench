@@ -50,7 +50,49 @@ export async function verifyAgentCubeNative({ unitRoot, traceRoot, index, stateB
   requireValue(same(state.identity, record.identity) && same(index.identity, record.identity), 'AGENTCUBE_IDENTITY_MISMATCH');
   const proof = await child(traceRoot, 'bindings/execution-proof.json');
   requireValue(sha(proof) === sha(stateBytes), 'AGENTCUBE_PROOF_STATE_MISMATCH');
-  requireValue(state.report?.schema_version === 2 && state.report?.status === 'completed', 'AGENTCUBE_TERMINAL_UNVERIFIED');
+  const recoverySchema = 'wildclawbench.agentcube-native-terminal-recovery/v1';
+  const recovered = state.report?.schema === recoverySchema;
+  requireValue((state.report?.schema_version === 2 || recovered)
+    && state.report?.status === 'completed', 'AGENTCUBE_TERMINAL_UNVERIFIED');
+  if (recovered) {
+    const recovery = state.native_terminal_recovery;
+    requireValue(recovery?.schema === recoverySchema && recovery.post_task_collection_only === true
+      && recovery.semantic_intervention_count === 0
+      && state.report.controller_run_report_available === false
+      && state.report.terminal_source === 'original-native-task_complete'
+      && state.report.sut_prompt_repeated === false, 'AGENTCUBE_RECOVERY_SOURCE_INVALID');
+    const archive = await child(traceRoot, recovery.capsule);
+    const manifest = JSON.parse(await child(traceRoot, recovery.source_manifest));
+    const post = JSON.parse(await child(traceRoot, recovery.post_cleanup));
+    requireValue(sha(archive) === recovery.capsule_sha256 && sha(archive) === state.report.capsule_sha256
+      && post.original_archive_sha256 === sha(archive)
+      && manifest.schema === 'astudio.original-session-readonly-recovery/v1'
+      && post.schema === 'astudio.original-session-post-task-cleanup/v1'
+      && manifest.sut_prompt_repeated === false && post.sut_prompt_repeated === false
+      && manifest.application_restarted === false && manifest.quiet_observed_milliseconds >= 5000
+      && same(post.cleanup, state.process_cleanup), 'AGENTCUBE_RECOVERY_PROOF_INVALID');
+    requireValue([manifest, post].every(value => value.session_id === state.session_id
+      && value.original_execution_attempt === record.identity.attempt_id)
+      && state.report.session_id === state.session_id
+      && state.report.attempt_id === record.identity.attempt_id, 'AGENTCUBE_RECOVERY_IDENTITY_MISMATCH');
+    requireValue(Array.isArray(manifest.files) && manifest.files.length > 0
+      && Array.isArray(post.files) && post.files.length === manifest.files.length
+      && new Set(manifest.files.map(f => f.path)).size === manifest.files.length,
+      'AGENTCUBE_RECOVERY_FILES_INVALID');
+    const originals = manifest.files.filter(f => f.path.startsWith('native/'));
+    requireValue(originals.length === 1 && index.raw_trace?.length === 1
+      && originals[0].sha256 === index.raw_trace[0].sha256
+      && originals[0].size === index.raw_trace[0].size, 'AGENTCUBE_RECOVERY_NATIVE_MISMATCH');
+    for (const file of manifest.files) {
+      const after = post.files.filter(f => f.path === file.path);
+      requireValue(after.length === 1 && after[0].sha256 === file.sha256
+        && after[0].size === file.size, 'AGENTCUBE_RECOVERY_POST_FILE_DRIFT');
+      if (file.path.startsWith('workspace/project/')) {
+        const bytes = await child(unitRoot, record.candidate.path + '/' + file.path.slice('workspace/project/'.length));
+        requireValue(bytes.length === file.size && sha(bytes) === file.sha256, 'AGENTCUBE_RECOVERY_CANDIDATE_DRIFT');
+      } else requireValue(file.path.startsWith('native/'), 'AGENTCUBE_RECOVERY_FILE_SCOPE');
+    }
+  }
   const cleanup = state.process_cleanup;
   requireValue(cleanup?.schema === 'wildclawbench.agentcube-process-cleanup/v1'
     && cleanup.phase === 'completed' && cleanup.supported === true && cleanup.success === true

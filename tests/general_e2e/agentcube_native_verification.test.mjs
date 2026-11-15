@@ -57,7 +57,7 @@ async function fixture(t) {
     Object.assign(index.raw_trace[0], { sha256: sha(bytes), size: bytes.length });
     await writeFile(join(traceRoot, 'raw/rollout.jsonl'), bytes);
   }
-  return { state, record, transcript, rows, rewriteRaw, verify };
+  return { state, record, transcript, rows, rewriteRaw, verify, unitRoot, traceRoot };
 }
 
 test('controller-closed AStudio requires an observed quiet period', async t => {
@@ -65,6 +65,49 @@ test('controller-closed AStudio requires an observed quiet period', async t => {
   assert.equal((await value.verify()).native_tool_calls, 1);
   value.state.process_cleanup.quiet_observed_milliseconds = 4999;
   await assert.rejects(value.verify(), /CLEANUP_UNVERIFIED/);
+});
+
+async function recoveredFixture(t) {
+  const value = await fixture(t);
+  const { unitRoot, traceRoot } = value;
+  const { readFile } = await import('node:fs/promises');
+  await mkdir(join(traceRoot, 'bindings/recovery'));
+  const archive = Buffer.from('fixture-original-archive');
+  const schema = 'wildclawbench.agentcube-native-terminal-recovery/v1';
+  value.state.session_id = 'sandbox';
+  value.state.report = {schema, status:'completed', controller_run_report_available:false,
+    terminal_source:'original-native-task_complete', sut_prompt_repeated:false,
+    capsule_sha256:sha(archive), session_id:'sandbox', attempt_id:'a'};
+  value.state.native_terminal_recovery = {schema, capsule_sha256:sha(archive),
+    capsule:'bindings/recovery/original.zip', source_manifest:'bindings/recovery/manifest.json',
+    post_cleanup:'bindings/recovery/post.json', post_task_collection_only:true, semantic_intervention_count:0};
+  const manifest = {schema:'astudio.original-session-readonly-recovery/v1', session_id:'sandbox',
+    original_execution_attempt:'a', sut_prompt_repeated:false, application_restarted:false,
+    quiet_observed_milliseconds:5000, files:[{path:'native/rollout.jsonl',
+      sha256:value.state.native_binding.raw_sha256, size:(await readFile(join(traceRoot,'raw/rollout.jsonl'))).length}]};
+  const post = {schema:'astudio.original-session-post-task-cleanup/v1', session_id:'sandbox',
+    original_execution_attempt:'a', original_archive_sha256:sha(archive), sut_prompt_repeated:false,
+    cleanup:value.state.process_cleanup, files:structuredClone(manifest.files)};
+  await writeFile(join(traceRoot,'bindings/recovery/original.zip'), archive);
+  async function verify() {
+    await writeFile(join(traceRoot,'bindings/recovery/manifest.json'), JSON.stringify(manifest));
+    await writeFile(join(traceRoot,'bindings/recovery/post.json'), JSON.stringify(post));
+    return value.verify();
+  }
+  return {value, manifest, post, verify};
+}
+
+test('native recovery uses a separate source and replays post-cleanup bytes', async t => {
+  const f = await recoveredFixture(t);
+  assert.equal((await f.verify()).verified, true);
+  f.post.files[0].sha256 = 'changed';
+  await assert.rejects(f.verify(), /RECOVERY_POST_FILE_DRIFT/);
+});
+
+test('recovered native terminal cannot be relabelled as a controller report', async t => {
+  const f = await recoveredFixture(t);
+  f.value.state.report.controller_run_report_available = true;
+  await assert.rejects(f.verify(), /RECOVERY_SOURCE_INVALID/);
 });
 
 test('explicit process cleanup binds its root identity', async t => {

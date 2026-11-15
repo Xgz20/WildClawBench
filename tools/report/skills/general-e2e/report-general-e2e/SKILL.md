@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.8.57` 对同次 AgentCube 原生完成后的控制器断连使用独立恢复来源，复验原始文件、清理证明、身份与唯一发送；原失败和旧发行保持，不能伪造 WGUI RunReport。
+
 `0.8.56` 多来源报告按原单元清单的嵌套 unit 身份验证 AgentCube 资源补充层，并保留旧无补充层的范围验证。普通报告与显式逐题报告同源复算资源，原包、分数和父批次范围不改。
 
 `0.8.55` 支持显式 AgentCube 原生资源补充层：独立重验原 Prompt、会话、MCP 调用、终态及清理证明，再按原 last/total 用量复算 Token 和请求数。原执行、资源字节与分数不改，缺失字段不补零；回传、导入和报告须使用支持该 Profile 的冻结发行。

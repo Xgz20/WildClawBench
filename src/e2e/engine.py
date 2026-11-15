@@ -45,6 +45,8 @@ def _publish(root: Path, store: BatchStore, item: dict, manifest: dict, unit: di
              "report": outcome["report"], "process_cleanup": outcome["cleanup"],
              "public_input_sha256": digest(task["public_inventory"]), "prompt_sha256": task["prompt_sha256"]}
     proof_path = staging / "trace/bindings/execution-proof.json"
+    if outcome.get("recovery"):
+        proof["native_terminal_recovery"] = outcome["recovery"]
     atomic_json(proof_path, proof)
     index = write_trace(staging / "trace", staging / outcome["native_path"], binding,
                         binding_artifacts=[_artifact(proof_path, staging / "trace")])
