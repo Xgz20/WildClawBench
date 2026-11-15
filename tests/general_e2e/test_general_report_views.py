@@ -13,6 +13,17 @@ CASES = REPORT.report_case_views
 
 
 class GeneralReportViewsTests(unittest.TestCase):
+    def test_model_identity_counts_undispatched_failures_without_inventing_an_actual_model(self):
+        good={'model':{'actual_id':'spark','verification_status':'verified'},'execution_phase':'COMPLETED','execution_status':'completed'}
+        pending={'model':{'actual_id':None,'verification_status':'unavailable'},'execution_phase':'FAILED',
+                 'execution_status':'infrastructure_error','lineage':{'execution_not_dispatched':True}}
+        rows=[copy.deepcopy(good),copy.deepcopy(pending)];before=copy.deepcopy(rows)
+        self.assertEqual(VIEWS.verified_model_scope(rows),({'spark'},True,1,1))
+        self.assertEqual(rows,before)
+        self.assertEqual(VIEWS.verified_model_scope([pending]),(set(),False,0,1))
+        rows[1]['execution_phase']='COMPLETED'
+        self.assertEqual(VIEWS.verified_model_scope(rows),({'spark'},False,2,0))
+
     def test_equal_score_counts_with_different_task_ids_do_not_establish_common_scope(self):
         tasks = [{"unit_id": unit, "task_id": task, "score_status": status}
                  for unit, task, status in [("a", "one", "valid"), ("a", "two", "unscored"),

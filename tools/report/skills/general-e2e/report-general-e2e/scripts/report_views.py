@@ -479,6 +479,18 @@ def harness_execution_error(row):
     )
 
 
+def verified_model_scope(rows):
+    undispatched = [row for row in rows if row.get('lineage',{}).get('execution_not_dispatched') is True
+        and row.get('execution_phase') == 'FAILED' and row.get('execution_status') == 'infrastructure_error'
+        and row['model'].get('actual_id') is None]
+    considered = [row for row in rows if row not in undispatched]
+    models = {row['model'].get('actual_id') for row in considered
+              if row['model'].get('verification_status') == 'verified'}
+    known = bool(considered) and len(models) == 1 and None not in models and all(
+        row['model'].get('verification_status') == 'verified' for row in considered)
+    return models, known, len(considered), len(undispatched)
+
+
 def build_views(data, references):
     import report_case_views
     import report_display
@@ -499,10 +511,11 @@ def build_views(data, references):
     applied_overrides = {}
     for unit in units:
         rows = [row for row in data["tasks"] if row["unit_id"] == unit["unit_id"]]
-        models = {row["model"].get("actual_id") for row in rows if row["model"].get("verification_status") == "verified"}
-        known = len(models) == 1 and None not in models and all(row["model"].get("verification_status") == "verified" for row in rows)
+        models, known, dispatched_count, undispatched_count = verified_model_scope(rows)
         model_id = next(iter(models)) if known else None
         model = references["models"].get(model_id, model_id) if known else ("混合模型" if len(models - {None}) > 1 else "未知模型")
+        if known and undispatched_count:
+            model += f"（{dispatched_count}题已核验，{undispatched_count}题未派发）"
         requested_label = overrides.get("unit_model_labels", {}).get(unit["unit_id"])
         if requested_label:
             model = requested_label["label"]

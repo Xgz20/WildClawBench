@@ -178,7 +178,8 @@ def _unavailable_row(core, item, task, unit, outcome):
             'checkpoints': core.report_views.checkpoints(None, None, core.resolve_file, core.sha256_file),
             'tool_calls': {'status': 'unavailable', 'total': None, 'by_tool': {}},
             'task_definition': {'task_id': task['task_id'], 'status': 'unavailable', 'sources': []},
-            'lineage': {'source_unit_id': unit['unit_id'], 'source_execution_state': item['key']}}
+            'lineage': {'source_unit_id': unit['unit_id'], 'source_execution_state': item['key'],
+                        'execution_not_dispatched': frozen_input_failure}}
 
 
 def normalize_presentation(data):
