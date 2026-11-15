@@ -6,7 +6,7 @@ selected report does not fabricate a complete single-source collect receipt.
 """
 from pathlib import Path
 from datetime import datetime, timezone
-import argparse, copy, hashlib, json, os, shutil, stat, subprocess, sys, uuid
+import argparse, copy, hashlib, json, os, shutil, stat, subprocess, sys, uuid, zipfile
 sys.path.insert(0,str(Path(__file__).resolve().parent))
 import report_general_e2e as report
 import leader_report
@@ -66,6 +66,36 @@ def select_source_package(packages,chosen,task_id):
     source=packages[package_id]
     require(task_id in source["task_ids"],"SELECTION_TASK_OUTSIDE_SOURCE_SCOPE")
     return source
+
+def source_package_lineage(entry,manifest,unit_id):
+    package=Path(entry["target"]).resolve()
+    row={"unit_id":unit_id,"package_id":entry["package_id"],"target":str(package),
+         "package_manifest_sha256":entry["package_manifest_sha256"],
+         "submission_sha256":manifest.get("sources",{}).get("submission_sha256")}
+    if entry.get("archive") or entry.get("archive_sha256"):
+        archive=safe_file(entry.get("archive"),ROOT)
+        require(sha(archive)==entry.get("archive_sha256"),"SELECTION_ARCHIVE_SHA_DRIFT")
+        with zipfile.ZipFile(archive) as z:
+            names=[n for n in z.namelist() if n.rsplit("/",1)[-1]=="package-manifest.json"]
+            require(len(names)==1 and z.getinfo(names[0]).file_size<=16*1024*1024
+                    and hashlib.sha256(z.read(names[0])).hexdigest()==entry["package_manifest_sha256"],
+                    "SELECTION_ARCHIVE_PACKAGE_BINDING")
+        row.update(archive=str(archive),archive_sha256=sha(archive))
+    receipt_path=package/"receipts/import-return-receipt.json"
+    if receipt_path.exists():
+        receipt_path=safe_file(receipt_path,package)
+        receipt=report.validate_contract(receipt_path,report.RECEIPT_SCHEMA)
+        require(receipt.get("stage")=="import-return" and receipt.get("status")=="completed"
+                and receipt.get("scope")=={k:manifest["identity"][k] for k in ("batch_id","unit_id")}
+                and receipt.get("task_ids")==manifest["identity"]["task_ids"]
+                and receipt.get("integrity",{}).get("valid") is True,
+                "SELECTION_IMPORT_RECEIPT_IDENTITY")
+        for filename,digest in [("package-manifest.json",row["package_manifest_sha256"]),
+                                ("submission.json",row["submission_sha256"])]:
+            refs=[r for r in receipt["artifacts"] if r["path"].rsplit("/",1)[-1]==filename]
+            require(len(refs)==1 and refs[0]["sha256"]==digest,"SELECTION_IMPORT_RECEIPT_BINDING")
+        row.update(import_receipt=str(receipt_path),import_receipt_sha256=sha(receipt_path))
+    return row
 
 def verify_source_unit_config(unit_doc,target,*,allow_mixed_version=False):
     source_unit=unit_doc.get("unit",{}) if unit_doc else {}
@@ -311,6 +341,7 @@ def main(argv=None):
             if "packages" in item:
                 require("unit/manifest.json" in members,"SELECTION_UNIT_MANIFEST_NOT_IN_PACKAGE")
                 verify_source_unit_config(unit_doc,units[uid],allow_mixed_version=uid in mixed_versions)
+            imports.append(source_package_lineage(entry,manifest,uid))
             require(entry["package_id"] not in packages,"SELECTION_SOURCE_PACKAGE_DUPLICATE")
             packages[entry["package_id"]]={"entry":entry,"package":package,"members":members,"unit_root":unit_root,"metas":metas,"task_ids":scope}
         current=[]
@@ -345,7 +376,7 @@ def main(argv=None):
             summary["runtime_version_coverage"]={"source_versions":sorted({v for v in versions if v is not None}),
                 "known":sum(v is not None for v in versions),"unknown":sum(v is None for v in versions),
                 "report_only_mixed_version_policy":True}
-        summaries.append(summary);imports.append({"unit_id":uid,**item})
+        summaries.append(summary)
     generated=report.generated_at_value(None)
     data={"schema_version":report.REPORT_DATA_SCHEMA,"generated_at":generated,"title":"通用场景端到端自动化评测报告",
         "batch_id":batch["batch_id"],"dataset":batch["dataset"],"release":batch["release"],

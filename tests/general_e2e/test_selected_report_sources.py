@@ -5,6 +5,7 @@ import json
 import sys
 import tempfile
 import unittest
+import zipfile
 
 SCRIPT = Path(__file__).resolve().parents[2] / "tools/report/skills/general-e2e/report-general-e2e/scripts/selected_report.py"
 SPEC = importlib.util.spec_from_file_location("selected_report_sources_tested", SCRIPT)
@@ -14,6 +15,27 @@ SPEC.loader.exec_module(REPORT)
 
 
 class SelectedReportSourcesTest(unittest.TestCase):
+    def test_lineage_keeps_each_package_and_binds_archive_to_its_manifest(self):
+        with tempfile.TemporaryDirectory() as temp:
+            REPORT.ROOT=Path(temp)
+            package=Path(temp)/"package";package.mkdir()
+            payload=b'{"verified":"manifest"}'
+            manifest_sha=hashlib.sha256(payload).hexdigest()
+            archive=Path(temp)/"return.zip"
+            with zipfile.ZipFile(archive,"w") as z:z.writestr("return/package-manifest.json",payload)
+            entry={"package_id":"id","target":str(package),"package_manifest_sha256":manifest_sha,
+                   "archive":str(archive),"archive_sha256":hashlib.sha256(archive.read_bytes()).hexdigest()}
+            row=REPORT.source_package_lineage(entry,{"sources":{"submission_sha256":"1"*64}},"u")
+            self.assertEqual(row["package_id"],"id")
+            self.assertEqual(row["submission_sha256"],"1"*64)
+            self.assertEqual(row["archive_sha256"],entry["archive_sha256"])
+            with zipfile.ZipFile(archive,"w") as z:z.writestr("return/package-manifest.json",b"other")
+            with self.assertRaisesRegex(ValueError,"ARCHIVE_SHA_DRIFT"):
+                REPORT.source_package_lineage(entry,{},"u")
+            entry["archive_sha256"]=hashlib.sha256(archive.read_bytes()).hexdigest()
+            with self.assertRaisesRegex(ValueError,"ARCHIVE_PACKAGE_BINDING"):
+                REPORT.source_package_lineage(entry,{},"u")
+
     def test_sealing_requires_a_new_report_output(self):
         with tempfile.TemporaryDirectory() as temp:
             with self.assertRaisesRegex(ValueError, 'SEAL_REQUIRES_REPORT_OUTPUT'):
