@@ -1,7 +1,8 @@
 from pathlib import Path
 import tempfile
 import unittest
-from src.e2e.general_reports import markdown, standalone_html, xlsx, score_column, cell_text
+from types import SimpleNamespace
+from src.e2e.general_reports import markdown, standalone_html, xlsx, score_column, cell_text, _unavailable_row
 
 
 def report():
@@ -12,6 +13,31 @@ def report():
 
 
 class GeneralReportExportTests(unittest.TestCase):
+    def unavailable(self, **changes):
+        core=SimpleNamespace(RESOURCE_FIELDS=[],resolve_file=None,sha256_file=None,
+             report_views=SimpleNamespace(checkpoints=lambda *args:{}))
+        item={'attempt_id':'attempt','phase':'FAILED','key':'key',
+              'error':{'code':'E2EError','message':'FROZEN_TASK_INPUT_DRIFT'},**changes}
+        return _unavailable_row(core,item,{'task_id':'task'},
+            {'unit_id':'unit','harness':'astronstudio','model':'spark'},None)
+
+    def test_known_predispatch_input_failure_is_infrastructure_without_score_zero(self):
+        row=self.unavailable()
+        self.assertEqual(row['execution_status'],'infrastructure_error')
+        self.assertEqual(row['score_status'],'unscored')
+        self.assertEqual(row['invalid_reason'],'FROZEN_TASK_INPUT_DRIFT')
+        self.assertIsNone(row['total_score'])
+
+    def test_unproven_or_dispatched_failures_keep_unknown_attribution_and_reason(self):
+        for change in [{'dispatch_armed_at':'observed'},{'session_id':'existing'},
+                       {'error':{'code':'Other','message':'original error'}}]:
+            with self.subTest(change=change):
+                row=self.unavailable(**change)
+                self.assertEqual(row['execution_status'],'unknown')
+                self.assertEqual(row['score_status'],'unscored')
+                self.assertIsNotNone(row['invalid_reason'])
+                self.assertIsNone(row['total_score'])
+
     def test_zero_null_and_round_half_up_are_distinct(self):
         self.assertEqual(cell_text(0.0,'0.00'),'0.00')
         self.assertEqual(cell_text(None,'0.00'),'-')

@@ -151,6 +151,16 @@ def _native_resource_projection(core, row, record, target):
 
 def _unavailable_row(core, item, task, unit, outcome):
     error = (outcome or {}).get('error')
+    execution_error = item.get('error')
+    frozen_input_failure = (item['phase'] == 'FAILED' and not item.get('dispatch_armed_at')
+        and not item.get('session_id') and isinstance(execution_error, dict)
+        and execution_error.get('code') == 'E2EError'
+        and execution_error.get('message') == 'FROZEN_TASK_INPUT_DRIFT')
+    status = ('cancelled' if item['phase'] == 'CANCELLED' else
+              'infrastructure_error' if frozen_input_failure else 'unknown')
+    reason = error
+    if reason is None and isinstance(execution_error, dict):
+        reason = execution_error.get('message') or execution_error.get('code')
     return {'run_id': unit['unit_id'] + '::' + task['task_id'], 'unit_id': unit['unit_id'],
             'task_id': task['task_id'], 'task_name': task.get('name'), 'category': task.get('category'),
             'difficulty': task.get('difficulty'), 'modality': task.get('modality'), 'execution_mode': 'automatic',
@@ -158,12 +168,12 @@ def _unavailable_row(core, item, task, unit, outcome):
             'model': {'requested_id': unit['model'], 'actual_id': None, 'reasoning_effort': unit.get('reasoning_effort'),
                       'verification_status': 'unavailable'}, 'human_assistance': {'mode': 'automatic'},
             'execution_attempt_id': item['attempt_id'], 'execution_phase': item['phase'],
-            'execution_status': 'cancelled' if item['phase'] == 'CANCELLED' else 'unknown',
-            'execution_error': item.get('error'), 'execution_started_at': None, 'execution_finished_at': None,
+            'execution_status': status,
+            'execution_error': execution_error, 'execution_started_at': None, 'execution_finished_at': None,
             'timing_clock_comparable': False, 'evidence_completeness': 'unavailable',
             'score_status': 'evaluation_error' if error else 'unscored', 'scoring_attempt_id': None,
             'judge': None, 'components': None, 'evaluation': {'status': 'evaluation_error', 'error': error} if error else None,
-            'total_score': None, 'invalid_reason': error, 'resource_collection_status': 'unavailable',
+            'total_score': None, 'invalid_reason': reason, 'resource_collection_status': 'unavailable',
             'resource': {field: core.metric_observation(None, field) for field, _, _ in core.RESOURCE_FIELDS},
             'checkpoints': core.report_views.checkpoints(None, None, core.resolve_file, core.sha256_file),
             'tool_calls': {'status': 'unavailable', 'total': None, 'by_tool': {}},
