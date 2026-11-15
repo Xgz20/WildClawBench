@@ -663,6 +663,8 @@ def doubao_resource_projection(unit_root: Path, execution: Mapping[str, Any], me
 
 
 def validate_return_supplement_scope(unit_root: Path, unit: Mapping[str, Any]) -> None:
+    if isinstance(unit.get('unit'), Mapping):
+        unit = {**unit['unit'], 'task_ids': unit['task_ids']}
     for kind in ('resource-supplements', 'timing-supplements'):
         folder = unit_root / 'evidence' / kind
         if not folder.exists():

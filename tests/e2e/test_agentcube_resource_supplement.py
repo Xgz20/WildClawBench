@@ -77,6 +77,7 @@ class AgentCubeSupplementTests(unittest.TestCase):
                                      'agentcube_resource_report_scope_test')
                 scope = {'harness': {'id': 'astronstudio'}, 'task_ids': [task]}
                 report.validate_return_supplement_scope(unit, scope)
+                report.validate_return_supplement_scope(unit, read_json(unit / 'manifest.json'))
                 with self.assertRaisesRegex(report.ReportError, 'RESOURCE_SUPPLEMENT_SCOPE_INVALID'):
                     report.validate_return_supplement_scope(unit, {**scope, 'harness': {'id': 'unknown'}})
                 original_manifest = (supplement / 'supplement.json').read_bytes()

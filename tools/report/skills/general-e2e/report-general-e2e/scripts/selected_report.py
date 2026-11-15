@@ -45,7 +45,8 @@ def verify_source_package(root,expected,unit_id,task_ids,*,allow_subset=False):
             members[rel]=e;continue
         require(len(b)==e["size"] and hashlib.sha256(b).hexdigest()==e["sha256"],"SELECTION_MEMBER_SHA_DRIFT")
         members[rel]=e
-    report.validate_return_supplement_scope(root / 'unit', load(root / 'unit/manifest.json'))
+    if any((root / 'unit/evidence' / kind).exists() for kind in ('resource-supplements', 'timing-supplements')):
+        report.validate_return_supplement_scope(root / 'unit', load(root / 'unit/manifest.json'))
     return manifest,members
 
 def source_package_items(item):
