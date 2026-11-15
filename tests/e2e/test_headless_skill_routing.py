@@ -22,3 +22,11 @@ class HeadlessSkillRoutingTests(unittest.TestCase):
  def test_aggregation_runtime_mismatch_stops_before_any_worker_or_judge(self):
   with tempfile.TemporaryDirectory() as d,self.assertRaisesRegex(RuntimeError,'AGGREGATION_SCORING_PYTHON_MISMATCH'):
    self.prepare(Path(d),profile='independent-business-capability/v2',python=(3,12,16))
+ def test_admission_inventory_locks_derived_evidence_but_leaves_query_logs_mutable(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);attempt=root/'attempt';(attempt/'grader-evidence').mkdir(parents=True);(attempt/'semantic').mkdir()
+   (attempt/'attempt-manifest.json').write_text('{}');(attempt/'grader-evidence/reference.docx').write_bytes(b'locked derived input')
+   (attempt/'semantic/query-log.json').write_text('{}')
+   with patch.object(worker,'ROOT',root):files=worker.immutable_inventory(attempt)
+   self.assertIn('attempt/grader-evidence/reference.docx',files)
+   self.assertNotIn('attempt/semantic/query-log.json',files)

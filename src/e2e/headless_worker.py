@@ -102,6 +102,7 @@ def immutable_inventory(attempt):
     # The host keeps this lock outside the agent's mounted filesystem.
     paths = [attempt / 'attempt-manifest.json', *list((attempt / 'private').rglob('*')),
              *list((attempt / 'candidate-original').rglob('*'))]
+    paths += list((attempt / 'grader-evidence').rglob('*'))
     paths += [attempt / 'judge-environment.json']
     paths += list((attempt / 'judge-environment').rglob('*'))
     paths += [p for p in attempt.rglob('*') if p.is_file() and
