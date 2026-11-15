@@ -211,7 +211,8 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
                      preservation_error=str(redact(str(backup_error), driver.config.auth_token)))
 
 
-def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None = None, driver_factory=None, progress=None) -> dict:
+def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None = None,
+              task_ids: list[str] | None = None, driver_factory=None, progress=None) -> dict:
     manifest = load_batch(root)
     store = BatchStore(root)
     units = {unit["unit_id"]: unit for unit in manifest["units"]}
@@ -219,6 +220,12 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
     if unit_ids and set(unit_ids) - set(units):
         raise E2EError("UNIT_SELECTION_UNKNOWN")
     selected = set(unit_ids or units)
+    selected_tasks = set(task_ids or ())
+    if selected_tasks and not selected_tasks <= {task for unit_id in selected for task in units[unit_id]['task_ids']}:
+        raise E2EError('TASK_RESUME_SELECTION_UNKNOWN')
+
+    def selected_row(row):
+        return row['unit_id'] in selected and (not selected_tasks or row['task_id'] in selected_tasks)
     stop = threading.Event()
     with controller_lock(root) as owner:
         heartbeat_at = 0
@@ -234,7 +241,7 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
         checked = set()
         for item in store.rows():
             heartbeat()
-            if item["unit_id"] not in selected or item["phase"] in {"COMPLETED", "FAILED", "CANCELLED"}:
+            if not selected_row(item) or item["phase"] in {"COMPLETED", "FAILED", "CANCELLED"}:
                 continue
             pair = (item["unit_id"], item["task_id"])
             if pair in checked:
@@ -262,12 +269,12 @@ def run_batch(root: Path, config: AgentCubeConfig, *, unit_ids: list[str] | None
                 try:
                     heartbeat()
                     rows = store.rows()
-                    attention = any(row["phase"] == "NEEDS_ATTENTION" for row in rows)
+                    attention = any(row["phase"] == "NEEDS_ATTENTION" and (not selected_tasks or selected_row(row)) for row in rows)
                     held = sum(row["resource_held"] for row in rows)
                     active_units = Counter(unit for _, unit in futures.values())
                     for row in rows:
                         key, unit_id = row["key"], row["unit_id"]
-                        if unit_id not in selected or key in seen or stop.is_set():
+                        if not selected_row(row) or key in seen or stop.is_set():
                             continue
                         resumable = row["phase"] in {"RESERVED", "CREATING", "PREPARING", "RUNNING", "COLLECTING", "SEALING", "NEEDS_ATTENTION"} or row["resource_held"]
                         if row["phase"] != "PENDING" and not resumable:

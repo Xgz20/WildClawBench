@@ -150,6 +150,25 @@ class SchedulerTests(unittest.TestCase):
     def factory(self, **kwargs):
         return FakeDriver(**kwargs, provider=self.provider)
 
+    def test_explicit_task_resume_preserves_other_attention_and_counts_its_resource(self):
+        store = BatchStore(self.root)
+        item = store.rows()[0]
+        store.update(item['key'], 'NEEDS_ATTENTION', resource_held=True, session_id='preserved-session')
+        self.provider.active.add('preserved-session')
+        before = store.get(item['key'])
+        result = run_batch(self.root, self.config, task_ids=['t1', 't2', 't3'], driver_factory=self.factory)
+        self.assertEqual(store.get(item['key']), before)
+        self.assertEqual({row['task_id'] for row in store.rows() if row['phase'] == 'COMPLETED'}, {'t1', 't2', 't3'})
+        self.assertLessEqual(self.provider.max_active, 3)
+        self.assertEqual(self.provider.active, {'preserved-session'})
+        self.assertEqual(len(result['executions']), 10)
+        self.assertFalse(any('t0-' in call for call in self.provider.calls))
+
+    def test_task_resume_rejects_unknown_scope_before_any_dispatch(self):
+        with self.assertRaisesRegex(E2EError, 'TASK_RESUME_SELECTION_UNKNOWN'):
+            run_batch(self.root, self.config, task_ids=['not-in-frozen-batch'], driver_factory=self.factory)
+        self.assertEqual(self.provider.calls, [])
+
     def test_resume_sealed_failure_retries_release_without_recollecting_or_rerunning(self):
         store = BatchStore(self.root)
         item = store.rows()[0]

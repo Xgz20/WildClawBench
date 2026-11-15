@@ -53,14 +53,24 @@ def _run(argv: list[str]) -> dict:
         raise E2EError("SCORING_ORCHESTRATOR_OUTPUT_INVALID") from error
 
 
-def init_orchestration(batch: Path, key: str, claim_id: str, *, score_python: Path | None = None) -> dict:
+def init_orchestration(batch: Path, key: str, claim_id: str, *, score_python: Path | None = None,
+                       score_skill_dir: Path | None = None) -> dict:
     manifest = load_batch(batch)
     store = BatchStore(batch)
     claim = _claim(store, key, claim_id)
     context = prepare_scoring_context(batch, key, claim_id)
     root = Path(context["context_root"])
     skills = Path(context["installed_skills"])
+    score_binding = None
+    if score_skill_dir is not None:
+        source = score_skill_dir.expanduser().resolve(strict=True)
+        spec = read_json(source / 'skill-metadata.json')
+        if context['scene'] != 'general' or spec.get('name') != 'score-general-e2e' or spec.get('contract_version') != 'general-e2e-contract-v1':
+            raise E2EError('SUPPLEMENTAL_SCORE_SKILL_INCOMPATIBLE')
+        score_binding = {'root': str(source), 'version': spec['version'], 'inventory_sha256': digest(inventory(source))}
     if claim.get("orchestration") and Path(claim["orchestration"]["state_file"]).exists():
+        if score_binding is not None and claim['orchestration'].get('supplemental_score_skill') != score_binding:
+            raise E2EError('SCORING_SKILL_ALREADY_FROZEN')
         if score_python is not None:
             state = read_json(Path(claim["orchestration"]["state_file"]))
             if state.get('score_skill', {}).get('python', {}).get('executable') != str(score_python.expanduser().absolute()):
@@ -73,7 +83,7 @@ def init_orchestration(batch: Path, key: str, claim_id: str, *, score_python: Pa
             orchestration = root / "orchestrations" / ("pipeline-" + claim_id)
             argv = [str(score_python.expanduser().absolute()) if score_python else sys.executable, "-X", "utf8", str(script), "init", "--unit-root", str(root / context["unit_root"]),
                     "--scoring-package", str(root / context["scoring_package"]), "--report-config", str(root / context["report_config"]),
-                    "--score-skill-dir", str(skills / "score-general-e2e"), "--output-root", str(orchestration.parent),
+                    "--score-skill-dir", score_binding['root'] if score_binding else str(skills / "score-general-e2e"), "--output-root", str(orchestration.parent),
                     "--orchestration-id", orchestration.name, "--score-slots", "1", "--task-id", item["task_id"]]
             state_file = orchestration / "orchestration-state.json"
         else:
@@ -89,6 +99,8 @@ def init_orchestration(batch: Path, key: str, claim_id: str, *, score_python: Pa
         # orchestrator instead of creating another Judge attempt.
         intent = {"scene": context["scene"], "root": str(orchestration), "script": str(script),
                   "state_file": str(state_file), "intent_at": utc_now()}
+        if score_binding is not None:
+            intent['supplemental_score_skill'] = score_binding
         store.score_update(key, claim_id, "CLAIMED", orchestration=intent)
         if not state_file.exists():
             result = _run(argv)

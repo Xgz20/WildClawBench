@@ -90,6 +90,7 @@ def build_parser() -> argparse.ArgumentParser:
     _batch(resume)
     _agentcube(resume)
     resume.add_argument("--unit-id", action="append", default=[])
+    resume.add_argument('--task-id', action='append', default=[], help='显式仅恢复所选题；未选资源继续计入全局占用')
     resume.add_argument("--jsonl", action="store_true")
     cleanup = commands.add_parser("cleanup", help="回收本批次登记的沙箱")
     _batch(cleanup)
@@ -134,6 +135,7 @@ def build_parser() -> argparse.ArgumentParser:
                           help="显式冻结补充 General 收集校验器，保留批次原有 Skill 和评分材料")
     pipeline.add_argument("--score-python", type=Path,
                           help="首次初始化 General 评分编排使用的专用解释器；不改变已有编排")
+    pipeline.add_argument('--score-skill-dir', type=Path, help='首次初始化时显式冻结补充 General 评分 Skill')
     pipeline.add_argument("--orchestrator-reader-dir", type=Path,
                           help="显式绑定旧 General 编排的补充读取器，原脚本保持不变")
     return parser
@@ -198,7 +200,8 @@ def _resume(args):
     from .agentcube import AgentCubeConfig
     from .engine import run_batch
     progress = (lambda event: _print_event(args, args.batch_id, event)) if args.jsonl else None
-    return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config), unit_ids=args.unit_id, progress=progress)
+    return run_batch(_batch_root(args), AgentCubeConfig.load(args.agentcube_config), unit_ids=args.unit_id,
+                     task_ids=args.task_id, progress=progress)
 
 
 def _cleanup(args):
@@ -289,6 +292,8 @@ def _pipeline(args):
     root = _batch_root(args)
     if args.score_python is not None and args.action != 'init-orchestration':
         raise E2EError('SCORE_PYTHON_REQUIRES_INIT_ORCHESTRATION')
+    if args.score_skill_dir is not None and args.action != 'init-orchestration':
+        raise E2EError('SCORE_SKILL_REQUIRES_INIT_ORCHESTRATION')
     if args.orchestrator_reader_dir is not None and args.action not in {'poll', 'record-submission'}:
         raise E2EError('ORCHESTRATOR_READER_REQUIRES_POLL_OR_SUBMISSION')
     if args.action == "takeover":
@@ -314,7 +319,8 @@ def _pipeline(args):
         return prepare_scoring_context(root, args.execution_key, args.claim_id,
                                        verification_skill=args.verification_skill_dir)
     if args.action == "init-orchestration":
-        return init_orchestration(root, args.execution_key, args.claim_id, score_python=args.score_python)
+        return init_orchestration(root, args.execution_key, args.claim_id,
+                                  score_python=args.score_python, score_skill_dir=args.score_skill_dir)
     if args.action in {"poll", "record-submission"}:
         handler = poll_orchestration if args.action == "poll" else record_submission
         return handler(root, args.execution_key, args.claim_id,
