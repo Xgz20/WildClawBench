@@ -11,12 +11,15 @@ COPY --from=node-runtime /usr/local/bin/node /usr/local/bin/node
 COPY --from=node-runtime /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
 COPY runtime-skill /opt/runtime-score-skill
 COPY wcb-dsh /usr/local/bin/wcb-dsh
+ENV PLAYWRIGHT_BROWSERS_PATH=/opt/scoring-browsers
 RUN ln -sf ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm \
  && ln -sf ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx \
  && chmod 755 /usr/local/bin/wcb-dsh \
  && pip install --no-cache-dir uv==0.13.6 pyyaml==6.0.3 jsonschema==4.26.0 openpyxl==3.1.5 playwright==1.55.0 \
  && python -m playwright install-deps chromium \
  && python /opt/runtime-score-skill/scripts/score_general_e2e.py bootstrap-runtime --venv-root /opt/scoring-runtime \
+ && /opt/scoring-runtime/bin/python -m playwright install chromium \
+ && /opt/scoring-runtime/bin/python /opt/runtime-score-skill/scripts/offline_browser_validate.py --probe --output-dir /opt/scoring-browser-preflight \
  && npm install -g --registry="${NPM_REGISTRY}" "@openai/codex@${CODEX_VERSION}" "@deepseek-ai/dsh@${DSH_VERSION}" \
  && codex --version && dsh --version \
  && rm -rf /root/.codex /root/.dsh /var/lib/apt/lists/*
