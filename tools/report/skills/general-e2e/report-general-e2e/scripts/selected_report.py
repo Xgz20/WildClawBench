@@ -69,18 +69,20 @@ def select_source_package(packages,chosen,task_id):
 
 def source_package_lineage(entry,manifest,unit_id):
     package=Path(entry["target"]).resolve()
+    require(entry["package_id"]==manifest.get("package_id"),"SELECTION_PACKAGE_ID_DRIFT")
     row={"unit_id":unit_id,"package_id":entry["package_id"],"target":str(package),
          "package_manifest_sha256":entry["package_manifest_sha256"],
          "submission_sha256":manifest.get("sources",{}).get("submission_sha256")}
     if entry.get("archive") or entry.get("archive_sha256"):
         archive=safe_file(entry.get("archive"),ROOT)
-        require(sha(archive)==entry.get("archive_sha256"),"SELECTION_ARCHIVE_SHA_DRIFT")
+        archive_sha=sha(archive)
+        require(archive_sha==entry.get("archive_sha256"),"SELECTION_ARCHIVE_SHA_DRIFT")
         with zipfile.ZipFile(archive) as z:
             names=[n for n in z.namelist() if n.rsplit("/",1)[-1]=="package-manifest.json"]
             require(len(names)==1 and z.getinfo(names[0]).file_size<=16*1024*1024
                     and hashlib.sha256(z.read(names[0])).hexdigest()==entry["package_manifest_sha256"],
                     "SELECTION_ARCHIVE_PACKAGE_BINDING")
-        row.update(archive=str(archive),archive_sha256=sha(archive))
+        row.update(archive=str(archive),archive_sha256=archive_sha)
     receipt_path=package/"receipts/import-return-receipt.json"
     if receipt_path.exists():
         receipt_path=safe_file(receipt_path,package)

@@ -25,16 +25,19 @@ class SelectedReportSourcesTest(unittest.TestCase):
             with zipfile.ZipFile(archive,"w") as z:z.writestr("return/package-manifest.json",payload)
             entry={"package_id":"id","target":str(package),"package_manifest_sha256":manifest_sha,
                    "archive":str(archive),"archive_sha256":hashlib.sha256(archive.read_bytes()).hexdigest()}
-            row=REPORT.source_package_lineage(entry,{"sources":{"submission_sha256":"1"*64}},"u")
+            manifest={"package_id":"id","sources":{"submission_sha256":"1"*64}}
+            row=REPORT.source_package_lineage(entry,manifest,"u")
             self.assertEqual(row["package_id"],"id")
             self.assertEqual(row["submission_sha256"],"1"*64)
             self.assertEqual(row["archive_sha256"],entry["archive_sha256"])
+            with self.assertRaisesRegex(ValueError,"PACKAGE_ID_DRIFT"):
+                REPORT.source_package_lineage({**entry,"package_id":"other"},manifest,"u")
             with zipfile.ZipFile(archive,"w") as z:z.writestr("return/package-manifest.json",b"other")
             with self.assertRaisesRegex(ValueError,"ARCHIVE_SHA_DRIFT"):
-                REPORT.source_package_lineage(entry,{},"u")
+                REPORT.source_package_lineage(entry,manifest,"u")
             entry["archive_sha256"]=hashlib.sha256(archive.read_bytes()).hexdigest()
             with self.assertRaisesRegex(ValueError,"ARCHIVE_PACKAGE_BINDING"):
-                REPORT.source_package_lineage(entry,{},"u")
+                REPORT.source_package_lineage(entry,manifest,"u")
 
     def test_sealing_requires_a_new_report_output(self):
         with tempfile.TemporaryDirectory() as temp:
