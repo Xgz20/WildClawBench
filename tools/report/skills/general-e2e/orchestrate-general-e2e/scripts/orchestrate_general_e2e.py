@@ -3657,6 +3657,8 @@ def main(argv: list[str] | None = None) -> int:
     complete_scope.add_argument("--unit-root", type=Path, required=True)
     complete_scope.add_argument("--additional-attempt", action="append", required=True)
     complete_scope.add_argument("--score-skill-dir", type=Path, required=True)
+    complete_scope.add_argument('--verification-score-python', type=Path,
+        help='显式绑定选择阶段的只读验分解释器，保留源编排冻结的解释器')
     complete_scope.add_argument("--output-root", type=Path, required=True)
     complete_scope.add_argument('--allow-scoring-infrastructure-repair',action='store_true')
     complete_scope.add_argument('--allow-valid-rescore',action='store_true')

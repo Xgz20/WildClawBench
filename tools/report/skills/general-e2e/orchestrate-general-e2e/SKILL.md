@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.87` 完整范围基础设施修复选择可显式冻结 `--verification-score-python`，只用于复验新评分，不修改原编排及其旧解释器锁。选择谱系保留新的 Skill/解释器摘要，避免用旧错误解释器验新聚合结果。
+
 `0.11.86` 为 general-custom70-v6 精确登记四题已审核的取证文件名模式；完整核对原契约、规则源码和数据集 SHA，沿用原检查点、原权重和匹配算法。旧 v5 及其余历史目录不改；旧未评分失败留证后从同一执行另建独立评分。
 
 `0.11.85` 新评分预检明确检查 independent-business-capability/v2 的评分解释器与原受管运行时锁一致；错配须在创建 Judge 前修复。可用新只读读取器严格留证已完成 Judge 的旧 Python 错配失败：保留原 Prompt、原响应、原未评分 attempt 和 SDK 证明，从同一执行另建评分尝试，不补零或放宽运行时锁。

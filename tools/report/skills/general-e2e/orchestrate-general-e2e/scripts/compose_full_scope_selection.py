@@ -122,7 +122,9 @@ def compose(args, *, frozen):
     if (not set(partial['task_ids'])<=set(expected)
             or (not repair and not valid_rescore and not set(partial["task_ids"]) < set(expected))):
         raise ValueError("STRICT_PARTIAL_SCOPE_REQUIRED")
-    skill = frozen._score_skill_lock(args.score_skill_dir, python_runtime=state["score_skill"].get("python"))
+    verification_python = getattr(args, 'verification_score_python', None)
+    runtime = {'executable': str(verification_python.expanduser().absolute())} if verification_python else state['score_skill'].get('python')
+    skill = frozen._score_skill_lock(args.score_skill_dir, python_runtime=runtime)
     rows = {r["task_id"]: copy.deepcopy(r) for r in partial["tasks"]}
     roots = {r["task_id"]: source_view.joinpath(*PurePosixPath(r["score_path"]).parts).parent
              for r in partial["tasks"] if r["score_path"] is not None}
@@ -246,6 +248,7 @@ def compose(args, *, frozen):
                "old_files_unchanged": True, "semantic_judging_performed": False, "scope_shrunk": False,
                "submission_sha256": digest(stage / "submission.json")}
     if selected_source is not None:lineage['source_selection']=str(source_view)
+    if verification_python is not None:lineage['verification_score_skill']=skill
     if repair:
         lineage.update(infrastructure_correction_profile='explicit-scoring-infrastructure-repair/v1',
                        infrastructure_repair_reason=reason,selected_infrastructure_repairs=repaired)
