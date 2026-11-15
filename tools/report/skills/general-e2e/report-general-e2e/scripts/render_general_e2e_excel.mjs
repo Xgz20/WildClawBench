@@ -373,13 +373,13 @@ function buildCoverage(workbook, data) {
   const metadataStart = end + 4;
   end = table(sheet, end + 3, ["Unit", "模型@Harness", "配置模型", "Harness 身份", "裁判分组"], data.presentation.unit_metadata);
   if (data.presentation.unit_metadata.length) {
-    sheet.getRange(`C${metadataStart}:E${end}`).format.wrapText = true;
+    sheet.getRange(`A${metadataStart}:E${end}`).format.wrapText = true;
     sheet.getRange(`A${metadataStart}:E${end}`).format.rowHeight = 110;
   }
   section(sheet, end + 2, 2, "公共报告字典来源");
   table(sheet, end + 3, ["文件", "SHA-256（前12位）"], Object.entries(data.presentation.reference_sources).map(([name, hash]) => [name, hash.slice(0, 12)]));
   widths(sheet, { A: 58, B: 28, C: 24, D: 16, E: 16, F: 16, G: 14, H: 14, I: 14, J: 16, K: 58, L: 16, M: 16 });
-  if (data.presentation.unit_metadata.length) sheet.getRange(`C${metadataStart}:E${end}`).format.autofitRows();
+  if (data.presentation.unit_metadata.length) sheet.getRange(`A${metadataStart}:E${end}`).format.autofitRows();
   // Native timing adds explicit lifecycle/queue semantics; fit its source text.
   rows.forEach((row, index) => {
     if (["duration_seconds", "agent_duration_seconds"].includes(row[1]) && row[3] === "observed") {
