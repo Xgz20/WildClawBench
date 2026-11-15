@@ -132,6 +132,12 @@ class AgentCubeClient:
             raise PlatformError(f"DELETE_SESSION_HTTP_{response.status_code}", uncertain=True)
         body = response.json() if response.content and response.status_code == 200 else None
         if isinstance(body, dict) and body.get("code", 0) != 0:
+            # The company manager reports an already-absent, exact session as
+            # HTTP 200/code 10001. Other errors and identities remain uncertain.
+            if (body.get("code") == 10001 and body.get("data") is None
+                    and body.get("msg") == "sessionId " + sid + " not found"):
+                return {"http_status": response.status_code, "response": body,
+                        "confirmed": True, "disposition": "already_absent"}
             raise PlatformError("DELETE_SESSION_REJECTED", uncertain=True)
         return {"http_status": response.status_code, "response": redact(body, self.config.auth_token),
                 "confirmed": response.status_code != 202}
