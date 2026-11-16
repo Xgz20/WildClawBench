@@ -17,7 +17,8 @@ def _sum_metric(observations):
         'known_subtotal': sum(known) if known else None, 'complete': complete,
         'status': 'complete' if complete else 'partial' if known else 'unavailable',
         'coverage': {'known': sum(row.get('coverage', {}).get('known', 0) for row in observations),
-                     'total': sum(totals) if all(value is not None for value in totals) else None}}
+                     'total': sum(totals) if all(value is not None for value in totals) else None,
+                     'unit': observations[0].get('coverage', {}).get('unit', 'unknown') if observations else 'unknown'}}
 
 
 def aggregate_case(rounds, unit_id):

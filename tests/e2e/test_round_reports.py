@@ -3,7 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from src.e2e.general_reports import report_module, _unavailable_row, markdown, xlsx, standalone_html
+from src.e2e.general_reports import report_module, _unavailable_row, markdown, xlsx, standalone_html, normalize_presentation
 from src.e2e.round_reports import aggregate_case, group_round_report
 
 
@@ -48,7 +48,7 @@ class RoundReportTests(unittest.TestCase):
                 unit.update(source={'score_operation_id': judge, 'unit_id': 'original', 'batch_id': 8, 'run_index': round_index, 'agent_invocation_count': 2},
                     scorer={'harness': 'codex' if judge == 1 else 'deepseek-harness', 'model': 'judge', 'reasoning_effort': 'high'})
                 units.append(unit)
-        data = {'title': '多轮验收', 'dataset': {'id': 'fixture'}, 'scope': {}, 'semantics': {}, 'units': units, 'tasks': rows}
+        data = {'title': '多轮验收', 'dataset': {'id': 'fixture'}, 'scope': {}, 'semantics': {}, 'lineage': {'selected_sources': []}, 'units': units, 'tasks': rows}
         result = group_round_report(self.core, data)
         self.assertEqual(result['schema_version'], 'wildclawbench.platform-general-report/v2')
         self.assertEqual(result['scope']['unit_count'], 2)
@@ -61,6 +61,8 @@ class RoundReportTests(unittest.TestCase):
         self.assertEqual([row[1] for row in result['presentation']['tables']['总览']['rows']], [75, 50])
         self.assertTrue(all('评分#' in label for label in result['presentation']['unit_labels'].values()))
         self.assertEqual(len(result['rounds']), 12)
+        normalize_presentation(result)
+        self.assertIn('unit', result['tasks'][0]['resource']['total_tokens']['coverage'])
         self.assertIn('多轮', markdown(result))
         self.assertIn('DATA=', standalone_html(result))
         with tempfile.TemporaryDirectory() as root:
