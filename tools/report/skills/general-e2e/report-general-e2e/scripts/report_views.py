@@ -277,6 +277,11 @@ def capability_scores(rows, mapping, dimensions=CAPABILITIES):
             if not keys:
                 continue
             eligible += 1
+            if row.get("rounds"):
+                observed = capability_scores(row["rounds"], mapping, dimensions)[dimension]
+                if observed["score"] is not None:
+                    scores.append(observed["score"])
+                continue
             if row["score_status"] != "valid" and row.get('checkpoints',{}).get('independent_capability_eligible') is not True:
                 continue
             independent=row.get('checkpoints',{}).get('independent_capabilities',{})
@@ -678,7 +683,7 @@ def build_views(data, references):
     if has5 and has7:
         order.insert(5, "Agent五维能力对比")
     presentation = {"schema_version": "wildclawbench.general-report-views/v1", "tables": {key: views[key] for key in order},
-            **report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES),
+            **({} if data.get("resource_round_view") else report_case_views.build_case_views(data, units, labels_by_id, table, CATEGORIES, MODALITIES)),
             "sheet_order": order,
             "unit_labels": labels_by_id, "dimension_coverage": dimension_coverage, "unit_metadata": metadata,
             "score_coverage": score_coverage,

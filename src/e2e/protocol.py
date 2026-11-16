@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -96,6 +97,7 @@ def describe(repo: Path) -> dict:
             "offline-parent-report-inputs",
             "headless-general-scoring",
             "canonical-general-reports",
+            "canonical-general-round-reports",
         ],
         "scenarios": [
             {"id": "general", "display_name": "通用场景", "dataset_required": True},
@@ -424,6 +426,15 @@ def snapshot(batch: Path) -> dict:
                         "is_dir": path.is_dir(),
                     }
                 )
+        start, finish = row.get("dispatch_armed_at"), row.get("finished_at")
+        duration = None
+        try:
+            if start and finish:
+                seconds = (datetime.fromisoformat(finish) - datetime.fromisoformat(start)).total_seconds()
+                if seconds >= 0:
+                    duration = seconds
+        except (TypeError, ValueError):
+            pass
         executions.append(
             {
                 "execution_key": row["key"],
@@ -432,6 +443,7 @@ def snapshot(batch: Path) -> dict:
                 "unit_id": row["unit_id"],
                 "run_index": row["run_index"],
                 "attempt_id": row["attempt_id"],
+                "started_at": start, "finished_at": finish, "duration_seconds": duration,
                 "stage": row["phase"],
                 "terminal": row["phase"] in TERMINAL_PHASES
                 and not row["resource_held"],

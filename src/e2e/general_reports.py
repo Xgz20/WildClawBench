@@ -355,6 +355,10 @@ def build_report(definition: dict, staging: Path):
         note = '本报告包含同一执行的独立评分版本；各单元复用原执行资源，不代表新增的被测端消耗。'
         data['semantics']['execution_reuse'] = note
         data['presentation']['tables']['总览']['notes'].insert(0, note)
+    if definition.get('group_rounds'):
+        from .round_reports import group_round_report
+        data = group_round_report(core, data)
+        units = data['units']
     configuration = []
     for unit in units:
         profile = unit['scorer']
@@ -365,6 +369,14 @@ def build_report(definition: dict, staging: Path):
         'headers': ['报告单元ID', '被测模型@Harness', '原执行批次', '评分操作', '评分Harness', '评分模型', '推理强度', '评分并发数', '评分超时（秒）', '评分镜像SHA', '实际模型评分任务数'],
         'rows': configuration, 'formats': {},
         'notes': ['评分 Harness 与被测 Harness 分开记录。纯自动规则任务不调用评分模型；规则与语义组件均按原冻结契约验分。']}
+    if definition.get('group_rounds'):
+        data['presentation']['tables']['分轮明细'] = {
+            'headers': ['比较单元', '用例ID', '用例轮次', '执行状态', '评分状态', '本轮总分', '执行尝试', '评分尝试', '检查点原始值'],
+            'rows': [[data['presentation']['unit_labels'][row['unit_id']], row['task_id'], row['run_index'], row['execution_status'],
+                      row['score_status'], row['total_score'] * 100 if row['total_score'] is not None else None,
+                      row['execution_attempt_id'], row.get('scoring_attempt_id'), json.dumps(row.get('checkpoints', {}).get('values', {}), ensure_ascii=False)] for row in data['rounds']],
+            'formats': {'5': '0.00'}, 'notes': ['原逐轮证据与分数独立保留；主比较表按用例汇总有效轮次，不覆盖冻结评分。']}
+        data['presentation']['sheet_order'].append('分轮明细')
     normalize_presentation(data)
     data['presentation']['sheet_order'].append('评分配置')
     _relative_lineage(data, staging)
@@ -482,7 +494,7 @@ def standalone_html(data):
     return '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>端到端评测报告</title>
 <style>body{font:14px system-ui;margin:32px;color:#1e293b;background:#f8fafc}section{background:white;padding:24px;margin:24px 0;border-radius:12px}.scroll{overflow:auto}table{border-collapse:collapse;min-width:800px;width:100%}td,th{padding:10px;border:1px solid #e2e8f0;max-width:460px;white-space:pre-wrap;overflow-wrap:anywhere}th{background:#e2e8f0;cursor:pointer;position:sticky;top:0}small{color:#64748b}svg{max-width:100%;height:auto}p{line-height:1.7}</style>
 <h1 id="title"></h1><p id="scope"></p><main id="report"></main><script>const DATA=''' + payload + ''';
-document.querySelector('#title').textContent=DATA.title;document.querySelector('#scope').textContent=DATA.dataset.id+' · '+DATA.scope.unit_count+' 个单元 · '+DATA.scope.task_run_count+' 项任务运行。异常/未评分不补零。点击表头可排序。';
+document.querySelector('#title').textContent=DATA.title;document.querySelector('#scope').textContent=DATA.dataset.id+' · '+(DATA.schema_version?.endsWith('/v2')?DATA.scope.unit_count+' 个比较对象 · '+DATA.scope.unique_execution_count+' 次原执行 · '+DATA.scope.task_run_count+' 项逐轮评分':DATA.scope.unit_count+' 个单元 · '+DATA.scope.task_run_count+' 项任务运行')+'。异常/未评分不补零。点击表头可排序。';
 const SCORE=new Set(['总览','分类对比','难度对比','Agent能力对比','模态对比']);
 function text(value,fmt){if(value===null||value===undefined)return '-';if(typeof value!=='number')return String(value);const digits=fmt&&fmt.includes('.')?fmt.split('.')[1].replace('%','').length:Number.isInteger(value)?0:2;return new Intl.NumberFormat('zh-CN',{minimumFractionDigits:digits,maximumFractionDigits:digits,useGrouping:!!fmt&&fmt.includes(',')}).format(fmt&&fmt.includes('%')?value*100:value)+(fmt&&fmt.includes('%')?'%':'')}
 function renderTable(name,view,parent){const wrap=document.createElement('div');wrap.className='scroll';const table=document.createElement('table');wrap.append(table);parent.append(wrap);let rows=view.rows.slice(),direction=1;function draw(){table.replaceChildren();const head=document.createElement('tr');view.headers.forEach((label,col)=>{const th=document.createElement('th');th.textContent=label;th.onclick=()=>{direction*=-1;rows.sort((a,b)=>{const val=row=>view.layout==='case_compare'&&col>=10&&col-10<(view.unit_scores?.[view.rows.indexOf(row)]?.length??0)?view.unit_scores[view.rows.indexOf(row)][col-10]:row[col];const left=val(a),right=val(b);if(left==null&&right==null)return 0;if(left==null)return 1;if(right==null)return -1;return direction*(typeof left==='number'&&typeof right==='number'?left-right:String(left).localeCompare(String(right),'zh-CN',{numeric:true}))});draw()};head.append(th)});table.append(head);rows.forEach(row=>{const tr=document.createElement('tr');row.forEach((value,col)=>{const td=document.createElement('td');td.textContent=text(value,view.formats?.[col]);const originalIndex=view.rows.indexOf(row),actual=view.layout==='case_compare'&&col>=10&&col-10<(view.unit_scores?.[originalIndex]?.length??0)?view.unit_scores[originalIndex][col-10]==null?null:view.unit_scores[originalIndex][col-10]*100:typeof value==='number'?value:null;if(actual!==null&&col>0&&((view.layout==='case_compare'&&col>=10&&col-10<(view.unit_scores?.[originalIndex]?.length??0))||(name==='总览'?col===1:(SCORE.has(name)||/得分|平均分|总分/.test(view.headers[col]))))&&!/分差/.test(view.headers[col]))td.style.background=actual>=90?'#dcfce7':actual>=70?'#dbeafe':actual>=50?'#fef3c7':'#fee2e2';const annotation=view.cell_annotations?.[view.rows.indexOf(row)+':'+col];if(annotation?.status==='partial'){td.style.background='#fffbe6';td.title='部分统计/已知小计'}tr.append(td)});table.append(tr)})}draw()}

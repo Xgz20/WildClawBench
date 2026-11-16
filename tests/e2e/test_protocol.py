@@ -46,6 +46,17 @@ class ProtocolTests(unittest.TestCase):
         self.assertNotIn("scoring", result)
         self.assertNotIn("scoring_concurrency", result["plan"])
 
+    def test_snapshot_flow_duration_is_additive_and_unknown_is_not_zero(self):
+        run_batch(self.fixture.root, self.fixture.config, driver_factory=self.fixture.factory)
+        store = BatchStore(self.fixture.root)
+        row = store.rows()[0]
+        store.update(row['key'], 'COMPLETED', dispatch_armed_at='2026-11-16T00:00:00+00:00', finished_at='2026-11-16T00:00:05+00:00')
+        value = next(item for item in snapshot(self.fixture.root)['executions'] if item['execution_key'] == row['key'])
+        self.assertEqual(value['duration_seconds'], 5)
+        store.update(row['key'], 'COMPLETED', dispatch_armed_at=None)
+        value = next(item for item in snapshot(self.fixture.root)['executions'] if item['execution_key'] == row['key'])
+        self.assertIsNone(value['duration_seconds'])
+
     def test_cursor_replay_and_legacy_status_share_the_same_batch(self):
         run_batch(
             self.fixture.root, self.fixture.config, driver_factory=self.fixture.factory
