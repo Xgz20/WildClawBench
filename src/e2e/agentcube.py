@@ -35,6 +35,7 @@ class AgentCubeConfig:
     trust_env: bool = False
     astudio_runtime: dict | None = None
     auth_token: str = field(default="", repr=False)
+    create_timeout_seconds: int = 900
 
     @classmethod
     def load(cls, path: Path | None = None, *, template: str | None = None):
@@ -65,6 +66,8 @@ class AgentCubeConfig:
                 raise E2EError("AGENTCUBE_ENDPOINT_INVALID")
         if type(result.active_ttl) is not int or type(result.expire_ttl) is not int or not 0 < result.active_ttl <= result.expire_ttl:
             raise E2EError("AGENTCUBE_TTL_INVALID")
+        if type(result.create_timeout_seconds) is not int or result.create_timeout_seconds <= 0:
+            raise E2EError("AGENTCUBE_CREATE_TIMEOUT_INVALID")
         if result.astudio_runtime is not None:
             from .windows_runtime import validate_runtime
             validate_runtime(result.astudio_runtime)
@@ -74,7 +77,12 @@ class AgentCubeConfig:
 
     def public(self) -> dict:
         return {key: value for key, value in asdict(self).items()
-                if key != "auth_token" and not (key == "astudio_runtime" and value is None)}
+                if key != "auth_token" and not (key == "astudio_runtime" and value is None)
+                # Keep legacy runtime fingerprints stable when using their original timeout.
+                and not (key == "create_timeout_seconds" and value == 900)}
+
+    def required_expire_ttl(self, execution_timeout: int) -> int:
+        return execution_timeout + 2400 + max(0, self.create_timeout_seconds - 900)
 
 
 class AgentCubeClient:
@@ -121,7 +129,7 @@ class AgentCubeClient:
         return data
 
     def create_session(self) -> str:
-        response = self._request("POST", self.manager, timeout=900, json={
+        response = self._request("POST", self.manager, timeout=self.config.create_timeout_seconds, json={
             "name": self.config.template, "namespace": self.config.namespace,
             "activeTTL": self.config.active_ttl, "expireTTL": self.config.expire_ttl})
         data = self._json(response, "CREATE_SESSION")
@@ -144,6 +152,20 @@ class AgentCubeClient:
             raise PlatformError("DELETE_SESSION_REJECTED", uncertain=True)
         return {"http_status": response.status_code, "response": redact(body, self.config.auth_token),
                 "confirmed": response.status_code != 202}
+
+    def confirm_session_absent(self, sid: str) -> dict:
+        response = self._request("GET", self.config.workload_manager_url.rstrip("/")
+                                 + "/v1/sandbox/sessions/" + quote(sid, safe=""), timeout=30)
+        try:
+            body = response.json()
+        except ValueError as error:
+            raise PlatformError("SESSION_ABSENCE_NOT_CONFIRMED") from error
+        if (response.status_code != 200 or not isinstance(body, dict)
+                or body.get("code") != 10001 or body.get("data") is not None
+                or body.get("msg") != "sessionId " + sid + " not found"):
+            raise PlatformError("SESSION_ABSENCE_NOT_CONFIRMED")
+        return {"confirmed": True, "session_id": sid, "http_status": 200,
+                "platform_code": 10001, "disposition": "already_absent"}
 
     def execute(self, sid: str, command: str, timeout=30) -> dict:
         response = self._request("POST", self.picod + "/execute", sid=sid, timeout=timeout + 5,

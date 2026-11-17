@@ -4,6 +4,20 @@
 
 支持 `runtime-preflight` 能力的发行可使用 `preflight --plan PLAN --check-runtime`，额外验证执行进程的 AgentCube Token、User-ID、TTL 和端点域名解析。失败返回 `valid=false` 及具体 issues，不创建沙箱。默认 preflight 仍可离线检查选题和参数；带 `--agentcube-config` 的原调用规则保持兼容。该检查不验证远端账号权限或 VM 可用性，实际执行仍需可访问的公司网络。
 
+`--agentcube-config` 指向非密钥 JSON 配置；平台通过 `WCB_E2E_AGENTCUBE_CONFIG` 引用同一文件。`namespace` 未填写时为 `default`，同时用于会话创建请求和 PicoD/Windows 路由。以下为相关字段示例，其余身份、地址和运行时字段按部署配置保留：
+
+```json
+{
+  "namespace": "agentcube-windows",
+  "template": "winarena-pc-20261116-b",
+  "create_timeout_seconds": 1800
+}
+```
+
+`create_timeout_seconds` 为创建会话的 HTTP 读取等待上限，必须为正整数，默认沿用 900 秒。它独立于单题执行预算；增加创建等待时间会相应增加预检要求的 expire TTL 余量。模板选项仍来自能力目录，修改模板时同步核对该目录。新配置用于新批次，保留旧配置文件供既有冻结批次恢复。创建超时且未得到 session ID 时保持 `NEEDS_ATTENTION`，须先核对原平台请求，不自动重复创建。
+
+操作员在控制台将唯一实例与原请求核对、确认已销毁后，可用 `reconcile-absent-creation --workspace-root ROOT --batch-id ID --execution-key KEY --platform-proof JSON --expected-proof-sha256 SHA --agentcube-config CONFIG` 收口派发前的创建超时。观测 JSON 使用 `wildclawbench.agentcube-creation-observation/v1`，包含原 `identity`、`creation_intent_at`、精确 `session_id`、`app_id`、`user_id`、`namespace`、`template`、带时区的 `created_at/destroyed_at/observed_at`、`source_url`、`observed_state: destroyed` 和 `matching_session_count: 1`。这份文件是操作员核对记录，不能替代线上检查；命令还会用冻结身份对精确 session ID 执行只读查询，只接受平台明确的同 ID `not found` 回执。已派发任务、身份/时间不匹配、存活或无法确认的会话均拒绝释放本地占位。原错误、观测与查询回执先封存备份，再追加创建失败状态；不改批次清单或执行器绑定，不生成可评分结果，不创建或删除远端会话。
+
 ```bash
 python eval/run_e2e.py --api-version 1 describe
 python eval/run_e2e.py --api-version 1 catalog --scenario general --dataset general-custom70-v4

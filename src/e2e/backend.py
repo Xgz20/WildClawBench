@@ -150,7 +150,7 @@ class AStudioSandboxDriver:
     def preflight(self):
         if self.unit["model"].casefold().startswith(("custom/","third-party/")) or "://" in self.unit["model"]:
             raise E2EError("CUSTOM_TESTED_MODELS_NOT_SUPPORTED")
-        if self.unit["timeout_override"] + 2400 > self.config.expire_ttl:
+        if self.config.required_expire_ttl(self.unit["timeout_override"]) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         for name, value in self.task.get("requirements", {}).items():
             if str(value).strip().casefold() not in {"", "none", "null", "n/a", "无", "{}", "[]"}:

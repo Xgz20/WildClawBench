@@ -93,6 +93,7 @@ def describe(repo: Path) -> dict:
             "events",
             "artifacts",
             "resume",
+            "creation-reconciliation",
             "cancel",
             "restore",
             "offline-export",
@@ -297,7 +298,7 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             issues.append({"code": "AGENTCUBE_RUNTIME_CONFIG_INVALID", "message": str(exc)})
     if config:
         if any(
-            unit["timeout_override"] + 2400 > config.expire_ttl
+            config.required_expire_ttl(unit["timeout_override"]) > config.expire_ttl
             for unit in plan["units"]
         ):
             issues.append({"code": "PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT"})

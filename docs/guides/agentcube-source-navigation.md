@@ -6,7 +6,7 @@
 源码路径可用不代表部署正在运行该版本。下列入口于 2026-11-17 在 Intel Mac 的
 checkout 中核验；后续排查先检查实际文件、HEAD 和工作区状态，再与运行身份对应。
 
-## 四个仓库的职责与入口
+## 五个仓库的职责与入口
 
 | 仓库 | 本轮排查职责 | 先读入口，路径相对各自仓库根 |
 |---|---|---|
@@ -14,6 +14,7 @@ checkout 中核验；后续排查先检查实际文件、HEAD 和工作区状态
 | astudio-eval-framework（WildClawBench） | 公开脚本协议、选题和调度、AgentCube 调用、采集备份、恢复导出及评分/报告实现 | `eval/run_e2e.py`、`src/e2e/`、`schemas/e2e-api-v1/`、[公开协议说明](e2e-api-v1.md) |
 | WindowsAgentArena | 沙箱控制层，wgui 请求契约、产品配置和操作、执行完成判定及轨迹采集 | `src/win-arena-container/wgui/controller/cli/main.py`、`src/win-arena-container/wgui/controller/contracts/models.py`；AStudio 配置导航另见其 `docs/astudio_model_configuration_flow.md` |
 | AgentCube | 沙箱平台，会话与工作负载生命周期、认证、路由及调用通信 | `router_workloadmanager_api.md`、`cmd/workload-manager/`、`pkg/workloadmanager/`、`cmd/router/`、`pkg/router/`、`cmd/picod/`；`sdk-python/` 可辅助对照 |
+| waa-agentcube | Windows 模板注册、namespace、固定镜像及注册台账 | `templates/README.md`、`templates/<模板名>.yaml`、`createWindowsCR_private_auth_a.py`、`template_record.py` |
 
 当前框架的实际 AgentCube HTTP 调用先从 `src/e2e/agentcube.py` 追踪，
 不要把 SDK 仓库的最新接口直接认作冻结执行器已使用的实现。
@@ -25,6 +26,7 @@ checkout 中核验；后续排查先检查实际文件、HEAD 和工作区状态
 - wgui 产品配置、菜单选择、发送及完成判定：从 WindowsAgentArena 的 CLI 和请求契约
   追到实际产品适配器；内部模块位置以该 checkout 为准，不猜固定目录。
 - 会话创建、TTL、平台认证、路由、PicoD 或上传下载：看 AgentCube，并对照框架实际请求。
+- 模板名、namespace、镜像 digest 与注册参数：先查 waa-agentcube 的模板台账；再用线上实例及事件核对当前状态。WindowsAgentArena 的镜像构建记录不等于 AgentCube 模板注册记录。台账中的 `waa_commit` 用于定位镜像内容，不能用本地最新 HEAD 替代。
 - `Model service request failed`：区分沙箱访问凭据、产品登录/运行状态与模型服务连接。
   核对实际 RunRequest、产品适配器、原生日志及脱敏 HTTP 错误，不把 AgentCube Token
   当作模型 API Key，也不假设本机配置已经传入 Windows 或所有产品支持相同自定义连接。
@@ -34,7 +36,7 @@ checkout 中核验；后续排查先检查实际文件、HEAD 和工作区状态
 
 ## 本机路径地图
 
-每台机器的 `source-map.md` 登记本机的四个 checkout 根目录、适用机器、核验日期和
+每台机器的 `source-map.md` 登记本机的五个 checkout 根目录、适用机器、核验日期和
 调试工作根。可记录上次核验的分支与 HEAD，但它们只是快照；每次排查重新核对。
 框架源码 checkout 与批次绑定的只读执行器发行分别记录，实际运行身份以配置和批次快照为准。
 

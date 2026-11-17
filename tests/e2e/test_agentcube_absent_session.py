@@ -24,3 +24,12 @@ class AbsentSessionTests(unittest.TestCase):
             with self.subTest(message=message, code=code):
                 with self.assertRaises(PlatformError):
                     self.client(message, code).delete_session("original")
+
+    def test_read_only_absence_requires_exact_session_and_platform_response(self):
+        client = self.client("sessionId original not found")
+        self.assertTrue(client.confirm_session_absent("original")["confirmed"])
+        self.assertEqual(client._request.call_args.args[0], "GET")
+        for message, code in [("sessionId other not found", 10001), ("permission denied", 10001),
+                              ("sessionId original not found", 10005)]:
+            with self.subTest(message=message, code=code), self.assertRaises(PlatformError):
+                self.client(message, code).confirm_session_absent("original")

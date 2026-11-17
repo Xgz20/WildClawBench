@@ -102,6 +102,12 @@ def build_parser() -> argparse.ArgumentParser:
     _batch(cleanup)
     _agentcube(cleanup)
     cleanup.add_argument("--cancel", action="store_true", help="显式允许取消仍活动的本批次任务")
+    reconcile = commands.add_parser("reconcile-absent-creation", help="依据操作员观测及平台精确查无回执收口派发前创建超时")
+    _batch(reconcile)
+    _agentcube(reconcile)
+    reconcile.add_argument("--execution-key", required=True)
+    reconcile.add_argument("--platform-proof", type=Path, required=True)
+    reconcile.add_argument("--expected-proof-sha256", required=True)
     restore = commands.add_parser("restore", help="从原始备份生成新的本地工作副本")
     _batch(restore)
     restore.add_argument("--execution-key", required=True)
@@ -228,6 +234,13 @@ def _cleanup(args):
     local_only = args.cancel and all(not row.get("creation_intent_at") and not row.get("session_id") for row in BatchStore(root).rows())
     config = AgentCubeConfig() if local_only else AgentCubeConfig.load(args.agentcube_config)
     return cleanup_batch(root, config, cancel=args.cancel)
+
+
+def _reconcile_absent_creation(args):
+    from .agentcube import AgentCubeConfig
+    from .creation_recovery import reconcile_absent_creation
+    return reconcile_absent_creation(_batch_root(args), args.execution_key, args.platform_proof.resolve(),
+                                     args.expected_proof_sha256, AgentCubeConfig.load(args.agentcube_config))
 
 
 def _restore(args):
@@ -380,13 +393,14 @@ def main(argv=None) -> int:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
     handlers = {"run": _run, "resume": _resume, "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
+                "reconcile-absent-creation": _reconcile_absent_creation,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "general-report": _general_report,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status")}}
     try:
         result = handlers[args.command](args)
         if args.api_version:
             from .protocol import envelope, snapshot
-            if args.command in {"status", "resume", "cleanup"} or (args.command == "run" and not args.dry_run):
+            if args.command in {"status", "resume", "cleanup", "reconcile-absent-creation"} or (args.command == "run" and not args.dry_run):
                 result = snapshot(_batch_root(args) if args.command != "run" else args.workspace_root.expanduser().resolve() / "batches" / result["batch_id"])
             print(json.dumps(envelope("result", result), ensure_ascii=False), flush=True)
         elif getattr(args, "jsonl", False):
