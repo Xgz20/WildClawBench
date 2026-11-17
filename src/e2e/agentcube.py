@@ -16,9 +16,10 @@ from .common import E2EError, identifier, read_json, redact
 
 
 class PlatformError(E2EError):
-    def __init__(self, message: str, *, uncertain: bool = False):
+    def __init__(self, message: str, *, uncertain: bool = False, platform_code: str | None = None):
         super().__init__(message)
         self.uncertain = uncertain
+        self.platform_code = platform_code
 
 
 @dataclass(frozen=True)
@@ -111,6 +112,8 @@ class AgentCubeClient:
         except ValueError as error:
             raise PlatformError(f"{action}_INVALID_JSON", uncertain=True) from error
         if not isinstance(payload, dict) or payload.get("code", 0) != 0:
+            if action=="CREATE_SESSION" and "USER_QUOTA_NOT_ACTIVE" in str(payload):
+                raise PlatformError("AgentCube 沙箱配额未生效（USER_QUOTA_NOT_ACTIVE）；请检查当前调用身份的有效配额规则。",platform_code="USER_QUOTA_NOT_ACTIVE")
             raise PlatformError(f"{action}_REJECTED: " + str(redact(payload, self.config.auth_token)))
         data = payload.get("data")
         if not isinstance(data, dict):

@@ -197,6 +197,9 @@ def _failure(root, store, item, driver, error, *, final_phase="FAILED"):
     row = store.get(item["key"])
     message = str(redact(str(error), driver.config.auth_token))
     failure = {"code": type(error).__name__, "message": message, "report_status": row.get("report", {}).get("status")}
+    if isinstance(error,PlatformError):
+        failure["fault_domain"]="agentcube"
+        if error.platform_code:failure["platform_code"]=error.platform_code
     if final_phase == "CANCELLED":
         failure["execution_phase"] = final_phase
     try:
