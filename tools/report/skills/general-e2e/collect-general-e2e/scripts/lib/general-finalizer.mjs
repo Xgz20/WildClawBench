@@ -40,6 +40,7 @@ import { sealFrozenOfficeFile, clearOwnedStagingOffice } from './office-freeze.m
 import { readFrozenStartRejection } from '../../vendor/e2e-shared/astronstudio-start-rejection/index.mjs';
 import { verifyChildSdkArchive } from '../../vendor/e2e-shared/workbuddy-jsonl-metrics/children.mjs';
 import { verifyAgentCubeNative } from './agentcube-native-verification.mjs';
+import { verifyAgentCubeWorkBuddy } from '../../vendor/e2e-shared/general-resource-supplements/agentcube-workbuddy-binding.mjs';
 import { verifyArchivedLoomy, verifyLoomyResources } from '../../vendor/e2e-shared/loomy/verification.mjs';
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
@@ -819,6 +820,10 @@ async function verifyCollectionWithReceipt(options, unitRoot, receiptSource) {
     }
     const traceRoot = dirname(indexSource.absolute);
     await verifyChildSdkArchive(traceRoot, index, record.identity, record.session);
+    if(record.harness?.id==='workbuddy' && index.adapter?.id==='agentcube-workbuddy-native'){
+      const declaredState=await readJsonFile(join(evidenceRoot,'execution','automation-state.json'));
+      await verifyAgentCubeWorkBuddy({unitRoot,traceRoot,index,stateBytes:declaredState.bytes,record});
+    }
     if (record.harness?.id === 'astronstudio') {
       const declaredState = await readJsonFile(join(evidenceRoot, 'execution', 'automation-state.json'));
       if (index.adapter?.id === 'agentcube-astudio-native') {

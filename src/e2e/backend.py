@@ -41,10 +41,10 @@ def _decode_output(result: dict):
     return json.loads(base64.b64decode(result["output"].strip(), validate=True).decode("utf-8-sig"))
 
 
-def process_cleanup_script(proof_path: str, workspace: str) -> str:
+def process_cleanup_script(proof_path: str, workspace: str, *, product="astudio") -> str:
     # A sandbox contains one evaluated GUI product. Every kill is tied to the
     # observed executable path, PID and CreationDate, with a workspace backstop.
-    return r"""
+    script = r"""
 $ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';
 $proofPath=__PROOF__;$workspace=__WORKSPACE__;
 function Snap($p){@{pid=[int]$p.ProcessId;parent_pid=[int]$p.ParentProcessId;name=$p.Name;path=$p.ExecutablePath;created=$p.CreationDate.ToUniversalTime().ToString('o');command=$p.CommandLine}}
@@ -103,6 +103,11 @@ $proof.phase='completed';foreach($entry in @{after=$after;late_process_detected=
 [Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes((ConvertTo-Json -InputObject $proof -Depth 15 -Compress))));
 """.replace("__PROOF__", "'" + proof_path.replace("'", "''") + "'").replace(
         "__WORKSPACE__", "'" + workspace.replace("'", "''") + "'")
+    if product == "workbuddy":
+        script=script.replace('AStudio.exe','WorkBuddy.exe').replace('Programs\\AStudio\\','Programs\\WorkBuddy\\').replace('Programs\\AStudio Data\\','Programs\\WorkBuddy Data\\')
+    elif product != "astudio": raise E2EError("UNSUPPORTED_PROCESS_CLEANUP_PRODUCT")
+    return script
+
 
 
 def validate_collect(root: Path) -> dict:
@@ -124,11 +129,14 @@ def validate_collect(root: Path) -> dict:
 
 
 class AStudioSandboxDriver:
+    product = "astudio"
+    native_root = NATIVE_ROOT
+    native_pattern = "rollout-*.jsonl"
     def __init__(self, *, batch_root: Path, store, item: dict, task: dict, unit: dict,
                  config: AgentCubeConfig, stop_event, client_factory=AgentCubeClient):
         self.batch = batch_root
         self.store, self.key, self.task, self.unit = store, item["key"], task, unit
-        self.config = replace(config, template=unit["template"])
+        self.config = replace(config, template=unit["template"], astudio_runtime=config.astudio_runtime if self.product=="astudio" else None)
         self.client = client_factory(self.config)
         self.stop = stop_event
         self.root = inside(batch_root, item["execution_root"])
@@ -140,6 +148,8 @@ class AStudioSandboxDriver:
             raise ObservationPaused("EXECUTION_OBSERVER_STOPPED")
 
     def preflight(self):
+        if self.unit["model"].casefold().startswith(("custom/","third-party/")) or "://" in self.unit["model"]:
+            raise E2EError("CUSTOM_TESTED_MODELS_NOT_SUPPORTED")
         if self.unit["timeout_override"] + 2400 > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         for name, value in self.task.get("requirements", {}).items():
@@ -218,8 +228,8 @@ class AStudioSandboxDriver:
 
     def _inventory_native(self, sid):
         script = ("$ErrorActionPreference='Stop';$ProgressPreference='SilentlyContinue';$rows=@();"
-                  "if(Test-Path -LiteralPath '" + NATIVE_ROOT + "'){$rows=@(Get-ChildItem -LiteralPath '"
-                  + NATIVE_ROOT + "' -Recurse -Filter 'rollout-*.jsonl' -File|Select-Object FullName,Length,"
+                  "if(Test-Path -LiteralPath '" + self.native_root + "'){$rows=@(Get-ChildItem -LiteralPath '"
+                  + self.native_root + "' -Recurse -Filter '" + self.native_pattern + "' -File|Select-Object FullName,Length,"
                   "@{Name='Sha256';Expression={(Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLower()}})};"
                   "$out=ConvertTo-Json -InputObject $rows -Compress;"
                   "[Console]::Out.Write([Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($out)))")
@@ -242,9 +252,12 @@ class AStudioSandboxDriver:
         self.client.checked(sid, "python3 -c " + shlex.quote(unpack), 120)
         self.client.upload(sid, "/run/wgui/instruction.txt", (public / "PROMPT.md").read_bytes())
         ui = {"permission": "full access"}
-        if self.unit.get("reasoning_effort") is not None:
+        if self.product=="astudio" and self.unit.get("reasoning_effort") is not None:
             ui["reasoning"] = {"none": "None", "high": "High", "max": "Max"}[self.unit["reasoning_effort"].casefold()]
-        request = {"schema_version": 2, "product": "astudio", "instruction_file": "/run/wgui/instruction.txt",
+        if self.product=="workbuddy":
+            proposed={"mode":"代码开发","max_mode":self.unit.get("max_mode",False),"plan_mode":False,"ask_mode":False}
+            ui={key:value for key,value in proposed.items() if key in getattr(self,"ui_fields",set(proposed))}
+        request = {"schema_version": 2, "product": self.product, "instruction_file": "/run/wgui/instruction.txt",
                    "workspace": {"guest": GUEST_WORKSPACE}, "timeout_sec": self.unit["timeout_override"],
                    "product_config": {"model": self.unit["model"], "ui": ui}}
         collect = {"schema_version": 2, "workspace": {"guest": GUEST_WORKSPACE}}
@@ -312,7 +325,7 @@ class AStudioSandboxDriver:
                 self._phase("COLLECTING", process_cleanup_intent={"path": proof_path, "at": utc_now()})
             # The guest resumes the original target identities from its durable
             # proof and returns base64, preserving JSON bytes across the gateway.
-            proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE)), timeout=120))
+            proof = _decode_output(self.client.windows_execute(sid, powershell(process_cleanup_script(proof_path, GUEST_WORKSPACE, product=self.product)), timeout=120))
             if proof.get("phase") == "completed":
                 atomic_json(path, proof)
         if (proof.get("schema") != "wildclawbench.agentcube-process-cleanup/v1" or proof.get("phase") != "completed"
@@ -330,7 +343,7 @@ class AStudioSandboxDriver:
         native_dir.mkdir(parents=True, exist_ok=True)
         bound = []
         for path in changed:
-            if not path.casefold().startswith(NATIVE_ROOT.casefold() + "\\"):
+            if not path.casefold().startswith(self.native_root.casefold() + "\\"):
                 raise E2EError("NATIVE_PATH_OUTSIDE_ROOT")
             name = path.replace("\\", "/").rsplit("/", 1)[-1]
             identifier(name, "native_filename")
@@ -351,6 +364,10 @@ class AStudioSandboxDriver:
             raise E2EError("ADDITIONAL_NATIVE_ROLLOUTS_NEED_BINDING")
         return bound[0]
 
+    def _prepare_runtime(self, sid):
+        from .windows_runtime import prepare_runtime
+        prepare_runtime(self,sid,WGUI,powershell)
+
     def execute(self) -> dict:
         self.preflight()
         row = self.store.get(self.key)
@@ -366,8 +383,7 @@ class AStudioSandboxDriver:
             self._phase("PREPARING", session_id=sid, created_at=utc_now())
         if not self.store.get(self.key).get("dispatch_armed_at"):
             self._health(sid)
-            from .windows_runtime import prepare_runtime
-            prepare_runtime(self, sid, WGUI, powershell)
+            self._prepare_runtime(sid)
             self._upload(sid)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
@@ -432,7 +448,7 @@ class AStudioSandboxDriver:
             for path, info in observed.items():
                 if before.get(path) == info:
                     continue
-                if not path.casefold().startswith(NATIVE_ROOT.casefold() + "\\"):
+                if not path.casefold().startswith(self.native_root.casefold() + "\\"):
                     raise E2EError("NATIVE_PATH_OUTSIDE_ROOT")
                 name = identifier(path.replace("\\", "/").rsplit("/", 1)[-1], "native_filename")
                 data = self.client.windows_download(sid, path)
@@ -470,3 +486,52 @@ class AStudioSandboxDriver:
 
 
 DRIVERS = {("agentcube", "astronstudio"): AStudioSandboxDriver}
+
+
+class WorkBuddySandboxDriver(AStudioSandboxDriver):
+    product='workbuddy'
+    native_root=r'C:\Users\Docker\.workbuddy\projects'
+    native_pattern='*.jsonl'
+
+    def _prepare_runtime(self,sid):
+        # Inspect the installed controller contract before dispatch, without sending a prompt.
+        script="import json,typing;from controller.contracts.models import ProductUIConfig,RunRequestV2;print(json.dumps({'ui_fields':list(ProductUIConfig.model_fields),'products':list(typing.get_args(RunRequestV2.model_fields['product'].annotation))}))"
+        value=json.loads(self.client.checked(sid,"/opt/wgui-venv/bin/python -c "+shlex.quote(script),timeout=30))
+        atomic_json(self.staging/"metadata/controller-capabilities.json",value)
+        if 'workbuddy' not in value.get('products',[]):raise E2EError('DEPLOYED_CONTROLLER_WORKBUDDY_UNSUPPORTED')
+        self.ui_fields=set(value.get('ui_fields',[]))
+        if self.unit.get('max_mode') and 'max_mode' not in self.ui_fields:raise E2EError('DEPLOYED_CONTROLLER_MAX_MODE_UNSUPPORTED')
+
+    def _bound_native(self,sid,before,report,identity,prompt,stage):
+        from .workbuddy_trace import normalize_workbuddy
+        after=self._inventory_native(sid)
+        atomic_json(self.staging/'metadata'/('native-'+stage+'.json'),after)
+        changed=[path for path in after if before.get(path)!=after[path]]
+        native_dir=self.staging/'native'/stage;native_dir.mkdir(parents=True,exist_ok=True)
+        product_path='/logs/agent/native-trajectory/workbuddy-trajectory/report.json'
+        diagnostics_path='/logs/artifacts/collect/evidence/diagnostics.json'
+        product=json.loads(self.client.download(sid,product_path))
+        # The WGUI guest retains model/Max/workspace observations under its artifact root.
+        diagnostics=self._read_workbuddy_diagnostics(sid)
+        atomic_json(self.staging/'metadata/workbuddy-product-report.json',product)
+        atomic_json(self.staging/'metadata/workbuddy-diagnostics.json',diagnostics)
+        bound=[]
+        for path in changed:
+            if not path.casefold().startswith(self.native_root.casefold()+'\\'):raise E2EError('NATIVE_PATH_OUTSIDE_ROOT')
+            data=self.client.windows_download(sid,path)
+            if len(data)!=after[path]['Length'] or hashlib.sha256(data).hexdigest()!=after[path]['Sha256']:raise E2EError('NATIVE_TRANSFER_MISMATCH')
+            name=path.replace('\\','/').rsplit('/',1)[-1];identifier(name,'native_filename');local=native_dir/name;local.write_bytes(data)
+            try:
+                binding=normalize_workbuddy(local,identity=identity,prompt=prompt,guest_cwd=GUEST_WORKSPACE,requested_model=self.unit['model'],requested_max_mode=self.unit.get('max_mode',False),report=report,product_report=product,diagnostics=diagnostics)
+                bound.append((local,binding))
+            except E2EError as error:atomic_json(self.staging/'metadata'/(stage+'-'+name+'.binding-error.json'),{'error':str(error)})
+        if len(bound)!=1:raise E2EError('TASK_NATIVE_BINDING_AMBIGUOUS')
+        if len(changed)!=1:raise E2EError('WORKBUDDY_ADDITIONAL_NATIVE_SESSIONS_NEED_BINDING')
+        return bound[0]
+
+    def _read_workbuddy_diagnostics(self,sid):
+        output=self.client.windows_download(sid,r'C:\ProgramData\WGUI\staging\diagnostics.json')
+        return json.loads(output.decode('utf-8-sig'))
+
+
+DRIVERS[('agentcube','workbuddy')]=WorkBuddySandboxDriver

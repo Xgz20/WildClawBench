@@ -178,9 +178,11 @@ class ProtocolTests(unittest.TestCase):
         self.assertEqual(result["planned_execution_count"], 2)
         create.assert_not_called()
         raw["units"][0]["reasoning_effort"] = "max"
+        self.assertTrue(preflight(root, raw)["valid"])
+        raw["units"][0]["model"] = "custom/not-a-builtin"
         unavailable = preflight(root, raw)
         self.assertFalse(unavailable["valid"])
-        self.assertIn("REASONING_NOT_PUBLISHED", {issue["code"] for issue in unavailable["issues"]})
+        self.assertIn("CUSTOM_TESTED_MODELS_NOT_SUPPORTED", {issue["code"] for issue in unavailable["issues"]})
 
     def test_runtime_preflight_rejects_missing_credentials_without_creating_sandbox(self):
         repo = Path(__file__).resolve().parents[2]

@@ -187,7 +187,7 @@ def normalize_plan(raw: dict) -> dict:
     for raw_unit in plan["units"]:
         if not isinstance(raw_unit, dict):
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
-        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override"}:
+        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
         unit = {"harness": raw_unit.get("harness"), "backend": raw_unit.get("backend", "agentcube"),
                 "model": raw_unit.get("model"), "reasoning_effort": raw_unit.get("reasoning_effort"),
@@ -196,7 +196,7 @@ def normalize_plan(raw: dict) -> dict:
                 "timeout_override": raw_unit.get("timeout_override", plan["timeout_override"])}
         if not isinstance(unit["model"], str) or not unit["model"].strip():
             raise E2EError("TESTED_MODEL_REQUIRED")
-        if unit["harness"] != "astronstudio" or unit["backend"] != "agentcube":
+        if unit["harness"] not in {"astronstudio", "workbuddy"} or unit["backend"] != "agentcube":
             raise E2EError("SANDBOX_DRIVER_UNAVAILABLE: " + str(unit["harness"]))
         if type(unit["max_concurrency"]) is not int or unit["max_concurrency"] < 1:
             raise E2EError("UNIT_CONCURRENCY_INVALID")
@@ -204,6 +204,11 @@ def normalize_plan(raw: dict) -> dict:
             raise E2EError("UNIT_TIMEOUT_INVALID")
         if unit["reasoning_effort"] is not None and str(unit["reasoning_effort"]).casefold() not in {"none", "high", "max"}:
             raise E2EError("ASTUDIO_REASONING_UNSUPPORTED")
+        if unit["harness"] == "workbuddy":
+            if unit["reasoning_effort"] not in {None,"none"}: raise E2EError("WORKBUDDY_USES_MAX_MODE_NOT_REASONING")
+            if type(raw_unit.get("max_mode",False)) is not bool: raise E2EError("WORKBUDDY_MAX_MODE_INVALID")
+            unit["max_mode"] = raw_unit.get("max_mode",False)
+        elif "max_mode" in raw_unit: raise E2EError("MAX_MODE_REQUIRES_WORKBUDDY")
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]
         identifier(unit["unit_id"], "unit_id")
         identifier(unit["template"], "template")

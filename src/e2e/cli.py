@@ -115,6 +115,9 @@ def build_parser() -> argparse.ArgumentParser:
     export.add_argument("--verification-skill-dir", type=Path,
                         help="显式补充 General 采集校验器，保留原批次与评分材料绑定")
     export.add_argument("--output", type=Path, required=True)
+    environment = commands.add_parser("environment-status", help="只读配置/DNS/健康探测，不创建沙箱")
+    _agentcube(environment)
+    environment.add_argument("--probe", action="store_true")
     score = commands.add_parser("headless-score", help="使用独立 Harness CLI 沙箱评分，不重跑被测端")
     _batch(score)
     score.add_argument("--scorer-config", type=Path, required=True)
@@ -355,6 +358,9 @@ def _public_command(args):
         return protocol.describe(args.repo_root)
     if args.command == "catalog":
         return protocol.catalog(args.repo_root, args.scenario, args.dataset)
+    if args.command == "environment-status":
+        from .environment import runtime_status
+        return runtime_status(args.agentcube_config,probe=args.probe)
     if args.command == "preflight":
         return protocol.preflight(args.repo_root, read_json(args.plan), args.agentcube_config,
                                   check_runtime=args.check_runtime)
@@ -375,7 +381,7 @@ def main(argv=None) -> int:
             return 2
     handlers = {"run": _run, "resume": _resume, "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "general-report": _general_report,
-                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts")}}
+                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status")}}
     try:
         result = handlers[args.command](args)
         if args.api_version:

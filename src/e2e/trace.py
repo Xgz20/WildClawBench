@@ -251,7 +251,7 @@ def write_trace(directory: Path, native_path: Path, binding: dict, *, binding_ar
     transcript = directory / "transcript.jsonl"
     transcript.write_text("".join(json.dumps(row, ensure_ascii=False) + "\n" for row in binding["events"]), encoding="utf-8")
     index = {"schema_id": "urn:wildclawbench:schema:general-e2e:trace-index:v2", "schema_version": 2,
-             "identity": binding["identity"], "adapter": {"id": ADAPTER, "version": "0.1.0", "source": "bound AStudio native rollout"},
+             "identity": binding["identity"], "adapter": {"id": binding.get("adapter",ADAPTER), "version": "0.1.0", "source": "bound product native trace" if binding.get("adapter") else "bound AStudio native rollout"},
              "session": binding["session"],
              "transcript": {"path": "transcript.jsonl", "sha256": file_sha256(transcript), "size": transcript.stat().st_size,
                             "event_count": len(binding["events"])},
@@ -260,7 +260,7 @@ def write_trace(directory: Path, native_path: Path, binding: dict, *, binding_ar
                                  "event_count": binding["native_event_count"]},
              "normalization": {"native_event_count": binding["native_event_count"], "normalized_event_count": len(binding["events"]),
                                "filtered_native_event_count": binding["filtered_native_event_count"],
-                               "compatibility_profiles": ["agentcube-astudio-native/v1"]},
+                               "compatibility_profiles": [binding.get("adapter",ADAPTER)+"/v1"]},
              "completeness": {"status": "partial" if binding["missing"] else "complete",
                               "omitted_event_count": 0, "missing": binding["missing"]},
              "calls": binding["calls"], "binding_evidence": binding_artifacts}
@@ -279,6 +279,10 @@ def ensure_resource_coverage(document: dict) -> dict:
 
 
 def resource_metrics(identity: dict, binding: dict, sources: list[dict]) -> dict:
+    if binding.get("adapter")=="agentcube-workbuddy-native":
+        native=binding["native_resources"]
+        return ensure_resource_coverage({"schema_id":"urn:wildclawbench:schema:general-e2e:resource-metrics:v1","schema_version":1,"identity":identity,
+            "collection":{"collector":binding["adapter"],"version":"0.1.0","status":"partial","collected_at":utc_now(),"sources":sources,"excluded_scope":["controller","judge","unlinked_child_agents"],"known_subtotals":native.get("collection",{}).get("known_subtotals",{}),"warnings":native.get("collection",{}).get("warnings",[])},"metrics":native["metrics"]})
     def metric(value, basis):
         return {"value": value, "status": "observed" if value is not None else "unavailable", "basis": basis}
     usage = binding.get("usage") or {}

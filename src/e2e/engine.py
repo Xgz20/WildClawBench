@@ -72,7 +72,7 @@ def _ready_document(root, item, manifest, unit, task, outcome, binding, receipt)
              "execution_root": item["execution_root"], "workspace": outcome["workspace"],
              "backup_sha256": receipt["archive_sha256"], "backup_receipt_sha256": file_sha256(execution / "backups/backup-receipt.json"),
              "native_session": binding["session"], "actual_model": binding["actual_model"],
-             "reasoning_effort": binding["reasoning_effort"], "trace_status": "partial" if binding["missing"] else "complete",
+             "reasoning_effort": binding["reasoning_effort"], "max_mode": binding.get("max_mode"), "trace_status": "partial" if binding["missing"] else "complete",
              "scoring_allowed": True, "created_at": utc_now()}
 
 
@@ -83,10 +83,16 @@ def _reconcile_sealed(root, store, item, manifest, unit, task):
     original = execution / "original"
     outcome = read_json(original / "metadata/result.json")
     prompt = (inside(root, task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")
-    binding = normalize_rollout(inside(original, outcome["native_path"]), identity=outcome["identity"], prompt=prompt,
-                                guest_cwd=outcome["binding_cwd"] if "binding_cwd" in outcome else
-                                read_json(original / "metadata/native-binding.json")["session"]["cwd"],
-                                requested_model=unit["model"], requested_effort=unit.get("reasoning_effort"), report=outcome["report"])
+    if unit["harness"]=="workbuddy":
+        from .workbuddy_trace import normalize_workbuddy
+        archived=read_json(original/"metadata/native-binding.json")
+        binding=normalize_workbuddy(inside(original,outcome["native_path"]),identity=outcome["identity"],prompt=prompt,guest_cwd=archived["session"]["cwd"],
+            requested_model=unit["model"],requested_max_mode=unit.get("max_mode",False),report=outcome["report"],**{k:archived["controller_binding"][k] for k in ["product_report","diagnostics"]})
+    else:
+        binding = normalize_rollout(inside(original, outcome["native_path"]), identity=outcome["identity"], prompt=prompt,
+                                    guest_cwd=outcome["binding_cwd"] if "binding_cwd" in outcome else
+                                    read_json(original / "metadata/native-binding.json")["session"]["cwd"],
+                                    requested_model=unit["model"], requested_effort=unit.get("reasoning_effort"), report=outcome["report"])
     if binding["missing"] or outcome["identity"] != receipt["identity"]:
         raise E2EError("SEALED_RESULT_BINDING_INVALID")
     ready = _ready_document(root, item, manifest, unit, task, outcome, binding, receipt)

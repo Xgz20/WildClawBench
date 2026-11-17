@@ -131,19 +131,23 @@ def _general_context(batch: Path, temporary: Path, manifest: dict, item: dict, t
     binding = proof["native_binding"]
     # Preserve native clock values. Flow duration stays unavailable because the
     # guest timestamps have not been calibrated against the controller clock.
-    native_path = next((evidence / "trace/raw").glob("rollout-*.jsonl"))
-    native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").splitlines() if line.strip()]
-    users = [row for row in native_rows if row.get("payload", {}).get("type") == "user_message"]
-    terminals = [row for row in native_rows if row.get("payload", {}).get("type") == "task_complete"]
+    if unit["harness"]=="workbuddy":
+        started_at=binding.get("native_started_at");finished_at=binding.get("native_finished_at")
+    else:
+        native_path = next((evidence / "trace/raw").glob("rollout-*.jsonl"))
+        native_rows = [json.loads(line) for line in native_path.read_text(encoding="utf-8-sig").splitlines() if line.strip()]
+        users = [row for row in native_rows if row.get("payload", {}).get("type") == "user_message"]
+        terminals = [row for row in native_rows if row.get("payload", {}).get("type") == "task_complete"]
+        started_at=users[0].get("timestamp");finished_at=terminals[0].get("timestamp")
     record = {"schema_id": "urn:wildclawbench:schema:general-e2e:execution-record:v1", "schema_version": 1,
               "identity": identity, "dataset": task["dataset"], "phase": "COMPLETED", "harness": public_unit["harness"],
               "model": {"requested_id": unit["model"], "actual_id": ready["actual_model"],
                         "reasoning_effort": ready["reasoning_effort"], "verification_status": "verified"},
-              "execution": {"business_status": "completed", "started_at": users[0].get("timestamp"),
-                            "finished_at": terminals[0].get("timestamp"), "duration_seconds": None,
+              "execution": {"business_status": "completed", "started_at": started_at,
+                            "finished_at": finished_at, "duration_seconds": None,
                             "agent_duration_seconds": (binding["native_duration_ms"] / 1000
                                 if isinstance(binding.get("native_duration_ms"), (int, float)) else None), "error": None},
-              "prompt": {"sha256": task["prompt_sha256"], "send_status": "sent", "sent_at": users[0].get("timestamp")},
+              "prompt": {"sha256": task["prompt_sha256"], "send_status": "sent", "sent_at": started_at},
               "session": {key: binding["session"][key] for key in ("thread_id", "turn_id", "session_id", "cwd")},
               "evidence": {"completeness": "partial", "transcript_path": evidence_relative + "/trace/transcript.jsonl",
                            "trace_index_path": evidence_relative + "/trace/trace-index.json",
@@ -278,7 +282,7 @@ def _web_context(batch: Path, temporary: Path, manifest: dict, item: dict, task:
     overlay = temporary / "overlay"
     private = overlay / "score/tasks" / task["task_id"] / "private-scoring"
     private.mkdir(parents=True)
-    contract = prepare.task_contract(identity["batch_id"], manifest["source_revision"], unit["harness"], "AstronStudio", source)
+    contract = prepare.task_contract(identity["batch_id"], manifest["source_revision"], unit["harness"], "WorkBuddy" if unit["harness"]=="workbuddy" else "AstronStudio", source)
     atomic_json(private / "task_contract.json", contract)
     fixtures = inside(batch, task["input_root"]) / "private-scoring/fixtures"
     if fixtures.is_dir():

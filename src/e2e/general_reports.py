@@ -323,6 +323,7 @@ def build_report(definition: dict, staging: Path):
             unit = {'unit_id': report_unit_id, 'harness': rows[0]['harness'], 'model': rows[0]['model'], 'execution_mode': 'automatic'}
         unit = {**unit, 'unit_id': report_unit_id, 'task_ids': [row['task_id'] for row in rows]}
         summary = core.unit_summary(rows, unit)
+        if original_unit['harness']=='workbuddy': summary['execution_options']={'max_mode':original_unit.get('max_mode',False)}
         summary['scorer'] = {key: result['config'].get(key) for key in ['harness', 'model', 'reasoning_effort', 'concurrency', 'timeout_seconds', 'api_format', 'image_id']}
         summary['source'] = {'batch_id': result['batch_id'], 'unit_id': source['unit_id'], 'run_index': source['run_index'],
                              'score_operation_id': source['id'], 'agent_invocation_count': sum(bool(row.get('agent_used')) for row in result['executions'] if row['unit_id'] == source['unit_id'] and row['run_index'] == source['run_index'])}

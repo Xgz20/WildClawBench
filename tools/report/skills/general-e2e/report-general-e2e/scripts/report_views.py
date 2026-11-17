@@ -525,6 +525,8 @@ def build_views(data, references):
         if requested_label:
             model = requested_label["label"]
             applied_overrides[unit["unit_id"]] = dict(requested_label)
+        if unit.get("execution_options",{}).get("max_mode") is not None:
+            model += " · Max开启" if unit["execution_options"]["max_mode"] else " · Max关闭"
         harness_id = unit["harness"]["id"]
         harness = references["harnesses"].get(harness_id, HARNESSES.get(harness_id, harness_id))
         version = unit["harness"].get("version")

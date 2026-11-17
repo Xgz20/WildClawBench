@@ -52,7 +52,8 @@ def envelope(kind: str, data: dict) -> dict:
 def profiles() -> list[dict]:
     """Operators may publish template/model metadata with the executor release."""
     source = os.environ.get("WCB_E2E_CAPABILITIES_FILE")
-    values = read_json(Path(source))["profiles"] if source else [DEFAULT_PROFILE]
+    from .controller_catalog import default_profiles
+    values = read_json(Path(source))["profiles"] if source else default_profiles()
     from .backend import DRIVERS
 
     result = []
@@ -86,6 +87,7 @@ def describe(repo: Path) -> dict:
             "catalog",
             "preflight",
             "runtime-preflight",
+            "environment-status",
             "windows-astudio-runtime-bootstrap",
             "execution",
             "events",
@@ -220,6 +222,7 @@ def resolve(
 def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_runtime: bool = False) -> dict:
     plan, tasks, members, _, _ = resolve(repo, raw)
     issues = []
+    warnings = []
     published = profiles()
     for unit in plan["units"]:
         matches = [
@@ -235,11 +238,19 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             )
             continue
         profile = matches[0]
-        if unit["model"] not in {model["id"] for model in profile["models"]}:
-            issues.append({"code": "MODEL_NOT_PUBLISHED", "unit_id": unit["unit_id"]})
+        if unit["model"].casefold().startswith(("custom/","third-party/")) or "://" in unit["model"]:
+            issues.append({"code":"CUSTOM_TESTED_MODELS_NOT_SUPPORTED","unit_id":unit["unit_id"]})
+        elif unit["model"] not in {model["id"] for model in profile["models"]}:
+            if profile.get("allow_unlisted_builtin_models"):
+                warnings.append({"code":"BUILTIN_MODEL_REQUIRES_NATIVE_MENU_READBACK","unit_id":unit["unit_id"]})
+            else: issues.append({"code": "MODEL_NOT_PUBLISHED", "unit_id": unit["unit_id"]})
+        selected_model=next((model for model in profile["models"] if model["id"]==unit["model"]),{})
+        allowed_efforts=selected_model.get("reasoning_efforts") or profile["reasoning_efforts"]
+        if unit.get("max_mode") and not profile.get("max_mode_supported",False):
+            issues.append({"code":"WORKBUDDY_MAX_MODE_NOT_PUBLISHED","unit_id":unit["unit_id"]})
         if (
             unit.get("reasoning_effort") is not None
-            and unit["reasoning_effort"] not in profile["reasoning_efforts"]
+            and unit["reasoning_effort"] not in allowed_efforts
         ):
             issues.append(
                 {"code": "REASONING_NOT_PUBLISHED", "unit_id": unit["unit_id"]}
@@ -312,6 +323,7 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
     return {
         "valid": not issues,
         "runtime_checks": runtime_checks,
+        "warnings": warnings,
         "issues": issues,
         "plan": plan,
         "plan_sha256": digest(plan),
@@ -455,6 +467,7 @@ def snapshot(batch: Path) -> dict:
                 "actual_model": ready.get("actual_model")
                 or binding.get("actual_model"),
                 "reasoning_effort": units[row["unit_id"]].get("reasoning_effort"),
+                "max_mode": units[row["unit_id"]].get("max_mode"),
                 "scene": tasks[row["task_id"]].get("scene", "general"),
                 "trace_completeness": trace_status,
                 "backup_status": "verified" if backup.exists() else "pending",
