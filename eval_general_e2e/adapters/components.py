@@ -54,10 +54,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
     ),
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.3.14",
+        name="general-resource-supplements", version="1.3.15",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
-        entrypoints=("astronstudio-final-prefix-divergence.mjs", "astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs", "agentcube-native-binding.mjs", "agentcube-native-resource.mjs"),
+        entrypoints=("astronstudio-final-prefix-divergence.mjs", "astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs", "agentcube-native-binding.mjs", "agentcube-native-resource.mjs", "agentcube-workbuddy-binding.mjs"),
     ),
     SharedComponentSpec(
         name="qwenwork-native-state", version="1.1.0",
