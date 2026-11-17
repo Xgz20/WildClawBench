@@ -1,3 +1,4 @@
+const finalizeAstronStudioExecution=(options,overrides={})=>finalizeWithLiveGuard(options,{runtimeSafetyGuard:async()=>({fixture:true,blockers:[]}),...overrides});
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
@@ -7,7 +8,7 @@ import { tmpdir } from 'node:os';
 import { verifyNativeStartRejection } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-start-rejection.mjs';
 import { executeSingleTask, parseArgs } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
 import { readFrozenStartRejection } from '../../tools/report/e2e-shared/astronstudio-start-rejection/index.mjs';
-import { finalizeAstronStudioExecution, verifyAstronStudioCollection } from '../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
+import { finalizeAstronStudioExecution as finalizeWithLiveGuard, verifyAstronStudioCollection } from '../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
 
 const sha = value => createHash('sha256').update(value).digest('hex');
 import { rejectionFixture as fixture } from './fixtures/native-start-rejection.mjs';

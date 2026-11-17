@@ -34,7 +34,7 @@
     },
     {
       "name": "task-process-cleanup",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "source_root": "tools/report/e2e-shared/task-process-cleanup",
       "vendor_root": "vendor/e2e-shared/task-process-cleanup",
       "entrypoints": [
@@ -224,6 +224,17 @@
         "verification.mjs",
         "native-state.py",
         "macos-ax.swift"
+      ]
+    },
+    {
+      "name": "astronstudio-runtime",
+      "version": "1.0.0",
+      "source_root": "tools/report/e2e-shared/astronstudio-runtime",
+      "vendor_root": "vendor/e2e-shared/astronstudio-runtime",
+      "entrypoints": [
+        "state.mjs",
+        "guard.mjs",
+        "diagnostics.mjs"
       ]
     }
   ]

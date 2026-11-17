@@ -1,9 +1,10 @@
+const finalizeAstronStudioExecution=(options,overrides={})=>finalizeWithLiveGuard(options,{runtimeSafetyGuard:async()=>({fixture:true,blockers:[]}),...overrides});
 // Synthetic integration fixture only: no UI, native app, model or scoring calls.
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { rejectionFixture } from './native-start-rejection.mjs';
 import { executeSingleTask } from '../../../tools/report/skills/general-e2e/execute-general-e2e/scripts/execute_astronstudio_macos.mjs';
-import { finalizeAstronStudioExecution } from '../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
+import { finalizeAstronStudioExecution as finalizeWithLiveGuard } from '../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
 
 const root=process.argv[2],taskRoot=join(root,'execution/tasks/task');
 const f=rejectionFixture(join(taskRoot,'workspace'));

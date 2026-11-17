@@ -15,6 +15,7 @@ import {
 } from "node:fs/promises";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 import { isRetryablePreSendFailure } from "./execute_astronstudio_macos.mjs";
 import { isQuotaError, pristineUnsentAttempt, readQuotaAuthorization, assertQuotaAuthorization, assertRetryableQuotaState,
   recoveryFiles, digest } from './lib/astronstudio-quota-retry.mjs';
@@ -606,7 +607,7 @@ async function launchSingleTask(plan, args, taskId, operation, activeSessionIds 
   const child = spawn(process.execPath, childArgs, { stdio: "inherit" });
   return new Promise((resolvePromise, rejectPromise) => {
     child.once("error", rejectPromise);
-    child.once("exit", (code, signal) => resolvePromise({ code: code ?? 2, signal }));
+    child.once("exit", (code, signal) => resolvePromise({ code: code ?? 2, signal,pid:child.pid }));
   });
 }
 
@@ -723,6 +724,11 @@ export async function runQueue(plan, args, overrides = {}) {
   const now = dependencies.now();
   if (args.resume) recordUnexpectedWorkerLoss(state, dependencies.isProcessAlive, now);
   const lock = await acquireWorkerLock(plan.workerLockFile, args.resume, dependencies.isProcessAlive);
+  const audit=async event=>{
+    try{await appendFrameworkEvent(join(plan.unitRoot,".general-e2e","diagnostics","framework-events.jsonl"),
+      {caller:"run_astronstudio_macos_batch",queue_identity:state.identity,...event});}
+    catch(error){state.runtime.audit_error=redactDiagnosticText(error.message).slice(0,300);}
+  };
   try {
     state.runtime.worker_pid = dependencies.pid;
     state.runtime.worker_started_at = now;
@@ -737,6 +743,8 @@ export async function runQueue(plan, args, overrides = {}) {
     state.phase = "RUNNING";
     state.error = null;
     await persist(plan, state, dependencies.now());
+    await audit({event:args.resume?"queue.worker.resumed":"queue.worker.started",run_slots:args.runSlots,
+      recovered_stale_lock:lock.recovered,run_config_digest:state.configuration.run_config_digest});
 
     if (args.retryQuotaTaskId || state.tasks.some(task => task.quota_recoveries?.length)) await ownedDirectory(plan.unitRoot, plan.queueRoot);
     await refreshAutomations(plan, state, dependencies);
@@ -899,6 +907,9 @@ export async function runQueue(plan, args, overrides = {}) {
           driver_exit_code: driverResult.code,
           driver_signal: driverResult.signal || null,
         });
+        await audit({event:"queue.task.dispatch-returned",task_id:pending.task_id,
+          task_phase:pending.phase,driver_pid:driverResult.pid||null,
+          driver_exit_code:driverResult.code,driver_signal:driverResult.signal||null});
         await persist(plan, state, dependencies.now());
         if (externalQuotaFailure(pending)) break;
         if (preSendInfrastructureFailure(pending)) { dispatchBlocked = true; break; }
@@ -968,6 +979,9 @@ export async function runQueue(plan, args, overrides = {}) {
           synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
         }
         observedChange ||= queueTask.phase !== previousPhase;
+        if(queueTask.phase!==previousPhase)await audit({event:"queue.task.phase-changed",task_id:queueTask.task_id,
+          previous_phase:previousPhase,phase:queueTask.phase,driver_pid:driverResult.pid||null,
+          driver_exit_code:driverResult.code,driver_signal:driverResult.signal||null});
         state.history.push({
           at: dependencies.now(),
           event: "TASK_OBSERVATION_RETURNED",
@@ -989,6 +1003,7 @@ export async function runQueue(plan, args, overrides = {}) {
     await persist(plan, state, dependencies.now());
     throw error;
   } finally {
+    await audit({event:"queue.worker.stopped",phase:state.phase,error:state.error||null});
     await lock.release();
   }
 }

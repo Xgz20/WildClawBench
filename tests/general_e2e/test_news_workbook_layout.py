@@ -5,6 +5,8 @@ import json
 import shutil
 import subprocess
 import sys
+import os
+import stat
 import tempfile
 import unittest
 import openpyxl
@@ -34,7 +36,12 @@ class CompleteNewsWorkbookTests(unittest.TestCase):
         root=self.root/label;root.mkdir();workspace=root/'workspace';workspace.mkdir()
         shutil.copytree(WORKSPACE/'gt',workspace/'gt');shutil.copytree(WORKSPACE/'gt',workspace/'results')
         if aliases or oversized:
-            path=workspace/'results/events.xlsx';wb=openpyxl.load_workbook(path)
+            path=workspace/'results/events.xlsx'
+            # This is a newly created mutable fixture copy, not the protected
+            # canonical input. APFS copytree can inherit its immutable flag.
+            if hasattr(os,'chflags'):
+                os.chflags(path,path.stat().st_flags & ~stat.UF_IMMUTABLE)
+            wb=openpyxl.load_workbook(path)
             cached=openpyxl.load_workbook(path,data_only=True)
             for ws in wb:
                 for row in ws:

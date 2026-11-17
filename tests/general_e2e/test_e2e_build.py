@@ -92,6 +92,7 @@ class E2EBuildTests(unittest.TestCase):
                 "independent-validity",
                 "general-resource-supplements",
                 "astronstudio-start-rejection",
+                "astronstudio-runtime",
                 "workbuddy-evidence",
                 "desktop-gui",
                 "doubaowork",

@@ -44,8 +44,9 @@ import { quotaContext, pristineUnsentAttempt, recoveryFiles, assertNativeQuotaTe
 import { queryNativeStartRejection, verifyNativeStartRejection } from './lib/astronstudio-start-rejection.mjs';
 import { verifyFrameworkDispatchRecoveries, assertUnacceptedDispatch } from './lib/astronstudio-dispatch-retry.mjs';
 import {ensureExecutionUiVisible} from './lib/astronstudio-visibility.mjs';
+import {captureRuntimeDiagnostics,appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.30";
+export const EXECUTION_DRIVER_VERSION = "0.4.31";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -558,6 +559,29 @@ async function persist(config, state) {
   await atomicWriteJson(config.recordFile, recordFromState(config, state));
 }
 
+async function diagnose(config,state,dependencies,reason,{force=false,nativeSession=null}={}) {
+  try {
+    const reference=await dependencies.captureRuntimeDiagnostics(config,state,{reason,force,nativeSession});
+    if(reference)state.evidence.runtime_diagnostics=reference;
+  } catch(error) {
+    // Evidence collection must not change task outcome or trigger a resend.
+    // Preserve its own failure explicitly rather than claiming complete logs.
+    if(!state.history.some(row=>row.event==="RUNTIME_DIAGNOSTICS_UNAVAILABLE"))
+      state.history.push({phase:state.phase,at:dependencies.now(),event:"RUNTIME_DIAGNOSTICS_UNAVAILABLE",
+        error:redactDiagnosticText(error.message).slice(0,300)});
+  }
+}
+
+async function auditExecution(config,state,dependencies,event,details={}) {
+  try {
+    await dependencies.appendFrameworkEvent(join(config.unitRoot,".general-e2e","diagnostics","framework-events.jsonl"),
+      {event,caller:"execute_astronstudio_macos",identity:state.identity,...details});
+  } catch(error) {
+    state.history.push({phase:state.phase,at:dependencies.now(),event:"FRAMEWORK_AUDIT_UNAVAILABLE",
+      error:redactDiagnosticText(error.message).slice(0,300)});
+  }
+}
+
 // Called only by the explicit, locked unaccepted-dispatch recovery CLI after
 // native/UI checks and the immutable previous-attempt archive are complete.
 export async function initializeFrameworkDispatchRetry(config, receipt, now = new Date().toISOString()) {
@@ -809,6 +833,8 @@ async function persistAttention(config, state, code, message, dependencies) {
     : state.prompt.send_status;
   state.execution.error = { code, message };
   transition(state, "NEEDS_ATTENTION", code, {}, now);
+  await auditExecution(config,state,dependencies,"execution.attention",{code});
+  await diagnose(config,state,dependencies,code,{force:true});
   await persist(config, state);
   return state;
 }
@@ -876,6 +902,9 @@ async function finalize(config, state, session, classification, dependencies) {
     { native_status: session.status, turn_state: session.turn_state },
     now,
   );
+  await auditExecution(config,state,dependencies,"execution.native-terminal",{business_status:classification.businessStatus,
+    native_status:session.status,turn_state:session.turn_state,native_completed_at:session.completed_at||null});
+  await diagnose(config,state,dependencies,"native-terminal",{force:classification.kind!=="completed",nativeSession:session});
   await persist(config, state);
   return state;
 }
@@ -931,6 +960,7 @@ async function observeOnce(config, state, dependencies) {
     );
   }
   transition(state, "RUNNING", "NATIVE_RUNNING_OBSERVED", { native_status: session.status }, dependencies.now());
+  await diagnose(config,state,dependencies,"observation",{nativeSession:session});
   await persist(config, state);
   return state;
 }
@@ -955,6 +985,7 @@ async function waitForTerminal(config, state, dependencies) {
         event: "NATIVE_STATE_READ_RETRY",
         error: lastObservationError,
       });
+      await diagnose(config,state,dependencies,"native-state-read-failed",{force:true});
       await persist(config, state);
       result = state;
     }
@@ -1072,6 +1103,8 @@ export async function executeSingleTask(config, overrides = {}) {
     queryNativeStartRejection,
     knownCompletedUiOwner,
     ensureExecutionUiVisible,
+    captureRuntimeDiagnostics,
+    appendFrameworkEvent,
     verifyPreparedFrameworkRetry,
     waitForThreadStreamLease,
     discoverMainTarget,
@@ -1243,6 +1276,7 @@ export async function executeSingleTask(config, overrides = {}) {
     // Electron's document.hasFocus()/visibility may remain true while another
     // native application owns the foreground. Revalidate and activate the exact
     // existing app immediately before arming a physical dispatch.
+    await diagnose(config,state,dependencies,"before-dispatch");
     const finalProbe = await currentProbe(config, dependencies, true);
     const sendTarget = await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
     if (config.runConfig.tested_model.custom_mapping || sendTarget.settled_transient_dialog) {
@@ -1269,6 +1303,8 @@ export async function executeSingleTask(config, overrides = {}) {
       prompt_sha256: state.prompt.sha256,
     }, state.send.dispatch_armed_at);
     await persist(config, state);
+    await auditExecution(config,state,dependencies,"execution.dispatch.armed",{
+      route_thread_id:state.send.pre_send_route_thread_id,prompt_sha256:state.prompt.sha256});
 
     let sendResult;
     try {
@@ -1286,6 +1322,8 @@ export async function executeSingleTask(config, overrides = {}) {
         route_thread_id: state.send.post_send_route_thread_id,
       }, state.send.dispatch_completed_at);
       await persist(config, state);
+      await auditExecution(config,state,dependencies,"execution.dispatch.returned",{
+        route_thread_id:state.send.post_send_route_thread_id});
     } catch (error) {
       state.send.post_send_route_thread_id = await dependencies.currentThreadId(client).catch(() => null);
       const captured = await captureIdentity(
@@ -1329,6 +1367,8 @@ export async function executeSingleTask(config, overrides = {}) {
       // failure. Publish that terminal before a batch can refill more slots.
       const classification = capturedNative ? classifyNativeState(capturedNative) : null;
       if (classification?.kind === 'failed') return await finalize(config, state, capturedNative, classification, dependencies);
+      await diagnose(config,state,dependencies,"native-identity-bound");
+      await persist(config,state);
       return state;
     }
     return await waitForTerminal(config, state, dependencies);
@@ -1352,6 +1392,8 @@ export async function executeSingleTask(config, overrides = {}) {
     );
     state.execution.error = { code: "PRE_SEND_DRIVER_ERROR", message };
     transition(state, "FAILED", "PRE_SEND_DRIVER_ERROR", {}, state.execution.finished_at);
+    await auditExecution(config,state,dependencies,"execution.pre-send-error",{code:"PRE_SEND_DRIVER_ERROR"});
+    await diagnose(config,state,dependencies,"pre-send-driver-error",{force:true});
     await persist(config, state);
     return state;
   } finally {

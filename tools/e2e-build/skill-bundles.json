@@ -90,7 +90,8 @@
         "qwenwork-native-state",
         "sqlite-snapshot",
         "astronstudio-start-rejection",
-        "loomy"
+        "loomy",
+        "astronstudio-runtime"
       ]
     },
     {
@@ -112,7 +113,8 @@
         "sqlite-snapshot",
         "astronstudio-start-rejection",
         "loomy",
-        "desktop-app-discovery"
+        "desktop-app-discovery",
+        "astronstudio-runtime"
       ]
     },
     {
