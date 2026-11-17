@@ -4,6 +4,8 @@ AStudio 产品线的智能体评测框架，基于 WildClawBench 扩展，支持
 
 公司仓库为 `astudio-eval-framework`，配套可视化平台为 `astudio-eval-platform`。新地址及多远程配置见[仓库地址与本地配置](docs/git-remotes.md)。
 
+涉及 AgentCube 和 Windows 沙箱的跨仓排查，先看[源码导航](docs/guides/agentcube-source-navigation.md)，本机路径由各机器的源码地图提供。
+
 下文保留 WildClawBench 上游基准的介绍、来源与统计。
 
 <h2 align="center">WildClawBench</h2>
