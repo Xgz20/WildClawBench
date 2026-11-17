@@ -9,6 +9,7 @@ import { deriveRuntimeInterruption, verifyRuntimeInterruption, RUNTIME_INTERRUPT
   RUNTIME_INTERRUPTION_RECONCILED_PROFILE,
   RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE,
   RUNTIME_WATCHDOG_FAILURE_PROFILE,
+  COMPLETED_SDK_RUNTIME_INTERRUPTION_PROFILE,
   RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
 const hash = b => createHash('sha256').update(b).digest('hex');
@@ -33,7 +34,60 @@ function fixture() {
   return { state, index, sdk, provider, native };
 }
 const lines = rows => Buffer.from(rows.map(JSON.stringify).join('\n')+'\n');
-const derive = f => deriveRuntimeInterruption(bytes(f.state), f.index, lines(f.sdk), lines(f.provider), f.native);
+const derive = f => deriveRuntimeInterruption(bytes(f.state), f.index, lines(f.sdk), f.provider.length?lines(f.provider):Buffer.alloc(0), f.native);
+function completedSdkFixture() {
+  const f=fixture();f.state.client={version:'3.6.4'};
+  f.state.execution.error={code:'ASTRONSTUDIO_TURN_INTERRUPTED',message:'native runtime interrupted'};
+  f.sdk.splice(-1,0,{type:'response_item',payload:{type:'message',id:'final-message',role:'assistant',
+    internal_chat_message_metadata_passthrough:{turn_id:'turn'},content:[{type:'output_text',text:'retained SDK final'}]}});
+  f.sdk.at(-1).payload={type:'task_complete',turn_id:'turn',duration_ms:20000,last_agent_message:'retained SDK final'};
+  f.provider=[];Object.assign(f.native,{runtime_turn_event_count:0,runtime_status:'stopped',
+    runtime_active_turn_id:null,runtime_resume_thread_id:'sdk',runtime_cwd:f.state.session.cwd,
+    runtime_lifecycle_generation:'epoch',runtime_payload_lifecycle_generation:'epoch',last_error:null,
+    last_runtime_event:'provider.stopRuntimeSession',last_runtime_event_at:'2026-11-05T12:00:22Z',
+    runtime_observed_at:'2026-11-05T12:00:23Z'});
+  return f;
+}
+test('SDK completion remains completion when a later native runtime interruption is preserved',()=>{
+  const f=completedSdkFixture(),before=JSON.stringify(f),proof=derive(f);
+  assert.equal(proof.profile,COMPLETED_SDK_RUNTIME_INTERRUPTION_PROFILE);
+  assert.equal(proof.sdk_completion_confirmed,true);assert.equal(proof.sdk_interruption_confirmed,false);
+  assert.equal(proof.original_business_status,'cancelled');assert.equal(proof.original_state_modified,false);
+  assert.equal(proof.client_display_of_sdk_final_verified,false);assert.equal(proof.scoreability_changed,false);
+  assert.equal(JSON.stringify(f),before);assert.equal('score' in proof,false);
+});
+test('completed SDK profile rejects live, pending, foreign, contradictory and unknown evidence',()=>{
+  const changes=[
+    f=>{f.state.client.version='3.6.5';},f=>{f.sdk.at(-1).payload.error={message:'failure'};},
+    f=>{f.sdk.at(-2).payload.content[0].text='different';},
+    f=>{f.native.completed_at='2026-11-05T12:00:19Z';},
+    f=>{f.native.runtime_status='running';},f=>{f.native.runtime_active_turn_id='active';},
+    f=>{f.native.runtime_resume_thread_id='foreign';},f=>{f.native.runtime_cwd='/foreign';},
+    f=>{f.native.runtime_payload_lifecycle_generation='other';},f=>{f.native.last_error='unknown';},
+    f=>{f.native.last_runtime_event='session.state.changed';},
+    f=>{f.native.last_runtime_event_at='2026-11-05T12:00:19Z';},
+    f=>{f.native.runtime_observed_at='2026-11-05T12:00:21Z';},
+    f=>{f.native.pending_count=1;},f=>{f.native.termination_origin='operator';},
+    f=>{f.native.runtime_turn_event_count=1;},
+    f=>{f.provider=[{event_type:'item.started'}];f.native.runtime_turn_event_count=1;},
+    f=>{f.sdk.push({type:'event_msg',payload:{type:'task_started',turn_id:'new-turn'}});},
+  ];
+  for(const [n,change] of changes.entries()){
+    const f=completedSdkFixture();change(f);assert.throws(()=>derive(f),/RUNTIME_INTERRUPTION_|ROLLOUT_/,String(n));
+  }
+});
+test('completed SDK profile replays portably with both conflicting terminal sources unchanged',async()=>{
+ const f=completedSdkFixture(),root=await mkdtemp(join(tmpdir(),'completed-sdk-runtime-'));
+ try{
+  const state=bytes(f.state),sdk=lines(f.sdk),provider=Buffer.alloc(0),proof=derive(f);
+  const sources=[['raw/astronstudio-rollout.jsonl',sdk],['raw/astronstudio-provider-events.jsonl',provider],
+    [RUNTIME_INTERRUPTION_STATE,state],[RUNTIME_INTERRUPTION_NATIVE,bytes(f.native)],[RUNTIME_INTERRUPTION_PROOF,bytes(proof)]];
+  const refs=[];for(const [path,value] of sources){await mkdir(join(root,path,'..'),{recursive:true});await writeFile(join(root,path),value);refs.push({path,sha256:hash(value),size:value.length});}
+  const index={...f.index,runtime_interruption_profile:{id:proof.profile},raw_trace:refs.filter(r=>r.path.startsWith('raw/')),binding_evidence:refs.filter(r=>!r.path.startsWith('raw/'))};
+  assert.deepEqual(await verifyRuntimeInterruption(index,state,root,{identity:f.state.identity,execution:{business_status:'cancelled'}}),proof);
+  assert.deepEqual(await readFile(join(root,RUNTIME_INTERRUPTION_STATE)),state);
+ }finally{await rm(root,{recursive:true,force:true});}
+});
 test('native watchdog failure keeps candidate_error and its tool error while proving the exact SDK stop',()=>{
   const f=fixture(),message='最后失败工具 Ran command，失败原因：command not found；308 秒无进展。任务已失败。';
   f.state.execution.business_status='candidate_error';f.state.execution.error={code:'ASTRONSTUDIO_TURN_ERROR',message};f.state.session.native_status='running';

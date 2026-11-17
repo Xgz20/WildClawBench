@@ -9,6 +9,7 @@ export const RUNTIME_INTERRUPTION_MISSING_PROFILE = 'bound-native-runtime-interr
 export const RUNTIME_INTERRUPTION_RECONCILED_PROFILE = 'bound-native-runtime-reconciled-interruption/v1';
 export const RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE = 'bound-native-runtime-interruption-stale-session/v1';
 export const RUNTIME_WATCHDOG_FAILURE_PROFILE = 'bound-native-runtime-watchdog-failure/v1';
+export const COMPLETED_SDK_RUNTIME_INTERRUPTION_PROFILE = 'bound-native-runtime-interruption-after-sdk-completion/v1';
 export const RUNTIME_INTERRUPTION_STATE = 'bindings/runtime-interruption-original-state.json';
 export const RUNTIME_INTERRUPTION_NATIVE = 'bindings/runtime-interruption-native-binding.json';
 export const RUNTIME_INTERRUPTION_PROOF = 'bindings/runtime-interruption-proof.json';
@@ -104,6 +105,54 @@ function watchdogGatewayMetric(row,state,native) {
     &&Number.isFinite(Date.parse(row.persisted_at))&&Date.parse(row.persisted_at)>=Date.parse(e.createdAt);
 }
 
+// The runtime can retire after the model has already completed. Preserve that
+// distinction; neither terminal source is rewritten and no score is assigned.
+function completedSdkInterruption(stateBytes,state,index,sdkBytes,providerBytes,native,sdk,terminal) {
+  const s=state.session,p=terminal.payload,time=Date.parse(terminal.timestamp);
+  ensure(state.client?.version==='3.6.4' && state.execution.business_status==='cancelled'
+    && s.native_status==='interrupted' && state.execution.error?.code==='ASTRONSTUDIO_TURN_INTERRUPTED'
+    && p.type==='task_complete' && !p.error && typeof p.last_agent_message==='string'
+    && p.last_agent_message.trim() && Number.isSafeInteger(p.duration_ms) && p.duration_ms>=0,
+  'COMPLETED_SDK_SCOPE');
+  ensure(sdk.filter(r=>r.type==='event_msg'&&r.payload?.type==='task_started').length===1,
+    'COMPLETED_SDK_MULTIPLE_TURNS');
+  const messages=sdk.filter(r=>r.type==='response_item'&&r.payload?.type==='message'
+    &&r.payload.role==='assistant'&&r.payload.internal_chat_message_metadata_passthrough?.turn_id===s.turn_id);
+  const final=messages.at(-1)?.payload,content=final?.content;
+  ensure(final && typeof final.id==='string' && Array.isArray(content)
+    && content.every(c=>c.type==='output_text'&&typeof c.text==='string')
+    && content.map(c=>c.text).join('')===p.last_agent_message, 'COMPLETED_SDK_FINAL_UNBOUND');
+  ensure(native.runtime_status==='stopped' && native.runtime_active_turn_id===null
+    && native.runtime_resume_thread_id===s.session_id && native.runtime_cwd===s.cwd
+    && native.last_error===null && native.last_runtime_event==='provider.stopRuntimeSession'
+    && typeof native.runtime_lifecycle_generation==='string' && native.runtime_lifecycle_generation
+    && native.runtime_lifecycle_generation===native.runtime_payload_lifecycle_generation,
+  'COMPLETED_RUNTIME_NOT_STOPPED');
+  ensure(Number.isFinite(time) && Date.parse(native.completed_at)>time
+    && Date.parse(native.last_runtime_event_at)>=Date.parse(native.completed_at)
+    && Date.parse(native.runtime_observed_at)>=Date.parse(native.last_runtime_event_at)
+    && Date.parse(state.execution.finished_at)>=Date.parse(native.completed_at), 'COMPLETED_CLOCK_INVALID');
+  const rows=providerBytes.toString('utf8').split('\n').filter(x=>x.trim()).map(JSON.parse);
+  const absent=providerBytes.length===0&&rows.length===0;
+  ensure(native.runtime_turn_event_count===rows.length && (absent||rows.length>0&&rows.every(row=>resourceMirror(row,state,sdk))),
+    'COMPLETED_PROVIDER_REMAINDER_UNBOUND');
+  return {profile:COMPLETED_SDK_RUNTIME_INTERRUPTION_PROFILE,identity:state.identity,
+    session:Object.fromEntries(['thread_id','turn_id','session_id','cwd'].map(k=>[k,s[k]])),
+    source_state_sha256:sha(stateBytes),sdk_sha256:sha(sdkBytes),provider_sha256:sha(providerBytes),
+    native_binding_sha256:sha(Buffer.from(JSON.stringify(stable(native)))),prompt_sha256:state.prompt.sha256,
+    native_termination_origin:'runtime',native_interrupted_at:native.completed_at,
+    native_runtime_stopped_at:native.last_runtime_event_at,
+    sdk_terminal_at:terminal.timestamp,sdk_duration_ms:p.duration_ms,sdk_final_sha256:sha(Buffer.from(p.last_agent_message)),
+    sdk_final_message_id:final.id,sdk_completion_confirmed:true,sdk_interruption_confirmed:false,
+    cancellation_confirmed:true,cancellation_scope:'native-runtime-after-sdk-completion',
+    original_business_status:'cancelled',provider_terminal_sequence:null,
+    provider_projection:{status:absent?'absent-at-collection':'verified-resource-only-after-sdk-completion',
+      verified_turn_event_count:rows.length,evidence_completeness:'partial',fabricated_rows:0,
+      basis:'same readonly snapshot: exact later native runtime interruption and stopped runtime; original SDK completed successfully earlier; remaining provider rows are absent or exact SDK usage mirrors'},
+    client_display_of_sdk_final_verified:false,human_cancellation_inferred:false,
+    scoreability_changed:false,original_state_modified:false};
+}
+
 export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerBytes, nativeBinding) {
   const state = JSON.parse(stateBytes), session = state.session;
   const watchdog = state.execution?.business_status === 'candidate_error';
@@ -121,6 +170,8 @@ export function deriveRuntimeInterruption(stateBytes, index, sdkBytes, providerB
   const sdk = sdkBytes.toString('utf8').split('\n').filter(x => x.trim()).map(JSON.parse);
   const terminals = sdk.filter(r => r.type === 'event_msg'
     && ['task_complete', 'turn_aborted'].includes(r.payload?.type) && r.payload.turn_id === session.turn_id);
+  if(terminals.length===1 && terminals[0].payload.type==='task_complete')
+    return completedSdkInterruption(stateBytes,state,index,sdkBytes,providerBytes,nativeBinding,sdk,terminals[0]);
   ensure(terminals.length === 1 && terminals[0].payload.type === 'turn_aborted'
     && terminals[0].payload.reason === 'interrupted', 'SDK_NOT_INTERRUPTED');
   const rows = providerBytes.toString('utf8').split('\n').filter(x => x.trim()).map(JSON.parse);
@@ -182,7 +233,8 @@ export async function verifyRuntimeInterruption(index, stateBytes, traceRoot, ex
   const bindings = index.binding_evidence ?? [];
   if (!index.runtime_interruption_profile && !bindings.some(r => paths.includes(r.path))) return null;
   ensure([RUNTIME_INTERRUPTION_PROFILE, RUNTIME_INTERRUPTION_MISSING_PROFILE,
-    RUNTIME_INTERRUPTION_RECONCILED_PROFILE, RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE, RUNTIME_WATCHDOG_FAILURE_PROFILE]
+    RUNTIME_INTERRUPTION_RECONCILED_PROFILE, RUNTIME_INTERRUPTION_STALE_SESSION_PROFILE, RUNTIME_WATCHDOG_FAILURE_PROFILE,
+    COMPLETED_SDK_RUNTIME_INTERRUPTION_PROFILE]
     .includes(index.runtime_interruption_profile?.id), 'DECLARATION_INVALID');
   async function bound(path) {
     const refs = [...(index.raw_trace ?? []), ...bindings].filter(r => r.path === path);

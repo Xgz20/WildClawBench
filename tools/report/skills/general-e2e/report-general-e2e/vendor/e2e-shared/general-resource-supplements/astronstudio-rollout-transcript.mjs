@@ -280,7 +280,10 @@ export function normalizeRolloutTranscript(bytes, state, provider, { sourcePolic
     }
   }
   if (!assistants.length) missing.push('assistant_message');
-  if (state.phase === 'COMPLETED') {
+  const completedBeforeRuntimeStop = state.phase === 'FAILED' && state.client?.version === '3.6.4'
+    && state.execution?.business_status === 'cancelled' && state.session?.native_status === 'interrupted'
+    && state.execution?.error?.code === 'ASTRONSTUDIO_TURN_INTERRUPTED' && terminal?.type === 'task_complete';
+  if (state.phase === 'COMPLETED' || completedBeforeRuntimeStop) {
     ensure(terminal?.type === 'task_complete' && typeof terminal.last_agent_message === 'string', 'ROLLOUT_FINAL_BINDING_MISSING');
     ensure(assistants.at(-1)?.content === terminal.last_agent_message, 'ROLLOUT_FINAL_MESSAGE_CONFLICT');
     assistants.at(-1).final = true;

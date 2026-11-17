@@ -259,14 +259,19 @@ WHERE turns.thread_id = ${sqlString(threadId)}
       WHERE turns.thread_id=${sqlString(threadId)} AND turns.turn_id=${sqlString(turnId)}`).all();
     if (extra.length !== 1) throw Error('RUNTIME_INTERRUPTION_NATIVE_BINDING_AMBIGUOUS');
     Object.assign(binding, extra[0]);
-    if(state.execution?.business_status==='candidate_error') {
+    if(state.execution?.business_status==='candidate_error'||binding.turn_state==='interrupted') {
       const failure = database.prepare(`SELECT sessions.last_error AS last_error,runtime.status AS runtime_status,
         json_extract(runtime.runtime_payload_json,'$.lastRuntimeEvent') AS last_runtime_event,
-        json_extract(runtime.runtime_payload_json,'$.lastRuntimeEventAt') AS last_runtime_event_at
+        json_extract(runtime.runtime_payload_json,'$.lastRuntimeEventAt') AS last_runtime_event_at,
+        json_extract(runtime.runtime_payload_json,'$.activeTurnId') AS runtime_active_turn_id,
+        json_extract(runtime.runtime_payload_json,'$.cwd') AS runtime_cwd,
+        json_extract(runtime.resume_cursor_json,'$.threadId') AS runtime_resume_thread_id,
+        runtime.lifecycle_generation AS runtime_lifecycle_generation,
+        json_extract(runtime.runtime_payload_json,'$.lifecycleGeneration') AS runtime_payload_lifecycle_generation
         FROM projection_thread_sessions sessions JOIN provider_session_runtime runtime ON runtime.thread_id=sessions.thread_id
         WHERE sessions.thread_id=${sqlString(threadId)}`).all();
-      if(failure.length!==1) throw Error('WATCHDOG_FAILURE_NATIVE_RUNTIME_AMBIGUOUS');
-      Object.assign(binding,failure[0]);
+      if(failure.length!==1 && state.execution?.business_status==='candidate_error') throw Error('WATCHDOG_FAILURE_NATIVE_RUNTIME_AMBIGUOUS');
+      if(failure.length===1) Object.assign(binding,failure[0],{runtime_observed_at:new Date().toISOString()});
     }
     // A crashed backend can omit its provider terminal event. Preserve the
     // native restart reconciliation and accepted command receipt from this
@@ -978,6 +983,8 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
       missing:[...new Set([...(index.completeness.missing ?? []), 'runtime-provider-turn-projection-unavailable'])] };
     if (proof.state_session_projection) index.completeness = { ...index.completeness, status:'partial',
       missing:[...new Set([...(index.completeness.missing ?? []), 'runtime-state-session-projection-stale'])] };
+    if (proof.sdk_completion_confirmed) index.completeness = { ...index.completeness, status:'partial',
+      missing:[...new Set([...(index.completeness.missing ?? []), 'native-runtime-interruption-after-sdk-completion'])] };
   }
   if(prefixDivergence){
     const suffix=prefixDivergence.suffix,names=suffix

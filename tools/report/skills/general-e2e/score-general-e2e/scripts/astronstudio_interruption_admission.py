@@ -15,6 +15,7 @@ AUTHORIZATION = "reviewed-interruption-authorization.json"
 VERIFIER = "astronstudio-runtime-interruption.mjs"
 SDK = "raw/astronstudio-rollout.jsonl"
 PROOF = "bindings/runtime-interruption-proof.json"
+COMPLETED_SDK_PROFILE = "bound-native-runtime-interruption-after-sdk-completion/v1"
 
 
 def _require(condition, detail):
@@ -103,12 +104,16 @@ def validate(execution, record_bytes, contract_bytes, files, *, require_authoriz
              and index.get("completeness", {}).get("omitted_event_count") == 0
              and set(index["completeness"]["missing"]) <= {
                  "assistant_message", "runtime-provider-turn-projection-unavailable", "runtime-state-session-projection-stale",
+                 "native-runtime-interruption-after-sdk-completion",
              }, "unexpected trace scope")
     for row in [index["transcript"], *index["raw_trace"], *index["binding_evidence"]]:
         raw = files[row["path"]]
         _require(len(raw) == row["size"] and sha(raw) == row["sha256"], "trace artifact drift")
     proof = _verify_native(files, record_bytes)
     _require(proof and proof == json.loads(files[PROOF]), "native interruption proof drift")
+    completed_sdk = proof.get('profile') == COMPLETED_SDK_PROFILE
+    _require(('native-runtime-interruption-after-sdk-completion' in index['completeness']['missing']) == completed_sdk,
+             'SDK completion discrepancy scope mismatch')
     state = json.loads(files["bindings/runtime-interruption-original-state.json"])
     _require(state["prompt"]["sha256"] == binding["prompt_sha256"], "sent prompt mismatch")
     events = [json.loads(line) for line in files[index["transcript"]["path"]].splitlines() if line.strip()]
@@ -117,9 +122,16 @@ def validate(execution, record_bytes, contract_bytes, files, *, require_authoriz
     _require(len(events) == index["transcript"]["event_count"] and all(row["identity"] == identity for row in events)
              and calls and calls == results and all(call_id and count == 1 for call_id, count in calls.items())
              and events[-1]["type"] == "status"
-             and events[-1]["status"]["type"] == "turn_aborted"
+             and events[-1]["status"]["type"] == ('task_complete' if completed_sdk else 'turn_aborted')
              and events[-1]["status"]["turn_id"] == execution["session"]["turn_id"]
-             and not any(row.get("final") is True for row in events), "canonical interruption transcript is incomplete")
+             and (completed_sdk or not any(row.get("final") is True for row in events)), "canonical interruption transcript is incomplete")
+    if completed_sdk:
+        finals=[row for row in events if row.get('type')=='assistant_message' and row.get('final') is True]
+        _require(len(finals)==1 and isinstance(finals[0].get('content'),str)
+                 and sha(finals[0]['content'].encode())==proof.get('sdk_final_sha256')
+                 and proof.get('sdk_completion_confirmed') is True
+                 and proof.get('sdk_interruption_confirmed') is False,
+                 'completed SDK final message binding drift')
     admission = ADMISSION if require_authorization else execution_accountability.INTERRUPTED_ADMISSION
     return {
         "schema_version": admission, "profile": admission, "identity": identity, **binding,
@@ -127,6 +139,8 @@ def validate(execution, record_bytes, contract_bytes, files, *, require_authoriz
            {"evidence_accountability_profile": execution_accountability.PROFILE, "numeric_decisions_assigned": False}),
         "proof": proof,
         "matched_tool_call_results": len(calls), "final_response_present": False,
+        **({'model_sdk_final_present':True,'client_display_of_sdk_final_verified':False,
+            'native_runtime_status_preserved':'interrupted'} if completed_sdk else {}),
         "original_execution_changed": False, "original_trace_changed": False,
         "files": [{"path": name, "sha256": sha(raw), "size": len(raw)} for name, raw in sorted(files.items())],
     }
