@@ -22,7 +22,7 @@ import { deriveTerminalProjection, TERMINAL_PROJECTION_STATE, TERMINAL_PROJECTIO
   from '../../tools/report/skills/general-e2e/collect-general-e2e/vendor/e2e-shared/general-resource-supplements/astronstudio-terminal-projection.mjs';
 
 import {
-  finalizeAstronStudioExecution,
+  finalizeAstronStudioExecution as finalizeWithLiveGuard,
   parseArgs,
   publishAstronStudioQueueCollection,
   verifyAstronStudioCollection,
@@ -34,6 +34,52 @@ import {
 } from "../../tools/report/skills/general-e2e/collect-general-e2e/scripts/lib/macos-task-processes.mjs";
 
 const DATASET_DIGEST = "1".repeat(64);
+// Synthetic collector tests provide explicit idle proof; production CLI always uses the live guard.
+const finalizeAstronStudioExecution=(options,overrides={})=>finalizeWithLiveGuard(options,{runtimeSafetyGuard:async()=>({fixture:true,blockers:[]}),...overrides});
+
+test("production AStudio finalizer rejects another running task before invoking any cleanup hook",async()=>{
+  const value=await fixture();let cleanupCalls=0;
+  try {
+    const peer=join(value.root,".general-e2e","execution","other-task");
+    await mkdir(peer,{recursive:true});
+    await writeJson(join(peer,"automation-state.json"),{phase:"RUNNING",send:{dispatch_attempt_count:1}});
+    await assert.rejects(finalizeWithLiveGuard(options(value),{terminateProcesses:async()=>{
+      cleanupCalls++;return successfulCleanup();
+    }}),/ASTUDIO_COLLECT_EXECUTION_ACTIVE/);
+    assert.equal(cleanupCalls,0);
+    const journal=await readFile(join(value.root,".general-e2e","diagnostics","framework-events.jsonl"),"utf8");
+    const rows=journal.trim().split("\n").map(JSON.parse);
+    assert.ok(rows.some(x=>x.event==="collect.blocked"&&x.blockers[0].task_id==="other-task"));
+  } finally {await rm(value.root,{recursive:true,force:true});}
+});
+
+test("formal collection copies declared diagnostic evidence and immutable verification detects tampering",async()=>{
+  const value=await fixture();
+  try {
+    const {captureRuntimeDiagnostics}=await import("../../tools/report/e2e-shared/astronstudio-runtime/diagnostics.mjs");
+    const state=JSON.parse(await readFile(value.statePath,"utf8"));
+    state.evidence.runtime_diagnostics=await captureRuntimeDiagnostics({stateFile:value.statePath,candidateWorkspace:value.workspace},state,{
+      readConfig:async()=>null,processSnapshot:async()=>({infrastructure_roots:[]})});
+    await writeJson(value.statePath,state);
+    const metrics=JSON.parse(await readFile(value.metricsPath,"utf8")),bytes=await readFile(value.statePath);
+    metrics.collection.sources[0].sha256=digest(bytes);metrics.collection.sources[0].size=bytes.length;
+    await writeJson(value.metricsPath,metrics);
+    const result=await finalizeAstronStudioExecution(options(value),{terminateProcesses:async()=>successfulCleanup()});
+    const index=join(result.evidence_root,"execution",state.evidence.runtime_diagnostics.index_path);
+    assert.equal(JSON.parse(await readFile(index)).auxiliary_only,true);
+    const journal=join(result.evidence_root,"execution","diagnostics","framework-events.jsonl");
+    const journalBytes=await readFile(journal);
+    assert.ok(journalBytes.toString().includes('collect.cleanup.completed'));
+    const provenance=JSON.parse(await readFile(join(result.evidence_root,"execution","diagnostics","framework-events-source.json")));
+    assert.equal(provenance.retained_sha256,digest(journalBytes));
+    assert.equal(provenance.source_start_line,1);
+    await writeFile(journal,"changed");
+    await assert.rejects(verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId}),/ARTIFACT|artifact|MISMATCH/);
+    await writeFile(journal,journalBytes);
+    await writeFile(index,"changed");
+    await assert.rejects(verifyAstronStudioCollection({unitRoot:value.root,taskId:value.taskId}),/ARTIFACT|artifact|MISMATCH/);
+  } finally {await rm(value.root,{recursive:true,force:true});}
+});
 
 test("completed native subset publishes only its verified collection scope", async () => {
   const value = await fixture();

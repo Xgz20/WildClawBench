@@ -26,6 +26,12 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
+        name="astronstudio-runtime", version="1.0.0",
+        source_root="tools/report/e2e-shared/astronstudio-runtime",
+        vendor_root="vendor/e2e-shared/astronstudio-runtime",
+        entrypoints=("state.mjs", "guard.mjs", "diagnostics.mjs"),
+    ),
+    SharedComponentSpec(
         name="loomy", version="0.1.10",
         source_root="tools/report/e2e-shared/loomy",
         vendor_root="vendor/e2e-shared/loomy",
@@ -48,10 +54,10 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/sqlite-snapshot", entrypoints=("index.mjs",),
     ),
     SharedComponentSpec(
-        name="general-resource-supplements", version="1.3.12",
+        name="general-resource-supplements", version="1.3.14",
         source_root="tools/report/e2e-shared/general-resource-supplements",
         vendor_root="vendor/e2e-shared/general-resource-supplements",
-        entrypoints=("astronstudio-final-prefix-divergence.mjs", "astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs"),
+        entrypoints=("astronstudio-final-prefix-divergence.mjs", "astronstudio-runtime-interruption.mjs", "index.mjs", "archive_astronstudio_trace.mjs", "collect_astronstudio_resource_metrics.mjs", "astronstudio-rollout.mjs", "astronstudio-native-provider-log.mjs", "astronstudio-terminal-final-recapture.mjs", "astronstudio-terminal-projection.mjs", "agentcube-native-binding.mjs", "agentcube-native-resource.mjs"),
     ),
     SharedComponentSpec(
         name="qwenwork-native-state", version="1.1.0",
@@ -100,7 +106,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="task-process-cleanup",
-        version="0.1.0",
+        version="0.2.0",
         source_root="tools/report/e2e-shared/task-process-cleanup",
         vendor_root="vendor/e2e-shared/task-process-cleanup",
         entrypoints=("cleanup-evidence.mjs", "macos-task-processes.mjs"),

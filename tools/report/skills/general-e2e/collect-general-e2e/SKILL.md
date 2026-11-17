@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+0.12.16 正式收口前及每次信号前核验整单元队列、锁和原生全局空闲；共享 ACode/app-server、应用及依赖链不归单题 cwd 清理。共享子树中的归属不明任务进程保留并阻断收口；框架信号先持久化意图，再写结果，诊断随正式证据校验封存。见[共享运行时安全与异常留证](vendor/e2e-shared/astronstudio-runtime/runtime-safety.md)。
+
 `0.12.15` 对同次 AgentCube 原生完成后的控制器断连使用独立恢复来源，复验原始文件、清理证明、身份与唯一发送；原失败和旧发行保持，不能伪造 WGUI RunReport。
 
 `0.12.14` 支持显式 AgentCube 原生资源补充层：独立重验原 Prompt、会话、MCP 调用、终态及清理证明，再按原 last/total 用量复算 Token 和请求数。原执行、资源字节与分数不改，缺失字段不补零；回传、导入和报告须使用支持该 Profile 的冻结发行。

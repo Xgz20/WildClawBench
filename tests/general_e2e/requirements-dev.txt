@@ -4,3 +4,5 @@ jsonschema>=4
 python-dotenv
 openpyxl>=3.1
 lxml
+python-docx
+pypdf

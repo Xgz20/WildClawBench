@@ -42,6 +42,7 @@ import { verifyChildSdkArchive } from '../../vendor/e2e-shared/workbuddy-jsonl-m
 import { verifyAgentCubeNative } from './agentcube-native-verification.mjs';
 import { verifyAgentCubeWorkBuddy } from '../../vendor/e2e-shared/general-resource-supplements/agentcube-workbuddy-binding.mjs';
 import { verifyArchivedLoomy, verifyLoomyResources } from '../../vendor/e2e-shared/loomy/verification.mjs';
+import {loadDiagnosticArtifacts,loadFrameworkAuditArtifacts} from "../../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
@@ -1163,6 +1164,8 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     throw new Error("COMPLETED_EXECUTION_EVIDENCE_INCOMPLETE");
   }
   const inputSnapshot = { manifestSource, stateSource, traceBundle, resource: resolvedResource, finalResponse };
+  const diagnosticArtifacts=profile.id==="astronstudio-macos-general-e2e-finalizer"
+    ? await loadDiagnosticArtifacts(state,stateSource.absolute) : [];
   if (overrides.validateInputs) await overrides.validateInputs(inputSnapshot);
   const cleanup = await terminateProcesses(workspace, {
     quietMilliseconds: options.processQuietMilliseconds,
@@ -1174,6 +1177,8 @@ export async function finalizeExecution(options, profile, overrides = {}) {
   }
 
   if (overrides.validateCleanup) await overrides.validateCleanup(cleanup, workspace, options);
+  if(profile.id==="astronstudio-macos-general-e2e-finalizer")
+    diagnosticArtifacts.push(...await loadFrameworkAuditArtifacts(unitRoot));
 
   const integrity = createIntegrity(policy);
   const before = integrity.snapshotWorkspace(workspace);
@@ -1246,6 +1251,14 @@ export async function finalizeExecution(options, profile, overrides = {}) {
     await writeFile(join(staging, "execution", "automation-state.json"), stateSource.bytes, { flag: "wx" });
     await writeFile(join(staging, "execution", "PROMPT.md"), promptSource.bytes, { flag: "wx" });
     await writeFile(join(staging, "execution", "unit-manifest.json"), manifestSource.bytes, { flag: "wx" });
+    if(diagnosticArtifacts.length) {
+      await mkdir(join(staging,"execution","diagnostics"),{recursive:true});
+      for(const item of diagnosticArtifacts) {
+        const destination=join(staging,"execution","diagnostics",item.relative);
+        await mkdir(dirname(destination),{recursive:true});
+        await writeFile(destination,item.bytes,{flag:"wx"});
+      }
+    }
     const preCollectRecord = join(dirname(stateSource.absolute), "execution-record.json");
     try {
       const source = await readRegularFile(preCollectRecord);

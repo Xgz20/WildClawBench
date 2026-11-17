@@ -2,8 +2,13 @@
 import { realpathSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import {mkdir,writeFile} from "node:fs/promises";
+import {join} from "node:path";
+import {randomUUID} from "node:crypto";
 import { finalizeExecution, parseArgs, usage, verifyGeneralCollection } from "./lib/general-finalizer.mjs";
-import { terminateDarwinTaskProcesses } from "./lib/macos-task-processes.mjs";
+import { terminateDarwinTaskProcesses,snapshotDarwinTaskProcesses } from "./lib/macos-task-processes.mjs";
+import {createCleanupGuard} from "../vendor/e2e-shared/astronstudio-runtime/guard.mjs";
+import {appendFrameworkEvent} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 export * from "./lib/general-finalizer.mjs";
 export const FINALIZER_ID = "astronstudio-macos-general-e2e-finalizer";
 export const FINALIZER_VERSION = "0.1.0";
@@ -14,8 +19,60 @@ const PROFILE = Object.freeze({
 });
 export const verifyAstronStudioCollection = verifyGeneralCollection;
 export async function finalizeAstronStudioExecution(options, overrides = {}) {
+  const operationId=randomUUID(),events=[];
+  const journal=join(resolve(options.unitRoot),".general-e2e","diagnostics","framework-events.jsonl");
+  let state,guard;
+  const audit=async event=>{
+    const row=await appendFrameworkEvent(journal,{operation_id:operationId,
+      caller:"finalize_astronstudio_execution",identity:state?.identity,...event},
+      {durable:event.event==="process.signal.intent"});
+    events.push(row);return row;
+  };
+  const blocked=async error=>{
+    const failure=await audit({event:"collect.blocked",error:error.message,blockers:error.blockers||[]});
+    const root=join(resolve(options.unitRoot),".general-e2e","diagnostics","blocked-collections",operationId);
+    await mkdir(root,{recursive:true});
+    await writeFile(join(root,"diagnostic.json"),JSON.stringify({identity:state?.identity,events,
+      error:failure.error,blockers:failure.blockers,cleanup_available:Boolean(error.cleanup)},null,2)+"\n",{flag:"wx",mode:0o600})
+      .catch(failure=>{if(failure.code!=="EEXIST")throw failure;});
+  };
+  const prepare=async input=>{
+    await overrides.validateInputs?.(input);
+    state=input.stateSource.value;
+    guard ||= overrides.runtimeSafetyGuard || createCleanupGuard({
+      unitRoot:resolve(options.unitRoot),state,
+      snapshotProcesses:()=>snapshotDarwinTaskProcesses(input.stateSource.value.candidate_workspace,overrides.processOverrides),
+    });
+    // validateInputs is called again before publication; recheck global native
+    // quiescence there as well as before every signal.
+    if(events.length)try{await guard();}catch(error){await blocked(error);throw error;}
+  };
+  const terminate=overrides.terminateProcesses||terminateDarwinTaskProcesses;
   return finalizeExecution(options, PROFILE, {
-    ...overrides, terminateProcesses: overrides.terminateProcesses || terminateDarwinTaskProcesses,
+    ...overrides,validateInputs:prepare,
+    terminateProcesses:async(workspace,processOptions)=>{
+      await audit({event:"collect.requested",workspace});
+      try {
+        const before=await guard();
+        await audit({event:"collect.native-idle-verified",guard:before});
+        const priorAudit=processOptions.audit,priorAssert=processOptions.assertSafe;
+        const cleanup=await terminate(workspace,{...processOptions,operationId,
+          audit:async event=>{await audit(event);await priorAudit?.(event);},
+          assertSafe:async()=>{await guard();await priorAssert?.();}});
+        if(!cleanup.success) {
+          const error=Error(`TASK_PROCESS_CLEANUP_FAILED: ${cleanup.error||"quiet window or native writers unresolved"}`);
+          error.cleanup=cleanup;throw error;
+        }
+        const after=await guard();
+        await audit({event:cleanup.success?"collect.cleanup.completed":"collect.cleanup.blocked",
+          success:cleanup.success,error:cleanup.error||null});
+        return {...cleanup,native_runtime_guard:{before,after},framework_audit:{
+          schema_version:"wildclawbench.astudio-framework-audit/v1",operation_id:operationId,events}};
+      } catch(error) {
+        await blocked(error);
+        throw error;
+      }
+    },
   });
 }
 
