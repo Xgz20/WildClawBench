@@ -1,0 +1,141 @@
+{
+  "schema_version": "h043-oracle-ownership-alignment/v2",
+  "at_utc": "2026-10-28T21:57:22.897820+00:00",
+  "reason": "Actual swallow-only control was penalized by E01/E03/E05 before their resource assertions due to repeated assertRaises. Keep cancellation failure in B03 and preserve edge resource checks independently. Error/expiry propagation is explicitly retained in B02/B04.",
+  "nonblind_revision": true,
+  "semantic_contract_source_inputs_or_reference_changed": false,
+  "reference_worker_sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+  "source_first_freeze_sha256": "d3bec75d6b6c6d1fe2e1c42dd5fb7d93e08857501512652e34daa21c312d4211",
+  "old_outputs_retained": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/oracle-ownership-v2/before",
+  "actual_after_runs": [
+    {
+      "name": "original",
+      "command": [
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+        "-I",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/gt/hidden_tests/run_oracle.py",
+        "--program",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/exec",
+        "--output",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/oracle-ownership-v2/original-results.json"
+      ],
+      "returncode": 1,
+      "case_passes": {
+        "B01": true,
+        "B02": false,
+        "B03": false,
+        "B04": false,
+        "B05": false,
+        "E01": true,
+        "E02": false,
+        "E03": false,
+        "E04": true,
+        "E05": false
+      },
+      "source_sha256": "d0d8596078ae4ed2773b7791fc89439da137f0c315271037879ff6af090d545b",
+      "test_files_sha256": {
+        "run_oracle.py": "4efd1739d334b31afe170c448a239c4d59f8d296676ef0cc54b5246cac39b250",
+        "test_lifecycle.py": "8b347716b28c080b416dca00e3bb1805bfa3f54ac23d8ec1e1844eed614faa7e"
+      }
+    },
+    {
+      "name": "swallow",
+      "command": [
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+        "-I",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/gt/hidden_tests/run_oracle.py",
+        "--program",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/authoring/control-fixtures/swallow-cancel",
+        "--output",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/oracle-ownership-v2/swallow-results.json"
+      ],
+      "returncode": 1,
+      "case_passes": {
+        "B01": true,
+        "B02": true,
+        "B03": false,
+        "B04": true,
+        "B05": true,
+        "E01": true,
+        "E02": true,
+        "E03": true,
+        "E04": true,
+        "E05": true
+      },
+      "source_sha256": "23d5dd16578c777d1f6f247340447a8c14926ee502fb8c1ef9dd1f9fd8737718",
+      "test_files_sha256": {
+        "run_oracle.py": "4efd1739d334b31afe170c448a239c4d59f8d296676ef0cc54b5246cac39b250",
+        "test_lifecycle.py": "8b347716b28c080b416dca00e3bb1805bfa3f54ac23d8ec1e1844eed614faa7e"
+      }
+    },
+    {
+      "name": "reference",
+      "command": [
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+        "-I",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/gt/hidden_tests/run_oracle.py",
+        "--program",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/authoring/reference/workspace",
+        "--output",
+        "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/oracle-ownership-v2/reference-results.json"
+      ],
+      "returncode": 0,
+      "case_passes": {
+        "B01": true,
+        "B02": true,
+        "B03": true,
+        "B04": true,
+        "B05": true,
+        "E01": true,
+        "E02": true,
+        "E03": true,
+        "E04": true,
+        "E05": true
+      },
+      "source_sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+      "test_files_sha256": {
+        "run_oracle.py": "4efd1739d334b31afe170c448a239c4d59f8d296676ef0cc54b5246cac39b250",
+        "test_lifecycle.py": "8b347716b28c080b416dca00e3bb1805bfa3f54ac23d8ec1e1844eed614faa7e"
+      }
+    }
+  ],
+  "public_inputs_unchanged": true,
+  "current_private_authority_sha256": {
+    "artifact_contract.json": "a1b4fb8324ee313e005540a588fcaf8fabfaabfcad886c1579742531cea5b0b7",
+    "business_oracle.json": "eff95cbb88cc27a89f88b54a0eecba863d8611cbc97100684f22ed7dd7b89889",
+    "counterexamples.json": "a53e2727c4cdfb162bf174e7ef5a729e9d0db2528f6d8118e9225ead84606259",
+    "evidence_requirements.json": "131dadf86d958cec2b572173c98cfbae145749fc93c213eca3d26b6763b2b16e",
+    "expected.json": "df949fa0f7d2985c720d9c45e88da59ab3624b189e6e3e4b8001ff605b6bbce1",
+    "hidden_tests/run_oracle.py": "7e21a4f52a2dfa0f60b7c88ca78f69c73d80563d45faf7ee84965c1e17824771",
+    "hidden_tests/test_lifecycle.py": "8b347716b28c080b416dca00e3bb1805bfa3f54ac23d8ec1e1844eed614faa7e",
+    "protected_sha256.json": "f63f84f96ebe771289e497bf75ec3603740a3c3dc8e4ac35ae35dfe8ad496d64",
+    "source_originals/contract.md": "7c3403d775071d5518fe203e708e8d11849ff05ff04673e86f60e410ba8ce933",
+    "source_originals/project/__init__.py": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+    "source_originals/project/resources.py": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+    "source_originals/project/worker.py": "d0d8596078ae4ed2773b7791fc89439da137f0c315271037879ff6af090d545b",
+    "source_originals/runtime.json": "189a110aa775762ff81075cce4768211beab1e1a9e2e6de3fb391899ceb4a37c",
+    "source_originals/tests_public/test_normal.py": "b9e4747534ae15825f6544d905288419292a5eeb35649f60ed5c139f8634a110",
+    "trusted_project/__init__.py": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+    "trusted_project/resources.py": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969"
+  },
+  "human_expert_Harness_Judge": false,
+  "runner_artifact_isolation": {
+    "sys_dont_write_bytecode": true,
+    "explicit_B_flag": true,
+    "reason": "-I ignores PYTHONDONTWRITEBYTECODE; generated runtime caches were removed within H043 only; original source files and all failed output evidence retained.",
+    "actual_final_command": [
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+      "-I",
+      "-B",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/gt/hidden_tests/run_oracle.py",
+      "--program",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/authoring/reference/workspace",
+      "--output",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h043/qa/oracle-ownership-v2/reference-final-runner-results.json"
+    ],
+    "returncode": 0,
+    "stdout_sha256": "9d039a79eeacbac1c7d3ebc8d2ce4160840ecffffd5d820d3ab2e4d377cf78c3",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "no_task_pyc_files": true
+  }
+}

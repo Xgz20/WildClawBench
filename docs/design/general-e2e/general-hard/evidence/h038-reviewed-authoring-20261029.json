@@ -1,0 +1,475 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 38,
+  "registered_task_index": 38,
+  "task_id": "general_hard_file_operations_task_004_resumable_inventory",
+  "registered": 38,
+  "remaining": 22,
+  "release": "building",
+  "author_handoff": {
+    "status": "AUTHORING_VALIDATED_READY_FOR_INDEPENDENT_REVIEW",
+    "task_id": "general_hard_file_operations_task_004_resumable_inventory",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h038",
+    "case_spec": "authoring/case-spec.json",
+    "exec_files": 91,
+    "source_files": 60,
+    "partial_files": 28,
+    "partial_manifest_rows": 29,
+    "gt_files": 11,
+    "references": [
+      "reference/canonical/results",
+      "reference/equivalent/results"
+    ],
+    "main_deliverables": [
+      "archive",
+      "manifest.tsv",
+      "recovery.json"
+    ],
+    "auxiliary_entry": "resume_entry.json and self-contained Python entry with arbitrary name",
+    "actual_managed_replays": "qa/actual-managed-replay-receipts.json",
+    "input_gt_file_allowlist": "qa/input-gt-allowlist.json",
+    "framework_gap_history": "qa/authoring-validation/framework-gap.json",
+    "framework_adaptation_owner": "root; no task Office/HTML flags",
+    "runtime_framework": {
+      "source": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "sha256_before": "5d6a6139ed385ff421b6e4336298aed8878384e2376d5b7831b45c0aae40dd58",
+      "fixture_api_sha256": "b1ab161ec7755b666e1395aeee70b897a57b68b5a822c03284af3ef717ae4b01",
+      "sha256_after": "5d6a6139ed385ff421b6e4336298aed8878384e2376d5b7831b45c0aae40dd58"
+    },
+    "stable_framework_binding": "qa/framework-stable-binding.json",
+    "final_current_custody_summary": "qa/authoring-validation/stable-custody-1793223551257868000/summary.json",
+    "evidence_reuse_boundary": "18 original Worker behavior controls executed under 5d6a; final 794b performs normal and moved archive custody verification for three positive attempts, each containing six original actual entry calls. No new Worker is claimed under 794b.",
+    "freeze_manifest": "qa/freeze-v1/manifest.json",
+    "freeze_sha256": "b921e865710ee79e1e9b5d060aa56b2f1f709f1d31838fe511f8b217364f8c90",
+    "controls_summary": "qa/authoring-validation/controls-1793221667838779000/summary.json",
+    "static_summary": "qa/authoring-validation/static-1793223780410300000/summary.json",
+    "resolution_counts": {
+      "adopt_unregistered": 6,
+      "copy_missing": 27,
+      "correct_index": 3,
+      "dedupe_index": 1,
+      "recopy_missing": 6,
+      "repair_corrupt": 6,
+      "reuse_verified": 11
+    },
+    "weights": {
+      "business_correctness": 0.55,
+      "boundary_cases": 0.25,
+      "delivery_integrity": 0.15,
+      "evidence_binding": 0.05
+    },
+    "next_owner_steps": [
+      "Independent review of actual source/partial interruption evidence, recovery policy/GT and isolated replay profile",
+      "Assemble/register only in approved worktree, full registered static gate",
+      "Independent official normal/moved ZIP replay proof with generic derived artifacts and candidate bindings",
+      "Allowlist/index SHA check including ignored .bin fixture, then scoped Chinese Conventional Commit"
+    ],
+    "limits": [
+      "No real Harness/Judge/finalize; model authors not human experts",
+      "L3 design estimate and discrimination unmeasured",
+      "Python audit profile is not OS sandbox, lacks unsupported-platform evidence only as evaluation exception",
+      "Known candidate input drift yields typed replay not_assessed with neutral dependent opportunity, not a claim of proven replay",
+      "Final bytes cannot rule out transient actions; actual Harness trace still required"
+    ]
+  },
+  "root_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h038/qa/root-review-v1/review.json",
+    "sha256": "f5b4fb1ad23c8ba272509fb60ed4ffe26398fe5969c97dfeb21d07202e856693"
+  },
+  "source_counts": {
+    "original_files": 60,
+    "partial_archive_files": 28,
+    "partial_index_rows": 29,
+    "public_files": 91,
+    "private_GT": 11
+  },
+  "original18_author_controls": [
+    {
+      "name": "canonical_positive",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "equivalent_BOM_chinese_index_arbitrary_entry_layout",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "detached_moved_archive_and_actual_replay",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "static_correct_but_noop_entry",
+      "status": "PASS",
+      "A": 0.8833333333333334,
+      "criteria": {
+        "boundary_cases": 0.5333333333333332,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "entry_repeated_append",
+      "status": "PASS",
+      "A": 0.8250000000000001,
+      "criteria": {
+        "boundary_cases": 0.29999999999999993,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "entry_only_missing_keeps_corrupt_copy",
+      "status": "PASS",
+      "A": 0.9416666666666668,
+      "criteria": {
+        "boundary_cases": 0.7666666666666666,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "entry_outside_profile_denied",
+      "status": "PASS",
+      "A": 0.8250000000000001,
+      "criteria": {
+        "boundary_cases": 0.29999999999999993,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "existing_copy_wrong_hash",
+      "status": "PASS",
+      "A": 0.9945,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.99,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "duplicated_final_index",
+      "status": "PASS",
+      "A": 0.9908333333333335,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9833333333333333,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "checkpoint_claim_used_as_actual_count",
+      "status": "PASS",
+      "A": 0.998125,
+      "criteria": {
+        "boundary_cases": 0.9924999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "initial_partial_hash_binding_wrong",
+      "status": "PASS",
+      "A": 0.9994166666666667,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9883333333333333
+      },
+      "exception": null
+    },
+    {
+      "name": "input_changed",
+      "status": "PASS",
+      "A": 0.9100000000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.4,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "entry_descriptor_missing",
+      "status": "PASS",
+      "A": 0.8250000000000001,
+      "criteria": {
+        "boundary_cases": 0.29999999999999993,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "manifest_missing",
+      "status": "PASS",
+      "A": 0.42,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "missing_expected_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H038_TRUSTED_CONTEXT_MISSING_OR_DRIFT: expected.json'}"
+      }
+    },
+    {
+      "name": "missing_probe_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H038_TRUSTED_CONTEXT_MISSING_OR_DRIFT: recovery_probe.py'}"
+      }
+    },
+    {
+      "name": "missing_restricted_runner_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H038_TRUSTED_CONTEXT_MISSING_OR_DRIFT: restricted_runner.py'}"
+      }
+    },
+    {
+      "name": "missing_generic_context_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H038_RULE_EVIDENCE_CONTEXT_UNAVAILABLE'}"
+      }
+    }
+  ],
+  "versioned_control_scope": {
+    "old_behavior_entry_SHA": "5d6a6139ed385ff421b6e4336298aed8878384e2376d5b7831b45c0aae40dd58",
+    "final_custody_entry_SHA": "794b08db5c61890a5c7067c12361b9bea6b204ea792c84371da0c032c0d006c6",
+    "old18_behaviors_reused_with_explicit_unchanged_ordinary_execution_diff": true,
+    "stable_custody_positive_attempts": 3,
+    "stable_custody_each_derived_files": 491,
+    "official_current_ZIP_extra_baseline_calls": 6,
+    "do_not_claim_all18_ran_on_current_entry": true
+  },
+  "formal_detached": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h038/qa/formal-detached-1793225201776446000/validation.json",
+    "sha256": "409b586bcebe47b871672c074f5ec3255f3ece616a38207599b62fd7ed5bbf9b",
+    "A": 1.0,
+    "raw_scores": {
+      "boundary_cases": 0.9999999999999999,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "source_revision": "4603d1b8e005d12ad29f15cf55335d049e0157b4",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "4603d1b8e005d12ad29f15cf55335d049e0157b4",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "4603d1b8e005d12ad29f15cf55335d049e0157b4",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "28aa9ac1976eeb4c87c7bf4a1c48dfa05b8cbcdd578061ed509d489b0c766b55",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "4603d1b8e005d12ad29f15cf55335d049e0157b4",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "40ff72c181a55a6cf96c63f64ee172a30e051da620b431be9fcfbb29d43d3b0b"
+    },
+    "same_byte_nonruntime_archive_files": 675,
+    "derived_count": 491,
+    "original_candidate_unchanged": true,
+    "actual_current_entry_replay_cases": [
+      {
+        "candidate_content_tree_sha256": "7f4f6876ebbf8b02089d504406770b50ec688aa7c162f58d705c60f3e44d87b1",
+        "case": "final_replay",
+        "entry_sha256": "8a5675905a96d695c0e7df97259ecd06ad25d4c67ce0ec6d5ed1fdea764df299",
+        "original_final_valid": true,
+        "passed": true,
+        "runs": [
+          {
+            "receipt": "final_replay/run-1/receipt.json",
+            "returncode": 0,
+            "timed_out": false
+          },
+          {
+            "receipt": "final_replay/run-2/receipt.json",
+            "returncode": 0,
+            "timed_out": false
+          }
+        ],
+        "semantic_final_sha256": "532a07a49c1eefcb7afcdb6f726b0a86cca64ad8a83098e63d2c45b30914bd2c",
+        "semantic_initial_sha256": "532a07a49c1eefcb7afcdb6f726b0a86cca64ad8a83098e63d2c45b30914bd2c",
+        "status": "verified_actual_replay",
+        "unchanged_from_original_required": true
+      },
+      {
+        "candidate_content_tree_sha256": "7f4f6876ebbf8b02089d504406770b50ec688aa7c162f58d705c60f3e44d87b1",
+        "case": "fresh_interruption",
+        "entry_sha256": "8a5675905a96d695c0e7df97259ecd06ad25d4c67ce0ec6d5ed1fdea764df299",
+        "original_final_valid": false,
+        "passed": true,
+        "runs": [
+          {
+            "receipt": "fresh_interruption/run-1/receipt.json",
+            "returncode": 0,
+            "timed_out": false
+          },
+          {
+            "receipt": "fresh_interruption/run-2/receipt.json",
+            "returncode": 0,
+            "timed_out": false
+          }
+        ],
+        "semantic_final_sha256": "532a07a49c1eefcb7afcdb6f726b0a86cca64ad8a83098e63d2c45b30914bd2c",
+        "semantic_initial_sha256": null,
+        "status": "verified_actual_replay",
+        "unchanged_from_original_required": false
+      },
+      {
+        "candidate_content_tree_sha256": "7f4f6876ebbf8b02089d504406770b50ec688aa7c162f58d705c60f3e44d87b1",
+        "case": "repair_replay",
+        "entry_sha256": "8a5675905a96d695c0e7df97259ecd06ad25d4c67ce0ec6d5ed1fdea764df299",
+        "original_final_valid": true,
+        "passed": true,
+        "runs": [
+          {
+            "receipt": "repair_replay/run-1/receipt.json",
+            "returncode": 0,
+            "timed_out": false
+          },
+          {
+            "receipt": "repair_replay/run-2/receipt.json",
+            "returncode": 0,
+            "timed_out": false
+          }
+        ],
+        "semantic_final_sha256": "532a07a49c1eefcb7afcdb6f726b0a86cca64ad8a83098e63d2c45b30914bd2c",
+        "semantic_initial_sha256": "532a07a49c1eefcb7afcdb6f726b0a86cca64ad8a83098e63d2c45b30914bd2c",
+        "status": "verified_actual_replay",
+        "unchanged_from_original_required": false
+      }
+    ],
+    "normal_and_moved_verified": true,
+    "repository_sys_path_absent": true
+  },
+  "static": {
+    "single_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h038/qa/static-registered/20261028T220845Z_d863ff6bad/report.json",
+    "single_sha256": "bb9cee4059b6d9782da86f64659a8bc36ef10552b47320f6dd258daf19b33d4e",
+    "single": "PASS",
+    "building_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h038/qa/static-building/20261028T220852Z_3ec56b753b/report.json",
+    "building_sha256": "d977d445962f3da30691799d6abbfff31349aca053beb5b5db9198f0b6f312d8",
+    "registered": 38,
+    "missing_only": 22
+  },
+  "frozen_QA": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h038/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "fad0ba1ab7c90724ba6e2db46d1f782fc5964680c621e492981dbbc2851cccac",
+    "bound_files": 19756,
+    "bound_directories": 3112
+  },
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "limits": {
+    "L3": "design estimate, uncalibrated",
+    "coding_primary": false,
+    "auxiliary_entry_is_behavior_acceptance": true,
+    "Python_audit_profile_not_OS_security_sandbox": true,
+    "model_review_not_human_expert": true,
+    "Harness": false,
+    "Judge": false,
+    "input_drift_does_not_prove_replay_and_is_not_double_charged": true,
+    "source_GT_reference_unchanged": true
+  },
+  "Git_material_preservation": {
+    "input_GT_index_blobs_verified": 102,
+    "frozen_TSV_CRLF_preserved_by_path_scoped_attribute": true,
+    "source_bytes_changed_for_diff_check": false
+  }
+}

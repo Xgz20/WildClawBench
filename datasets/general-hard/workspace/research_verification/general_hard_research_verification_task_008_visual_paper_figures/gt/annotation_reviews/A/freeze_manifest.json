@@ -1,0 +1,58 @@
+{
+  "schema": "independent-annotation-freeze-v1",
+  "annotator": "A",
+  "output_directory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/annotation-a-v1",
+  "status": "frozen",
+  "all_listed_outputs_read_only": true,
+  "files": [
+    {
+      "file": "claim_assessments.json",
+      "size_bytes": 21270,
+      "sha256": "3683eadff4b94d3d49617439c5d8e2feec62e7f118cad6b71ce39040d94b08da",
+      "mode": "0o444"
+    },
+    {
+      "file": "input_sha_after.json",
+      "size_bytes": 2086,
+      "sha256": "6e7dc3da3f1178af8c186ff0593f0738c29d8eb3d3ae4e568ef3af731f320aea",
+      "mode": "0o444"
+    },
+    {
+      "file": "input_sha_before.json",
+      "size_bytes": 1427,
+      "sha256": "93cd2ba9db3cf64b8ec3b739723ce31a828081f71328a65dc63e0608b16fbef0",
+      "mode": "0o444"
+    },
+    {
+      "file": "process_receipt.json",
+      "size_bytes": 950,
+      "sha256": "c4bf648a3ae8d65b6791bb142b0802ad467e5ded32fc1e83e3a5e2fef1756e9f",
+      "mode": "0o444"
+    },
+    {
+      "file": "raw_visual_observations.json",
+      "size_bytes": 25654,
+      "sha256": "3e4d317172837332fe874c0566d4484d9dbc7fa6aa004a3fe20fb034657eeb92",
+      "mode": "0o444"
+    },
+    {
+      "file": "regions.json",
+      "size_bytes": 12638,
+      "sha256": "15d9d8643e1fb4d44d63b5c44777fe385a7ca48216dde7ec79911d29c22db7d5",
+      "mode": "0o444"
+    },
+    {
+      "file": "review.md",
+      "size_bytes": 2497,
+      "sha256": "fcdd58085bdacf5ca03e62eb9518b0cdd62ed544a474dc2fc7dd311646cee76f",
+      "mode": "0o444"
+    }
+  ],
+  "manifest_self_hash": "excluded to avoid self-reference",
+  "input_receipts": [
+    "input_sha_before.json",
+    "input_sha_after.json"
+  ],
+  "annotation_role": "Independent model pixel annotation; no human expert, Harness/Judge execution or semantic score.",
+  "raw_observations_immutable": true
+}

@@ -1,0 +1,1215 @@
+{
+  "schema_version": "general-hard-h013-reviewed-authoring/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_013_proposal_delivery",
+  "status": "registered_author_validation_pass",
+  "completed_dataset_task_count": 15,
+  "remaining_dataset_tasks": 45,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_task": "94087af09f46be599d407df2928b8fbac7f37837",
+  "source_sha256": {
+    "customer_requirements.docx": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+    "options.csv": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+    "technical_notes.pdf": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+    "response_template.docx": "be54cdcd2f4f31b00cde15ffc2e6798ae76d5049e687e1ae0b849ff318c588d4"
+  },
+  "native_materials_stage_record": "docs/design/general-e2e/general-hard/evidence/h013-materials-20261027.json",
+  "inputs_reference_and_numeric_gt_preserved": true,
+  "author_controls": {
+    "count": 69,
+    "baseline_full_count": 61,
+    "baseline_positive": 17,
+    "baseline_negative": 37,
+    "infrastructure": 5,
+    "semantic_only_rule_full_credit": 2,
+    "final_exception_scope_runs": 7,
+    "formula_error_runs": 1,
+    "full_matrix_report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/validation.json",
+    "final_scope_report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/validation.json",
+    "control_scope_summary": "61项完整基线矩阵（17合法表达、37候选负例、5基础设施、2语义专用），加7项例外缺交专项回归与1项实际公式错误验证；三批分别保留源码绑定，不声称69项全在最终同一版执行。",
+    "source_gt_binding": {
+      "evidence_requirements.json": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+      "business_oracle.json": "f195deecc9cf76adbff524975f73a4a8ea8204020713d18e7d15a67b5f39d775",
+      "protected_sha256.json": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+      "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+      "grader.py": "440e573a4b028c5b914695cddbdaf40964a897c2c951da530481fbf229771a23",
+      "expected.json": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+      "business_checks.py": "c6b86b40078c37deec452c6682eb60d86d7430e71a48be19f01e7e4077e033d1",
+      "evidence_index.json": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+      "business_model.py": "432c97465c6c8dde1b8dc20bddce696ef9de985f271ab8c0d3fc8fe8e4c2895f",
+      "counterexamples.json": "1e2f838d29be5ee7f3de5b07b2527adc6584bb5c241039d563ba72d9ff8eb845",
+      "render_checks.py": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+      "artifact_io.py": "b357be16562a55b6ea0fbfa29c79571a1e104ac181026661acc599b981a73bdd",
+      "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+      "artifact_contract.json": "2a70048bcfacd3ee32ed3b3426cc4b3c3f923879c4ebb6d253e3ef8dd9dff140",
+      "validate_authoring.py": "2b86df06b81a4b6b5bec14c71644a48e1184b87255ad8f5484fc5b5d64cc8dc8",
+      "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+      "source_verification.json": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+      "reference/results/exceptions.csv": "649bb66a6e3055fc8d55605aed23be3066660ab497ec97436e230f1b35934ac2",
+      "reference/results/customer_email.md": "ea8b83e5768b046079beed592244bbda43aa24809c8b18e7d1b58c66c3f67229",
+      "reference/results/quote.xlsx": "5d249b692c14b93eeb54c73a75061d5c84fe58e722730c298c1ef3c3da1632c9",
+      "reference/results/proposal.docx": "f1f01ec878a636002f5089e8b2ee6c8499c5e2f3b462b6e38ffd176bee07bffd"
+    }
+  },
+  "logical_observations": {
+    "renamed_sheets": true,
+    "shifted_rows_columns": true,
+    "reordered_rows": true,
+    "chinese_headers": true,
+    "transposed_site_inputs": true,
+    "long_metrics_table": true,
+    "merged_native_ids": true,
+    "equivalent_round": true,
+    "structural_zero_literals": true,
+    "prose_or_table_recommendations": true
+  },
+  "managed_worker": {
+    "report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/validation.json",
+    "rule_score": 1.0,
+    "baseline_numeric_checks": 243,
+    "constraint_checks": 72,
+    "response_runs": 4,
+    "response_numeric_checks": 972,
+    "covered_nonzero_nodes": 213,
+    "normal_and_archived_artifacts": 23,
+    "workspace_unchanged": true,
+    "undeclared_dependency_is_evaluation_error": true
+  },
+  "regression": {
+    "status": "PASS",
+    "unittest_count": 44,
+    "function_count": 15,
+    "unittest_modules": [
+      "tests.general_e2e.test_dataset_catalog",
+      "tests.general_e2e.test_dataset_bundle",
+      "tools.report.tests.test_wildclawbench_case_generator"
+    ],
+    "function_report": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/static-selector-regression.json"
+  },
+  "release_status": "building",
+  "manifest_created": false,
+  "files": [
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/office_documents/general_hard_office_documents_task_013_proposal_delivery.md",
+      "sha256": "238750e58a4da66ae34170d056187911cc123121e13ff8a699bb1c4a3fbc7dff",
+      "size": 11833
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/evidence_requirements.json",
+      "sha256": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+      "size": 901
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/business_oracle.json",
+      "sha256": "f195deecc9cf76adbff524975f73a4a8ea8204020713d18e7d15a67b5f39d775",
+      "size": 7277
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/protected_sha256.json",
+      "sha256": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+      "size": 377
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/office_runtime.py",
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+      "size": 49901
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/grader.py",
+      "sha256": "440e573a4b028c5b914695cddbdaf40964a897c2c951da530481fbf229771a23",
+      "size": 10515
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/expected.json",
+      "sha256": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+      "size": 33518
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/business_checks.py",
+      "sha256": "c6b86b40078c37deec452c6682eb60d86d7430e71a48be19f01e7e4077e033d1",
+      "size": 9662
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/evidence_index.json",
+      "sha256": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+      "size": 42926
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/business_model.py",
+      "sha256": "432c97465c6c8dde1b8dc20bddce696ef9de985f271ab8c0d3fc8fe8e4c2895f",
+      "size": 8548
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/counterexamples.json",
+      "sha256": "1e2f838d29be5ee7f3de5b07b2527adc6584bb5c241039d563ba72d9ff8eb845",
+      "size": 1224
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/render_checks.py",
+      "sha256": "6d6fbf5923732ff5010517303ce8067e78bd9f5c2687c270095e5e9af5876a6d",
+      "size": 1597
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/artifact_io.py",
+      "sha256": "b357be16562a55b6ea0fbfa29c79571a1e104ac181026661acc599b981a73bdd",
+      "size": 15446
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/word_model.py",
+      "sha256": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33",
+      "size": 11963
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/authoring_validation.json",
+      "sha256": "1b38237bbca111529f5a8ad5dae2ac2b4964e08e06fdc57b67f7a941c4578d61",
+      "size": 11714
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/artifact_contract.json",
+      "sha256": "2a70048bcfacd3ee32ed3b3426cc4b3c3f923879c4ebb6d253e3ef8dd9dff140",
+      "size": 11219
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/validate_authoring.py",
+      "sha256": "2b86df06b81a4b6b5bec14c71644a48e1184b87255ad8f5484fc5b5d64cc8dc8",
+      "size": 25557
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/native_text.py",
+      "sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+      "size": 39711
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/source_verification.json",
+      "sha256": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+      "size": 6219
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/reference/results/exceptions.csv",
+      "sha256": "649bb66a6e3055fc8d55605aed23be3066660ab497ec97436e230f1b35934ac2",
+      "size": 3226
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/reference/results/customer_email.md",
+      "sha256": "ea8b83e5768b046079beed592244bbda43aa24809c8b18e7d1b58c66c3f67229",
+      "size": 1361
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/reference/results/quote.xlsx",
+      "sha256": "5d249b692c14b93eeb54c73a75061d5c84fe58e722730c298c1ef3c3da1632c9",
+      "size": 14236
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/gt/reference/results/proposal.docx",
+      "sha256": "f1f01ec878a636002f5089e8b2ee6c8499c5e2f3b462b6e38ffd176bee07bffd",
+      "size": 41819
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/exec/response_template.docx",
+      "sha256": "be54cdcd2f4f31b00cde15ffc2e6798ae76d5049e687e1ae0b849ff318c588d4",
+      "size": 38835
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/exec/customer_requirements.docx",
+      "sha256": "0a4dc8a33c42eab345bdad0690830bd3005fb0e6c9adb7d0e44f4a18be3bf05a",
+      "size": 40234
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/exec/technical_notes.pdf",
+      "sha256": "ebfb69ac93be4180aebf7239d58a5de045548a0ff1dcf99b04288b1e3044e87b",
+      "size": 140335
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_013_proposal_delivery/exec/options.csv",
+      "sha256": "35bd4e9b0cfd3c121ef4cd11cf9b7cda5ea47a38c7e429b552e1fd58d8a9d236",
+      "size": 426
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/task_sources.yaml",
+      "sha256": "ce60ba9e466bdbc3af4f3694aafbc50c3648eb507a30ee409df91fe3020061fe",
+      "size": 28831
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/checkpoint_capability_map7.yaml",
+      "sha256": "ea527b617f05d6cd352957421a890d4dc5c8afa1bb39500f8bb7f04ed862635c",
+      "size": 5611
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/case-spec.json",
+      "sha256": "f0b457f225823be11e4ea54c5df2752af462ff9e37a761ddf8362c5750e859ec",
+      "size": 18386
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/prepare_contracts.py",
+      "sha256": "523c9b0df1163685574620925973407818e3190b037dc90ee758c83ff9683451",
+      "size": 10547
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/run_managed_worker.py",
+      "sha256": "27e7e4c6c567b2853d5db5340e14b791e371bb5e69efe0d28de82d5dddc7e0a2",
+      "size": 5885
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/prepare_case_spec.py",
+      "sha256": "660a776f53748f3e55f3b09ead4515a27cdbfb8e8db94e42bc74c62583b9faa7",
+      "size": 11811
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/verify_sources_and_build_gt.py",
+      "sha256": "fa299b4209434c8ccb9df0e90f59485cc6f1311c4055051577a4f3609c5d3b96",
+      "size": 6343
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/marker_status.json",
+      "sha256": "35866d8832d65ed65203daedf3ecf645411e4c6ca3b9c18ad60cc7618719ccb4",
+      "size": 720
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/repair_word_widths.py",
+      "sha256": "703e8336bff35ad6ff9a12ca7ed00fbd0d7a1da6ba30097e519d7c3f86b8ffe4",
+      "size": 1363
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/finalize_controls.py",
+      "sha256": "e4665b2a65d72b1cd26de8e69badc461a0bfdd1f178eb167ad219ab62714555a",
+      "size": 3528
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/run_reference_rules.py",
+      "sha256": "318d491915552657c8112afb260b9027d39349b4e26b09c37d12fd3cf96916bf",
+      "size": 1888
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/build_word_inputs.py",
+      "sha256": "b0fc70f489d93f806cf1696c384bded177233d2c53f5077d10f7c0ec4cfd4832",
+      "size": 7229
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/verify_native_reference.py",
+      "sha256": "de31d24641ced94f0998c1c5b1440c2d133fcd3c4bdb36884ef0b0e72fa59b24",
+      "size": 13015
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/build_technical_pdf.py",
+      "sha256": "68e5e5ccd458d5f72267ac8806b021dd1f1658cfbbd4b8c8174dbe9135574df4",
+      "size": 3073
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/build_quote.mjs",
+      "sha256": "1c90aa8f66d5eea978b8978593ae7b1e91c423f5652bca88431b9b099d1ccc4e",
+      "size": 11682
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/build_checkpoint_evidence.py",
+      "sha256": "5fef03992108de27ca8b77d1f85735ff4a8ef955990b22574b7f2fffc96b2cd9",
+      "size": 6307
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/render_inputs.py",
+      "sha256": "59a4758adcc7851a08461769cd14389bf2325a9a893a6b38e9d4a112ba9086fb",
+      "size": 2073
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/blueprint-snapshot.json",
+      "sha256": "f687777fe0536f0cb7ca1455b10a873c4ca25b24a604f0cc14a32f2c0d45c198",
+      "size": 14102
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/facts.json",
+      "sha256": "52538a7f55648f3e1c7760ea61af1c0a4ff544a04046ddf885b837e3db5b4099",
+      "size": 10047
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/build_reference_documents.py",
+      "sha256": "5aee9b4dcb8384018fc5176e160ee02d148d5ac4eba08857add4ec27345cb4cc",
+      "size": 10668
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/declare_materials.py",
+      "sha256": "474208e69761c5eeb7245fc4f56c95ce6fc6a5636e8101907e771845eed2fbca",
+      "size": 9438
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/check_formula_error.py",
+      "sha256": "4498379a7e400133e7b7e9b4be9ec2581376ea055dd0f3dd84b1d37e50d13ed1",
+      "size": 2370
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/authoring/build_registered_evidence.py",
+      "sha256": "0af6f4939910417ccf0bd80b8015bfd3e6ae286fd1f18ed4f46912417ec5c158",
+      "size": 6198
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/validation.json",
+      "sha256": "dd87199016cc0547d8b29b2d82bbd9d4522115b02c6aa014b5c5398806f03743",
+      "size": 26839
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/validation.json",
+      "sha256": "5c6bf975a97fe56220880c94ed949b63297c6bf102ded5150b57635fb3c8a285",
+      "size": 5886
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/formula-error-001/validation.json",
+      "sha256": "69a2c8c774d8dd60a9b2f89a2aef4d67142b4f3558c26acaf9c7f1e109d75582",
+      "size": 456
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/scope.json",
+      "sha256": "1be5c3410a83b721b816fc325cdd4de881a000618d9eb196cb6df60bb9217493",
+      "size": 1127
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/scope.diff",
+      "sha256": "7b0734ddec35a55a179b63324b51e20d4581a8b860103642783439a9248fbfd9",
+      "size": 1608
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/scoring-python-syntax.json",
+      "sha256": "8b736344716b956e3e7fab1d2bcdbb5da8e08bff64a1dbb599da03200d622149",
+      "size": 3252
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/runtime/probe.json",
+      "sha256": "19e9b1223c96ecd6be81dc819d23dd5fbfd60eda51757396dd27631936a6f304",
+      "size": 982
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/runtime/initial-probe-correction.json",
+      "sha256": "f249c646e9fb250f0126ed1f3c6d7be0ea669ec85c64453ffaba9dd531ae1071",
+      "size": 421
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-smoke-002/validation.json",
+      "sha256": "3502dc80d890c319a9a40897afd946c035a32a41ff6d5154f8a3f1fe81f42744",
+      "size": 4488
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/regression.json",
+      "sha256": "f5196f578e44ca8efc52077be78f69d6ac68b49d56dfccc6e659545c5ad10057",
+      "size": 398
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/unittest.stdout.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/unittest.stderr.txt",
+      "sha256": "cc63054c11ebc7143009bc5a085644ed8da13997d6e4cf744f22b97ae1035136",
+      "size": 143
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/static-selector-regression.json",
+      "sha256": "a55984bdff747cd6c7ef82a174cb883f05f12871f15eb8304a74ea9a87acfe65",
+      "size": 1700
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/canonical-isolation.json",
+      "sha256": "9004854d45bc2744146b34b920346766283e0a64ed02a7bad92e52ed13e4f90a",
+      "size": 185
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/static-single/20261027T125149Z_46d0d458cd/report.json",
+      "sha256": "9d16aee24f9139e4576c90cabbacc13d7f6049e7441064e97cb7632fc6a35d29",
+      "size": 1221
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/static-release/20261027T125152Z_35e0f3714e/report.json",
+      "sha256": "1c801013bfa80574af39298a56c567b72783db406e338f4245f861d2a806b0fe",
+      "size": 37621
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/validation.json",
+      "sha256": "b1b57349e2fe687dc2a922cb071aaddc1c35333e840964022a114b0e4521d6ad",
+      "size": 13910
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/worker-validation.json",
+      "sha256": "8ac800063e4bdb7c095697005606de397f233ff0b37a7ce2b2b11d1bc0d8ed9c",
+      "size": 5537
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/worker/derived/h013-analysis.json",
+      "sha256": "245251df4b5923e0be4f3aba41a69ff34573351b24dbfaa72b6d1b59e9a98aed",
+      "size": 144529
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/visual-review.json",
+      "sha256": "5683247cfc10455bb9dc418c460a80506d00a68e43e79243e21d2021960e2ed9",
+      "size": 1753
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/worker-preview-1.png",
+      "sha256": "9d0eb182dc94ce3d6f964fb2692b5ba1bc97aa6a832f5df3d66de4c902125697",
+      "size": 222556
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/worker-preview-3.png",
+      "sha256": "f1d008e798e5518ee098d89dc8b449163843d309ebf3394f5b205a7550cfe75b",
+      "size": 286715
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/managed-worker-1793105404875006000/worker-preview-2.png",
+      "sha256": "fe3904e8cd7f2a0b8107da8e858c2b1fa63552cd522f4212efc1d9441bc04269",
+      "size": 303179
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/retained-versions.json",
+      "sha256": "80235a0dfc122cdd4ecc7091dc35a09fcaff76ee4b2b13c730bcd49c99f89db5",
+      "size": 2049
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/reference/validation.json",
+      "sha256": "d7096abce9df72c13da0ca6f01c7fa1c416a413f7d6c6ff971ba4f54bb8032d1",
+      "size": 310
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/reference/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/renamed_sheets/validation.json",
+      "sha256": "a6b7145768e38d145f8e072bb5a37a1d5e5c0198581cce5d7d37991e76c7f0b5",
+      "size": 315
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/renamed_sheets/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/chinese_headers/validation.json",
+      "sha256": "d9e9daa9d68084e87e5a540b76744478746003fbd908c3c29edbd663c284d9fe",
+      "size": 316
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/chinese_headers/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/shifted_grid/validation.json",
+      "sha256": "d9145b1b776dd69b19347a8fef9e7072ac2c1ceef5572b1a7edb779968bb6a52",
+      "size": 313
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/shifted_grid/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/transposed_sites/validation.json",
+      "sha256": "679a0d64c8dc00475e84cba6081e3961e4085c532a6a42e5bcaae09bb938a1e7",
+      "size": 317
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/transposed_sites/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/reordered_model_rows/validation.json",
+      "sha256": "1b80055ae6279c972bc485b624bba09509104184dbc5afd93f3e310116f71c38",
+      "size": 321
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/reordered_model_rows/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/merged_xlsx_ids/validation.json",
+      "sha256": "676ab89c32b8e9d6c86d963a36c8f0cb937eee1988c1263f7da18e5ff9ccf4e5",
+      "size": 316
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/merged_xlsx_ids/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/long_model/validation.json",
+      "sha256": "32ac178fd7bc9e6502e1719b0f3a918f1277dc2c6f52837ee278cf6f51200040",
+      "size": 311
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/long_model/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/reordered_word_rows/validation.json",
+      "sha256": "24c2b8c68134468379355e9793319672f76009a6980a25997a8c368ebf050b63",
+      "size": 320
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/reordered_word_rows/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/merged_word_ids/validation.json",
+      "sha256": "8c95e8857eb396873402cb45822d34690a791431beac8cc2ac8f11b689fa2d11",
+      "size": 316
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/merged_word_ids/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/prose_email/validation.json",
+      "sha256": "1b2ee8285435e80c17c11fb331b8f6be4cd16d63c6e20d3c8dc50920369efc7b",
+      "size": 312
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/prose_email/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/source_locator_site/validation.json",
+      "sha256": "ff5ce482762f0bd163c0cdea8a98baabe60a842e6689033d220e03361a75f8bc",
+      "size": 320
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/source_locator_site/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/source_locator_physical/validation.json",
+      "sha256": "a9fddea67f0ddad77146db3ec4ce2a0d045ececd153c37e0d450f86c5f9bc848",
+      "size": 324
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/source_locator_physical/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_optional_rule_source/validation.json",
+      "sha256": "3c7cc6c3c47555f186fbf11e99f4f675cd88b7a31dc3e80a56ee8cebd6b17d00",
+      "size": 329
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_optional_rule_source/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/equivalent_round/validation.json",
+      "sha256": "3a33b1a7c15122d1032800b45a2eb965ce89ea8a13b66983e56728e91806e430",
+      "size": 317
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/equivalent_round/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/structural_literal_zeros/validation.json",
+      "sha256": "fe0b176449145f626293e974d4862bb9514e5be3fd92afaed633e6eed0ede146",
+      "size": 325
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/structural_literal_zeros/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/bom_csv/validation.json",
+      "sha256": "4ccd44821f780de5613881b6fbd846ad1a411fd508fbca55370b0d2268b41ccb",
+      "size": 308
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/bom_csv/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/floor_modules/validation.json",
+      "sha256": "15b1307e83d2ad936d8d32bd6f93fa05528cdc64677ae7c6e874679dfc1a0db7",
+      "size": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/floor_modules/result.json",
+      "sha256": "7f3c0bfed749fd9f30f396a2ea7dcd80e064b6051252356b727e37c5f00f66a7",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/double_shading/validation.json",
+      "sha256": "b3c4510ea725bc8f2851a810e8c1407c203e16177dcb86301a345f012599bcd3",
+      "size": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/double_shading/result.json",
+      "sha256": "263135e072f557495ee500de69aa8f786479aeac25b2dafdbef6c93a6f7cd643",
+      "size": 231
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_flat_load/validation.json",
+      "sha256": "2b83d57588302163a00bd00b12673c3f8074a22dcd64607aa09b429258e129fd",
+      "size": 361
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_flat_load/result.json",
+      "sha256": "19d2e06f7faed9dab428940312da8b7fcff8ed86bbea79967aa5bc8f4445c19a",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_replacement_area/validation.json",
+      "sha256": "c29853810b83d19f3300ecfd068ffb1d8ab1ac3385b08a0ca8884cc92938c9a0",
+      "size": 368
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_replacement_area/result.json",
+      "sha256": "771da318e8767821da8bff188059ef5c5f87b8e4aabac0b4fa2cec5e2bc26156",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_permission/validation.json",
+      "sha256": "2f709a3fd9d9e05297698b665091abc93b9d574df0c2a3525c4d8dbc620dc10e",
+      "size": 362
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_permission/result.json",
+      "sha256": "4f804b900b85cb51425f4d2c6fb972df24c890e5658ae9f50f80e50f676e7e84",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_inverter/validation.json",
+      "sha256": "40486135c0a6c3f3a935c7d16ff45d44be1144435bfbe0276f9a6a1d1234e436",
+      "size": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_inverter/result.json",
+      "sha256": "d020a99d542d1fcef752fc4e0cf110c189cdb011b169a964d48e5bdfdc2d15ec",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_cable/validation.json",
+      "sha256": "2677d1708d535d60290da7f6f75e477e205a59cf2e1b576e29c527eadb58b736",
+      "size": 355
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_cable/result.json",
+      "sha256": "f82e813bdc5f07eafde2f0caf5bbdd585f38a1e8923ca217105b6155363c446d",
+      "size": 231
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_isolation/validation.json",
+      "sha256": "590c7a5af89e3873886a4a18294ed143179354c36d75cb86006ed67d59ff2f75",
+      "size": 360
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_isolation/result.json",
+      "sha256": "26aef51ff2a86edb6cc2a5eb85d8992538d17efa06d9b4ad9c134d2b19c42595",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_adhesion/validation.json",
+      "sha256": "bc8c7c5529d8e5ffebd5aa6bd342185bd1d1aeb976629ce3666ac425d7456dd9",
+      "size": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_adhesion/result.json",
+      "sha256": "f1483ccf708931b90d04e1aa0a73c042098639ba4efb41c4e63061aa702e1e0e",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_corrosion/validation.json",
+      "sha256": "6bb0b706580d424b472116c920cac898639c33b7f975d29503b1a66d73280ce3",
+      "size": 360
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/omit_corrosion/result.json",
+      "sha256": "3a94a6093f43b7e568e0c71ee74a9a5badfa046057de3400c4317308c8592062",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_vat/validation.json",
+      "sha256": "eba4ced13b0cef4bc3c61213a0fd07d678401a133a026708d71c5b2157592668",
+      "size": 353
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_vat/result.json",
+      "sha256": "04b8757b1ac25b7de3ce94475dd5b690fe21ac45f8c0b193cc67b60044efb461",
+      "size": 230
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_half_cent/validation.json",
+      "sha256": "7e8a60370dfd336deb4863b60d8657f7c9ac05fcde48837a74ed2a7ed845ec2e",
+      "size": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_half_cent/result.json",
+      "sha256": "04b8757b1ac25b7de3ce94475dd5b690fe21ac45f8c0b193cc67b60044efb461",
+      "size": 230
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/subsidy_deduction/validation.json",
+      "sha256": "045a873372e5e6bc7b656bc0fc33bb23bc5a794d0b84c94f7f99b47b11517604",
+      "size": 363
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/subsidy_deduction/result.json",
+      "sha256": "26bbab8ec7a18c3fb1b1825d4f1f9619e1f29a628b5afb5d368004a10dc1f361",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/unknown_load_zero/validation.json",
+      "sha256": "b77ceb25d590592ba39a1e5c7da394a298c48c60511592e57911bacbc6e83a4e",
+      "size": 347
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/unknown_load_zero/result.json",
+      "sha256": "095d0f59ff65fd06d4c390a2eb80d3c8d54d65abbd2c39628627909b03eb9bc0",
+      "size": 216
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_existing_locator/validation.json",
+      "sha256": "33bd34b0b28194d0b89a8a24c662c735c8d6a4ef74e2030742e9d84f19341b22",
+      "size": 367
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_existing_locator/result.json",
+      "sha256": "912d064a79f55d3e186b60a1845de8d431e954414968c0c52a671b9320542147",
+      "size": 231
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_wrong_price/validation.json",
+      "sha256": "51e787eb27bcf3ef539fd7279f7b063ed51fa0b89885d2c3e249214fbb139292",
+      "size": 362
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_wrong_price/result.json",
+      "sha256": "59d355438030dd3e74b29800b8b77b7f8996c901229ca5fbccf8fdc52a23c627",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_wrong_recommendation/validation.json",
+      "sha256": "93f0fd8ef9eedfcdc5247fff4ec2c8ba770a5666aa71d6446150f6628ff80a51",
+      "size": 370
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_wrong_recommendation/result.json",
+      "sha256": "439140cf1981eb88ee0b68812fc20b66013483ec1190ab16fef5a4d0ac0e92aa",
+      "size": 231
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/static_model_cache/validation.json",
+      "sha256": "945e5638e315db7557fcd4b4b663cf8d3547dc9cc73b98e5eef02628cdeffae6",
+      "size": 321
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/static_model_cache/result.json",
+      "sha256": "00dcb6cff0e86c882041616464bf8896e15f8bb82d48d062b19be1978b4389c0",
+      "size": 189
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/constant_model_formulas/validation.json",
+      "sha256": "d56fef586fd4db4e87409aa1e21370ecc34e5db0c11958ac8c804e1846919c78",
+      "size": 326
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/constant_model_formulas/result.json",
+      "sha256": "00dcb6cff0e86c882041616464bf8896e15f8bb82d48d062b19be1978b4389c0",
+      "size": 189
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_source_parameter/validation.json",
+      "sha256": "0d6c89e40d530e42aa9fc02c1ff952d3a80a30ea0b53fb3ebbec03d34b0a389a",
+      "size": 355
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_source_parameter/result.json",
+      "sha256": "ec6acfc994581e8d70598f2b6e3e0f0500cff5dbba044b38d39ec47fafbf4fe8",
+      "size": 217
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_formula_old_cache/validation.json",
+      "sha256": "3760f9a37921bd6112ca6ed00ec3336000cf8c3c9aaee3721425c260329d4abe",
+      "size": 369
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_formula_old_cache/result.json",
+      "sha256": "d020a99d542d1fcef752fc4e0cf110c189cdb011b169a964d48e5bdfdc2d15ec",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_exception_value/validation.json",
+      "sha256": "95b887a589b5e400cd543a016c3b3c90c93e5d357b15d4ec964dc6846cc779d3",
+      "size": 382
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_exception_value/result.json",
+      "sha256": "0b21b646975591671bde14fc5e4a5cca74029462c4aadb4288f92ce7498ba196",
+      "size": 247
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_exception_status/validation.json",
+      "sha256": "77c31e39ec60a3591fbebef3ee86aaed6dc9ea6af656f9da4e017d0d68a4bcaa",
+      "size": 368
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_exception_status/result.json",
+      "sha256": "0033b652ef00cc04bcb00dabd04a17c97c337aa3a5241f4c752b78c4d789aa55",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_next_action/validation.json",
+      "sha256": "214a933eb3b83f69f7c46208b3cbc15d75bf8fddb6353628863e03e7188bbf58",
+      "size": 365
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_next_action/result.json",
+      "sha256": "0033b652ef00cc04bcb00dabd04a17c97c337aa3a5241f4c752b78c4d789aa55",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/duplicate_exception/validation.json",
+      "sha256": "243f5b311d42f9056dc90b22412ade1045cd90236b2b82f198304923380ab74b",
+      "size": 385
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/duplicate_exception/result.json",
+      "sha256": "803136040bbe541fd1d0eacb6da523cfe73ba5ac59c9687dea2d8dc4259c153b",
+      "size": 252
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_exception/validation.json",
+      "sha256": "042b7ffcae154c6ebdb3a9f53bffc33662f7ecbcdc65cfc51bd7cf94d24db7bc",
+      "size": 393
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_exception/result.json",
+      "sha256": "8225c8b53a72eef59954654d3b70bde205599c4e484ef2268c9b15302bd49ee1",
+      "size": 262
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/extra_exception/validation.json",
+      "sha256": "72cf33c04920b1f08c8fbb366929aa159e4764d79b60e80686ba5db7d29a6642",
+      "size": 364
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/extra_exception/result.json",
+      "sha256": "d8b504de4eb97632cd5133988ef270f45c49099e2091516ad7e674093ef46c38",
+      "size": 235
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_hidden_text/validation.json",
+      "sha256": "09489d2968ade547929ec0d9627405cbfb23e6c7d2bb01efc8f29bdd953ed1f0",
+      "size": 347
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_hidden_text/result.json",
+      "sha256": "d429018d40abb036db94a881bbbd24603ef0b743eb5122f6f3dd8234f16acf93",
+      "size": 217
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_missing_requirement/validation.json",
+      "sha256": "6ff542a4cb40fb2ac1356e0d85e8f59385ebc26717eea969b6d97443cb05d61c",
+      "size": 355
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/word_missing_requirement/result.json",
+      "sha256": "64642936e91c20aa3bbdc90e1a4563be13bc4635f26023b20babfa1a85a2f21a",
+      "size": 217
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_quote/validation.json",
+      "sha256": "c365cadb25e5a561c330a3a686b7df8ccbabc700d937f1d55a7a130daab74b2c",
+      "size": 376
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_quote/result.json",
+      "sha256": "549d8b565acec96825a56ca7622850bdf064dc20fde1b89cbf90ae4f7c439df5",
+      "size": 249
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_word/validation.json",
+      "sha256": "f830fbfe4a454ef8463e5ad11decac67c7d191a34502b4da9d34d8e7cb878af4",
+      "size": 373
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_word/result.json",
+      "sha256": "c0339a3b589a7d92f92b1f4b7bf24b09dffefc7a07dcaba513da9839aa1e5f5a",
+      "size": 247
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_email/validation.json",
+      "sha256": "9bda46a436473bde6883ddad06c92df0ff2f188bc691fbbf72bb31320e7a3004",
+      "size": 373
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_email/result.json",
+      "sha256": "32bcf0faf54ce688f9e91f892c0ce046e012148402cf3d5c519410efa37e48c7",
+      "size": 246
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/corrupt_quote/validation.json",
+      "sha256": "fbf82d04663f46386ad99c879e91a1cd63945f32f262fd182759fd7746224d09",
+      "size": 376
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/corrupt_quote/result.json",
+      "sha256": "549d8b565acec96825a56ca7622850bdf064dc20fde1b89cbf90ae4f7c439df5",
+      "size": 249
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_exceptions/validation.json",
+      "sha256": "f259ac351e091d3cae0dc453f790f543a774a5f9e87e2868bff114eccaf3ff07",
+      "size": 394
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_exceptions/result.json",
+      "sha256": "29658cae6e7112defe8420910e378ae43c60e8f2a6534870f5d8736050627ee8",
+      "size": 262
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/all_missing/validation.json",
+      "sha256": "4a1d877f6cb4400e2d94de27ab65d0db25f5b6c996189547a497cc02470dfb80",
+      "size": 312
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/all_missing/result.json",
+      "sha256": "7b4e35e76beb2befb197b97142722db49fb7c50c1f7c37f808f7ee7cf44afb52",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/malformed_csv/validation.json",
+      "sha256": "6ad02d68c3670e0705764856af8a86aefbd5a06231b2cabe6a2a43d1050ace45",
+      "size": 389
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/malformed_csv/result.json",
+      "sha256": "29658cae6e7112defe8420910e378ae43c60e8f2a6534870f5d8736050627ee8",
+      "size": 262
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_gt/validation.json",
+      "sha256": "5ae7c8e512dc8a328ca2889601c1c80b2d037513ba9b9fd946ffac07303a7e6d",
+      "size": 174
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_gt/result.json",
+      "sha256": "f9fdc2570c3a4300f70666106edb82bfa187a0785c7b2b5756ce3211fc44e811",
+      "size": 2230
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/helper_drift/validation.json",
+      "sha256": "dd1ed800807b933c42c1990f615d63aaa3190b3af6032a7912e65934af3a63b5",
+      "size": 176
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/helper_drift/result.json",
+      "sha256": "eecc478af6fffa644177db3780fcbec7539a13b788382f56372a874e47902383",
+      "size": 982
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_gt_digest/validation.json",
+      "sha256": "1adac708112264ea29d6f67554826db3edb3f39cb1597b87595d760c6c2957a2",
+      "size": 179
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/wrong_gt_digest/result.json",
+      "sha256": "799e592fabf6df6b0bd85d338530c2954ef140985e95ca7819260ce71501bd71",
+      "size": 1077
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_runtime/validation.json",
+      "sha256": "f41d972a71b325f1984c962fe1fadfa2580fc0c1eb8c03e69ea39964e5bb92ee",
+      "size": 179
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/missing_runtime/result.json",
+      "sha256": "dc33defd639462330057306206624ffc5a3f7f897cbc3498defaa9f4dcf5697d",
+      "size": 1067
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/render_lock_mismatch/validation.json",
+      "sha256": "b7393a2ad0f004b8278941eb8a39ac89c60e336f3d85ad7e9c0813689732d943",
+      "size": 184
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/render_lock_mismatch/result.json",
+      "sha256": "75a932840dd52607b707bcc7f64bd860edbaa91c75d3fc0d8ea73efe06f446f3",
+      "size": 1822
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/tampered_input/validation.json",
+      "sha256": "1ce3171486a2583c0351250ec7bb9b674511c5fb8545674234e20bf151ba864c",
+      "size": 316
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/tampered_input/result.json",
+      "sha256": "4139a528d1d931736977dee9b04270beb7c69c3223da3aff168f9f11f1297bfb",
+      "size": 188
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/semantic_unproven_approval/validation.json",
+      "sha256": "94cbac545e59761ff663f98b16ea15718617e694549f3791e1910f502830a620",
+      "size": 326
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/semantic_unproven_approval/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/semantic_invented_subsidy/validation.json",
+      "sha256": "f59793a0b2d0266d7be3e729e476751bf6549bb960194a37e2ff87c8e9759b38",
+      "size": 325
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/business-controls-full-001/semantic_invented_subsidy/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/reference/validation.json",
+      "sha256": "d7096abce9df72c13da0ca6f01c7fa1c416a413f7d6c6ff971ba4f54bb8032d1",
+      "size": 310
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/reference/result.json",
+      "sha256": "8ef615b5127e264aa4eda7e29132277b96358bfae97a1068fb09ea106bdedfe6",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/missing_exceptions/validation.json",
+      "sha256": "62a04148369706aa563dafd0edac08174c9ce77009789727231cbab6e0364705",
+      "size": 379
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/missing_exceptions/result.json",
+      "sha256": "ff399812d6f48d92813b24646ec9e4e168eeecd46858a1c12fb5044f6d711d83",
+      "size": 247
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/malformed_csv/validation.json",
+      "sha256": "5ab39bab2828bb711d782cb05099986a34401797452fa564f822dc361d34ff91",
+      "size": 374
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/malformed_csv/result.json",
+      "sha256": "ff399812d6f48d92813b24646ec9e4e168eeecd46858a1c12fb5044f6d711d83",
+      "size": 247
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/duplicate_exception/validation.json",
+      "sha256": "eefdbbd5ee13c044afc44a14f29f5460312f5873f8ec3be936e340c18a49802f",
+      "size": 383
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/duplicate_exception/result.json",
+      "sha256": "b100aa5772004ed55854be21d44df356acf7d05b773c51a5fa752cff395cdb43",
+      "size": 250
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/all_missing/validation.json",
+      "sha256": "4a1d877f6cb4400e2d94de27ab65d0db25f5b6c996189547a497cc02470dfb80",
+      "size": 312
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/all_missing/result.json",
+      "sha256": "7b4e35e76beb2befb197b97142722db49fb7c50c1f7c37f808f7ee7cf44afb52",
+      "size": 187
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/missing_exception/validation.json",
+      "sha256": "594cf5cda23aaaace0fab0cfea16ae9c9b950d779f665d8791a0c383801bc1a5",
+      "size": 393
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/missing_exception/result.json",
+      "sha256": "af94788b0b8e39e4d6fc37e31daf1504fe9f5b625669aa68b8726831c0ea643d",
+      "size": 262
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/wrong_existing_locator/validation.json",
+      "sha256": "33bd34b0b28194d0b89a8a24c662c735c8d6a4ef74e2030742e9d84f19341b22",
+      "size": 367
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-followup-001/wrong_existing_locator/result.json",
+      "sha256": "912d064a79f55d3e186b60a1845de8d431e954414968c0c52a671b9320542147",
+      "size": 231
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/business_oracle.json",
+      "sha256": "35a23ed7cb3c5a024c5c23ff54f1947d8b3d3fd8b1a878cdbd5441d51e1cfa4f",
+      "size": 7304
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/business_checks.py",
+      "sha256": "45f8679c97c9171a5c0eb7812d2fba464ddfd0c2da3952f4f594abd1f1240b91",
+      "size": 9632
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/counterexamples.json",
+      "sha256": "98b1ccadb057a26375919f8919f1cceda34785c7b409091470ef5548827ba85b",
+      "size": 1248
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/exception-scope-before/artifact_contract.json",
+      "sha256": "41c9114a1984399d53b9295569459edbd396f7113c562fb1385e78e89de3f200",
+      "size": 11236
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/formula-error-001/result.json",
+      "sha256": "ccd2f52e6273a320625c97c7cd1ff119bf8f687015fd7123f48e1862a9339f43",
+      "size": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/evidence_requirements.json",
+      "sha256": "00117bab4890d0100c2cb42357cc5e6bc0926f57999908b3244b9eebd247b0cf",
+      "size": 901
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/business_oracle.json",
+      "sha256": "0b06185ce9a9eb8cac67aee0ae4767580331f9f5893324ac0ea821d9511b9aa5",
+      "size": 7307
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/protected_sha256.json",
+      "sha256": "4898bd74296da9a7e94aaaeb6dcea952dd02974184f11724bc850a4300a90156",
+      "size": 377
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/expected.json",
+      "sha256": "23c2b9447ec3540e432c46047196e3e1e1611369eb570732e7dc7453539f9279",
+      "size": 33518
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/evidence_index.json",
+      "sha256": "d90adae3c1511a34248da408a884353dc6fd7b8bccd023ce2107c6335766e331",
+      "size": 42926
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/counterexamples.json",
+      "sha256": "be1456aa44b6e59295eb89dbf4fb0548a1bc425d19dcee122b891a8d8033032e",
+      "size": 1259
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/artifact_contract.json",
+      "sha256": "9507b3c163cd633c66e4b83a196a71a0f9dfdcfe31b436d68e64fceef1d814a7",
+      "size": 5547
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h013/qa/materials-contract-snapshot/gt/source_verification.json",
+      "sha256": "a24c135c88f72fddda431130dbec7a220c576c0eefa82d9c0d8f34cbe9858145",
+      "size": 6219
+    }
+  ],
+  "limits": [
+    "Author controls and generated-MD rule score are not independent semantic or real Harness results.",
+    "Full prose meaning, invented subsidy/actual approval claims and visual usability require an independent Judge.",
+    "Difficulty L4 and four-client calibration remain unmeasured; full 60-task release not frozen.",
+    "Original draft contract versions are retained by original SHA; historical materials evidence is not rewritten."
+  ]
+}

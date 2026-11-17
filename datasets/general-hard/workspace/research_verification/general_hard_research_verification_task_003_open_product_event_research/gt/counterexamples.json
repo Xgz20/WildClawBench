@@ -1,0 +1,50 @@
+{
+  "schema_version": "h029-author-controls/v1",
+  "positive_controls": [
+    "native_static_values",
+    "chinese_shifted_reordered_columns",
+    "split_and_transposed_logical_tables",
+    "source_nested_dates_claims_sections",
+    "reused_date_and_multi_field_claims",
+    "real_month_calendar_label",
+    "real_body_date_no_structured_date",
+    "honest_unknown_publication",
+    "visible_day_and_cross_day_UTC_metadata",
+    "actual_Office_formula_recalculation",
+    "pool_external_valid_evidence",
+    "real_HTML_PDF_and_router_MDContent_equivalence"
+  ],
+  "candidate_loss_controls": {
+    "missing_or_corrupt_deliverable": "Related record/protected scores decrease, no evaluation error",
+    "malformed_typed_ledger_values": "Candidate loss without TypeError/unhashable crash",
+    "fabricated_or_unlocated_date": "Independent binding/time trace fails",
+    "invented_day_from_month": "Precision/binding fails",
+    "wrong_timezone_conversion": "Normalization fails",
+    "wrong_declared_window_arithmetic": "Window arithmetic fails",
+    "missing_claim_field_mapping": "Its fixed public claim slots fail",
+    "fabricated_quote_or_wrong_locator": "Fixed affected citation slots fail",
+    "missing_event_slot": "Four-event denominator remains four",
+    "protected_input_mutation": "protected_delivery=0; all other identical scores preserved",
+    "hidden_or_image_core": "Native visibility/structure failure"
+  },
+  "semantic_boundary_controls": {
+    "real_date_wrong_event_relation": "Mechanical token/date can pass; factual_support/coverage must be checked by actual Judge",
+    "publication_in_window_old_event": "Publication date existence does not prove event occurrence; actual Judge rejects old event counting",
+    "future_launch_promoted_to_GA": "Mechanical citations can pass; actual Judge rejects stage inflation",
+    "same_change_multi_stage": "Distinct candidate IDs do not prove distinct groups; actual Judge checks duplication",
+    "model_only_or_non_search_release": "Files/citations do not prove AI-search product scope; actual Judge checks",
+    "syndicated_many_domains": "Domain count not independent evidence; actual Judge checks lineage and honest single-source disclosure",
+    "unsupported_trend_or_action": "IDs and source quote location may pass; actual Judge checks actual premise/support/bounds"
+  },
+  "evaluation_error_controls": {
+    "missing_private_binding_or_oracle": "Missing/drifted private material",
+    "missing_bundle_context": "Managed independent bundle missing",
+    "source_body_projection_receipt_SHA_drift": "Trusted evidence drift",
+    "collector_outage": "Unresolved acquisition error",
+    "unsupported_dynamic_shell_or_bad_router": "Unresolved independent source projection",
+    "missing_or_invalid_Office_lock": "Managed Office dependency/context error"
+  },
+  "control_evidence_policy": "Synthetic no-answer parser tests establish mechanics only. Full artifact/bundle controls require independently collected production sources. Preserve failed rounds, exact errors/assertions and same-round code/contract hashes. Never invent semantic scores.",
+  "source_before_reference": true,
+  "candidate_used_for_truth": false
+}

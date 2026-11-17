@@ -1,0 +1,1130 @@
+{
+  "reviewer_identity": "独立模型标注者B（Codex模型代理）",
+  "review_type": "independent_model_annotation",
+  "human_expert": false,
+  "stage": "image_first_original_observations",
+  "actual_image_reads": [
+    {
+      "path": "input/vouchers/voucher_01.png",
+      "sha256": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "状态章中心约(905,235)，位于有效格；原始金额1280.00，手写区空白。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_02.png",
+      "sha256": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "状态章中心约(1075,235)，位于作废格；原始金额1280.00，手写区空白。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_03.png",
+      "sha256": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "状态章在有效格；原始金额860.50，无手写改动。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_04.png",
+      "sha256": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "已单独打开本图；状态章在有效格，原始金额860.50，无手写改动。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_05.png",
+      "sha256": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "有效格状态章；原始2400.00被蓝色双线划过，手写2140.00；更正复核格内双圈复核章未划销。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_06.png",
+      "sha256": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "有效格状态章；原始2400.00被划线，手写2140.00；复核章只在一般复核格，更正复核格空白。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_07.png",
+      "sha256": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "编号后缀108的中间字符是带斜线的数字0；有效格状态章；金额510.20，无手写。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_08.png",
+      "sha256": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "编号后缀1O8的中间字符是无内斜线的大写O，与本页其它带斜线数字0不同；有效格状态章；金额510.20。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_09.png",
+      "sha256": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "状态章中心约(1245,235)，位于待核格；原始780.00，无手写。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_10.png",
+      "sha256": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "状态章在有效格；原始金额清楚为0.00，是真实零值；手写区空白。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_11.png",
+      "sha256": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "有效格状态章；原始460.00，无手写。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    },
+    {
+      "path": "input/vouchers/voucher_12.png",
+      "sha256": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf",
+      "dimensions": {
+        "width": 1400,
+        "height": 1000
+      },
+      "read": true,
+      "observation": "状态章在有效格；原始1020.00被蓝线划过，手写1200.00；更正复核格内复核章被两条粗线交叉划销。",
+      "tool": "view_image",
+      "actual_original_png_view": true
+    }
+  ],
+  "source_input_sha256": {
+    "input/vouchers/voucher_01.png": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+    "input/vouchers/voucher_02.png": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+    "input/vouchers/voucher_03.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "input/vouchers/voucher_04.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "input/vouchers/voucher_05.png": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+    "input/vouchers/voucher_06.png": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+    "input/vouchers/voucher_07.png": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+    "input/vouchers/voucher_08.png": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+    "input/vouchers/voucher_09.png": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+    "input/vouchers/voucher_10.png": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+    "input/vouchers/voucher_11.png": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+    "input/vouchers/voucher_12.png": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf",
+    "input/policy.md": "0d0151d5f228d9d3462a44381cfb0d97328583421f90d62879a0dea66409f070"
+  },
+  "records": [
+    {
+      "file": "input/vouchers/voucher_01.png",
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "counterparty_name": "青禾示例服务",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "1280.00",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "状态章中心约(905,235)，位于有效格；原始金额1280.00，手写区空白。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_01.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260910-018；往来方编码CP-001，名称青禾示例服务。"
+        },
+        {
+          "path": "input/vouchers/voucher_01.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-10；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_01.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额1280.00；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_01.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_01.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_02.png",
+      "voucher_no": "NF-260910-018",
+      "counterparty_id": "CP-001",
+      "counterparty_name": "青禾示例服务",
+      "business_date": "2026-09-10",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "1280.00",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "void",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "状态章中心约(1075,235)，位于作废格；原始金额1280.00，手写区空白。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_02.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260910-018；往来方编码CP-001，名称青禾示例服务。"
+        },
+        {
+          "path": "input/vouchers/voucher_02.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-10；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_02.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额1280.00；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_02.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(1075, 235)，唯一落在作废格。"
+        },
+        {
+          "path": "input/vouchers/voucher_02.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_03.png",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "860.50",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "状态章在有效格；原始金额860.50，无手写改动。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_03.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260912-004；往来方编码CP-002，名称澄星示例供应。"
+        },
+        {
+          "path": "input/vouchers/voucher_03.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-12；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_03.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额860.50；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_03.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_03.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_04.png",
+      "voucher_no": "NF-260912-004",
+      "counterparty_id": "CP-002",
+      "counterparty_name": "澄星示例供应",
+      "business_date": "2026-09-12",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "860.50",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "已单独打开本图；状态章在有效格，原始金额860.50，无手写改动。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_04.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260912-004；往来方编码CP-002，名称澄星示例供应。"
+        },
+        {
+          "path": "input/vouchers/voucher_04.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-12；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_04.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额860.50；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_04.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_04.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_05.png",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "2400.00",
+      "has_handwritten_correction": true,
+      "handwritten_amount": "2140.00",
+      "status_selection": "valid",
+      "approval_location": "correction",
+      "approval_crossed_out": false,
+      "correction_status": "approved",
+      "rule_ids": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "reason": "有效格状态章；原始2400.00被蓝色双线划过，手写2140.00；更正复核格内双圈复核章未划销。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_05.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260914-027；往来方编码CP-003，名称溪桥示例设备。"
+        },
+        {
+          "path": "input/vouchers/voucher_05.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-14；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_05.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额2400.00；原值有双蓝线划过；下方手写金额2140.00。"
+        },
+        {
+          "path": "input/vouchers/voucher_05.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_05.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(930,795)，在更正复核格内且无交叉划销，批准本图手写更正。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_06.png",
+      "voucher_no": "NF-260914-027",
+      "counterparty_id": "CP-003",
+      "counterparty_name": "溪桥示例设备",
+      "business_date": "2026-09-14",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "2400.00",
+      "has_handwritten_correction": true,
+      "handwritten_amount": "2140.00",
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "unapproved",
+      "rule_ids": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "reason": "有效格状态章；原始2400.00被划线，手写2140.00；复核章只在一般复核格，更正复核格空白。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_06.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260914-027；往来方编码CP-003，名称溪桥示例设备。"
+        },
+        {
+          "path": "input/vouchers/voucher_06.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-14；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_06.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额2400.00；原值有双蓝线划过；下方手写金额2140.00。"
+        },
+        {
+          "path": "input/vouchers/voucher_06.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_06.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_07.png",
+      "voucher_no": "NF-260916-108",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "510.20",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "编号后缀108的中间字符是带斜线的数字0；有效格状态章；金额510.20，无手写。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_07.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260916-108；往来方编码CP-004，名称远杉示例用品。后缀数字0带斜线。"
+        },
+        {
+          "path": "input/vouchers/voucher_07.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-16；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_07.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额510.20；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_07.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_07.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_08.png",
+      "voucher_no": "NF-260916-1O8",
+      "counterparty_id": "CP-004",
+      "counterparty_name": "远杉示例用品",
+      "business_date": "2026-09-16",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "510.20",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "编号后缀1O8的中间字符是无内斜线的大写O，与本页其它带斜线数字0不同；有效格状态章；金额510.20。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_08.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260916-1O8；往来方编码CP-004，名称远杉示例用品。后缀中间大写O无内斜线，与数字0区别保留。"
+        },
+        {
+          "path": "input/vouchers/voucher_08.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-16；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_08.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额510.20；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_08.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_08.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_09.png",
+      "voucher_no": "NF-260918-036",
+      "counterparty_id": "CP-005",
+      "counterparty_name": "明川示例支持",
+      "business_date": "2026-09-18",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "780.00",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "pending",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "状态章中心约(1245,235)，位于待核格；原始780.00，无手写。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_09.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260918-036；往来方编码CP-005，名称明川示例支持。"
+        },
+        {
+          "path": "input/vouchers/voucher_09.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-18；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_09.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额780.00；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_09.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(1245, 235)，唯一落在待核格。"
+        },
+        {
+          "path": "input/vouchers/voucher_09.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_10.png",
+      "voucher_no": "NF-260920-052",
+      "counterparty_id": "CP-006",
+      "counterparty_name": "安桐示例耗材",
+      "business_date": "2026-09-20",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "0.00",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "状态章在有效格；原始金额清楚为0.00，是真实零值；手写区空白。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_10.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260920-052；往来方编码CP-006，名称安桐示例耗材。"
+        },
+        {
+          "path": "input/vouchers/voucher_10.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-20；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_10.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额0.00；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_10.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_10.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_11.png",
+      "voucher_no": "NF-260922-062",
+      "counterparty_id": "CP-007",
+      "counterparty_name": "泉屿示例租赁",
+      "business_date": "2026-09-22",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "460.00",
+      "has_handwritten_correction": false,
+      "handwritten_amount": null,
+      "status_selection": "valid",
+      "approval_location": "general",
+      "approval_crossed_out": false,
+      "correction_status": "none",
+      "rule_ids": [
+        "P2",
+        "P3"
+      ],
+      "reason": "有效格状态章；原始460.00，无手写。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_11.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260922-062；往来方编码CP-007，名称泉屿示例租赁。"
+        },
+        {
+          "path": "input/vouchers/voucher_11.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-22；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_11.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额460.00；手写更正一行空白，无划线。"
+        },
+        {
+          "path": "input/vouchers/voucher_11.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_11.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(1200,795)，在一般复核格内且无划销；更正复核格空白。"
+        }
+      ],
+      "unknown_fields": []
+    },
+    {
+      "file": "input/vouchers/voucher_12.png",
+      "voucher_no": "NF-260924-080",
+      "counterparty_id": "CP-013",
+      "counterparty_name": "启明示例物流",
+      "business_date": "2026-09-24",
+      "currency": "CNY",
+      "direction": "expense",
+      "printed_amount": "1020.00",
+      "has_handwritten_correction": true,
+      "handwritten_amount": "1200.00",
+      "status_selection": "valid",
+      "approval_location": "correction",
+      "approval_crossed_out": true,
+      "correction_status": "unapproved",
+      "rule_ids": [
+        "P2",
+        "P3",
+        "P4"
+      ],
+      "reason": "状态章在有效格；原始1020.00被蓝线划过，手写1200.00；更正复核格内复核章被两条粗线交叉划销。",
+      "source_regions": [
+        {
+          "path": "input/vouchers/voucher_12.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            166,
+            650,
+            320
+          ],
+          "observation": "凭据编号NF-260924-080；往来方编码CP-013，名称启明示例物流。"
+        },
+        {
+          "path": "input/vouchers/voucher_12.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            350,
+            1290,
+            414
+          ],
+          "observation": "业务日期2026-09-24；币种CNY；方向费用，记录expense。"
+        },
+        {
+          "path": "input/vouchers/voucher_12.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            65,
+            465,
+            813,
+            640
+          ],
+          "observation": "原始金额1020.00；原值有双蓝线划过；下方手写金额1200.00。"
+        },
+        {
+          "path": "input/vouchers/voucher_12.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            812,
+            111,
+            1337,
+            318
+          ],
+          "observation": "包括状态确认标题、有效/作废/待核标签及三格边界（约x820/990/1160/1330，y150至310）；红色双圈核验章中心约(905, 235)，唯一落在有效格。"
+        },
+        {
+          "path": "input/vouchers/voucher_12.png",
+          "coordinate_system": "pixel",
+          "bbox": [
+            798,
+            696,
+            1334,
+            867
+          ],
+          "observation": "左侧更正复核格约x805至1055，右侧一般复核格约x1075至1325，均包含标签和边框；复核章中心约(930,795)，在更正复核格内；两条粗交叉线穿过并划销该章，不能批准手写更正。"
+        }
+      ],
+      "unknown_fields": []
+    }
+  ],
+  "scope_notes": [
+    "按README先读policy，再逐张用view_image实际打开12张原始PNG；不是OCR替代读图。",
+    "保存本文件时尚未读取input/ledger.csv。未访问GT、作者构图代码、作者意图、另一位标注者包或输出及主会话历史；未联网。",
+    "金额均以两位小数字符串保存；无手写金额用null；原始0.00保留。",
+    "本阶段只记录逐图观察；同键副本冲突及账目建议留到本文件落盘后的第二阶段。",
+    "图01与图02具有相同五字段键但状态不同；图05与图06的手写金额相同而局部复核位置不同，保留各自观察。",
+    "图07后缀108与图08后缀1O8按原图字形区别保存，不将大写O改成数字0。",
+    "本次未发现无法读清的字段或跨界无法判定的状态章；不能据此宣称正式审批或实际记账。",
+    "像素区域为本标注者从实际原图视图估计的观察框；包含栏位边界和标签，便于回看。"
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "schema_version": "h011-artifact-contract/v1",
+  "files": {
+    "workbook": "results/finance_revised.xlsx",
+    "word": "results/report_revised.docx",
+    "slides": "results/deck_revised.pptx",
+    "impact_log": "results/change_impact.json"
+  },
+  "scope_values": {
+    "报告截止": "2026-09-30",
+    "源报告发布": "2026-10-05",
+    "REV": "营业收入，期间流量",
+    "COGS": "营业成本，期间流量",
+    "OPEX": "期间费用，期间流量",
+    "OCF": "经营活动现金净额，期间流量，可为负",
+    "AR": "月末应收余额，时点量，不按月累加",
+    "GP": "REV减COGS",
+    "OP": "本题简化经营利润，GP减OPEX；不等于净利润",
+    "治理制度": "数据复核制度版本2026年7月，责任角色为财务负责人和经营分析员。",
+    "处理范围": "仅同步八项已批准更正及传递依赖，保留其余事实、章节与期间；不填补Q4，不推定付款、对外确认或其他审批已执行。",
+    "Q4": null,
+    "income_tax": null,
+    "finance_costs": null,
+    "net_profit": null,
+    "external_confirmation": null
+  },
+  "scope_labels": {
+    "报告截止": "报告截止",
+    "源报告发布": "源报告发布",
+    "REV": "REV",
+    "COGS": "COGS",
+    "OPEX": "OPEX",
+    "OCF": "OCF",
+    "AR": "AR",
+    "GP": "GP",
+    "OP": "OP",
+    "治理制度": "治理制度",
+    "处理范围": "处理范围",
+    "Q4": "Q4",
+    "income_tax": "income_tax",
+    "finance_costs": "finance_costs",
+    "net_profit": "net_profit",
+    "external_confirmation": "external_confirmation"
+  },
+  "protected_word_elements": {
+    "P11": [
+      "毛利",
+      "收入",
+      "营业成本",
+      "期间费用",
+      "净利润"
+    ],
+    "P90": [
+      "2025",
+      "2026",
+      "1至9月",
+      "Q4",
+      "所得税",
+      "财务费用",
+      "净利润",
+      "未提供"
+    ],
+    "P99": [
+      "2026年7月",
+      "财务负责人",
+      "经营分析员"
+    ],
+    "P91": [
+      "原始资料",
+      "输出",
+      "期间",
+      "单位",
+      "口径"
+    ]
+  },
+  "protected_slide_elements": {
+    "governance": [
+      "2026年7月",
+      "财务负责人",
+      "经营分析员"
+    ],
+    "scope": [
+      "1至9月",
+      "第四季度",
+      "所得税",
+      "财务费用",
+      "完整利润表",
+      "未提供",
+      "净利润"
+    ],
+    "unknowns": [
+      "对外确认",
+      "付款",
+      "其他业务审批",
+      "未提供"
+    ]
+  },
+  "private_helper_sha256": {
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33"
+  },
+  "equivalence": "Business fields, visible K/P/F IDs, current locators and native chart series/category labels; sheet names, row/column order, native note ids, styles, pagination and formulas may differ.",
+  "impact_log_required_fields": {
+    "correction": "correction_id, source, targets",
+    "source": "file, locator, period, metric, old_value, old_unit, new_value, new_unit, normalized_new_cny",
+    "target": "file, locator, before, after, unit"
+  },
+  "formula_response_cases": [
+    "approved_drivers",
+    "all_monthly_inputs",
+    "zero_cash_and_balance_snapshot"
+  ],
+  "limit": "Text element preservation observes fixed factual tokens, not complete protected meaning. Full visual fit and prose direction require independent Judge."
+}

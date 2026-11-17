@@ -1,0 +1,7 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><title>成员管理</title><main><h1>成员管理</h1><label>本地合成成员ID <input id="actor" value="m-admin"></label><button id="load">加载</button><form id="add"><input name="id" placeholder="ID"><input name="name" placeholder="姓名"><input name="email" placeholder="邮箱"><select name="role"><option>viewer</option><option>manager</option><option>admin</option></select><button>创建</button></form><div id="root"></div></main><script type="module">
+import {createController,render} from './project/client.mjs';
+const root=document.querySelector('#root');let controller;
+const refresh=()=>{root.innerHTML=render(controller.snapshot());};
+document.querySelector('#load').onclick=async()=>{const actor=document.querySelector('#actor').value;controller=createController(async(method,path,body)=>{const response=await fetch(path,{method,headers:{'Content-Type':'application/json','X-Actor':actor},...(method==='GET'?{}:{body:JSON.stringify(body)})});return {status:response.status,body:await response.json()};});await controller.load();refresh();};
+document.querySelector('#add').onsubmit=async(e)=>{e.preventDefault();if(!controller)return;await controller.submit('create',Object.fromEntries(new FormData(e.target)),crypto.randomUUID());refresh();};
+</script></html>

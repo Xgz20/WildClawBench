@@ -1,0 +1,50 @@
+{
+  "schema": "h046-expected/v1",
+  "task_id": "general_hard_software_engineering_task_006_config_migration",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "case_ids": {
+    "business": [
+      "B01_default",
+      "B02_scalar_priority",
+      "B03_legacy_all",
+      "B04_user_legacy_beats_project_new",
+      "B05_project_legacy_beats_default_new",
+      "B06_unknown_nested",
+      "B07_lists_replace",
+      "B08_same_layer_canonical",
+      "B09_empty_group_then_alias",
+      "B10_unknown_scalar_to_dict",
+      "B11_unknown_dict_to_list",
+      "B12_migrate_single"
+    ],
+    "boundary": [
+      "N01_zero_all",
+      "N02_false_empty_null",
+      "N03_explicit_null_alias",
+      "N04_new_zero_wins",
+      "N05_ancestor_null_wins",
+      "N06_barrier_no_resurrection",
+      "N07_empty_map_preserves",
+      "N08_unknown_second_migration",
+      "N09_merge_already_merged",
+      "N10_input_ownership",
+      "N11_sources_legacy",
+      "N12_sources_ignored",
+      "N13_pointer_escape",
+      "N14_sources_empty",
+      "N15_unrelated_key",
+      "N16_known_invalid",
+      "N17_bad_version",
+      "N18_bad_unshadowed_alias",
+      "N19_bad_group",
+      "N20_missing_layers"
+    ]
+  },
+  "fixed_denominators": true,
+  "source_first": true
+}

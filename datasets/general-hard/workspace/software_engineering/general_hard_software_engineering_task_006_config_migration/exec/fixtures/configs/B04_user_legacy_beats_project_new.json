@@ -1,0 +1,36 @@
+{
+  "case_id": "B04_user_legacy_beats_project_new",
+  "defaults": {
+    "network": {
+      "timeout_seconds": 30,
+      "retries": 2,
+      "headers": {
+        "x-mode": "default"
+      }
+    },
+    "cache": {
+      "enabled": true
+    },
+    "pipeline": {
+      "workers": 4
+    },
+    "output": {
+      "directory": "out"
+    },
+    "extensions": {
+      "labels": [
+        "a",
+        "b"
+      ],
+      "threshold": 1
+    }
+  },
+  "project": {
+    "network": {
+      "timeout_seconds": 9
+    }
+  },
+  "user": {
+    "timeout_ms": 500
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "items": [
+    {
+      "plan_id": "P1",
+      "claim": "隐藏按钮替代服务器权限"
+    },
+    {
+      "plan_id": "P2",
+      "claim": "仅修download而不处理其他入口"
+    },
+    {
+      "plan_id": "P3",
+      "claim": "对全部单元格统一加apostrophe"
+    },
+    {
+      "plan_id": "P4",
+      "claim": "关闭所有角色的导出"
+    },
+    {
+      "plan_id": "P5",
+      "claim": "授权后共用类型化CSV序列化"
+    },
+    {
+      "plan_id": "P6",
+      "claim": "job难猜即可省略当前授权"
+    }
+  ],
+  "decision_values": [
+    "accept",
+    "revise",
+    "reject"
+  ],
+  "reason_codes": {
+    "SERVER_AUTHORITY": "服务器授权不能由前端按钮替代",
+    "ALL_ENTRYPOINTS": "授权须覆盖全部导出入口",
+    "TEXT_TYPES_ONLY": "防公式处理按文本与数值类型区分",
+    "PRESERVE_AUTHORIZED": "保留授权范围内合法导出",
+    "SHARED_TYPED_CSV": "共用类型化CSV编码并正确引用",
+    "CURRENT_JOB_AUTHORITY": "job获取检查创建人和当前授权"
+  }
+}

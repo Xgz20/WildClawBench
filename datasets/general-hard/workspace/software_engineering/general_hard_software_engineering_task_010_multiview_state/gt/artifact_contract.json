@@ -1,0 +1,25 @@
+{
+  "mutable": [
+    "project/api.py",
+    "project/store.ts",
+    "project/view.ts"
+  ],
+  "new_files_only": "results",
+  "required": [
+    "results/scenarios.json"
+  ],
+  "protected": [
+    "runtime.json",
+    "profile.py",
+    "contract.md",
+    "engine.mjs",
+    "replay.py",
+    "api_probe.py",
+    "tests_public/test_smoke.py",
+    "fixtures/records.json",
+    "fixtures/smoke.json",
+    "fixtures/public_scenarios.json"
+  ],
+  "report": "h050-actual-replay/v1",
+  "scope": "function/state text replay, no browser/Harness claims"
+}

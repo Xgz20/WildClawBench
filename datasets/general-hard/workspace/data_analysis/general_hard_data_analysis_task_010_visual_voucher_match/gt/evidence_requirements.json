@@ -1,0 +1,40 @@
+{
+  "schema_version": "h026-evidence-requirements/v1",
+  "source_images": 12,
+  "per_image_required": [
+    "file",
+    "sha256",
+    "width",
+    "height",
+    "identity",
+    "date_currency_direction",
+    "amount",
+    "status_context"
+  ],
+  "local_review_required": [
+    "vouchers/voucher_05.png",
+    "vouchers/voucher_06.png",
+    "vouchers/voucher_12.png"
+  ],
+  "bbox": {
+    "coordinate_system": [
+      "pixel",
+      "normalized"
+    ],
+    "origin": "upper-left",
+    "layout": "x0,y0,x1,y1",
+    "must_be_finite_and_inside_source": true,
+    "maximum_image_area_fraction": 0.25,
+    "minimum_IoU_with_independent_annotation_window": 0.08
+  },
+  "mechanical_binding_only": true,
+  "semantic_judge_must_assess": [
+    "whether identity/amount observations are correct",
+    "stamp centre and slot labels/borders together",
+    "which local review slot contains approval",
+    "crossing lines and whether correction approval survives",
+    "reasoning preserves pending/null and distinguishes retained book balance from confirmed expenses"
+  ],
+  "keyword_scoring": false,
+  "source_provenance": "visual_regions.json from two independent raw-pixel readers, not construction coordinates"
+}

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -342,6 +343,161 @@ class WildClawBenchCaseGeneratorDistributionTest(unittest.TestCase):
                 self.assertTrue(link.is_symlink())
                 self.assertFalse(Path(link.readlink()).is_absolute())
                 self.assertEqual(link.resolve(), source)
+
+
+class RegisteredCaseGeneratorTest(unittest.TestCase):
+    """Reuse the legacy fixture to prove writes stay in the new family."""
+
+    def setUp(self) -> None:
+        WildClawBenchCaseGeneratorTest.setUp(self)
+        self.base = self.repo / "datasets/sample"
+        self.base.mkdir(parents=True)
+        self.task_id = "sample_research_task_001_local_fact_summary"
+        self.family = {
+            "schema_version": 1, "series_id": "sample", "task_id_prefix": "sample_",
+            "task_root": "datasets/sample/tasks", "workspace_root": "datasets/sample/workspace",
+            "source_registry": "datasets/sample/task_sources.yaml", "capability_map": "datasets/sample/checkpoint_capability_map7.yaml",
+            "required_tags": ["custom", "sample"], "exclude_tags": ["invalid"],
+            "categories": {"research": {"name": "研究"}}, "default_release": "sample-v1",
+            "releases": {"sample-v1": {"status": "building", "created_at": "2026-10-26T00:00:00+08:00",
+                "manifest": "datasets/sample/manifests/sample-v1.json", "task_ids": [self.task_id],
+                "expected_statistics": {"task_count": 1, "category_counts": {"research": 1},
+                    "grading_type_counts": {"automated": 1}, "difficulty_counts": {"L2": 1}, "timeout_counts": {"180": 1}}}},
+        }
+        self.save_family()
+        (self.repo / "datasets/catalog.yaml").write_text(yaml.safe_dump({"schema_version": 1,
+            "datasets": {"sample": {"definition": "datasets/sample/dataset.yaml"}}}), encoding="utf-8")
+        (self.repo / "input.md").write_text("甲的数值为2。", encoding="utf-8")
+        (self.repo / "expected.json").write_text('{"value": 2}', encoding="utf-8")
+
+    def save_family(self) -> None:
+        (self.base / "dataset.yaml").write_text(yaml.safe_dump(self.family, allow_unicode=True, sort_keys=False), encoding="utf-8")
+
+    def tearDown(self) -> None:
+        WildClawBenchCaseGeneratorTest.tearDown(self)
+
+    def spec(self) -> dict:
+        spec = automated_spec()
+        spec.update({"dataset_id": "sample", "category": "research",
+            "prompt": "读取 /tmp_workspace/input.md，在 /tmp_workspace/results/summary.md 写事实摘要。",
+            "workspace": {"exec": [{"source": "input.md", "target": "input.md"}],
+                          "gt": [{"source": "expected.json", "target": "expected.json"}]},
+            "judge_evidence": {"required": [{"path": "results/summary.md", "role": "candidate_deliverable"}]},
+            "source": {"origin": {"mode": "constructed", "production_refs": []}, "network": {"mode": "offline"},
+                       "attributes": {"requires_visual_input": False, "coding_primary": False, "retrieval_group": "local_evidence"}}})
+        return spec
+
+    def install_validator_wrapper(self, *, fail: bool = False) -> None:
+        target = self.repo / "tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        source = REPO_ROOT / "tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py"
+        code = ("raise SystemExit(1)\n" if fail else
+                "import sys, runpy\nsys.path.insert(0, " + repr(str(REPO_ROOT)) + ")\nrunpy.run_path(" + repr(str(source)) + ", run_name='__main__')\n")
+        target.write_text(code, encoding="utf-8")
+
+    def test_registered_dry_run_is_read_only_and_uses_the_planned_namespace(self):
+        before = (self.registry_path.read_bytes(), self.map_path.read_bytes())
+        result = generator.assemble_case(self.spec(), repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        self.assertEqual(result["task_id"], self.task_id)
+        self.assertEqual(Path(result["workspace_path"]), (self.base / "workspace/research" / self.task_id).resolve())
+        self.assertFalse((self.base / "task_sources.yaml").exists())
+        self.assertFalse((self.base / "tasks").exists())
+        self.assertEqual(before, (self.registry_path.read_bytes(), self.map_path.read_bytes()))
+
+    def test_registered_creation_passes_the_real_validator_and_preserves_legacy_sources(self):
+        before = (self.registry_path.read_bytes(), self.map_path.read_bytes())
+        self.install_validator_wrapper()
+        result = generator.assemble_case(self.spec(), repo_root=self.repo, spec_dir=self.repo)
+        self.assertEqual(result["validation"], "PASS")
+        parsed = parse_task_md(Path(result["task_path"]))
+        self.assertEqual(parsed["category"], "research")
+        text = Path(result["task_path"]).read_text()
+        self.assertIn("candidate_deliverable", text)
+        self.assertIn("  - custom\n  - sample", text)
+        registry = yaml.safe_load((self.base / "task_sources.yaml").read_text())
+        self.assertEqual(registry["registry_contract"]["category_task_counts"], {"research": 1})
+        self.assertEqual(registry["tasks"][0]["task_id"], self.task_id)
+        self.assertEqual(before, (self.registry_path.read_bytes(), self.map_path.read_bytes()))
+
+    def test_registered_conflicting_plans_and_frozen_numbers_are_reserved(self):
+        spec = self.spec()
+        spec.update({"number": 1, "slug": "other"})
+        with self.assertRaisesRegex(generator.SpecError, "保留"):
+            generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        self.family["releases"]["sample-v1"]["status"] = "frozen"
+        self.save_family()
+        manifest = self.base / "manifests/sample-v1.json"
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text(json.dumps({"dataset_id": "sample-v1", "source": {"revision": "a" * 40}}))
+        with self.assertRaisesRegex(generator.SpecError, "保留"):
+            generator.assemble_case({**self.spec(), "number": 1}, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        # New source-pool cases may be added without modifying the frozen list.
+        result = generator.assemble_case({**self.spec(), "slug": "increment"}, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        self.assertEqual(result["task_id"], "sample_research_task_002_increment")
+        self.assertEqual(self.family["releases"]["sample-v1"]["task_ids"], [self.task_id])
+
+    def test_registered_rollback_removes_new_registry_and_mapping(self):
+        self.install_validator_wrapper(fail=True)
+        with self.assertRaisesRegex(generator.SpecError, "已回滚"):
+            generator.assemble_case(self.spec(), repo_root=self.repo, spec_dir=self.repo)
+        self.assertFalse((self.base / "task_sources.yaml").exists())
+        self.assertFalse((self.base / "checkpoint_capability_map7.yaml").exists())
+        self.assertFalse((self.base / "tasks/research" / f"{self.task_id}.md").exists())
+        self.assertFalse((self.base / "workspace/research" / self.task_id).exists())
+
+    def test_registered_visual_gt_and_evidence_requirements_fail_before_writing(self):
+        spec = self.spec()
+        spec["modality"] = "multimodal"
+        with self.assertRaisesRegex(generator.SpecError, "requires_visual_input"):
+            generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        spec = self.spec()
+        spec["workspace"]["gt"] = []
+        with self.assertRaisesRegex(generator.SpecError, "真实workspace.gt"):
+            generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        spec = self.spec()
+        spec["judge_evidence"]["required"][0]["path"] = "gt/expected.json"
+        with self.assertRaisesRegex(generator.SpecError, "results"):
+            generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+
+    def test_office_requirement_uses_boolean_scoring_metadata(self):
+        for requirement in ({"office": "true"}, {"office": 1}, {"unknown": True}, {"office_render": True},
+                            {"office": False, "office_render": True}, {"office": True, "office_render": "true"}, {"html_render": 1}):
+            with self.subTest(requirement=requirement), self.assertRaisesRegex(generator.SpecError, "scoring_runtime"):
+                generator.assemble_case({**self.spec(), "scoring_runtime": requirement},
+                    repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        self.install_validator_wrapper()
+        result = generator.assemble_case({**self.spec(), "scoring_runtime": {"office": True, "office_render": True}},
+            repo_root=self.repo, spec_dir=self.repo)
+        metadata = yaml.safe_load(Path(result["task_path"]).read_text(encoding="utf-8").split("---", 2)[1])
+        self.assertEqual(metadata["scoring_runtime"], {"office": True, "office_render": True})
+
+    def test_html_requirement_passes_generator_and_static_validator_without_office(self):
+        self.install_validator_wrapper()
+        result = generator.assemble_case({**self.spec(), "scoring_runtime": {"html_render": True}},
+            repo_root=self.repo, spec_dir=self.repo)
+        metadata = yaml.safe_load(Path(result["task_path"]).read_text(encoding="utf-8").split("---", 2)[1])
+        self.assertEqual(metadata["scoring_runtime"], {"html_render": True})
+
+    def test_research_requirement_is_private_boolean_metadata(self):
+        with self.assertRaisesRegex(generator.SpecError, "scoring_runtime"):
+            generator.assemble_case({**self.spec(), "scoring_runtime": {"research_sources": 1}},
+                repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        self.install_validator_wrapper()
+        result = generator.assemble_case({**self.spec(), "scoring_runtime": {"research_sources": True}},
+            repo_root=self.repo, spec_dir=self.repo)
+        metadata = yaml.safe_load(Path(result["task_path"]).read_text(encoding="utf-8").split("---", 2)[1])
+        self.assertEqual(metadata["scoring_runtime"], {"research_sources": True})
+
+    def test_rejects_symbolic_material_source_and_module_level_network_import(self):
+        (self.repo / "linked.md").symlink_to("input.md")
+        spec = self.spec()
+        spec["workspace"]["exec"][0]["source"] = "linked.md"
+        with self.assertRaisesRegex(generator.SpecError, "符号链接源"):
+            generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
+        spec = self.spec()
+        spec["automated_checks"] = "import requests\n" + spec["automated_checks"]
+        with self.assertRaisesRegex(generator.SpecError, "禁止导入"):
+            generator.assemble_case(spec, repo_root=self.repo, spec_dir=self.repo, dry_run=True)
 
 
 if __name__ == "__main__":

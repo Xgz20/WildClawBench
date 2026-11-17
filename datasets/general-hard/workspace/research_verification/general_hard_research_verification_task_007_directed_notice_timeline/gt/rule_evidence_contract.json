@@ -1,0 +1,17 @@
+{
+  "schema_version": "h033-rule-evidence-contract/v1",
+  "derived_path": "rule-observations.json",
+  "observation_schema": "h033-rule-observations/v1",
+  "allowed_scores": ["record_contract", "time_and_scope", "citation_resolution", "protected_delivery", "overall_score"],
+  "source": "Only independently collected production policy-v2 bundle bound to frozen candidate deliveries; no historical author QA body paths at runtime.",
+  "literal_resolution": "Every declared CID resolves at its requested actual-format locator. Unicode whitespace normalization preserves digits, units and punctuation. A single XLSX cell is exact. Same DOCX row cells may concatenate with explicit part/node lineage.",
+  "error_ownership": "Schema/ID/reference mechanics belong to record_contract; date role/raw/precision/window/profile and public URL scope to time_and_scope; actual literal quote and format/value-role locator plus target resolvability to citation_resolution; frozen inputs and actual native containers to protected_delivery. Separate observable obligations are reported explicitly, never counted as scientific proof.",
+  "padding": "Fixed component/subcheck denominators use all-declared obligations; extra correct citations or records cannot dilute a retained bad graph or literal locator.",
+  "absence": "No forced counts. Empty discovery and matters do not prove coverage; independent Judge assesses actual investigation and omissions. No content citation means zero actual citation-resolution credit.",
+  "missing_trusted_material": "EVALUATOR_ERROR_OR_PENDING_REVIEW, no fabricated candidate zero.",
+  "candidate_defects": "Malformed public schema, graph, URL, quote, date, supplied native container or protected input are candidate defects; not network failures.",
+  "unsupported_legal_locator": "Typed NEEDS_LOCATOR_REVIEW or NEEDS_SOURCE_REVIEW; no global quote fallback or candidate zero.",
+  "semantic_requirements": ["actual autonomous discovery and reading from complete observable trace", "statement to source relation and applicable context", "cross-department coverage and independence", "date role and latest version semantics", "bounded personal applicability and usable native handoff"],
+  "semantic_score": null,
+  "final_hybrid_score": null
+}

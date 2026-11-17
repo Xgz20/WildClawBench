@@ -1,0 +1,185 @@
+{
+  "schema_version": "h034-independent-claim-assessments-v1",
+  "annotator": "model-annotator-B",
+  "role": "Independent model pixel annotation, not human expert or formal Judge",
+  "raw_observation_file": "raw_visual_observations.json",
+  "raw_observation_sha256_at_preclaim_save": "d01226e1fcd8940135a5c770802993881667dcd0caa6ff942ae43d15af7b70a8",
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/independent-annotation-input-v1",
+  "coordinate_system": "Original 1800x1260 image pixels, top-left origin; bbox [left, top, right, bottom]. Regions are manually located visible objects.",
+  "verdict_semantics": {
+    "supported": "The actual proposition is consistent with direct visual evidence and the stated evidence scope.",
+    "refuted": "A factual subclaim conflicts with visible evidence, or an explicit claim that evidence proves a conclusion conflicts with the stated evidential limits. Unknown empirical truth is separately identified.",
+    "insufficient": "The target empirical proposition is neither established nor contradicted by the supplied evidence. Missing evidence is not a zero or an adverse result."
+  },
+  "assessments": [
+    {
+      "claim_id": "C01",
+      "claim": "F01在总工具预算10处，Method A的目标通过率约72%，Method B约64%；这只描述图示同设置均值，不宣称显著或因果优势。",
+      "actual_target": "预算10这一已绘设置下两方法的描述性均值及其有限范围。",
+      "verdict": "supported",
+      "readings": {"budget": 10, "A_percent_interval": [71.3, 72.7], "B_percent_interval": [63.4, 64.8], "approximate_A_minus_B_percentage_points": 8},
+      "figure_evidence": [
+        {"file": "figures/F01_budget.png", "object": "预算10刻度", "bbox": [910, 1075, 962, 1134]},
+        {"file": "figures/F01_budget.png", "object": "Method A蓝色空心圆均值，预算10", "bbox": [922, 569, 950, 596], "raw_ref": "F01-A-10"},
+        {"file": "figures/F01_budget.png", "object": "Method B橙色方块均值，预算10", "bbox": [920, 691, 952, 720], "raw_ref": "F01-B-10"},
+        {"file": "figures/F01_budget.png", "object": "通过率百分比刻度", "bbox": [148, 282, 207, 1095]},
+        {"file": "figures/F01_budget.png", "object": "A、B图例及线型标记绑定", "bbox": [265, 248, 482, 342]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E01", "relevance": "同任务集、模型设置、最终目标谓词；每点12批次均值，预算为不同设置。"}],
+      "rationale": "两均值点在对应百分比刻度上约为72%与64%，与论述的近似读数一致。其文字明确不主张显著性或因果优势，未超出E01提供的范围。",
+      "uncertainty": ["像素读数不是隐藏数值表；不主张小数精度。", "即使图示均值相差约8个百分点，配对差值与检验未发布，不能在本项额外推导显著性。"],
+      "tolerance_applied": "F01允许均值绝对误差2个百分点；当前读数用更宽于单像素的可辨区间表达。"
+    },
+    {
+      "claim_id": "C02",
+      "claim": "F01三个预算点的横向间距相等，所以从第一个到第二个点的预算绝对增量，与从第二个到第三个点相同。",
+      "actual_target": "相等图像间距是否表示相等预算绝对增量。",
+      "verdict": "refuted",
+      "subclaims": [
+        {"proposition": "图上三个预算点横向间距相等。", "verdict": "supported", "reason": "1、10、100在近似等距横向位置。"},
+        {"proposition": "两段预算绝对增量相等。", "verdict": "refuted", "reason": "刻度为1、10、100，绝对增量分别9与90；相等的是十倍的比例。"}
+      ],
+      "readings": {"budget_ticks": [1, 10, 100], "scale": "logarithmic x", "absolute_increments": [9, 90], "multiplicative_factors": [10, 10]},
+      "figure_evidence": [
+        {"file": "figures/F01_budget.png", "object": "预算1刻度", "bbox": [180, 1075, 218, 1134]},
+        {"file": "figures/F01_budget.png", "object": "预算10刻度", "bbox": [910, 1075, 962, 1134]},
+        {"file": "figures/F01_budget.png", "object": "预算100刻度", "bbox": [1638, 1075, 1710, 1134]},
+        {"file": "figures/F01_budget.png", "object": "总工具预算轴名", "bbox": [712, 1174, 1218, 1220]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E01", "relevance": "各预算为不同设置；论述应读取图示预算而非把像素距离当绝对预算增量。"}],
+      "rationale": "对数横轴把相同比例变化画成相同距离。图中标签直接给出相差9和90的两段预算，因此绝对增量相同这一结论被标签反驳。",
+      "uncertainty": ["只比较三个已标预算，不对图间未测设置补值。"],
+      "tolerance_applied": "F01预算必须按实际刻度和尺度读取。"
+    },
+    {
+      "claim_id": "C03",
+      "claim": "F02中Method B的均值高于Method A，且两条误差区间存在交叠；该句只描述图形关系。",
+      "actual_target": "两均值的可见次序及SD误差范围的可见交叠。",
+      "verdict": "supported",
+      "readings": {"unit": "percent", "A_mean_interval": [79.5, 80.5], "B_mean_interval": [83.5, 84.5], "A_SD_span_approximate": [74, 86], "B_SD_span_approximate": [81, 87], "overlap_approximate": [81, 86], "error_type": "SD", "paired_batches": 12},
+      "figure_evidence": [
+        {"file": "figures/F02_intervals.png", "object": "A均值及上下SD端点", "bbox": [582, 454, 619, 755], "raw_ref": "F02-A"},
+        {"file": "figures/F02_intervals.png", "object": "B均值及上下SD端点", "bbox": [1253, 431, 1290, 589], "raw_ref": "F02-B"},
+        {"file": "figures/F02_intervals.png", "object": "y轴百分比刻度", "bbox": [146, 230, 205, 1096]},
+        {"file": "figures/F02_intervals.png", "object": "Method A、B类别标识", "bbox": [528, 1089, 1371, 1130]},
+        {"file": "figures/F02_intervals.png", "object": "Error bars: SD；n = 12 paired batches", "bbox": [1146, 240, 1466, 332]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E02", "relevance": "图示误差棒是12个配对批次的标准差，不是95%置信区间。"}],
+      "rationale": "B均值约84%高于A约80%；A约74%至86%、B约81%至87%的竖直范围在约81%至86%有交叠。该论述限定为图形关系，不需要把交叠解释成统计结果。",
+      "uncertainty": ["端点为视觉近似读数；不声称交叠边界的小数精度。", "这些是SD范围，描述性支持不包含显著性或等效性判断。"],
+      "tolerance_applied": "F02均值及SD端点允许2个百分点误差，交叠和次序在读数误差内仍明确。"
+    },
+    {
+      "claim_id": "C04",
+      "claim": "F02误差棒交叠已经证明两方法差异不显著，并且效果相同。",
+      "actual_target": "SD误差棒交叠是否足以证明不显著和效果相同；另区分两经验结论本身的未知真值。",
+      "verdict": "refuted",
+      "verdict_basis": "Refutes the explicit evidence-sufficiency assertion, not an invented significant or unequal result.",
+      "subclaims": [
+        {"proposition": "两SD区间存在交叠。", "verdict": "supported", "reason": "A约74–86%、B约81–87%。"},
+        {"proposition": "仅凭这种交叠已证明差异不显著。", "verdict": "refuted", "reason": "E02明确禁止此推断；SD不是差值的置信区间，配对差值及协方差、检验未提供。"},
+        {"proposition": "两方法差异的统计检验实际不显著。", "verdict": "insufficient", "reason": "没有检验结果或配对差值统计，既不能证明不显著，也不能反向断言显著。"},
+        {"proposition": "两方法效果实际相同或统计等效。", "verdict": "insufficient", "reason": "没有等效界与相应不确定性证据；未显著本身也不等于效果相同。"}
+      ],
+      "readings": {"A_mean_percent_approximate": 80, "B_mean_percent_approximate": 84, "A_SD_span_approximate": [74, 86], "B_SD_span_approximate": [81, 87], "printed_error_type": "SD", "printed_n": "12 paired batches"},
+      "figure_evidence": [
+        {"file": "figures/F02_intervals.png", "object": "A SD端点、均值", "bbox": [582, 454, 619, 755], "raw_ref": "F02-A"},
+        {"file": "figures/F02_intervals.png", "object": "B SD端点、均值", "bbox": [1253, 431, 1290, 589], "raw_ref": "F02-B"},
+        {"file": "figures/F02_intervals.png", "object": "误差类型SD与12个配对批次文本", "bbox": [1146, 240, 1466, 332]},
+        {"file": "figures/F02_intervals.png", "object": "百分比轴刻度", "bbox": [146, 230, 205, 1096]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E02", "relevance": "未提供原始配对差值、协方差、显著性检验或预先设定等效界；不能仅由误差棒交叠/不交叠确定显著或等效。"}],
+      "rationale": "图形交叠为真，但“已经证明”的证据充分性主张与E02及图中SD类型相冲突。A与B均值不同不等于已有显著差异；图中均值有差也不能替代等效性检验。应保留实际显著性与等效性未知。",
+      "uncertainty": ["不补造配对差值、相关性、p值或等效性结果。", "不把本项的refuted误读为已经证明两方法显著不同。"],
+      "tolerance_applied": "端点可在2个百分点内近似；不确定性缺失不因像素精度提高而消失。"
+    },
+    {
+      "claim_id": "C05",
+      "claim": "F03在8 workers处，Method B的耗时约为Method A的10倍；该比较限图示硬件和计时条件。",
+      "actual_target": "8 workers已绘设置下的B/A耗时比及硬件计时范围。",
+      "verdict": "supported",
+      "readings": {"workers": 8, "unit": "ms", "A_elapsed_interval": [280, 320], "B_elapsed_interval": [2800, 3200], "central_visual_B_to_A_ratio": 10, "conservative_ratio_interval_from_individual_read_intervals": [8.75, 11.43], "y_scale": "logarithmic", "x_scale": "linear"},
+      "figure_evidence": [
+        {"file": "figures/F03_latency.png", "object": "8 workers刻度", "bbox": [867, 1075, 906, 1135]},
+        {"file": "figures/F03_latency.png", "object": "A在8 workers的蓝色空心圆，约300 ms", "bbox": [871, 860, 902, 891], "raw_ref": "F03-A-8"},
+        {"file": "figures/F03_latency.png", "object": "B在8 workers的橙色方块，约3000 ms", "bbox": [871, 433, 902, 464], "raw_ref": "F03-B-8"},
+        {"file": "figures/F03_latency.png", "object": "对数毫秒刻度", "bbox": [100, 208, 206, 1098]},
+        {"file": "figures/F03_latency.png", "object": "Elapsed time (ms)标签", "bbox": [191, 134, 489, 175]},
+        {"file": "figures/F03_latency.png", "object": "A、B图例", "bbox": [265, 249, 483, 343]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E03", "relevance": "同硬件与计时边界；只记录图示worker设置的耗时代表值。"}],
+      "rationale": "两个点分别落在约300与3000毫秒刻度线上，3000/300约10。读取的是轴数值之比，不能把对数轴像素差直接当耗时差。限定硬件和计时条件与E03一致。",
+      "uncertainty": ["没有误差棒，不能从代表值推导耗时分布。", "不保证其它硬件、并发设置或未绘点仍为十倍。"],
+      "tolerance_applied": "F03单项耗时相对误差15%、比值20%；使用视觉区间，约10倍结论在范围内稳健。"
+    },
+    {
+      "claim_id": "C06",
+      "claim": "F03中Method A在8 workers处的耗时较低，因此其最终目标质量也比Method B更高。",
+      "actual_target": "8 workers处的最终目标质量次序；耗时较低是论据，不是质量指标。",
+      "verdict": "insufficient",
+      "verdict_basis": "The empirical quality comparison is absent, so its truth remains unknown; the asserted derivation from elapsed time is unsupported.",
+      "subclaims": [
+        {"proposition": "A在8 workers处耗时较低。", "verdict": "supported", "reason": "A约300 ms，B约3000 ms。"},
+        {"proposition": "A在该设置最终目标质量高于B。", "verdict": "insufficient", "reason": "F03纵轴是耗时，E03明确没有记录最终目标质量。"},
+        {"proposition": "较低耗时本身足以推出更高最终目标质量。", "verdict": "refuted", "reason": "给定证据没有连接耗时与质量的测量或设计，E03明确限定为耗时代表值。"}
+      ],
+      "readings": {"workers": 8, "A_elapsed_ms_interval": [280, 320], "B_elapsed_ms_interval": [2800, 3200], "final_target_quality_A": "unreported", "final_target_quality_B": "unreported"},
+      "figure_evidence": [
+        {"file": "figures/F03_latency.png", "object": "8 workers刻度", "bbox": [867, 1075, 906, 1135]},
+        {"file": "figures/F03_latency.png", "object": "A在8 workers的耗时点", "bbox": [871, 860, 902, 891], "raw_ref": "F03-A-8"},
+        {"file": "figures/F03_latency.png", "object": "B在8 workers的耗时点", "bbox": [871, 433, 902, 464], "raw_ref": "F03-B-8"},
+        {"file": "figures/F03_latency.png", "object": "Elapsed time (ms)指标标签", "bbox": [191, 134, 489, 175]},
+        {"file": "figures/F03_latency.png", "object": "方法标记图例", "bbox": [265, 249, 483, 343]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E03", "relevance": "该图没有记录最终目标质量；没有跨硬件或其它并发条件保证。"}],
+      "rationale": "低耗时前提可见且成立，但质量结论没有对应坐标、标记或文本数据。不能把快当作高质量，也不能反过来编造A质量较差或相同的结果。整项以质量这一实际待判断事实为对象，标为证据不足。",
+      "uncertainty": ["最终质量的真实次序未知；不是已证伪A质量较高。", "F01、F02的通过率不绑定到F03的8 workers设置，不能自动挪用为该设置质量数据。"],
+      "tolerance_applied": "耗时读数遵循F03容差；缺失质量值保持unreported，不填0或臆测。"
+    },
+    {
+      "claim_id": "C07",
+      "claim": "F04合并点位呈总体正关联，足以说明任一组内增加计划长度都会提高成功率，并已建立因果关系。",
+      "actual_target": "合并正关联、各组内正向关系，以及已建立因果关系这一复合论述。",
+      "verdict": "refuted",
+      "subclaims": [
+        {"proposition": "合并点云呈总体正关联。", "verdict": "supported", "reason": "G2在较长计划区间8–12且通过率约87–95%，G1在1–5且约72–80%，跨组点云向右上。"},
+        {"proposition": "图示每一组内更长计划都对应更高成功率。", "verdict": "refuted", "reason": "G1从约(1,80%)降至(5,72%)；G2从约(8,95%)降至(12,87%)，均向下。"},
+        {"proposition": "这些图形关系已经建立增加计划长度提高成功率的因果关系。", "verdict": "refuted", "reason": "已建立的证据充分性主张不成立；E04为不同工作负载与不同任务分布的观察性记录，无随机分配或因果干预。"},
+        {"proposition": "增加计划长度的真实因果效应为正、负或零。", "verdict": "insufficient", "reason": "当前证据不能识别干预效应；观察性负向趋势也不证明负向因果。"}
+      ],
+      "readings": {"unit_x": "steps", "unit_y": "percent", "G1_left_endpoint": {"x": [0.9, 1.1], "y": [79.3, 80.7]}, "G1_right_endpoint": {"x": [4.9, 5.1], "y": [71.2, 72.6]}, "G2_left_endpoint": {"x": [7.9, 8.1], "y": [94.2, 95.6]}, "G2_right_endpoint": {"x": [11.9, 12.1], "y": [86.2, 87.6]}, "within_group_direction": {"G1": "down", "G2": "down"}, "pooled_direction": "up across clusters"},
+      "figure_evidence": [
+        {"file": "figures/F04_grouping.png", "object": "G1蓝色圆、G2橙色方块图例", "bbox": [1236, 932, 1457, 1025]},
+        {"file": "figures/F04_grouping.png", "object": "G1短计划端点约(1,80%)", "bbox": [255, 698, 286, 728], "raw_ref": "F04-G1-1"},
+        {"file": "figures/F04_grouping.png", "object": "G1长计划端点约(5,72%)", "bbox": [739, 896, 770, 926], "raw_ref": "F04-G1-5"},
+        {"file": "figures/F04_grouping.png", "object": "G2短计划端点约(8,95%)", "bbox": [1101, 334, 1133, 365], "raw_ref": "F04-G2-8"},
+        {"file": "figures/F04_grouping.png", "object": "G2长计划端点约(12,87%)", "bbox": [1585, 530, 1617, 561], "raw_ref": "F04-G2-12"},
+        {"file": "figures/F04_grouping.png", "object": "通过率百分比标签", "bbox": [136, 134, 598, 177]},
+        {"file": "figures/F04_grouping.png", "object": "y轴百分比刻度", "bbox": [136, 209, 205, 1097]},
+        {"file": "figures/F04_grouping.png", "object": "计划长度步数轴", "bbox": [714, 1175, 1200, 1219]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E04", "relevance": "每点为不同工作负载，G1与G2来自不同任务分布；非同任务随机分配；未控制全部混杂，无因果干预。"}],
+      "rationale": "复合论述不能只保留总体正关联而忽略组内反证。两组均在x增大时y下降，直接反驳“组内均提高”的图形描述。G2同时拥有较长计划和较高通过率，组别/任务分布差异足以成为总体正关联的替代解释；该解释是兼容证据的混杂可能，并非已测出的因果机制。",
+      "uncertainty": ["未计算相关系数，方向来自图中分群与逐点趋势。", "不能因组内观察向下就断言延长计划会降低成功率。", "不同分布如何产生水平差异以及真实干预效应仍未知。"],
+      "tolerance_applied": "F04点成功率按1个百分点容差；端点差约8个百分点，组内下降和跨组高低关系不依赖隐藏精度。"
+    },
+    {
+      "claim_id": "C08",
+      "claim": "F04合并后整体关联向上，但按图例分别看G1、G2时两组内趋势都向下；这些观察不能确证增加计划长度会提高成功率。",
+      "actual_target": "合并与组内方向的描述及观察证据不能确证正因果效应的边界。",
+      "verdict": "supported",
+      "readings": {"G1_points_approximate": [[1, 80], [2, 78], [3, 76], [4, 74], [5, 72]], "G2_points_approximate": [[8, 95], [9, 93], [10, 91], [11, 89], [12, 87]], "unit_x": "steps", "unit_y": "percent", "pooled_direction": "up across clusters", "G1_direction": "down", "G2_direction": "down", "precision_note": "Approximate readable values; intervals for every point are in raw_visual_observations.json."},
+      "figure_evidence": [
+        {"file": "figures/F04_grouping.png", "object": "G1、G2图例绑定", "bbox": [1236, 932, 1457, 1025]},
+        {"file": "figures/F04_grouping.png", "object": "G1五点，从左至右均向下", "point_bboxes": [[255, 698, 286, 728], [376, 748, 407, 778], [497, 799, 528, 829], [618, 844, 649, 874], [739, 896, 770, 926]], "raw_refs": ["F04-G1-1", "F04-G1-2", "F04-G1-3", "F04-G1-4", "F04-G1-5"]},
+        {"file": "figures/F04_grouping.png", "object": "G2五点，从左至右均向下；整组在G1右上方", "point_bboxes": [[1101, 334, 1133, 365], [1222, 380, 1254, 411], [1343, 431, 1375, 462], [1464, 477, 1496, 508], [1585, 530, 1617, 561]], "raw_refs": ["F04-G2-8", "F04-G2-9", "F04-G2-10", "F04-G2-11", "F04-G2-12"]},
+        {"file": "figures/F04_grouping.png", "object": "线性计划长度刻度", "bbox": [252, 1074, 1625, 1134]},
+        {"file": "figures/F04_grouping.png", "object": "线性通过率刻度", "bbox": [136, 209, 205, 1097]}
+      ],
+      "text_evidence": [{"file": "paper_excerpts.md", "paragraph": "E04", "relevance": "观察性、不同工作负载、不同任务分布；没有随机同任务分配或因果干预。"}],
+      "rationale": "按图例分组后，每组五点均随计划长度增大而下降；合并方向受两个分离群组的位置影响而向上。论述正确保留了观察与因果的边界。“不能确证提高”并非声称已经确证无效或有害。",
+      "uncertainty": ["真实延长计划的因果效应仍未知。", "没有数值相关系数，也没有充分控制混杂的条件效应估计。"],
+      "tolerance_applied": "F04点成功率按1个百分点容差；所有组内相邻点约下降2个百分点，整体端点约下降8个百分点，方向可辨。"
+    }
+  ]
+}

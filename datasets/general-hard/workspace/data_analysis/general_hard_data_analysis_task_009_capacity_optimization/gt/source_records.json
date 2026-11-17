@@ -1,0 +1,835 @@
+{
+  "seed": 2026102625,
+  "currency": "CNY",
+  "demand": [
+    {
+      "sku_id": "S01",
+      "sku_name": "合成商品01",
+      "priority": 1,
+      "demand_units": 5,
+      "minimum_service": 1,
+      "destination": "East"
+    },
+    {
+      "sku_id": "S02",
+      "sku_name": "合成商品02",
+      "priority": 1,
+      "demand_units": 6,
+      "minimum_service": 1,
+      "destination": "Central"
+    },
+    {
+      "sku_id": "S03",
+      "sku_name": "合成商品03",
+      "priority": 1,
+      "demand_units": 4,
+      "minimum_service": 1,
+      "destination": "West"
+    },
+    {
+      "sku_id": "S04",
+      "sku_name": "合成商品04",
+      "priority": 1,
+      "demand_units": 7,
+      "minimum_service": 1,
+      "destination": "East"
+    },
+    {
+      "sku_id": "S05",
+      "sku_name": "合成商品05",
+      "priority": 2,
+      "demand_units": 5,
+      "minimum_service": 0,
+      "destination": "Central"
+    },
+    {
+      "sku_id": "S06",
+      "sku_name": "合成商品06",
+      "priority": 2,
+      "demand_units": 6,
+      "minimum_service": 0,
+      "destination": "West"
+    },
+    {
+      "sku_id": "S07",
+      "sku_name": "合成商品07",
+      "priority": 2,
+      "demand_units": 4,
+      "minimum_service": 0,
+      "destination": "East"
+    },
+    {
+      "sku_id": "S08",
+      "sku_name": "合成商品08",
+      "priority": 2,
+      "demand_units": 6,
+      "minimum_service": 0,
+      "destination": "Central"
+    },
+    {
+      "sku_id": "S09",
+      "sku_name": "合成商品09",
+      "priority": 3,
+      "demand_units": 5,
+      "minimum_service": 0,
+      "destination": "West"
+    },
+    {
+      "sku_id": "S10",
+      "sku_name": "合成商品10",
+      "priority": 3,
+      "demand_units": 7,
+      "minimum_service": 0,
+      "destination": "East"
+    },
+    {
+      "sku_id": "S11",
+      "sku_name": "合成商品11",
+      "priority": 3,
+      "demand_units": 4,
+      "minimum_service": 0,
+      "destination": "Central"
+    },
+    {
+      "sku_id": "S12",
+      "sku_name": "合成商品12",
+      "priority": 3,
+      "demand_units": 6,
+      "minimum_service": 0,
+      "destination": "West"
+    }
+  ],
+  "costs": [
+    {
+      "plant_id": "A",
+      "sku_id": "S01",
+      "variable_cost": "95.25",
+      "transport_cost": "4.20",
+      "line_setup_fee": "37.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S02",
+      "variable_cost": "102.25",
+      "transport_cost": "19.50",
+      "line_setup_fee": "44.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S03",
+      "variable_cost": "109.25",
+      "transport_cost": "32.30",
+      "line_setup_fee": "30.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S04",
+      "variable_cost": "88.25",
+      "transport_cost": "4.20",
+      "line_setup_fee": "37.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S05",
+      "variable_cost": "95.25",
+      "transport_cost": "19.50",
+      "line_setup_fee": "44.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S06",
+      "variable_cost": "102.25",
+      "transport_cost": "32.30",
+      "line_setup_fee": "30.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S07",
+      "variable_cost": "109.25",
+      "transport_cost": "4.20",
+      "line_setup_fee": "37.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S08",
+      "variable_cost": "88.25",
+      "transport_cost": "19.50",
+      "line_setup_fee": "44.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S09",
+      "variable_cost": "95.25",
+      "transport_cost": "32.30",
+      "line_setup_fee": "30.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S10",
+      "variable_cost": "102.25",
+      "transport_cost": "4.20",
+      "line_setup_fee": "37.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S11",
+      "variable_cost": "109.25",
+      "transport_cost": "19.50",
+      "line_setup_fee": "44.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S12",
+      "variable_cost": "88.25",
+      "transport_cost": "32.30",
+      "line_setup_fee": "30.50",
+      "plant_activation_fee": "110.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S01",
+      "variable_cost": "84.40",
+      "transport_cost": "17.10",
+      "line_setup_fee": "54.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S02",
+      "variable_cost": "92.40",
+      "transport_cost": "5.10",
+      "line_setup_fee": "45.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S03",
+      "variable_cost": "100.40",
+      "transport_cost": "18.40",
+      "line_setup_fee": "54.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S04",
+      "variable_cost": "108.40",
+      "transport_cost": "17.10",
+      "line_setup_fee": "45.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S05",
+      "variable_cost": "76.40",
+      "transport_cost": "5.10",
+      "line_setup_fee": "54.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S06",
+      "variable_cost": "84.40",
+      "transport_cost": "18.40",
+      "line_setup_fee": "45.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S07",
+      "variable_cost": "92.40",
+      "transport_cost": "17.10",
+      "line_setup_fee": "54.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S08",
+      "variable_cost": "100.40",
+      "transport_cost": "5.10",
+      "line_setup_fee": "45.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S09",
+      "variable_cost": "108.40",
+      "transport_cost": "18.40",
+      "line_setup_fee": "54.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S10",
+      "variable_cost": "76.40",
+      "transport_cost": "17.10",
+      "line_setup_fee": "45.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S11",
+      "variable_cost": "84.40",
+      "transport_cost": "5.10",
+      "line_setup_fee": "54.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S12",
+      "variable_cost": "92.40",
+      "transport_cost": "18.40",
+      "line_setup_fee": "45.20",
+      "plant_activation_fee": "130.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S01",
+      "variable_cost": "100.15",
+      "transport_cost": "28.20",
+      "line_setup_fee": "31.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S02",
+      "variable_cost": "106.15",
+      "transport_cost": "16.25",
+      "line_setup_fee": "37.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S03",
+      "variable_cost": "94.15",
+      "transport_cost": "3.05",
+      "line_setup_fee": "43.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S04",
+      "variable_cost": "100.15",
+      "transport_cost": "28.20",
+      "line_setup_fee": "25.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S05",
+      "variable_cost": "106.15",
+      "transport_cost": "16.25",
+      "line_setup_fee": "31.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S06",
+      "variable_cost": "94.15",
+      "transport_cost": "3.05",
+      "line_setup_fee": "37.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S07",
+      "variable_cost": "100.15",
+      "transport_cost": "28.20",
+      "line_setup_fee": "43.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S08",
+      "variable_cost": "106.15",
+      "transport_cost": "16.25",
+      "line_setup_fee": "25.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S09",
+      "variable_cost": "94.15",
+      "transport_cost": "3.05",
+      "line_setup_fee": "0.00",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S10",
+      "variable_cost": "100.15",
+      "transport_cost": "28.20",
+      "line_setup_fee": "37.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S11",
+      "variable_cost": "106.15",
+      "transport_cost": "16.25",
+      "line_setup_fee": "43.80",
+      "plant_activation_fee": "90.00"
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S12",
+      "variable_cost": "94.15",
+      "transport_cost": "3.05",
+      "line_setup_fee": "25.80",
+      "plant_activation_fee": "90.00"
+    }
+  ],
+  "plants": [
+    {
+      "plant_id": "A",
+      "plant_name": "东部工厂",
+      "unit_capacity": 17,
+      "labour_capacity": 18
+    },
+    {
+      "plant_id": "B",
+      "plant_name": "中部工厂",
+      "unit_capacity": 16,
+      "labour_capacity": 15
+    },
+    {
+      "plant_id": "C",
+      "plant_name": "西部工厂",
+      "unit_capacity": 15,
+      "labour_capacity": 17
+    }
+  ],
+  "routes": [
+    {
+      "plant_id": "A",
+      "sku_id": "S01",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S02",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S03",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S04",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S05",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S06",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S07",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S08",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S09",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 2,
+      "labour_per_unit": 3
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S10",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S11",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "A",
+      "sku_id": "S12",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S01",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S02",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S03",
+      "eligible": 1,
+      "max_units": 3,
+      "min_batch": 3,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S04",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S05",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S06",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 3,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S07",
+      "eligible": 1,
+      "max_units": 3,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S08",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S09",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 3,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S10",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S11",
+      "eligible": 1,
+      "max_units": 3,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "B",
+      "sku_id": "S12",
+      "eligible": 1,
+      "max_units": 4,
+      "min_batch": 3,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S01",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 3
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S02",
+      "eligible": 1,
+      "max_units": 3,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S03",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S04",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S05",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S06",
+      "eligible": 1,
+      "max_units": 3,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S07",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S08",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S09",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 3,
+      "labour_per_unit": 1
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S10",
+      "eligible": 1,
+      "max_units": 3,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S11",
+      "eligible": 0,
+      "max_units": 0,
+      "min_batch": 2,
+      "labour_per_unit": 2
+    },
+    {
+      "plant_id": "C",
+      "sku_id": "S12",
+      "eligible": 1,
+      "max_units": 5,
+      "min_batch": 2,
+      "labour_per_unit": 1
+    }
+  ],
+  "materials": [
+    {
+      "material_id": "M1",
+      "available_units": 41
+    },
+    {
+      "material_id": "M2",
+      "available_units": 31
+    }
+  ],
+  "recipes": [
+    {
+      "sku_id": "S01",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S01",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S02",
+      "material_id": "M1",
+      "units_per_item": 2
+    },
+    {
+      "sku_id": "S02",
+      "material_id": "M2",
+      "units_per_item": 0
+    },
+    {
+      "sku_id": "S03",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S03",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S04",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S04",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S05",
+      "material_id": "M1",
+      "units_per_item": 0
+    },
+    {
+      "sku_id": "S05",
+      "material_id": "M2",
+      "units_per_item": 2
+    },
+    {
+      "sku_id": "S06",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S06",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S07",
+      "material_id": "M1",
+      "units_per_item": 2
+    },
+    {
+      "sku_id": "S07",
+      "material_id": "M2",
+      "units_per_item": 0
+    },
+    {
+      "sku_id": "S08",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S08",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S09",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S09",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S10",
+      "material_id": "M1",
+      "units_per_item": 0
+    },
+    {
+      "sku_id": "S10",
+      "material_id": "M2",
+      "units_per_item": 2
+    },
+    {
+      "sku_id": "S11",
+      "material_id": "M1",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S11",
+      "material_id": "M2",
+      "units_per_item": 1
+    },
+    {
+      "sku_id": "S12",
+      "material_id": "M1",
+      "units_per_item": 2
+    },
+    {
+      "sku_id": "S12",
+      "material_id": "M2",
+      "units_per_item": 0
+    }
+  ],
+  "budget": "5000.00"
+}

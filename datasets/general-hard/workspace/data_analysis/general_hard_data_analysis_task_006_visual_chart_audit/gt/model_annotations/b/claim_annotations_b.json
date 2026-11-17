@@ -1,0 +1,160 @@
+{
+  "reviewer_identity": {"reviewer_id": "b", "kind": "model_agent", "description": "独立模型标注者；非人工、非母语专家，不提供正式语义分"},
+  "review_type": "independent_model_annotation",
+  "human_expert": false,
+  "source_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/b",
+  "input_sha256": {
+    "input/chart_pages/chart_A.png": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+    "input/chart_pages/chart_B.png": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+    "input/chart_pages/chart_C.png": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+    "input/chart_pages/chart_D.png": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465",
+    "input/claims.docx": "f4213644e21ce8eea1ac69b96701371769c0915c828d35b3f924834a3ea1dd35",
+    "input/reading_rules.md": "6a2845e9dc6229e09331d85d49e5499dfd43cb362e2ccb92ef410a2821b2c826"
+  },
+  "image_reading_sha256": "6c681cf2b47278f1782e7a0a51bfb69ac0927620a555851c8eb46c3f64180eb2",
+  "actual_docx_read": {
+    "path": "input/claims.docx",
+    "sha256": "f4213644e21ce8eea1ac69b96701371769c0915c828d35b3f924834a3ea1dd35",
+    "read": true,
+    "method": "阶段一JSON保存并校验SHA256后，运行unzip -p input/claims.docx word/document.xml，实际读取包内正文XML及C01至C08句子；未使用桌面Office、未生成解包文件。",
+    "part": "word/document.xml"
+  },
+  "records": [
+    {
+      "claim_id": "C01",
+      "decision": "refuted",
+      "claim_quote": "09-18到09-21，活跃用户和D1流失率都上升了。",
+      "reason": "蓝色实线圆点是活跃用户，按左轴千人读数，09-18为[12.8,13.3]千人、09-21为[17.7,18.2]千人，增加区间[4.4,5.4]千人。橙色虚线方点是D1流失率，按右轴百分比读数，从[10.8,11.2]%降至[7.7,8.2]%，后减前为[-3.5,-2.6]个百分点，明确下降。复合主张中的活跃用户上升成立，流失率上升被反证，因此整句反驳。",
+      "reading_ids": ["R01", "R02", "R03", "R04"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [374,455,399,494], "role": "09-18蓝圆点与橙方点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [874,365,899,558], "role": "09-21两类标记，分别在上方蓝圆点及下方橙方点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [108,169,347,773], "role": "活跃用户左轴及千人单位"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [1205,169,1358,773], "role": "D1流失率右轴及%单位"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [355,130,963,164], "role": "蓝圆点与橙方点的图例对应"}
+      ],
+      "critical_limits": ["比较的是09-18与09-21端点，不声称活跃用户在区间内每天单调上升。", "百分比之差为百分点；不能把左轴千人与右轴%混算。"],
+      "uncertainties": ["没有逐点原值，确切小数尾数未知；读图区间已足以排除D1流失率端点上升。"]
+    },
+    {
+      "claim_id": "C02",
+      "decision": "supported",
+      "claim_quote": "09-21活跃用户约18千人，D1流失率约8%。这两个数不能直接相减成为10个百分点。",
+      "reason": "09-21蓝色活跃用户圆点按左轴落在[17.7,18.2]千人，橙色D1流失率方点按右轴落在[7.7,8.2]%，分别支持约18千人与约8%。千人是人数单位，百分比是基准日活跃用户中的次日未活跃比例；两者不具备直接相减得到百分点的同量纲关系。图脚注也明确两者属于不同单位。该句的近似读数和单位限制均获得支持。",
+      "reading_ids": ["R03", "R04"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [874,365,899,391], "role": "09-21蓝色活跃用户圆点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [875,538,899,558], "role": "09-21橙色D1流失率方点"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [108,169,347,773], "role": "千人左轴"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [1205,169,1358,773], "role": "百分比右轴"},
+        {"path": "input/chart_pages/chart_A.png", "coordinate_system": "pixel", "bbox": [170,832,1070,902], "role": "D1定义及不同单位说明"}
+      ],
+      "critical_limits": ["支持的是图示近似数量级，未确认18和8为隐藏精确原值。", "未由此推算人数和率之间的其他业务关系。"],
+      "uncertainties": ["逐点原始小数未知，但不影响近似读数及量纲判断。"]
+    },
+    {
+      "claim_id": "C03",
+      "decision": "refuted",
+      "claim_quote": "6月新用户流失人数约300人。",
+      "reason": "图例将蓝色下层定义为新用户流失人数。6月蓝层上边界只到[117,123]人，约120人；约300人的[297,303]人位置是蓝橙两层的总柱顶。6月橙色老用户分项需用总柱顶减蓝层，区间[174,186]人。将堆叠总高称为新用户分项，与实际图形和图例矛盾。",
+      "reading_ids": ["R05", "R06", "R07"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,622,928,641], "role": "6月新用户蓝层上边界约120人"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,433,928,447], "role": "6月总柱顶约300人"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "人数单轴及刻度"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [350,128,1045,164], "role": "蓝色新用户、橙色老用户图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [170,833,1040,901], "role": "同月自下而上堆叠脚注"}
+      ],
+      "critical_limits": ["新用户人数读蓝层高度，合计读堆顶，二者对象不同。", "不是仅凭缺少精确原值就判不确定；约120与约300数量级差足以反证。"],
+      "uncertainties": ["原始人数的个位数未知，合理目视误差不能将新用户人数推近300人。"]
+    },
+    {
+      "claim_id": "C04",
+      "decision": "supported",
+      "claim_quote": "6月与7月总流失人数大致相当，但7月的新用户部分更少、老用户部分更多。这不等于两类用户的流失率走势。",
+      "reason": "6月与7月堆顶均落在[297,303]人，支持总流失人数大致相当，不要求精确相等。蓝色新用户从[117,123]降至[87,93]人，7月减6月为[-36,-24]人。橙色老用户按柱顶减蓝层得到6月[174,186]、7月[204,216]人，变化[18,42]人，支持老用户部分更多。脚注明确本图只给人数，未给两类用户各自活跃基数，因此这些人数变化不能直接当作各自流失率走势。该句各关键部分均支持。",
+      "reading_ids": ["R05", "R06", "R07", "R08", "R09", "R10"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [780,433,928,641], "role": "6月总柱顶及蓝橙分界"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [1050,433,1201,673], "role": "7月总柱顶及蓝橙分界"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [105,169,330,773], "role": "人数单轴"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [350,128,1045,164], "role": "新老用户颜色图例"},
+        {"path": "input/chart_pages/chart_B.png", "coordinate_system": "pixel", "bbox": [170,833,1040,901], "role": "堆叠与未给活跃基数脚注"}
+      ],
+      "critical_limits": ["总量大致相当不等于原值精确相等，合计变化的保守读图区间为[-6,6]人。", "人数分项的增减得到支持，流失率可能受活跃基数变化影响，实际率走势未决。"],
+      "uncertainties": ["新老用户各自的活跃基数及原始人数未给；不能确定各自流失率增减。"]
+    },
+    {
+      "claim_id": "C05",
+      "decision": "refuted",
+      "claim_quote": "W5单周新增用户约225千人。",
+      "reason": "图例和脚注明确绿色圆点表示该周结束时累计新增，且各周累计起点相同。W5点的[222,228]千人确实约225千人，但它是累计量。W4累计为[162,168]千人，W5单周量应为W5减W4，保守区间[222-168,228-162]=[54,66]千人，约60千人。该单周范围远离225千人，故主张被反证。",
+      "reading_ids": ["R11", "R12", "R13"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [806,455,830,478], "role": "W4累计值圆点"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [1003,348,1028,371], "role": "W5累计值圆点"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [105,169,400,773], "role": "累计新增千人单轴"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [568,130,864,164], "role": "周末累计新增图例"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [170,833,1050,901], "role": "周末累计与同一累计起点脚注"}
+      ],
+      "critical_limits": ["同一累计起点使相邻周末值之差具有W5单周含义。", "支持约60千人的数量级，不声称恢复精确单周原值。"],
+      "uncertainties": ["原始小数未提供，W5单周精确人数未知；不影响排除约225千人的主张。"]
+    },
+    {
+      "claim_id": "C06",
+      "decision": "uncertain",
+      "claim_quote": "仅凭此图即可确认W5单周新增精确等于60000人，误差不超过1人。",
+      "reason": "从W4累计[162,168]千人与W5累计[222,228]千人相减，只能得到W5单周[54,66]千人，即[54000,66000]人；中心近似约60000人。脚注明确未附原始数值表或逐点数值标签，图形没有确认±1人精度的依据。实际原值可能恰为60000，也可能为邻近数值，当前证据既无法确认也无法排除精确等于60000的事实部分，因此标证据不足；不能把读图精度不足当成原值一定不等于60000的反证。“仅凭即可确认”的确定性表述不获支持。",
+      "reading_ids": ["R11", "R12", "R13"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [806,455,830,478], "role": "W4累计读数输入"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [1003,348,1028,371], "role": "W5累计读数输入"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [105,169,400,773], "role": "千人单轴及50千人刻度间距"},
+        {"path": "input/chart_pages/chart_C.png", "coordinate_system": "pixel", "bbox": [170,833,1050,901], "role": "同一累计起点、未附原始表及逐点标签脚注"}
+      ],
+      "critical_limits": ["约60000人与精确等于60000且误差不超过1人不是同一精度主张。", "读图区间为视觉不确定性范围，不是统计置信区间，也不是实际原值误差的已知上限。", "此处的uncertain针对精确数值及精度断言缺乏可核实证据；未将60000这一可能原值宣布为假。"],
+      "uncertainties": ["W4、W5未取整的原始累计记录缺失。", "无法知道单周实际原值是否恰等于60000；需要可审计原值或达到相应精度的数值标签才能核实±1人。"]
+    },
+    {
+      "claim_id": "C07",
+      "decision": "refuted",
+      "claim_quote": "B组柱高大约是A组的两倍，因此B组D1流失率约为A组的两倍。",
+      "reason": "图D纵轴从45%开始，脚注直接指出柱形可见高度不以0%为起点。因此可见柱高比较的是超过45%的部分，不能代表完整流失率倍数。A组样本流失率为[46.0,46.2]%，B组为[47.7,47.9]%，B/A按正数区间相除并向外舍入为[1.032,1.042]倍，约1.04倍，明确不是约2倍。可见柱形B确实明显高于A，但其形状前提不能推出该率值倍数；主张的关键结论有直接数值反证。",
+      "reading_ids": ["R14", "R15", "R20"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [390,637,583,761], "role": "A组从45%起的可见柱及柱顶"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [890,455,1083,761], "role": "B组从45%起的可见柱及柱顶"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,169,405,773], "role": "45%至50%截断百分比轴"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [462,778,1015,812], "role": "A组与B组横轴分组"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,833,1110,899], "role": "柱形从45%起点及样本信息脚注"}
+      ],
+      "critical_limits": ["不需要规定“大约两倍”的柱形描述容差，实际流失率之比约1.04已反证整句的关键结论。", "上述比值仅对样本显示值及其读图误差成立，不是总体风险比的统计区间。", "A与B样本绝对差为[1.5,1.9]个百分点，与“增加约一倍”含义不同。"],
+      "uncertainties": ["原始精确率值未知，但合理目视范围与两倍率值相距很远。"]
+    },
+    {
+      "claim_id": "C08",
+      "decision": "uncertain",
+      "claim_quote": "B组相对A组的总体差异具有统计显著性，而且是渠道调整造成的。",
+      "reason": "图D可观察到B组样本显示值[47.7,47.9]%高于A组[46.0,46.2]%，差[1.5,1.9]个百分点。A误差线可见端点约45.2%与47.0%，B约46.6%与49.0%，存在重叠，但脚注明确未给样本量、误差线含义或随机化设计。不能自行认定这些线是某置信水平的置信区间，更不能单凭重叠断言显著或不显著。图中也未建立渠道调整、组别分配与结果之间的因果识别关系。因此总体统计显著性与渠道调整因果归因两个关键部分均缺证，当前既不能确认，也没有证据证明其必不显著或必无因果，标为uncertain。",
+      "reading_ids": ["R14", "R15", "R16", "R17", "R18", "R19", "R20"],
+      "source_regions": [
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [390,539,583,746], "role": "A组样本柱顶及误差线上下横帽"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [890,327,1083,597], "role": "B组样本柱顶及误差线上下横帽"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [110,169,405,773], "role": "样本D1流失率%单轴"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [569,130,864,164], "role": "样本显示值及误差线图例"},
+        {"path": "input/chart_pages/chart_D.png", "coordinate_system": "pixel", "bbox": [168,833,1110,899], "role": "未提供样本量、误差线含义与随机化设计的脚注"}
+      ],
+      "critical_limits": ["样本显示差异不是总体显著性的充分证据。", "误差线重叠不能被简化成“已经证明不显著”。", "渠道调整的因果结论需要干预或可支持识别的研究设计；图中没有这些证据。"],
+      "uncertainties": ["各组样本量、误差线定义和置信水平、抽样及组间依赖结构、检验方法均未给。", "是否确有渠道调整、如何分配组别、是否随机化、是否有混杂因素与调整策略未知。", "总体差异的统计显著性及渠道调整因果性均保持未决。"]
+    }
+  ],
+  "decision_counts": {"supported": 2, "refuted": 4, "uncertain": 2, "total": 8},
+  "overall_notes": [
+    "遵守先图后题：先核四PNG与reading_rules的SHA256，逐张view_image打开原图，保存并校验含R01至R20的image_reading_b.json；冻结后才解包读取claims.docx的word/document.xml。阶段一文件未因第二阶段主张内容改写。",
+    "全部六源SHA256与input-sha256.json一致；本文件绑定阶段一SHA256=6c681cf2b47278f1782e7a0a51bfb69ac0927620a555851c8eb46c3f64180eb2。",
+    "所有相对图片路径均相对于source_root；坐标为1467×960原图像素，左上为原点。定位涵盖实际标记、轴、图例与相关脚注。",
+    "独立模型标注，共20项有信息量的读图区间和8项主张判断；supported 2项、refuted 4项、uncertain 2项。human_expert=false，非人工专家标注、非母语专家标注、非正式语义评分。",
+    "实际未决：C06的精确60000人及±1人精度；C08的总体显著性与渠道调整因果归因。各图原始小数未提供、B图各组活跃基数未给，也限定了可作出的额外解释。",
+    "未参考作者预期、GT、生成代码、原始数值、对照图、其他标注包或他人结果；未联网、未再派代理、未运行桌面Office，包内只新写这两份原始JSON。"
+  ]
+}

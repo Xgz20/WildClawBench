@@ -1,0 +1,14 @@
+{
+  "semantic": [
+    "priority email overrides other matching criteria",
+    "fallback when higher key has no match",
+    "stable catalog and query order",
+    "duplicate IDs not deduplicated",
+    "hash collision is not identity",
+    "ASCII leading zeros and non-ASCII case distinctions",
+    "blank/partial/null keys disabled",
+    "invalid phone does not become blank equality"
+  ],
+  "performance": "Copying views or using C comparison helpers still invokes trusted Key equality; repeated scans exceed the public algebraic work bound.",
+  "protection": "Changing candidate-visible counters or baseline never changes private trusted measurement."
+}

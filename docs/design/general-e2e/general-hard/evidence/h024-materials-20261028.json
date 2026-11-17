@@ -1,0 +1,540 @@
+{
+  "schema_version": "general-hard-h024-source-materials/v1",
+  "date_local": "2026-10-28",
+  "task_id": "general_hard_data_analysis_task_008_parameterized_model",
+  "name": "提成模型的参数化与情景联动",
+  "status": "SOURCE_MATERIALS_AND_DUAL_TRUTH_PASS_COMPARISON_DESIGN_PENDING_USER",
+  "formal_tasks": 25,
+  "remaining_tasks": 35,
+  "H024_registered": false,
+  "release_status": "building",
+  "manifest_created": false,
+  "parent_commit": "d5e53997761ea8ea33e79ddf0bf8dea3180d4f87",
+  "inputs": {
+    "exec_files": 3,
+    "workbook_sheets": 4,
+    "employees": 12,
+    "attendance": 36,
+    "sales": 110,
+    "refunds": 34,
+    "parameter_rows": 9,
+    "source_rows_verified": 192,
+    "source_sha256": {
+      "payroll.xlsx": "5e46af597aec9fb0f7d27c30a3e42936682e8cd2e5d5b8ad435eff4abfc4baf1",
+      "policy.md": "1db3e2f09a707d32098594add8fa23d8e26562f17ca7ae9bc023e9bdd89b8636",
+      "scenario_inputs.json": "f58b735e31c9772925ddd7779c636490f0e3566ab1a906cd355ae1f4ee59534c"
+    },
+    "online_origin": "accepted deidentified intent prototype ACQ-003745ca05849e3f; every employee/value/date synthetic, SpreadsheetBench methods only",
+    "human_expert_review": false
+  },
+  "truth": {
+    "methods": [
+      "Decimal grouped monthly curve and cumulative before/through refunds",
+      "Independent integer-cent and Fraction tier bands, sequential refund deltas"
+    ],
+    "cases": 4,
+    "checks": 16848,
+    "actual_source_workbook_read": true,
+    "candidate_output_used_to_construct_GT": false,
+    "boundary_design": [
+      "marginal tier limits",
+      "monthly aggregate rounding versus per-sale rounding",
+      "original-month cap and rates for retrospective refunds",
+      "refunds in cap plateau give real zero",
+      "prior clawbacks not deducted again",
+      "quarter-day/zero attendance",
+      "negative commission/pay preserved",
+      "late-month parameter and true zero cap"
+    ]
+  },
+  "native_scalar_math": {
+    "checks": 7146,
+    "cases": 6,
+    "source": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/validation.json",
+    "scope": "36 employee-month and 72 original-month/as-of rows for three selectors and three parameter changes. Rejected prototype is used only for these reusable scalar calculations; comparison is explicitly excluded.",
+    "comparison_validated": false
+  },
+  "comparison_decision": {
+    "question_pending": true,
+    "recommended": "one uniform parameterized formula table on scenario × employee × month (108 payroll rows), real simultaneous comparison and parameter propagation; no snapshots or hardcoded answers",
+    "preserves_original_live_requirement": true,
+    "rejected": "metric selector manufactured as the second sensitivity-table input",
+    "skill": "/Users/gzx/.codex/plugins/cache/openai-primary-runtime/spreadsheets/26.1025.11240/skills/Spreadsheets/SKILL.md",
+    "rule": "Do not introduce TABLE into an ordinary forecast or case comparison, or manufacture a second varying input with a metric selector.",
+    "native_diagnostics": "Several lookup-intermediate forms also remained at active-case values in this Office profile. Direct/conditional minimal feature tests can work; this does not authorize the rejected metric-selector case comparison or establish a full compatible comparison."
+  },
+  "snapshot": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1",
+  "snapshot_authority": "Files inside materials-snapshot-v1 preserve this revision. Original author working paths may evolve in later explicitly versioned work.",
+  "files": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/base_july_rate/calculated/office-audit.json",
+      "sha256": "7d615c1954ad45b28e73d4178adaac4c2b7ccdbc092d9782889a900a6a125e8f",
+      "size": 1120
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/base_july_rate/calculated/recalculated.xlsx",
+      "sha256": "2eecc11f9938c225244331445eb5fcc70656d989e33326b716934b82691e2f50",
+      "size": 90742
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/base_july_rate/prepared/counterfactual-audit.json",
+      "sha256": "7df69aa2a7d9d06e5330a6fbb301eacbeba0a05d1a0d58a8dba044e5c6e538f8",
+      "size": 458
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/base_july_rate/prepared/prepared.xlsx",
+      "sha256": "ace31dc5777c4772e6d8d8879fcef53e6fb1625cfd8341dff31a47ebccb150f9",
+      "size": 85237
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/base_july_rate.json",
+      "sha256": "1a96c12e5c52ad6939936a90de3c8aa5d7233ee9c5446f0e73879d410b08bfe4",
+      "size": 2756
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/baseline/calculated/office-audit.json",
+      "sha256": "a67a508a0e2a75ff0554ab8ca53b3ba715804d1d643b14b140a0ec4360f99e9b",
+      "size": 1120
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/baseline/calculated/recalculated.xlsx",
+      "sha256": "33d5a5809eebe05d600f629943331eb44c9e78f702c4a100a1cba1cdb5c7cf5a",
+      "size": 90725
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/baseline.json",
+      "sha256": "961b4012db0d04fefdd3aa07746264c99421f113ab2f1bf5a435df046ef2ff26",
+      "size": 1826
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/growth_september_cap/calculated/office-audit.json",
+      "sha256": "5e024eb89efb35ed2344264d44405bc75e34ab5bd615260ecb17e9ae1b104b8e",
+      "size": 1120
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/growth_september_cap/calculated/recalculated.xlsx",
+      "sha256": "99d9a81eced188247d5c069c1bbb1d5a2412b14f78815cb9054a5017bf83bf3c",
+      "size": 90727
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/growth_september_cap/prepared/counterfactual-audit.json",
+      "sha256": "97527b83c94f8d93edf4829348479faba1ce8fe3e0a7ce5d7001c3b38bf5dcab",
+      "size": 459
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/growth_september_cap/prepared/prepared.xlsx",
+      "sha256": "ea8680747725290cd7c0708b89b9da85e4d1622d6ef2210f51e3b55116eb1633",
+      "size": 85238
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/growth_september_cap.json",
+      "sha256": "3e1de55bb14681b6b3df5ab31382e384cf430b51512279fc418edbed5fc538af",
+      "size": 2787
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/guardrail_september_zero_cap/calculated/office-audit.json",
+      "sha256": "445148bae14782c5d181cf5a42a9ce2c8bae82033fb1e77eb7109b42ceb364d2",
+      "size": 1120
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/guardrail_september_zero_cap/calculated/recalculated.xlsx",
+      "sha256": "f255ad722c02ed0351563ca99b2cae4da35a5704b93e15cd34bc40a1a84826f0",
+      "size": 90725
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/guardrail_september_zero_cap/prepared/counterfactual-audit.json",
+      "sha256": "0e9180dd80ad4aeacbf94690f88fd450968e87c61accb7d38066620d9b55eb73",
+      "size": 455
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/guardrail_september_zero_cap/prepared/prepared.xlsx",
+      "sha256": "1c7a5449dcab606149df7016275864089ebffbcb5fc3cbee82a5800c62397931",
+      "size": 85236
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/guardrail_september_zero_cap.json",
+      "sha256": "1f22a42ad92d934b3ea17ad0fbc55a9b439266a5a3437c22639c36e9ddd739d9",
+      "size": 2823
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_2/calculated/office-audit.json",
+      "sha256": "543a04b5f7cedb45978ef1c24662b92833a03914fa97af647e547705faf84fee",
+      "size": 1120
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_2/calculated/recalculated.xlsx",
+      "sha256": "6afc86d2017749e99ec763b1f51b80fe1e1d9fa9b833779c2ca0de5be264d6e3",
+      "size": 90841
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_2/prepared/counterfactual-audit.json",
+      "sha256": "acbbd47bfe1049ec075acc964fb9d5d3d17261f29f6214ca5ead373581792d26",
+      "size": 458
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_2/prepared/prepared.xlsx",
+      "sha256": "8fd09cc3a2d48331af1d5c94255d4af1577535055bdff26933f3c7049fa0fac5",
+      "size": 85289
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_2.json",
+      "sha256": "2fda23ef62ed3d5c88462d18de802a15152ca169c8b1453c30c0e97f85ed2b72",
+      "size": 2736
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_3/calculated/office-audit.json",
+      "sha256": "ea31dde71bb6b5c00f29d83d6f9ff6838a5f98264fb26bd6e9a73ef96f5047d6",
+      "size": 1120
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_3/calculated/recalculated.xlsx",
+      "sha256": "9276b4c3a4f48a514f22fd3ec7b8a5dc75aff82c70b73bb80659516030215bf5",
+      "size": 90774
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_3/prepared/counterfactual-audit.json",
+      "sha256": "688af40bcc31c79a06e9d92d6f1deed01def24df11c8ddd177799dfe2905b396",
+      "size": 458
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_3/prepared/prepared.xlsx",
+      "sha256": "5807bd082936f29f2ad4ae67db5229a5b4db604d564058b9d6e24dd0a5f6abbe",
+      "size": 85288
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/selector_3.json",
+      "sha256": "5662c8fb3432287eb6dd0613e26f4df2e419f25aa879c00b42b7ec41379531a9",
+      "size": 2736
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/active-model-only-1793164743745305000/validation.json",
+      "sha256": "020574ffeee5716f670062d56882bfd29224858d94c8c54a8079756a19695ab2",
+      "size": 16940
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/datatable-probe-build.log",
+      "sha256": "1908eadb3cb54ced40707fcfbe0036768b4bd3e7d6ff4ddb16b4e75c09ed7f7b",
+      "size": 314
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/datatable-probe-v2-build.log",
+      "sha256": "20b507243d5548d5c92e8de197c08cc65df6c5796950548f7c61a1995d2dac71",
+      "size": 266
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/datatable-probe-v3-build.log",
+      "sha256": "15ea337df6bf984254e739bedf015e4f07209761e49634cda7ce7da77c742192",
+      "size": 317
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/datatable-probe-v4-build.log",
+      "sha256": "b2dfdd3942ff73b27aa73d8f80542b8b866df24510f917c5355f928477452fad",
+      "size": 317
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/blueprint-snapshot.json",
+      "sha256": "7f7d9f6543c0c79148bfae63c1ab63458b720d97946ba5bc6395dd0544bebdfe",
+      "size": 11411
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/build_material_evidence.py",
+      "sha256": "9b9d50b96050e23d45f94af26699205856f66f12f8bf46a68ae68695f91c97d3",
+      "size": 5632
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/build_reference.mjs",
+      "sha256": "8088f62e08a8408bcd8492f7e3207b9e67e6f92c296434e83042b020a843f97f",
+      "size": 6945
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/build_source.mjs",
+      "sha256": "eabe493d94704528b7d7077742fb78f4b507b14491ed5070c1eddf4325e1ede2",
+      "size": 2912
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/declare_materials.py",
+      "sha256": "f433c14177208248a8ecf7a3e4300ed78a2ca31cce613aa651d944aec9bab582",
+      "size": 5278
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/facts.json",
+      "sha256": "ed78a3653d706f64f629162fd7c11ef8aa7984273056f320c265589a63ef1907",
+      "size": 32293
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/marker_status.json",
+      "sha256": "16e09f0b4db889118a9a57c2f81f0266d75ebdab6b124b0b4ec2759b87a38b75",
+      "size": 339
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/prepare_reference_spec.py",
+      "sha256": "56f973059727d3c9f06926011f41b75065d35a9b1fe1379cd63b30f639b60be1",
+      "size": 9855
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/probe_datatable.mjs",
+      "sha256": "9eb99460f5c40f01165e79c5c4ab74e284778ab364d2b73607818a0e7ed57f36",
+      "size": 1331
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature/compensation_model.xlsx",
+      "sha256": "8cf1c96121d765372ca02eb56d137589211ca1d848c88c76fdfd3fdcc94d6feb",
+      "size": 3596
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature/compensation_model.xlsx.inspect.ndjson",
+      "sha256": "3de1c3fd644c1602f526e23bfb1f1c7e6b0a124e98c557f903d413210ab237c1",
+      "size": 7330
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature-v2/compensation_model.xlsx",
+      "sha256": "a5cb503841b6aa68f672817d2cbe6400e3a9594cad7bf0cfcc5ea05ea03746d3",
+      "size": 4788
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature-v2/compensation_model.xlsx.inspect.ndjson",
+      "sha256": "530ad4c4b306a7355dbb921441d4368f667e9df2a7c163e25c2fa5b155b01083",
+      "size": 21854
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature-v3/compensation_model.xlsx",
+      "sha256": "6d78ea88c402b5d8b0df58df54c98887be832e60238474fa1c94e7aa5ca27a4a",
+      "size": 3633
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature-v3/compensation_model.xlsx.inspect.ndjson",
+      "sha256": "752f5712fc3d18e85ef5630a4ebece4aba09511b960b3fb13dee04530e91d042",
+      "size": 8929
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature-v4/compensation_model.xlsx",
+      "sha256": "4d00b81a958b0cb522755337c8ae9881933a085e7662c8782802eaf6c3214240",
+      "size": 4954
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/native-feature-v4/compensation_model.xlsx.inspect.ndjson",
+      "sha256": "00df5ffb97c370aa5ac1a963df9c38ef7c899a8d683a9f78ab5b538f8b2ec9c1",
+      "size": 27119
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/proposed/v1/results/compensation_model.xlsx",
+      "sha256": "583d5418b296ab027d3625968798e08fe3f708247e969cb7c34fbf5e238a13f0",
+      "size": 85762
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/read_sources.py",
+      "sha256": "8a718087eebf6696ad4c6472e2622c37f9f4c9d10fd42318aacc74fe4f026a69",
+      "size": 1492
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/reference-spec.json",
+      "sha256": "bebf9c8dbb1633dfb4df12c4fa5ca4a442bbf31d03161cb89c8014a4a9695ddb",
+      "size": 187717
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/verify_active_model.py",
+      "sha256": "4bc8f399a69d3345a410cb9cd5af5cb9446eaedce56dbcb1c4f4eefbd3248836",
+      "size": 4118
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/verify_datatable_feature.py",
+      "sha256": "4832c8a82696d0538edacbe40cfbbf2137d64157e58b0bb3ef53c24dcb2d87dd",
+      "size": 2371
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/verify_datatable_v2.py",
+      "sha256": "b13cee0be46390a3ac66928010b68bb5fa1e4c57db1c334c2d4155957b0edaf8",
+      "size": 1004
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/authoring/verify_models.py",
+      "sha256": "44360f0870a848f9da0a4ed7fcaa23381b1f035cedb6b2e11b81c2f9c57de238",
+      "size": 3274
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/exec/payroll.xlsx",
+      "sha256": "5e46af597aec9fb0f7d27c30a3e42936682e8cd2e5d5b8ad435eff4abfc4baf1",
+      "size": 12212
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/exec/policy.md",
+      "sha256": "1db3e2f09a707d32098594add8fa23d8e26562f17ca7ae9bc023e9bdd89b8636",
+      "size": 5519
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/exec/scenario_inputs.json",
+      "sha256": "f58b735e31c9772925ddd7779c636490f0e3566ab1a906cd355ae1f4ee59534c",
+      "size": 2995
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/business_model.py",
+      "sha256": "14b6e67343dc66ca4293f16e94991a5b84623e3865dd2bb47986fb218d33ef9c",
+      "size": 5043
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/expected.json",
+      "sha256": "7a3a71fd44808809919520e5a1d17d439f5247e57ded20ef112378681a6870f3",
+      "size": 157130
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/independent_fraction_model.py",
+      "sha256": "f11e9493c27c326e2fd6b36610040dc48461a91ddb97997b305dd93155433629",
+      "size": 4638
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/independent_validation.json",
+      "sha256": "10df65468636475bef3627b2ba48b48fcd47af87b1ded69590a8af31772bc563",
+      "size": 22451
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/protected_sha256.json",
+      "sha256": "cc712f4237b0179489bbefd74f3107019642d7fc9ec0f2c1d243555368709980",
+      "size": 266
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/scenarios/base_july_rate/expected.json",
+      "sha256": "1e1e50fb10b893412e01ff957d516fe9603aec4c973e0fce254bdf3db4201f23",
+      "size": 157154
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/scenarios/growth_september_cap/expected.json",
+      "sha256": "cd6e9b6fa021aac80af7630d4fcd8c07733b0fd35f89bd806628decaa3b01bab",
+      "size": 157129
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/scenarios/guardrail_september_zero_cap/expected.json",
+      "sha256": "8a0b0d71a523599fdb438550b2fa46d5e07b5f461ca972edce346f1e8311788e",
+      "size": 157015
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/gt/source_records.json",
+      "sha256": "45d0a68a1a78d6c7a8afbe1ddc706534ed06286f9a883cc52c011059a4577033",
+      "size": 32295
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/runtime-source/office-lock.json",
+      "sha256": "eb73a21f130e9db548d2aba00a5c090a6a6f5062a9ddbda1d957f9fe0b5ee4cf",
+      "size": 411
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/materials-snapshot-v1/runtime-source/office_runtime.py",
+      "sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+      "size": 65333
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/comparison-inspect.ndjson",
+      "sha256": "cac64eb1789fc9caea8134ac64d69f5f5d309f88a6716b05cccafbdfe2a64b04",
+      "size": 812
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/error-scan.ndjson",
+      "sha256": "acc0111e19cf44d2753fc9ecd164bf1b27fbd65597463a25cf48bd1c65e90146",
+      "size": 60
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/export-inspect.ndjson",
+      "sha256": "d8aec9e91f9d768537c45202bcc2ce494b3035e96464a0b43bcda4b2419f9d46",
+      "size": 1481821
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/参数.png",
+      "sha256": "0be3a013f26baabc81e450347ca9056c9567d5063416bc077e18f75f9725e3dc",
+      "size": 123783
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/员工底稿.png",
+      "sha256": "86022b6588ef51dca05254c67a4f6e83f2a69c72442a72c71324dab0ff983a8a",
+      "size": 43309
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/工资结果.png",
+      "sha256": "2176c0d39b0261a5d5c3b82e8f5ecfe2a70587d7ddb21a86f7b084aee3dcc419",
+      "size": 63770
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/情景对比.png",
+      "sha256": "b3127a2bb37b2b2590456e3a419ff6acf18ae34ac82f9beb5b72546655357e4f",
+      "size": 111729
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/提成回溯.png",
+      "sha256": "2499cbf14d94518f17ded8f24ae41623374d94148400b65c32d2ddf9a7de49b7",
+      "size": 87556
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/考勤底稿.png",
+      "sha256": "fcd9fa2f85c0cb625b4a69a859e6f9f2b53461234802fb5d6b1f54a5c3f3c2a4",
+      "size": 64171
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/退款底稿.png",
+      "sha256": "c9a2328813784abca901a94064cea10910005a971e0e82880c1d8f8b1b6ba05a",
+      "size": 100570
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/reference-v1/销售底稿.png",
+      "sha256": "96c1b5e925256a8a808a7762af077dd6e479fc8210f391fb15c472f0d354464a",
+      "size": 72763
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/source-export-inspect.ndjson",
+      "sha256": "aeac59c1cba3bf0172ab2fd4027d9ee845fe8f70cd4036a9fb28cfc11587d9de",
+      "size": 308222
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/source-visual-review.json",
+      "sha256": "4d8356d7433fcfbffa2265a14307094584afeb047cbeb9fc0b6b814e6fcc5776",
+      "size": 463
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/source-员工.png",
+      "sha256": "d152c4116a6f93cccd409479430c9b3dfc042c354e642943075790e7e18540e8",
+      "size": 68195
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/source-月度考勤.png",
+      "sha256": "47701d569324f95e9d801a68911bd9a5b077b4676978f4d66be1177b84c6565b",
+      "size": 78987
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/source-退款.png",
+      "sha256": "c9ba9d5b7b7d54f33f9a7faf38b461008ed2956582c62574079f66262c937a17",
+      "size": 96245
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/source-销售.png",
+      "sha256": "bbedc37cbbbe1c892fda5dbee5534c621066de4a955b87c65127d4e66fafe41a",
+      "size": 84726
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/verify-active-only-v2.log",
+      "sha256": "0b3e7c1131a45ec3ed26564eb476465cda86f833d165e6a557dbe348e20d88b0",
+      "size": 432
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/verify-datatable-feature.log",
+      "sha256": "4f76c3dc83ed36aae032c416d6295729a2788658c493ffdbdf6a031cd20ff5cd",
+      "size": 1307
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/verify-datatable-v2.log",
+      "sha256": "8615a40d48a1cd504cb819f4f4cc5f5779a56687a69cb928132ab993c23ca4ac",
+      "size": 127
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/verify-datatable-v3.log",
+      "sha256": "fb7c11dfe3ef9c161a69ea7422a7ed026af1f0b825b66ef2d909fd39992263c0",
+      "size": 1307
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h024/qa/verify-datatable-v4.log",
+      "sha256": "810de75202b55557e980f1c7365069516895c7a46878f3b493ce315e823aaeb3",
+      "size": 520
+    }
+  ],
+  "limits": [
+    "H024 has no registered task MD, business grader, accepted full reference comparison or formal Worker score yet.",
+    "No case/method has been silently changed to static snapshots; the live-comparison design question remains pending.",
+    "No human accounting expert, actual Harness/model score or measured L4/discrimination. 35 tasks, release freezing and calibration remain outstanding."
+  ]
+}

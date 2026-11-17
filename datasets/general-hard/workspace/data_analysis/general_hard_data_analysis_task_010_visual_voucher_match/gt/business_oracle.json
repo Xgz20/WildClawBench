@@ -1,0 +1,39 @@
+{
+  "schema_version": "h026-business-oracle/v1",
+  "source_truth": "expected.json",
+  "status": "APPROVED_AFTER_TWO_INDEPENDENT_MODEL_READS",
+  "source_images": 12,
+  "economic_groups": 9,
+  "ledger_rows": 18,
+  "proposals": 7,
+  "core_summary": {
+    "image_count": 12,
+    "voucher_group_count": 9,
+    "ledger_row_count": 18,
+    "eligible_entry_count": 14,
+    "excluded_entry_count": 4,
+    "eligible_book_amount": "12946.59",
+    "proposed_delta_sum": "-5370.49",
+    "book_amount_after_proposals": "7576.10",
+    "unresolved_book_amount": "3095.20",
+    "unresolved_entry_count": 4,
+    "proposal_count": 7,
+    "unbooked_pending_group_count": 1,
+    "confirmed_voucher_target_sum": "4480.90",
+    "fully_reconciled": false,
+    "applied": false,
+    "approval_required": true
+  },
+  "independent_model_readers": 2,
+  "human_expert_review": false,
+  "reconciliation_sha256": "eab0f94c285533c9123954cfaf979c0c686dffb1f0b443ef801c52bf900fcf15",
+  "grader_reads_reference_workbook": false,
+  "methods": [
+    "two isolated actual original-pixel model annotations, frozen before ledger read",
+    "author source-field reconciliation and independent arithmetic checks"
+  ],
+  "limits": [
+    "Not human financial expertise, official payment approval, real accounting execution or measured candidate difficulty.",
+    "Source images and policy define rules; author construction intent is not a grading dependency."
+  ]
+}

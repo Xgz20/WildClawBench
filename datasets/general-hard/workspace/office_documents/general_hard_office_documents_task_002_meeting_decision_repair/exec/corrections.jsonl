@@ -1,0 +1,6 @@
+{"event_id": "E06", "effective_at": "2026-10-27T12:10:00+08:00", "author_id": "U06", "claimed_role": "平台负责人", "issue_id": "A09", "patch": {"due_date": "2026-11-20"}, "reason": "平台排期紧张，申请把A09顺延到11月20日，尚未收到负责人批准。"}
+{"event_id": "E02", "effective_at": "2026-10-27T11:00:00+08:00", "author_id": "U08", "claimed_role": "授权项目代理", "issue_id": "A03", "patch": {"due_date": "2026-11-06"}, "reason": "核验日志实际可得时间后，再将A03截止日改为11月6日，取代E01的日期。"}
+{"event_id": "E04", "effective_at": "2026-10-27T10:45:00+08:00", "author_id": "U08", "claimed_role": "授权项目代理", "issue_id": "A12", "patch": {"status": "待办", "owner_id": "U05", "due_date": "2026-11-05"}, "reason": "完整快照已到，恢复A12，由周宁在11月5日前整理索引，取代会上撤回状态和旧日期。"}
+{"event_id": "E03", "effective_at": "2026-10-27T10:30:00+08:00", "author_id": "U01", "claimed_role": "项目负责人", "issue_id": "A13", "patch": {"status": "撤回"}, "reason": "现有审计已经覆盖每日快照，撤回A13，避免额外副本；原责任人和日期保留为撤回历史。"}
+{"event_id": "E05", "effective_at": "2026-10-27T11:20:00+08:00", "author_id": "U02", "claimed_role": "会议主席", "issue_id": "A04", "patch": {"owner_id": "U02"}, "reason": "我认为反馈合并应该转给研发陈晨，申请将A04责任人改为我。"}
+{"event_id": "E01", "effective_at": "2026-10-27T10:15:00+08:00", "author_id": "U01", "claimed_role": "项目负责人", "issue_id": "A03", "patch": {"due_date": "2026-11-04"}, "reason": "日志授权等待，A03截止日由10月30日改为11月4日，其他安排不变。"}

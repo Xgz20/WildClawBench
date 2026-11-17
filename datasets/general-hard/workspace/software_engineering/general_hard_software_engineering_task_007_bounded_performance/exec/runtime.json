@@ -1,0 +1,13 @@
+{
+  "language": "Python 3.11+",
+  "third_party": [],
+  "work_profile": "h047-counted-keys/v1",
+  "replay_profile": "h047-pure-matcher/v2",
+  "work_bound": "32*(n+q)+4*expected_output_ID_count+128",
+  "wall_time_is_gate": false,
+  "only_edit": [
+    "project/matcher.py"
+  ],
+  "new_outputs": "results/",
+  "no_network_install_threads_or_real_services_required": true
+}

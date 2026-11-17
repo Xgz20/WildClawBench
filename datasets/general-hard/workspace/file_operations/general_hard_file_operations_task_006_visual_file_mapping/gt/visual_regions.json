@@ -1,0 +1,804 @@
+{
+  "schema": "h040-ab-pixel-role-reconciliation-v1",
+  "coordinate_space": "original_pixels",
+  "bbox_format": "x0,y0,x1,y1",
+  "precision_policy": "Human-style pixel estimates from two model observations; neither exact SVG geometry nor answer extraction from renderer/source-construction. A/B envelopes guide local-role matching and are not exact equality requirements.",
+  "scenes": {
+    "S01": {
+      "width": 1800,
+      "height": 1100,
+      "active_panel": [
+        471,
+        138,
+        1111,
+        1013
+      ],
+      "active_border_regions": [
+        [
+          471,
+          138,
+          1111,
+          143
+        ],
+        [
+          471,
+          138,
+          476,
+          1013
+        ],
+        [
+          1106,
+          138,
+          1111,
+          1013
+        ],
+        [
+          471,
+          1008,
+          1111,
+          1013
+        ]
+      ],
+      "ancestor_nodes": [
+        {
+          "label": "工作资料",
+          "bbox": [
+            35,
+            188,
+            203,
+            223
+          ],
+          "a_bbox": [
+            35,
+            188,
+            198,
+            223
+          ],
+          "b_bbox": [
+            35,
+            188,
+            203,
+            220
+          ]
+        },
+        {
+          "label": "复核",
+          "bbox": [
+            64,
+            410,
+            195,
+            447
+          ],
+          "a_bbox": [
+            65,
+            410,
+            195,
+            447
+          ],
+          "b_bbox": [
+            64,
+            412,
+            193,
+            444
+          ]
+        },
+        {
+          "label": "客户甲",
+          "bbox": [
+            96,
+            442,
+            238,
+            478
+          ],
+          "a_bbox": [
+            96,
+            442,
+            238,
+            478
+          ],
+          "b_bbox": [
+            97,
+            445,
+            237,
+            477
+          ]
+        },
+        {
+          "label": "2026秋",
+          "bbox": [
+            139,
+            505,
+            285,
+            540
+          ],
+          "a_bbox": [
+            139,
+            505,
+            277,
+            540
+          ],
+          "b_bbox": [
+            139,
+            505,
+            285,
+            537
+          ]
+        }
+      ],
+      "ancestor_chain_labels": [
+        "工作资料",
+        "复核",
+        "客户甲",
+        "2026秋"
+      ],
+      "tree_connectors": [
+        [
+          50,
+          213,
+          91,
+          431
+        ],
+        [
+          82,
+          435,
+          123,
+          462
+        ],
+        [
+          112,
+          468,
+          151,
+          527
+        ]
+      ],
+      "selected_rows": [
+        {
+          "source_path": "source_tree/复核/客户甲/2026秋/方案.md",
+          "name": "方案.md",
+          "bbox": [
+            476,
+            248,
+            1106,
+            325
+          ],
+          "a_bbox": [
+            476,
+            248,
+            1106,
+            325
+          ],
+          "b_bbox": [
+            477,
+            249,
+            1106,
+            324
+          ]
+        },
+        {
+          "source_path": "source_tree/复核/客户甲/2026秋/交付清单.txt",
+          "name": "交付清单.txt",
+          "bbox": [
+            476,
+            404,
+            1106,
+            480
+          ],
+          "a_bbox": [
+            476,
+            404,
+            1106,
+            479
+          ],
+          "b_bbox": [
+            477,
+            404,
+            1106,
+            480
+          ]
+        }
+      ],
+      "active_directory": "source_tree/复核/客户甲/2026秋",
+      "control_directory": "source_tree/客户甲/2026秋",
+      "excluded_visible_rows": [
+        {
+          "scene_id": "S01",
+          "source_path": "source_tree/复核/客户甲/2026秋/预算.csv",
+          "panel": "活动中间",
+          "reason": "行底色为白色，未选中",
+          "visual_evidence": {
+            "scene_id": "S01",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              477,
+              326,
+              1106,
+              402
+            ],
+            "visible_object": "预算.csv 白色行",
+            "selection_relation": "排除未选文件"
+          }
+        },
+        {
+          "scene_id": "S01",
+          "source_path": "source_tree/客户甲/2026秋/预算.csv",
+          "panel": "右侧对照",
+          "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+          "visual_evidence": {
+            "scene_id": "S01",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              326,
+              1759,
+              403
+            ],
+            "visible_object": "预算.csv 灰色行",
+            "selection_relation": "对照列表排除"
+          }
+        },
+        {
+          "scene_id": "S01",
+          "source_path": "source_tree/客户甲/2026秋/交付清单.txt",
+          "panel": "右侧对照",
+          "reason": "面板为对照；且仅细边框光标、无底色",
+          "visual_evidence": {
+            "scene_id": "S01",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              405,
+              1759,
+              479
+            ],
+            "visible_object": "交付清单.txt 白色细边框行",
+            "selection_relation": "对照及无底色光标双重排除"
+          }
+        },
+        {
+          "scene_id": "S01",
+          "source_path": "source_tree/客户甲/2026秋/方案.md",
+          "panel": "右侧对照",
+          "reason": "对照列表且白色未选中",
+          "visual_evidence": {
+            "scene_id": "S01",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              249,
+              1759,
+              324
+            ],
+            "visible_object": "方案.md 白色行",
+            "selection_relation": "对照列表排除"
+          }
+        }
+      ],
+      "highlight_bbox": [
+        24,
+        505,
+        443,
+        537
+      ]
+    },
+    "S02": {
+      "width": 1800,
+      "height": 1100,
+      "active_panel": [
+        1125,
+        138,
+        1765,
+        1013
+      ],
+      "active_border_regions": [
+        [
+          1125,
+          138,
+          1765,
+          143
+        ],
+        [
+          1125,
+          138,
+          1130,
+          1013
+        ],
+        [
+          1760,
+          138,
+          1765,
+          1013
+        ],
+        [
+          1125,
+          1008,
+          1765,
+          1013
+        ]
+      ],
+      "ancestor_nodes": [
+        {
+          "label": "工作资料",
+          "bbox": [
+            35,
+            188,
+            203,
+            223
+          ],
+          "a_bbox": [
+            35,
+            188,
+            198,
+            223
+          ],
+          "b_bbox": [
+            35,
+            188,
+            203,
+            220
+          ]
+        },
+        {
+          "label": "外包协作",
+          "bbox": [
+            64,
+            634,
+            241,
+            670
+          ],
+          "a_bbox": [
+            65,
+            634,
+            239,
+            670
+          ],
+          "b_bbox": [
+            64,
+            637,
+            241,
+            670
+          ]
+        },
+        {
+          "label": "客户甲",
+          "bbox": [
+            96,
+            666,
+            243,
+            702
+          ],
+          "a_bbox": [
+            96,
+            666,
+            238,
+            702
+          ],
+          "b_bbox": [
+            97,
+            670,
+            243,
+            701
+          ]
+        },
+        {
+          "label": "2026春",
+          "bbox": [
+            139,
+            697,
+            286,
+            733
+          ],
+          "a_bbox": [
+            139,
+            697,
+            277,
+            733
+          ],
+          "b_bbox": [
+            139,
+            697,
+            286,
+            729
+          ]
+        }
+      ],
+      "ancestor_chain_labels": [
+        "工作资料",
+        "外包协作",
+        "客户甲",
+        "2026春"
+      ],
+      "tree_connectors": [
+        [
+          50,
+          213,
+          91,
+          654
+        ],
+        [
+          82,
+          658,
+          123,
+          686
+        ],
+        [
+          112,
+          690,
+          151,
+          718
+        ]
+      ],
+      "selected_rows": [
+        {
+          "source_path": "source_tree/外包协作/客户甲/2026春/预算.csv",
+          "name": "预算.csv",
+          "bbox": [
+            1130,
+            325,
+            1760,
+            403
+          ],
+          "a_bbox": [
+            1130,
+            325,
+            1760,
+            403
+          ],
+          "b_bbox": [
+            1130,
+            326,
+            1759,
+            403
+          ]
+        }
+      ],
+      "active_directory": "source_tree/外包协作/客户甲/2026春",
+      "control_directory": "source_tree/客户甲/2026春",
+      "excluded_visible_rows": [
+        {
+          "scene_id": "S02",
+          "source_path": "source_tree/外包协作/客户甲/2026春/方案.md",
+          "panel": "活动右侧",
+          "reason": "行底色为白色，未选中",
+          "visual_evidence": {
+            "scene_id": "S02",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              249,
+              1759,
+              324
+            ],
+            "visible_object": "方案.md 白色行",
+            "selection_relation": "排除未选文件"
+          }
+        },
+        {
+          "scene_id": "S02",
+          "source_path": "source_tree/外包协作/客户甲/2026春/交付清单.txt",
+          "panel": "活动右侧",
+          "reason": "仅有细边框光标，行底色为白色，不算选中",
+          "visual_evidence": {
+            "scene_id": "S02",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              405,
+              1759,
+              479
+            ],
+            "visible_object": "交付清单.txt 白色细边框行",
+            "selection_relation": "排除光标行"
+          }
+        },
+        {
+          "scene_id": "S02",
+          "source_path": "source_tree/客户甲/2026春/方案.md",
+          "panel": "左侧对照",
+          "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+          "visual_evidence": {
+            "scene_id": "S02",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              477,
+              249,
+              1106,
+              324
+            ],
+            "visible_object": "方案.md 灰色行",
+            "selection_relation": "对照列表排除"
+          }
+        },
+        {
+          "scene_id": "S02",
+          "source_path": "source_tree/客户甲/2026春/交付清单.txt",
+          "panel": "左侧对照",
+          "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+          "visual_evidence": {
+            "scene_id": "S02",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              477,
+              404,
+              1106,
+              480
+            ],
+            "visible_object": "交付清单.txt 灰色行",
+            "selection_relation": "对照列表排除"
+          }
+        },
+        {
+          "scene_id": "S02",
+          "source_path": "source_tree/客户甲/2026春/预算.csv",
+          "panel": "左侧对照",
+          "reason": "对照列表且白色未选中",
+          "visual_evidence": {
+            "scene_id": "S02",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              477,
+              326,
+              1106,
+              402
+            ],
+            "visible_object": "预算.csv 白色行",
+            "selection_relation": "对照列表排除"
+          }
+        }
+      ],
+      "highlight_bbox": [
+        24,
+        697,
+        443,
+        729
+      ]
+    },
+    "S03": {
+      "width": 1800,
+      "height": 1100,
+      "active_panel": [
+        471,
+        138,
+        1111,
+        1013
+      ],
+      "active_border_regions": [
+        [
+          471,
+          138,
+          1111,
+          143
+        ],
+        [
+          471,
+          138,
+          476,
+          1013
+        ],
+        [
+          1106,
+          138,
+          1111,
+          1013
+        ],
+        [
+          471,
+          1008,
+          1111,
+          1013
+        ]
+      ],
+      "ancestor_nodes": [
+        {
+          "label": "工作资料",
+          "bbox": [
+            35,
+            188,
+            203,
+            223
+          ],
+          "a_bbox": [
+            35,
+            188,
+            198,
+            223
+          ],
+          "b_bbox": [
+            35,
+            188,
+            203,
+            220
+          ]
+        },
+        {
+          "label": "客户乙",
+          "bbox": [
+            64,
+            314,
+            216,
+            350
+          ],
+          "a_bbox": [
+            65,
+            314,
+            213,
+            350
+          ],
+          "b_bbox": [
+            64,
+            317,
+            216,
+            350
+          ]
+        },
+        {
+          "label": "2026秋",
+          "bbox": [
+            108,
+            377,
+            285,
+            411
+          ],
+          "a_bbox": [
+            108,
+            377,
+            258,
+            411
+          ],
+          "b_bbox": [
+            108,
+            377,
+            285,
+            409
+          ]
+        }
+      ],
+      "ancestor_chain_labels": [
+        "工作资料",
+        "客户乙",
+        "2026秋"
+      ],
+      "tree_connectors": [
+        [
+          50,
+          213,
+          91,
+          333
+        ],
+        [
+          82,
+          339,
+          123,
+          397
+        ]
+      ],
+      "selected_rows": [
+        {
+          "source_path": "source_tree/客户乙/2026秋/方案.md",
+          "name": "方案.md",
+          "bbox": [
+            476,
+            248,
+            1106,
+            325
+          ],
+          "a_bbox": [
+            476,
+            248,
+            1106,
+            325
+          ],
+          "b_bbox": [
+            477,
+            249,
+            1106,
+            324
+          ]
+        },
+        {
+          "source_path": "source_tree/客户乙/2026秋/预算.csv",
+          "name": "预算.csv",
+          "bbox": [
+            476,
+            325,
+            1106,
+            403
+          ],
+          "a_bbox": [
+            476,
+            325,
+            1106,
+            403
+          ],
+          "b_bbox": [
+            477,
+            326,
+            1106,
+            403
+          ]
+        }
+      ],
+      "active_directory": "source_tree/客户乙/2026秋",
+      "control_directory": "source_tree/联合项目/2026秋",
+      "excluded_visible_rows": [
+        {
+          "scene_id": "S03",
+          "source_path": "source_tree/客户乙/2026秋/交付清单.txt",
+          "panel": "活动中间",
+          "reason": "仅有细边框光标，行底色为白色，不算选中",
+          "visual_evidence": {
+            "scene_id": "S03",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              477,
+              405,
+              1106,
+              479
+            ],
+            "visible_object": "交付清单.txt 白色细边框行",
+            "selection_relation": "排除光标行"
+          }
+        },
+        {
+          "scene_id": "S03",
+          "source_path": "source_tree/联合项目/2026秋/交付清单.txt",
+          "panel": "右侧对照",
+          "reason": "虽有灰色选中底色，但面板无蓝色外边框",
+          "visual_evidence": {
+            "scene_id": "S03",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              404,
+              1759,
+              480
+            ],
+            "visible_object": "交付清单.txt 灰色行",
+            "selection_relation": "对照列表排除"
+          }
+        },
+        {
+          "scene_id": "S03",
+          "source_path": "source_tree/联合项目/2026秋/方案.md",
+          "panel": "右侧对照",
+          "reason": "对照列表且白色未选中",
+          "visual_evidence": {
+            "scene_id": "S03",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              249,
+              1759,
+              324
+            ],
+            "visible_object": "方案.md 白色行",
+            "selection_relation": "对照列表排除"
+          }
+        },
+        {
+          "scene_id": "S03",
+          "source_path": "source_tree/联合项目/2026秋/预算.csv",
+          "panel": "右侧对照",
+          "reason": "对照列表且白色未选中",
+          "visual_evidence": {
+            "scene_id": "S03",
+            "coordinate_space": "original_pixels",
+            "bbox": [
+              1130,
+              326,
+              1759,
+              403
+            ],
+            "visible_object": "预算.csv 白色行",
+            "selection_relation": "对照列表排除"
+          }
+        }
+      ],
+      "highlight_bbox": [
+        24,
+        377,
+        443,
+        409
+      ]
+    }
+  }
+}

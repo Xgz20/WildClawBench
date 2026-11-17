@@ -1,0 +1,48 @@
+{
+  "numeric_version_before_timestamp": [
+    "I001",
+    "I002"
+  ],
+  "draft_newer_than_approved": [
+    "I003",
+    "I005"
+  ],
+  "withdrawn_never_current": "I009",
+  "same_priority_distinct_content": [
+    "I014",
+    "I017",
+    "I032",
+    "I035"
+  ],
+  "duplicate_pairs": [
+    [
+      "I002",
+      "I004"
+    ],
+    [
+      "I005",
+      "I006"
+    ],
+    [
+      "I043",
+      "I044"
+    ]
+  ],
+  "unicode_business_key": [
+    "I025",
+    "I029"
+  ],
+  "extension_spoof": [
+    "I001",
+    "I003",
+    "I047"
+  ],
+  "unknown_sources": [
+    "I043",
+    "I044",
+    "I045",
+    "I046",
+    "I047",
+    "I048"
+  ]
+}

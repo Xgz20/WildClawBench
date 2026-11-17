@@ -1,0 +1,25 @@
+{
+  "schema_version": "h026-reference-provenance/v1",
+  "status": "AUTHOR_REFERENCE_SOURCE_AND_NATIVE_VERIFIED",
+  "authoring": "Artifact Tool five-sheet native static audit workbook and two linked JSON files",
+  "reference_sha256": {
+    "voucher_match.xlsx": "a89db6141ec72cb0e57f5fee996676e66b7b37d4232797fde81f7f1b1091f168",
+    "adjustment_proposal.json": "2d7ba7b0fec68740f0115a3a7f15b4a4306f5895aae6ae187b7fbf55c1982d2b",
+    "visual_evidence.json": "81cc2fc7898991b1db241c2f78b7f955b3b72cbc8338ab917483006175d0172f"
+  },
+  "source_reconciliation_sha256": "eab0f94c285533c9123954cfaf979c0c686dffb1f0b443ef801c52bf900fcf15",
+  "source_annotation_precedes_reference": true,
+  "independent_source_reviewers": 2,
+  "source_reviewers_saw_reference": false,
+  "source_math_checks": 721,
+  "source_review_financial_checks": 422,
+  "native_checks": 702,
+  "native_validation": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/native-reference-v1-1793171725279678000/validation.json",
+  "source_inputs_unchanged": true,
+  "reference_previews_actually_opened": 7,
+  "worksheets": 5,
+  "human_expert_review": false,
+  "independent_candidate_semantic_score": null,
+  "candidate_dynamic_formula_model_required": false,
+  "limit": "Source-model annotations, author native/reference QA only; not human expertise, independent scored candidate judgement or real Harness performance."
+}

@@ -1,0 +1,6 @@
+{
+  "source": "project/store.py",
+  "audit": "results/db_audit.json",
+  "tests": "results/tests.txt",
+  "basis": "Final source digest, independently replayed public demo, and re-executed pristine public suite; proves recorded behavior consistency rather than cryptographic historical launch time."
+}

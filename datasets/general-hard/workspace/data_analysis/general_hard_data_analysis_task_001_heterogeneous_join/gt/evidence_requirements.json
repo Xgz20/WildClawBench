@@ -1,0 +1,8 @@
+{
+  "status": "material_phase",
+  "semantic_judge": true,
+  "audit": "Each native source/result row must be traceable by stable ID and actual worksheet/row; stale or unrelated existing locations do not count",
+  "source_unchanged": true,
+  "four_client_validation": false,
+  "independent_human_review": false
+}

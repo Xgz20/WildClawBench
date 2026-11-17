@@ -1,0 +1,3611 @@
+{
+  "schema_version": "h005-real-source-index/v1",
+  "records": [
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:1",
+      "text": "澄岭智服年度经营汇报任务说明"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:2",
+      "text": "请为经营负责人制作2026年度汇报。年度收入、盈利、交付和回款须采用同一份结账快照。输入是合成业务数据，固定截止2026-12-31，Asia/Shanghai；不按今天截断未来月份，也不联网补充或推断后续事项。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:3",
+      "text": "metrics.xlsx含财务月度、运营月度、应收明细三张原始表，表头在第5行、数据从第6行开始。各表B2为截止日。财务表更正列非空时替代原值，0是有效更正；空白才保留原值。金额按每行单位转换。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:4",
+      "text": "财务营业成本用于毛利。运营服务成本用于单工单服务成本，不能混用。交付、结单、满意率均先汇总分子分母，再求比率。应收的received_as_of是截至截止日累计到账金额，未来到期发票不参与已到期发票回款率。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:5",
+      "text": "三月收入冲回只反映确认口径，材料没有证明业务停止，也没有后续验收结论。未知的同比驱动、客户结构、满意度目标和续年预测应保留未知。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:6",
+      "text": "交付annual.pptx恰好8页，含封面。沿用theme.pptx的16比9画布、白底、深蓝标题和Heiti SC字体，可按内容重排。正文、来源、页码和图表标签均不少于16pt，不靠缩小文字容纳内容。文字、表格及图表须原生可编辑，不得整页截图。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:7",
+      "text": "交付evidence.csv及notes.docx。CSV至少包含kpi_id、slide、value、unit、source_cells、method，覆盖K01至K12，并为图表系列和账龄数值给出来源。source_cells用工作表!单元格或范围，多个以分号分隔。K指标保留2位小数，百分比以百分数点和%表示，不写成无标记小数。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:8",
+      "text": "八页结构与原生对象"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:1/cell:1",
+      "text": "页"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:1/cell:2",
+      "text": "内容"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:1/cell:3",
+      "text": "必须保留的对象或指标"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:2/cell:1",
+      "text": "1"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:2/cell:2",
+      "text": "封面与范围"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:2/cell:3",
+      "text": "公司 年度 截止日和数据范围"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:3/cell:1",
+      "text": "2"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:3/cell:2",
+      "text": "年度经营总览"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:3/cell:3",
+      "text": "K01 K02 K03，并说明预算是否达成"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:4/cell:1",
+      "text": "3"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:4/cell:2",
+      "text": "月度收入与第四季度贡献"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:4/cell:3",
+      "text": "12个月2025/2026收入原生图表，单位万元，K06"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:5/cell:1",
+      "text": "4"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:5/cell:2",
+      "text": "盈利质量与季度成本"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:5/cell:3",
+      "text": "四季度收入和财务成本原生图表，单位万元，K04 K05"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:6/cell:1",
+      "text": "5"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:6/cell:2",
+      "text": "交付与服务效率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:6/cell:3",
+      "text": "各季度准时交付率和24h结单率原生图表，K07 K08 K12"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:7/cell:1",
+      "text": "6"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:7/cell:2",
+      "text": "客户反馈与回款"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:7/cell:3",
+      "text": "原生表格或可编辑文字，K09 K10及各自分母口径"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:8/cell:1",
+      "text": "7"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:8/cell:2",
+      "text": "应收账龄与风险"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:8/cell:3",
+      "text": "未到期 0至30天 31至60天 大于60天四类未收余额，K11"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:9/cell:1",
+      "text": "8"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:9/cell:2",
+      "text": "行动建议与未决事项"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "table:1/row:9/cell:3",
+      "text": "区分事实 支持的建议和未决项，不作材料未支持的因果或预测承诺"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:9",
+      "text": "K编号须在相应指标的可见标签保留，便于跨产物复核。页面题名可等价改写。图表类型、系列顺序及排版可变化，但时间、系列意义、单位和数值必须一致。证据表中的slide填写实际页码。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:10",
+      "text": "CSV图表记录使用C03-2025、C03-2026、C04-revenue、C04-cost、C05-ontime、C05-24h。value用按月份或季度顺序的JSON数列，前四项单位万元，后两项单位ratio表示0至1比率，比率至少保存6位小数。账龄记录为A07-future、A07-0-30、A07-31-60、A07-over60，value为对应万元余额。连同12项K指标共22条必需记录，可额外补充定位说明。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:11",
+      "text": "指标定义 K01至K06"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:12",
+      "text": "K01 年度收入"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:13",
+      "text": "更正非空时优先且0有效，统一万元后累计。输出单位 万元。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:14",
+      "text": "K02 收入同比"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:15",
+      "text": "同口径年度收入与2025收入比较。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:16",
+      "text": "K03 预算达成率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:17",
+      "text": "年度收入除以年度预算。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:18",
+      "text": "K04 年度毛利"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:19",
+      "text": "年度收入减年度财务营业成本。输出单位 万元。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:20",
+      "text": "K05 年度毛利率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:21",
+      "text": "年度毛利除以年度收入。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:22",
+      "text": "K06 第四季度收入占比"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:23",
+      "text": "10至12月收入除以年度收入。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:24",
+      "text": "指标定义 K07至K12"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:25",
+      "text": "K07 准时交付率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:26",
+      "text": "全年准时交付数除以全年交付数。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:27",
+      "text": "K08 24小时结单率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:28",
+      "text": "全年24h结单数除以全年工单数。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:29",
+      "text": "K09 有效回访满意率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:30",
+      "text": "全年正向回访数除以全年有效回访数。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:31",
+      "text": "K10 已到期发票累计回款率"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:32",
+      "text": "到期日不晚于截止日的累计到账除以这些发票金额。输出单位 %。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:33",
+      "text": "K11 逾期大于30天余额"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:34",
+      "text": "截止日减到期日严格大于30天的未收余额，统一万元。输出单位 万元。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:35",
+      "text": "K12 第四季度单工单服务成本"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:36",
+      "text": "10至12月服务成本统一元后除以同季度工单数。输出单位 元。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:37",
+      "text": "账龄以截止日减到期日的自然日数判断。0至30天包含0和30，31至60天包含31和60，大于60天从61起。未到期的余额单列。K11只合计日数严格大于30的未收余额。"
+    },
+    {
+      "source": "brief.docx",
+      "source_sha256": "5a949861824e66f05c3a5db613aa7355f9e748f0dbb911022f97c6a6cada13da",
+      "locator": "paragraph:38",
+      "text": "图表与表格的派生数值也须能回到原始来源。保留来源单位，不能为方便展示而改写输入。允许先用等价计算工具求值，但最终交付是可编辑的办公文件，不要求交付计算代码。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "sheet:财务月度",
+      "state": "visible"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A1",
+      "type": "str",
+      "value": "澄岭智服 财务月度"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A2",
+      "type": "str",
+      "value": "截止日"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-31T00:00:00",
+      "locator": "财务月度!B2",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46387"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A3",
+      "type": "str",
+      "value": "合成年度结账数据 更正非空优先且0有效 金额按每行单位转换"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A5",
+      "type": "str",
+      "value": "month"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B5",
+      "type": "str",
+      "value": "revenue_2025"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C5",
+      "type": "str",
+      "value": "revenue_2026_raw"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!D5",
+      "type": "str",
+      "value": "revenue_2026_correction"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E5",
+      "type": "str",
+      "value": "revenue_unit"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F5",
+      "type": "str",
+      "value": "cost_2026_raw"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!G5",
+      "type": "str",
+      "value": "cost_2026_correction"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H5",
+      "type": "str",
+      "value": "cost_unit"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I5",
+      "type": "str",
+      "value": "budget_2026"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J5",
+      "type": "str",
+      "value": "budget_unit"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K5",
+      "type": "str",
+      "value": "note"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A6",
+      "type": "str",
+      "value": "2026-01"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "160"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "190"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E6",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "118"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H6",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "200"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J6",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K6",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A7",
+      "type": "str",
+      "value": "2026-02"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "180"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "220"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E7",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "138"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H7",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "225"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J7",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K7",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A8",
+      "type": "str",
+      "value": "2026-03"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "195"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "195"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!D8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "0"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E8",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "142"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H8",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "240"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J8",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K8",
+      "type": "str",
+      "value": "年末复核将3月未验收收入冲回为0。未提供后续验收或2027确认信息。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A9",
+      "type": "str",
+      "value": "2026-04"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "2100000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "2650000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E9",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "161"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H9",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "260"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J9",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K9",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A10",
+      "type": "str",
+      "value": "2026-05"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "230"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "280"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E10",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "2000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!G10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "1730"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H10",
+      "type": "str",
+      "value": "千元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "280"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J10",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K10",
+      "type": "str",
+      "value": "5月成本按更正列，单位为千元。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A11",
+      "type": "str",
+      "value": "2026-06"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "240"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "315"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E11",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "194"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H11",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "300"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J11",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K11",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A12",
+      "type": "str",
+      "value": "2026-07"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "250"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "300"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E12",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "187"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H12",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "320"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J12",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K12",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A13",
+      "type": "str",
+      "value": "2026-08"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "260"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "340"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E13",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "211"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H13",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "340"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J13",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K13",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A14",
+      "type": "str",
+      "value": "2026-09"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "280"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "365"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E14",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "229"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H14",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "360"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J14",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K14",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A15",
+      "type": "str",
+      "value": "2026-10"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "300"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "385"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E15",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "242"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H15",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "380"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J15",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K15",
+      "type": "str",
+      "value": "更正列空白时保留原值。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A16",
+      "type": "str",
+      "value": "2026-11"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "3200000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "3900000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!D16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "4150000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E16",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "261"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H16",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "400"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J16",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K16",
+      "type": "str",
+      "value": "11月收入更正为本行更正列金额，注意本行单位为元。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!A17",
+      "type": "str",
+      "value": "2026-12"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!B17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "350"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!C17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "470"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!E17",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!F17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "3100"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!G17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "2950"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!H17",
+      "type": "str",
+      "value": "千元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!I17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "450"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!J17",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "财务月度!K17",
+      "type": "str",
+      "value": "12月成本按更正列，单位为千元。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "sheet:运营月度",
+      "state": "visible"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A1",
+      "type": "str",
+      "value": "澄岭智服 运营月度"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A2",
+      "type": "str",
+      "value": "截止日"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-31T00:00:00",
+      "locator": "运营月度!B2",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46387"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A3",
+      "type": "str",
+      "value": "合成年度运营数据 比率使用各自分母 服务成本与财务成本不同"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A5",
+      "type": "str",
+      "value": "month"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B5",
+      "type": "str",
+      "value": "deliveries"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C5",
+      "type": "str",
+      "value": "on_time"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D5",
+      "type": "str",
+      "value": "tickets"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E5",
+      "type": "str",
+      "value": "resolved_24h"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F5",
+      "type": "str",
+      "value": "positive_responses"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G5",
+      "type": "str",
+      "value": "valid_responses"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H5",
+      "type": "str",
+      "value": "service_cost"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I5",
+      "type": "str",
+      "value": "service_cost_unit"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J5",
+      "type": "str",
+      "value": "note"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A6",
+      "type": "str",
+      "value": "2026-01"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B6",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "20"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C6",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "18"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D6",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "120"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E6",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "96"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F6",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "12"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G6",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "15"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "6000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I6",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J6",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A7",
+      "type": "str",
+      "value": "2026-02"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B7",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "40"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C7",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "36"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D7",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "200"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E7",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "170"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F7",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "45"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G7",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "50"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "9600"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I7",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J7",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A8",
+      "type": "str",
+      "value": "2026-03"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B8",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "15"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C8",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "9"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D8",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "80"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E8",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "40"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F8",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "9"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G8",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "15"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "4400"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I8",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J8",
+      "type": "str",
+      "value": "满意度分母为本行有效回访数，非工单总数。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A9",
+      "type": "str",
+      "value": "2026-04"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B9",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "55"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C9",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "50"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D9",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "260"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E9",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "221"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F9",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "50"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G9",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "55"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "11700"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I9",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J9",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A10",
+      "type": "str",
+      "value": "2026-05"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B10",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "80"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C10",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "72"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D10",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "400"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E10",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "352"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F10",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "72"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G10",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "80"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "17200"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I10",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J10",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A11",
+      "type": "str",
+      "value": "2026-06"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B11",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "110"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C11",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "104"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D11",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "550"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E11",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "495"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F11",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "65"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G11",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "70"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "22550"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I11",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J11",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A12",
+      "type": "str",
+      "value": "2026-07"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B12",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "75"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C12",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "68"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D12",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "390"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E12",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "335"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F12",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "89"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G12",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "100"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "16380"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I12",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J12",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A13",
+      "type": "str",
+      "value": "2026-08"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B13",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "130"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C13",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "122"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D13",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "630"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E13",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "567"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F13",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "114"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G13",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "120"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "25200"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I13",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J13",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A14",
+      "type": "str",
+      "value": "2026-09"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B14",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "160"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C14",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "150"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D14",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "780"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E14",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "718"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F14",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "130"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G14",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "140"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "29640"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I14",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J14",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A15",
+      "type": "str",
+      "value": "2026-10"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B15",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "145"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C15",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "138"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D15",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "760"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E15",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "699"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F15",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "160"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G15",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "170"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "28120"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I15",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J15",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A16",
+      "type": "str",
+      "value": "2026-11"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B16",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "190"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C16",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "180"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D16",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "890"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E16",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "837"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F16",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "171"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G16",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "180"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "32.04"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I16",
+      "type": "str",
+      "value": "千元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J16",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!A17",
+      "type": "str",
+      "value": "2026-12"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!B17",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "240"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!C17",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "232"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!D17",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "1200"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!E17",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "1140"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!F17",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "225"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!G17",
+      "number_format": "#,##0",
+      "number_format_id": 202,
+      "type": "n",
+      "value": "230"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!H17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "42000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!I17",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "运营月度!J17",
+      "type": "str",
+      "value": "服务成本与财务营业成本口径不同。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "sheet:应收明细",
+      "state": "visible"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A1",
+      "type": "str",
+      "value": "澄岭智服 应收明细"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A2",
+      "type": "str",
+      "value": "截止日"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-31T00:00:00",
+      "locator": "应收明细!B2",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46387"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A3",
+      "type": "str",
+      "value": "合成截止日快照 已到期发票回款率排除未来到期项 大于30天不含30天"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A5",
+      "type": "str",
+      "value": "invoice_id"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!B5",
+      "type": "str",
+      "value": "due_date"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C5",
+      "type": "str",
+      "value": "amount"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D5",
+      "type": "str",
+      "value": "received_as_of"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E5",
+      "type": "str",
+      "value": "amount_unit"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F5",
+      "type": "str",
+      "value": "note"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A6",
+      "type": "str",
+      "value": "INV-001"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-08-31T00:00:00",
+      "locator": "应收明细!B6",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46265"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "80"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D6",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "80"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E6",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F6",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A7",
+      "type": "str",
+      "value": "INV-002"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-09-15T00:00:00",
+      "locator": "应收明细!B7",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46280"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "120"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D7",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "100"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E7",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F7",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A8",
+      "type": "str",
+      "value": "INV-003"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-09-30T00:00:00",
+      "locator": "应收明细!B8",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46295"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "60"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D8",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "60"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E8",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F8",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A9",
+      "type": "str",
+      "value": "INV-004"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-10-15T00:00:00",
+      "locator": "应收明细!B9",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46310"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "150"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D9",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "140"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E9",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F9",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A10",
+      "type": "str",
+      "value": "INV-005"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-10-31T00:00:00",
+      "locator": "应收明细!B10",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46326"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "95"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D10",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "80"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E10",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F10",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A11",
+      "type": "str",
+      "value": "INV-006"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-11-15T00:00:00",
+      "locator": "应收明细!B11",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46341"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "110"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D11",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "110"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E11",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F11",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A12",
+      "type": "str",
+      "value": "INV-007"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-11-30T00:00:00",
+      "locator": "应收明细!B12",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46356"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "1300000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D12",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "1000000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E12",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F12",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A13",
+      "type": "str",
+      "value": "INV-008"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-01T00:00:00",
+      "locator": "应收明细!B13",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46357"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "85"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D13",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "70"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E13",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F13",
+      "type": "str",
+      "value": "距截止日恰好30天，排除大于30天余额。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A14",
+      "type": "str",
+      "value": "INV-009"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-05T00:00:00",
+      "locator": "应收明细!B14",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46361"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "1600000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D14",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "1200000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E14",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F14",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A15",
+      "type": "str",
+      "value": "INV-010"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-10T00:00:00",
+      "locator": "应收明细!B15",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46366"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "70"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D15",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "50"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E15",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F15",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A16",
+      "type": "str",
+      "value": "INV-011"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-15T00:00:00",
+      "locator": "应收明细!B16",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46371"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "100"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D16",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "90"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E16",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F16",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A17",
+      "type": "str",
+      "value": "INV-012"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-20T00:00:00",
+      "locator": "应收明细!B17",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46376"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "140"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D17",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "140"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E17",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F17",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A18",
+      "type": "str",
+      "value": "INV-013"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-25T00:00:00",
+      "locator": "应收明细!B18",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46381"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C18",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "90"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D18",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "40"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E18",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F18",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A19",
+      "type": "str",
+      "value": "INV-014"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-28T00:00:00",
+      "locator": "应收明细!B19",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46384"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C19",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "75"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D19",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "55"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E19",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F19",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A20",
+      "type": "str",
+      "value": "INV-015"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-12-31T00:00:00",
+      "locator": "应收明细!B20",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46387"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C20",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "65"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D20",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "65"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E20",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F20",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A21",
+      "type": "str",
+      "value": "INV-016"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2026-11-01T00:00:00",
+      "locator": "应收明细!B21",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46327"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C21",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "125"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D21",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "90"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E21",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F21",
+      "type": "str",
+      "value": "已到期发票。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A22",
+      "type": "str",
+      "value": "INV-017"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2027-01-15T00:00:00",
+      "locator": "应收明细!B22",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46402"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C22",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "2000000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D22",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "200000"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E22",
+      "type": "str",
+      "value": "元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F22",
+      "type": "str",
+      "value": "未到期，排除已到期发票回款率。"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!A23",
+      "type": "str",
+      "value": "INV-018"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "interpreted_date": "2027-01-31T00:00:00",
+      "locator": "应收明细!B23",
+      "number_format": "yyyy-mm-dd",
+      "number_format_id": 200,
+      "type": "n",
+      "value": "46418"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!C23",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "50"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!D23",
+      "number_format": "#,##0.00",
+      "number_format_id": 201,
+      "type": "n",
+      "value": "0"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!E23",
+      "type": "str",
+      "value": "万元"
+    },
+    {
+      "source": "metrics.xlsx",
+      "source_sha256": "7e25af2716ec1f0323d960329d4b76c0be6174d54b62c60b9f80c48b0a4322f5",
+      "locator": "应收明细!F23",
+      "type": "str",
+      "value": "未到期，排除已到期发票回款率。"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "height_emu": "6858000",
+      "locator": "presentation",
+      "slide_count": 1,
+      "width_emu": "12192000"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "locator": "slide:1",
+      "part": "ppt/slides/slide1.xml",
+      "show": true,
+      "slide_id": "256"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide_object",
+      "hidden": false,
+      "locator": "slide:1/shape:6",
+      "name": "",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide",
+      "explicit_font_sizes_hundredth_pt": [
+        "2850"
+      ],
+      "locator": "slide:1/shape:6/paragraph:1",
+      "text": "汇报标题"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide_object",
+      "hidden": false,
+      "locator": "slide:1/shape:2",
+      "name": "",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide",
+      "explicit_font_sizes_hundredth_pt": [
+        "1650"
+      ],
+      "locator": "slide:1/shape:2/paragraph:1",
+      "text": "来源位置"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide_object",
+      "hidden": false,
+      "locator": "slide:1/shape:3",
+      "name": "",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide",
+      "explicit_font_sizes_hundredth_pt": [
+        "1650"
+      ],
+      "locator": "slide:1/shape:3/paragraph:1",
+      "text": "1"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide_object",
+      "hidden": false,
+      "locator": "slide:1/shape:4",
+      "name": "",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide",
+      "explicit_font_sizes_hundredth_pt": [
+        "2250"
+      ],
+      "locator": "slide:1/shape:4/paragraph:1",
+      "text": "可编辑正文占位"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide_object",
+      "hidden": false,
+      "locator": "slide:1/shape:5",
+      "name": "",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "slide",
+      "explicit_font_sizes_hundredth_pt": [
+        "1950"
+      ],
+      "locator": "slide:1/shape:5/paragraph:1",
+      "text": "白底  深蓝标题  Heiti SC  正文与图表不少于16pt"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "speaker_notes_object",
+      "hidden": false,
+      "locator": "slide:1/notes/shape:2",
+      "name": "Slide Image Placeholder 1",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "speaker_notes_object",
+      "hidden": false,
+      "locator": "slide:1/notes/shape:3",
+      "name": "Notes Placeholder 2",
+      "object_kind": "sp"
+    },
+    {
+      "source": "theme.pptx",
+      "source_sha256": "7e58c94325f8ab6379a38d5ff88ab299db6e8bfdf57afafce39228d356b8bf8f",
+      "context": "speaker_notes_object",
+      "hidden": false,
+      "locator": "slide:1/notes/shape:4",
+      "name": "Slide Number Placeholder 3",
+      "object_kind": "sp"
+    }
+  ]
+}

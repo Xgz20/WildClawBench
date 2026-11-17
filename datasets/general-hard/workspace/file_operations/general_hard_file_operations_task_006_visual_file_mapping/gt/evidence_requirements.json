@@ -1,0 +1,49 @@
+{
+  "source_images": [
+    {
+      "scene_id": "S01",
+      "path": "source_images/S01.png",
+      "sha256": "679218247f3bea3e85c4d11c3cb01b77f92b70e46d1993a1d406a93dbae4ed0b",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "ba4824724c5fbff10045296f0dc6f25b9f242edb58cfcbf23f06fbaebea613f9"
+    },
+    {
+      "scene_id": "S02",
+      "path": "source_images/S02.png",
+      "sha256": "c05ea8dc7d6d6d4701fc33a75938b0f5e041106424a2fef39f7b93ddda1c5fd1",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "b2fb99c37f45b375fdce6018b59645ab819ffb3c62ab0ae3dec0a62afa29cef6"
+    },
+    {
+      "scene_id": "S03",
+      "path": "source_images/S03.png",
+      "sha256": "bd9f115e7de9926c89ea7ef4f0be71e756eb0d0ed11715a1ee0f2d139133c7bb",
+      "width": 1800,
+      "height": 1100,
+      "format": "PNG",
+      "decode": "Pillow Image.open + load + convert RGB succeeded",
+      "rgb_sha256": "2d37c875aaa6c0c754f06d8155e8ee02e605fe295d746163c0d1043d3f778be5"
+    }
+  ],
+  "must_bind_all_3_original_images": true,
+  "required_roles": [
+    "active_panel",
+    "selected_row",
+    "ancestor_chain"
+  ],
+  "pixel_decode_required": true,
+  "active_region": "Correct panel box or localized blue-border strip; wrong panel or whole image fails.",
+  "row_region": "Local selected row area must show selection state beyond a text-only OCR crop; wrong/cursor row fails.",
+  "ancestor_region": "Multiple node boxes and/or connected local tree regions; must cover every ancestor, including high-level branch distinguishing same-named clients. Whole image/nav dump does not suffice.",
+  "limits": [
+    "Endpoint artifacts and coordinates do not mechanically prove the model actually viewed an image.",
+    "Correct terminal hashes do not prove absence of transient writes.",
+    "All independent reviews and reconciliation are model work, not human expert validation."
+  ]
+}

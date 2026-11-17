@@ -1,0 +1,39 @@
+{
+  "schema_version": "h010-native-reference-verification/v1",
+  "status": "pass",
+  "source_unchanged": true,
+  "source_files": {
+    "approval.docx": "c59233ed40d34ed86a6cfa82744c89e98fd2456017ca35eb3d8298c260726c35",
+    "baseline.xlsx": "840e4c987eea88016f1830fe79fc5da26f0fec2971a9a50ebc1c16e3c311287a",
+    "constraints.md": "f23c13920c760a89b322df8140ce42cfc787605857eb42b358319655a94f3d45",
+    "quotes/quote_A.pdf": "2a09f48efd2df86493cdfcba65c3b3bf2bd5e2d8471dcad849174df58657034c",
+    "quotes/quote_C.pdf": "ff52ba00bcebebb35fd032eb2f110493e8343eb989a04a8a1d6b3fa2ba79187d",
+    "quotes/quote_B.pdf": "9c908322842335072ad1d4b46af1eb6b6edc1b3d50518fa9653594352382e682"
+  },
+  "reference_files": {
+    "assumptions.json": "437f996ea1f9658435d95741f4fe26a6ac72af5fd630a5175b85ef2fee13472e",
+    "budget.xlsx": "9716c616edca7f3dc1848db1861395e3d0da69a924af46b4d66cbc4b5deadf6d",
+    "application.docx": "7e81723cc3303e6bd4d40f0381e67e97014897c0a75dc87a52a8079b894b5fdf",
+    "plan.html": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603"
+  },
+  "budget_tables_and_ledger_match_source_truth": true,
+  "native_formula_columns": 16,
+  "real_recalculation_cases": 7,
+  "real_recalculation_checks": 273,
+  "document_pages": 3,
+  "template_pages": 1,
+  "word_and_html_work_dates_match": true,
+  "resource_conflicts": 0,
+  "unknowns_null": 3,
+  "gates_pending": 3,
+  "quote_exclusions": 3,
+  "html_visual_review": {
+    "kind": "actual IAB full-page screenshot and accessibility readback",
+    "url": "http://127.0.0.1:18767/plan.html",
+    "html_sha256": "c1ac1de4eb88c9371d6b5d9319b4c3527303349d489499494476dcd404f98603",
+    "local_server_stopped": true,
+    "temporary_tab_closed": true,
+    "screenshot_retained_in": "conversation tool output only"
+  },
+  "limit": "Author arithmetic, native structure and visual QA; no H010 grader/control suite/actual MD Worker, independent semantic Judge, four-client run or measured difficulty."
+}

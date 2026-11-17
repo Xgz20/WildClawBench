@@ -1,0 +1,12 @@
+{
+  "schema": "h034-rule-runtime/v1",
+  "office": true,
+  "formula_recalculation": "Only if actual formulas; trusted existing lock; derivative outside frozen candidate, no cached fallback",
+  "source_images": "Pillow actual decode of four exact private source_originals PNG, SHA and1800x1260 checked.",
+  "source_text": "Two public text originals copied byte-for-byte privately",
+  "dependencies": "existing managed Worker lock; no network/install; no user LibreOffice",
+  "failure_boundary": "Missing private GT/helper/source/decoder/Office dependency or unsupported legal representation is typed evaluator error or pending independent review, never filled as ability0. Missing/invalid candidate outputs or changed protected inputs are candidate failures.",
+  "semantic_review_required": true,
+  "semantic_score": null,
+  "hybrid_score": null
+}

@@ -1,0 +1,61 @@
+# 可信Office渲染
+
+score-general-e2e 0.14.0、grading-core 0.6.0支持把PPTX的一次性原字节副本转换为PDF。任务私有frontmatter声明`scoring_runtime: {office: true, office_render: true}`；生成器、静态门禁和分包器验证两个boolean，`office_render: true`必须同时声明`office: true`。这些字段不进入被测端输入、Skills或Env，旧任务不增加依赖。
+
+## 冻结Office与字体
+
+先按[可信Office重算](office-recalculation.md)生成Office程序锁，再从本Skill根运行：
+
+```bash
+python scripts/score_general_e2e.py bootstrap-office-render \
+  --office-runtime-lock /absolute/path/to/office-runtime.json \
+  --font-file /absolute/path/to/ChineseFont.ttf \
+  --font-directory /absolute/path/to/office-install/fonts/truetype \
+  --runtime-lock references/scoring-runtime-lock.json \
+  --output /absolute/path/to/scoring-runtime-with-rendering.json
+```
+
+正式命令沿用已冻结的评分CLI解释器前缀。`--font-file`与`--font-directory`可重复，至少提供一份可用字体；支持TTF、OTF、TTC，合计最多512个文件、16个目录。目录内字体成员及每份字体的路径、大小、SHA均冻结，新增、删除或替换会拒绝正常运行。应把Office自带字体目录纳入清单，不能假定设置一份CJK字体后就没有其它回退字体。
+
+输出为新的Python/runtime组合锁，保留`office_runtime`并增加`office_render_runtime`。独立渲染锁为`wildclawbench.office-render-runtime-lock/v1`，嵌套原Office锁；两者的Office身份必须一致。原XLSX锁的schema与Profile不变，已有GT helper和冻结attempt按原契约使用。`prepare --runtime-lock`冻结组合锁，新任务在启动Worker前检查渲染依赖；不从候选目录读取同名配置。
+
+字体文件只在受管临时目录使用，不复制进候选、正式exec/gt或数据集发行包。程序锁与字体清单不逐文件冻结Office全部动态库、平台及其它系统资源；正式校准仍须统一并记录可信安装制品和平台。字体名可能发生替换，任务还要核对实际PDF字体与规定字体的关系，不能把清单本身当作全部字形已正确呈现的证明。
+
+## 可信规则调用
+
+```python
+root = Path(kwargs["workspace_path"])
+lock = json.loads(Path(os.environ["GENERAL_E2E_OFFICE_RENDER_LOCK"]).read_text(encoding="utf-8"))
+derived = Path(os.environ["GENERAL_E2E_RULE_EVIDENCE_DIR"])
+result = render_pptx_pdf(root / "results/annual.pptx", lock, derived / "annual")
+```
+
+helper可作为同SHA的`office_runtime.py`复制到私有GT并通过`runpy`读取。它校验被动PPTX及嵌入XLSX，用原字节副本渲染，不先修订图表或重算嵌入缓存。宏、其它OLE嵌入和外部数据/素材超出本Profile，显式拒绝；普通超链接不会被点击。格式或任务交付问题由冻结规则按原业务契约分类，不能把缺交付和缺渲染环境混为一谈。该helper不是恶意代码安全沙箱。
+
+渲染在临时用户配置、字体副本和Fontconfig目录中运行，不继承用户凭据。固定导出包含隐藏幻灯片、排除备注页；源文件不改，`rendered.pdf`及`render-audit.json`不覆盖已有文件。回执记录PPTX/PDF SHA、源声明页数、Office程序身份、渲染锁摘要、字体资产、导出选项与操作边界。PDF实际页数、文字溢出、字号、颜色和图表结论仍须独立检查。
+
+## 证据与验证
+
+Worker把两个运行时锁及`worker/derived/`派生文件加入证据。语义catalog、合分、回传和`verify-score`核验源PPTX属于冻结候选或私有参考、PDF SHA及回执与锁一致。仅重新索引被篡改回执，不能使错误源、字体或导出选项通过。缺交付可以没有PDF回执，由任务原规则计分；缺引擎、字体漂移、超时或转换失败不补能力零分。
+
+`verify-score --archived`不要求原引擎和字体仍存在，但继续检查完整锁结构及全部绑定字节，不重新渲染或改变旧分数。PDF文本查询仍要求**冻结评分CLI解释器**具备pypdf；转换用的规则Worker可只用标准库。文字提取不等于视觉检查，API文本包不能证明遮挡、图像含义或原生可编辑性。
+
+当前macOS作者验证通过实际受管LibreOfficeDev 26.8.0.0.alpha0渲染仓库一份现有4页PPTX，锁定一份CJK字体与127份Office内置字体。原件未变，实际4页PDF、页文本与字体名已独立核对，全部4页已渲染为PNG检查。另将末页设为隐藏的QA变体仍导出4页、包含该页文字，8段仅在备注中的文字未进入PDF。伪转换器回归只验证运行时、依赖和归档绑定，不证明版式正确。尚未据此完成H005素材、GT、独立语义评分、四端兼容或难度校准。
+
+## Word渲染
+
+score-general-e2e 0.18.0、grading-core 0.10.0新增`render_docx_pdf(source, render_lock, output_dir, timeout_seconds=60)`。先用同一bootstrap命令加`--document-format docx`生成Word锁，再在受管规则中调用；任务私有`scoring_runtime`仍声明`{office: true, office_render: true}`。Python API用`create_office_render_lock(..., document_format="docx")`。锁schema仍为v1，Word的Profile为`offline-docx-to-pdf-with-fonts/v1`；省略format仍产生原PPTX Profile，旧题与旧helper无须修改。两种导出函数拒绝另一种格式的锁，不能仅改文件扩展名或沿用PPTX导出选项。
+
+Word导出使用`writer_pdf_Export`，固定`ExportNotes=false`、`ExportNotesInMargin=false`、`ExportFormFields=false`、`IsSkipEmptyPages=false`，不导出评论及交互表单；脚注与尾注是正文内容，仍会呈现。原始DOCX字节复制到一次性目录，不先修订文字、接受修订或补算字段。Writer对字段、修订显示及字体替换的实际行为需要题目另行核验，不能据导出成功推断已保留全部语义。
+
+此Profile接收被动Word正文、原生表格、注释部件及内部图片。预检验证OPC主关系、包内关系目标、唯一ID、XML与大小边界；普通超链接保留但不点击。宏、ActiveX、OLE/嵌入包、altChunk/子文档、外部模板/图片及DDE、INCLUDETEXT、INCLUDEPICTURE、LINK、DATABASE等主动字段明确拒绝。复杂字段会按实际指令片段组合检查，不能靠拆分`instrText`绕过。它是受信任数据集的离线输入Profile，不是恶意Office文件安全沙箱；超出范围的输入由任务契约明确分类，不应由基础设施擅自补能力零分。
+
+`wildclawbench.office-docx-render/v1`回执保留源/PDF SHA、Office身份、Word字体锁摘要、字体清单、固定导出选项及正文段落/表格/节声明数量。这些数量来自主文档XML，不含脚注部件，不是页数或可用性分。来源必须属于冻结候选或私有参考的实际DOCX；归档时重新解析该原件核对摘要，不能仅重新索引一份篡改回执。正常运行核验实际引擎/字体，`verify-score --archived`只验证锁结构与绑定字节，不要求引擎仍在、不重新转换。派生PDF与回执继续通过原Worker目录、语义catalog及归档证据机制收口。
+
+## Word与PPTX共同渲染
+
+score-general-e2e 0.20.0、core 0.12.0新增`bootstrap-office-render --document-format both`，Python API对应`create_office_render_lock(..., document_format="both")`。该显式选项生成`wildclawbench.office-render-runtime-lock/v2`，Profile为`offline-docx-pptx-to-pdf-with-fonts/v1`；字段仍只有引擎、字体清单及字体目录，共享同一份真实资产，不复制两份配置。`office_render_lock_formats(lock)`分别返回v2的`("docx", "pptx")`或v1唯一格式。
+
+在同一个受管Worker中，把该完整锁传给`render_docx_pdf()`和`render_pptx_pdf()`，输出须使用不同派生目录。Word仍走Writer固定选项、PPTX仍走Impress固定选项；两份`render-audit.json`分别记录原格式的Profile、源SHA和摘要，`render_lock_sha256`共同绑定完整v2锁。正常及归档核验按各自冻结Word/PPTX重新检查结构；新v2对PPTX的声明页数和内嵌XLSX数也重新对照原件，不以正整数声明代替来源核验。PDF实际页数、内容、字体显示和业务语义仍由任务独立检查。
+
+默认省略format仍生成原PPTX v1锁，指定`docx`仍生成原Word v1锁；这些锁继续拒绝另一类导出。v1/v2与Profile不能交叉拼装，v2不授权其它格式、主动内容、外部数据或其它导出选项。旧私有helper只接受其冻结协议，应继续配原单格式锁；双格式任务使用新helper并显式准备`both`锁，不能把v2当作旧helper的通用替换。缺引擎、字体漂移、配置/来源不一致及转换失败仍是评测异常，不补候选能力零分。

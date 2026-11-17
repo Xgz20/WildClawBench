@@ -1,0 +1,37 @@
+{
+  "schema_version": "h047-artifact/v1",
+  "public_inputs": 11,
+  "editable_inputs": [
+    "project/matcher.py"
+  ],
+  "deliverables": [
+    "project/matcher.py",
+    "results/benchmark.json",
+    "results/review.md"
+  ],
+  "frozen_truth_cases": 16,
+  "semantic_scoring_cases": "All16 frozen cases including the scale cases; incorrect scale output never escapes semantic loss.",
+  "workload_cases": [
+    "public_workload",
+    "scale_mixed_a",
+    "scale_mixed_b",
+    "scale_all_miss"
+  ],
+  "work_bound": "32*(n+q)+4*expected_output_ID_count+128",
+  "wall_clock_gate": false,
+  "scoring_ownership": {
+    "business_correctness": "Mean exact per-query output correctness over all16 fixed source cases, with empty-query case checked as a full case. Priority, complete duplicate list and stable catalog/query order are semantic obligations.",
+    "boundary_cases": "Mean verified work-bound compliance on four fixed workload cases. Non-equivalent output is explicitly not_assessed/neutral here and loses business instead; an independently proven stop-work violation loses work. Neutral is not verified performance.",
+    "delivery_integrity": ".80 protected inputs and no extra unapproved input files; .10 benchmark JSON object; .10 nonempty native review text.",
+    "evidence_binding": ".20 source/protocol facts; .60 exact actual before/after public counter/output/fixture facts; .20 bounded review summary. Honest non-equivalence can retain provenance credit."
+  },
+  "equivalence": [
+    "two independent index directions",
+    "helper functions and standard local containers",
+    "list/tuple JSON-equivalent results",
+    "JSON key/case ordering and BOM",
+    "uppercase SHA and equivalent integer notation",
+    "free review wording and algorithm family"
+  ],
+  "no_padding_dilution": "Fixed16 truth cases and three required public benchmark case IDs; duplicate required IDs are invalid, extra rows never add denominator credit."
+}

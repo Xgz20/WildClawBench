@@ -1,0 +1,2956 @@
+{
+  "schema_version": "h007-author-controls/v1",
+  "status": "AUTHOR_CONTROLS_PASS",
+  "control_count": 46,
+  "controls": {
+    "author_reference": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_reviewer_a_regions": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_reviewer_b_regions": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_normalized_regions_and_order": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_xywh_and_polygon_regions": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_native_without_source_bookmarks": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_inline_warning": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_native_automatic_numbering": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_explicit_page_defaults": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "equivalent_null_for_deleted_text": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "ledger_correct_document_unchanged": {
+      "scores": {
+        "business_correctness": 0.484375,
+        "boundary_cases": 0.5,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.5614062500000001
+      },
+      "native_checks": {
+        "V01": 0.0,
+        "V02": 0.0,
+        "V03": 0.0,
+        "V04": 0.0,
+        "V05": 1.0,
+        "V06": 0.0,
+        "V07": 0.5,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": false,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "global_window_replacement": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9543750000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "backup_changed_with_primary": {
+      "scores": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.875,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8871875000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 0.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "delete_whole_paragraph_not_selected_sentence": {
+      "scores": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.875,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8871875000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 0.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "nearest_row_not_arrow_target": {
+      "scores": {
+        "business_correctness": 0.8125,
+        "boundary_cases": 0.8333333333333333,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8252083333333334
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 0.0,
+        "V05": 0.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "cancelled_proposal_applied": {
+      "scores": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.8958333333333334,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.8923958333333334
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 0.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "warning_added_to_similar_archive_note": {
+      "scores": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9028125000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 0.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "step_order_unchanged": {
+      "scores": {
+        "business_correctness": 0.953125,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9285937500000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 0.5,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": false,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "step_order_correct_numbers_stale": {
+      "scores": {
+        "business_correctness": 0.953125,
+        "boundary_cases": 0.9375,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9285937500000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 0.5,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": false
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "outside_scope_deletion": {
+      "scores": {
+        "business_correctness": 0.90625,
+        "boundary_cases": 0.9583333333333334,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9080208333333334
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 0.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "retained_document_but_false_delete_record": {
+      "scores": {
+        "business_correctness": 0.98125,
+        "boundary_cases": 0.9166666666666666,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9688541666666667
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": false,
+          "target": true,
+          "decision": false,
+          "before": true,
+          "after": false
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "wrong_source_image": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.875,
+        "overall_score": 0.99375
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "wrong_source_sha": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.96875,
+        "overall_score": 0.9984375000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "whole_image_regions_not_target_evidence": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.5125,
+        "overall_score": 0.9756250000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "wrong_region_same_word_other_row": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.96875,
+        "overall_score": 0.9984375000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "wrong_move_destination": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.975,
+        "overall_score": 0.99875
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "changed_table_value_font": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9700000000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "missing_explanations": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9400000000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "missing_deleted_after_field": {
+      "scores": {
+        "business_correctness": 0.99375,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9665625000000001
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": false
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "missing_native_document": {
+      "scores": {
+        "business_correctness": 0.25,
+        "boundary_cases": 0.16666666666666666,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.31916666666666665
+      },
+      "native_checks": {
+        "V01": 0.0,
+        "V02": 0.0,
+        "V03": 0.0,
+        "V04": 0.0,
+        "V05": 0.0,
+        "V06": 0.0,
+        "V07": 0.0,
+        "V08": 0.0
+      },
+      "native_details": {
+        "step_order": false,
+        "step_numbering": false
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "damaged_native_document": {
+      "scores": {
+        "business_correctness": 0.25,
+        "boundary_cases": 0.16666666666666666,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.31916666666666665
+      },
+      "native_checks": {
+        "V01": 0.0,
+        "V02": 0.0,
+        "V03": 0.0,
+        "V04": 0.0,
+        "V05": 0.0,
+        "V06": 0.0,
+        "V07": 0.0,
+        "V08": 0.0
+      },
+      "native_details": {
+        "step_order": false,
+        "step_numbering": false
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "missing_native_package_contract": {
+      "scores": {
+        "business_correctness": 0.25,
+        "boundary_cases": 0.16666666666666666,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.31916666666666665
+      },
+      "native_checks": {
+        "V01": 0.0,
+        "V02": 0.0,
+        "V03": 0.0,
+        "V04": 0.0,
+        "V05": 0.0,
+        "V06": 0.0,
+        "V07": 0.0,
+        "V08": 0.0
+      },
+      "native_details": {
+        "step_order": false,
+        "step_numbering": false
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "missing_ledger": {
+      "scores": {
+        "business_correctness": 0.75,
+        "boundary_cases": 0.8333333333333333,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 0.0,
+        "overall_score": 0.7108333333333333
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V02": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V03": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V04": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V05": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V06": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V07": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V08": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "all_outputs_missing": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "native_checks": {
+        "V01": 0.0,
+        "V02": 0.0,
+        "V03": 0.0,
+        "V04": 0.0,
+        "V05": 0.0,
+        "V06": 0.0,
+        "V07": 0.0,
+        "V08": 0.0
+      },
+      "native_details": {
+        "step_order": false,
+        "step_numbering": false
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V02": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V03": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V04": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V05": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V06": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V07": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        },
+        "V08": {
+          "action": false,
+          "target": false,
+          "decision": false,
+          "before": false,
+          "after": false
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "protected_input_changed": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.55
+      },
+      "native_checks": {
+        "V01": 1.0,
+        "V02": 1.0,
+        "V03": 1.0,
+        "V04": 1.0,
+        "V05": 1.0,
+        "V06": 1.0,
+        "V07": 1.0,
+        "V08": 1.0
+      },
+      "native_details": {
+        "step_order": true,
+        "step_numbering": true
+      },
+      "ledger_checks": {
+        "V01": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V02": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V03": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V04": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V05": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V06": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V07": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        },
+        "V08": {
+          "action": true,
+          "target": true,
+          "decision": true,
+          "before": true,
+          "after": true
+        }
+      },
+      "workspace_unchanged": true
+    },
+    "missing_private_contract": {
+      "error_type": "FileNotFoundError",
+      "expected": "evaluation error, not zero"
+    },
+    "missing_native_helper": {
+      "error_type": "FileNotFoundError",
+      "expected": "evaluation error, not zero"
+    },
+    "pending_review_gate": {
+      "expected": "evaluation error",
+      "error": "H007 independent annotation gate not satisfied"
+    },
+    "status_flag_without_review_records": {
+      "expected": "evaluation error",
+      "error": "H007 two distinct independent annotation records required"
+    },
+    "raw_review_changed_sha": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "ValueError",
+      "error": "H007 independent annotation record binding mismatch"
+    },
+    "raw_input_sha_wrong_after_reindex": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "ValueError",
+      "error": "H007 raw annotation input binding mismatch"
+    },
+    "model_record_claims_human_after_reindex": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "ValueError",
+      "error": "H007 model annotations must not claim human expertise"
+    },
+    "actual_pixels_not_read_after_reindex": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "ValueError",
+      "error": "H007 actual image review binding mismatch"
+    },
+    "unresolved_reconciliation_after_reindex": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "ValueError",
+      "error": "H007 annotation disagreements unresolved"
+    },
+    "approved_regions_changed": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "ValueError",
+      "error": "H007 approved GT visual region binding mismatch"
+    },
+    "missing_actual_second_annotation": {
+      "expected": "evaluation error, not capability zero",
+      "error_type": "FileNotFoundError",
+      "error": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h007/qa/approved-author-controls-003/missing_actual_second_annotation/workspace/gt/reviews/reviewer_b.json'"
+    }
+  },
+  "independent_annotations_received": 2,
+  "review_kind": "independent_model_review",
+  "human_expert": false,
+  "gt_bindings": {
+    "annotation_status.json": "7a5a737227aadd63e5b0325c401bcacef646ab6ad9e5a9b38abc3706c4b50539",
+    "artifact_contract.json": "e70b5e72d3fbf99502b26bf987fa2914514263608506ab6501325c0094149dec",
+    "author_expected.json": "9aa0f9e6542904ed434b2fa3163992c0362871b00ef9c38c0f8412e27b52e386",
+    "author_oracle.json": "ef9b45efd30cb8ad9aa120cb701fcbd640ad6781e6ebbfd8580ba3e8ecf333e4",
+    "business_oracle.json": "7b5beded3b5458035f5a94bb1e62a2078ea966fb9be7d41793fdbcf8e963d73c",
+    "constructed_regions.json": "8b7d7bbb81c7a76d88e5fe65d147c0af8f280c833d302979b31e0c3a091a737d",
+    "counterexamples.json": "a6fab5950e401ef79cd419178ffdf6c149d2c25abfab2883df01b70ac17edea9",
+    "declared_actions.json": "8d9add664822f0d12acb911c99a9aa0e8af190573499742c572291aac39488dc",
+    "evidence_index.json": "6a43a45802255edab74067fa6b5ca41e8f08937fb27730092ab7cdb88d6133e1",
+    "evidence_requirements.json": "bb962116ab12bb78adca7a3bd94a7f44abbb2c2b1f024722ac39cf39cf49d7dc",
+    "expected.json": "c743455b374328ccf860b2cbc622b9460e9ad6bfda4d50b9a302b71aadf3768a",
+    "grader.py": "57f57c9f39d48dca58eec23b54f3ef0779887008798da2b33674a7a07c104655",
+    "native_docx.py": "9509967b8a0f037c7c2d3e110cf422b96c0f50085919279cf38bcbe3a4e931a8",
+    "protected_sha256.json": "942165650690d80066e374232eba7b3ce9355bb72085ccb868a206b4a31eb97b",
+    "reference/results/handoff_revised.docx": "ddef3aa560e84cba48d3aba9d6b9df8be8da177a7db7e2dce720ce2b7ef40e04",
+    "reference/results/visual_changes.json": "55dff64c0b3ccc938c9a9f0ffba5074e1a86ce5627c6f298dd4e9eb5ab68c1bd",
+    "reviews/reconciliation.json": "4d9ee0801c76c867d1a368c219af8f17b10c2e96211e99902d74efd798e196d4",
+    "reviews/reviewer_a.json": "b7fd29de9311e5fe896311e61eedfcc74f0339c731a02ce958e8d1750f8fbc33",
+    "reviews/reviewer_b.json": "336705b3b79c025a5c15f0a3d06bcbcf6e66f69d0c24409443241a0fb815648d",
+    "structured_io.py": "9c4e96356dc71ee34eab346e431c2624b127c44b2aaab6cead1df909b40a9f14",
+    "validate_authoring.py": "c61f865e577b17f66992f9dd1fc4d8784901c35c7783d5a95313f9517ca7bee4",
+    "visual_regions.json": "b89e0d7ee473211548df0a26405f1efea5fa50551d9407af66ea0c0f74b3f070"
+  },
+  "limit": "Author rule controls; approved GT has two retained model annotations and author reconciliation. No independent semantic score, actual Harness result or empirical calibration."
+}

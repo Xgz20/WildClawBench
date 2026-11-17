@@ -10,6 +10,7 @@ from pathlib import Path
 
 from eval_general_e2e.datasets.bundle import (
     DEFAULT_DEFINITION,
+    _task_contracts,
     _tree_materials,
     compile_dataset,
     default_manifest_path,
@@ -24,6 +25,39 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 class GeneralDatasetCacheFilteringTests(unittest.TestCase):
+    def test_office_requirement_is_private_and_absence_preserves_legacy_contract(self):
+        execution, scoring = _task_contracts("task", {}, {}, {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        actual_execution, actual_scoring = _task_contracts("task", {"scoring_runtime": {"office": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(actual_execution, execution)
+        self.assertNotIn("scoring_runtime", scoring)
+        self.assertEqual(actual_scoring, {**scoring, "scoring_runtime": {"office": True}})
+        rendered_execution, rendered_scoring = _task_contracts("task", {"scoring_runtime": {"office": True, "office_render": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(rendered_execution, execution)
+        self.assertEqual(rendered_scoring["scoring_runtime"], {"office": True, "office_render": True})
+        html_execution, html_scoring = _task_contracts("task", {"scoring_runtime": {"html_render": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(html_execution, execution)
+        self.assertEqual(html_scoring["scoring_runtime"], {"html_render": True})
+        research_execution, research_scoring = _task_contracts("task", {"scoring_runtime": {"research_sources": True}}, {},
+            {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        self.assertEqual(research_execution, execution)
+        self.assertEqual(research_scoring["scoring_runtime"], {"research_sources": True})
+        for invalid in ({"office_render": True}, {"office": False, "office_render": True}, {"office": True, "office_render": 1}, {"html_render": 1}, {"research_sources": 1}):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):
+                _task_contracts("task", {"scoring_runtime": invalid}, {}, {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        with self.assertRaisesRegex(ValueError, "invalid scoring_runtime"):
+            _task_contracts("task", {"scoring_runtime": {"office": "false"}}, {},
+                {"sha256": "a" * 64}, {"sha256": "b" * 64})
+
+    def test_runtime_requirements_and_product_rule_adapter_remain_private_together(self) -> None:
+        metadata = {"scoring_runtime": {"office": True}, "rule_result_adapter": {"evidence_only": True}}
+        execution, scoring = _task_contracts("task", metadata, {}, {"sha256": "a" * 64}, {"sha256": "b" * 64})
+        for key, value in metadata.items():
+            self.assertNotIn(key, execution)
+            self.assertEqual(scoring[key], value)
+
     def test_generated_caches_do_not_change_material_digest_or_archive_members(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)

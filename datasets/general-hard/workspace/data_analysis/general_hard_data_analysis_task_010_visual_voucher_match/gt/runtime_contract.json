@@ -1,0 +1,57 @@
+{
+  "schema_version": "h026-runtime-contract/v1",
+  "grading_type": "hybrid",
+  "automatic_share": 0.75,
+  "semantic_share": 0.25,
+  "automatic_checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "automatic_return_keys": [
+    "business_correctness",
+    "boundary_cases",
+    "delivery_integrity",
+    "evidence_binding",
+    "overall_score"
+  ],
+  "scoring_runtime": {
+    "office": true
+  },
+  "office_profile": "offline-xlsx-remove-formula-caches/v1",
+  "office_helper": "office_runtime.py copied byte-for-byte from core0.15.2",
+  "business_weights": {
+    "image_records": 0.25,
+    "ledger_records": 0.35,
+    "groups": 0.1,
+    "summary": 0.05,
+    "proposals_and_pending": 0.25
+  },
+  "boundary_aggregation": "macro average of8 critical mechanism groups; each group must pass its specified critical checks",
+  "input_mutation": "all four automatic scores and internal overall become0",
+  "unsafe_approval_claim": "business capped at.25, delivery0 and approval boundary false",
+  "candidate_input_response_required": false,
+  "formula_count_threshold": null,
+  "runtime_failures_are_errors": [
+    "missing or changed trusted GT/helper",
+    "missing managed Office lock or evidence context",
+    "engine identity mismatch or execution failure",
+    "unsupported formula compatibility requiring review"
+  ],
+  "candidate_format_failures_are_scored": [
+    "missing/malformed delivery",
+    "invalid/oversized/unsafe XLSX input package",
+    "malformed JSON/duplicate keys/nonfinite amounts"
+  ],
+  "no_cache_fallback": true,
+  "derived_evidence_outside_frozen_workspace": true,
+  "reference_consumed_during_grading": false,
+  "unimplemented": [
+    "semantic correctness of observation prose",
+    "visual layout aesthetics",
+    "human financial expert judgement",
+    "true ledger application/payment",
+    "actual Harness/model validation and measured difficulty"
+  ]
+}

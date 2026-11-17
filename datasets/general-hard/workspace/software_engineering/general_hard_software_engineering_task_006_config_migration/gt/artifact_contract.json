@@ -1,0 +1,13 @@
+{
+  "mutable_sources": [
+    "project/config.py"
+  ],
+  "reports": {
+    "audit": "results/migration_audit.json",
+    "tests": "results/tests.txt"
+  },
+  "schemas": {
+    "audit": "h046-migration-audit/v1",
+    "tests": "h046-public-test-run/v1"
+  }
+}

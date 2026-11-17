@@ -63,6 +63,8 @@ v6 Prompt 给出冻结 `score_cli_argv_prefix`、Python 解释器和元数据路
 
 ## 分页取证
 
+静态图片用`query-evidence --mode image --evidence-id ...`核验来源并取得实际路径，然后用看图工具查看原始像素。图片查询描述不证明已经查看；仅catalog不足以引用图片判分。完整要求见[冻结图片证据](image-evidence.md)。
+
 先查目录，再读取文件或 transcript。每次查询返回 `query_id`；最终逐项判定必须引用实际使用的 query ID 和 evidence ID。
 
 ```bash

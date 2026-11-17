@@ -1,0 +1,134 @@
+{
+  "schema_version": "h029-reference-source-manifest/v1",
+  "non_exhaustive": true,
+  "independent_production_fetch_project_preflight": [
+    {
+      "source_id": "google-official",
+      "url": "https://blog.google/products-and-platforms/products/search/football-features-google-search/",
+      "final_url": "https://blog.google/products-and-platforms/products/search/football-features-google-search/",
+      "retrieved_at": "2026-10-28T10:33:43.199141Z",
+      "body_sha256": "c88466ce402b1eab1352a2142b6f3c642ce0393a1193c6412539370e0143f208",
+      "body_size": 975218,
+      "media_type": "text/html",
+      "external_receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/google-official/receipt.json",
+      "receipt_sha256": "3ce97b3d623bb350019f0fac29ae02749ea7079b7521530f2ccbdbf601d861a2",
+      "projection_sha256": "aed8dc6e4ea77f18681dd1e104faec4df5e2ad029f2a54cadb924958893b8bdb",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "searchlive-official",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/",
+      "final_url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/",
+      "retrieved_at": "2026-10-28T10:33:40.564424Z",
+      "body_sha256": "8d15d4814e1ecda45604f70a34bb24e41b694dcce89e93ef0765ed267534a894",
+      "body_size": 1043738,
+      "media_type": "text/html",
+      "external_receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/searchlive-official/receipt.json",
+      "receipt_sha256": "93a85b0766dfed861d14f724f0cdddd36ac361f87e401026ed06ffe05160573d",
+      "projection_sha256": "c06951c22ab0a96b3b50ea76d2ccfb0753c92c86d8c6aed4cf2e57beab1fae1e",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "youtube-official",
+      "url": "https://blog.youtube/news-and-events/made-on-youtube-viewer-custom-feeds-shopping-tools/",
+      "final_url": "https://blog.youtube/news-and-events/made-on-youtube-viewer-custom-feeds-shopping-tools/",
+      "retrieved_at": "2026-10-28T10:33:37.655576Z",
+      "body_sha256": "4aa820facba18eb18d7c251bd17721c94b6f4af9489b9ab44f5b98c0a35d1dd6",
+      "body_size": 117413,
+      "media_type": "text/html",
+      "external_receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/youtube-official/receipt.json",
+      "receipt_sha256": "a9523c306ed0504ffa5d87743fbccf5021ef84510fb5283edb40846e15591ebb",
+      "projection_sha256": "4c1a19639450e182db0c78f4d37cd4467c5eee5e937f69d9cb52335411b8332e",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "doubao-changelog-pdf",
+      "url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E6%96%B0%E5%8A%9F%E8%83%BD%E5%8F%91%E5%B8%83%E8%AE%B0%E5%BD%95_1792068421.pdf",
+      "final_url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E6%96%B0%E5%8A%9F%E8%83%BD%E5%8F%91%E5%B8%83%E8%AE%B0%E5%BD%95_1792068421.pdf",
+      "retrieved_at": "2026-10-28T10:33:47.275479Z",
+      "body_sha256": "5d35f80a41f6cd6f85b8e71d17d3ce409bedf8ee62ad9dd10ff7bd78633ccabc",
+      "body_size": 4708818,
+      "media_type": "application/pdf",
+      "external_receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/doubao-changelog-pdf/receipt.json",
+      "receipt_sha256": "6daaae46e4c2df09a702e87e0d7a7f899486f214228ffa4d531ae3b3ade71fd9",
+      "projection_sha256": "c0d56e032960d8573fa898289ab7513e44dfcf00100d5177c8b6eeeca1e77c79",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "doubao-api-pdf",
+      "url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2%20Global%E7%89%88_1790074639.pdf",
+      "final_url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2%20Global%E7%89%88_1790074639.pdf",
+      "retrieved_at": "2026-10-28T10:33:47.260517Z",
+      "body_sha256": "aca2922858b9add6ed0f60b7138bfb35366d4752d3e1d02460054bab12c9f78c",
+      "body_size": 4798213,
+      "media_type": "application/pdf",
+      "external_receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/doubao-api-pdf/receipt.json",
+      "receipt_sha256": "8e7426a5a9cf0fc3462a7f53456f25afc7b8fd2c3d49c9405b824bc382eb2cc7",
+      "projection_sha256": "7a6be14c15e7aedd1c57f2c9e7477a917b2fa2ca6bb0e215122387574e53a71d",
+      "reference_identity_only_not_URL_whitelist": true
+    }
+  ],
+  "historical_limit": "Current bytes acquired2026-10-28; explicit article metadata and dated monthly rows support bounded historical statements, not contemporaneous September byte captures.",
+  "actual_complete_attempt_collection_done": false,
+  "original_full_bodies_external_only": true,
+  "author_source_B_manifest": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-b/source-manifest.json",
+    "sha256": "65ece8255abe159408eb35a86d2a8af2a5291558acbcfe27c0216779ee30b71b"
+  },
+  "quotes_policy": "Only necessary short snippets and locators in formal GT; complete official/commercial originals remain external QA and scoring runtime evidence.",
+  "provider_identity_sources": [
+    {
+      "source_id": "google-provider-terms",
+      "url": "https://policies.google.com/terms/embedded?hl=en-US",
+      "final_url": "https://policies.google.com/terms/embedded?hl=en-US",
+      "retrieved_at": "2026-10-28T10:52:14.153276Z",
+      "body_sha256": "651a59b3624614567142edfc50cc0bca3751c9398b7afcbb907abc2b1c8a2c6f",
+      "body_size": 496558,
+      "media_type": "text/html",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/google-provider-terms/receipt.json",
+      "receipt_sha256": "2edd7a6c43e83165bbdfd4f753468fb1895ff6df773f5014ddd6d0095cc603d5",
+      "projection_sha256": "8c1fd2a5c13897777d02d46ce2d778cc81d45bbca4dbde224058dfd5ce3eed83",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "volcengine-provider-terms",
+      "url": "https://docs.volcengine.com/docs/legal-agreements/products-and-services-agreement?lang=zh",
+      "final_url": "https://docs.volcengine.com/docs/legal-agreements/products-and-services-agreement?lang=zh",
+      "retrieved_at": "2026-10-28T10:52:14.101423Z",
+      "body_sha256": "479a807767d2dae3228f53d4359f89c18e0d96f4323ecc90cfe1e930676fea37",
+      "body_size": 221815,
+      "media_type": "text/html",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-provider-terms/receipt.json",
+      "receipt_sha256": "1e742acb1ea4a2e07690c3cee0d38d6fa7a39211f1f89a81d0cac5c6eef17a08",
+      "projection_sha256": "630a15c73887fc4021b9cd233e2d7eab1d231ec6b557b472b55abeb26c7ede7e",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "volcengine-government-license",
+      "url": "https://banshi.whlyj.beijing.gov.cn/publish/6897521451094312.pdf",
+      "final_url": "https://banshi.whlyj.beijing.gov.cn/publish/6897521451094312.pdf",
+      "retrieved_at": "2026-10-28T10:52:13.589814Z",
+      "body_sha256": "96b9a8f5948d9bfbb1750186e702e7926c6a428fd72ce64f08e1cb2bedf7f787",
+      "body_size": 178242,
+      "media_type": "application/pdf",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-government-license/receipt.json",
+      "receipt_sha256": "6d50728a903547fb15a89f55b8380e1c3847c8283ee15470bb0543238a8aeef8",
+      "projection_sha256": "c4b2d7657d93c4ec055bce9fd91ebd7067ca52de27d033e059d947171453e3ad",
+      "reference_identity_only_not_URL_whitelist": true
+    },
+    {
+      "source_id": "google-product-parent",
+      "url": "https://policies.google.com/",
+      "final_url": "https://policies.google.com/",
+      "retrieved_at": "2026-10-28T10:59:59.159075Z",
+      "body_sha256": "c58c54c4379d357097ae01bd1e0ccf76bcbf3dd33424a1fece6faa6dc0794378",
+      "body_size": 538001,
+      "media_type": "text/html",
+      "receipt": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-product-parent-target-1793185198159798000/receipt.json",
+      "receipt_sha256": "bf1e4e1586646489841d670dc6c40bc1e80138e4ea8989d9d5f11e524c1324b9",
+      "projection_sha256": "3a2d8212efbbfcc7a67c7b09a3ea15f66cf7c55728fdc3fe573c630b4a778dab",
+      "reference_identity_only_not_URL_whitelist": true
+    }
+  ],
+  "provider_identity_oracle": "provider_identity_oracle.json"
+}

@@ -1,0 +1,23 @@
+{
+  "artifact_contract.json": "78c55e81599b4487434b24ce55a9bcf57525236b773c6284035b155318f367bc",
+  "business_oracle.json": "5dd1c841fd32e2b68958c595c296269e3a7a67d00ac7ba1f4f6e79c6a6b01373",
+  "counterexamples.json": "c50e664adb0772efa44f9cbb2b4bf5f4f0b06b7821542ccf145371af440d4b98",
+  "evidence_requirements.json": "92ac339cd83bd18be08008f9905674c0f18d7d7cb0b0a9eea3815b9737a9063c",
+  "expected.json": "3b75ba45e78c568c6999bcbf541f6bfce06d4b8b445eef9c55d98206fe09724c",
+  "grader.py": "8160cfe9e2eb9186d5ac9cea2a74ef98ade95cdf0dae58657331aedf8275f846",
+  "hidden_cases.json": "086f0b5ef59ffdd3679647c591d77d7ade53c8ac79d18c437d8dfccff1841cad",
+  "protected_sha256.json": "fc25dd67ea4e852d2fd09afe0c1a054fa24a744b5c7633718fd19269c0dba51b",
+  "runner.py": "3a68d3abf0ab9e62bd0f491bd28b95d3d18644f20dffb87f805598ab95bff217",
+  "runtime_contract.json": "c6ba49314471a548640de6168c4ad07a1b428fad6ae32d7611524450ba141733",
+  "source_originals/baseline_matcher.py": "ed462a3e1b413e27c9133d238c313ae73a46f78b31dc92747f5abbaedcabb6b5",
+  "source_originals/benchmark.py": "29d36def0d8fd73be7d4b56243a4abcfc49cd63a79dd58120c30907c469b6b8a",
+  "source_originals/contract.md": "a22130a2d00699bfd30397e3bf16954f3ecb3b61aaf94c99c2e6c2380dc01e18",
+  "source_originals/fixtures/public_adversarial.json": "738d49a299864c547e66e9418ead75561d99cac1c9ac7393e62a2dc5fe03a06d",
+  "source_originals/fixtures/public_smoke.json": "09c3cb61ea789d1279e800e393b5403e3cb118bed8bed4ab97115f54b4b7da92",
+  "source_originals/fixtures/public_workload.json": "f8f316a85b204436d434c532ddea5495aba06f2dfc40106f4ae95153304427a0",
+  "source_originals/instrumentation.py": "550a1ded9512a2cac0c14edb5a805a01d863bb29fc0390901e0cc622bc106e7a",
+  "source_originals/profile.py": "e38677ec1235f1e6a1416423e5d7a174aa4a78b6d0b9e1f613644a1d10a2c854",
+  "source_originals/project/matcher.py": "ed462a3e1b413e27c9133d238c313ae73a46f78b31dc92747f5abbaedcabb6b5",
+  "source_originals/runtime.json": "24bea251e84cc42863d4962a5ea653bfc1ad4ca405eb626ac6fa2f5209dd4f83",
+  "source_originals/tests_public/test_matcher.py": "d82c5f0154edb37329d06576a0201ef21e8173aabe4f586fdc477ab56c73d5de"
+}

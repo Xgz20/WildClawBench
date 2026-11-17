@@ -1,0 +1,21 @@
+{
+  "schema_version": "h023-artifacts/v1",
+  "outputs": [
+    "results/ledger.xlsx",
+    "results/exceptions.csv",
+    "results/method.md"
+  ],
+  "input_immutable": true,
+  "single_native_dynamic_model": true,
+  "tables": "ledger_io.py / FIELDS",
+  "equivalences": [
+    "different sheets, one-row clear bilingual headers, shifted/reordered columns",
+    "partitioned customer tables",
+    "different scalar formulas and helper fields",
+    "FIFO sorted by actual business keys, not author encoded keys"
+  ],
+  "unknown_not_zero": true,
+  "max_delivery_bytes": 5242880,
+  "formula_count_threshold": null,
+  "visual_or_semantic_judge": false
+}

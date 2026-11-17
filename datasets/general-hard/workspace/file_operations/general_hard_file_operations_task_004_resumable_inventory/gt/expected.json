@@ -1,0 +1,998 @@
+{
+  "schema": "h038.expected/v1",
+  "sources": [
+    {
+      "source_id": "K001",
+      "key": "batch-01/report.txt",
+      "source_path": "source_tree/batch-01/report.txt",
+      "sha256": "c978e17cd69bd7bcf5279fd4fe166fdb01ed1f028f893e9d27522fcc0450aa96",
+      "bytes": 65
+    },
+    {
+      "source_id": "K002",
+      "key": "batch-01/资料 02.txt",
+      "source_path": "source_tree/batch-01/资料 02.txt",
+      "sha256": "18c35cd84958eeaf37812c89090b7c2a9e439873968dd15978cb978e0e4f8c27",
+      "bytes": 65
+    },
+    {
+      "source_id": "K003",
+      "key": "batch-01/资料 03.txt",
+      "source_path": "source_tree/batch-01/资料 03.txt",
+      "sha256": "74a4967557225751b9ef01f77a64c2241c3eb80b97e9d503d58b90e790eb073b",
+      "bytes": 65
+    },
+    {
+      "source_id": "K004",
+      "key": "batch-01/资料 04.txt",
+      "source_path": "source_tree/batch-01/资料 04.txt",
+      "sha256": "bac58fb22a8951aeb4a9d06d6bf9564792200d951f4edf3f8696b5695bae0b0b",
+      "bytes": 65
+    },
+    {
+      "source_id": "K005",
+      "key": "batch-01/资料 05.txt",
+      "source_path": "source_tree/batch-01/资料 05.txt",
+      "sha256": "5229fe5d7332458e4ccfdab3e61515721cde711cba9cada8c40c3230b20e1bc1",
+      "bytes": 65
+    },
+    {
+      "source_id": "K006",
+      "key": "batch-01/资料 06.txt",
+      "source_path": "source_tree/batch-01/资料 06.txt",
+      "sha256": "dc6c69c395f64282fe8320244ab60e977e80b15f07fbf04626cc5c1a1a2b0184",
+      "bytes": 65
+    },
+    {
+      "source_id": "K007",
+      "key": "batch-01/资料 07.txt",
+      "source_path": "source_tree/batch-01/资料 07.txt",
+      "sha256": "4bd7f91ffa2717fe298dda7542d23000b91d9daf6316187033dae339614bb152",
+      "bytes": 65
+    },
+    {
+      "source_id": "K008",
+      "key": "batch-01/资料 08.txt",
+      "source_path": "source_tree/batch-01/资料 08.txt",
+      "sha256": "7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984",
+      "bytes": 65
+    },
+    {
+      "source_id": "K009",
+      "key": "batch-01/资料 09.txt",
+      "source_path": "source_tree/batch-01/资料 09.txt",
+      "sha256": "b81deedec858d31110bac381a51b68fbf8d6c0b69645cc883934a852cd8db79e",
+      "bytes": 65
+    },
+    {
+      "source_id": "K010",
+      "key": "batch-01/资料 10.txt",
+      "source_path": "source_tree/batch-01/资料 10.txt",
+      "sha256": "b0ba9e640d5bc86a584c7476e6fc7233d6f99e7e35082543b0bf8eef7e47c122",
+      "bytes": 65
+    },
+    {
+      "source_id": "K011",
+      "key": "batch-02/report.txt",
+      "source_path": "source_tree/batch-02/report.txt",
+      "sha256": "db85251a0f874dd664e5ffc70e22e834dec2e3f42b2620ae57b4ae57fa382d39",
+      "bytes": 65
+    },
+    {
+      "source_id": "K012",
+      "key": "batch-02/资料 02.txt",
+      "source_path": "source_tree/batch-02/资料 02.txt",
+      "sha256": "7e4651233122fb15ec3dc12706749907c2f81dd2f96bdea648835483a636411d",
+      "bytes": 65
+    },
+    {
+      "source_id": "K013",
+      "key": "batch-02/资料 03.txt",
+      "source_path": "source_tree/batch-02/资料 03.txt",
+      "sha256": "53f607a2398c9e51633be88dc7045a6448dc220dd3c4b44671b14b6532266640",
+      "bytes": 65
+    },
+    {
+      "source_id": "K014",
+      "key": "batch-02/资料 04.txt",
+      "source_path": "source_tree/batch-02/资料 04.txt",
+      "sha256": "5b774e187c2261166db443090dc143dbb77db3f7e5a66deaf724def771af6562",
+      "bytes": 65
+    },
+    {
+      "source_id": "K015",
+      "key": "batch-02/资料 05.txt",
+      "source_path": "source_tree/batch-02/资料 05.txt",
+      "sha256": "64e0a80e54633bcf42d036d73b82ae5997ede9ebfdbc9d8e1a468089433a8414",
+      "bytes": 65
+    },
+    {
+      "source_id": "K016",
+      "key": "batch-02/资料 06.txt",
+      "source_path": "source_tree/batch-02/资料 06.txt",
+      "sha256": "40be748d1c896624e56208948e1850430c0711169fcd3614baf91c23e7477288",
+      "bytes": 65
+    },
+    {
+      "source_id": "K017",
+      "key": "batch-02/资料 07.txt",
+      "source_path": "source_tree/batch-02/资料 07.txt",
+      "sha256": "56c9fcc7248cd1eb4135783d468da32d7d7351425113482f63bab5951404e09d",
+      "bytes": 65
+    },
+    {
+      "source_id": "K018",
+      "key": "batch-02/资料 08.txt",
+      "source_path": "source_tree/batch-02/资料 08.txt",
+      "sha256": "e4a7aa023381063d68852b95f0094e3f82f309f0857d357ad7d37b6a7424173b",
+      "bytes": 65
+    },
+    {
+      "source_id": "K019",
+      "key": "batch-02/资料 09.txt",
+      "source_path": "source_tree/batch-02/资料 09.txt",
+      "sha256": "4665f54528d8b88cfab136eac4bea1c2b6fe88c723e07d08b5e0d2950849f5f0",
+      "bytes": 65
+    },
+    {
+      "source_id": "K020",
+      "key": "batch-02/资料 10.txt",
+      "source_path": "source_tree/batch-02/资料 10.txt",
+      "sha256": "3949597c656ad0f15280e05b4f06b489833fc56f5c98dcdbfceffad93e9635e6",
+      "bytes": 65
+    },
+    {
+      "source_id": "K021",
+      "key": "batch-03/report.txt",
+      "source_path": "source_tree/batch-03/report.txt",
+      "sha256": "1df5b107f37b9eea82dbd94a511f2e1729e2b885eccf9bd9f41f0ccebb7c92d2",
+      "bytes": 65
+    },
+    {
+      "source_id": "K022",
+      "key": "batch-03/café.txt",
+      "source_path": "source_tree/batch-03/café.txt",
+      "sha256": "ca727960e67a4f43e35c0c2e7de147d485c669d72b726546c9d171521d941d26",
+      "bytes": 65
+    },
+    {
+      "source_id": "K023",
+      "key": "batch-03/资料 03.txt",
+      "source_path": "source_tree/batch-03/资料 03.txt",
+      "sha256": "66f4af898f784dd3e7425e1553c12fd354a14b212957fe4a6669494ea3960732",
+      "bytes": 65
+    },
+    {
+      "source_id": "K024",
+      "key": "batch-03/资料 04.txt",
+      "source_path": "source_tree/batch-03/资料 04.txt",
+      "sha256": "afdbc3492b85cc036a8839a8d0d2670b851bd4adf1684010f3421aa5de8eab88",
+      "bytes": 65
+    },
+    {
+      "source_id": "K025",
+      "key": "batch-03/资料 05.txt",
+      "source_path": "source_tree/batch-03/资料 05.txt",
+      "sha256": "711f4edb76c0ff134857f510f706dfe85afd3d33b08e22b2b8dfd1edd5cca718",
+      "bytes": 65
+    },
+    {
+      "source_id": "K026",
+      "key": "batch-03/资料 06.txt",
+      "source_path": "source_tree/batch-03/资料 06.txt",
+      "sha256": "a0e138dc6581f821b7e688eaf7345e49c7f949a2c111e09c16c4682371c2850a",
+      "bytes": 65
+    },
+    {
+      "source_id": "K027",
+      "key": "batch-03/资料 07.txt",
+      "source_path": "source_tree/batch-03/资料 07.txt",
+      "sha256": "ba43c10ada7592bd7d197216555f1bf16ef614deb56510ab83e1d7f37e0255b3",
+      "bytes": 65
+    },
+    {
+      "source_id": "K028",
+      "key": "batch-03/资料 08.txt",
+      "source_path": "source_tree/batch-03/资料 08.txt",
+      "sha256": "8f3e388c8b2f74308d2f9c2202988c88b361fc0b1f5b83a91c276963d75228ab",
+      "bytes": 65
+    },
+    {
+      "source_id": "K029",
+      "key": "batch-03/资料 09.txt",
+      "source_path": "source_tree/batch-03/资料 09.txt",
+      "sha256": "007392ad677990a7a5f1abefa4a61ceaff13f76eb3c1c67e393ea87fe05463df",
+      "bytes": 65
+    },
+    {
+      "source_id": "K030",
+      "key": "batch-03/资料 10.txt",
+      "source_path": "source_tree/batch-03/资料 10.txt",
+      "sha256": "5a9040a5e4d382c4788e3b1eb1f734c6de46123123a5fc1232a2bac0a71712f6",
+      "bytes": 65
+    },
+    {
+      "source_id": "K031",
+      "key": "batch-04/report.txt",
+      "source_path": "source_tree/batch-04/report.txt",
+      "sha256": "db8f5e695ffa3657204baa831e2715441f17550bd0a7ae103eed28e310667308",
+      "bytes": 65
+    },
+    {
+      "source_id": "K032",
+      "key": "batch-04/资料 02.txt",
+      "source_path": "source_tree/batch-04/资料 02.txt",
+      "sha256": "66cd09af80ba0ce3503a25a8d717adb389f35b6a1e2197d0eafd8b5c744fd9bc",
+      "bytes": 65
+    },
+    {
+      "source_id": "K033",
+      "key": "batch-04/资料 03.txt",
+      "source_path": "source_tree/batch-04/资料 03.txt",
+      "sha256": "406128ac923f094e08ff46674cfbaaf6cf72292618736bc7461e9441f4d7eae5",
+      "bytes": 65
+    },
+    {
+      "source_id": "K034",
+      "key": "batch-04/资料 04.txt",
+      "source_path": "source_tree/batch-04/资料 04.txt",
+      "sha256": "6b7ed85bddce5402970aa42636102bafa160371f1bc6f1daba1ff89229ad6ebd",
+      "bytes": 65
+    },
+    {
+      "source_id": "K035",
+      "key": "batch-04/资料 05.txt",
+      "source_path": "source_tree/batch-04/资料 05.txt",
+      "sha256": "c0461248eccb1d18ecfa18d05c6b5c26d40a30e2e2c8c13195737e20e249a7c4",
+      "bytes": 65
+    },
+    {
+      "source_id": "K036",
+      "key": "batch-04/资料 06.txt",
+      "source_path": "source_tree/batch-04/资料 06.txt",
+      "sha256": "dcbab1cb06076bcf7f329ed198e89da545378f9f4257eefd0c8d8cb3855dbd30",
+      "bytes": 65
+    },
+    {
+      "source_id": "K037",
+      "key": "batch-04/资料 07.txt",
+      "source_path": "source_tree/batch-04/资料 07.txt",
+      "sha256": "ebafeae3766d166dbe5a24eeb28483dd836e829b416df36759159333c1eced3c",
+      "bytes": 65
+    },
+    {
+      "source_id": "K038",
+      "key": "batch-04/资料 08.txt",
+      "source_path": "source_tree/batch-04/资料 08.txt",
+      "sha256": "8068db623dbde51bde2539bb2dd2e08450e80f61ac7bea1c740a99bb2fe5cfe0",
+      "bytes": 65
+    },
+    {
+      "source_id": "K039",
+      "key": "batch-04/资料 09.txt",
+      "source_path": "source_tree/batch-04/资料 09.txt",
+      "sha256": "f19a12d3037df21b10b13648674fa831dac2b5073cb32fcf40d9fef3d8f1b05a",
+      "bytes": 65
+    },
+    {
+      "source_id": "K040",
+      "key": "batch-04/资料 10.txt",
+      "source_path": "source_tree/batch-04/资料 10.txt",
+      "sha256": "b3eb258657f2935e3b8a4ab82b4e00659d8844b6253341b8a8e7b80b5dc6035b",
+      "bytes": 65
+    },
+    {
+      "source_id": "K041",
+      "key": "batch-05/report.txt",
+      "source_path": "source_tree/batch-05/report.txt",
+      "sha256": "9851897e310f1d0e778dd992c57924315324313a52d15f92fff03525333b2a2c",
+      "bytes": 65
+    },
+    {
+      "source_id": "K042",
+      "key": "batch-05/资料 02.txt",
+      "source_path": "source_tree/batch-05/资料 02.txt",
+      "sha256": "8ca8e13fcbaaaa0e01f259d5af7a683aee31e320f78000832ab2d23707961353",
+      "bytes": 65
+    },
+    {
+      "source_id": "K043",
+      "key": "batch-05/资料 03.txt",
+      "source_path": "source_tree/batch-05/资料 03.txt",
+      "sha256": "e81eacea4cc3745d91123b45618e761857cc1efbd5e495a7982e42c928789209",
+      "bytes": 65
+    },
+    {
+      "source_id": "K044",
+      "key": "batch-05/资料 04.txt",
+      "source_path": "source_tree/batch-05/资料 04.txt",
+      "sha256": "87e9db25efb01ea68e5d3fef4563934217fdabfd0f2cbae0497ba6e05581fcd7",
+      "bytes": 65
+    },
+    {
+      "source_id": "K045",
+      "key": "batch-05/资料 05.txt",
+      "source_path": "source_tree/batch-05/资料 05.txt",
+      "sha256": "6658bc15ca1a1babf39495604d05689a709fa0e9645490175193bace2ce0389e",
+      "bytes": 48
+    },
+    {
+      "source_id": "K046",
+      "key": "batch-05/资料 06.txt",
+      "source_path": "source_tree/batch-05/资料 06.txt",
+      "sha256": "6658bc15ca1a1babf39495604d05689a709fa0e9645490175193bace2ce0389e",
+      "bytes": 48
+    },
+    {
+      "source_id": "K047",
+      "key": "batch-05/资料 07.txt",
+      "source_path": "source_tree/batch-05/资料 07.txt",
+      "sha256": "3843e7278f9e50c642800ccdc584eb55e5d79b3ae9d062896407e7550d78cfa7",
+      "bytes": 65
+    },
+    {
+      "source_id": "K048",
+      "key": "batch-05/资料 08.txt",
+      "source_path": "source_tree/batch-05/资料 08.txt",
+      "sha256": "68c2c0beba035149938807c6172ebbfca58f6addc9e270fb95d8aa0cf73861ad",
+      "bytes": 65
+    },
+    {
+      "source_id": "K049",
+      "key": "batch-05/资料 09.txt",
+      "source_path": "source_tree/batch-05/资料 09.txt",
+      "sha256": "e4f0a3a53165ce16648355cbc566aaccc7afe97b17c66c24ff93266addf03dbf",
+      "bytes": 65
+    },
+    {
+      "source_id": "K050",
+      "key": "batch-05/资料 10.txt",
+      "source_path": "source_tree/batch-05/资料 10.txt",
+      "sha256": "cda1d6ac9006ad0578e871d5b31a0e30467daac1d8a7eaa09f5a779f1243369c",
+      "bytes": 65
+    },
+    {
+      "source_id": "K051",
+      "key": "batch-06/report.txt",
+      "source_path": "source_tree/batch-06/report.txt",
+      "sha256": "bc26eb418b83f78e1634aeb7fe1f58b353db532d0f9408d3a8981af9ddb0672a",
+      "bytes": 65
+    },
+    {
+      "source_id": "K052",
+      "key": "batch-06/资料 02.txt",
+      "source_path": "source_tree/batch-06/资料 02.txt",
+      "sha256": "61b0d0e8ae25479c13f00c53f6f2e821ef874e2b6c0463fb4b4ac7e61c950825",
+      "bytes": 65
+    },
+    {
+      "source_id": "K053",
+      "key": "batch-06/资料 03.txt",
+      "source_path": "source_tree/batch-06/资料 03.txt",
+      "sha256": "63ea079d173cceaedb1ba7426e6c045825ba5ad9ccc71761e22673763fd439e0",
+      "bytes": 65
+    },
+    {
+      "source_id": "K054",
+      "key": "batch-06/资料 04.txt",
+      "source_path": "source_tree/batch-06/资料 04.txt",
+      "sha256": "a10ad2bcf255e43197fea9e02f8a6d36241416e6d42c687cebd7009958f22bea",
+      "bytes": 65
+    },
+    {
+      "source_id": "K055",
+      "key": "batch-06/资料 05.txt",
+      "source_path": "source_tree/batch-06/资料 05.txt",
+      "sha256": "e411ab5cbd6ef78978e6f7ef47740bd7e84c257cc977d3f5fc3d7960e159051f",
+      "bytes": 65
+    },
+    {
+      "source_id": "K056",
+      "key": "batch-06/资料 06.txt",
+      "source_path": "source_tree/batch-06/资料 06.txt",
+      "sha256": "95a8ff779841ddb767edbdff4486d80bab1e6298dc90ba7770ed37e40d864f22",
+      "bytes": 65
+    },
+    {
+      "source_id": "K057",
+      "key": "batch-06/资料 07.txt",
+      "source_path": "source_tree/batch-06/资料 07.txt",
+      "sha256": "31b143d96efd5d2b701c2c9fca8ab75f6b22c0daabb37ac860e185b6506d54f8",
+      "bytes": 65
+    },
+    {
+      "source_id": "K058",
+      "key": "batch-06/无后缀",
+      "source_path": "source_tree/batch-06/无后缀",
+      "sha256": "24ef90ae66afe4c5526f5c165a7e18e119307a349b75445f4b4a04c998d7119d",
+      "bytes": 65
+    },
+    {
+      "source_id": "K059",
+      "key": "batch-06/资料 09.txt",
+      "source_path": "source_tree/batch-06/资料 09.txt",
+      "sha256": "54311a6e1c2c2bddd04bdcb435a8919d45e042748ae642725647ee8917f266db",
+      "bytes": 65
+    },
+    {
+      "source_id": "K060",
+      "key": "batch-06/end.bin",
+      "source_path": "source_tree/batch-06/end.bin",
+      "sha256": "94e6fd65d45fcc1e45cf47431722e7ad39435d076cae9f3ed1466d663891098f",
+      "bytes": 26
+    }
+  ],
+  "recovery": {
+    "initial": {
+      "source_count": 60,
+      "initial_copy_verified_count": 21,
+      "partial_file_count": 28,
+      "initial_manifest_row_count": 29,
+      "duplicate_index_keys": [
+        "batch-01/资料 08.txt"
+      ],
+      "ignored_manifest_rows": [
+        29
+      ],
+      "orphan_partial_paths": [
+        "orphan/legacy.txt"
+      ],
+      "claimed_complete_keys": [
+        "batch-01/report.txt",
+        "batch-01/资料 02.txt",
+        "batch-01/资料 03.txt",
+        "batch-01/资料 04.txt",
+        "batch-01/资料 05.txt",
+        "batch-01/资料 06.txt",
+        "batch-01/资料 07.txt",
+        "batch-01/资料 08.txt",
+        "batch-01/资料 09.txt",
+        "batch-01/资料 10.txt",
+        "batch-02/report.txt",
+        "batch-02/资料 02.txt",
+        "batch-02/资料 03.txt",
+        "batch-02/资料 04.txt",
+        "batch-02/资料 05.txt",
+        "batch-02/资料 06.txt",
+        "batch-02/资料 07.txt",
+        "batch-02/资料 08.txt",
+        "batch-02/资料 09.txt",
+        "batch-02/资料 10.txt",
+        "batch-03/café.txt",
+        "batch-03/report.txt",
+        "batch-03/资料 03.txt",
+        "batch-03/资料 04.txt",
+        "batch-03/资料 05.txt",
+        "batch-03/资料 06.txt",
+        "batch-03/资料 07.txt",
+        "batch-03/资料 08.txt",
+        "batch-03/资料 09.txt",
+        "batch-03/资料 10.txt",
+        "batch-06/end.bin",
+        "batch-06/无后缀",
+        "batch-06/资料 05.txt",
+        "batch-06/资料 06.txt",
+        "batch-06/资料 07.txt",
+        "batch-06/资料 09.txt"
+      ],
+      "false_complete_keys": [
+        "batch-02/资料 09.txt",
+        "batch-02/资料 10.txt",
+        "batch-03/café.txt",
+        "batch-03/report.txt",
+        "batch-03/资料 03.txt",
+        "batch-03/资料 04.txt",
+        "batch-03/资料 05.txt",
+        "batch-03/资料 06.txt",
+        "batch-03/资料 07.txt",
+        "batch-03/资料 08.txt",
+        "batch-03/资料 09.txt",
+        "batch-03/资料 10.txt",
+        "batch-06/end.bin",
+        "batch-06/无后缀",
+        "batch-06/资料 05.txt",
+        "batch-06/资料 06.txt",
+        "batch-06/资料 07.txt",
+        "batch-06/资料 09.txt"
+      ],
+      "unclaimed_verified_keys": [
+        "batch-04/report.txt",
+        "batch-04/资料 02.txt",
+        "batch-04/资料 03.txt"
+      ],
+      "checkpoint_declared_complete_count": 60,
+      "observed_complete_before_resume": 21
+    },
+    "files": [
+      {
+        "key": "batch-01/report.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "c978e17cd69bd7bcf5279fd4fe166fdb01ed1f028f893e9d27522fcc0450aa96",
+        "initial_archive_sha256": "c978e17cd69bd7bcf5279fd4fe166fdb01ed1f028f893e9d27522fcc0450aa96"
+      },
+      {
+        "key": "batch-01/资料 02.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "18c35cd84958eeaf37812c89090b7c2a9e439873968dd15978cb978e0e4f8c27",
+        "initial_archive_sha256": "18c35cd84958eeaf37812c89090b7c2a9e439873968dd15978cb978e0e4f8c27"
+      },
+      {
+        "key": "batch-01/资料 03.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "74a4967557225751b9ef01f77a64c2241c3eb80b97e9d503d58b90e790eb073b",
+        "initial_archive_sha256": "74a4967557225751b9ef01f77a64c2241c3eb80b97e9d503d58b90e790eb073b"
+      },
+      {
+        "key": "batch-01/资料 04.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "bac58fb22a8951aeb4a9d06d6bf9564792200d951f4edf3f8696b5695bae0b0b",
+        "initial_archive_sha256": "bac58fb22a8951aeb4a9d06d6bf9564792200d951f4edf3f8696b5695bae0b0b"
+      },
+      {
+        "key": "batch-01/资料 05.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "5229fe5d7332458e4ccfdab3e61515721cde711cba9cada8c40c3230b20e1bc1",
+        "initial_archive_sha256": "5229fe5d7332458e4ccfdab3e61515721cde711cba9cada8c40c3230b20e1bc1"
+      },
+      {
+        "key": "batch-01/资料 06.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "dc6c69c395f64282fe8320244ab60e977e80b15f07fbf04626cc5c1a1a2b0184",
+        "initial_archive_sha256": "dc6c69c395f64282fe8320244ab60e977e80b15f07fbf04626cc5c1a1a2b0184"
+      },
+      {
+        "key": "batch-01/资料 07.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "4bd7f91ffa2717fe298dda7542d23000b91d9daf6316187033dae339614bb152",
+        "initial_archive_sha256": "4bd7f91ffa2717fe298dda7542d23000b91d9daf6316187033dae339614bb152"
+      },
+      {
+        "key": "batch-01/资料 08.txt",
+        "resolution": "dedupe_index",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 2,
+        "source_sha256": "7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984",
+        "initial_archive_sha256": "7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984"
+      },
+      {
+        "key": "batch-01/资料 09.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "b81deedec858d31110bac381a51b68fbf8d6c0b69645cc883934a852cd8db79e",
+        "initial_archive_sha256": "b81deedec858d31110bac381a51b68fbf8d6c0b69645cc883934a852cd8db79e"
+      },
+      {
+        "key": "batch-01/资料 10.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "b0ba9e640d5bc86a584c7476e6fc7233d6f99e7e35082543b0bf8eef7e47c122",
+        "initial_archive_sha256": "b0ba9e640d5bc86a584c7476e6fc7233d6f99e7e35082543b0bf8eef7e47c122"
+      },
+      {
+        "key": "batch-02/report.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "db85251a0f874dd664e5ffc70e22e834dec2e3f42b2620ae57b4ae57fa382d39",
+        "initial_archive_sha256": "db85251a0f874dd664e5ffc70e22e834dec2e3f42b2620ae57b4ae57fa382d39"
+      },
+      {
+        "key": "batch-02/资料 02.txt",
+        "resolution": "reuse_verified",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "7e4651233122fb15ec3dc12706749907c2f81dd2f96bdea648835483a636411d",
+        "initial_archive_sha256": "7e4651233122fb15ec3dc12706749907c2f81dd2f96bdea648835483a636411d"
+      },
+      {
+        "key": "batch-02/资料 03.txt",
+        "resolution": "adopt_unregistered",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 0,
+        "source_sha256": "53f607a2398c9e51633be88dc7045a6448dc220dd3c4b44671b14b6532266640",
+        "initial_archive_sha256": "53f607a2398c9e51633be88dc7045a6448dc220dd3c4b44671b14b6532266640"
+      },
+      {
+        "key": "batch-02/资料 04.txt",
+        "resolution": "adopt_unregistered",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 0,
+        "source_sha256": "5b774e187c2261166db443090dc143dbb77db3f7e5a66deaf724def771af6562",
+        "initial_archive_sha256": "5b774e187c2261166db443090dc143dbb77db3f7e5a66deaf724def771af6562"
+      },
+      {
+        "key": "batch-02/资料 05.txt",
+        "resolution": "adopt_unregistered",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 0,
+        "source_sha256": "64e0a80e54633bcf42d036d73b82ae5997ede9ebfdbc9d8e1a468089433a8414",
+        "initial_archive_sha256": "64e0a80e54633bcf42d036d73b82ae5997ede9ebfdbc9d8e1a468089433a8414"
+      },
+      {
+        "key": "batch-02/资料 06.txt",
+        "resolution": "adopt_unregistered",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 0,
+        "source_sha256": "40be748d1c896624e56208948e1850430c0711169fcd3614baf91c23e7477288",
+        "initial_archive_sha256": "40be748d1c896624e56208948e1850430c0711169fcd3614baf91c23e7477288"
+      },
+      {
+        "key": "batch-02/资料 07.txt",
+        "resolution": "adopt_unregistered",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 0,
+        "source_sha256": "56c9fcc7248cd1eb4135783d468da32d7d7351425113482f63bab5951404e09d",
+        "initial_archive_sha256": "56c9fcc7248cd1eb4135783d468da32d7d7351425113482f63bab5951404e09d"
+      },
+      {
+        "key": "batch-02/资料 08.txt",
+        "resolution": "adopt_unregistered",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 0,
+        "source_sha256": "e4a7aa023381063d68852b95f0094e3f82f309f0857d357ad7d37b6a7424173b",
+        "initial_archive_sha256": "e4a7aa023381063d68852b95f0094e3f82f309f0857d357ad7d37b6a7424173b"
+      },
+      {
+        "key": "batch-02/资料 09.txt",
+        "resolution": "repair_corrupt",
+        "initial_copy_state": "corrupt",
+        "initial_index_row_count": 1,
+        "source_sha256": "4665f54528d8b88cfab136eac4bea1c2b6fe88c723e07d08b5e0d2950849f5f0",
+        "initial_archive_sha256": "6cd234ffee0a7cc65d0b6d586a08f5b5a136bce13991a987752f16403fbf7528"
+      },
+      {
+        "key": "batch-02/资料 10.txt",
+        "resolution": "repair_corrupt",
+        "initial_copy_state": "corrupt",
+        "initial_index_row_count": 1,
+        "source_sha256": "3949597c656ad0f15280e05b4f06b489833fc56f5c98dcdbfceffad93e9635e6",
+        "initial_archive_sha256": "075c76054a575c4be537561e5b43d16cbe2a8ca596f4a8f72720317c1cfa608a"
+      },
+      {
+        "key": "batch-03/report.txt",
+        "resolution": "repair_corrupt",
+        "initial_copy_state": "corrupt",
+        "initial_index_row_count": 1,
+        "source_sha256": "1df5b107f37b9eea82dbd94a511f2e1729e2b885eccf9bd9f41f0ccebb7c92d2",
+        "initial_archive_sha256": "4dc05eef5db455a1ca268c5ce67c914241a2421f724b23d3eb2daa76d206d041"
+      },
+      {
+        "key": "batch-03/café.txt",
+        "resolution": "repair_corrupt",
+        "initial_copy_state": "corrupt",
+        "initial_index_row_count": 1,
+        "source_sha256": "ca727960e67a4f43e35c0c2e7de147d485c669d72b726546c9d171521d941d26",
+        "initial_archive_sha256": "d2a101e7017564e9dca35541c7c841a773d4d8de1d31b4f01ab00c374c06404b"
+      },
+      {
+        "key": "batch-03/资料 03.txt",
+        "resolution": "repair_corrupt",
+        "initial_copy_state": "corrupt",
+        "initial_index_row_count": 1,
+        "source_sha256": "66f4af898f784dd3e7425e1553c12fd354a14b212957fe4a6669494ea3960732",
+        "initial_archive_sha256": "99e7e0b3ef40cef9aa4f21420d9eaa7f45df70023e931cd8abe6bb7a45ada1bb"
+      },
+      {
+        "key": "batch-03/资料 04.txt",
+        "resolution": "repair_corrupt",
+        "initial_copy_state": "corrupt",
+        "initial_index_row_count": 1,
+        "source_sha256": "afdbc3492b85cc036a8839a8d0d2670b851bd4adf1684010f3421aa5de8eab88",
+        "initial_archive_sha256": "c5030917d9364339a9f55a990d95dbc98e2a2fb935a2a353c14956cb682d0411"
+      },
+      {
+        "key": "batch-03/资料 05.txt",
+        "resolution": "recopy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 1,
+        "source_sha256": "711f4edb76c0ff134857f510f706dfe85afd3d33b08e22b2b8dfd1edd5cca718",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-03/资料 06.txt",
+        "resolution": "recopy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 1,
+        "source_sha256": "a0e138dc6581f821b7e688eaf7345e49c7f949a2c111e09c16c4682371c2850a",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-03/资料 07.txt",
+        "resolution": "recopy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 1,
+        "source_sha256": "ba43c10ada7592bd7d197216555f1bf16ef614deb56510ab83e1d7f37e0255b3",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-03/资料 08.txt",
+        "resolution": "recopy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 1,
+        "source_sha256": "8f3e388c8b2f74308d2f9c2202988c88b361fc0b1f5b83a91c276963d75228ab",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-03/资料 09.txt",
+        "resolution": "recopy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 1,
+        "source_sha256": "007392ad677990a7a5f1abefa4a61ceaff13f76eb3c1c67e393ea87fe05463df",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-03/资料 10.txt",
+        "resolution": "recopy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 1,
+        "source_sha256": "5a9040a5e4d382c4788e3b1eb1f734c6de46123123a5fc1232a2bac0a71712f6",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/report.txt",
+        "resolution": "correct_index",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "db8f5e695ffa3657204baa831e2715441f17550bd0a7ae103eed28e310667308",
+        "initial_archive_sha256": "db8f5e695ffa3657204baa831e2715441f17550bd0a7ae103eed28e310667308"
+      },
+      {
+        "key": "batch-04/资料 02.txt",
+        "resolution": "correct_index",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "66cd09af80ba0ce3503a25a8d717adb389f35b6a1e2197d0eafd8b5c744fd9bc",
+        "initial_archive_sha256": "66cd09af80ba0ce3503a25a8d717adb389f35b6a1e2197d0eafd8b5c744fd9bc"
+      },
+      {
+        "key": "batch-04/资料 03.txt",
+        "resolution": "correct_index",
+        "initial_copy_state": "correct",
+        "initial_index_row_count": 1,
+        "source_sha256": "406128ac923f094e08ff46674cfbaaf6cf72292618736bc7461e9441f4d7eae5",
+        "initial_archive_sha256": "406128ac923f094e08ff46674cfbaaf6cf72292618736bc7461e9441f4d7eae5"
+      },
+      {
+        "key": "batch-04/资料 04.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "6b7ed85bddce5402970aa42636102bafa160371f1bc6f1daba1ff89229ad6ebd",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/资料 05.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "c0461248eccb1d18ecfa18d05c6b5c26d40a30e2e2c8c13195737e20e249a7c4",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/资料 06.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "dcbab1cb06076bcf7f329ed198e89da545378f9f4257eefd0c8d8cb3855dbd30",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/资料 07.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "ebafeae3766d166dbe5a24eeb28483dd836e829b416df36759159333c1eced3c",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/资料 08.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "8068db623dbde51bde2539bb2dd2e08450e80f61ac7bea1c740a99bb2fe5cfe0",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/资料 09.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "f19a12d3037df21b10b13648674fa831dac2b5073cb32fcf40d9fef3d8f1b05a",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-04/资料 10.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "b3eb258657f2935e3b8a4ab82b4e00659d8844b6253341b8a8e7b80b5dc6035b",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/report.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "9851897e310f1d0e778dd992c57924315324313a52d15f92fff03525333b2a2c",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 02.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "8ca8e13fcbaaaa0e01f259d5af7a683aee31e320f78000832ab2d23707961353",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 03.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "e81eacea4cc3745d91123b45618e761857cc1efbd5e495a7982e42c928789209",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 04.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "87e9db25efb01ea68e5d3fef4563934217fdabfd0f2cbae0497ba6e05581fcd7",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 05.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "6658bc15ca1a1babf39495604d05689a709fa0e9645490175193bace2ce0389e",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 06.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "6658bc15ca1a1babf39495604d05689a709fa0e9645490175193bace2ce0389e",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 07.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "3843e7278f9e50c642800ccdc584eb55e5d79b3ae9d062896407e7550d78cfa7",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 08.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "68c2c0beba035149938807c6172ebbfca58f6addc9e270fb95d8aa0cf73861ad",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 09.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "e4f0a3a53165ce16648355cbc566aaccc7afe97b17c66c24ff93266addf03dbf",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-05/资料 10.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "cda1d6ac9006ad0578e871d5b31a0e30467daac1d8a7eaa09f5a779f1243369c",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/report.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "bc26eb418b83f78e1634aeb7fe1f58b353db532d0f9408d3a8981af9ddb0672a",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 02.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "61b0d0e8ae25479c13f00c53f6f2e821ef874e2b6c0463fb4b4ac7e61c950825",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 03.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "63ea079d173cceaedb1ba7426e6c045825ba5ad9ccc71761e22673763fd439e0",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 04.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "a10ad2bcf255e43197fea9e02f8a6d36241416e6d42c687cebd7009958f22bea",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 05.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "e411ab5cbd6ef78978e6f7ef47740bd7e84c257cc977d3f5fc3d7960e159051f",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 06.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "95a8ff779841ddb767edbdff4486d80bab1e6298dc90ba7770ed37e40d864f22",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 07.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "31b143d96efd5d2b701c2c9fca8ab75f6b22c0daabb37ac860e185b6506d54f8",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/无后缀",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "24ef90ae66afe4c5526f5c165a7e18e119307a349b75445f4b4a04c998d7119d",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/资料 09.txt",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "54311a6e1c2c2bddd04bdcb435a8919d45e042748ae642725647ee8917f266db",
+        "initial_archive_sha256": null
+      },
+      {
+        "key": "batch-06/end.bin",
+        "resolution": "copy_missing",
+        "initial_copy_state": "missing",
+        "initial_index_row_count": 0,
+        "source_sha256": "94e6fd65d45fcc1e45cf47431722e7ad39435d076cae9f3ed1466d663891098f",
+        "initial_archive_sha256": null
+      }
+    ],
+    "final": {
+      "verified_count": 60,
+      "unique_keys": 60,
+      "archive_file_count": 60,
+      "complete": true,
+      "missing_keys": [],
+      "corrupt_keys": []
+    }
+  },
+  "protected_count": 91
+}

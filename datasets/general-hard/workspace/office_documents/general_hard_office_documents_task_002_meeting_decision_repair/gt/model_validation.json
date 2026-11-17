@@ -1,0 +1,278 @@
+{
+  "schema_version": "h002-model-validation/v1",
+  "status": "PASS",
+  "issue_count": 17,
+  "comparisons": [
+    {
+      "issue_id": "A01",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S007"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A02",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S012"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A03",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "E02",
+        "S017"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A04",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S022"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A05",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S027"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A06",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S032"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A07",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S037"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A08",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S042"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A09",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S047"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A10",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S052"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A11",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S057"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A12",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "E04"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A13",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "E03",
+        "S067"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A14",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S070",
+        "S072"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A15",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S075",
+        "S077"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A16",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S082"
+      ],
+      "proof_matches": true
+    },
+    {
+      "issue_id": "A17",
+      "fields": {
+        "status": true,
+        "owner_id": true,
+        "owner_role": true,
+        "due_date": true
+      },
+      "final_field_events": [
+        "S087"
+      ],
+      "proof_matches": true
+    }
+  ],
+  "audit": {
+    "accepted_meeting": [
+      "S007",
+      "S012",
+      "S017",
+      "S022",
+      "S027",
+      "S032",
+      "S037",
+      "S042",
+      "S047",
+      "S052",
+      "S057",
+      "S060",
+      "S062",
+      "S067",
+      "S070",
+      "S072",
+      "S075",
+      "S077",
+      "S082",
+      "S087"
+    ],
+    "accepted_corrections": [
+      "E01",
+      "E03",
+      "E04",
+      "E02"
+    ],
+    "rejected_corrections": [
+      {
+        "event_id": "E05",
+        "actual_role": "研发接口负责人",
+        "reason": "no_approval_authority"
+      },
+      {
+        "event_id": "E06",
+        "actual_role": "平台负责人",
+        "reason": "no_approval_authority"
+      }
+    ],
+    "ignored_after_cutoff": []
+  },
+  "model_sha256": "19b0244cd0d63c1f527e29be1e424fd116565c6a3ecc1261f5e9a910f6e5acf7",
+  "annotations_sha256": "8fd26bbd281134ee2b16f473e9018c156b48e7717a70212de00ab5e3f97d25ca",
+  "limit": "Separately declared final labels versus independent state fold; source annotations are author-labelled, not independently human-reviewed."
+}

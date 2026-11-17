@@ -1,0 +1,54 @@
+{
+  "schema_version": "h032-private-reference-v3-provenance/v1",
+  "at_utc": "2026-10-28T20:10:45.079536+00:00",
+  "source_truth_freeze_receipt_sha256": "db2f60cee1ee109013100e1e27cf29e53d84a7a759583eb33f73fc5cd868d8ab",
+  "source_GT8_sha256": {
+    "artifact_contract.json": "008046b9b56289cf8ba4375cdf99bc10d98d1c6a036e1adfffefbdb34b96b902",
+    "scoring_design.json": "11b32164ebbaddbc85c0db6b8f7e3e415108ac48acb686f7c092c5491ad61a6c",
+    "expected.json": "2c92282f35d010ce78f979341060338b3d43e9ce528bd1d0ecb9514fdfdd8acf",
+    "business_oracle.json": "871b7c27b7f8ba7dd33f39de657ae3ee0cb9ec4137b0ba385c82f58d09043720",
+    "reference_source_manifest.json": "7889e97bd1ab373a2273b70832cfe053b9452f11856db87efa3769416b28987c",
+    "evidence_requirements.json": "fe581408efba82883e36e8978ce7363df23af0abd366957460414b63aed1aedd",
+    "protected_sha256.json": "7060958f28427789d82dd5e69ed959c869a88ec3af72a8c76990bc612c17c605",
+    "source_review_reconciliation.json": "0c7deb5c586908eee5695333b97d6f26d8cc8246ad98d160483f4f3adc19c156"
+  },
+  "public_and_private_originals11_sha256": {
+    "claims.md": "517e03969ac6574c5d93a4c72643e3916470b21562082e76c19ff213a9de033b",
+    "delivery_contract.md": "f36892d117a767dd81d08e5ebb0263671ac96e39a9b69309888b642f2d55f534",
+    "metadata.csv": "2f28efd4a9d18dc7edd6405f1eede9f74364425364e77a6ae27113f09901866c",
+    "papers/AF_v1.pdf": "b5365f30279e3b3d33aa591ad270780d6dc2c90098e1c4508bf358b91c83be5e",
+    "papers/BL_v1.pdf": "5c3946338bbac68df927ae6e6fd8e477ef88378aa06e3d4e777c4eae086c4413",
+    "papers/BL_v2.pdf": "4ef773da0ef055b949434c09c323093993d7f298f814e45432167d627858bbe1",
+    "papers/LB_v1.pdf": "990960307a80a42f6cef0b5c9b929494ee925ead943671463516d2c2af2a7abe",
+    "papers/RP_v1.pdf": "20a608062a39927cc3622fcda35c48f9d4e8b282bacf7982f82edd97aba71956",
+    "papers/SL_v1.pdf": "706f640d4304c7ae872721abc652ab83331a123d72051d176f165d1bf8703a73",
+    "papers/ST_v1.pdf": "0ff55b3a203a33ed1ef318288d5401f3a2565045cf9f784aabf27373a10b613c",
+    "papers/WL_v1.pdf": "8802cd311bfff3abd4ae4ab7fbfd43d9c2127c3ab86ca4d648810a771234b17f"
+  },
+  "reference_outputs": [
+    {
+      "source": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/authoring/reference-proposed/v3/results/evidence_matrix.xlsx",
+      "private_relative_path": "reference/v3/results/evidence_matrix.xlsx",
+      "sha256": "518b81295d84ef59c1aceda47ce89921e249be0e1b1296696559bea226020a0d",
+      "byte_identical": true
+    },
+    {
+      "source": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/authoring/reference-proposed/v3/results/review.docx",
+      "private_relative_path": "reference/v3/results/review.docx",
+      "sha256": "3a87a1a9ff0b58559a5b8f76bb2fe4921ce8807c6b3ebddaf0e6c9a27f1127cc",
+      "byte_identical": true
+    },
+    {
+      "source": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/authoring/reference-proposed/v3/results/bibliography.json",
+      "private_relative_path": "reference/v3/results/bibliography.json",
+      "sha256": "758a5ac5eab3ba5f50aba5eb8ba7ea937645f0e930cb0701865e8b1586a0bf30",
+      "byte_identical": true
+    }
+  ],
+  "reference_author_context": "Nonblind model author; controlled-fiction reference example, not a human expert/real experiment",
+  "independent_native_review_freeze_sha256": "273969c5792983f8b5cf766517ef754e1c83c8f5198ebad56e41f70cd0408824",
+  "reference_v3_freeze_sha256": "4be4fd92f4f84528d20823cded3f2bb8966f009265ffe4f5795234515317a1e4",
+  "role": "Private author example and review aid only. Source-first originals/expected/oracle/spec remain scientific truth. The rule does not read this reference as an answer oracle.",
+  "label_policy": "Different justified fact/proof/conjunction interpretations remain acceptable; reference label distribution is not a whitelist.",
+  "reference_oracle_or_original_sources_changed": false
+}

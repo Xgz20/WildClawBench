@@ -1,0 +1,14 @@
+{
+  "schema": "h059-runtime-contract/v1",
+  "libraries": {
+    "python-docx": "1.2.0",
+    "openpyxl": "3.1.5",
+    "pypdf": "6.10.0"
+  },
+  "preinstalled_only": true,
+  "native": "Word actual locked Office PDF; Excel cleared caches actual Office reopen; static literal rates accepted, formulas not required",
+  "sparse_parser": "pinned openpyxl sparse stored cells, no max_row3000/column100 capability cutoff; formatting-only far cells do not lose candidate score",
+  "semantics": "literal graph/date/count/unit/rate/quote bindings objective; direct claim support and editorial usefulness remain Judge",
+  "candidate_errors": "missing/corrupt/active or outside public byte-limit candidate files reduce related opportunities; malformed candidate JSON fields are checked, not trusted",
+  "evaluation_errors": "missing/drifted GT or dependency/runtime/font/Worker and trusted operation timeout are typed errors, never ability zero"
+}

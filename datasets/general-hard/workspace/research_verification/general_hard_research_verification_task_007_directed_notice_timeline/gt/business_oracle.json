@@ -1,0 +1,1337 @@
+{
+  "schema_version": "h033-open-notice-business-oracle/v1",
+  "profile": "general_hard_research_verification_task_007_directed_notice_timeline synthetic undergraduate profile in user_profile.md",
+  "window": {
+    "timezone": "Asia/Shanghai",
+    "start_inclusive": "2026-09-01T00:00:00+08:00",
+    "end_exclusive": "2026-10-01T00:00:00+08:00",
+    "basis": "通知页面显示的网页发布日期；日期精度和原文同时保留"
+  },
+  "nonexhaustive_action_nodes": [
+    {
+      "event_id": "T01",
+      "label_zh": "学院推荐名单公示",
+      "actor": "异议人/学院",
+      "start": "2026-09-05",
+      "end": "2026-09-07",
+      "precision": "date",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F04",
+        "B-F09"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S01"
+      ],
+      "applicability_condition_zh": "是否名单有关及是否有异议均未知",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T02",
+      "label_zh": "2023级补退选",
+      "actor": "学生",
+      "start": "2026-09-07T09:00",
+      "end": "2026-09-08T08:00",
+      "precision": "minute",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F20",
+        "B-F23"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "明确采用2023级作者假设，且有选课需求",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T03",
+      "label_zh": "课程替代学生提交",
+      "actor": "学生",
+      "start": null,
+      "end": "2026-09-09T18:00",
+      "precision": "minute",
+      "date_role": "deadline",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F22",
+        "B-F24"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "具备规定课程号/补修重修等需求",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T04",
+      "label_zh": "校级推荐名单公示",
+      "actor": "异议人/学校",
+      "start": "2026-09-09T12:00",
+      "end": "2026-09-16T12:00",
+      "precision": "minute",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "B-F10"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S08"
+      ],
+      "applicability_condition_zh": "与学院公示为不同阶段",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T05",
+      "label_zh": "共同补退选",
+      "actor": "除2026级外规定对象",
+      "start": "2026-09-10T09:00",
+      "end": "2026-09-14T08:00",
+      "precision": "minute",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F21",
+        "B-F23"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "2023级属于年级范围，具体需求未知",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T06",
+      "label_zh": "课程替代学院审批",
+      "actor": "学院",
+      "start": null,
+      "end": "2026-09-11T18:00",
+      "precision": "minute",
+      "date_role": "deadline",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F22",
+        "B-F24"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "存在学生申请",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T07",
+      "label_zh": "拟停开课程单位反馈",
+      "actor": "教学单位",
+      "start": null,
+      "end": "2026-09-15T18:00",
+      "precision": "minute",
+      "date_role": "deadline",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "B-F25"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S09"
+      ],
+      "applicability_condition_zh": "单位流程，非学生补选截止",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T08",
+      "label_zh": "毕业研究生生源录入",
+      "actor": "毕业研究生",
+      "start": null,
+      "end": "2026-09-18",
+      "precision": "date",
+      "date_role": "deadline",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F19",
+        "B-F30"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "本科画像不适用",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T09",
+      "label_zh": "本科电子注册",
+      "actor": "符合年级且缴费的在籍本科生",
+      "start": "2026-09-20T12:00",
+      "end": "2026-09-22T18:00",
+      "precision": "minute",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F25",
+        "A-F26",
+        "A-F27",
+        "B-F27"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "缴费和注册状态未知",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T10",
+      "label_zh": "推免报名功能开放",
+      "actor": "系统/合格申请人",
+      "start": "2026-09-21T09:00",
+      "end": null,
+      "precision": "minute",
+      "date_role": "function_opens",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F08",
+        "B-F18"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "须推免资格等条件",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T11",
+      "label_zh": "学院推免材料接收截止",
+      "actor": "申请人/学院",
+      "start": null,
+      "end": "2026-09-21T12:00",
+      "precision": "minute",
+      "date_role": "deadline",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F12",
+        "B-F13"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S02"
+      ],
+      "applicability_condition_zh": "符合申请条件；电子/纸件要求均保留",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T12",
+      "label_zh": "复试通知发送及确认功能开放",
+      "actor": "系统/招生单位/申请人",
+      "start": "2026-09-22T08:00",
+      "end": null,
+      "precision": "minute",
+      "date_role": "function_opens",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F09",
+        "B-F18"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "个人确认期限依实际通知，未给统一小时数",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T13",
+      "label_zh": "第一批法律（法学）复试计划",
+      "actor": "第一批该专业申请考生",
+      "start": "2026-09-23T15:10",
+      "end": "2026-09-23T18:00",
+      "precision": "minute",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F15",
+        "A-F16",
+        "B-F16"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S03"
+      ],
+      "applicability_condition_zh": "个人第一批名单归属/群内调整未知",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T14",
+      "label_zh": "既往缓考学生选课统计报送",
+      "actor": "学院",
+      "start": null,
+      "end": "2026-09-23T18:00",
+      "precision": "minute",
+      "date_role": "deadline",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "B-F29"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "针对既往已办缓考但未参加补缓考；学院报送",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T15",
+      "label_zh": "发送待录取通知功能开放",
+      "actor": "系统/招生单位",
+      "start": "2026-09-24T08:00",
+      "end": null,
+      "precision": "minute",
+      "date_role": "function_opens",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "B-F18"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "不同于申请人确认开放",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T16",
+      "label_zh": "考生确认待录取功能开放",
+      "actor": "系统/申请人",
+      "start": "2026-09-24T14:00",
+      "end": null,
+      "precision": "minute",
+      "date_role": "function_opens",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F10",
+        "B-F18"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "个人实际确认期限未知",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T17",
+      "label_zh": "统考网上预报名",
+      "actor": "符合条件统考考生",
+      "start": "2026-10-09",
+      "end": "2026-10-12",
+      "precision": "date+daily_09:00-22:00",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F17",
+        "B-F20"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "已录取推免者不得再报名；未录取者另核资格",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T18",
+      "label_zh": "统考网上报名",
+      "actor": "符合条件统考考生",
+      "start": "2026-10-15",
+      "end": "2026-10-24",
+      "precision": "date+daily_09:00-22:00",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F17",
+        "B-F20"
+      ],
+      "supplemental_citation_ids": [],
+      "applicability_condition_zh": "与已录取推免条件互斥",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T19",
+      "label_zh": "关闭推免注册/支付/报名",
+      "actor": "系统",
+      "start": null,
+      "end": "2026-10-18",
+      "precision": "date",
+      "date_role": "function_closes",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F11",
+        "B-F19"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S07"
+      ],
+      "applicability_condition_zh": "无具体闭站小时，不替代学院材料截止",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T20",
+      "label_zh": "校方发送待录取通知期间",
+      "actor": "招生单位",
+      "start": "2026-09-24T08:00",
+      "end": "2026-10-19",
+      "precision": "mixed_minute_start_date_end",
+      "date_role": "action_window",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "B-F19"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S07"
+      ],
+      "applicability_condition_zh": "不替代考生个人确认期限",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T21",
+      "label_zh": "关闭推免通知相关功能/服务系统",
+      "actor": "系统",
+      "start": null,
+      "end": "2026-10-20",
+      "precision": "date",
+      "date_role": "function_closes",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F11",
+        "B-F19"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S07"
+      ],
+      "applicability_condition_zh": "不擅补23:59；来源已述功能/系统关闭",
+      "completion_status": "unknown",
+      "mandatory": false
+    },
+    {
+      "event_id": "T22",
+      "label_zh": "选课期间每日备份暂关",
+      "actor": "选课系统",
+      "start": "17:00",
+      "end": "18:00",
+      "precision": "daily_recurrence",
+      "date_role": "system_unavailable_recurrence",
+      "task_calendar_timezone": "Asia/Shanghai",
+      "timezone_explicit_in_source": false,
+      "evidence_fact_ids": [
+        "A-F23",
+        "B-F23"
+      ],
+      "supplemental_citation_ids": [
+        "TR-S04"
+      ],
+      "applicability_condition_zh": "只在选课期间，不外推其他系统",
+      "completion_status": "unknown",
+      "mandatory": false
+    }
+  ],
+  "matter_graph": {
+    "nodes": [
+      {
+        "id": "notice-jwc-12352",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12352.htm"
+      },
+      {
+        "id": "notice-jwc-12360",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12360.htm"
+      },
+      {
+        "id": "notice-jwc-12364",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12364.htm"
+      },
+      {
+        "id": "notice-jwc-12386",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12386.htm"
+      },
+      {
+        "id": "notice-jwc-12394",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12394.htm"
+      },
+      {
+        "id": "notice-jwc-12398",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12398.htm"
+      },
+      {
+        "id": "notice-jwc-12405",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12405.htm"
+      },
+      {
+        "id": "notice-jwc-12411",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12411.htm"
+      },
+      {
+        "id": "notice-jwc-12419",
+        "type": "URL_carrier",
+        "url": "https://jwc.hbu.cn/info/1108/12419.htm"
+      },
+      {
+        "id": "notice-law-19945",
+        "type": "URL_carrier",
+        "url": "http://law.hbu.cn/jxgz/19945.jhtml"
+      },
+      {
+        "id": "notice-law-19962",
+        "type": "URL_carrier",
+        "url": "http://law.hbu.cn/jxgz/19962.jhtml"
+      },
+      {
+        "id": "notice-law-20003",
+        "type": "URL_carrier",
+        "url": "http://law.hbu.cn/tzgg/20003.jhtml"
+      },
+      {
+        "id": "notice-law-20037",
+        "type": "URL_carrier",
+        "url": "http://law.hbu.cn/tzgg/20037.jhtml"
+      },
+      {
+        "id": "notice-law-20046",
+        "type": "URL_carrier",
+        "url": "http://law.hbu.cn/tzgg/20046.jhtml"
+      },
+      {
+        "id": "notice-yjsy-4427",
+        "type": "URL_carrier",
+        "url": "https://yjsy.hbu.edu.cn/info/1104/4427.htm"
+      },
+      {
+        "id": "notice-yjsy-4428",
+        "type": "URL_carrier",
+        "url": "https://yjsy.hbu.edu.cn/info/1159/4428.htm"
+      },
+      {
+        "id": "notice-yjsy-4430",
+        "type": "URL_carrier",
+        "url": "https://yjsy.hbu.edu.cn/info/1159/4430.htm"
+      },
+      {
+        "id": "notice-yjsy-4439",
+        "type": "URL_carrier",
+        "url": "https://yjsy.hbu.edu.cn/info/1102/4439.htm"
+      },
+      {
+        "id": "notice-yjsy-4440",
+        "type": "URL_carrier",
+        "url": "https://yjsy.hbu.edu.cn/info/1159/4440.htm"
+      },
+      {
+        "id": "DOC-JWC-12352",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12360",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12364",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12386",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12394",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12398",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12405",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12411",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-JWC-12419",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-LAW-19945",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-LAW-19962",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-LAW-20003",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-LAW-20037",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-LAW-20046",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-YJSY-4427-4428",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-YJSY-4430",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "DOC-YJSY-4439-4440",
+        "type": "observed_document_group"
+      },
+      {
+        "id": "RECOMMEND-QUALIFICATION-2027",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "RECEIVE-RECOMMENDED-MASTER-2027",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "NATIONAL-EXAM-2027",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "COURSE-CHANGE-FALL-2026",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "REGISTRATION-FALL-2026",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "DEFERRED-COURSE-FALL-2026",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "GRADUATE-SOURCE-PROFILE-2027",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "AUG-EXAM-CONTEXT",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "OCT-GRADUATION-IMAGE-CONTEXT",
+        "type": "nonmandatory_suggested_matter"
+      },
+      {
+        "id": "paid_tuition_unknown",
+        "type": "unknown_personal_state"
+      },
+      {
+        "id": "student_course_substitution",
+        "type": "conditional_student_action"
+      },
+      {
+        "id": "college_substitution_approval",
+        "type": "conditional_college_action"
+      },
+      {
+        "id": "admitted_by_recommendation_unknown",
+        "type": "unknown_personal_state"
+      },
+      {
+        "id": "synthetic_undergraduate_profile",
+        "type": "explicit_author_assumption"
+      },
+      {
+        "id": "attachment_points_revision_2025_07_07",
+        "type": "observed_attachment_version"
+      },
+      {
+        "id": "attachment_competition_2024",
+        "type": "observed_attachment_version"
+      }
+    ],
+    "nodes_zh": "carrier_id为URL载体，document_id为本样本同一文书归并，matter_id为可讨论业务范围；三种数量不可互换。",
+    "edges": [
+      {
+        "from": "notice-yjsy-4427",
+        "to": "notice-yjsy-4428",
+        "relation": "same_document_parallel_carrier",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同日正文及附件URL相同；首发/转载顺序未立，不能作为两次独立业务确认。",
+        "local_comparison": {
+          "from": "notice-yjsy-4427",
+          "to": "notice-yjsy-4428",
+          "relation": "same_document_parallel_category_carriers",
+          "raw_HTML_equal": false,
+          "same_main_body_text": true,
+          "main_body_text_sha256": [
+            "3b583dbec5cd2047c3e62473e11bfef330d74644dc6ef93e181195deffc6ba67",
+            "3b583dbec5cd2047c3e62473e11bfef330d74644dc6ef93e181195deffc6ba67"
+          ],
+          "same_attachment_URLs": true,
+          "same_displayed_date": true,
+          "first_original_or_repost_order": "unresolved",
+          "independent_confirmation_count": 1
+        }
+      },
+      {
+        "from": "notice-yjsy-4439",
+        "to": "notice-yjsy-4440",
+        "relation": "same_document_parallel_carrier",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同日正文及附件URL相同；首发/转载顺序未立，不能作为两次独立业务确认。",
+        "local_comparison": {
+          "from": "notice-yjsy-4439",
+          "to": "notice-yjsy-4440",
+          "relation": "same_document_parallel_category_carriers",
+          "raw_HTML_equal": false,
+          "same_main_body_text": true,
+          "main_body_text_sha256": [
+            "56797a3643db4ef5d92e4cf4bb331da589c98e6b2691ccbfdb52a1303c9b081d",
+            "56797a3643db4ef5d92e4cf4bb331da589c98e6b2691ccbfdb52a1303c9b081d"
+          ],
+          "same_attachment_URLs": true,
+          "same_displayed_date": true,
+          "first_original_or_repost_order": "unresolved",
+          "independent_confirmation_count": 1
+        }
+      },
+      {
+        "from": "notice-law-19945",
+        "to": "notice-law-19962",
+        "relation": "rules_to_college_selection_publicity",
+        "evidence_fact_ids": [
+          "A-F01",
+          "A-F04",
+          "B-F06",
+          "B-F09"
+        ],
+        "qualified_interpretation_zh": "规则与公示是不同文书/阶段。"
+      },
+      {
+        "from": "notice-law-19962",
+        "to": "notice-jwc-12364",
+        "relation": "college_recommendation_to_university_publicity",
+        "evidence_fact_ids": [
+          "B-F09",
+          "B-F10"
+        ],
+        "qualified_interpretation_zh": "校级正文明确学院遴选后校审议；学校公示不构成学院公示延期。"
+      },
+      {
+        "from": "RECOMMEND-QUALIFICATION-2027",
+        "to": "RECEIVE-RECOMMENDED-MASTER-2027",
+        "relation": "qualification_prerequisite",
+        "evidence_fact_ids": [
+          "A-F06",
+          "B-F11"
+        ],
+        "qualified_interpretation_zh": "只有在就读学校取得并备案推免资格才进入申请条件；合成学生资格未知。"
+      },
+      {
+        "from": "notice-yjsy-4427",
+        "to": "notice-law-20003",
+        "relation": "school_policy_to_college_implementation",
+        "evidence_fact_ids": [
+          "A-F07",
+          "A-F12",
+          "B-F12",
+          "B-F13"
+        ],
+        "qualified_interpretation_zh": "学院细化材料/截止，非同正文转载；9月21日09:00系统开放与12:00收件不冲突。"
+      },
+      {
+        "from": "notice-law-20003",
+        "to": "notice-law-20046",
+        "relation": "implementation_to_first_batch_plan",
+        "evidence_fact_ids": [
+          "A-F15",
+          "A-F16",
+          "B-F16",
+          "B-F17"
+        ],
+        "qualified_interpretation_zh": "后续第一批日程；是否入围需独立个人名单，不是更正/延期。"
+      },
+      {
+        "from": "notice-jwc-12360",
+        "to": "notice-jwc-12386",
+        "relation": "course_changes_to_proposed_closure_feedback",
+        "evidence_fact_ids": [
+          "B-F23",
+          "B-F25"
+        ],
+        "qualified_interpretation_zh": "9月15日为教学单位反馈，不形成学生补选新截止。"
+      },
+      {
+        "from": "notice-jwc-12386",
+        "to": "notice-jwc-12394",
+        "relation": "proposed_closure_to_result",
+        "evidence_fact_ids": [
+          "B-F25",
+          "B-F26"
+        ],
+        "qualified_interpretation_zh": "后续停开结果；未知具体课程/个人影响，不等于补选延期。"
+      },
+      {
+        "from": "paid_tuition_unknown",
+        "to": "notice-jwc-12398",
+        "relation": "explicit_prerequisite",
+        "evidence_fact_ids": [
+          "A-F26",
+          "B-F27"
+        ],
+        "qualified_interpretation_zh": "已缴学费是条件，未验证完成。"
+      },
+      {
+        "from": "notice-jwc-12398",
+        "to": "notice-jwc-12411",
+        "relation": "registration_to_list_and_stamp_followup",
+        "evidence_fact_ids": [
+          "A-F27",
+          "A-F28",
+          "A-F29",
+          "B-F28"
+        ],
+        "qualified_interpretation_zh": "注册结束后按名单盖章；补注册另待通知，不自动延期。"
+      },
+      {
+        "from": "student_course_substitution",
+        "to": "college_substitution_approval",
+        "relation": "different_actor_deadlines",
+        "evidence_fact_ids": [
+          "A-F22",
+          "B-F24"
+        ],
+        "qualified_interpretation_zh": "学生9月9日18:00、学院9月11日18:00，各自主体截止不互换。"
+      },
+      {
+        "from": "admitted_by_recommendation_unknown",
+        "to": "NATIONAL-EXAM-2027",
+        "relation": "conditional_exclusion",
+        "evidence_fact_ids": [
+          "A-F18",
+          "B-F21"
+        ],
+        "qualified_interpretation_zh": "只有已录取推免状态触发不能再报统考；资格和录取不是同一条件。"
+      },
+      {
+        "from": "GRADUATE-SOURCE-PROFILE-2027",
+        "to": "synthetic_undergraduate_profile",
+        "relation": "excluded_due_to_degree_level",
+        "evidence_fact_ids": [
+          "A-F19",
+          "B-F30"
+        ],
+        "qualified_interpretation_zh": "同为2027届不足以跨学历适用。"
+      },
+      {
+        "from": "notice-law-19945",
+        "to": "attachment_points_revision_2025_07_07",
+        "relation": "references_historical_attachment",
+        "evidence_fact_ids": [
+          "A-F30",
+          "B-F07"
+        ],
+        "qualified_interpretation_zh": "附件修订日与网页发布/正文落款分别保留，无普遍附件优先规则。"
+      },
+      {
+        "from": "notice-law-19945",
+        "to": "attachment_competition_2024",
+        "relation": "references_historical_attachment",
+        "evidence_fact_ids": [
+          "B-F33"
+        ],
+        "qualified_interpretation_zh": "2024版/校团字〔2024〕1号作为正文链接历史载体，不作九月独立通知。"
+      },
+      {
+        "from": "notice-jwc-12352",
+        "to": "DOC-JWC-12352",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12360",
+        "to": "DOC-JWC-12360",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12364",
+        "to": "DOC-JWC-12364",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12386",
+        "to": "DOC-JWC-12386",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12394",
+        "to": "DOC-JWC-12394",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12398",
+        "to": "DOC-JWC-12398",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12405",
+        "to": "DOC-JWC-12405",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12411",
+        "to": "DOC-JWC-12411",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-jwc-12419",
+        "to": "DOC-JWC-12419",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-law-19945",
+        "to": "DOC-LAW-19945",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-law-19962",
+        "to": "DOC-LAW-19962",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-law-20003",
+        "to": "DOC-LAW-20003",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-law-20037",
+        "to": "DOC-LAW-20037",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-law-20046",
+        "to": "DOC-LAW-20046",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-yjsy-4427",
+        "to": "DOC-YJSY-4427-4428",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-yjsy-4428",
+        "to": "DOC-YJSY-4427-4428",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-yjsy-4430",
+        "to": "DOC-YJSY-4430",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-yjsy-4439",
+        "to": "DOC-YJSY-4439-4440",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "notice-yjsy-4440",
+        "to": "DOC-YJSY-4439-4440",
+        "relation": "carrier_of_document",
+        "evidence_fact_ids": [],
+        "qualified_interpretation_zh": "同一URL载体归属文书组；不增加独立业务确认。"
+      },
+      {
+        "from": "RECOMMEND-QUALIFICATION-2027",
+        "to": "DOC-JWC-12364",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F01",
+          "A-F02",
+          "A-F03",
+          "A-F04",
+          "A-F05",
+          "A-F30",
+          "A-F32",
+          "B-F05",
+          "B-F06",
+          "B-F07",
+          "B-F08",
+          "B-F09",
+          "B-F10",
+          "B-F33"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "RECOMMEND-QUALIFICATION-2027",
+        "to": "DOC-LAW-19945",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F01",
+          "A-F02",
+          "A-F03",
+          "A-F04",
+          "A-F05",
+          "A-F30",
+          "A-F32",
+          "B-F05",
+          "B-F06",
+          "B-F07",
+          "B-F08",
+          "B-F09",
+          "B-F10",
+          "B-F33"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "RECOMMEND-QUALIFICATION-2027",
+        "to": "DOC-LAW-19962",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F01",
+          "A-F02",
+          "A-F03",
+          "A-F04",
+          "A-F05",
+          "A-F30",
+          "A-F32",
+          "B-F05",
+          "B-F06",
+          "B-F07",
+          "B-F08",
+          "B-F09",
+          "B-F10",
+          "B-F33"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "RECEIVE-RECOMMENDED-MASTER-2027",
+        "to": "DOC-LAW-20003",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F06",
+          "A-F07",
+          "A-F08",
+          "A-F09",
+          "A-F10",
+          "A-F11",
+          "A-F12",
+          "A-F13",
+          "A-F14",
+          "A-F15",
+          "A-F16",
+          "A-F31",
+          "B-F11",
+          "B-F12",
+          "B-F13",
+          "B-F14",
+          "B-F15",
+          "B-F16",
+          "B-F17",
+          "B-F18",
+          "B-F19"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "RECEIVE-RECOMMENDED-MASTER-2027",
+        "to": "DOC-LAW-20046",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F06",
+          "A-F07",
+          "A-F08",
+          "A-F09",
+          "A-F10",
+          "A-F11",
+          "A-F12",
+          "A-F13",
+          "A-F14",
+          "A-F15",
+          "A-F16",
+          "A-F31",
+          "B-F11",
+          "B-F12",
+          "B-F13",
+          "B-F14",
+          "B-F15",
+          "B-F16",
+          "B-F17",
+          "B-F18",
+          "B-F19"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "RECEIVE-RECOMMENDED-MASTER-2027",
+        "to": "DOC-YJSY-4427-4428",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F06",
+          "A-F07",
+          "A-F08",
+          "A-F09",
+          "A-F10",
+          "A-F11",
+          "A-F12",
+          "A-F13",
+          "A-F14",
+          "A-F15",
+          "A-F16",
+          "A-F31",
+          "B-F11",
+          "B-F12",
+          "B-F13",
+          "B-F14",
+          "B-F15",
+          "B-F16",
+          "B-F17",
+          "B-F18",
+          "B-F19"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "NATIONAL-EXAM-2027",
+        "to": "DOC-LAW-20037",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F17",
+          "A-F18",
+          "B-F20",
+          "B-F21"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "NATIONAL-EXAM-2027",
+        "to": "DOC-YJSY-4439-4440",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F17",
+          "A-F18",
+          "B-F20",
+          "B-F21"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "COURSE-CHANGE-FALL-2026",
+        "to": "DOC-JWC-12360",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F20",
+          "A-F21",
+          "A-F22",
+          "A-F23",
+          "A-F24",
+          "B-F22",
+          "B-F23",
+          "B-F24",
+          "B-F25",
+          "B-F26"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "COURSE-CHANGE-FALL-2026",
+        "to": "DOC-JWC-12386",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F20",
+          "A-F21",
+          "A-F22",
+          "A-F23",
+          "A-F24",
+          "B-F22",
+          "B-F23",
+          "B-F24",
+          "B-F25",
+          "B-F26"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "COURSE-CHANGE-FALL-2026",
+        "to": "DOC-JWC-12394",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F20",
+          "A-F21",
+          "A-F22",
+          "A-F23",
+          "A-F24",
+          "B-F22",
+          "B-F23",
+          "B-F24",
+          "B-F25",
+          "B-F26"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "REGISTRATION-FALL-2026",
+        "to": "DOC-JWC-12398",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F25",
+          "A-F26",
+          "A-F27",
+          "A-F28",
+          "A-F29",
+          "B-F27",
+          "B-F28"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "REGISTRATION-FALL-2026",
+        "to": "DOC-JWC-12411",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F25",
+          "A-F26",
+          "A-F27",
+          "A-F28",
+          "A-F29",
+          "B-F27",
+          "B-F28"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "DEFERRED-COURSE-FALL-2026",
+        "to": "DOC-JWC-12405",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "B-F29"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "GRADUATE-SOURCE-PROFILE-2027",
+        "to": "DOC-YJSY-4430",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "A-F19",
+          "B-F30"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "AUG-EXAM-CONTEXT",
+        "to": "DOC-JWC-12352",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "B-F31"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      },
+      {
+        "from": "OCT-GRADUATION-IMAGE-CONTEXT",
+        "to": "DOC-JWC-12419",
+        "relation": "suggested_matter_includes_document",
+        "evidence_fact_ids": [
+          "B-F32"
+        ],
+        "qualified_interpretation_zh": "非穷尽范围分组，非固定必答集合。"
+      }
+    ],
+    "source_identity_facts": [
+      "B-F01",
+      "B-F02",
+      "B-F03",
+      "B-F04"
+    ],
+    "genuine_same_actor_same_field_contradictions_verified": [],
+    "explicit_correction_or_extension_versions_verified": [],
+    "absence_globally_proven": false,
+    "sample_only_zh": "本样本未证更正、延期或同一主体同一字段冲突；不代表全站不存在。"
+  },
+  "domain_boundaries": [
+    "carrier/document-version/matter are different identities",
+    "web publication/signoff/attachment version/action/source access dates keep roles",
+    "different actor or action deadlines are not automatically extension/conflict",
+    "personal status remains unknown",
+    "not finding a correction is not whole-site absence",
+    "no fixed matter or citation count"
+  ],
+  "supported_negative_review": {
+    "fact_id": "A-F07",
+    "scope_zh": "仅冻结的学校接收办法正文；本轮通读其相关材料、流程与时间段，未定位统一各学院材料精确截止。不能证明全站、未取附件或历史版本都没有此规定。",
+    "body_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/source-review-a/sources/notice-yjsy-tm-4427/body.bin",
+    "body_sha256": "27dd97e05344012758deba445354a358d59a6901824361282b62c763fed6f6cb",
+    "locator": {
+      "type": "actual_HTML_subtree",
+      "xpath": "/html/body/div[5]/div[2]/form/div/div[2]"
+    },
+    "strict_visible_main_text_sha256": "3b583dbec5cd2047c3e62473e11bfef330d74644dc6ef93e181195deffc6ba67",
+    "material_paragraph_locator": "/html/body/div[5]/div[2]/form/div/div[2]/div/div/p[29]",
+    "negative_claim_is_scoped_model_reading": true,
+    "not_independent_fetch": true
+  },
+  "source_truth_precedes_reference": true,
+  "fixed_answer_roster": false,
+  "Judge_required_for_open_factual_and_selection_semantics": true
+}

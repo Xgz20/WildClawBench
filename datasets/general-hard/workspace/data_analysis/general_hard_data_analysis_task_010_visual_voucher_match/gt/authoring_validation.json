@@ -1,0 +1,748 @@
+{
+  "schema_version": "h026-authoring-validation/v2",
+  "status": "AUTHOR_SOURCE_RULES_REFERENCE_AND_IMAGE_SDK_VERIFIED",
+  "controls": {
+    "status": "PASS",
+    "count": 47,
+    "cases": [
+      {
+        "name": "reference",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.226,
+        "kind": "positive"
+      },
+      {
+        "name": "formula_with_forged_cache_recomputed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.093,
+        "kind": "positive"
+      },
+      {
+        "name": "complete_native_static",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.108,
+        "kind": "positive"
+      },
+      {
+        "name": "chinese_reordered_shifted_sheets",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.11,
+        "kind": "positive"
+      },
+      {
+        "name": "chinese_status_action_values",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.058,
+        "kind": "positive"
+      },
+      {
+        "name": "numeric_json_and_reordered_items",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.062,
+        "kind": "positive"
+      },
+      {
+        "name": "normalized_equivalent_boxes",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.067,
+        "kind": "positive"
+      },
+      {
+        "name": "void_group_null_equivalent",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.08,
+        "kind": "positive"
+      },
+      {
+        "name": "same_key_excluded_audit_citations",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.069,
+        "kind": "positive"
+      },
+      {
+        "name": "pending_type_alias",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.063,
+        "kind": "positive"
+      },
+      {
+        "name": "semantic_only_observation_requires_judge",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.076,
+        "kind": "semantic_boundary"
+      },
+      {
+        "name": "reference_removed_from_private_gt",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.063,
+        "kind": "positive"
+      },
+      {
+        "name": "void_priority_ignored",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.979166666667,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.957291666667
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.076,
+        "kind": "negative"
+      },
+      {
+        "name": "general_review_misread_as_correction",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.979166666667,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.957291666667
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.079,
+        "kind": "negative"
+      },
+      {
+        "name": "crossed_out_local_review_approved",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.979166666667,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.957291666667
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.151,
+        "kind": "negative"
+      },
+      {
+        "name": "O_normalized_to_zero",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.979166666667,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.957291666667
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.068,
+        "kind": "negative"
+      },
+      {
+        "name": "counterparty_transposition_guessed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.980555555556,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.958055555556
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.076,
+        "kind": "negative"
+      },
+      {
+        "name": "unmatched_B_guessed_as_8",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.980555555556,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.958055555556
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.059,
+        "kind": "negative"
+      },
+      {
+        "name": "pending_null_replaced_by_zero",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.980555555556,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.958055555556
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.072,
+        "kind": "negative"
+      },
+      {
+        "name": "confirmed_real_zero_replaced_by_null",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.988888888889,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.962638888889
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.07,
+        "kind": "negative"
+      },
+      {
+        "name": "lower_entry_id_chosen_over_posted_time",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.988888888889,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.962638888889
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.071,
+        "kind": "negative"
+      },
+      {
+        "name": "closest_amount_chosen_over_first_posted",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.988888888889,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.962638888889
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.071,
+        "kind": "negative"
+      },
+      {
+        "name": "draft_used_as_first_posted",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.988888888889,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.962638888889
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.079,
+        "kind": "negative"
+      },
+      {
+        "name": "excluded_currency_adjusted",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.980555555556,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.958055555556
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.069,
+        "kind": "negative"
+      },
+      {
+        "name": "summary_pending_book_claimed_confirmed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.996428571429,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.966785714286
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.075,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_raw_ledger",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 1.0,
+          "overall_score": 0.9625
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.077,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_create_proposal",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.861607142857,
+          "boundary_cases": 0.75,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 1.0,
+          "overall_score": 0.823883928571
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.071,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_unbooked_pending",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.928125,
+          "boundary_cases": 0.75,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 1.0,
+          "overall_score": 0.86046875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.064,
+        "kind": "negative"
+      },
+      {
+        "name": "conflicting_kind_type",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.9875,
+          "boundary_cases": 0.75,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 1.0,
+          "overall_score": 0.893125
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.115,
+        "kind": "negative"
+      },
+      {
+        "name": "applied_true_significant_penalty",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.40625
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.077,
+        "kind": "negative"
+      },
+      {
+        "name": "approval_claimed_completed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.40625
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.065,
+        "kind": "negative"
+      },
+      {
+        "name": "full_page_box_not_evidence_binding",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 0.930555555556,
+          "overall_score": 0.959027777778
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.073,
+        "kind": "negative"
+      },
+      {
+        "name": "wrong_source_sha",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 0.916666666667,
+          "overall_score": 0.958333333333
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.078,
+        "kind": "negative"
+      },
+      {
+        "name": "malformed_workbook",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.275,
+          "boundary_cases": 0.125,
+          "delivery_integrity": 0.5,
+          "evidence_binding": 1.0,
+          "overall_score": 0.3075
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.062,
+        "kind": "negative"
+      },
+      {
+        "name": "malformed_proposal_json",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.725,
+          "boundary_cases": 0.25,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 1.0,
+          "overall_score": 0.62375
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.072,
+        "kind": "negative"
+      },
+      {
+        "name": "protected_input_changed_all_zero",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.0,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.05,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_gt_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_gt_is_error/workspace/gt/expected.json'",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_gt_is_error/workspace/gt/grader.py\", line 15, in grade\n    if sha(gt/name)!=want:raise ValueError('H026 private scoring drift '+name)\n       ^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_gt_is_error/workspace/gt/grader.py\", line 9, in <lambda>\n    sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()\n                                ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py\", line 1019, in read_bytes\n    with self.open(mode='rb') as f:\n         ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py\", line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_gt_is_error/workspace/gt/expected.json'\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.025,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "helper_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "ValueError",
+          "message": "H026 private scoring drift voucher_io.py",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/helper_drift_is_error/workspace/gt/grader.py\", line 15, in grade\n    if sha(gt/name)!=want:raise ValueError('H026 private scoring drift '+name)\n                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nValueError: H026 private scoring drift voucher_io.py\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.021,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "missing_office_helper_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_office_helper_is_error/workspace/gt/office_runtime.py'",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_office_helper_is_error/workspace/gt/grader.py\", line 15, in grade\n    if sha(gt/name)!=want:raise ValueError('H026 private scoring drift '+name)\n       ^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_office_helper_is_error/workspace/gt/grader.py\", line 9, in <lambda>\n    sha=lambda p:hashlib.sha256(Path(p).read_bytes()).hexdigest()\n                                ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py\", line 1019, in read_bytes\n    with self.open(mode='rb') as f:\n         ^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/pathlib.py\", line 1013, in open\n    return io.open(self, mode, buffering, encoding, errors, newline)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_office_helper_is_error/workspace/gt/office_runtime.py'\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.021,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "missing_managed_lock_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "RuntimeError",
+          "message": "H026 missing managed runtime GENERAL_E2E_OFFICE_LOCK",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_managed_lock_is_error/workspace/gt/grader.py\", line 23, in grade\n    if not os.environ.get(name):raise RuntimeError('H026 missing managed runtime '+name)\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: H026 missing managed runtime GENERAL_E2E_OFFICE_LOCK\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.046,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "missing_managed_evidence_context_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "RuntimeError",
+          "message": "H026 missing managed runtime GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/missing_managed_evidence_context_is_error/workspace/gt/grader.py\", line 23, in grade\n    if not os.environ.get(name):raise RuntimeError('H026 missing managed runtime '+name)\n                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: H026 missing managed runtime GENERAL_E2E_RULE_EVIDENCE_DIR\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.046,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "engine_identity_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "OfficeRuntimeError",
+          "message": "OFFICE_EXECUTABLE_DRIFT: /Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/engine_identity_drift_is_error/workspace/gt/grader.py\", line 24, in grade\n    lock=json.loads(Path(os.environ['GENERAL_E2E_OFFICE_LOCK']).read_text(encoding='utf-8'));office['validate_office_lock'](lock)\n                                                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/engine_identity_drift_is_error/workspace/gt/office_runtime.py\", line 130, in validate_office_lock\n    raise OfficeRuntimeError(\"OFFICE_EXECUTABLE_DRIFT\", str(binary))\n<run_path>.OfficeRuntimeError: OFFICE_EXECUTABLE_DRIFT: /Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.045,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "same_total_self_consistent_wrong_first",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.791071428571,
+          "boundary_cases": 0.75,
+          "delivery_integrity": 0.75,
+          "evidence_binding": 1.0,
+          "overall_score": 0.785089285714
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.261,
+        "kind": "negative"
+      },
+      {
+        "name": "engine_process_failure_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "OfficeRuntimeError",
+          "message": "OFFICE_RECALCULATION_FAILED: ",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/engine_process_failure_is_error/workspace/gt/grader.py\", line 53, in grade\n    book=attempt('workbook',workbook)\n         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/engine_process_failure_is_error/workspace/gt/grader.py\", line 34, in attempt\n    try:return action()\n               ^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/engine_process_failure_is_error/workspace/gt/grader.py\", line 48, in workbook\n    native=office['recalculate_xlsx'](candidate('voucher_match.xlsx'),lock,derived/'baseline',timeout_seconds=120)\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/engine_process_failure_is_error/workspace/gt/office_runtime.py\", line 233, in recalculate_xlsx\n    raise OfficeRuntimeError(\"OFFICE_RECALCULATION_FAILED\", result.stderr.decode(\"utf-8\", errors=\"replace\")[-1500:])\n<run_path>.OfficeRuntimeError: OFFICE_RECALCULATION_FAILED: \n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.086,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "evidence_context_inside_workspace_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "RuntimeError",
+          "message": "H026 derived evidence must be outside frozen Workspace",
+          "traceback": "Traceback (most recent call last):\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/authoring/run_controls.py\", line 112, in run\n    try:scores=runpy.run_path(str(w/'gt/grader.py'))['grade'](w)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/evidence_context_inside_workspace_is_error/workspace/gt/grader.py\", line 26, in grade\n    if derived==root or root in derived.parents:raise RuntimeError('H026 derived evidence must be outside frozen Workspace')\n                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: H026 derived evidence must be outside frozen Workspace\n"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.046,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "oversized_5MiB_candidate",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.275,
+          "boundary_cases": 0.125,
+          "delivery_integrity": 0.5,
+          "evidence_binding": 1.0,
+          "overall_score": 0.3075
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.071,
+        "kind": "negative"
+      },
+      {
+        "name": "approval_required_false_significant_penalty",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.875,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.40625
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.222,
+        "kind": "negative"
+      }
+    ],
+    "scope": "Author-generated controls through actual cache-clearing native Office on disposable copies; not scored candidate or semantic-Judge validation.",
+    "counts": {
+      "positive": 11,
+      "semantic_boundary": 1,
+      "negative": 27,
+      "infrastructure": 8
+    },
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000",
+    "final_source_binding": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h026/qa/grader-a/controls-1793174008784806000/final-source-binding.json",
+    "recovery": "Initial reference integration failed on a missing json import after native recalc; failure and Office receipt retained. Helper fixed before old41, then pending-summary coverage strengthened before v1 frozen46. V2 centralizes the declared correction-status Chinese alias in field-aware enum parsing, replacing the previous grader-local fallback. A new actual native Chinese status/action positive was added. Its first fixture failed before scoring on an incomplete economic key; that failure is retained, the fixture uses the full key, and all final47 were rerun against one frozen grader/contract. Old41/v1 frozen46 and all immutable evidence remain historical.",
+    "process_failure_control": "A controlled executable with bound SHA exits23, exercising real subprocess failure handling. It is not evidence of a real LibreOffice crash."
+  },
+  "source_observation_reviewers": 2,
+  "source_math_checks": 721,
+  "source_review_financial_checks": 422,
+  "source_images": 12,
+  "source_ledger_rows": 18,
+  "native_reference_checks": 702,
+  "native_raw_source_rows_verified": 18,
+  "reference_previews_actually_opened": 7,
+  "independent_author_reference_review": {
+    "path": "author_reference_model_review.json",
+    "sha256": "59bc6f4420641b9582f77dd6189dae489a32bf6fb917a9ded3b0cfa8e8de7568",
+    "verdict": "PASS",
+    "issues": 0,
+    "formal_semantic_score": null,
+    "human_expert": false,
+    "source_files_covered": 12,
+    "unique_pixel_reads": 11
+  },
+  "detached_image_sdk": {
+    "original_images_decoded": 12,
+    "original_byte_bindings": 12,
+    "source_bytes": 1915645,
+    "config12_all_complete": true,
+    "config11_last_marked_omitted": true,
+    "provider_or_vision_score_claimed": false
+  },
+  "reference_sha256": {
+    "visual_evidence.json": "81cc2fc7898991b1db241c2f78b7f955b3b72cbc8338ab917483006175d0172f",
+    "voucher_match.xlsx": "a89db6141ec72cb0e57f5fee996676e66b7b37d4232797fde81f7f1b1091f168",
+    "adjustment_proposal.json": "2d7ba7b0fec68740f0115a3a7f15b4a4306f5895aae6ae187b7fbf55c1982d2b"
+  },
+  "human_expert_review": false,
+  "formal_semantic_score": null,
+  "limits": [
+    "Automatic native rule acceptance is separate from the .25 semantic component.",
+    "Fresh independent model author-reference review is not a formal semantic-Judge or Harness score.",
+    "L4 and four-Harness compatibility remain uncalibrated; formal MD/Worker binding recorded separately."
+  ]
+}

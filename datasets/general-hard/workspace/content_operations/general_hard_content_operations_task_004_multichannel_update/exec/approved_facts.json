@@ -1,0 +1,60 @@
+{
+  "schema": "h060-approved-base/v1",
+  "revision": 1,
+  "approval_id": "BASE-20261020",
+  "approved_at": "2026-10-20T10:00:00+08:00",
+  "authority": "This is the baseline. Fold every approved change by integer seq ascending, not JSONL physical line or draft timestamp. Each changes object atomically replaces the complete value of the stated fact ID. Later seq wins for that fact. Unchanged facts persist. Draft/article prose never overrides approved facts.",
+  "facts": {
+    "F01": {
+      "zh": "青禾工单",
+      "en": "Qinghe Desk"
+    },
+    "F02": {
+      "version": "1.0"
+    },
+    "F03": {
+      "plan": "Team"
+    },
+    "F04": {
+      "amount": 99,
+      "currency": "CNY",
+      "unit": "workspace_month",
+      "tax_inclusive": true
+    },
+    "F05": {
+      "vat_rate": "0.06"
+    },
+    "F06": {
+      "status": "scheduled",
+      "date": "2026-11-01",
+      "time": "09:00",
+      "timezone": "Asia/Shanghai"
+    },
+    "F07": {
+      "trial_days": 30,
+      "payment_card_required": false,
+      "automatic_charge": false
+    },
+    "F08": {
+      "member_limit": 10,
+      "scope": "workspace"
+    },
+    "F09": {
+      "automatic_send": true,
+      "manual_confirmation_required": false
+    },
+    "F10": {
+      "export_format": "CSV",
+      "allowed_role": "workspace_admin",
+      "scope": "own_workspace"
+    },
+    "F11": {
+      "service_region": "mainland_China",
+      "security_certification": "not_claimed"
+    },
+    "F12": {
+      "searchable_text_pdf": true,
+      "scanned_pdf_ocr": null
+    }
+  }
+}

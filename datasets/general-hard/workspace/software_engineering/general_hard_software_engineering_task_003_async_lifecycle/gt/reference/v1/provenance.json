@@ -1,0 +1,12 @@
+{
+  "schema_version": "h043-reference/v1",
+  "reference_worker_sha256": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+  "source_first_freeze_sha256": "d3bec75d6b6c6d1fe2e1c42dd5fb7d93e08857501512652e34daa21c312d4211",
+  "oracle_ownership_v2_receipt_sha256": "85ed6304dc596c4df9304ef0aeb7fc383febfacdb6c53b2d66a49eb3572f11a8",
+  "actual_public_and_private_execution_receipts": [
+    "qa/reference-v1/execution.json",
+    "qa/oracle-ownership-v2/reference-final-runner-results.json"
+  ],
+  "human_expert_Harness_Judge": false,
+  "reference_not_used_as_patch_string_or_runtime_oracle": true
+}

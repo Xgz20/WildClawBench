@@ -1,0 +1,167 @@
+{
+  "now": 1000,
+  "session_ttl": 60,
+  "users": [
+    {
+      "id": "s1-public44",
+      "username": "s1.public44@synthetic.invalid",
+      "password": "SYNTHETIC-s1-public44",
+      "role": "student",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "s2-public44",
+      "username": "s2.public44@synthetic.invalid",
+      "password": "SYNTHETIC-s2-public44",
+      "role": "student",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "t1-public44",
+      "username": "t1.public44@synthetic.invalid",
+      "password": "SYNTHETIC-t1-public44",
+      "role": "teacher",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "t2-public44",
+      "username": "t2.public44@synthetic.invalid",
+      "password": "SYNTHETIC-t2-public44",
+      "role": "teacher",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "admin-public44",
+      "username": "admin.public44@synthetic.invalid",
+      "password": "SYNTHETIC-admin-public44",
+      "role": "tenant_admin",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "audit-public44",
+      "username": "audit.public44@synthetic.invalid",
+      "password": "SYNTHETIC-audit-public44",
+      "role": "auditor",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "blocked-public44",
+      "username": "blocked.public44@synthetic.invalid",
+      "password": "SYNTHETIC-blocked-public44",
+      "role": "student",
+      "tenant_id": "campus-a",
+      "enabled": true
+    },
+    {
+      "id": "disabled-public44",
+      "username": "disabled.public44@synthetic.invalid",
+      "password": "SYNTHETIC-disabled-public44",
+      "role": "teacher",
+      "tenant_id": "campus-a",
+      "enabled": false
+    },
+    {
+      "id": "badmin-public44",
+      "username": "badmin.public44@synthetic.invalid",
+      "password": "SYNTHETIC-badmin-public44",
+      "role": "tenant_admin",
+      "tenant_id": "campus-b",
+      "enabled": true
+    },
+    {
+      "id": "b1-public44",
+      "username": "b1.public44@synthetic.invalid",
+      "password": "SYNTHETIC-b1-public44",
+      "role": "student",
+      "tenant_id": "campus-b",
+      "enabled": true
+    }
+  ],
+  "blacklist": [
+    "blocked.public44@synthetic.invalid"
+  ],
+  "resources": {
+    "ra-public44": {
+      "id": "ra-public44",
+      "tenant_id": "campus-a",
+      "owner_id": "t1-public44",
+      "enrolled_ids": [
+        "s1-public44",
+        "s2-public44",
+        "blocked-public44"
+      ],
+      "rows": [
+        {
+          "student_id": "s1-public44",
+          "tenant_id": "campus-a",
+          "display_name": "合成-s1",
+          "score": 81,
+          "feedback": "练习反馈-s1",
+          "email": "s1@synthetic.invalid",
+          "support_tag": "support-s1",
+          "internal_note": "NEVER-EXPORT-s1",
+          "password_digest": "INERT-NOT-A-REAL-HASH"
+        },
+        {
+          "student_id": "s2-public44",
+          "tenant_id": "campus-a",
+          "display_name": "合成-s2",
+          "score": 93,
+          "feedback": "练习反馈-s2",
+          "email": "s2@synthetic.invalid",
+          "support_tag": "support-s2",
+          "internal_note": "NEVER-EXPORT-s2",
+          "password_digest": "INERT-NOT-A-REAL-HASH"
+        }
+      ]
+    },
+    "ra2-public44": {
+      "id": "ra2-public44",
+      "tenant_id": "campus-a",
+      "owner_id": "t2-public44",
+      "enrolled_ids": [
+        "s2-public44"
+      ],
+      "rows": [
+        {
+          "student_id": "s2-public44",
+          "tenant_id": "campus-a",
+          "display_name": "合成-s2",
+          "score": 77,
+          "feedback": "练习反馈-s2",
+          "email": "s2@synthetic.invalid",
+          "support_tag": "support-s2",
+          "internal_note": "NEVER-EXPORT-s2",
+          "password_digest": "INERT-NOT-A-REAL-HASH"
+        }
+      ]
+    },
+    "rb-public44": {
+      "id": "rb-public44",
+      "tenant_id": "campus-b",
+      "owner_id": "badmin-public44",
+      "enrolled_ids": [
+        "b1-public44"
+      ],
+      "rows": [
+        {
+          "student_id": "b1-public44",
+          "tenant_id": "campus-b",
+          "display_name": "合成-b1",
+          "score": 68,
+          "feedback": "练习反馈-b1",
+          "email": "b1@synthetic.invalid",
+          "support_tag": "support-b1",
+          "internal_note": "NEVER-EXPORT-b1",
+          "password_digest": "INERT-NOT-A-REAL-HASH"
+        }
+      ]
+    }
+  }
+}

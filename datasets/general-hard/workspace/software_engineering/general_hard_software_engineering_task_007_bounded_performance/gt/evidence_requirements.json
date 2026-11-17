@@ -1,0 +1,11 @@
+{
+  "schema_version": "h047-evidence/v1",
+  "source_truth_freeze_sha256": "30d3dd247c6b7c12c5b7c5cf0071f323b07170f3f8eaee645a284536748ef543",
+  "actual_execution": "Managed Worker starts its frozen interpreter with -I -B -X utf8 for the trusted child. Fresh restricted function namespace and counted views per case. Candidate source, full requests/responses, command, stdout/stderr and scoring observations remain in generic derived evidence.",
+  "counter_integrity": "Private frozen original instrumentation owns counters; public counter edits are input drift and cannot replace actual measurement.",
+  "case_source": "Private original public fixtures and private source cases; independent expected outputs precede either optimized reference.",
+  "reported_numbers": "Finite integral values; booleans are not counter numbers; six counter names must match exactly. Elapsed seconds ignored for capability.",
+  "unassessed": "Unsupported declared profile or infrastructure timeout has no candidate component; non-equivalent work comparison is neutral, not a verified speed/performance verdict.",
+  "scope": "Pure-profile model-author replay, not an OS sandbox, real Harness, semantic Judge or human expert calibration.",
+  "profile_revision_sha256": "2b90f303cc9ca783ddcee5cd124f3ff0905b969cd21470f9ec5111fcaaf9ab4b"
+}

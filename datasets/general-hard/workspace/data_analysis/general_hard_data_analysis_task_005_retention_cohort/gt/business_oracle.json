@@ -1,0 +1,20 @@
+{
+  "schema_version": "h021-material-business/v1",
+  "stage": "materials_not_runtime_scoring_authority",
+  "expected": "expected.json",
+  "raw_records": 1200,
+  "user_days": 500,
+  "base_memberships": 476,
+  "daily_cohort_rows": 30,
+  "clock": "2026-09-15T23:59:59+08:00",
+  "business_timezone": "Asia/Shanghai",
+  "direct_anomaly_mechanisms": [
+    "duplicate_event_rows",
+    "utc_day_cutover",
+    "wrong_cohort_denominator"
+  ],
+  "true_new_change": "2026-09-12 new6/12=.5 must remain",
+  "empty_vs_unobserved": "2026-09-10 new0/0 has completed observation;2026-09-15 both cohorts numerator/rate unknown.",
+  "equivalence": "Complete auditable detail is a valid alternative to live formulas. Do not impose H020 formula-only rules. Candidate evidence can use sufficient valid per-user-day witnesses when full canonical audit and derived sets remain reconstructable; the full reference lists are not the sole valid presentation.",
+  "truth_independence": "Actual CSV read twice and normalized using datetime/Decimal/dictionary sets versus calendar/Fraction/SQLite; actual saved source workbook read two ways. No construction plan or reference artifact generates truth."
+}

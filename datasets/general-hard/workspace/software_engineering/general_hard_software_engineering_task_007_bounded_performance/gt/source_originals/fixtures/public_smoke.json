@@ -1,0 +1,57 @@
+{
+  "case_id": "public_smoke",
+  "group": "public",
+  "catalog": [
+    {
+      "record_id": "Z-7",
+      "email": "alpha@example.test",
+      "phone": "00110",
+      "display_name": "ALICE",
+      "region": "north"
+    },
+    {
+      "record_id": "A-2",
+      "email": "beta@example.test",
+      "phone": "00220",
+      "display_name": "BOB",
+      "region": "south"
+    },
+    {
+      "record_id": "M-4",
+      "email": "alpha@example.test",
+      "phone": "00330",
+      "display_name": "alice",
+      "region": "NORTH"
+    },
+    {
+      "record_id": "P-8",
+      "email": null,
+      "phone": "00220",
+      "display_name": "CAROL",
+      "region": "west"
+    }
+  ],
+  "queries": [
+    {
+      "query_id": "demo-1",
+      "email": "alpha@example.test",
+      "phone": "00220",
+      "display_name": "bob",
+      "region": "south"
+    },
+    {
+      "query_id": "demo-2",
+      "email": "missing@x",
+      "phone": "00220",
+      "display_name": "alice",
+      "region": "north"
+    },
+    {
+      "query_id": "demo-3",
+      "email": null,
+      "phone": null,
+      "display_name": "alice",
+      "region": "north"
+    }
+  ]
+}

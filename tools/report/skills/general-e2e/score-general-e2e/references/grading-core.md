@@ -1,10 +1,40 @@
 # General E2E 评分 core 接口
 
+score-general-e2e0.23.2/core0.15.2让`prepare_xlsx_counterfactual()`兼容普通字面原生ISO日期（`t=d`）。新值仍由调用方提供Excel数值序列，保留日期样式；源绑定回执记录原ISO值，正常/归档重放继续拒绝额外公式、缓存、样式或部件变更。接口不推断时区或日期系统，普通文本不获日期权限，冻结旧helper不变。
+
+score-general-e2e0.23.1/core0.15.1修复HTML资源回执跨Python/系统MIME表的误报。冻结request/audit仍核对实际content_type，源清单的跨机身份只比较路径、大小和SHA；旧观察脚本、锁、截图及回执不重写。文件或请求上下文漂移仍拒绝。
+
+score-general-e2e 0.23.0装配core 0.15.0，增加`HtmlRuntimeError`、`create_html_lock()`、`validate_html_lock()`、`html_lock_digest()`、`observe_html()`及`verify_html_observation()`。Python包装器与`html_observer.mjs`共同分发，实际运行使用显式冻结的外部Node/Playwright core/Chromium。返回浏览器观测和来源回执，不决定业务正确性。归档验证保留源文件、资源、脚本、请求、观测和截图的绑定，无需执行浏览器；不声称密码学证明渲染真实发生。见[HTML运行时观测](html-observation.md)。
+
+score-general-e2e 0.22.0装配core 0.14.0，新增普通标量公式/数值中间量干预API `prepare_xlsx_numeric_intervention()`、`verify_xlsx_numeric_intervention()`。有限数值范围沿用已有numeric literal约束，逐格保存完整`original_cell`并以新的审计schema/Profile重放；不扩大旧字面数值或二进制标记接口。它与原两种Profile共用扎根来源图，归档不依赖引擎仍在场。见[标量数值中间量干预](office-recalculation.md#标量数值中间量干预)。
+
+score-general-e2e 0.21.0装配core 0.13.0，新增`prepare_xlsx_marker_intervention()`与`verify_xlsx_marker_intervention()`。独立Profile记录原单元格完整XML，允许在副本对普通标量公式或二进制数值/布尔/文本标记做0/1干预；现有普通数值输入接口仍拒绝改公式。归档校验器按来源依赖重放连续普通变体和标记变体，未扎根、环和未声明变更均拒绝。详见[连续变体与标记干预](office-recalculation.md#连续变体与二进制标记干预)。
+
 `score-general-e2e` 0.8.1 装配 `grading-core` 0.2.0。core 只负责规则依赖审计、结果校验、证据索引、语义结果校验和合分，不拥有评分工作空间、本地进程运行时、模型调用或任务调度。
 
-发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。core 仅依赖 Python 标准库；任务规则所需的 PyYAML、Playwright 和 Chromium 属于 G3-02 专用评分虚拟环境，不安装到控制 Harness 使用的 Python 环境。
+自score-general-e2e 0.11.0起装配core 0.3.0，新增`extract_native_text()`和`is_native_text_format()`：DOCX/XLSX使用标准库，PDF按需导入评分环境中的pypdf。提取只做离线文本/单元格投影，保留原文件及投影SHA、记录位置、公式缓存状态和未解释内容；不执行宏、外链或公式计算。`NativeTextError`提供独立code/message，缺PDF依赖不能转为候选零分。详见[原生文件文本证据](native-text-evidence.md)。
+
+score-general-e2e 0.12.0装配core 0.4.0，增加`create_office_lock(executable)`、`validate_office_lock(lock)`和`recalculate_xlsx(source, lock, output_dir)`。重算调用锁定的外部LibreOffice，不是Python公式模拟器；`OfficeRuntimeError`保留独立code/message。`validate_office_lock(..., require_executable=False)`仅用于归档时核验完整锁结构，不能作为运行前检查。详见[可信Office重算](office-recalculation.md)。
+
+score-general-e2e 0.13.0装配core 0.5.0，`extract_native_text()`与`is_native_text_format()`增加PPTX。该格式的`engine.version`为`wildclawbench.pptx-text/v1`，外层schema仍为`wildclawbench.native-artifact-text/v1`。幻灯片顺序、文本/表格/备注、图表缓存与嵌入XLSX分别保留位置和适用边界；不渲染、不重算、不解析图像，也不跟随外部关系。既有三种格式的投影不改写。详见[原生文件文本证据](native-text-evidence.md)。
+
+score-general-e2e 0.14.0装配core 0.6.0，新增`create_office_render_lock()`、`validate_office_render_lock()`、`office_render_lock_digest()`及`render_pptx_pdf()`。独立渲染锁在原Office程序锁外绑定字体文件及目录成员，原XLSX锁保持兼容；PPTX转PDF使用原字节一次性副本和明确导出选项，派生回执由外围评分工作空间核验。详见[可信PPTX渲染](office-rendering.md)。
+
+score-general-e2e 0.15.0装配core 0.7.0，新增`read_embedded_xlsx()`、`extract_embedded_xlsx()`，建立冻结PPTX→原始内嵌XLSX→可信重算XLSX的来源链，归档复核不要求引擎存在。规则目录允许可选`pdfplumber`、`pypdf`，但Worker实际锁未声明的模块会在执行前报`RUNTIME_DEPENDENCY_UNDECLARED`，不能仅凭允许目录推断已安装。详见[内嵌表格重算](office-recalculation.md#内嵌表格重算)。
+
+score-general-e2e 0.17.0装配core 0.9.0，`extract_native_text()`增加DOCX声明网格/合并区间及脚注、尾注关系链。DOCX提取引擎为`wildclawbench.docx-text/v1`；保留原段落和物理单元格locator，但新增结构记录会改变记录序号、总数及投影SHA。缺关系/部件/注释、外部目标分开记录，不通过匹配注释文字猜挂接；结构声明不证明版式、可编辑性或显示编号，嵌套表拓扑不展开。公开API签名与其它格式不变，历史attempt仍用冻结入口。详见[原生文件文本证据](native-text-evidence.md#word结构证据)。
+
+score-general-e2e 0.20.0装配core 0.12.0，`create_office_render_lock(..., document_format="both")`生成显式v2共享锁，`office_render_lock_formats()`返回其授权的Word/PPTX格式。两类导出API使用同一引擎/字体清单，回执分别保留固定格式Profile/选项及源摘要，共同绑定完整锁SHA。旧v1锁和已冻结私有helper不自动升级；默认PPTX和显式docx行为保持原协议。详见[双格式渲染](office-rendering.md#word与pptx共同渲染)。
+
+score-general-e2e 0.19.0装配core 0.11.0时新增`prepare_xlsx_counterfactual()`及`verify_xlsx_counterfactual()`。规则可以只改一次性副本的显式数值输入，再用现有Office锁重算，按独立oracle检验数量阶梯、税率或费率响应。源包、变体、声明编辑与重算回执均可归档验证，不接受未声明的公式/缓存或其它部件修改；旧Office helper继续沿用其冻结能力。详见[数值输入扰动](office-recalculation.md#数值输入扰动)。
+
+score-general-e2e 0.18.0装配core 0.10.0时新增`render_docx_pdf()`；`create_office_render_lock(..., document_format="docx")`生成独立Word Profile，默认仍为PPTX。两种Profile共用引擎/字体身份结构与归档校验方式，互不授权另一种格式导出；旧PPTX锁及私有helper不需迁移。DOCX回执按冻结原件重新核对主文档结构摘要，不虚构源页数；宏/嵌入、外部数据与主动字段明确拒绝。详见[可信Office渲染](office-rendering.md#word渲染)。
+
+发行包内模块位于 `vendor/e2e-shared/wildclawbench_grading_core/`。调用方把其父目录加入 Python 模块搜索路径后导入 `wildclawbench_grading_core`。规则/索引/结果校验及合分、DOCX/XLSX/PPTX文本投影只使用Python标准库，PDF投影按需使用评分CLI解释器中的pypdf。任务规则所需的PyYAML、Playwright和Chromium属于G3-02专用评分虚拟环境，不因原生证据提取而安装到被测项目。
 
 ## 公开 API
+
+score-general-e2e 0.16.0装配core 0.8.0，新增`read_image_evidence()`、`is_image_evidence_format()`及`ImageEvidenceError`。Pillow只在实际图片解码时按需导入，普通文本评分和归档附件字节核验不增加该依赖；返回原始图片字节及来源SHA，不执行OCR或转换。详见[冻结图片证据](image-evidence.md)。
 
 ### `run_rules()`
 

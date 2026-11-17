@@ -1,0 +1,9 @@
+{
+  "status": "material_phase",
+  "grading_type": "automated",
+  "semantic_judge": false,
+  "exclusion_row_binding": "stage/record_id/respondent_id/source_row/reason/related_record_id points to actual original response and selected replacement where applicable",
+  "word_baseline": "Eight metric rows and five sample statistics agree with native baseline; exact R-scope/R-multi quotations identify their source rule IDs.",
+  "full_client_validation": false,
+  "human_expert_review": false
+}

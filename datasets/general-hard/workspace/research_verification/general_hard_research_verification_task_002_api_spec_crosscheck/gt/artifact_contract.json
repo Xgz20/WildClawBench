@@ -1,0 +1,1206 @@
+{
+  "schema_version": "h028-artifact-contract/v1",
+  "outputs": [
+    "results/api_contract.xlsx",
+    "results/integration_revised.md",
+    "results/sources.json"
+  ],
+  "max_each_delivery_bytes": 5242880,
+  "field_catalog": [
+    {
+      "topic_id": "T01",
+      "field_id": "service.product",
+      "label_zh": "产品与接入形态",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T01",
+      "field_id": "connection.endpoint",
+      "label_zh": "地址与协议",
+      "value_type": "record",
+      "value_shape": {
+        "recommended": "url",
+        "also_documented": "url"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T01",
+      "field_id": "connection.host_policy",
+      "label_zh": "域名或固定IP策略",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T01",
+      "field_id": "document.version_state",
+      "label_zh": "正式版本与日期",
+      "value_type": "record",
+      "value_shape": {
+        "version": "string|null",
+        "publication_date": "date|null",
+        "revision_date": "date|null"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T02",
+      "field_id": "handshake.required_query",
+      "label_zh": "必填握手参数与类型",
+      "value_type": "record_set",
+      "value_shape": [
+        {
+          "name": "string",
+          "type": "string"
+        }
+      ],
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T02",
+      "field_id": "auth.api_key_placement",
+      "label_zh": "apiKey用途与放置",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T02",
+      "field_id": "query.encoding",
+      "label_zh": "Query编码范围",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T03",
+      "field_id": "signature.base_string",
+      "label_zh": "签名原串构造",
+      "value_type": "record",
+      "value_shape": {
+        "ordered_terms": "string[]",
+        "separator": "string"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T03",
+      "field_id": "signature.md5_representation",
+      "label_zh": "MD5中间值表示",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T03",
+      "field_id": "signature.hmac_inputs",
+      "label_zh": "HMAC算法与输入",
+      "value_type": "record",
+      "value_shape": {
+        "algorithm": "string",
+        "key_role": "string",
+        "message_role": "string"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T03",
+      "field_id": "signature.final_encoding",
+      "label_zh": "最终签名编码",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T04",
+      "field_id": "timestamp.semantic",
+      "label_zh": "ts类型、单位与时基",
+      "value_type": "record",
+      "value_shape": {
+        "type": "string",
+        "unit": "string",
+        "origin": "string",
+        "current": "boolean"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T04",
+      "field_id": "timestamp.documented_window",
+      "label_zh": "ts允许偏差和有效窗",
+      "value_type": "record",
+      "value_shape": {
+        "clock_skew_seconds": "number|null",
+        "signature_validity_seconds": "number|null"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T05",
+      "field_id": "audio.format",
+      "label_zh": "音频编码",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T05",
+      "field_id": "audio.sample_rate",
+      "label_zh": "采样率",
+      "value_type": "number",
+      "value_shape": "number",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T05",
+      "field_id": "audio.bit_depth",
+      "label_zh": "位深",
+      "value_type": "integer",
+      "value_shape": "integer",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T05",
+      "field_id": "audio.channels",
+      "label_zh": "声道数",
+      "value_type": "integer",
+      "value_shape": "integer",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T05",
+      "field_id": "audio.message_type",
+      "label_zh": "音频消息类型",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T06",
+      "field_id": "cadence.recommended_interval",
+      "label_zh": "建议发送间隔",
+      "value_type": "number",
+      "value_shape": "number",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T06",
+      "field_id": "cadence.recommended_chunk",
+      "label_zh": "建议分片大小",
+      "value_type": "integer",
+      "value_shape": "integer",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T06",
+      "field_id": "cadence.requirement_strength",
+      "label_zh": "建议与硬限制",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T06",
+      "field_id": "audio.idle_timeout",
+      "label_zh": "发送空闲超时",
+      "value_type": "record",
+      "value_shape": {
+        "threshold_seconds": "number",
+        "consequences": "string[]"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T06",
+      "field_id": "session.duration_boundary",
+      "label_zh": "音频总时长边界",
+      "value_type": "record",
+      "value_shape": {
+        "source_claim": "string",
+        "finite_total_seconds": "number|null"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T07",
+      "field_id": "end.message_type",
+      "label_zh": "结束消息类型",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T07",
+      "field_id": "end.payload",
+      "label_zh": "结束消息内容",
+      "value_type": "json_object",
+      "value_shape": {
+        "end": "boolean"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T07",
+      "field_id": "response.message_type",
+      "label_zh": "服务端响应消息类型",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T07",
+      "field_id": "response.envelope_types",
+      "label_zh": "外层字段类型",
+      "value_type": "record",
+      "value_shape": "map<string,string>",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T07",
+      "field_id": "response.data_parse",
+      "label_zh": "结果数据解码层次",
+      "value_type": "enum",
+      "value_shape": "string",
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T07",
+      "field_id": "response.result_type",
+      "label_zh": "结果最终/中间标志",
+      "value_type": "record",
+      "value_shape": {
+        "final": "integer",
+        "intermediate": "integer"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T08",
+      "field_id": "optional.lang",
+      "label_zh": "lang缺省与授权",
+      "value_type": "record",
+      "value_shape": {
+        "required": "boolean",
+        "default": "string",
+        "additional_languages_require_authorization": "boolean",
+        "unauthorized_code": "string"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T08",
+      "field_id": "optional.trans_strategy",
+      "label_zh": "transStrategy建议与缺省",
+      "value_type": "record",
+      "value_shape": {
+        "required": "boolean",
+        "recommended": "integer",
+        "documented_default": "integer|null",
+        "translation_requires_console_enable": "boolean"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T08",
+      "field_id": "optional.punc",
+      "label_zh": "punc默认行为与过滤值",
+      "value_type": "record",
+      "value_shape": {
+        "default_behavior": "string",
+        "filter_value": "string",
+        "documented_numeric_default": "number|null"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T08",
+      "field_id": "optional.role_type",
+      "label_zh": "roleType默认行为与启用值",
+      "value_type": "record",
+      "value_shape": {
+        "default_behavior": "string",
+        "enable_value": "integer",
+        "documented_numeric_default": "integer|null"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T09",
+      "field_id": "errors.selected_map",
+      "label_zh": "指定错误码及表中处理",
+      "value_type": "record_set",
+      "value_shape": [
+        {
+          "code": "string",
+          "meaning": "enum",
+          "action": "enum"
+        }
+      ],
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T09",
+      "field_id": "errors.10110_diagnostic",
+      "label_zh": "10110能否唯一定位签名",
+      "value_type": "record",
+      "value_shape": {
+        "unique_signature_cause": "boolean",
+        "table_meaning": "string",
+        "handshake_example": "string",
+        "faq_meaning": "string"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T09",
+      "field_id": "retry.documented_policy",
+      "label_zh": "明文重试与未规定策略",
+      "value_type": "record",
+      "value_shape": {
+        "explicit_retry_codes": "string[]",
+        "max_attempts": "integer|null",
+        "backoff_seconds": "number|null",
+        "resume_or_replay_guarantee": "boolean|null"
+      },
+      "primary_checkpoint": "boundary_cases"
+    },
+    {
+      "topic_id": "T10",
+      "field_id": "ip_whitelist.rules",
+      "label_zh": "白名单开关、范围与生效",
+      "value_type": "record",
+      "value_shape": {
+        "disabled": "string",
+        "enabled": "string",
+        "ip_kind": "string",
+        "settings_scope": "string",
+        "propagation_minutes_approx": "number"
+      },
+      "primary_checkpoint": "business_correctness"
+    },
+    {
+      "topic_id": "T10",
+      "field_id": "handshake.checksum_boundary",
+      "label_zh": "FAQ checkSum与正式参数表",
+      "value_type": "record",
+      "value_shape": {
+        "in_formal_table": "boolean",
+        "mandatory": "boolean",
+        "faq_mentions": "boolean"
+      },
+      "primary_checkpoint": "boundary_cases"
+    }
+  ],
+  "public_schema": {
+    "column_aliases": {
+      "topic_id": [
+        "topic",
+        "topic number",
+        "主题编号",
+        "核验主题"
+      ],
+      "field_id": [
+        "field",
+        "field key",
+        "字段",
+        "字段编号"
+      ],
+      "value": [
+        "value",
+        "verified value",
+        "值",
+        "核对值"
+      ],
+      "status": [
+        "evidence status",
+        "状态",
+        "证据状态"
+      ],
+      "unit": [
+        "unit",
+        "单位"
+      ],
+      "requirement_strength": [
+        "strength",
+        "约束强度",
+        "要求强度"
+      ],
+      "citation_ids": [
+        "citation IDs",
+        "引用ID",
+        "引用编号"
+      ],
+      "vector_id": [
+        "vector",
+        "向量编号"
+      ],
+      "md5_hex": [
+        "MD5 hex",
+        "MD5十六进制"
+      ],
+      "signa_base64": [
+        "Base64 signature",
+        "Base64签名"
+      ],
+      "signa_urlencoded": [
+        "URL-encoded signature",
+        "URL编码签名"
+      ]
+    },
+    "chinese_alias_policy": "Clear Chinese field/enum aliases must be frozen before grading; no prose substring extraction. field_catalog.label_zh supplies baseline labels.",
+    "equivalence": [
+      "Explicit unit conversion accepted, including 16kHz/16000Hz and 0.04s/40ms.",
+      "Sets are unordered, signing terms ordered; JSON key order/whitespace irrelevant. Conflicting duplicate values cannot be cherry-picked.",
+      "Unknown can be null/blank/explicit unknown only with not_documented semantics; real zero stays zero.",
+      "Protocol parameter names and Base64 are case-sensitive; percent-hex letter case is equivalent but double encoding is not.",
+      "HTML table quotations accept logical cell/row boundaries and whitespace normalization consistent with an actual table projection. Do not reject merely because the generic collector joins cell text. Preserve case, punctuation relevant to claims and numbers; do not normalize conflicting facts away."
+    ],
+    "limits": {
+      "max_each_delivery_bytes": 5242880,
+      "input_immutable": true,
+      "new_outputs_under": "/tmp_workspace/results",
+      "no_real_account_credential_service_or_paid_api": true,
+      "coding_primary": false,
+      "requires_visual_input": false
+    },
+    "enum_vocabulary": {
+      "product": [
+        "rtasr_standard_websocket",
+        "rtasr_llm_websocket",
+        "iat_websocket",
+        "other",
+        "not_documented"
+      ],
+      "host_policy": [
+        "use_domain_not_fixed_server_ip",
+        "pin_fixed_server_ip",
+        "either_domain_or_fixed_ip",
+        "not_documented"
+      ],
+      "api_key_placement": [
+        "signing_secret_not_documented_query_parameter",
+        "query_parameter",
+        "header_parameter",
+        "not_documented"
+      ],
+      "query_encoding": [
+        "urlencode_each_key_and_value",
+        "encode_values_only",
+        "no_url_encoding",
+        "urlencode_whole_url",
+        "not_documented"
+      ],
+      "signing_terms": [
+        "appid",
+        "ts",
+        "apiKey",
+        "signa",
+        "path",
+        "sorted_query",
+        "MD5_hex_text",
+        "MD5_raw_bytes",
+        "HMAC_hex_text",
+        "HMAC_raw_bytes"
+      ],
+      "md5_representation": [
+        "32_lowercase_hex_text",
+        "32_uppercase_hex_text",
+        "16_raw_bytes",
+        "not_documented"
+      ],
+      "algorithm": [
+        "HMAC-SHA1",
+        "HMAC-SHA256",
+        "SHA1",
+        "MD5",
+        "other",
+        "not_documented"
+      ],
+      "final_encoding": [
+        "standard_base64_of_raw_hmac_sha1_digest",
+        "base64_of_hmac_hex_text",
+        "urlsafe_base64",
+        "hex_text",
+        "not_documented"
+      ],
+      "timestamp_type": [
+        "string",
+        "integer",
+        "number",
+        "not_documented"
+      ],
+      "timestamp_unit": [
+        "s",
+        "ms",
+        "us",
+        "not_documented"
+      ],
+      "timestamp_origin": [
+        "unix_epoch",
+        "other",
+        "not_documented"
+      ],
+      "audio_format": [
+        "pcm_s16le",
+        "pcm_other",
+        "wav",
+        "mp3",
+        "other",
+        "not_documented"
+      ],
+      "message_type": [
+        "binary",
+        "text",
+        "either",
+        "not_documented"
+      ],
+      "cadence_strength": [
+        "recommendation_not_exact_size_or_maximum",
+        "mandatory_exact_size",
+        "maximum_size",
+        "minimum_size",
+        "not_documented"
+      ],
+      "idle_consequence": [
+        "error",
+        "disconnect",
+        "continue",
+        "not_documented"
+      ],
+      "duration_claim": [
+        "theoretically_unlimited",
+        "finite_limit_documented",
+        "guaranteed_unlimited",
+        "not_documented"
+      ],
+      "json_type": [
+        "string",
+        "integer",
+        "number",
+        "object",
+        "array",
+        "boolean",
+        "not_documented"
+      ],
+      "response_parse": [
+        "parse_outer_json_then_result_data_json_string",
+        "parse_outer_json_only_data_is_object",
+        "parse_outer_json_only_data_is_plain_text",
+        "not_documented"
+      ],
+      "language": [
+        "cn",
+        "en",
+        "other",
+        "not_documented"
+      ],
+      "default_behavior": [
+        "return_punctuation",
+        "filter_punctuation",
+        "disabled",
+        "enabled",
+        "not_documented"
+      ],
+      "error_meaning": [
+        "no_permission",
+        "invalid_parameter",
+        "illegal_parameter",
+        "no_license",
+        "over_authorized_connections",
+        "basic_component_error",
+        "audio_idle_over_15s",
+        "illegal_signa",
+        "no_license_or_authorization_count_full",
+        "engine_error",
+        "other",
+        "not_documented"
+      ],
+      "error_action": [
+        "check_authorization_apiKey_ip_ts",
+        "check_required_parameters_format_encoding",
+        "check_parameter_range_or_requirements",
+        "check_authorized_connection_count",
+        "retry_or_contact_provider",
+        "check_audio_send_gap_15s",
+        "retry_all_errors",
+        "other",
+        "not_documented"
+      ],
+      "whitelist_disabled": [
+        "no_ip_check",
+        "reject_all",
+        "check_whitelist",
+        "not_documented"
+      ],
+      "whitelist_enabled": [
+        "reject_unlisted_client_ip",
+        "allow_all",
+        "reject_all",
+        "not_documented"
+      ],
+      "ip_kind": [
+        "public_egress_ip",
+        "private_lan_ip",
+        "any_ip",
+        "not_documented"
+      ],
+      "settings_scope": [
+        "per_appid_per_service",
+        "shared_global",
+        "per_appid_only",
+        "per_service_only",
+        "not_documented"
+      ]
+    },
+    "enum_field_vocabulary": {
+      "service.product": "product",
+      "connection.host_policy": "host_policy",
+      "auth.api_key_placement": "api_key_placement",
+      "query.encoding": "query_encoding",
+      "signature.base_string.ordered_terms": "signing_terms",
+      "signature.md5_representation": "md5_representation",
+      "signature.hmac_inputs.algorithm": "algorithm",
+      "signature.hmac_inputs.key_role": "signing_terms",
+      "signature.hmac_inputs.message_role": "signing_terms",
+      "signature.final_encoding": "final_encoding",
+      "timestamp.semantic.type": "timestamp_type",
+      "timestamp.semantic.unit": "timestamp_unit",
+      "timestamp.semantic.origin": "timestamp_origin",
+      "audio.format": "audio_format",
+      "audio.message_type": "message_type",
+      "cadence.requirement_strength": "cadence_strength",
+      "audio.idle_timeout.consequences": "idle_consequence",
+      "session.duration_boundary.source_claim": "duration_claim",
+      "end.message_type": "message_type",
+      "response.message_type": "message_type",
+      "response.envelope_types.*": "json_type",
+      "response.data_parse": "response_parse",
+      "optional.lang.default": "language",
+      "optional.punc.default_behavior": "default_behavior",
+      "optional.role_type.default_behavior": "default_behavior",
+      "errors.selected_map[].meaning": "error_meaning",
+      "errors.selected_map[].action": "error_action",
+      "errors.10110_diagnostic.table_meaning": "error_meaning",
+      "errors.10110_diagnostic.handshake_example": "error_meaning",
+      "errors.10110_diagnostic.faq_meaning": "error_meaning",
+      "ip_whitelist.rules.disabled": "whitelist_disabled",
+      "ip_whitelist.rules.enabled": "whitelist_enabled",
+      "ip_whitelist.rules.ip_kind": "ip_kind",
+      "ip_whitelist.rules.settings_scope": "settings_scope",
+      "handshake.required_query[].type": "json_type"
+    },
+    "enum_answer_boundary": "Vocabulary includes alternatives and aliases, never private correct field/value associations. If an equivalent precise enum is absent, accept an explicitly mapped unambiguous alias; do not infer facts from prose keywords.",
+    "enum_aliases": {
+      "rtasr_standard_websocket": [
+        "实时语音转写标准版WebSocket",
+        "实时语音转写(标准版)",
+        "标准版实时语音转写"
+      ],
+      "rtasr_llm_websocket": [
+        "实时语音转写大模型版",
+        "实时语音转写大模型"
+      ],
+      "iat_websocket": [
+        "语音听写WebSocket",
+        "语音听写"
+      ],
+      "use_domain_not_fixed_server_ip": [
+        "使用域名，不固定服务器IP",
+        "域名调用，勿指定固定IP"
+      ],
+      "pin_fixed_server_ip": [
+        "固定服务器IP调用"
+      ],
+      "signing_secret_not_documented_query_parameter": [
+        "签名密钥，不是文档列出的query参数",
+        "仅用于生成签名，不随query发送"
+      ],
+      "query_parameter": [
+        "query参数",
+        "URL查询参数"
+      ],
+      "header_parameter": [
+        "请求头参数"
+      ],
+      "urlencode_each_key_and_value": [
+        "每个key和value分别URL编码",
+        "键和值均进行urlencode"
+      ],
+      "encode_values_only": [
+        "只编码值"
+      ],
+      "no_url_encoding": [
+        "不进行URL编码"
+      ],
+      "urlencode_whole_url": [
+        "整个URL一起编码"
+      ],
+      "32_lowercase_hex_text": [
+        "32位小写十六进制文本",
+        "小写MD5十六进制字符串"
+      ],
+      "32_uppercase_hex_text": [
+        "32位大写十六进制文本"
+      ],
+      "16_raw_bytes": [
+        "16字节原始摘要"
+      ],
+      "HMAC-SHA1": [
+        "HmacSHA1",
+        "HMACSHA1",
+        "HMAC-SHA-1"
+      ],
+      "HMAC-SHA256": [
+        "HmacSHA256",
+        "HMACSHA256"
+      ],
+      "MD5_hex_text": [
+        "MD5十六进制文本",
+        "MD5小写hex字符串"
+      ],
+      "MD5_raw_bytes": [
+        "MD5原始摘要字节"
+      ],
+      "HMAC_hex_text": [
+        "HMAC十六进制文本"
+      ],
+      "HMAC_raw_bytes": [
+        "HMAC原始摘要字节"
+      ],
+      "standard_base64_of_raw_hmac_sha1_digest": [
+        "原始HMAC-SHA1摘要的标准Base64",
+        "HMAC-SHA1原始字节再标准Base64"
+      ],
+      "base64_of_hmac_hex_text": [
+        "HMAC的hex文本再Base64"
+      ],
+      "urlsafe_base64": [
+        "URL安全Base64",
+        "URLsafe Base64"
+      ],
+      "hex_text": [
+        "十六进制文本"
+      ],
+      "unix_epoch": [
+        "Unix纪元",
+        "Unix时间戳时基",
+        "1970-01-01 00:00:00 UTC"
+      ],
+      "s": [
+        "秒",
+        "seconds"
+      ],
+      "ms": [
+        "毫秒",
+        "milliseconds"
+      ],
+      "us": [
+        "微秒",
+        "microseconds"
+      ],
+      "string": [
+        "字符串"
+      ],
+      "integer": [
+        "整数"
+      ],
+      "number": [
+        "数字",
+        "数值"
+      ],
+      "object": [
+        "对象"
+      ],
+      "array": [
+        "数组"
+      ],
+      "boolean": [
+        "布尔值"
+      ],
+      "pcm_s16le": [
+        "16bit小端有符号PCM",
+        "PCM signed 16-bit little-endian",
+        "s16le PCM"
+      ],
+      "binary": [
+        "二进制",
+        "二进制消息",
+        "binary message"
+      ],
+      "text": [
+        "文本",
+        "文本消息",
+        "text message"
+      ],
+      "either": [
+        "二者均可"
+      ],
+      "recommendation_not_exact_size_or_maximum": [
+        "建议值，非精确大小或上限",
+        "推荐分片，未规定必须恰好或最大值"
+      ],
+      "mandatory_exact_size": [
+        "必须恰好该大小"
+      ],
+      "maximum_size": [
+        "最大分片大小"
+      ],
+      "minimum_size": [
+        "最小分片大小"
+      ],
+      "error": [
+        "报错",
+        "返回错误"
+      ],
+      "disconnect": [
+        "断开连接",
+        "关闭连接"
+      ],
+      "continue": [
+        "继续连接"
+      ],
+      "theoretically_unlimited": [
+        "理论不限",
+        "音频流长度理论无限制"
+      ],
+      "finite_limit_documented": [
+        "明确规定有限总时长"
+      ],
+      "guaranteed_unlimited": [
+        "保证不限时长"
+      ],
+      "parse_outer_json_then_result_data_json_string": [
+        "先解析外层JSON，再解析结果data内的JSON字符串",
+        "外层JSON解析后对结果data二次JSON解析"
+      ],
+      "parse_outer_json_only_data_is_object": [
+        "仅解析外层，data直接为对象"
+      ],
+      "parse_outer_json_only_data_is_plain_text": [
+        "仅解析外层，data是普通文本"
+      ],
+      "cn": [
+        "中文",
+        "中文及中英混合"
+      ],
+      "en": [
+        "英文"
+      ],
+      "return_punctuation": [
+        "返回标点",
+        "保留标点"
+      ],
+      "filter_punctuation": [
+        "过滤标点"
+      ],
+      "disabled": [
+        "默认关闭",
+        "不开启"
+      ],
+      "enabled": [
+        "开启"
+      ],
+      "no_permission": [
+        "没有权限",
+        "无权限",
+        "illegal access"
+      ],
+      "invalid_parameter": [
+        "无效参数",
+        "invalid parameter"
+      ],
+      "illegal_parameter": [
+        "非法参数值",
+        "illegal parameter"
+      ],
+      "no_license": [
+        "无授权许可",
+        "no license"
+      ],
+      "over_authorized_connections": [
+        "超过授权连接数",
+        "超过授权路数",
+        "over max connect limit"
+      ],
+      "basic_component_error": [
+        "基础组件异常",
+        "basic component error"
+      ],
+      "audio_idle_over_15s": [
+        "超过15秒未发送音频",
+        "超过15秒没有向服务端发送音频数据",
+        "no audio data"
+      ],
+      "illegal_signa": [
+        "签名非法",
+        "illegal signa",
+        "invalid authorization|illegal signa"
+      ],
+      "no_license_or_authorization_count_full": [
+        "没有授权许可或授权数已满",
+        "无授权许可或授权路数已满"
+      ],
+      "engine_error": [
+        "引擎错误",
+        "engine error"
+      ],
+      "check_authorization_apiKey_ip_ts": [
+        "检查apiKey、IP、ts等授权参数",
+        "检查密钥、IP白名单和时间戳等授权参数"
+      ],
+      "check_required_parameters_format_encoding": [
+        "上传必要参数并检查格式编码",
+        "检查必填参数、格式和编码"
+      ],
+      "check_parameter_range_or_requirements": [
+        "检查参数值是否超过范围或不符合要求",
+        "检查参数范围和要求"
+      ],
+      "check_authorized_connection_count": [
+        "检查连接数是否超过授权数",
+        "确认授权连接数或路数"
+      ],
+      "retry_or_contact_provider": [
+        "重试或向服务提供商反馈",
+        "重试或联系服务商"
+      ],
+      "check_audio_send_gap_15s": [
+        "检查是否超过15秒没有进行音频发送",
+        "检查音频发送间隔是否超过15秒"
+      ],
+      "retry_all_errors": [
+        "所有错误都重试"
+      ],
+      "no_ip_check": [
+        "不校验IP",
+        "IP不限"
+      ],
+      "reject_unlisted_client_ip": [
+        "拒绝未列入白名单的调用方IP",
+        "检查调用方IP在白名单内，否则拒绝"
+      ],
+      "allow_all": [
+        "全部放行"
+      ],
+      "reject_all": [
+        "全部拒绝"
+      ],
+      "check_whitelist": [
+        "检查白名单"
+      ],
+      "public_egress_ip": [
+        "公网出口IP",
+        "外网IP",
+        "公网IP"
+      ],
+      "private_lan_ip": [
+        "局域网IP",
+        "内网IP"
+      ],
+      "any_ip": [
+        "任意IP"
+      ],
+      "per_appid_per_service": [
+        "不同Appid的不同服务分别设置",
+        "按应用和服务分别设置"
+      ],
+      "shared_global": [
+        "全局共用配置"
+      ],
+      "per_appid_only": [
+        "仅按应用设置"
+      ],
+      "per_service_only": [
+        "仅按服务设置"
+      ],
+      "not_documented": [
+        "未知",
+        "未注明",
+        "未规定",
+        "文档未说明"
+      ],
+      "other": [
+        "其它",
+        "其他"
+      ],
+      "apiKey": [
+        "api_key",
+        "API Key",
+        "API key"
+      ]
+    },
+    "boolean_aliases": {
+      "true": [
+        "是",
+        "true"
+      ],
+      "false": [
+        "否",
+        "false"
+      ]
+    },
+    "enum_alias_boundary": "Aliases name discrete typed values. They are not permissive substring matches against arbitrary explanations. Additional unambiguous conventional aliases may be added before freeze; protocol names and Base64 never receive case folding."
+  },
+  "facts_columns": [
+    "topic_id",
+    "field_id",
+    "value",
+    "status",
+    "unit",
+    "requirement_strength",
+    "citation_ids"
+  ],
+  "signature_columns": [
+    "vector_id",
+    "md5_hex",
+    "signa_base64",
+    "signa_urlencoded",
+    "citation_ids"
+  ],
+  "source_identity_columns": [
+    "source_id",
+    "retrieved_at",
+    "body_sha256",
+    "article_projection_identity",
+    "reported_document_version",
+    "reported_document_date"
+  ],
+  "record_status": [
+    "documented",
+    "document_example",
+    "implementation_interpretation",
+    "not_documented",
+    "client_policy",
+    "not_tested",
+    "mixed"
+  ],
+  "record_strength": [
+    "required",
+    "recommended",
+    "optional",
+    "example",
+    "not_stated",
+    "client_policy"
+  ],
+  "layout_equivalence": "Sheet names, table positions, row/column order and split/combined sheets are free. English keys or clear Chinese aliases accepted. Either 38 field rows or ten topic objects flattened into native tables. Small fixed records may be subcolumns/subrows or JSON in their value cell; all core results cannot be a single giant JSON cell, hidden cells or pictures.",
+  "mixed_record_status": "For records with known and unknown leaves, status=mixed plus explicit null/unknown leaf is valid; per-leaf status objects are also valid. A blank entire row is missing data, not evidence of unknown. Numeric zero never becomes null.",
+  "legacy_issues": [
+    {
+      "legacy_id": "L01",
+      "synthetic_wrong_claim": "Uses another speech product or HTTP endpoint as the standard RTASR WebSocket address.",
+      "corrected_by_fields": [
+        "service.product",
+        "connection.endpoint",
+        "connection.host_policy"
+      ]
+    },
+    {
+      "legacy_id": "L02",
+      "synthetic_wrong_claim": "Uses appId, sends apiKey in query, and adds mandatory checkSum from FAQ.",
+      "corrected_by_fields": [
+        "handshake.required_query",
+        "auth.api_key_placement",
+        "handshake.checksum_boundary"
+      ]
+    },
+    {
+      "legacy_id": "L03",
+      "synthetic_wrong_claim": "Uses sorted query/path HMAC-SHA256, skips MD5, swaps key/message or Base64-encodes hex HMAC text.",
+      "corrected_by_fields": [
+        "signature.base_string",
+        "signature.md5_representation",
+        "signature.hmac_inputs",
+        "signature.final_encoding"
+      ]
+    },
+    {
+      "legacy_id": "L04",
+      "synthetic_wrong_claim": "Uses millisecond ts and imports a 5-minute or SDK18006 30-minute validity window.",
+      "corrected_by_fields": [
+        "timestamp.semantic",
+        "timestamp.documented_window"
+      ]
+    },
+    {
+      "legacy_id": "L05",
+      "synthetic_wrong_claim": "Defaults to 44.1kHz 24-bit stereo WAV/MP3 without conversion.",
+      "corrected_by_fields": [
+        "audio.format",
+        "audio.sample_rate",
+        "audio.bit_depth",
+        "audio.channels"
+      ]
+    },
+    {
+      "legacy_id": "L06",
+      "synthetic_wrong_claim": "Sends Base64 audio in text frames and skips or duplicates signa query encoding.",
+      "corrected_by_fields": [
+        "audio.message_type",
+        "query.encoding"
+      ]
+    },
+    {
+      "legacy_id": "L07",
+      "synthetic_wrong_claim": "Treats 40ms/1280 bytes as exact mandatory or maximum frame size and 15 seconds as total duration.",
+      "corrected_by_fields": [
+        "cadence.recommended_interval",
+        "cadence.recommended_chunk",
+        "cadence.requirement_strength",
+        "audio.idle_timeout",
+        "session.duration_boundary"
+      ]
+    },
+    {
+      "legacy_id": "L08",
+      "synthetic_wrong_claim": "Sends end marker as text then closes immediately without awaiting remaining results.",
+      "corrected_by_fields": [
+        "end.message_type",
+        "end.payload",
+        "response.message_type"
+      ]
+    },
+    {
+      "legacy_id": "L09",
+      "synthetic_wrong_claim": "Treats data as object, parses once, reverses final/intermediate flags and declares code integer.",
+      "corrected_by_fields": [
+        "response.envelope_types",
+        "response.data_parse",
+        "response.result_type"
+      ]
+    },
+    {
+      "legacy_id": "L10",
+      "synthetic_wrong_claim": "Treats suggested transStrategy and punc/roleType control values as defaults; ignores authorization.",
+      "corrected_by_fields": [
+        "optional.lang",
+        "optional.trans_strategy",
+        "optional.punc",
+        "optional.role_type"
+      ]
+    },
+    {
+      "legacy_id": "L11",
+      "synthetic_wrong_claim": "Claims 10110 uniquely proves signing error; all errors require three exponential retries and guaranteed resume/replay.",
+      "corrected_by_fields": [
+        "errors.selected_map",
+        "errors.10110_diagnostic",
+        "retry.documented_policy"
+      ]
+    },
+    {
+      "legacy_id": "L12",
+      "synthetic_wrong_claim": "Requires whitelist for all calls; local IP suffices; edits apply instantly and settings are shared; HTTP date is publication date.",
+      "corrected_by_fields": [
+        "ip_whitelist.rules",
+        "document.version_state"
+      ]
+    }
+  ],
+  "structured_cross_artifact": "Match explicit field/vector/source/citation identifiers and source metadata. Prose meaning and whether L01-L12 are really corrected are independent Judge responsibilities; no keyword scoring.",
+  "input_mutation": "delivery_integrity becomes0; other business facts are still evaluated from the independent oracle.",
+  "native_static_or_formula": "Both accepted; any formulas use independent cache-clearing Office recalculation, not saved caches.",
+  "reference_not_an_oracle": true
+}

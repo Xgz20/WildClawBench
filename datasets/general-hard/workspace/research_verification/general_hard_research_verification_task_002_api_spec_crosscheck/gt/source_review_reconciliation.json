@@ -1,0 +1,446 @@
+{
+  "schema_version": "h028-source-review-reconciliation/v1",
+  "status": "PASS_AUTHOR_RECONCILIATION",
+  "reviews": [
+    {
+      "model": "source-review-a",
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-a/review.json",
+      "sha256": "73cc007a9a41e207cab8e146285fb3788d3a644a80fc80e3e21a206dec918ee6"
+    },
+    {
+      "model": "source-review-b",
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h028/qa/source-review-b/review.json",
+      "sha256": "e7c71f5b8b69ae61d8fa9cf6f31eced8e6322568910c89ff299dd6bc36d349d9"
+    }
+  ],
+  "same_original_primary_HTML_sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+  "selected_typed_fields": 38,
+  "authored_canonical_leaf_count": 101,
+  "mechanical_review_reference_resolution_count": 38,
+  "field_refs": [
+    {
+      "field_id": "service.product",
+      "A_observation_ids": [],
+      "B_review_path": [
+        "product_scope"
+      ],
+      "qualification": "正文标题为标准版；页首大模型推荐链接不替换目标产品。"
+    },
+    {
+      "field_id": "connection.endpoint",
+      "A_observation_ids": [
+        "connection.url",
+        "connection.protocol"
+      ],
+      "B_review_path": [
+        "endpoint"
+      ],
+      "qualification": "wss强烈推荐；ws也被文档支持。接受明确相同host/path的ws[s]模板和wss推荐。"
+    },
+    {
+      "field_id": "connection.host_policy",
+      "A_observation_ids": [
+        "connection.host_policy"
+      ],
+      "B_review_path": [
+        "endpoint",
+        "host_usage"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "document.version_state",
+      "A_observation_ids": [
+        "document.version",
+        "document.publication_date",
+        "document.last_updated_date"
+      ],
+      "B_review_path": [
+        "sources",
+        0
+      ],
+      "qualification": "正文未声明。抓取时间、HTTP日期、静态资源日期、/v1/与采集器版本均不是正式文档版本/日期。"
+    },
+    {
+      "field_id": "handshake.required_query",
+      "A_observation_ids": [
+        "handshake.query.appid",
+        "handshake.query.ts",
+        "handshake.query.signa"
+      ],
+      "B_review_path": [
+        "handshake_parameters"
+      ],
+      "qualification": "集合无序，name大小写有协议意义；appid不能变为appId。"
+    },
+    {
+      "field_id": "auth.api_key_placement",
+      "A_observation_ids": [
+        "auth.apiKey_location"
+      ],
+      "B_review_path": [
+        "signing",
+        "api_key_role"
+      ],
+      "qualification": "文档示例key不得作为真实配置；仅使用本题合成输入。"
+    },
+    {
+      "field_id": "query.encoding",
+      "A_observation_ids": [
+        "query.encoding"
+      ],
+      "B_review_path": [
+        "endpoint",
+        "url_encoding"
+      ],
+      "qualification": "显式格式要求优先于URL示例裸等号。一次编码由向量另验；没有排序query的官方要求。"
+    },
+    {
+      "field_id": "signature.base_string",
+      "A_observation_ids": [
+        "auth.signature.step_1"
+      ],
+      "B_review_path": [
+        "signing",
+        "documented_order",
+        0
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "signature.md5_representation",
+      "A_observation_ids": [
+        "auth.signature.step_2"
+      ],
+      "B_review_path": [
+        "signing",
+        "documented_order",
+        1
+      ],
+      "qualification": "官方示例为小写32hex；UTF-8文本用作后续核算。不能扩展为已证明服务端拒绝其它大小写。"
+    },
+    {
+      "field_id": "signature.hmac_inputs",
+      "A_observation_ids": [
+        "auth.signature.step_3"
+      ],
+      "B_review_path": [
+        "signing",
+        "documented_order",
+        2
+      ],
+      "qualification": "不可反置key/message，不对完整路径或排序query做该签名。"
+    },
+    {
+      "field_id": "signature.final_encoding",
+      "A_observation_ids": [
+        "auth.signature.step_3"
+      ],
+      "B_review_path": [
+        "signing",
+        "hash_representation_boundary"
+      ],
+      "qualification": "原始摘要再标准Base64是与官方示例一致的字节解释；无服务端接收验证。"
+    },
+    {
+      "field_id": "timestamp.semantic",
+      "A_observation_ids": [
+        "handshake.query.ts"
+      ],
+      "B_review_path": [
+        "current_timestamp_and_clock_window"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "timestamp.documented_window",
+      "A_observation_ids": [
+        "auth.clock_skew_window"
+      ],
+      "B_review_path": [
+        "current_timestamp_and_clock_window"
+      ],
+      "qualification": "冻结direct-WebSocket正文未给数字窗；不证明服务器不校验时间。5min白名单传播、SDK18006的30min、15s音频空闲均不可套用。"
+    },
+    {
+      "field_id": "audio.format",
+      "A_observation_ids": [
+        "audio.format"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "audio.sample_rate",
+      "A_observation_ids": [
+        "audio.sample_rate"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "基准Hz；16kHz等单位清楚的换算可接受。"
+    },
+    {
+      "field_id": "audio.bit_depth",
+      "A_observation_ids": [
+        "audio.sample_width"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "bit/sample。"
+    },
+    {
+      "field_id": "audio.channels",
+      "A_observation_ids": [
+        "audio.channels"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "audio.message_type",
+      "A_observation_ids": [
+        "audio.message_type"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "cadence.recommended_interval",
+      "A_observation_ids": [
+        "audio.chunk_interval_recommendation"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "基准ms。"
+    },
+    {
+      "field_id": "cadence.recommended_chunk",
+      "A_observation_ids": [
+        "audio.chunk_bytes_recommendation"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "bytes；16000*2*1*0.04=1280仅是数学一致性，不是实测。"
+    },
+    {
+      "field_id": "cadence.requirement_strength",
+      "A_observation_ids": [
+        "audio.chunk_interval_recommendation",
+        "audio.chunk_bytes_recommendation",
+        "audio.maximum_message_bytes",
+        "audio.allowed_chunk_variance"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "不把40ms/1280B写成必须恰好或最大值，不虚构容差。"
+    },
+    {
+      "field_id": "audio.idle_timeout",
+      "A_observation_ids": [
+        "audio.send_interval_timeout",
+        "error.code.37005"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "Check only documented 15-second audio-idle threshold and error/disconnect consequences. The text says over 15 seconds, but > versus >= at the exact boundary is not a scored leaf or a measured server claim."
+    },
+    {
+      "field_id": "session.duration_boundary",
+      "A_observation_ids": [
+        "audio.duration_policy",
+        "connection.session_timeout_duration"
+      ],
+      "B_review_path": [
+        "audio_and_session"
+      ],
+      "qualification": "理论不限不等于实测SLA、永不超时或保证不限。"
+    },
+    {
+      "field_id": "end.message_type",
+      "A_observation_ids": [
+        "audio.end_marker"
+      ],
+      "B_review_path": [
+        "audio_and_session",
+        "end_marker"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "end.payload",
+      "A_observation_ids": [
+        "audio.end_marker_literal"
+      ],
+      "B_review_path": [
+        "audio_and_session",
+        "end_marker"
+      ],
+      "qualification": "按JSON语义比较，不要求空白完全一致；true是bool。"
+    },
+    {
+      "field_id": "response.message_type",
+      "A_observation_ids": [
+        "response.transport",
+        "error.transport_and_close"
+      ],
+      "B_review_path": [
+        "responses"
+      ],
+      "qualification": ""
+    },
+    {
+      "field_id": "response.envelope_types",
+      "A_observation_ids": [
+        "response.envelope.action",
+        "response.envelope.code",
+        "response.envelope.data",
+        "response.envelope.desc",
+        "response.envelope.sid"
+      ],
+      "B_review_path": [
+        "responses",
+        "envelope_fields"
+      ],
+      "qualification": "这是文档类型声明；code类型不可写成integer。"
+    },
+    {
+      "field_id": "response.data_parse",
+      "A_observation_ids": [
+        "response.data_nested_json"
+      ],
+      "B_review_path": [
+        "responses",
+        "recognition_result"
+      ],
+      "qualification": "针对有结果载荷的data；started/error可为空串，不要求无条件解析空串。"
+    },
+    {
+      "field_id": "response.result_type",
+      "A_observation_ids": [
+        "response.data.type"
+      ],
+      "B_review_path": [
+        "responses",
+        "intermediate_final"
+      ],
+      "qualification": "接受字符串0/1含义映射；不推定完整增量合并算法。"
+    },
+    {
+      "field_id": "optional.lang",
+      "A_observation_ids": [
+        "handshake.query.lang"
+      ],
+      "B_review_path": [
+        "handshake_parameters"
+      ],
+      "qualification": "接受中文/cn与原文相同口径；不可套用大模型的免切能力。"
+    },
+    {
+      "field_id": "optional.trans_strategy",
+      "A_observation_ids": [
+        "handshake.query.transStrategy",
+        "handshake.query.transType"
+      ],
+      "B_review_path": [
+        "handshake_parameters"
+      ],
+      "qualification": "建议2不是默认2；transType默认normal不可错置。"
+    },
+    {
+      "field_id": "optional.punc",
+      "A_observation_ids": [
+        "handshake.query.punc"
+      ],
+      "B_review_path": [
+        "handshake_parameters"
+      ],
+      "qualification": "0是过滤值；未知数值默认不能填0。"
+    },
+    {
+      "field_id": "optional.role_type",
+      "A_observation_ids": [
+        "handshake.query.roleType"
+      ],
+      "B_review_path": [
+        "handshake_parameters"
+      ],
+      "qualification": "默认不开启不是文档明示数字0；不考察rl全部增量角色规则。"
+    },
+    {
+      "field_id": "errors.selected_map",
+      "A_observation_ids": [
+        "error.code.10105",
+        "error.code.10106",
+        "error.code.10110",
+        "error.code.10800",
+        "error.code.16003",
+        "error.code.37005"
+      ],
+      "B_review_path": [
+        "error_codes_and_corrections"
+      ],
+      "qualification": "仅6个指定码纳入分母；中文明确含义接受。10110保留表中泛化处理，不改成独占签名诊断。"
+    },
+    {
+      "field_id": "errors.10110_diagnostic",
+      "A_observation_ids": [
+        "error.code.10110",
+        "error.10110_faq"
+      ],
+      "B_review_path": [
+        "retry_policy_boundary",
+        "10110_cross_section_boundary"
+      ],
+      "qualification": "typed对照与自然语言排查解释分开；保留code/desc/sid和授权上下文。"
+    },
+    {
+      "field_id": "retry.documented_policy",
+      "A_observation_ids": [
+        "connection.retry_policy",
+        "error.code.16003"
+      ],
+      "B_review_path": [
+        "retry_policy_boundary"
+      ],
+      "qualification": "仅指冻结表明文写重试；不推定其它故障绝对禁止重试。客户退避策略须另标client_policy。"
+    },
+    {
+      "field_id": "ip_whitelist.rules",
+      "A_observation_ids": [
+        "auth.ip_whitelist.disabled",
+        "auth.ip_whitelist.enabled",
+        "auth.ip_whitelist.propagation"
+      ],
+      "B_review_path": [
+        "authorization_and_whitelist",
+        "ip_whitelist"
+      ],
+      "qualification": "约5min是保存后的传播，不是时钟窗或精确SLA；公网IP、按应用/服务独立设置见该节完整规则。"
+    },
+    {
+      "field_id": "handshake.checksum_boundary",
+      "A_observation_ids": [],
+      "B_review_path": [
+        "retry_policy_boundary",
+        "faq_10105_boundary"
+      ],
+      "qualification": "仅断言正式表未列/不能据FAQ增为必填；不声称服务端必拒绝所有额外参数。"
+    }
+  ],
+  "author_direct_main_title_check": true,
+  "interpretation_boundary": "Same complete original bytes and two independent model source reads support the authored typed projection. 101 is the canonical leaf count, not101 independently identical raw reviewer strings. Known/unknown, examples and interpretations remain qualified.",
+  "model_review_not_human_expert": true,
+  "formal_semantic_score": null
+}

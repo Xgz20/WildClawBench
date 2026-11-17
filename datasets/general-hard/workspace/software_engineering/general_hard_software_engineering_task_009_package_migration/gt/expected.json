@@ -1,0 +1,28 @@
+{
+  "schema": "h049-expected/v1",
+  "task_id": "general_hard_software_engineering_task_009_package_migration",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "business_case_ids": [
+    "default",
+    "legacy",
+    "canonical_zero",
+    "null_threshold",
+    "zero_scale",
+    "negative",
+    "unicode_unknown",
+    "ignored_invalid_old",
+    "explicit_false",
+    "legacy_null"
+  ],
+  "interpreter_versions": [
+    "3.11",
+    "3.12"
+  ],
+  "source_first": true,
+  "reference_not_oracle": true
+}

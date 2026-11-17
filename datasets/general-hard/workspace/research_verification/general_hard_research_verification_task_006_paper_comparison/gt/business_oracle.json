@@ -1,0 +1,546 @@
+{
+  "status": "SOURCE_FIRST_FACTS_AND_PUBLIC_CONTRACT_ADOPTED_REFERENCE_AND_RULES_PENDING",
+  "created_at_utc": "2026-10-28T16:42:56.404514+00:00",
+  "stage": "post-freeze non-blind source reconciliation and scientific proposal only",
+  "formal_Judge_or_semantic_score": false,
+  "real_experiment_Harness_or_human_expert_review": false,
+  "candidate_delivery_schema_public_verdict_rule_grading_weights_defined": true,
+  "source_truth_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/reconciliation-v1/source_truth.json",
+  "source_truth_sha256": "599d2284c600c098361630a9e6a93b19ea7fd3d817ffbb51b1f505da7d2dfd65",
+  "role": "源领域判据和限制提案，不含执行Judge/权重/grade代码",
+  "domain_definitions": {
+    "work_vs_report": "BL两版同work，report/version各保留具体结果。",
+    "goal": "全目标谓词通过，WP-1/BA-2/DO-1各自保留；格式/终止/reload不能替代。",
+    "budget": "每任务累计已发出工具调用，错误/无结果计入，重试共享剩余预算，模型请求不是工具调用。",
+    "attempt": "controller start，上限不等于实际使用数或成功率分母。",
+    "reload": "加载有效记录并发出下一单元，不要求剩余结果正确。",
+    "p95": "全部100执行nearest-rank第95秩，不是最大值；跨报告比较须共同硬件和计时边界。",
+    "lifecycle_CU": "ST五类；SL首次I/O切片；缺项不置0、不借其它控制器。",
+    "SF1": "受限沙箱执行是否至少一次allowlist外调用，非生产普遍安全证明。"
+  },
+  "definition_source_evidence_ids": [
+    "BL1-identity",
+    "BL2-identity",
+    "WP1-definition",
+    "WL-goal",
+    "AF-goal",
+    "BL2-budget",
+    "RP-config",
+    "RP-endpoints",
+    "LB-rank",
+    "ST-timer",
+    "LB-timer",
+    "SL-exclude",
+    "ST-nofill",
+    "AF-flagunit",
+    "AF-noguarantee"
+  ],
+  "facts": [
+    {
+      "fact_id": "F-BL1",
+      "report_id": "BL_v1",
+      "values": {
+        "goal_pass": 68,
+        "parseable_artifact": 96,
+        "parseable_target_fail": 28,
+        "no_artifact": 4,
+        "N_tasks": 100,
+        "group_goal_pass": [
+          14,
+          19,
+          35
+        ],
+        "group_sizes": [
+          20,
+          30,
+          50
+        ]
+      },
+      "definition": "WP-1全部目标，越高越好；产物行与目标行重叠。",
+      "evidence_ids": [
+        "BL1-goal"
+      ],
+      "additional_locator": "物理p2 Tables1–2"
+    },
+    {
+      "fact_id": "F-BL2",
+      "report_id": "BL_v2",
+      "values": {
+        "goal_pass": 85,
+        "parseable_artifact": 98,
+        "parseable_target_fail": 13,
+        "no_artifact": 2,
+        "N_tasks": 100,
+        "group_goal_pass": [
+          18,
+          26,
+          41
+        ],
+        "group_sizes": [
+          20,
+          30,
+          50
+        ]
+      },
+      "definition": "WP-1全部目标，越高越好；第二次尝试不增任务分母。",
+      "evidence_ids": [
+        "BL2-goal"
+      ],
+      "additional_locator": "物理p2 Tables1–2"
+    },
+    {
+      "fact_id": "F-BL-causal",
+      "report_id": "BL_v2",
+      "values": {
+        "policy": "L0→L1",
+        "controller": "J0→J1; adds step-boundary records",
+        "tool_ceiling": "16→64 total/task",
+        "attempt_ceiling": "1→2 starts/task",
+        "checkpoint_only_ablation": "not supplied",
+        "causal_component_contributions": "unknown"
+      },
+      "evidence_ids": [
+        "BL2-settings",
+        "BL2-multiple"
+      ]
+    },
+    {
+      "fact_id": "F-BL-recovery",
+      "report_id": "BL_v2",
+      "values": {
+        "restart": "one reset after completed-step record committed; fresh instance reads record",
+        "continuous_48h_experiment": "explicitly not conducted or stipulated",
+        "latency_series": "not recorded",
+        "actual_max_recovery_latency": "unknown; neither known zero nor known >3 seconds"
+      },
+      "evidence_ids": [
+        "BL2-restart",
+        "BL2-no48",
+        "BL2-notiming"
+      ]
+    },
+    {
+      "fact_id": "F-ST",
+      "report_id": "ST_v1",
+      "values": {
+        "goal_pass": 80,
+        "N_tasks": 100,
+        "group_goal_pass": [
+          17,
+          25,
+          38
+        ],
+        "p95_seconds": "1.20",
+        "lifecycle_mean_CU_per_task": "1.10",
+        "components_CU_per_task": {
+          "initial_input": ".54",
+          "initial_output": ".36",
+          "retry": ".10",
+          "startup": ".06",
+          "storage": ".04"
+        }
+      },
+      "definition": "目标高为好，p95/成本低为好。计时和成本各含全部100执行和目标失败。",
+      "evidence_ids": [
+        "ST-goal",
+        "ST-time",
+        "ST-cost",
+        "ST-costscope"
+      ]
+    },
+    {
+      "fact_id": "F-timer",
+      "report_ids": [
+        "ST_v1",
+        "LB_v1"
+      ],
+      "values": {
+        "host": "H8-16",
+        "logical_CPU": 8,
+        "memory_decimal_bytes": 16000000000,
+        "GPU": false,
+        "N_timed_each": 100,
+        "quantile": "nearest-rank rank95/100, not maximum",
+        "timer": "first startup request through last allowed attempt terminal artifact write and target-check return",
+        "includes": "startup, model/tool waiting, failed calls, retry, persistence; no pause removed",
+        "LB_U_T": "1U_T=1ms",
+        "LB_p95_U_T": 900,
+        "LB_goal_count": "not reported"
+      },
+      "evidence_ids": [
+        "ST-hardware",
+        "ST-timer",
+        "LB-900",
+        "LB-unit",
+        "LB-rank",
+        "LB-hardware",
+        "LB-timer",
+        "LB-missing"
+      ],
+      "additional_locator": "两报告物理p3 TableA1，8逻辑CPU、16GB decimal、无GPU"
+    },
+    {
+      "fact_id": "F-WL",
+      "report_id": "WL_v1",
+      "values": {
+        "suite": "BrowserActions120/B2",
+        "case_ids": "B201–B320",
+        "N": 120,
+        "format_valid": 112,
+        "final_goal_pass": 86,
+        "valid_target_fail": 26,
+        "invalid_format": 8,
+        "mapping_to_W1": "not supplied"
+      },
+      "definition": "BAFrame-1格式与BA-2最终目标分开；各通过率高为好。",
+      "evidence_ids": [
+        "WL-format",
+        "WL-goal",
+        "WL-task",
+        "WL-id"
+      ],
+      "additional_locator": "物理p2 Tables1–2：86+26+8=120"
+    },
+    {
+      "fact_id": "F-RP",
+      "report_id": "RP_v1",
+      "values": {
+        "unique_W1_task_IDs": 100,
+        "F_CP": {
+          "N": 100,
+          "reload": 92,
+          "goal": 84,
+          "resumed_goal_fail": 8,
+          "no_reload": 8
+        },
+        "N_CP": {
+          "N": 100,
+          "reload": "not applicable",
+          "goal": 92
+        },
+        "primary": {
+          "arms": [
+            "F-CP",
+            "N-CP"
+          ],
+          "N": 200,
+          "goal": 176
+        },
+        "F_NOCP": {
+          "N": 100,
+          "reload": "not recorded",
+          "goal": 60
+        },
+        "all_arms_executions": 300,
+        "matched": "sameW1,L1,64 total calls,max2starts,H8-16,one reset after completed step4",
+        "only_registered_ablation_change": "checkpoint persistence enabled/disabled",
+        "individual_success_indicators": "not distributed"
+      },
+      "definition": "reload为加载有效记录并发出下一单元，不要求剩余单元正确；最终目标为最后尝试后WP-1全部满足，两者高为好。",
+      "evidence_ids": [
+        "RP-counts",
+        "RP-control",
+        "RP-resumed",
+        "RP-endpoints",
+        "RP-ablation",
+        "RP-fault",
+        "RP-pairing",
+        "RP-primary",
+        "RP-no-fault",
+        "RP-ledger",
+        "RP-config"
+      ]
+    },
+    {
+      "fact_id": "F-SL",
+      "report_id": "SL_v1",
+      "values": {
+        "N_tasks": 100,
+        "initial_input_total_CU": "54.00",
+        "initial_output_total_CU": "36.00",
+        "subtotal_CU": "90.00",
+        "slice_mean_CU_per_task": ".90",
+        "retry_startup_storage": "not recorded",
+        "lifecycle_total": "not reported or reconstructable",
+        "target_goal_count": "not reported"
+      },
+      "definition": "首尝试I/O切片，成本低为好；全部100任务分母，包括后续重试或失败。CU是虚构核算单位。",
+      "evidence_ids": [
+        "SL-slice",
+        "SL-exclude",
+        "SL-missing",
+        "SL-noschedule",
+        "ST-nofill"
+      ],
+      "additional_locator": "SL物理p2 Table1及p3 TableA1"
+    },
+    {
+      "fact_id": "F-AF",
+      "report_id": "AF_v1",
+      "values": {
+        "suite": "Doc100/D1",
+        "task_ids": "D001–D100",
+        "N_doc_tasks": 100,
+        "PF1_structure_pass": 100,
+        "DO1_goal_pass": 72,
+        "structure_pass_target_fail": 28,
+        "separate_N_sandbox_executions": 100,
+        "SF1_flagged_executions": 0,
+        "SF1_unit": "execution with at least one outside-allowlist call",
+        "allowlist": [
+          "read-local-input",
+          "write-draft-output",
+          "inspect-draft"
+        ],
+        "real_application_open_test": "not performed",
+        "human_expert_or_semantic_model_panel": "not performed",
+        "production_test_population_risk_bound_or_universal_proof": "not supplied"
+      },
+      "definition": "PF-1结构与DO-1目标高为好；SF-1受限执行标记低为好；文档任务和安全执行分母分开。",
+      "evidence_ids": [
+        "AF-format",
+        "AF-goal",
+        "AF-safety",
+        "AF-flagunit",
+        "AF-permission",
+        "AF-noguarantee",
+        "AF-fail",
+        "AF-oracle",
+        "AF-no-realopen",
+        "AF-denominators",
+        "AF-localallowlist",
+        "AF-id"
+      ]
+    }
+  ],
+  "arithmetic": [
+    {
+      "id": "D01",
+      "formula": "85−80",
+      "result": "5",
+      "unit": "percentage points",
+      "limit": "W1条件描述性点差，非显著性或因果"
+    },
+    {
+      "id": "D02",
+      "formula": "8 reports−1 extra BL version",
+      "result": "7",
+      "unit": "declared work identities",
+      "limit": "不是7项真实独立实验"
+    },
+    {
+      "id": "D03",
+      "formula": "85−68",
+      "result": "17",
+      "unit": "percentage points",
+      "limit": "不能分解checkpoint唯一贡献"
+    },
+    {
+      "id": "D04a",
+      "formula": "112/120×100",
+      "result": "93.33333333333333333333333333",
+      "unit": "percent format-valid",
+      "limit": "一位小数93.3%"
+    },
+    {
+      "id": "D04b",
+      "formula": "86/120×100",
+      "result": "71.66666666666666666666666667",
+      "unit": "percent final target-pass",
+      "limit": "一位小数71.7%"
+    },
+    {
+      "id": "D05a",
+      "formula": "92/100×100",
+      "result": "92",
+      "unit": "percent reload event",
+      "limit": ""
+    },
+    {
+      "id": "D05b",
+      "formula": "84/100×100",
+      "result": "84",
+      "unit": "percent final goal-pass",
+      "limit": ""
+    },
+    {
+      "id": "D05c",
+      "formula": "84/92×100",
+      "result": "91.30434782608695652173913043",
+      "unit": "percent goal conditional on reload",
+      "limit": "条件分母92，不能替代全体100分母"
+    },
+    {
+      "id": "D06a",
+      "formula": "1.20s×1000",
+      "result": "1200.00",
+      "unit": "ms ST p95",
+      "limit": ""
+    },
+    {
+      "id": "D06b",
+      "formula": "900U_T×1ms/U_T",
+      "result": "900",
+      "unit": "ms LB p95",
+      "limit": ""
+    },
+    {
+      "id": "D06c",
+      "formula": "1200−900",
+      "result": "300",
+      "unit": "ms reduction",
+      "limit": ""
+    },
+    {
+      "id": "D06d",
+      "formula": "300/1200×100",
+      "result": "25.00",
+      "unit": "percent reduction relative to ST",
+      "limit": "同硬件/时间边界/分位数；非质量相等/逐任务快25%/最大值"
+    },
+    {
+      "id": "D07a",
+      "formula": "(1.10−.90)/1.10×100",
+      "result": "18.18181818181818181818181818",
+      "unit": "percent scope-mismatched apparent difference",
+      "limit": "不能当SL完整生命周期节省"
+    },
+    {
+      "id": "D07b",
+      "formula": "SL=.90+x; at least18% less iff .90+x≤1.10×.82=.902 iff x≤.002",
+      "result": "0.0020",
+      "unit": "CU/task omitted-sum ceiling",
+      "limit": "x未知；不是实际费用，不能填0或抄ST"
+    },
+    {
+      "id": "D11",
+      "formula": "100−72",
+      "result": "28",
+      "unit": "structure-pass target-fail tasks",
+      "limit": ""
+    },
+    {
+      "id": "D12",
+      "formula": "84−60",
+      "result": "24",
+      "unit": "percentage points final goal-pass",
+      "limit": "F-CP与F-NOCP各100；无显著性主张"
+    },
+    {
+      "id": "D-RP-primary",
+      "formula": "84+92",
+      "result": "176",
+      "unit": "goal-passes/200 primary executions",
+      "limit": ""
+    },
+    {
+      "id": "D-RP-rate",
+      "formula": "176/200×100",
+      "result": "88",
+      "unit": "percent primary goal-pass",
+      "limit": ""
+    },
+    {
+      "id": "D-RP-all",
+      "formula": "100+100+100",
+      "result": "300",
+      "unit": "all arm executions",
+      "limit": "同100任务身份重复三臂；额外消融不属primary200"
+    },
+    {
+      "id": "D-ST-cost",
+      "formula": ".54+.36+.10+.06+.04",
+      "result": "1.10",
+      "unit": "CU/task lifecycle",
+      "limit": ""
+    },
+    {
+      "id": "D-SL-slice",
+      "formula": "(54+36)/100",
+      "result": "0.9",
+      "unit": "CU/task initial I/O",
+      "limit": ""
+    },
+    {
+      "id": "D-p95-rank",
+      "formula": "ceil(.95×100)",
+      "result": "95",
+      "unit": "order-statistic rank",
+      "limit": "非最大值"
+    }
+  ],
+  "interpretation_boundaries": {
+    "C03": [
+      {
+        "classification": "insufficient",
+        "interpretation": "排他因果世界命题：全部17点由checkpoint导致，真实贡献未识别",
+        "necessary_reason_boundary": "须指出多配置同改和缺单因素消融；不能归因全部。"
+      },
+      {
+        "classification": "refuted",
+        "interpretation": "报告已建立唯一checkpoint归因或版本数据足以证明唯一原因的证据元命题",
+        "necessary_reason_boundary": "反驳唯一归因资格；不得声称实测checkpoint无效，或其他变化各自确实造成提升。"
+      }
+    ],
+    "C08": [
+      {
+        "classification": "insufficient",
+        "interpretation": "真实未来生产永远安全的经验世界命题，有限受限样本无法建立",
+        "necessary_reason_boundary": "保留SF-1沙箱0/100范围；真实生产风险未知，不虚构生产事故。"
+      },
+      {
+        "classification": "refuted",
+        "interpretation": "这组证据足以保证永远安全的证据充分性/外推元命题",
+        "necessary_reason_boundary": "反驳充分性；引用受限权限、有限样本和无生产测试/风险界/普遍证明，不等于已观察生产事故。"
+      }
+    ],
+    "C09": [
+      {
+        "classification": "refuted",
+        "interpretation": "整句合取含已做48小时实验，PDF明确否认；也未测得3秒最大值",
+        "necessary_reason_boundary": "必须承认48h未做/未设定；延迟未知，不能推出>3秒或=0。"
+      },
+      {
+        "classification": "insufficient (component only)",
+        "interpretation": "单独抽出实际最大恢复延迟≤3秒这一数值真值缺证",
+        "necessary_reason_boundary": "不作为忽略48h明确否认的全句替代标签；若对象为报告已测得，则测量存在性也可反驳。"
+      }
+    ]
+  },
+  "missing_must_remain_unknown": [
+    "BL因果分量",
+    "BL实际最大恢复延迟",
+    "SL完整生命周期费用",
+    "LB目标通过数/质量相等",
+    "生产风险/普遍保证",
+    "未发布配对成功/时延成本向量/重复运行不确定性"
+  ],
+  "native_delivery_and_public_final_verdict_policy": "未确定，待root；此提案不引入候选隐藏schema、重复CID闭包、评分代码/权重。",
+  "root_adoption": {
+    "date_utc": "2026-10-28T17:46:46.970585+00:00",
+    "source_truth_sha256": "599d2284c600c098361630a9e6a93b19ea7fd3d817ffbb51b1f505da7d2dfd65",
+    "decisions": {
+      "R01": "Adopt fact vs evidence-sufficiency distinction. C03/C08 insufficient fact or refuted proof-sufficiency are both admissible only with their source-supported reasons and boundaries; label/kind alone cannot certify interpretation.",
+      "R02": "C09 whole conjunction is refuted by explicit no48h experiment. Its unknown latency fact can be separately insufficient; this cannot erase the48h contradiction or fabricate a latency above3s/zero.",
+      "R03": "Adopt public native/JSON contract below and fixed judgment ownership; rules/reference/runtime not yet created.",
+      "R04": "Preserve original CC0 controlled fiction and model-review provenance; no real experiment, human expert, Harness, Judge or semantic score."
+    },
+    "judgment_owner_by_input_ref": {
+      "C01": "business_correctness",
+      "C02": "boundary_cases",
+      "C03": "boundary_cases",
+      "C04": "boundary_cases",
+      "C05": "business_correctness",
+      "C06": "business_correctness",
+      "C07": "boundary_cases",
+      "C08": "boundary_cases",
+      "C09": "boundary_cases",
+      "C10": "boundary_cases",
+      "C11": "business_correctness",
+      "C12": "business_correctness"
+    },
+    "reference_precedes_truth": false,
+    "model_review_not_human_expert": true,
+    "rules_Office_Harness_Judge_or_semantic_score_run": false
+  }
+}

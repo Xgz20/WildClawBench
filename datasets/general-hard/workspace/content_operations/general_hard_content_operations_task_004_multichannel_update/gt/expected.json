@@ -1,0 +1,29 @@
+{
+  "schema": "h060.expected/v1",
+  "task_id": "general_hard_content_operations_task_004_multichannel_update",
+  "order": 60,
+  "difficulty": "L4_design_estimate",
+  "source_files": 7,
+  "facts": 12,
+  "channels": 3,
+  "locations": 36,
+  "approved_events": 3,
+  "event_order": [
+    "CHG-001",
+    "CHG-002",
+    "CHG-003"
+  ],
+  "gross_optional": "157.94",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "hybrid_weights": {
+    "automated": 0.65,
+    "llm_judge": 0.35
+  },
+  "natural_semantics_proven_by_JSON": false,
+  "reference_wording_is_not_oracle": true
+}

@@ -1,0 +1,381 @@
+                                                 APPENDIX A
+                                    Abbreviations and Units of Measure
+                        1 carat (metric) (diamond)           = 200 milligrams
+                        1 flask (fl)                         = 76 pounds, avoirdupois, or 34.47 kilograms
+                        1 karat (gold)                       = one twenty-fourth part
+                        1 kilogram (kg)                      = 2.2046 pounds, avoirdupois
+                        1 kilopascal (kPa)                   = 0.145 pounds per square inch
+                        1 liter (L)                          = 0.264172 gallon
+                        1 long ton (lt)                      = 2,240 pounds, avoirdupois
+                        1 long ton unit (ltu)                = 1% of 1 long ton, or 22.4 pounds, avoirdupois
+                          long calcined ton (lct)            = excludes water of hydration
+                          long dry ton (ldt)                 = excludes excess free moisture
+                          Mcf                                = 1,000 cubic feet
+                        1 metric ton (t)                     = 2,204.6 pounds, avoirdupois, or 1,000 kilograms
+                        1 metric ton (t)                     = 1.1023 short ton
+                        1 metric ton unit (mtu)              = 1% of 1 metric ton, or 10 kilograms
+                          metric dry ton (mdt)               = excludes excess free moisture
+                        1 pound (lb)                         = 453.6 grams
+                        1 short ton (st)                     = 2,000 pounds, avoirdupois
+                        1 short ton unit (stu)               = 1% of 1 short ton, or 20 pounds, avoirdupois
+                          short dry ton (sdt)                = excludes excess free moisture
+                        1 square foot (ft2)                  = 0.092903 square meter
+                        1 square mile (mi2)                  = 2.58999 square kilometers
+                        1 troy ounce (tr oz)                 = 1.09714 avoirdupois ounces, or 31.103 grams
+                        1 troy pound                         = 12 troy ounces
+
+
+
+
+                                                 APPENDIX B
+                           Definitions of Selected Terms Used in This Report
+Terms Used for Materials in the National Defense Stockpile and Federal Helium Reserve
+
+Fiscal year for the U.S. Government is the period from October 1 through September 30. Fiscal year (FY) 2025 is
+from October 1, 2024, through September 30, 2025. FY 2026 is from October 1, 2025, through September 30, 2026.
+
+Inventory refers to the quantity of mineral materials held in the National Defense Stockpile or in the Federal Helium
+Reserve. Beginning in 2023, National Defense Stockpile shipments and inventory levels are no longer included.
+
+Potential disposals indicate the total amount of a material in the National Defense Stockpile that the U.S.
+Department of Defense is permitted to dispose of under the Annual Materials Plan approved by Congress for the
+fiscal year. Congress has authorized disposal over the long term at rates designed to maximize revenue but avoid
+undue disruption to the usual markets and financial loss to the United States. Disposals are defined as any disposal
+or sale of National Defense Stockpile stock. Starting in FY 2026, the Annual Materials Plan is no longer available
+publicly. The Federal Helium System assets (formerly operated by the Bureau of Land Management) were sold and
+transferred in June 2024 to a private company. This satisfied the requirements of the Helium Stewardship Act of 2013
+(HSA), which mandated the privatization of the Federal Helium System.
+
+Potential acquisitions indicate the maximum amount of a material that may be acquired by the U.S. Department of
+Defense for the National Defense Stockpile under the Annual Materials Plan approved by Congress for the fiscal year.
+
+Depletion Allowance
+
+The depletion allowance is a business tax deduction analogous to depreciation, but which applies to an ore reserve
+rather than equipment or production facilities. Federal tax law allows this deduction from taxable corporate income,
+recognizing that an ore deposit is a depletable asset that must eventually be replaced.
+                                                         APPENDIX C
+                                                  Reserves and Resources
+Reserves data are dynamic. They may be reduced as              with reserves of about 280 million tons of copper. Since
+ore is mined and (or) the feasibility of extraction            then, about 712 million tons of copper have been
+diminishes, or more commonly, they may continue to             produced worldwide, but world copper reserves in 2024
+increase as additional deposits (known or recently             were estimated to be 980 million tons of copper, more
+discovered) are developed, or currently exploited              than 3.5 times those in 1970, despite the depletion by
+deposits are more thoroughly explored and (or) new             mining of much more than the 1970 estimated reserves.
+technology or economic variables improve their
+economic feasibility. Reserves may be considered a             Future supplies of minerals will come from reserves and
+working inventory of mining companies’ supplies of an          other identified resources, currently undiscovered
+economically extractable mineral commodity. As such,           resources in deposits that will be discovered in the
+the magnitude of that inventory is necessarily limited by      future, and material that will be recycled from current
+many considerations, including cost of drilling, taxes,        in-use stocks of minerals or from minerals in waste
+price of the mineral commodity being mined, and the            disposal sites. Undiscovered deposits of minerals
+demand for it. Reserves will be developed to the point of      constitute an important consideration in assessing future
+business needs and geologic limitations of economic            supplies. Mineral-resource assessments have been
+ore grade and tonnage. For example, in 1970, identified        carried out for small parcels of land being evaluated for
+and undiscovered world copper resources were                   land reclassification, for the Nation, and for the world.
+estimated to contain 1.6 billion metric tons of copper,
+
+                        Part A—Resource and Reserve Classification for Minerals 1
+Introduction                                                   extracting and marketing the material in a given
+                                                               economy at a given time. The former constitutes
+Through the years, geologists, mining engineers, and           important objective scientific information of the resource
+others operating in the minerals field have used various       and a relatively unchanging foundation upon which the
+terms to describe and classify mineral resources, which        latter more valuable economic delineation can be based.
+as defined herein include energy materials. Some of
+these terms have gained wide use and acceptance,               The revised classification system, designed generally for
+although they are not always used with precisely the           all mineral materials, is shown graphically in figures C1
+same meaning.                                                  and C2; its components and their usage are described
+                                                               in the text. The classification of mineral and energy
+The U.S. Geological Survey (USGS) collects information         resources is necessarily arbitrary because definitional
+about the quantity and quality of all mineral resources. In    criteria do not always coincide with natural boundaries.
+1976, the USGS and the U.S. Bureau of Mines                    The system can be used to report the status of mineral
+developed a common classification and nomenclature,            and energy-fuel resources for the Nation or for specific
+which was published as USGS Bulletin 1450–A—                   areas.
+“Principles of the Mineral Resource Classification
+System of the U.S. Bureau of Mines and U.S. Geological         Resource and Reserve Definitions
+Survey.” Experience with this resource classification
+system showed that some changes were necessary in              A dictionary definition of resource, “something in reserve
+order to make it more workable in practice and more            or ready if needed,” has been adapted for mineral and
+useful in long-term planning. Therefore, representatives       energy resources to comprise all materials, including
+of the USGS and the U.S. Bureau of Mines collaborated          those only surmised to exist, that have present or
+to revise Bulletin 1450–A. Their work was published in         anticipated future value.
+1980 as USGS Circular 831—“Principles of a
+Resource/Reserve Classification for Minerals.”                 Resource.—A concentration of naturally occurring solid,
+                                                                  liquid, or gaseous material in or on the Earth’s crust
+Long-term public and commercial planning must be                  in such form and amount that economic extraction of
+based on the probability of discovering new deposits, on          a commodity from the concentration is currently or
+developing economic extraction processes for currently            potentially feasible.
+unworkable deposits, and on knowing which resources            Original Resource.—The amount of a resource before
+are immediately available. Thus, resources must be                production.
+continuously reassessed in the light of new geologic           Identified Resources.—Resources for which location,
+knowledge, of progress in science and technology, and             grade, quality, and quantity are known or estimated
+of shifts in economic and political conditions. To best           from specific geologic evidence. Identified resources
+serve these planning needs, known resources should be             include economic, marginally economic, and
+classified from two standpoints: (1) purely geologic or           subeconomic components. To reflect varying degrees
+physical and chemical characteristics—such as grade,              of geologic certainty, these economic divisions can
+quality, tonnage, thickness, and depth—of the material            be subdivided into measured, indicated, and inferred.
+in place; and (2) profitability analyses based on costs of
+  1
+   Based on U.S. Geological Survey Circular 831, 1980.
+   Demonstrated.—A term for the sum of measured               Economic.—This term implies that profitable extraction
+       plus indicated resources.                                or production under defined investment assumptions
+       Measured.—Quantity is computed from                      has been established, analytically demonstrated, or
+          dimensions revealed in outcrops, trenches,            assumed with reasonable certainty.
+          workings, or drill holes; grade and (or) quality    Subeconomic Resources.—The part of identified
+          are computed from the results of detailed             resources that does not meet the economic criteria of
+          sampling. The sites for inspection, sampling,         reserves and marginal reserves.
+          and measurements are spaced so closely and          Undiscovered Resources.—Resources, the existence
+          the geologic character is so well defined that        of which are only postulated, comprising deposits that
+          size, shape, depth, and mineral content of the        are separate from identified resources. Undiscovered
+          resource are well established.                        resources may be postulated in deposits of such
+       Indicated.—Quantity and grade and (or) quality           grade and physical location as to render them
+          are computed from information similar to that         economic, marginally economic, or subeconomic. To
+          used for measured resources, but the sites for        reflect varying degrees of geologic certainty,
+          inspection, sampling, and measurements are            undiscovered resources may be divided into two
+          farther apart or are otherwise less adequately        parts, as follows:
+          spaced. The degree of assurance, although             Hypothetical Resources.—Undiscovered resources
+          lower than that for measured resources, is high          that are similar to known mineral bodies and that
+          enough to assume continuity between points of            may be reasonably expected to exist in the same
+          observation.                                             producing district or region under analogous
+   Inferred.—Estimates are based on an assumed                     geologic conditions. If exploration confirms their
+       continuity beyond measured and (or) indicated               existence and reveals enough information about
+       resources, for which there is geologic evidence.            their quality, grade, and quantity, they will be
+       Inferred resources may or may not be supported              reclassified as identified resources.
+       by samples or measurements.                              Speculative Resources.—Undiscovered resources
+Reserve Base.—That part of an identified resource that             that may occur either in known types of deposits in
+   meets specified minimum physical and chemical                   favorable geologic settings where mineral
+   criteria related to current mining and production               discoveries have not been made, or in types of
+   practices, including those for grade, quality,                  deposits as yet unrecognized for their economic
+   thickness, and depth. The reserve base is the                   potential. If exploration confirms their existence
+   in-place demonstrated (measured plus indicated)                 and reveals enough information about their
+   resource from which reserves are estimated. It may              quantity, grade, and quality, they will be
+   encompass those parts of the resources that have a              reclassified as identified resources.
+   reasonable potential for becoming economically             Restricted Resources or Reserves.—That part of any
+   available within planning horizons beyond those that         resource or reserve category that is restricted from
+   assume proven technology and current economics.              extraction by laws or regulations. For example,
+   The reserve base includes those resources that are           restricted reserves meet all the requirements of
+   currently economic (reserves), marginally economic           reserves except that they are restricted from
+   (marginal reserves), and some of those that are              extraction by laws or regulations.
+   currently subeconomic (subeconomic resources). The         Other Occurrences.—Materials that are too low grade
+   term “geologic reserve” has been applied by others           or for other reasons are not considered potentially
+   generally to the reserve-base category, but it also          economic, in the same sense as the defined
+   may include the inferred-reserve-base category; it is        resource, may be recognized and their magnitude
+   not a part of this classification system.                    estimated, but they are not classified as resources. A
+Inferred Reserve Base.—The in-place part of an                  separate category, labeled “other occurrences,” is
+   identified resource from which inferred reserves are         included in figures C1 and C2. In figure C1, the
+   estimated. Quantitative estimates are based largely          boundary between subeconomic and other
+   on knowledge of the geologic character of a deposit          occurrences is limited by the concept of current or
+   and for which there may be no samples or                     potential feasibility of economic production, which is
+   measurements. The estimates are based on an                  required by the definition of a resource. The boundary
+   assumed continuity beyond the reserve base, for              is obviously uncertain, but limits may be specified in
+   which there is geologic evidence.                            terms of grade, quality, thickness, depth, extractable
+Reserves.—That part of the reserve base that could be           percentage, or other economic-feasibility variables.
+   economically extracted or produced at the time of          Cumulative Production.—The amount of past
+   determination. The term “reserves” need not signify          cumulative production is not, by definition, a part of
+   that extraction facilities are in place and operative.       the resource. Nevertheless, a knowledge of what has
+   Reserves include only recoverable materials; thus,           been produced is important in order to understand
+   terms such as “extractable reserves” and                     current resources, in terms of both the amount of past
+   “recoverable reserves” are redundant and are not a           production and the amount of residual or remaining
+   part of this classification system.                          in-place resource. A separate space for cumulative
+Marginal Reserves.—That part of the reserve base                production is shown in figures C1 and C2. Residual
+   which, at the time of determination, borders on being        material left in the ground during current or future
+   economically producible. Its essential characteristic is     extraction should be recorded in the resource
+   economic uncertainty. Included are resources that            category appropriate to its economic-recovery
+   would be producible, given postulated changes in             potential.
+   economic or technological factors.
+  Figure C1.—Major Elements of Mineral-Resource Classification, Excluding
+                 Reserve Base and Inferred Reserve Base
+
+
+
+
+Figure C2.—Reserve Base and Inferred Reserve Base Classification Categories
+                                      Part B—Sources of Reserves Data
+National information on reserves for most mineral             considered to provide a reasonable and objective
+commodities found in this report, including those for the     estimate of what is likely to be available for mining in the
+United States, is derived from a variety of sources. The      long term. Accessible Economic Demonstrated
+ideal source of such information would be comprehensive       Resources represent the resources within the EDR
+evaluations that apply the same criteria to deposits in       category that are accessible for mining. Reserves for
+different geographic areas and report the results by          Australia in the Mineral Commodity Summaries 2026
+country. In the absence of such evaluations, national         are Accessible EDR. For more information, see
+reserves estimates compiled by countries for selected         “Australia’s Estimated Ore Reserves as at December
+mineral commodities are a primary source of national          2023—Table 2” (https://www.ga.gov.au/aimr2024/
+reserves information. Lacking national assessment             australias-estimated-ore-reserves).
+information by governments, sources such as academic
+articles, company reports, presentations by company           In Canada, the Canadian Institute of Mining, Metallurgy
+representatives, and trade journal articles, or a             and Petroleum (CIM) provides definition standards for
+combination of these, serve as the basis for national         the classification of mineral resources and mineral
+information on reserves reported in the mineral               reserves estimates into various categories. The
+commodity sections of this publication.                       category to which a resource or reserves estimate is
+                                                              assigned depends on the level of confidence in the
+A national estimate may be assembled from the                 geologic information available on the mineral deposit,
+following: historically reported reserves information         the quality and quantity of data available on the deposit,
+carried for years without alteration because no new           the level of detail of the technical and economic
+information is available, historically reported reserves      information that has been generated about the deposit,
+reduced by the amount of historical production, and           and the interpretation of the data and information. For
+company-reported reserves. International minerals             more information on the CIM definition standards, see
+availability studies conducted by the U.S. Bureau of          https://mrmr.cim.org/media/1128/cim-definition-
+Mines before 1996 and estimates of identified resources       standards_2014.pdf.
+by an international collaborative effort (the International
+Strategic Minerals Inventory) are the bases for some          In Russia, reserves for most minerals can appear in a
+reserves estimates. The USGS collects some qualitative        number of sources, although no comprehensive list of
+information about the quantity and quality of mineral         reserves is published. Reserves data for a limited set of
+resources but does not directly measure reserves or           mineral commodities are available in the annual report
+resources, and companies or governments do not                "Gosudarstvennyi Doklad o Sostoyanii i Ispol'zovanii
+directly report information about reserves or resources       Mineral'no-Syryevyh Resursov Rossiyskoy Federatsii"
+to the USGS. Reassessment of reserves is a continuing         (State Report on the State and Use of Mineral and Raw
+process, and the intensity of this process differs by         Materials Resources of the Russian Federation), which
+mineral commodity, country, and time period.                  is published by Russia’s Ministry of Natural Resources
+                                                              and Environment. Reserves data for various minerals
+Some countries have specific definitions for reserves         appear at times in journal articles, such as those in the
+data, and reserves for each country are assessed              journal "Mineral’nyye Resursy Rossii. Ekonomika i
+separately, based on reported data and definitions. An        Upravleniye" (Mineral Resources of Russia. Economics
+attempt is made to make reserves consistent among             and Management), which is published by the "OOO RG-
+countries for a mineral commodity and its byproducts.         Inform," a subsidiary of Rosgeologiya Holding. Also,
+For example, the Australasian Joint Ore Reserves              reserves data for individual jurisdictions are available on
+Committee (JORC) established the Australasian Code            the website of the Federal'noye Agentstvo po
+for Reporting of Exploration Results, Mineral Resources       Nedropol'zovaniyu (Federal Agency for Subsoil Use). It
+and Ore Reserves (JORC Code) that sets out minimum            is sometimes not clear if the reserves are being reported
+standards, recommendations, and guidelines for public         in ore or mineral content. It is also in many cases not
+reporting in Australasia of exploration results, mineral      clear which definition of reserves is being used,
+resources, and ore reserves. Companies listed on the          because the system inherited from the former Soviet
+Australian Securities Exchange and the New Zealand            Union has a number of ways in which the term
+Stock Exchange are required to report publicly on ore         “reserves” is defined, and these definitions qualify the
+reserves and mineral resources under their control,           percentage of resources that are included in a specific
+using the JORC Code.                                          category. For example, the Soviet reserves
+                                                              classification system, besides the categories A, B, C1,
+Data reported for individual deposits by mining               and C2, which represent progressively detailed
+companies are compiled in Geoscience Australia’s              knowledge of a mineral deposit based on exploration
+national mineral resources database and used in the           data, has other subcategories cross imposed upon the
+preparation of the annual national assessments of             system. Under the broad category reserves (zapasy),
+Australia’s mineral resources. Because of its specific        there are subcategories that include balance reserves
+use in the JORC Code, the term “reserves” is not used         (balansovyye zapasy, or economic reserves) and
+in the national inventory, where the highest category is      outside-the-balance reserves (zabalansovye zapasy, or
+“Economic Demonstrated Resources” (EDR). In                   subeconomic reserves), as well as categories that
+essence, EDR combines the JORC Code categories                include explored, industrial, and proven reserves, and
+“proved reserves” and “probable reserves,” plus               the reserves totals can vary significantly, depending on
+measured resources and indicated resources. This is           the specific definition of reserves being reported.
+                                                 APPENDIX D
+                                    Country Specialists Directory
+Minerals information country specialists at the U.S. Geological Survey collect and analyze information on the mineral
+industries of more than 170 nations throughout the world. The specialists are available to answer minerals-related
+questions concerning individual countries.
+
+
+Africa and the Middle East                                   Africa and the Middle East—Continued
+Algeria                      Kathleen D. Gans                Sao Tome e Principe           Meralis Plaza-Toledo
+Angola                       Meralis Plaza-Toledo            Saudi Arabia                  Iman Salehihikouei
+Bahrain                      Iman Salehihikouei              Senegal                       Alberto Alexander Perez
+Benin                        Meralis Plaza-Toledo            Seychelles                    Edgardo J. Pujols
+Botswana                     Yadira Soto-Viruet              Sierra Leone                  Alberto Alexander Perez
+Burkina Faso                 Alberto Alexander Perez         Somalia                       Edgardo J. Pujols
+Burundi                      Yadira Soto-Viruet              South Africa                  Edgardo J. Pujols
+Cabo Verde                   Meralis Plaza-Toledo            South Sudan                   Alberto Alexander Perez
+Cameroon                     Edgardo J. Pujols               Sudan                         Alberto Alexander Perez
+Central African Republic     Edgardo J. Pujols               Syria                         Iman Salehihikouei
+Chad                         Edgardo J. Pujols               Tanzania                      Yolanda Fong-Sam
+Comoros                      Edgardo J. Pujols               Togo                          Alberto Alexander Perez
+Congo (Brazzaville)          Edgardo J. Pujols               Tunisia                       Kathleen D. Gans
+Congo (Kinshasa)             Edgardo J. Pujols               Uganda                        Jesse J. Inestroza
+Côte d’Ivoire                Alberto Alexander Perez         United Arab Emirates          Iman Salehihikouei
+Djibouti                     Alberto Alexander Perez         Yemen                         Iman Salehihikouei
+Egypt                        Kathleen D. Gans                Zambia                        Edgardo J. Pujols
+Equatorial Guinea            Meralis Plaza-Toledo            Zimbabwe                      Edgardo J. Pujols
+Eritrea                      Alberto Alexander Perez
+                                                             Asia and the Pacific
+Eswatini                     Edgardo J. Pujols
+Ethiopia                     Meralis Plaza-Toledo            Afghanistan                   Keita F. DeCarlo
+Gabon                        Alberto Alexander Perez         Australia                     Loyd M. Trimmer III
+The Gambia                   Meralis Plaza-Toledo            Bangladesh                    Keita F. DeCarlo
+Ghana                        Meralis Plaza-Toledo            Bhutan                        Keita F. DeCarlo
+Guinea                       Alberto Alexander Perez         Brunei                        Loyd M. Trimmer III
+Guinea-Bissau                Meralis Plaza-Toledo            Burma (Myanmar)               Keita F. DeCarlo
+Iran                         Iman Salehihikouei              Cambodia                      Keita F. DeCarlo
+Iraq                         Iman Salehihikouei              China                         Ji Won Moon
+Israel                       Kathleen D. Gans                Fiji                          Loyd M. Trimmer III
+Jordan                       Iman Salehihikouei              India                         Keita F. DeCarlo
+Kenya                        Meralis Plaza-Toledo            Indonesia                     Jaewon Chung
+Kuwait                       Iman Salehihikouei              Japan                         Keita F. DeCarlo
+Lebanon                      Kathleen D. Gans                Korea, North                  Jaewon Chung
+Lesotho                      Edgardo J. Pujols               Korea, Republic of            Jaewon Chung
+Liberia                      Meralis Plaza-Toledo            Laos                          Keita F. DeCarlo
+Libya                        Kathleen D. Gans                Malaysia                      Jaewon Chung
+Madagascar                   Meralis Plaza-Toledo            Mongolia                      Jaewon Chung
+Malawi                       Jesse J. Inestroza              Nauru                         Loyd M. Trimmer III
+Mali                         Alberto Alexander Perez         Nepal                         Keita F. DeCarlo
+Mauritania                   Meralis Plaza-Toledo            New Caledonia                 Loyd M. Trimmer III
+Mauritius                    Edgardo J. Pujols               New Zealand                   Loyd M. Trimmer III
+Morocco and                                                  Pakistan                      Keita F. DeCarlo
+  Western Sahara             Kathleen D. Gans                Papua New Guinea              Loyd M. Trimmer III
+Mozambique                   Meralis Plaza-Toledo            Philippines                   Ji Won Moon
+Namibia                      Edgardo J. Pujols               Singapore                     Loyd M. Trimmer III
+Niger                        Alberto Alexander Perez         Solomon Islands               Loyd M. Trimmer III
+Nigeria                      Meralis Plaza-Toledo            Sri Lanka                     Keita F. DeCarlo
+Oman                         Iman Salehihikouei              Taiwan                        Jaewon Chung
+Qatar                        Iman Salehihikouei              Thailand                      Jaewon Chung
+Reunion                      Edgardo J. Pujols               Timor-Leste                   Loyd M. Trimmer III
+Rwanda                       Yolanda Fong-Sam                Vietnam                       Ji Won Moon
+Europe and Central Eurasia                               Europe and Central Eurasia—Continued
+Albania                      Kristian A. Macias          Spain                     Kristian A. Macias
+Armenia                      Elena Safirova              Sweden                    Joanna Asha Goclawska
+Austria                      Kathleen R. Trafton         Switzerland               Kathleen R. Trafton
+Azerbaijan                   Elena Safirova              Tajikistan                Karine M. Renaud
+Belarus                      Elena Safirova              Turkey                    Alexandru Hostiuc
+Belgium                      Elizabeth R. Neustaedter    Turkmenistan              Karine M. Renaud
+Bosnia and Herzegovina       Kathleen R. Trafton         Ukraine                   Elena Safirova
+Bulgaria                     Karine M. Renaud            United Kingdom            Kathleen R. Trafton
+Croatia                      Kathleen R. Trafton         Uzbekistan                Elena Safirova
+Cyprus                       Kristian A. Macias
+Czechia                      Elizabeth R. Neustaedter    North America, Central America, and the Caribbean
+Denmark, Faroe Islands,                                  Aruba                     Yadira Soto-Viruet
+   and Greenland             Joanna Asha Goclawska       The Bahamas               Yadira Soto-Viruet
+Estonia                      Alexandru Hostiuc           Belize                    Jesse J. Inestroza
+Finland                      Joanna Asha Goclawska       Canada                    Jesse J. Inestroza
+France                       Kathleen R. Trafton         Costa Rica                Jesse J. Inestroza
+Georgia                      Elena Safirova              Cuba                      Yadira Soto-Viruet
+Germany                      Karine M. Renaud            Dominican Republic        Yadira Soto-Viruet
+Greece                       Kristian A. Macias          El Salvador               Jesse J. Inestroza
+Hungary                      Elizabeth R. Neustaedter    Guatemala                 Jesse J. Inestroza
+Iceland                      Joanna Asha Goclawska       Haiti                     Yadira Soto-Viruet
+Ireland                      Joanna Asha Goclawska       Honduras                  Jesse J. Inestroza
+Italy                        Alexandru Hostiuc           Jamaica                   Yadira Soto-Viruet
+Kazakhstan                   Karine M. Renaud            Mexico                    Alberto Alexander Perez
+Kosovo                       Kristian A. Macias          Nicaragua                 Jesse J. Inestroza
+Kyrgyzstan                   Karine M. Renaud            Panama                    Jesse J. Inestroza
+Latvia                       Alexandru Hostiuc           Trinidad and Tobago       Yadira Soto-Viruet
+Lithuania                    Alexandru Hostiuc
+Luxembourg                   Elizabeth R. Neustaedter    South America
+Malta                        Kristian A. Macias          Argentina                 Jesse J. Inestroza
+Moldova                      Alexandru Hostiuc           Bolivia                   Yolanda Fong-Sam
+Montenegro                   Kristian A. Macias          Brazil                    Yolanda Fong-Sam
+Netherlands                  Elizabeth R. Neustaedter    Chile                     Yadira Soto-Viruet
+North Macedonia              Kathleen R. Trafton         Colombia                  Jesse J. Inestroza
+Norway                       Joanna Asha Goclawska       Ecuador                   Jesse J. Inestroza
+Poland                       Joanna Asha Goclawska       French Guiana             Yolanda Fong-Sam
+Portugal                     Kristian A. Macias          Guyana                    Yolanda Fong-Sam
+Romania                      Alexandru Hostiuc           Paraguay                  Yadira Soto-Viruet
+Russia                       Elena Safirova              Peru                      Yadira Soto-Viruet
+Serbia                       Karine M. Renaud            Suriname                  Yolanda Fong-Sam
+Slovakia                     Elizabeth R. Neustaedter    Uruguay                   Yadira Soto-Viruet
+Slovenia                     Elizabeth R. Neustaedter    Venezuela                 Yolanda Fong-Sam
+Country specialist         Telephone             Email
+Jaewon Chung               (703) 648–4793        jchung@usgs.gov
+Keita F. DeCarlo           (703) 648–7716        kdecarlo@usgs.gov
+Yolanda Fong-Sam           (703) 648–7756        yfong-sam@usgs.gov
+Kathleen D. Gans           (703) 648–4905        kgans@usgs.gov
+Joanna Asha Goclawska      (703) 648–7973        jgoclawska@usgs.gov
+Alexandru Hostiuc          (703) 648–7708        ahostiuc@usgs.gov
+Jesse J. Inestroza         (703) 648–7779        jinestroza@usgs.gov
+Kristian A. Macias         (703) 648–4902        kmacias@usgs.gov
+Ji Won Moon                (703) 648–7791        jmoon@usgs.gov
+Elizabeth R. Neustaedter   (703) 648–7732        eneustaedter@usgs.gov
+Alberto Alexander Perez    (703) 648–7749        aperez@usgs.gov
+Meralis Plaza-Toledo       (703) 648–7759        mplaza-toledo@usgs.gov
+Edgardo J. Pujols          (703) 648–4919        epujolsvazquez@usgs.gov
+Karine M. Renaud           (703) 648–7748        krenaud@usgs.gov
+Elena Safirova             (703) 648–7731        esafirova@usgs.gov
+Iman Salehihikouei         (703) 648–7744        isalehihikouei@usgs.gov
+Yadira Soto-Viruet         (703) 648–4957        ysoto-viruet@usgs.gov
+Kathleen R. Trafton        (703) 648–4903        ktrafton@usgs.gov
+Loyd M. Trimmer III        (703) 648–4983        ltrimmer@usgs.gov
+

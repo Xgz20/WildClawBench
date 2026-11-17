@@ -1,0 +1,15 @@
+{
+  "schema": "h044-evidence/v1",
+  "command_tail": [
+    "-B",
+    "-m",
+    "unittest",
+    "discover",
+    "-s",
+    "tests",
+    "-v"
+  ],
+  "public_test_count": 4,
+  "binding": "final source SHA + independent real subprocess test results/returncode",
+  "public_tests_not_security_proof": true
+}

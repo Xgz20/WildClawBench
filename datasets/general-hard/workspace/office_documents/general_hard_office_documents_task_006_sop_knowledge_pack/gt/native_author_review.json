@@ -1,0 +1,23 @@
+{
+  "schema_version": "h006-native-author-review/v1",
+  "reviewer": "same author visual inspection; not independent expert",
+  "page_counts": {
+    "manuals": 6,
+    "operator": 2,
+    "supervisor": 4
+  },
+  "images_reviewed": 12,
+  "changes": "Replaced cramped English decision headers with Chinese and split supervisor roles and timing tables.",
+  "result": "No observed clipping, overlap or missing text in final unchanged source layouts and final reference pages.",
+  "source_sha256": {
+    "exec/manuals/01_customer.docx": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+    "exec/manuals/02_warehouse.docx": "e1e936b50b4eac600e5f1f499d0c3c5deb9898441800ef570dc1a12ea7704bd1",
+    "exec/manuals/03_quality.docx": "de09c6829ded6802a8b3c4869f756026250f1003f6d79be9e0ec57e98217ab16",
+    "exec/manuals/04_finance.docx": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+    "exec/manuals/05_operations.docx": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+    "exec/manuals/06_compliance.docx": "b95381a5f56c2dfca1bc687170a85996b5fef47cac07ba7af175270b97383521",
+    "gt/reference/results/operator.docx": "8c3a957e4491ce857d8954a6bfb9140004c9d1eb49e8f25114d38de6d6c16dec",
+    "gt/reference/results/supervisor.docx": "b7623c1bffccb5a39714e4087d577adbffacd87c546e6c3b9a1cdf0dcf9aee23"
+  },
+  "limit": "Author rendering/visual review only, not target-app usability, automatic Worker visual scoring or independent semantic judgment."
+}

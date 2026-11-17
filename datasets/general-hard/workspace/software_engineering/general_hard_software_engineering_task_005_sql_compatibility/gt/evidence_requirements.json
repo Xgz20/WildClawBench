@@ -1,0 +1,29 @@
+{
+  "public_ids": [
+    "B01_plain",
+    "B02_reserved_table",
+    "B04_two_bind_order",
+    "B05_date_window",
+    "B06_nested_precedence",
+    "N01_empty_in",
+    "N02_empty_not_in",
+    "N03_equal_null",
+    "N05_mixed_in",
+    "N15_quote_binding",
+    "V01_invalid"
+  ],
+  "test_count": 4,
+  "command_tail": [
+    "-B",
+    "-m",
+    "unittest",
+    "project.test_public",
+    "-v"
+  ],
+  "weights": {
+    "audit_source": 0.2,
+    "tests_source": 0.2,
+    "queries": 0.4,
+    "actual_test_run": 0.2
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "unsafe": [
+    "frontend-only authorization",
+    "download-only fix",
+    "legacy/preview/job bypass",
+    "cached job ignores current authority",
+    "all text/numeric apostrophe",
+    "remove formula characters",
+    "quote-only CSV defense",
+    "deny all legitimate exports",
+    "blind plan acceptance",
+    "fake/stale report",
+    "modified matrix/tests"
+  ],
+  "neutral": [
+    "unsupported imports/cache/IO",
+    "missing trusted context",
+    "independent replay timeout",
+    "unsupported native DOCX profile"
+  ],
+  "limits": "This finite rule family is not an exploit guarantee for all spreadsheet products or natural-language audit quality."
+}

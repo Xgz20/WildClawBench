@@ -1,0 +1,548 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 58,
+  "task_id": "general_hard_content_operations_task_002_source_bound_campaign",
+  "registered_task_index": 54,
+  "registered": 54,
+  "remaining": 6,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 10,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6,
+    "content_operations": 2,
+    "planning_coordination": 3
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/content_operations/general_hard_content_operations_task_002_source_bound_campaign.md",
+      "sha256": "cfe6ee6a43ca306e40a7b7dbb9ce5e2a2e8cbc5f43a5f5dc0c49d00bbcf082c8",
+      "size": 11602
+    },
+    "exec": [
+      {
+        "path": "acceptance.md",
+        "sha256": "d7ee6cde7031401fdd7704c0b7ff2ad7913dff77434f1cc1b2caa3acd9e25c04",
+        "size": 3520
+      },
+      {
+        "path": "brand_brief.md",
+        "sha256": "dec0542d505cfbff9c0cbbbc1abdc0b53e9fbe810d7bf154812a5b2f1df45cc5",
+        "size": 2298
+      },
+      {
+        "path": "channel_rules.json",
+        "sha256": "a2eee7a3d2b312f63e71db00e7b8c1763198495417d4064d89955b59c566a6ac",
+        "size": 1651
+      },
+      {
+        "path": "source_texts/S01.md",
+        "sha256": "b1c3e4927217410f7b2709c67c5780d3f478b96f68848c0791c0a6295c0dbe85",
+        "size": 779
+      },
+      {
+        "path": "source_texts/S02.md",
+        "sha256": "ad3fe74523019bc46e16bb40fd0139c74eb8168f6bf429bf1e35caa0aeec8897",
+        "size": 745
+      },
+      {
+        "path": "source_texts/S03.md",
+        "sha256": "810f6869e3d35b8a65b58c0841538c4f82c7cbc793857a9757967c646ef41297",
+        "size": 670
+      },
+      {
+        "path": "source_texts/S04.md",
+        "sha256": "8438c330fa0598304bb7b3caa4912b85c42b05ff5778372c19db56293db3d073",
+        "size": 634
+      },
+      {
+        "path": "source_texts/S05.md",
+        "sha256": "5889f541b61741c1dc2d077924f9164898ea122e28d5473b8f85e407abaeb343",
+        "size": 685
+      },
+      {
+        "path": "source_texts/S06.md",
+        "sha256": "7cd6e7e9b8bc596bb444647f2b61bb964b2e625758b262428b4b7ab155732004",
+        "size": 672
+      },
+      {
+        "path": "source_texts/S07.md",
+        "sha256": "42f24ad9d259612b42001062133c583aa59647cd3c5b975ad9cfcbc0164c621f",
+        "size": 671
+      },
+      {
+        "path": "source_texts/S08.md",
+        "sha256": "ef7b1f5c352acbfbf5078642d33bf785fb55a9caf4fceff307e73fe507974a10",
+        "size": 693
+      },
+      {
+        "path": "source_texts/catalog.json",
+        "sha256": "131b914ac5c98effb9d83aa067f9d43029e1c84cd4331bf6c188cd88ef0dc006",
+        "size": 10654
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "369419e9dd17b9e4a3dbbf154783d56258bcac92b8f2589f6a9aa28d61c72aa3",
+        "size": 1056
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "fd66cb510d7b8db443ea53aee2e2f9c7e69f6acd979da06f4221745d512dc4ef",
+        "size": 14620
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "74d97cc121f692c33d6b3ccb17a769849cfaa5769681ab972f9b9feb28ed55a6",
+        "size": 1042
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "e705f8e62099a1fe14acb7ee7618d437f6bf761f4d6a0ef6ad7950af2a207ed3",
+        "size": 573
+      },
+      {
+        "path": "expected.json",
+        "sha256": "77a25f084e7a4efcb471aed22a5c88ce4405136e64efa863829b15656e7f7fbb",
+        "size": 629
+      },
+      {
+        "path": "grader.py",
+        "sha256": "ec130ba5e396c8e4fd191fbfaee6aa8dfe1e7b8827845891c20e53524fe68307",
+        "size": 15627
+      },
+      {
+        "path": "office-render-lock.json",
+        "sha256": "6b6636d1c9315d3565779813fddb1f611a434c0eed650eff5ff1c016d5630c4b",
+        "size": 1025
+      },
+      {
+        "path": "office-runtime-lock.json",
+        "sha256": "6b5b216b9f30c081018ddfb758b87a24bf4b1c839e502d1e817e82851327e0be",
+        "size": 472
+      },
+      {
+        "path": "office_runtime.py",
+        "sha256": "f56b3efe064fc862a0b352012010e9fc149da3c1d5cd10f6f1b0d5968ae90859",
+        "size": 65303
+      },
+      {
+        "path": "protected_inputs/acceptance.md",
+        "sha256": "d7ee6cde7031401fdd7704c0b7ff2ad7913dff77434f1cc1b2caa3acd9e25c04",
+        "size": 3520
+      },
+      {
+        "path": "protected_inputs/brand_brief.md",
+        "sha256": "dec0542d505cfbff9c0cbbbc1abdc0b53e9fbe810d7bf154812a5b2f1df45cc5",
+        "size": 2298
+      },
+      {
+        "path": "protected_inputs/channel_rules.json",
+        "sha256": "a2eee7a3d2b312f63e71db00e7b8c1763198495417d4064d89955b59c566a6ac",
+        "size": 1651
+      },
+      {
+        "path": "protected_inputs/source_texts/S01.md",
+        "sha256": "b1c3e4927217410f7b2709c67c5780d3f478b96f68848c0791c0a6295c0dbe85",
+        "size": 779
+      },
+      {
+        "path": "protected_inputs/source_texts/S02.md",
+        "sha256": "ad3fe74523019bc46e16bb40fd0139c74eb8168f6bf429bf1e35caa0aeec8897",
+        "size": 745
+      },
+      {
+        "path": "protected_inputs/source_texts/S03.md",
+        "sha256": "810f6869e3d35b8a65b58c0841538c4f82c7cbc793857a9757967c646ef41297",
+        "size": 670
+      },
+      {
+        "path": "protected_inputs/source_texts/S04.md",
+        "sha256": "8438c330fa0598304bb7b3caa4912b85c42b05ff5778372c19db56293db3d073",
+        "size": 634
+      },
+      {
+        "path": "protected_inputs/source_texts/S05.md",
+        "sha256": "5889f541b61741c1dc2d077924f9164898ea122e28d5473b8f85e407abaeb343",
+        "size": 685
+      },
+      {
+        "path": "protected_inputs/source_texts/S06.md",
+        "sha256": "7cd6e7e9b8bc596bb444647f2b61bb964b2e625758b262428b4b7ab155732004",
+        "size": 672
+      },
+      {
+        "path": "protected_inputs/source_texts/S07.md",
+        "sha256": "42f24ad9d259612b42001062133c583aa59647cd3c5b975ad9cfcbc0164c621f",
+        "size": 671
+      },
+      {
+        "path": "protected_inputs/source_texts/S08.md",
+        "sha256": "ef7b1f5c352acbfbf5078642d33bf785fb55a9caf4fceff307e73fe507974a10",
+        "size": 693
+      },
+      {
+        "path": "protected_inputs/source_texts/catalog.json",
+        "sha256": "131b914ac5c98effb9d83aa067f9d43029e1c84cd4331bf6c188cd88ef0dc006",
+        "size": 10654
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "dc4fb7d31a2a3d09b1667066c95be648f649a3096fde0de8ca846f4705b4872d",
+        "size": 1113
+      },
+      {
+        "path": "runtime_contract.json",
+        "sha256": "4028c559a9e861d1b8c61316c62209c15442cfccf1e95b1188b904726eeaed0d",
+        "size": 873
+      },
+      {
+        "path": "trusted_manifest.json",
+        "sha256": "7130287392fce7dc0a223b2be392619380ad17271b7dca9ff6c4d28d80fca6ee",
+        "size": 2450
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/root-final-v2/handoff.json",
+    "sha256": "45bb5e45106deadf7ef08e17d5abf760958923d129f64f2b360bf2642d5bb7db",
+    "size": 867
+  },
+  "review": {
+    "kind": "same model source dual-path plus independent root nonblind model/native readback not human expert",
+    "old_frozen_files_verified": 353,
+    "root_source_catalog_matches_raw": 8,
+    "root_actual_citation_quote_author_version_SHA_DOCX_checks": 18,
+    "root_calendar_rows_capacity_checked": 18,
+    "root_DOCX_pages_seen": 8,
+    "author_DOCX_pages_seen": 12,
+    "author_calendar_views_seen": 2,
+    "old_v1_controls": 26,
+    "current_v2_affected_controls": 3,
+    "do_not_sum_as_all_current": true,
+    "root_initial_fixture_XML_error_preserved_and_corrected": true,
+    "valid_old_GT_layout_false_loss_actual": 0.8981250000000001,
+    "current_legal_unsupported": "typed no component, not ability0",
+    "no_Judge": true
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_content_operations_task_002_source_bound_campaign",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/attempts/author-only-h058-formal__detached-zip-worker/general_hard_content_operations_task_002_source_bound_campaign/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 0.9999999999999999,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/attempts/author-only-h058-formal__detached-zip-worker/general_hard_content_operations_task_002_source_bound_campaign/author-only-formal-auto",
+      "candidate_sha256": "e9bc69475b1ffe29297583a82308057fd5c5b91bda32efca68c0fafe8c81e840",
+      "entry_count": 18
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/moved-without-runtime",
+      "candidate_sha256": "e9bc69475b1ffe29297583a82308057fd5c5b91bda32efca68c0fafe8c81e840",
+      "entry_count": 18
+    },
+    "nonruntime_same_byte_files": 68,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/calendar-office/office-audit.json",
+        "sha256": "9f77ab4854521200ec556d0d79148d4d0c418c7e8aa10d338f6166a49e4d97e4",
+        "size": 1199
+      },
+      {
+        "path": "worker/derived/calendar-office/recalculated.xlsx",
+        "sha256": "c720bd587a41e0688b0667249f1a2c52c1364e61b4f303aa556e7025b07c6178",
+        "size": 8597
+      },
+      {
+        "path": "worker/derived/campaign-render/render-audit.json",
+        "sha256": "758f7ab49d8e57af47ff43b00b123d71facbd1716caafca4ee7ba2881568ffc3",
+        "size": 2053
+      },
+      {
+        "path": "worker/derived/campaign-render/rendered.pdf",
+        "sha256": "c46d23def6c93fcd6aefdd8186f5626bc33a2d287b3e3d2f63bfcec80365fbbc",
+        "size": 288212
+      },
+      {
+        "path": "worker/derived/h058-rule-witness.json",
+        "sha256": "c4937ad88a39ee4ec7f5963d43030aac1afed0d39265fd894a5826247c089f90",
+        "size": 15823
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/calendar-office/office-audit.json",
+        "sha256": "9f77ab4854521200ec556d0d79148d4d0c418c7e8aa10d338f6166a49e4d97e4",
+        "size": 1199
+      },
+      {
+        "path": "worker/derived/calendar-office/recalculated.xlsx",
+        "sha256": "c720bd587a41e0688b0667249f1a2c52c1364e61b4f303aa556e7025b07c6178",
+        "size": 8597
+      },
+      {
+        "path": "worker/derived/campaign-render/render-audit.json",
+        "sha256": "758f7ab49d8e57af47ff43b00b123d71facbd1716caafca4ee7ba2881568ffc3",
+        "size": 2053
+      },
+      {
+        "path": "worker/derived/campaign-render/rendered.pdf",
+        "sha256": "c46d23def6c93fcd6aefdd8186f5626bc33a2d287b3e3d2f63bfcec80365fbbc",
+        "size": 288212
+      },
+      {
+        "path": "worker/derived/h058-rule-witness.json",
+        "sha256": "c4937ad88a39ee4ec7f5963d43030aac1afed0d39265fd894a5826247c089f90",
+        "size": 15823
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "def174e55faba1858f57afe9679aa1cd993d696da2249c57fe8380d4fefdd6f1",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "ef0c2eb895367d3c476ee3f1005d41984edcb12a11f0a7157fcdc4e07008b21d"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/calendar-office/office-audit.json",
+          "sha256": "9f77ab4854521200ec556d0d79148d4d0c418c7e8aa10d338f6166a49e4d97e4",
+          "size": 1199
+        },
+        {
+          "path": "worker/derived/calendar-office/recalculated.xlsx",
+          "sha256": "c720bd587a41e0688b0667249f1a2c52c1364e61b4f303aa556e7025b07c6178",
+          "size": 8597
+        },
+        {
+          "path": "worker/derived/campaign-render/render-audit.json",
+          "sha256": "758f7ab49d8e57af47ff43b00b123d71facbd1716caafca4ee7ba2881568ffc3",
+          "size": 2053
+        },
+        {
+          "path": "worker/derived/campaign-render/rendered.pdf",
+          "sha256": "c46d23def6c93fcd6aefdd8186f5626bc33a2d287b3e3d2f63bfcec80365fbbc",
+          "size": 288212
+        },
+        {
+          "path": "worker/derived/h058-rule-witness.json",
+          "sha256": "c4937ad88a39ee4ec7f5963d43030aac1afed0d39265fd894a5826247c089f90",
+          "size": 15823
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "cbe6517cce481df2d7c4dbefe3f0a259f1e6c8e84a3a38672c80425076ba7207",
+        "file_count": 5,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-29T00:20:16.078194Z",
+      "identity": {
+        "batch_id": "author-only-h058-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_content_operations_task_002_source_bound_campaign",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "dddc0639da2c3240ba99fb41f63ba1842a8ac3528b9511ad91e478ea8ef1f767",
+        "root_result_count": 4,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": true,
+        "final_sha256": "252c7e1faf415160a45cdf40194ebfbcd365058cf9bb4011e5ff54e303e0736d",
+        "initial_sha256": "77c3c1318a8c78e88ae1286eec54a476241c4c2a8cbb6c1e639c8a06a91ccc69"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-29T00:20:09.488216Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 6.405676,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "44bff12782ff5c530f1a1e765f8cc9bfaf0e1dfced8f33f17b1b3a43019b86a6",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "5362d6a2e6f7c83daa6c540e7a63eda6d45d56526281762c8359d106a42bd757",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 26844
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": {
+      "prepared": true,
+      "preparation_result": {
+        "status": "PASS",
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/attempts/author-only-h058-formal__detached-zip-worker/general_hard_content_operations_task_002_source_bound_campaign/author-only-formal-auto",
+        "grading_type": "hybrid",
+        "evidence_catalog": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/attempts/author-only-h058-formal__detached-zip-worker/general_hard_content_operations_task_002_source_bound_campaign/author-only-formal-auto/semantic/evidence-catalog.json",
+        "request": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/attempts/author-only-h058-formal__detached-zip-worker/general_hard_content_operations_task_002_source_bound_campaign/author-only-formal-auto/semantic/request.json",
+        "semantic_status": "awaiting_response",
+        "response_template": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/attempts/author-only-h058-formal__detached-zip-worker/general_hard_content_operations_task_002_source_bound_campaign/author-only-formal-auto/semantic/response-template.json"
+      },
+      "queries": [
+        {
+          "evidence_id": "evidence-0008",
+          "path": "candidate-original/workspace/results/calendar.xlsx",
+          "receipt": "semantic-query-1.json",
+          "sha256": "01bc4951c5f0349ed29f07f7bc1d3038577b6636114eb7bf3aa566c3afb39070",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0010",
+          "path": "candidate-original/workspace/results/campaign.docx",
+          "receipt": "semantic-query-2.json",
+          "sha256": "0cccf6578995dc05fd29d5b8208954617a5de509a66649fec01fcc005806358a",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        },
+        {
+          "evidence_id": "evidence-0048",
+          "path": "worker/derived/calendar-office/recalculated.xlsx",
+          "receipt": "semantic-query-3.json",
+          "sha256": "aa0c577369d0a0b1c2cdd558518fc1cab00286b4fa025fd426edb96875faa35b",
+          "scope": "representative native/image query only, not a semantic-support verdict"
+        }
+      ],
+      "catalog_sha256": "4f209737dfd635356e722300a59431027470225d7737d46c499def0f5ddef3b2",
+      "frozen_configuration_only": true,
+      "Judge_called": false,
+      "semantic_response_submitted": false
+    },
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/formal-detached-1793233208358921000/validation.json",
+    "sha256": "15ec23becb852f8c5106b1208e4a0bace9a775df3d6776738d13a0b8d5e4b654",
+    "size": 12247
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "2858036dafed5b0395d5fbff87cdceddcb8920bc3308812f54eb25d74610ba3b",
+    "size": 29871
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/static-root-single/20261029T002139Z_11bf205dca/report.json",
+      "sha256": "35e5df3a307b5139b6bd113b54304e28a5424c8dda18137f166f977d3b25e863",
+      "size": 1243
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h058/qa/static-root-full/20261029T002148Z_5e545a7cd7/report.json",
+      "sha256": "b370c9eb6625abe0559cefa09e845f5a9b1a5ae6e46854f6c783b08158ccadd6",
+      "size": 23771
+    },
+    "only_remaining_missing": 6
+  },
+  "source_summary": "12输入、24GT，8段公版古文按固定网页版本采录；三主题九渠道文案、引用CSV和原生一次性日历。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-29T00:21:49.154893+00:00"
+}

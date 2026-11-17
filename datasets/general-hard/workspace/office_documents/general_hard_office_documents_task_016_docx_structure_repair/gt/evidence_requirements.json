@@ -1,0 +1,7 @@
+{
+  "status": "material_phase_construction_contract",
+  "logs": "each repair binds actual original and final paragraph/table/bookmark/field/TOC entry positions; existing unrelated targets do not establish semantic correctness",
+  "semantic_judge": true,
+  "native_comments_required": true,
+  "full_client_validation": false
+}

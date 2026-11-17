@@ -1,0 +1,126 @@
+{
+  "schema_version": "h021-material-counterexamples/v1",
+  "status": "planned_controls_not_business_grader_verified",
+  "cases": [
+    {
+      "id": "truncated_first_seen",
+      "group": "business",
+      "scenario": "Use only metric-window history or first payment to classify new/old."
+    },
+    {
+      "id": "wrong_old_denominator",
+      "group": "business",
+      "scenario": "Use daily new users as old active stock."
+    },
+    {
+      "id": "duplicate_numerator",
+      "group": "boundary",
+      "scenario": "Count old lost transport records as unique users."
+    },
+    {
+      "id": "keep_conflict_first",
+      "group": "boundary",
+      "scenario": "Pick a successful conflicting event rather than quarantining the group."
+    },
+    {
+      "id": "UTC_day",
+      "group": "boundary",
+      "scenario": "Group next-day activity in UTC or raw timestamp date."
+    },
+    {
+      "id": "received_day",
+      "group": "boundary",
+      "scenario": "Use received_at for activity day."
+    },
+    {
+      "id": "event_difference",
+      "group": "business",
+      "scenario": "Subtract event/next-day user totals without fixed base-member sets."
+    },
+    {
+      "id": "deactivation_active",
+      "group": "boundary",
+      "scenario": "Treat deactivate as activity."
+    },
+    {
+      "id": "post_deactivation",
+      "group": "boundary",
+      "scenario": "Count post/same-second cancellation successes."
+    },
+    {
+      "id": "failed_or_refund_active",
+      "group": "boundary",
+      "scenario": "Count failures, refunds, pending, zero or negative payments."
+    },
+    {
+      "id": "erase_real_new_spike",
+      "group": "business",
+      "scenario": "Flatten the genuine new6/12=.5 observation."
+    },
+    {
+      "id": "empty_zero_rate",
+      "group": "boundary",
+      "scenario": "Treat observed empty cohort rate as0."
+    },
+    {
+      "id": "unobserved_zero",
+      "group": "boundary",
+      "scenario": "Fill censored numerator/rate with0 or use provided future events."
+    },
+    {
+      "id": "same_counts_wrong_users",
+      "group": "business",
+      "scenario": "Swap returned/lost users while preserving all counts and graph."
+    },
+    {
+      "id": "graph_correct_ledger_wrong",
+      "group": "business",
+      "scenario": "Correct report curves but wrong Excel event/member decisions."
+    },
+    {
+      "id": "same_shape_same_reason",
+      "group": "evidence",
+      "scenario": "Assign one reason to all three old peaks without trace proof."
+    },
+    {
+      "id": "wrong_physical_row",
+      "group": "evidence",
+      "scenario": "Correct ID but false physical CSV source_row."
+    },
+    {
+      "id": "unrelated_trace_sample",
+      "group": "evidence",
+      "scenario": "Cite base rows that do not support the direct mechanism."
+    },
+    {
+      "id": "visible_table_wrong",
+      "group": "delivery",
+      "scenario": "Correct metadata or graph but wrong visible denominator/rate."
+    },
+    {
+      "id": "actual_curve_wrong",
+      "group": "delivery",
+      "scenario": "Correct table and point metadata but shifted curve."
+    },
+    {
+      "id": "remote_resource",
+      "group": "delivery",
+      "scenario": "Depend on CDN/script/font instead of a usable offline report."
+    },
+    {
+      "id": "missing_output",
+      "group": "delivery",
+      "scenario": "Missing/unreadable required artifact."
+    },
+    {
+      "id": "input_changed",
+      "group": "delivery",
+      "scenario": "Modify frozen event/definition/old-dashboard input."
+    },
+    {
+      "id": "missing_private_or_browser",
+      "group": "infrastructure",
+      "scenario": "Missing/drifted GT/helper/browser assets is evaluation_error, not candidate0."
+    }
+  ]
+}

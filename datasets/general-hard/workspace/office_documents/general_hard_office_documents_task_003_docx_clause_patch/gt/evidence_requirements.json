@@ -1,0 +1,12 @@
+{
+  "schema_version": "h003-evidence/v1",
+  "file_binding_weight": 0.4,
+  "change_mapping_weight": 0.6,
+  "rule": "Source/result file SHA plus unique C01-C07 mappings whose actual input/result locations resolve. Deleted target uses explicit absent: location.",
+  "semantic_scope": [
+    "Approved scope and legal meaning",
+    "Accurate audit explanation and no unapproved commitments",
+    "Usable editable handoff and cross-file consistency"
+  ],
+  "native_scope": "Automated rules inspect actual XML relationships/bookmarks/field codes, not only cached text. Semantic text projection alone is not proof of native field validity."
+}

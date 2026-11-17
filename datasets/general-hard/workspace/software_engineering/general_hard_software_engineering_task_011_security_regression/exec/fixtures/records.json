@@ -1,0 +1,85 @@
+{
+  "actors": {
+    "admin-a": {
+      "id": "admin-a",
+      "tenant_id": "ta",
+      "role": "admin",
+      "active": true
+    },
+    "audit-a": {
+      "id": "audit-a",
+      "tenant_id": "ta",
+      "role": "auditor",
+      "active": true
+    },
+    "member-a": {
+      "id": "member-a",
+      "tenant_id": "ta",
+      "role": "member",
+      "active": true
+    },
+    "other-a": {
+      "id": "other-a",
+      "tenant_id": "ta",
+      "role": "member",
+      "active": true
+    },
+    "admin-b": {
+      "id": "admin-b",
+      "tenant_id": "tb",
+      "role": "admin",
+      "active": true
+    },
+    "guest-a": {
+      "id": "guest-a",
+      "tenant_id": "ta",
+      "role": "guest",
+      "active": true
+    },
+    "off-a": {
+      "id": "off-a",
+      "tenant_id": "ta",
+      "role": "admin",
+      "active": false
+    }
+  },
+  "records": [
+    {
+      "id": "a1",
+      "tenant_id": "ta",
+      "owner_id": "member-a",
+      "display_name": "普通客户",
+      "note": "comma, quote \" and\nline",
+      "amount": "-12.50",
+      "account_ref": "00123"
+    },
+    {
+      "id": "a2",
+      "tenant_id": "ta",
+      "owner_id": "other-a",
+      "display_name": "=SUM(1,2)",
+      "note": "  +CMD",
+      "amount": "+7.2",
+      "account_ref": "-005"
+    },
+    {
+      "id": "a3",
+      "tenant_id": "ta",
+      "owner_id": "member-a",
+      "display_name": "\t@formula",
+      "note": "\r\nordinary",
+      "amount": "0",
+      "account_ref": "+008"
+    },
+    {
+      "id": "b1",
+      "tenant_id": "tb",
+      "owner_id": "admin-b",
+      "display_name": "Outside tenant",
+      "note": "private",
+      "amount": "99.00",
+      "account_ref": "9001"
+    }
+  ],
+  "jobs": {}
+}

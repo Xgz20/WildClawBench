@@ -1,0 +1,26 @@
+{
+  "schema_version": "h025-business-oracle/v1",
+  "source_revision": "v2",
+  "source_rows": 113,
+  "source_inputs_precede_reference": true,
+  "optimal_gap_vector": [
+    0,
+    7,
+    22
+  ],
+  "optimal_total_cents": 481355,
+  "methods": [
+    "36 integer quantities +36 positive-line binaries +3 plant binaries",
+    "Complete integer feasible per-SKU allocations, one selected option per SKU; 3 plant binaries"
+  ],
+  "independent_backends": [
+    "HiGHS",
+    "CBC"
+  ],
+  "four_stages_each": true,
+  "exact_feasibility_checks_each": 93,
+  "analytic_checks": 6,
+  "reference_matrix_used_for_grading": false,
+  "candidate_reoptimization_required": false,
+  "human_expert_review": false
+}

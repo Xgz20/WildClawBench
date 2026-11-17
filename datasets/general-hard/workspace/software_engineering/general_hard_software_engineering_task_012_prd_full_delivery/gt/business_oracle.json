@@ -1,0 +1,16 @@
+{
+  "source_truth": "Python and independent Node in-memory PRD models, no candidate/reference output generated GT",
+  "initial_source_first_cases": 24,
+  "later_independently_recomputed_edges": 2,
+  "cases": 26,
+  "business": "12 fixed requirements equal weight",
+  "boundary": "12 fixed requirements equal weight; R04/R05 each have2 subcases averaged within requirement",
+  "scopes": "R01 raw members/schema; R02 response; R09 full audit/member/response; other backend response/member and no extra audit; client actual controller/HTML/requests and persisted members",
+  "parallel": "Actual two HTTP request threads accepted against two raw-source allowed linearizations",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  }
+}

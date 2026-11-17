@@ -503,6 +503,8 @@ process.stdout.write(JSON.stringify({{
         package = vendor_parent / "wildclawbench_grading_core"
         self.assertTrue((package / "__init__.py").is_file())
         self.assertTrue((package / "rule-runtime-dependencies.json").is_file())
+        self.assertTrue((package / "html_runtime.py").is_file())
+        self.assertTrue((package / "html_observer.mjs").is_file())
         runtime_script = root / "scripts/score_general_e2e.py"
         self.assertTrue(runtime_script.is_file())
         self.assertTrue((root / "scripts/rule_worker.py").is_file())
@@ -515,8 +517,8 @@ import json
 import sys
 sys.path.insert(0, sys.argv[1])
 import wildclawbench_grading_core as core
-payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api')
-print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external']}))
+payload = core.inspect_rule_dependencies('import yaml\\nimport playwright.sync_api\\nfrom PIL import Image')
+print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external'], 'marker_api': callable(core.prepare_xlsx_marker_intervention) and callable(core.verify_xlsx_marker_intervention), 'numeric_api': callable(core.prepare_xlsx_numeric_intervention) and callable(core.verify_xlsx_numeric_intervention), 'html_api': all(callable(getattr(core,n)) for n in ['create_html_lock','validate_html_lock','html_lock_digest','observe_html','verify_html_observation'])}))
 """
         completed = subprocess.run(
             [sys.executable, "-I", "-c", source, str(vendor_parent)],
@@ -528,10 +530,15 @@ print(json.dumps({'version': core.CORE_VERSION, 'external': payload['external']}
         )
         self.assertEqual(completed.returncode, 0, completed.stderr)
         payload = json.loads(completed.stdout)
-        self.assertEqual(payload["version"], "0.2.13")
+        self.assertEqual(payload["version"], "0.16.0")
+        self.assertTrue(payload["marker_api"])
+        self.assertTrue(payload["numeric_api"])
+        self.assertTrue(payload["html_api"])
+        component = next(c for c in self.rows["score-general-e2e"]["components"] if c["name"] == "grading-core")
+        self.assertEqual(component["version"], payload["version"])
         self.assertEqual(
             {item["distribution"] for item in payload["external"]},
-            {"PyYAML", "playwright"},
+            {"PyYAML", "playwright", "pillow"},
         )
         self.assertNotIn(str(REPO_ROOT), completed.stdout + completed.stderr)
 

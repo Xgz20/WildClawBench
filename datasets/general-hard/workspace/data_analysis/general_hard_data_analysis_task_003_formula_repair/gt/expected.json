@@ -1,0 +1,881 @@
+{
+  "status": "independent_native_two_path_verified",
+  "records": [
+    {
+      "employee_id": "E001",
+      "employee_name": "员工甲",
+      "hire_date": "2025-03-01",
+      "fte": "1"
+    },
+    {
+      "employee_id": "E002",
+      "employee_name": "员工乙",
+      "hire_date": "2025-02-28",
+      "fte": "0.75"
+    },
+    {
+      "employee_id": "E003",
+      "employee_name": "员工丙",
+      "hire_date": "2016-02-29",
+      "fte": "1"
+    },
+    {
+      "employee_id": "E004",
+      "employee_name": "员工丁",
+      "hire_date": "2006-03-01",
+      "fte": "0.6"
+    },
+    {
+      "employee_id": "E005",
+      "employee_name": "员工戊",
+      "hire_date": "2006-02-28",
+      "fte": "0.35"
+    },
+    {
+      "employee_id": "E006",
+      "employee_name": "员工己",
+      "hire_date": "2026-03-01",
+      "fte": "1"
+    },
+    {
+      "employee_id": "E007",
+      "employee_name": "员工庚",
+      "hire_date": "2024-02-29",
+      "fte": "0"
+    },
+    {
+      "employee_id": "E008",
+      "employee_name": "员工辛",
+      "hire_date": "2016-03-01",
+      "fte": "0.8"
+    },
+    {
+      "employee_id": "E009",
+      "employee_name": "员工壬",
+      "hire_date": "2026-02-28",
+      "fte": "1"
+    },
+    {
+      "employee_id": "E010",
+      "employee_name": "员工癸",
+      "hire_date": "",
+      "fte": "0.5"
+    },
+    {
+      "employee_id": "E011",
+      "employee_name": "员工子",
+      "hire_date": "2023-02-29",
+      "fte": "1"
+    },
+    {
+      "employee_id": "E012",
+      "employee_name": "员工丑",
+      "hire_date": "2000-02-29",
+      "fte": "0.9"
+    }
+  ],
+  "scenarios": [
+    {
+      "name": "date-2026-02-28",
+      "as_of": "2026-02-28",
+      "changes": [],
+      "expected": [
+        {
+          "employee_id": "E001",
+          "row": 6,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E002",
+          "row": 7,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 3.5,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E003",
+          "row": 8,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E004",
+          "row": 9,
+          "as_of_date": "2026-02-28",
+          "complete_years": 19,
+          "base_days": 10,
+          "entitled_days": 6.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E005",
+          "row": 10,
+          "as_of_date": "2026-02-28",
+          "complete_years": 20,
+          "base_days": 15,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E006",
+          "row": 11,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "未入职"
+        },
+        {
+          "employee_id": "E007",
+          "row": 12,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E008",
+          "row": 13,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 4.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E009",
+          "row": 14,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E010",
+          "row": 15,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E011",
+          "row": 16,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E012",
+          "row": 17,
+          "as_of_date": "2026-02-28",
+          "complete_years": 25,
+          "base_days": 15,
+          "entitled_days": 13.5,
+          "status": "正常"
+        }
+      ],
+      "total_days": 37.0
+    },
+    {
+      "name": "date-2026-03-01",
+      "as_of": "2026-03-01",
+      "changes": [
+        {
+          "sheet": "Control",
+          "cell": "B3",
+          "value": 46082
+        }
+      ],
+      "expected": [
+        {
+          "employee_id": "E001",
+          "row": 6,
+          "as_of_date": "2026-03-01",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E002",
+          "row": 7,
+          "as_of_date": "2026-03-01",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 3.5,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E003",
+          "row": 8,
+          "as_of_date": "2026-03-01",
+          "complete_years": 10,
+          "base_days": 10,
+          "entitled_days": 10.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E004",
+          "row": 9,
+          "as_of_date": "2026-03-01",
+          "complete_years": 20,
+          "base_days": 15,
+          "entitled_days": 9.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E005",
+          "row": 10,
+          "as_of_date": "2026-03-01",
+          "complete_years": 20,
+          "base_days": 15,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E006",
+          "row": 11,
+          "as_of_date": "2026-03-01",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E007",
+          "row": 12,
+          "as_of_date": "2026-03-01",
+          "complete_years": 2,
+          "base_days": 5,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E008",
+          "row": 13,
+          "as_of_date": "2026-03-01",
+          "complete_years": 10,
+          "base_days": 10,
+          "entitled_days": 8.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E009",
+          "row": 14,
+          "as_of_date": "2026-03-01",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E010",
+          "row": 15,
+          "as_of_date": "2026-03-01",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E011",
+          "row": 16,
+          "as_of_date": "2026-03-01",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E012",
+          "row": 17,
+          "as_of_date": "2026-03-01",
+          "complete_years": 26,
+          "base_days": 15,
+          "entitled_days": 13.5,
+          "status": "正常"
+        }
+      ],
+      "total_days": 54.0
+    },
+    {
+      "name": "date-2028-02-29",
+      "as_of": "2028-02-29",
+      "changes": [
+        {
+          "sheet": "Control",
+          "cell": "B3",
+          "value": 46812
+        }
+      ],
+      "expected": [
+        {
+          "employee_id": "E001",
+          "row": 6,
+          "as_of_date": "2028-02-29",
+          "complete_years": 2,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E002",
+          "row": 7,
+          "as_of_date": "2028-02-29",
+          "complete_years": 3,
+          "base_days": 5,
+          "entitled_days": 3.5,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E003",
+          "row": 8,
+          "as_of_date": "2028-02-29",
+          "complete_years": 12,
+          "base_days": 10,
+          "entitled_days": 10.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E004",
+          "row": 9,
+          "as_of_date": "2028-02-29",
+          "complete_years": 21,
+          "base_days": 15,
+          "entitled_days": 9.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E005",
+          "row": 10,
+          "as_of_date": "2028-02-29",
+          "complete_years": 22,
+          "base_days": 15,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E006",
+          "row": 11,
+          "as_of_date": "2028-02-29",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E007",
+          "row": 12,
+          "as_of_date": "2028-02-29",
+          "complete_years": 4,
+          "base_days": 5,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E008",
+          "row": 13,
+          "as_of_date": "2028-02-29",
+          "complete_years": 11,
+          "base_days": 10,
+          "entitled_days": 8.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E009",
+          "row": 14,
+          "as_of_date": "2028-02-29",
+          "complete_years": 2,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E010",
+          "row": 15,
+          "as_of_date": "2028-02-29",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E011",
+          "row": 16,
+          "as_of_date": "2028-02-29",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E012",
+          "row": 17,
+          "as_of_date": "2028-02-29",
+          "complete_years": 28,
+          "base_days": 15,
+          "entitled_days": 13.5,
+          "status": "正常"
+        }
+      ],
+      "total_days": 64.0
+    },
+    {
+      "name": "policy-inputs",
+      "as_of": "2026-02-28",
+      "params": {
+        "DaysLow": 7,
+        "DaysMid": 12,
+        "DaysHigh": 17,
+        "ThresholdMid": 2,
+        "ThresholdHigh": 12,
+        "HalfUnit": 0.25
+      },
+      "changes": [
+        {
+          "sheet": "Control",
+          "cell": "B7",
+          "value": 7
+        },
+        {
+          "sheet": "Control",
+          "cell": "B8",
+          "value": 12
+        },
+        {
+          "sheet": "Control",
+          "cell": "B9",
+          "value": 17
+        },
+        {
+          "sheet": "Control",
+          "cell": "B10",
+          "value": 2
+        },
+        {
+          "sheet": "Control",
+          "cell": "B11",
+          "value": 12
+        },
+        {
+          "sheet": "Control",
+          "cell": "B12",
+          "value": 0.25
+        }
+      ],
+      "expected": [
+        {
+          "employee_id": "E001",
+          "row": 6,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E002",
+          "row": 7,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 7,
+          "entitled_days": 5.25,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E003",
+          "row": 8,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 12,
+          "entitled_days": 12.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E004",
+          "row": 9,
+          "as_of_date": "2026-02-28",
+          "complete_years": 19,
+          "base_days": 17,
+          "entitled_days": 10.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E005",
+          "row": 10,
+          "as_of_date": "2026-02-28",
+          "complete_years": 20,
+          "base_days": 17,
+          "entitled_days": 5.75,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E006",
+          "row": 11,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "未入职"
+        },
+        {
+          "employee_id": "E007",
+          "row": 12,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 7,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E008",
+          "row": 13,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 12,
+          "entitled_days": 9.5,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E009",
+          "row": 14,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E010",
+          "row": 15,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E011",
+          "row": 16,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E012",
+          "row": 17,
+          "as_of_date": "2026-02-28",
+          "complete_years": 25,
+          "base_days": 17,
+          "entitled_days": 15.25,
+          "status": "正常"
+        }
+      ],
+      "total_days": 57.75
+    },
+    {
+      "name": "fte-inputs",
+      "as_of": "2026-02-28",
+      "ftes": {
+        "E002": "0",
+        "E005": "0.8",
+        "E012": "0.35"
+      },
+      "changes": [
+        {
+          "sheet": "Employees",
+          "cell": "D7",
+          "value": 0
+        },
+        {
+          "sheet": "Employees",
+          "cell": "D10",
+          "value": 0.8
+        },
+        {
+          "sheet": "Employees",
+          "cell": "D17",
+          "value": 0.35
+        }
+      ],
+      "expected": [
+        {
+          "employee_id": "E001",
+          "row": 6,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E002",
+          "row": 7,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E003",
+          "row": 8,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E004",
+          "row": 9,
+          "as_of_date": "2026-02-28",
+          "complete_years": 19,
+          "base_days": 10,
+          "entitled_days": 6.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E005",
+          "row": 10,
+          "as_of_date": "2026-02-28",
+          "complete_years": 20,
+          "base_days": 15,
+          "entitled_days": 12.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E006",
+          "row": 11,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "未入职"
+        },
+        {
+          "employee_id": "E007",
+          "row": 12,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E008",
+          "row": 13,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 4.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E009",
+          "row": 14,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E010",
+          "row": 15,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E011",
+          "row": 16,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E012",
+          "row": 17,
+          "as_of_date": "2026-02-28",
+          "complete_years": 25,
+          "base_days": 15,
+          "entitled_days": 5.0,
+          "status": "正常"
+        }
+      ],
+      "total_days": 32.0
+    },
+    {
+      "name": "hire-inputs",
+      "as_of": "2026-02-28",
+      "hires": {
+        "E001": "2016-02-29",
+        "E009": "2027-03-01"
+      },
+      "changes": [
+        {
+          "sheet": "Employees",
+          "cell": "C6",
+          "value": 42429
+        },
+        {
+          "sheet": "Employees",
+          "cell": "C14",
+          "value": 46447
+        }
+      ],
+      "expected": [
+        {
+          "employee_id": "E001",
+          "row": 6,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E002",
+          "row": 7,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 3.5,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E003",
+          "row": 8,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E004",
+          "row": 9,
+          "as_of_date": "2026-02-28",
+          "complete_years": 19,
+          "base_days": 10,
+          "entitled_days": 6.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E005",
+          "row": 10,
+          "as_of_date": "2026-02-28",
+          "complete_years": 20,
+          "base_days": 15,
+          "entitled_days": 5.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E006",
+          "row": 11,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "未入职"
+        },
+        {
+          "employee_id": "E007",
+          "row": 12,
+          "as_of_date": "2026-02-28",
+          "complete_years": 1,
+          "base_days": 5,
+          "entitled_days": 0.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E008",
+          "row": 13,
+          "as_of_date": "2026-02-28",
+          "complete_years": 9,
+          "base_days": 5,
+          "entitled_days": 4.0,
+          "status": "正常"
+        },
+        {
+          "employee_id": "E009",
+          "row": 14,
+          "as_of_date": "2026-02-28",
+          "complete_years": 0,
+          "base_days": 0,
+          "entitled_days": 0.0,
+          "status": "未入职"
+        },
+        {
+          "employee_id": "E010",
+          "row": 15,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E011",
+          "row": 16,
+          "as_of_date": "2026-02-28",
+          "complete_years": null,
+          "base_days": null,
+          "entitled_days": null,
+          "status": "待核验"
+        },
+        {
+          "employee_id": "E012",
+          "row": 17,
+          "as_of_date": "2026-02-28",
+          "complete_years": 25,
+          "base_days": 15,
+          "entitled_days": 13.5,
+          "status": "正常"
+        }
+      ],
+      "total_days": 42.0
+    }
+  ],
+  "baseline_name": "date-2026-02-28",
+  "control_defaults": {
+    "DaysLow": 5,
+    "DaysMid": 10,
+    "DaysHigh": 15,
+    "ThresholdMid": 10,
+    "ThresholdHigh": 20,
+    "HalfUnit": 0.5
+  },
+  "names": {
+    "AsOfDate": "'Control'!$B$4",
+    "DaysLow": "'Control'!$B$7",
+    "DaysMid": "'Control'!$B$8",
+    "DaysHigh": "'Control'!$B$9",
+    "ThresholdMid": "'Control'!$B$10",
+    "ThresholdHigh": "'Control'!$B$11",
+    "HalfUnit": "'Control'!$B$12"
+  },
+  "method": "CSV and independent stdlib OOXML/library reads; anniversary enumeration versus year/month/day comparison; Fraction floor versus Decimal floor. Constructed before reference workbook."
+}

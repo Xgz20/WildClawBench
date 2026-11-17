@@ -1,0 +1,144 @@
+{
+  "schema_version": "wildclawbench.office-render-author-validation/v1",
+  "status": "PASS",
+  "kind": "author-runtime-validation-only",
+  "source_base_commit": "c19de64ab43732a7e753c9404b03fb853f5a65b5",
+  "core_version": "0.6.0",
+  "score_skill_version": "0.14.0",
+  "office_helper_sha256": "63bbdae1104f44c1e7c780a2496f91be91c4a255f0ca731799488502311e9d0f",
+  "input": {
+    "path": "workspace/extension/01_Productivity_Flow/task_011_weekly_focus/exec/source.pptx",
+    "sha256": "147752d5da2cb42b1ec4be168d929a6f56868ce7ab9a358b9e9a2b51ea9eab5b",
+    "source_slide_count": 4
+  },
+  "engine": {
+    "version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+    "executable_sha256": "38936fe8d6fdd43effb49caef6a62107f568b5db5ec18de98899ebd78230f67b"
+  },
+  "fonts": {
+    "count": 128,
+    "render_lock_sha256": "1c48f5dd659d62e9db498cc3f1e42a74aa083a9f2baf6eae315d349b68499c6a",
+    "sealed_directories": 1,
+    "actual_pdf_font_names": [
+      "/BAAAAA+LiberationSans-Bold",
+      "/CAAAAA+STHeitiSC-Light",
+      "/DAAAAA+STHeitiSC-Light",
+      "/EAAAAA+STHeitiSC-Light",
+      "/FAAAAA+LiberationSans",
+      "/GAAAAA+STHeitiSC-Light",
+      "/HAAAAA+LiberationSans-Bold",
+      "/IAAAAA+LiberationSans",
+      "/JAAAAA+STHeitiSC-Light",
+      "/KAAAAA+STHeitiSC-Light",
+      "/LAAAAA+Carlito"
+    ],
+    "pdf_font_names_match_locked_inventory": true,
+    "method": "Independent bounded SFNT name-table metadata versus PDF BaseFont names; not proof of every glyph or full installation identity."
+  },
+  "pdf": {
+    "sha256": "00edda7b04b4452c9bd572bc4c1074b9dbd98509c389d08a4f2375dd24c61db2",
+    "page_count": 4,
+    "text_chars": 315,
+    "native_projection": {
+      "schema_version": "wildclawbench.native-artifact-text/v1",
+      "source_sha256": "00edda7b04b4452c9bd572bc4c1074b9dbd98509c389d08a4f2375dd24c61db2",
+      "format": "pdf",
+      "text_sha256": "cbcfd5d67aa9cb146d3ede9a2cf4b19f4ae74294e951c45e89cc46ea9583ab52",
+      "original_chars": 473,
+      "included_chars": 473,
+      "truncated": false,
+      "record_count": 4,
+      "record_offset": 0,
+      "selected_record_count": 4,
+      "engine": {
+        "name": "pypdf",
+        "version": "6.10.0"
+      },
+      "limitations": [
+        "Extracted PDF text only; images, scans, charts and layout are not interpreted.",
+        "Text extraction is not a native-application or visual usability check."
+      ]
+    },
+    "export_filter": {
+      "ExportHiddenSlides": {
+        "type": "boolean",
+        "value": "true"
+      },
+      "ExportNotesPages": {
+        "type": "boolean",
+        "value": "false"
+      },
+      "ExportOnlyNotesPages": {
+        "type": "boolean",
+        "value": "false"
+      }
+    }
+  },
+  "workspace_unchanged": true,
+  "worker_finished": true,
+  "visual_review": {
+    "status": "PASS",
+    "reviewed_page_count": 4,
+    "scope": "All four rendered pages inspected; text and charts readable. This is an existing source fixture, not H005 output or business scoring.",
+    "page_image_sha256": [
+      "3bd6c16f6ba2ef610f2e403452551b06df3722eefc163f6fc338a8f7768d2b8e",
+      "ed422575c73bea71a16a05a572908fa380996f72716998a3dcb031d1c32698ef",
+      "ededa8f907f408977053df4efed976ee4cd06ea62081a9719faafcb97c8bed70",
+      "346c21d575f56dbd954c1e9535be4c2a5081ada2d3a93bb47eaf8d7310d01c61"
+    ]
+  },
+  "qa_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/real-render-worker-1793045809536402000",
+  "limit": "No new dataset task, GT, semantic score, Harness result, frozen release or difficulty proof.",
+  "cli_pdf_dependency": "Validated using bundled Python with pypdf. The repository .venv lacks pypdf and was not modified; the frozen scoring CLI must supply it.",
+  "tests": {
+    "status": "PASS",
+    "unique_test_count": 101,
+    "groups": [
+      {
+        "count": 19,
+        "modules": [
+          "tests.general_e2e.test_office_render_runtime",
+          "tests.general_e2e.test_office_runtime",
+          "tests.general_e2e.test_general_release_prepare.GeneralReleasePrepareTests.test_packaged_round5_entrypoints_run_without_checkout_or_pythonpath"
+        ]
+      },
+      {
+        "count": 49,
+        "modules": [
+          "tests.general_e2e.test_dataset_bundle",
+          "tools.report.tests.test_wildclawbench_case_generator",
+          "tests.general_e2e.test_skill_layout",
+          "tests.general_e2e.test_shared_components",
+          "tests.general_e2e.test_grading_core"
+        ]
+      },
+      {
+        "count": 32,
+        "modules": [
+          "tests.general_e2e.test_local_scoring_runtime",
+          "tests.general_e2e.test_general_semantic_scoring",
+          "tests.general_e2e.test_general_api_judge"
+        ]
+      },
+      {
+        "count": 1,
+        "modules": [
+          "tests.general_e2e.test_run_general_e2e.RunGeneralE2ETests.test_return_package_is_deterministic_and_excludes_runtime"
+        ]
+      }
+    ],
+    "layout_gate": "PASS"
+  },
+  "real_export_control": {
+    "status": "PASS",
+    "change": "last slide show=0",
+    "source_unchanged": true,
+    "source_sha256": "147752d5da2cb42b1ec4be168d929a6f56868ce7ab9a358b9e9a2b51ea9eab5b",
+    "variant_sha256": "50250a1304bda3e61d1ab4c0a2dd4fb0f09ed231836f86a329de063ddc615d35",
+    "pdf_page_count": 4,
+    "hidden_last_slide_text_present": true,
+    "note_only_paragraphs_excluded": 8,
+    "limit": "Controlled structural test specimen only; not a new dataset task or model output.",
+    "receipt_sha256": "ecd78507d453600ea275558a15ddf6926a8f1e132681d37b0dce121db0b45579"
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": "h030-scoring-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_checkpoint_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "declared_execution_boundary": "Declaration/query-navigation/outcome/time-or-unknown/DOCX linkage only; no tool-name execution detector or fabricated Harness trace. Actual attempts and reading are Judge-only.",
+  "source_precedes_reference": true,
+  "reference_answer_is_oracle": false,
+  "candidate_answer_used_for_truth": false,
+  "hash_only_fact_materials": [
+    "expected.json",
+    "business_oracle.json",
+    "reference_source_manifest.json",
+    "source_review_reconciliation.json"
+  ],
+  "private_sha256": {
+    "artifact_contract.json": "9fafbbc854880e226e3833807269cb82a71fbff3002d4060c7df6e875bf43828",
+    "scoring_design.json": "9f9c8f9bdf59db4bf2a69a0dd50e999418847f8dcecf26aa10578efb8ca9c359",
+    "protected_sha256.json": "44f2987823e12e717c353cb1487fde37170c7281846bce5359c62344737d341f",
+    "research_source_policy.json": "5ba59bdaacda4d5f97dd92b28c8e007ae7942fbab5587bc9bd3d147c6ae7e25a",
+    "native_io.py": "ec85b3803b72fcd049fa3b02a64889cf514cc991842b337ba1e1144760a0efdc",
+    "source_projection.py": "cd94b4614ac105f33fc46bc0ec46613c6cf0345ae6f1b1268972d55f872b856e",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "grader.py": "d6bf06ddeadb9fbacfbcbf4f3f3066e073405c2a3da85a128dd9339c5a05e4ca",
+    "runtime_contract.json": "452fbd5318860198c4fc56fa86c12630476b893b4684efb523f56ad2095c04a8",
+    "evidence_requirements.json": "62fa8a957808bd6e239dba36357fa2436f36b4409d5376c0f1931bfd08b12e8c",
+    "counterexamples.json": "30db515f4a8e7b5a7878426ee467b2184073ec367bcf97376e9f76c1bb50417f",
+    "reference_provenance.json": "e194441ac8e397aac3273d912fc5082be093c5461f0313ebe0faff02cc93f5df",
+    "expected.json": "669e2dea2136974d011fda59bb8ef1c2b877ee65f24e7a33239107c523e3f94d",
+    "business_oracle.json": "375f4fed3f9d5cf9163302bdec3fe26ca70a196c697416256789ad87ceefec9b",
+    "reference_source_manifest.json": "a460932d5f1c1c076002d59ce178cd4887f9ac2a9a227d8c4e1110160bcc63fd",
+    "source_review_reconciliation.json": "234eb06dd2b875e8b8c57dc8e1f2cf6712fbea6a24d0c5b4124ae92a4f224af6"
+  }
+}

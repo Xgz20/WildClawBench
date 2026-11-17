@@ -1,0 +1,16 @@
+{
+  "schema_version": "h020-material-evidence/v1",
+  "stage": "materials_not_runtime_scoring_authority",
+  "input_sha256": "protected_sha256.json",
+  "source_csv_rows": 63,
+  "source_locator": "Actual statement visible ID and reported amount/unit, normalized effective value; revision links bind actual restatements.csv ID.",
+  "semantic_judge_required": true,
+  "not_proof_of_execution": "A prose claim of checks, audit or external retrieval requires actual trace evidence.",
+  "office_scoring_requirement": "Locked runtime in isolated frozen Workspace; derivatives outside Workspace, cache-cleared baseline, five source interventions, actual normal/archive verifier before registering case.",
+  "semantic_requirements": [
+    "Interpret ranking within defined measures; do not aggregate into universal quality or investment claim.",
+    "B scope discontinuity limits cross-year business causal conclusions.",
+    "Do not swap parent and consolidated fields, zero and missing, or cash stock and operating cash flow.",
+    "No unsupported causes, audits, approvals or real execution claims."
+  ]
+}

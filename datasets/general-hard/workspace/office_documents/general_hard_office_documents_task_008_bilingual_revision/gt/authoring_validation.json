@@ -1,0 +1,1794 @@
+{
+  "schema_version": "h008-author-validation/v1",
+  "status": "PASS",
+  "control_count": 41,
+  "controls": {
+    "reference": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "equivalent_bom_chinese_fields_numbers_dates_null_unknown": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "equivalent_nfd_accents": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "equivalent_vietnamese_numeral_words_and_date_phrasing": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "equivalent_native_id_body_table_reordered": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "equivalent_native_table_other_vietnamese_headers": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "equivalent_explicit_final_column_beside_original": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "positive"
+    },
+    "ledger_correct_native_amount_wrong": {
+      "scores": {
+        "business_correctness": 0.9843750000000001,
+        "boundary_cases": 0.9857142857142858,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9878348214285716
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.9375,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "extra_thousand_group": {
+      "scores": {
+        "business_correctness": 0.978125,
+        "boundary_cases": 0.9714285714285714,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9808258928571431
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.984375,
+        "native_literal_values": 0.9375,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "malformed_native_amount_separator": {
+      "scores": {
+        "business_correctness": 0.9843750000000001,
+        "boundary_cases": 0.9857142857142858,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9878348214285716
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.9375,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "currency_changed": {
+      "scores": {
+        "business_correctness": 0.9625,
+        "boundary_cases": 0.9571428571428572,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9686607142857144
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": false
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.984375,
+        "native_literal_values": 0.875,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "unapproved_date_extension": {
+      "scores": {
+        "business_correctness": 0.9531249999999999,
+        "boundary_cases": 0.9387755102040816,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9589126275510204
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": false
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.96875,
+        "native_literal_values": 0.875,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 0.9791666666666666
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "native_work_days_instead_of_hours": {
+      "scores": {
+        "business_correctness": 0.963621794871795,
+        "boundary_cases": 0.9802197802197803,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9750469322344324
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": false
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.875,
+        "native_coverage_and_terms": 0.9743589743589745,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "calendar_hours_and_wrong_origin": {
+      "scores": {
+        "business_correctness": 0.9354967948717948,
+        "boundary_cases": 0.9373626373626374,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9488638965201467
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": false
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 0.875,
+        "native_coverage_and_terms": 0.9743589743589745,
+        "comment_decisions": 0.9791666666666666
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "wrong_subject_declarations": {
+      "scores": {
+        "business_correctness": 0.975,
+        "boundary_cases": 0.9523809523809523,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9743452380952381
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "prohibition_removed_in_fact_record": {
+      "scores": {
+        "business_correctness": 0.975,
+        "boundary_cases": 0.994047619047619,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9847619047619048
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "raw_data_allowed_in_fact_record": {
+      "scores": {
+        "business_correctness": 0.9874999999999999,
+        "boundary_cases": 0.994047619047619,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9916369047619048
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.96875,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "oral_acceptance_in_fact_record": {
+      "scores": {
+        "business_correctness": 0.975,
+        "boundary_cases": 0.9821428571428571,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9817857142857144
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "term_drift_in_actual_vietnamese": {
+      "scores": {
+        "business_correctness": 0.994871794871795,
+        "boundary_cases": 0.9945054945054945,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.995805860805861
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 0.9743589743589745,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "pending_counted_as_completed": {
+      "scores": {
+        "business_correctness": 0.9604166666666666,
+        "boundary_cases": 0.9714285714285714,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9710863095238096
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": false
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9791666666666666,
+        "native_literal_values": 0.875,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "unknown_marked_completed": {
+      "scores": {
+        "business_correctness": 0.975,
+        "boundary_cases": 0.9642857142857143,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9773214285714287
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "real_send_claim_in_facts": {
+      "scores": {
+        "business_correctness": 0.975,
+        "boundary_cases": 0.9880952380952381,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9832738095238096
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "native_backup_changed": {
+      "scores": {
+        "business_correctness": 0.9687500000000001,
+        "boundary_cases": 0.9880952380952381,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9798363095238097
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": false
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.875,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "csv_correct_native_review_decision_wrong": {
+      "scores": {
+        "business_correctness": 0.9968750000000001,
+        "boundary_cases": 0.979591836734694,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9931792091836736
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 0.9791666666666666
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "unrelated_real_source_refs": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.984375,
+        "overall_score": 0.99921875
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "wrong_existing_final_sentence_ref": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.984375,
+        "overall_score": 0.99921875
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "wrong_existing_review_ref": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.984375,
+        "overall_score": 0.99921875
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "missing_description_column": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9400000000000001
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "missing_fact_not_known_unknown": {
+      "scores": {
+        "business_correctness": 0.9916666666666666,
+        "boundary_cases": 0.9880952380952381,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9624404761904762
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9791666666666666,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "duplicate_json_fact_keys": {
+      "scores": {
+        "business_correctness": 0.975,
+        "boundary_cases": 0.9428571428571428,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0,
+        "overall_score": 0.9419642857142857
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.9375,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "missing_native_final": {
+      "scores": {
+        "business_correctness": 0.6166666666666667,
+        "boundary_cases": 0.7295918367346939,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.75,
+        "overall_score": 0.6790646258503401
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": false
+        },
+        "S04": {
+          "dates": false
+        },
+        "S05": {
+          "work_hours": false
+        },
+        "S06": {
+          "work_days": false
+        },
+        "S11": {
+          "counts": false
+        },
+        "S13": {
+          "backup_name": false
+        },
+        "S14": {
+          "currency": false
+        },
+        "S15": {
+          "mentioned_count": false
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.0,
+        "native_coverage_and_terms": 0.3333333333333333,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "damaged_native_final": {
+      "scores": {
+        "business_correctness": 0.6166666666666667,
+        "boundary_cases": 0.7295918367346939,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.75,
+        "overall_score": 0.6790646258503401
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": false
+        },
+        "S04": {
+          "dates": false
+        },
+        "S05": {
+          "work_hours": false
+        },
+        "S06": {
+          "work_days": false
+        },
+        "S11": {
+          "counts": false
+        },
+        "S13": {
+          "backup_name": false
+        },
+        "S14": {
+          "currency": false
+        },
+        "S15": {
+          "mentioned_count": false
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.0,
+        "native_coverage_and_terms": 0.3333333333333333,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "xml_text_without_valid_word_package": {
+      "scores": {
+        "business_correctness": 0.6166666666666667,
+        "boundary_cases": 0.7295918367346939,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.75,
+        "overall_score": 0.6790646258503401
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": false
+        },
+        "S04": {
+          "dates": false
+        },
+        "S05": {
+          "work_hours": false
+        },
+        "S06": {
+          "work_days": false
+        },
+        "S11": {
+          "counts": false
+        },
+        "S13": {
+          "backup_name": false
+        },
+        "S14": {
+          "currency": false
+        },
+        "S15": {
+          "mentioned_count": false
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 0.0,
+        "native_coverage_and_terms": 0.3333333333333333,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "missing_chinese_review": {
+      "scores": {
+        "business_correctness": 0.925,
+        "boundary_cases": 0.8829931972789116,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.625,
+        "overall_score": 0.8807482993197279
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 0.5
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "missing_alignment": {
+      "scores": {
+        "business_correctness": 0.4583333333333333,
+        "boundary_cases": 0.3874149659863946,
+        "delivery_integrity": 0.6,
+        "evidence_binding": 0.1875,
+        "overall_score": 0.44831207482993196
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 0.6666666666666666,
+        "comment_decisions": 0.5
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "all_outputs_missing": {
+      "scores": {
+        "business_correctness": 0.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": false,
+          "currency": false
+        },
+        "S04": {
+          "dates": false
+        },
+        "S05": {
+          "work_hours": false
+        },
+        "S06": {
+          "work_days": false
+        },
+        "S11": {
+          "counts": false
+        },
+        "S13": {
+          "backup_name": false
+        },
+        "S14": {
+          "currency": false
+        },
+        "S15": {
+          "mentioned_count": false
+        }
+      },
+      "business_parts": {
+        "declared_facts": 0.0,
+        "native_literal_values": 0.0,
+        "native_coverage_and_terms": 0.0,
+        "comment_decisions": 0.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "source_baseline_changed": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 0.0,
+        "delivery_integrity": 0.0,
+        "evidence_binding": 0.0,
+        "overall_score": 0.55
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "negative"
+    },
+    "missing_private_gt": {
+      "expected": "evaluation error",
+      "error_type": "FileNotFoundError"
+    },
+    "missing_native_helper": {
+      "expected": "evaluation error",
+      "error_type": "FileNotFoundError"
+    },
+    "semantic_only_roles_reversed_with_same_names": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "semantic_boundary",
+      "expected_semantics": "Separate Judge must reject actual role/polarity contradiction; rule is not complete translation proof."
+    },
+    "semantic_only_prohibition_missing_same_literals": {
+      "scores": {
+        "business_correctness": 1.0,
+        "boundary_cases": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0,
+        "overall_score": 1.0
+      },
+      "native_literals": {
+        "S03": {
+          "amount": true,
+          "currency": true
+        },
+        "S04": {
+          "dates": true
+        },
+        "S05": {
+          "work_hours": true
+        },
+        "S06": {
+          "work_days": true
+        },
+        "S11": {
+          "counts": true
+        },
+        "S13": {
+          "backup_name": true
+        },
+        "S14": {
+          "currency": true
+        },
+        "S15": {
+          "mentioned_count": true
+        }
+      },
+      "business_parts": {
+        "declared_facts": 1.0,
+        "native_literal_values": 1.0,
+        "native_coverage_and_terms": 1.0,
+        "comment_decisions": 1.0
+      },
+      "workspace_unchanged": true,
+      "semantic_status": "not_run",
+      "kind": "semantic_boundary",
+      "expected_semantics": "Separate Judge must reject actual role/polarity contradiction; rule is not complete translation proof."
+    }
+  },
+  "gt_bindings": {
+    "artifact_contract.json": "d518541daf67fb29a53837eac76e0bdb587d23df22afb6bb0d5d246ed8baa4b1",
+    "business_oracle.json": "446d5e1fb169c4df5c1d3ce89030607b6b7f41cbf256710006564aca733e6198",
+    "counterexamples.json": "f75528375c6bb9c2ef03c20c3e58dc33a67bd73a7ca45f222b20939fbcc4d2d0",
+    "evidence_index.json": "ebe69942ad740b8b80b0a6317d4e22a24b74c8bb904b4cf8306122f3554620ab",
+    "evidence_requirements.json": "ac2b44cac0e32ba99957bc7454b65355109ca202b0fe99d6068a7a5579378c3b",
+    "expected.json": "abea23ce2a9d2e0b8f2140cd2d8bfd01980fdeae7347e58a2a7fcad543dbda9f",
+    "grader.py": "2f9264369e213049a81bd12f2e08690cd698d599c69cbcbc0d040848b2ecad71",
+    "model_validation.json": "8522ed18ee0883ab0c9140211abad73e6d2feea5599f4ce4f008cad866eb0e7e",
+    "native_author_review.json": "12de0931a5dc05bc8787e4821bc2e866da48a274160ecc640f51274c42fe9749",
+    "native_docx.py": "9509967b8a0f037c7c2d3e110cf422b96c0f50085919279cf38bcbe3a4e931a8",
+    "native_values.py": "ca2e00118b4bf1df1ba8e5ff48e916b29f696fe4e64153fba5126d84bc3a3669",
+    "protected_sha256.json": "e8b2d86defa274ead498847eeb33b63b59702fa335041f2eb31bdeb985ab64f4",
+    "reference/results/alignment.csv": "edf02d359d69721cf227cc8c72398ed40f36eb5587e722641baf0a06cccc1684",
+    "reference/results/final_vi.docx": "18d906003026e7207b6d4cc25e4fe3572e5a95e4526f55ee13ce57cbeb4c2001",
+    "reference/results/review_zh.docx": "696b14f550a07de188bae7df45d6fdf5061d1722dfc2483b1cdcc37bfa83679b",
+    "source_annotations.json": "0f22ec7391b49a4daa89d0ccbad2b3d910a7ce13be06d77c222e22f17d253b05",
+    "structured_io.py": "63beb74d485649582dba3abd2ec49a8dc42199ac497ea4a9de537a5ab8edbc92",
+    "validate_authoring.py": "4f206f2e8545db4da630d132a2dbbdf23d46caf4228e1d4f6e0eb7b53dd24c4a",
+    "verify_oracle.py": "24308207bd62d2f965c94bf861ede3f63f625436052c4aff8353312fe0be7c9f"
+  },
+  "limit": "Author rule controls and literal extraction. No independent bilingual expert review, actual semantic Judge, four-client run or calibrated difficulty."
+}

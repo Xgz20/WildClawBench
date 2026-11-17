@@ -1,0 +1,26 @@
+{
+  "schema_version": "h005-rule-aggregation/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "business_weights": {
+    "kpi_mean": 0.7,
+    "chart_values": 0.2,
+    "aging_values": 0.1
+  },
+  "per_kpi_weights": {
+    "ledger": 0.35,
+    "pptx": 0.3,
+    "rendered": 0.2,
+    "notes": 0.15
+  },
+  "boundary_weights": {
+    "numeric_mechanisms": 0.4,
+    "editable_data_consistency": 0.3,
+    "font_and_fit": 0.3
+  },
+  "semantic_limit": "Business claims, chart labels/meaning, template fidelity, full visual overlap and actionable handoff require independent semantic/visual review."
+}

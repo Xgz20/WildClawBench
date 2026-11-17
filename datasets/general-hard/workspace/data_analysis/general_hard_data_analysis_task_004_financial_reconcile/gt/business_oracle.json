@@ -1,0 +1,26 @@
+{
+  "schema_version": "h020-material-business-oracle/v1",
+  "stage": "materials_not_runtime_scoring_authority",
+  "expected": "expected.json",
+  "three_statement_inputs": 9,
+  "source_fields": 63,
+  "core_metric_records": 27,
+  "incomparable_core_records": 4,
+  "native_metric_fields": [
+    "numerator_wan",
+    "denominator_wan",
+    "value",
+    "rank",
+    "change_pp",
+    "status",
+    "reason"
+  ],
+  "baseline_and_response_contexts": 6,
+  "reference_independence": "Native source ID/label reads, Decimal/Fraction, independent SQLite eligibility/arithmetic/rank/lag; never reference-derived.",
+  "ratio_tolerance": 1e-09,
+  "money_tolerance_wan": 1e-06,
+  "change_pp_tolerance": 1e-07,
+  "report_rounding_percentage_points": 0.005001,
+  "namespaces": "company_id/year/metric_id; no fixed author coordinates required.",
+  "version_selection": "As of2026-09-30; historical revisions applied once to actual period/field and relevant comparative source rows."
+}

@@ -1,0 +1,1029 @@
+{
+  "schema": "h036.expected/v1",
+  "rows": [
+    {
+      "source_id": "I001",
+      "source_path": "incoming/finance/drop-1/report.txt",
+      "sha256": "ad22ff91f2aa56e68847cae8374475b2991c1281bc0ce28af21b8eb56f5125cf",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "finance",
+      "document_id": "FIN-ACCRUAL",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I002",
+      "source_path": "incoming/finance/drop-2/release",
+      "sha256": "1e1961cfce68c6ed2d9f031ba713d620b336b52d07b7c23adec8a4cc2786600e",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "finance",
+      "document_id": "FIN-ACCRUAL",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I003",
+      "source_path": "incoming/finance/drop-3/preview.exe",
+      "sha256": "ccd47fd8515898e5685962654c704a5a462afb69cfacec4ef2f4df0159f68a15",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "finance",
+      "document_id": "FIN-ACCRUAL",
+      "version": "9.0",
+      "state": "draft",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I004",
+      "source_path": "incoming/finance/drop-4/renamed.copy",
+      "sha256": "1e1961cfce68c6ed2d9f031ba713d620b336b52d07b7c23adec8a4cc2786600e",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "finance",
+      "document_id": "FIN-ACCRUAL",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I005",
+      "source_path": "incoming/finance/drop-5/résumé.pdf",
+      "sha256": "2191eed16d91911fb2912b4a9b4f2654ddff7b63c7419d769baacdccd0f4c041",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "finance",
+      "document_id": "FIN-ACCRUAL",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I006",
+      "source_path": "incoming/finance/drop-6/same-content.bin",
+      "sha256": "2191eed16d91911fb2912b4a9b4f2654ddff7b63c7419d769baacdccd0f4c041",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "finance",
+      "document_id": "FIN-ACCRUAL",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I007",
+      "source_path": "incoming/people/drop-1/report.txt",
+      "sha256": "7235bb27db31f336cb3f25710abb0317b81f909ec2e4789043309bbc07899f4f",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "people",
+      "document_id": "HR-POLICY",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I008",
+      "source_path": "incoming/people/drop-2/release",
+      "sha256": "97a929f32905b67ebf15fd8ee64c98c025d5eb45374992e7b10cea1acb99a6d1",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "people",
+      "document_id": "HR-POLICY",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I009",
+      "source_path": "incoming/people/drop-3/preview.exe",
+      "sha256": "355f0ce1591488ad4daec3703a4c90053bbe3669fa64efb0e9087284c86f806c",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "people",
+      "document_id": "HR-POLICY",
+      "version": "9.0",
+      "state": "withdrawn",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I010",
+      "source_path": "incoming/people/drop-4/renamed.copy",
+      "sha256": "97a929f32905b67ebf15fd8ee64c98c025d5eb45374992e7b10cea1acb99a6d1",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "people",
+      "document_id": "HR-POLICY",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I011",
+      "source_path": "incoming/people/drop-5/résumé.pdf",
+      "sha256": "e43c2d67d57a5068390e61ae9eabbc71977832ab742cb18b55808272ac234667",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "people",
+      "document_id": "HR-POLICY",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I012",
+      "source_path": "incoming/people/drop-6/same-content.bin",
+      "sha256": "e43c2d67d57a5068390e61ae9eabbc71977832ab742cb18b55808272ac234667",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "people",
+      "document_id": "HR-POLICY",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I013",
+      "source_path": "incoming/sales/drop-1/report.txt",
+      "sha256": "feae9b60c1509a763b2b628cccaf8291a407a7e67ba3cc7a2c47677a9b92fd9a",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "sales",
+      "document_id": "SALES-TERMS",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I014",
+      "source_path": "incoming/sales/drop-2/release",
+      "sha256": "f62420b04ccfe30a6d382888bf2d0add0fbcbf10988565b3c886a002b5472bea",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "sales",
+      "document_id": "SALES-TERMS",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I015",
+      "source_path": "incoming/sales/drop-3/preview.exe",
+      "sha256": "cb542b8c75658bdac4fc0d784ba4442fd86185af99caf258163896d0f83e0383",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "sales",
+      "document_id": "SALES-TERMS",
+      "version": "9.0",
+      "state": "draft",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I016",
+      "source_path": "incoming/sales/drop-4/renamed.copy",
+      "sha256": "f62420b04ccfe30a6d382888bf2d0add0fbcbf10988565b3c886a002b5472bea",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "sales",
+      "document_id": "SALES-TERMS",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I017",
+      "source_path": "incoming/sales/drop-5/résumé.pdf",
+      "sha256": "260a58ecbc95f2b2b868a2b1ad07546a5fc8e37f954ac6ebbc4f5c6e53d68f37",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "sales",
+      "document_id": "SALES-TERMS",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I018",
+      "source_path": "incoming/sales/drop-6/same-content.bin",
+      "sha256": "260a58ecbc95f2b2b868a2b1ad07546a5fc8e37f954ac6ebbc4f5c6e53d68f37",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "sales",
+      "document_id": "SALES-TERMS",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I019",
+      "source_path": "incoming/operations/drop-1/report.txt",
+      "sha256": "2fcc9dea58fccbc848abe10ac6e8559e63618dbf671e0d7e03e679811b020fa7",
+      "detected_format": "markdown",
+      "reason_code": "ok",
+      "business_area": "operations",
+      "document_id": "OPS-RUNBOOK",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I020",
+      "source_path": "incoming/operations/drop-2/release",
+      "sha256": "3feb4b33cba7ff3645246ff8b3d92a4bcccb9b3fbec375dddf0055a2209a4850",
+      "detected_format": "markdown",
+      "reason_code": "ok",
+      "business_area": "operations",
+      "document_id": "OPS-RUNBOOK",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I021",
+      "source_path": "incoming/operations/drop-3/preview.exe",
+      "sha256": "4ca3f43072508f8e322859e3b729b9a56ee2f19ffec1b04b2d79a4926e8061f1",
+      "detected_format": "markdown",
+      "reason_code": "ok",
+      "business_area": "operations",
+      "document_id": "OPS-RUNBOOK",
+      "version": "9.0",
+      "state": "draft",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I022",
+      "source_path": "incoming/operations/drop-4/renamed.copy",
+      "sha256": "3feb4b33cba7ff3645246ff8b3d92a4bcccb9b3fbec375dddf0055a2209a4850",
+      "detected_format": "markdown",
+      "reason_code": "ok",
+      "business_area": "operations",
+      "document_id": "OPS-RUNBOOK",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I023",
+      "source_path": "incoming/operations/drop-5/résumé.pdf",
+      "sha256": "f59247dac00b40d62c3bb539e85b14ff69b69a842153fb519664dd026ff347ac",
+      "detected_format": "markdown",
+      "reason_code": "ok",
+      "business_area": "operations",
+      "document_id": "OPS-RUNBOOK",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I024",
+      "source_path": "incoming/operations/drop-6/same-content.bin",
+      "sha256": "f59247dac00b40d62c3bb539e85b14ff69b69a842153fb519664dd026ff347ac",
+      "detected_format": "markdown",
+      "reason_code": "ok",
+      "business_area": "operations",
+      "document_id": "OPS-RUNBOOK",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I025",
+      "source_path": "incoming/compliance/drop-1/report.txt",
+      "sha256": "2972ff4c9e479e76096331dc71d62298b91fd255d61a1badf1725ec37f64380d",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "compliance",
+      "document_id": "RÉTENTION",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I026",
+      "source_path": "incoming/compliance/drop-2/release",
+      "sha256": "ce29e817bd544453b27a374f063d475dbfcd6810a047d5ca71e52cc64b1afeb0",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "compliance",
+      "document_id": "RÉTENTION",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I027",
+      "source_path": "incoming/compliance/drop-3/preview.exe",
+      "sha256": "78edd052d4f0f7da0bd4f382f65c21c6cb9d6885ab608a128d822f9a62417b87",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "compliance",
+      "document_id": "RÉTENTION",
+      "version": "9.0",
+      "state": "draft",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I028",
+      "source_path": "incoming/compliance/drop-4/renamed.copy",
+      "sha256": "ce29e817bd544453b27a374f063d475dbfcd6810a047d5ca71e52cc64b1afeb0",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "compliance",
+      "document_id": "RÉTENTION",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I029",
+      "source_path": "incoming/compliance/drop-5/résumé.pdf",
+      "sha256": "d0733d33cef6aecde6896733b49944ff0f4d72e3c034e1fdeb11d0e0e512780c",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "compliance",
+      "document_id": "RÉTENTION",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I030",
+      "source_path": "incoming/compliance/drop-6/same-content.bin",
+      "sha256": "d0733d33cef6aecde6896733b49944ff0f4d72e3c034e1fdeb11d0e0e512780c",
+      "detected_format": "json",
+      "reason_code": "ok",
+      "business_area": "compliance",
+      "document_id": "RÉTENTION",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I031",
+      "source_path": "incoming/research/drop-1/report.txt",
+      "sha256": "8013a5f75ca6ea2709c05a28f92222a4a9b56d2661f035d23b025bce26174fec",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "research",
+      "document_id": "RND-NOTE",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I032",
+      "source_path": "incoming/research/drop-2/release",
+      "sha256": "8a486e18c953ace5f8c0ebb924f505f140ef06140472cc86d6360e79133a9128",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "research",
+      "document_id": "RND-NOTE",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T08:00:00+08:00",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I033",
+      "source_path": "incoming/research/drop-3/preview.exe",
+      "sha256": "0bd063e614d8c09e098ebfe4c4e1f7b998e7a567a94875b439dcc087722c39fc",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "research",
+      "document_id": "RND-NOTE",
+      "version": "9.0",
+      "state": "draft",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I034",
+      "source_path": "incoming/research/drop-4/renamed.copy",
+      "sha256": "8a486e18c953ace5f8c0ebb924f505f140ef06140472cc86d6360e79133a9128",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "research",
+      "document_id": "RND-NOTE",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T08:00:00+08:00",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I035",
+      "source_path": "incoming/research/drop-5/résumé.pdf",
+      "sha256": "a4a7450eff7c892b737e79e6bf67b4e02882a7183c67f8ca50ce9587f8adfa51",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "research",
+      "document_id": "RND-NOTE",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I036",
+      "source_path": "incoming/research/drop-6/same-content.bin",
+      "sha256": "a4a7450eff7c892b737e79e6bf67b4e02882a7183c67f8ca50ce9587f8adfa51",
+      "detected_format": "csv",
+      "reason_code": "ok",
+      "business_area": "research",
+      "document_id": "RND-NOTE",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "conflict"
+    },
+    {
+      "source_id": "I037",
+      "source_path": "incoming/procurement/drop-1/report.txt",
+      "sha256": "dd35a8970ae20f7d0a79aab569e6d330c27fb5e3557b2133ac710f3c03354518",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "procurement",
+      "document_id": "BUY-SPEC",
+      "version": "1.9",
+      "state": "approved",
+      "issued_at": "2026-09-15T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I038",
+      "source_path": "incoming/procurement/drop-2/release",
+      "sha256": "d673f2a57e985eec13f4470ba3033ca7c88d350e36e32f7dd0c951d37c46b879",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "procurement",
+      "document_id": "BUY-SPEC",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I039",
+      "source_path": "incoming/procurement/drop-3/preview.exe",
+      "sha256": "5b1162e74ecc76f1891cacfa6d81fe9014a6f818c9fc942f2a0c6e7e55659bc4",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "procurement",
+      "document_id": "BUY-SPEC",
+      "version": "9.0",
+      "state": "draft",
+      "issued_at": "2026-10-20T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I040",
+      "source_path": "incoming/procurement/drop-4/renamed.copy",
+      "sha256": "d673f2a57e985eec13f4470ba3033ca7c88d350e36e32f7dd0c951d37c46b879",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "procurement",
+      "document_id": "BUY-SPEC",
+      "version": "1.10",
+      "state": "approved",
+      "issued_at": "2026-09-01T00:00:00Z",
+      "selection": "superseded"
+    },
+    {
+      "source_id": "I041",
+      "source_path": "incoming/procurement/drop-5/résumé.pdf",
+      "sha256": "fae336fb78e62c92ca06edf44dd02a167eb50c93f81c0d982a5b8c4eec070f90",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "procurement",
+      "document_id": "BUY-SPEC",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I042",
+      "source_path": "incoming/procurement/drop-6/same-content.bin",
+      "sha256": "fae336fb78e62c92ca06edf44dd02a167eb50c93f81c0d982a5b8c4eec070f90",
+      "detected_format": "xml",
+      "reason_code": "ok",
+      "business_area": "procurement",
+      "document_id": "BUY-SPEC",
+      "version": "1.10.0",
+      "state": "approved",
+      "issued_at": "2026-09-05T00:00:00Z",
+      "selection": "current"
+    },
+    {
+      "source_id": "I043",
+      "source_path": "incoming/mystery/opaque",
+      "sha256": "5ab247b722a37acd094f31488816861c65db52a7ee12f535ca066a02625010f1",
+      "detected_format": "unknown",
+      "reason_code": "format_unknown",
+      "business_area": "unknown",
+      "document_id": "unknown",
+      "version": "unknown",
+      "state": "unknown",
+      "issued_at": "unknown",
+      "selection": "unknown"
+    },
+    {
+      "source_id": "I044",
+      "source_path": "incoming/mystery/renamed.pdf",
+      "sha256": "5ab247b722a37acd094f31488816861c65db52a7ee12f535ca066a02625010f1",
+      "detected_format": "unknown",
+      "reason_code": "format_unknown",
+      "business_area": "unknown",
+      "document_id": "unknown",
+      "version": "unknown",
+      "state": "unknown",
+      "issued_at": "unknown",
+      "selection": "unknown"
+    },
+    {
+      "source_id": "I045",
+      "source_path": "incoming/mystery/unclear.csv",
+      "sha256": "3d415e23ec401c47da29575d75642b3a9cc993d7b2e654e17cdaf04050481b5a",
+      "detected_format": "unknown",
+      "reason_code": "format_unknown",
+      "business_area": "unknown",
+      "document_id": "unknown",
+      "version": "unknown",
+      "state": "unknown",
+      "issued_at": "unknown",
+      "selection": "unknown"
+    },
+    {
+      "source_id": "I046",
+      "source_path": "incoming/mystery/broken.json",
+      "sha256": "7fb9a2eba354f21a1681c5c523972d62d9b7e6bacb402e6827527ee8abb3a8ba",
+      "detected_format": "unknown",
+      "reason_code": "format_unknown",
+      "business_area": "unknown",
+      "document_id": "unknown",
+      "version": "unknown",
+      "state": "unknown",
+      "issued_at": "unknown",
+      "selection": "unknown"
+    },
+    {
+      "source_id": "I047",
+      "source_path": "incoming/mystery/ambiguous.txt",
+      "sha256": "dc1d9e82021bfed5b5500575f1fb21fc5ae38f6ded80b931b971d23896c938eb",
+      "detected_format": "json",
+      "reason_code": "metadata_invalid",
+      "business_area": "unknown",
+      "document_id": "unknown",
+      "version": "unknown",
+      "state": "unknown",
+      "issued_at": "unknown",
+      "selection": "unknown"
+    },
+    {
+      "source_id": "I048",
+      "source_path": "incoming/mystery/incomplete.xml",
+      "sha256": "51fa7433910a8331789e491b3437d619971453fe28ce0d9dbed1cc969b0ff5ca",
+      "detected_format": "xml",
+      "reason_code": "metadata_missing",
+      "business_area": "unknown",
+      "document_id": "unknown",
+      "version": "unknown",
+      "state": "unknown",
+      "issued_at": "unknown",
+      "selection": "unknown"
+    }
+  ],
+  "exception_pairs": [
+    [
+      "extension_mismatch",
+      "I001"
+    ],
+    [
+      "extension_mismatch",
+      "I002"
+    ],
+    [
+      "extension_mismatch",
+      "I003"
+    ],
+    [
+      "extension_mismatch",
+      "I004"
+    ],
+    [
+      "extension_mismatch",
+      "I005"
+    ],
+    [
+      "extension_mismatch",
+      "I006"
+    ],
+    [
+      "extension_mismatch",
+      "I007"
+    ],
+    [
+      "extension_mismatch",
+      "I008"
+    ],
+    [
+      "extension_mismatch",
+      "I009"
+    ],
+    [
+      "extension_mismatch",
+      "I010"
+    ],
+    [
+      "extension_mismatch",
+      "I011"
+    ],
+    [
+      "extension_mismatch",
+      "I012"
+    ],
+    [
+      "extension_mismatch",
+      "I013"
+    ],
+    [
+      "extension_mismatch",
+      "I014"
+    ],
+    [
+      "extension_mismatch",
+      "I015"
+    ],
+    [
+      "extension_mismatch",
+      "I016"
+    ],
+    [
+      "extension_mismatch",
+      "I017"
+    ],
+    [
+      "extension_mismatch",
+      "I018"
+    ],
+    [
+      "extension_mismatch",
+      "I019"
+    ],
+    [
+      "extension_mismatch",
+      "I020"
+    ],
+    [
+      "extension_mismatch",
+      "I021"
+    ],
+    [
+      "extension_mismatch",
+      "I022"
+    ],
+    [
+      "extension_mismatch",
+      "I023"
+    ],
+    [
+      "extension_mismatch",
+      "I024"
+    ],
+    [
+      "extension_mismatch",
+      "I025"
+    ],
+    [
+      "extension_mismatch",
+      "I026"
+    ],
+    [
+      "extension_mismatch",
+      "I027"
+    ],
+    [
+      "extension_mismatch",
+      "I028"
+    ],
+    [
+      "extension_mismatch",
+      "I029"
+    ],
+    [
+      "extension_mismatch",
+      "I030"
+    ],
+    [
+      "extension_mismatch",
+      "I031"
+    ],
+    [
+      "extension_mismatch",
+      "I032"
+    ],
+    [
+      "extension_mismatch",
+      "I033"
+    ],
+    [
+      "extension_mismatch",
+      "I034"
+    ],
+    [
+      "extension_mismatch",
+      "I035"
+    ],
+    [
+      "extension_mismatch",
+      "I036"
+    ],
+    [
+      "extension_mismatch",
+      "I037"
+    ],
+    [
+      "extension_mismatch",
+      "I038"
+    ],
+    [
+      "extension_mismatch",
+      "I039"
+    ],
+    [
+      "extension_mismatch",
+      "I040"
+    ],
+    [
+      "extension_mismatch",
+      "I041"
+    ],
+    [
+      "extension_mismatch",
+      "I042"
+    ],
+    [
+      "extension_mismatch",
+      "I047"
+    ],
+    [
+      "name_collision",
+      "I001"
+    ],
+    [
+      "name_collision",
+      "I002"
+    ],
+    [
+      "name_collision",
+      "I003"
+    ],
+    [
+      "name_collision",
+      "I004"
+    ],
+    [
+      "name_collision",
+      "I005"
+    ],
+    [
+      "name_collision",
+      "I006"
+    ],
+    [
+      "name_collision",
+      "I007"
+    ],
+    [
+      "name_collision",
+      "I008"
+    ],
+    [
+      "name_collision",
+      "I009"
+    ],
+    [
+      "name_collision",
+      "I010"
+    ],
+    [
+      "name_collision",
+      "I011"
+    ],
+    [
+      "name_collision",
+      "I012"
+    ],
+    [
+      "name_collision",
+      "I013"
+    ],
+    [
+      "name_collision",
+      "I014"
+    ],
+    [
+      "name_collision",
+      "I015"
+    ],
+    [
+      "name_collision",
+      "I016"
+    ],
+    [
+      "name_collision",
+      "I017"
+    ],
+    [
+      "name_collision",
+      "I018"
+    ],
+    [
+      "name_collision",
+      "I019"
+    ],
+    [
+      "name_collision",
+      "I020"
+    ],
+    [
+      "name_collision",
+      "I021"
+    ],
+    [
+      "name_collision",
+      "I022"
+    ],
+    [
+      "name_collision",
+      "I023"
+    ],
+    [
+      "name_collision",
+      "I024"
+    ],
+    [
+      "name_collision",
+      "I025"
+    ],
+    [
+      "name_collision",
+      "I026"
+    ],
+    [
+      "name_collision",
+      "I027"
+    ],
+    [
+      "name_collision",
+      "I028"
+    ],
+    [
+      "name_collision",
+      "I029"
+    ],
+    [
+      "name_collision",
+      "I030"
+    ],
+    [
+      "name_collision",
+      "I031"
+    ],
+    [
+      "name_collision",
+      "I032"
+    ],
+    [
+      "name_collision",
+      "I033"
+    ],
+    [
+      "name_collision",
+      "I034"
+    ],
+    [
+      "name_collision",
+      "I035"
+    ],
+    [
+      "name_collision",
+      "I036"
+    ],
+    [
+      "name_collision",
+      "I037"
+    ],
+    [
+      "name_collision",
+      "I038"
+    ],
+    [
+      "name_collision",
+      "I039"
+    ],
+    [
+      "name_collision",
+      "I040"
+    ],
+    [
+      "name_collision",
+      "I041"
+    ],
+    [
+      "name_collision",
+      "I042"
+    ],
+    [
+      "unknown_item",
+      "I043"
+    ],
+    [
+      "unknown_item",
+      "I044"
+    ],
+    [
+      "unknown_item",
+      "I045"
+    ],
+    [
+      "unknown_item",
+      "I046"
+    ],
+    [
+      "unknown_item",
+      "I047"
+    ],
+    [
+      "unknown_item",
+      "I048"
+    ],
+    [
+      "version_conflict",
+      "I014"
+    ],
+    [
+      "version_conflict",
+      "I016"
+    ],
+    [
+      "version_conflict",
+      "I017"
+    ],
+    [
+      "version_conflict",
+      "I018"
+    ],
+    [
+      "version_conflict",
+      "I032"
+    ],
+    [
+      "version_conflict",
+      "I034"
+    ],
+    [
+      "version_conflict",
+      "I035"
+    ],
+    [
+      "version_conflict",
+      "I036"
+    ]
+  ],
+  "source_count": 48,
+  "unique_sha_count": 33
+}

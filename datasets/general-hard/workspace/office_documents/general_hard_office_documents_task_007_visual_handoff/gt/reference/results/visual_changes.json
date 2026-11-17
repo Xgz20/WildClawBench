@@ -1,0 +1,284 @@
+{
+  "changes": [
+    {
+      "annotation_id": "V01",
+      "image": "page_01.png",
+      "action": "replace",
+      "decision": "applied",
+      "target_ref": {
+        "bookmark": "current_window"
+      },
+      "before": "周一09:00",
+      "after": "周二10:30",
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          374.33392333984375,
+          1399.93115234375,
+          430.67254638671875
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          256,
+          570.375,
+          363.84375,
+          594.375
+        ]
+      },
+      "source_image_sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "explanation": "箭头绑定本批正式窗口，历史演练中的相同时间保留。"
+    },
+    {
+      "annotation_id": "V02",
+      "image": "page_01.png",
+      "action": "replace_span",
+      "decision": "applied",
+      "target_ref": {
+        "bookmark": "owner_pair"
+      },
+      "before": "准备责任岗为值班小组A",
+      "after": "准备责任岗为值班小组B",
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          592.067138671875,
+          1443.184326171875,
+          650.6725463867188
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          88,
+          635.96875,
+          345.765625,
+          659.96875
+        ]
+      },
+      "source_image_sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "explanation": "圈选的是准备责任岗，后备岗的同名小组不在圈选范围。"
+    },
+    {
+      "annotation_id": "V03",
+      "image": "page_01.png",
+      "action": "delete_span",
+      "decision": "applied",
+      "target_ref": {
+        "bookmark": "customer_promise"
+      },
+      "before": "通知客户时承诺当日一定结案。",
+      "after": "",
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          819.840087890625,
+          1390.2725830078125,
+          875.6725463867188
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          88,
+          701.5625,
+          424,
+          725.5625
+        ]
+      },
+      "source_image_sha256": "bc96cdb69201b0c0c3322e966c22c9f5f9407b58866056ce37d2deb62e9f3465",
+      "explanation": "双线划除首个承诺句，后半段依赖未完的处理要求保留。"
+    },
+    {
+      "annotation_id": "V04",
+      "image": "page_02.png",
+      "action": "replace_cell",
+      "decision": "applied",
+      "target_ref": {
+        "table_row": "复核材料",
+        "column": "截止时间"
+      },
+      "before": "16:00",
+      "after": "17:30",
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          498.7301330566406,
+          1316.0462646484375,
+          550.6725463867188
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          491.375,
+          405.828125,
+          548.71875,
+          428.828125
+        ]
+      },
+      "source_image_sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "explanation": "批注在较低位置，但箭头回到复核材料行的截止单元格。"
+    },
+    {
+      "annotation_id": "V05",
+      "image": "page_02.png",
+      "action": "retain",
+      "decision": "retained",
+      "target_ref": {
+        "table_row": "回执归档",
+        "column": "整行"
+      },
+      "before": [
+        "回执归档",
+        "归档专员",
+        "16:00",
+        "沿用历史归档登记口径"
+      ],
+      "after": [
+        "回执归档",
+        "归档专员",
+        "16:00",
+        "沿用历史归档登记口径"
+      ],
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          700.9699096679688,
+          1368.4788818359375,
+          793.6135864257812
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          88.5,
+          450.96875,
+          1069.5,
+          517.609375
+        ]
+      },
+      "source_image_sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "explanation": "归档17:30提案已划除，圈中整行保留，不跟随相邻截止调整。"
+    },
+    {
+      "annotation_id": "V06",
+      "image": "page_02.png",
+      "action": "insert_after",
+      "decision": "applied",
+      "target_ref": {
+        "bookmark": "handoff_note"
+      },
+      "before": "交接说明：提交后由下一岗接续办理。",
+      "after": "交接说明：提交后由下一岗接续办理。 缺回执不得标记为完成。",
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          946.3055419921875,
+          1492.3336181640625,
+          1043.6136474609375
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          88,
+          559.109375,
+          496,
+          583.109375
+        ]
+      },
+      "source_image_sha256": "db80ec3f35de875cf0cc85430e11551bfab306a8d04800583777fb6640fcf954",
+      "explanation": "目标是交接说明，按箭头在该说明后追加限制，不改相似归档说明。"
+    },
+    {
+      "annotation_id": "V07",
+      "image": "page_03.png",
+      "action": "reorder",
+      "decision": "applied",
+      "target_ref": {
+        "bookmark": "step3",
+        "before_paragraph": "2 通知协作岗位。"
+      },
+      "before": [
+        "1 登记本批次状态。",
+        "2 通知协作岗位。",
+        "3 核对依赖回执。",
+        "4 记录交接结果。"
+      ],
+      "after": [
+        "1 登记本批次状态。",
+        "2 核对依赖回执。",
+        "3 通知协作岗位。",
+        "4 记录交接结果。"
+      ],
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          296.3055114746094,
+          1362.3109130859375,
+          393.6136169433594
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          88,
+          343.1875,
+          388,
+          382.78125
+        ]
+      },
+      "source_image_sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "explanation": "圈选第三步沿左侧上移箭头到第二步前，实际顺序和编号一并调整。",
+      "destination_region": {
+        "space": "pixel",
+        "bbox": [
+          83,
+          256.59375,
+          438,
+          274.59375
+        ]
+      }
+    },
+    {
+      "annotation_id": "V08",
+      "image": "page_03.png",
+      "action": "reject_out_of_scope",
+      "decision": "rejected_out_of_scope",
+      "target_ref": {
+        "bookmark": "record_retention"
+      },
+      "before": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+      "after": "发布记录保存期为180天；任何例外仍按已批准记录保留。",
+      "annotation_region": {
+        "space": "pixel",
+        "bbox": [
+          1174.7781982421875,
+          807.7709350585938,
+          1334.3492431640625,
+          860.6725463867188
+        ]
+      },
+      "target_region": {
+        "space": "pixel",
+        "bbox": [
+          88,
+          529.375,
+          703.890625,
+          553.375
+        ]
+      },
+      "source_image_sha256": "b14f12865a2ba51078a768b57cba6cff1ebbf6773ddbf17e7924dcf75fef1f76",
+      "explanation": "箭头所指属于第五节，修改范围不授权该节，保留原文并记录未采纳。"
+    }
+  ]
+}

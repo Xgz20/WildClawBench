@@ -1,0 +1,967 @@
+{
+  "schema_version": "general-hard-h021-html-runtime-adapters/v1",
+  "date_local": "2026-10-28",
+  "status": "SDK_AUTHOR_ACCEPTANCE_PASS",
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "source_revision": "438e3ded261b78f31a2971ebfe723b0c4d644d7e",
+  "core_version": "0.15.0",
+  "score_skill_version": "0.23.0",
+  "new_API": [
+    "create_html_lock",
+    "validate_html_lock",
+    "html_lock_digest",
+    "observe_html",
+    "verify_html_observation"
+  ],
+  "profile": "offline-html-dom-svg-canvas-observation/v1",
+  "real_browser_version": "156.0.8078.48",
+  "protocol_tests": {
+    "html_lock_and_real_browser_worker": 13,
+    "grading_dataset_generator_office_regressions": 44,
+    "legacy_numeric_and_multi_format_office": 16,
+    "static_validator_tmp_path_fixture_adapter": 11,
+    "e2e_build": 21,
+    "skill_layout_and_general_release_prepare": 20,
+    "total_unique_tests_passed": 125,
+    "static_validator_runner": "Existing pytest-style tmp_path-only functions invoked unchanged with temporary Path fixtures via unittest; pytest is not installed and no shared environment was modified."
+  },
+  "native_reference_projection": {
+    "canvases": 0,
+    "svg": 40,
+    "tables": 1,
+    "texts": 346
+  },
+  "managed_python": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+  "normal_and_archived_score_valid": true,
+  "detached_package_source_revision": "438e3ded261b78f31a2971ebfe723b0c4d644d7e",
+  "detached_CLI_stages": [
+    "bootstrap",
+    "prepare",
+    "rules",
+    "semantics-not-required",
+    "finalize",
+    "verify-normal",
+    "verify-archived"
+  ],
+  "detached_package_uses_repository_pythonpath": false,
+  "rendered_reference_screenshot_visually_checked": true,
+  "prior_material_bindings_unchanged": 118,
+  "HTML_only_and_combined_office_runtime_tested": true,
+  "separate_browser_group_timeout_and_outer_worker_cancellation_tested": true,
+  "unfrozen_source_and_byte_context_tampering_rejected": true,
+  "completed_dataset_tasks": 21,
+  "remaining_dataset_tasks": 39,
+  "H021_registered": false,
+  "business_grader_materialized": false,
+  "task_MD_materialized": false,
+  "release_status": "building",
+  "manifest_created": false,
+  "harness_score": null,
+  "measured_difficulty": null,
+  "limits": [
+    "Protocol acceptance uses real Chrome and a managed Python Worker with an explicit test fixture; it is not a Harness/model score or H021 business-rule acceptance.",
+    "DOM visibility and native geometry hits are observations. Composition, overpaint, filters, masks and semantic correctness require task-level cross-checking with actual pixels and source evidence.",
+    "Canvas fill/drawImage/putImageData, WebGL/offscreen transfer, rotated/3D CSS and iframe content do not have a complete generic vector reconstruction guarantee. Legal unhandled charts must remain evaluation_error/null.",
+    "The lock binds browser/Node executables, core assets, observer, platform and settings, not all OS dynamic libraries or fallback fonts.",
+    "Archive verification checks source, resource, script, request, observation and derived-byte context without rendering. It cannot cryptographically attest that an arbitrarily rewritten self-consistent receipt was produced by a real browser.",
+    "Windows browser/process lifecycle, H021 candidate matrix and formal MD Worker, all60 release freeze and12-task four-Harness calibration remain pending."
+  ],
+  "files": [
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/adapters/components.py",
+      "size": 12887,
+      "sha256": "401b0aed056705f2f501fa326ff0241df202c35c43cfbc4ba4a10981c2385593"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/datasets/bundle.py",
+      "size": 39399,
+      "sha256": "ef431462640800b945bb94bc3997e128519901773a4861c86bf9388a34ec7245"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/stages.py",
+      "size": 5181,
+      "sha256": "893af35c6228a4044ae0270dfc197f52138fa3c72baae11c45be2a7bcfa5388a"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/__init__.py",
+      "size": 2374,
+      "sha256": "dc18bb45d387254bea804351f73482a9e0f6ae66d3580da7d87c98d3a6e60b51"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/html_observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/html_runtime.py",
+      "size": 20578,
+      "sha256": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_dataset_bundle.py",
+      "size": 9859,
+      "sha256": "5797fd8c1d270cc91a893b1e6f19b8107e620b467aee802186a19910c8c97112"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_e2e_build.py",
+      "size": 37997,
+      "sha256": "2b73a5602ea1b6e3e1661f1e8d32f79dd14bed866c513375517b5b14bbf9a0c4"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_general_release_prepare.py",
+      "size": 25815,
+      "sha256": "5adfeadbf0b9aef1ac0cf2f4c58f5aed9a5e06663bfb9b0c58f50782b3755197"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_grading_core.py",
+      "size": 14252,
+      "sha256": "bc97e16d2b2eaff58dced555fdcc6aa29df9671fc33241fed5dada6883c8b94e"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_html_runtime.py",
+      "size": 20692,
+      "sha256": "fed8ab6378f2b438267c7377c3a4a713d119b8c6caa9528707177f097c2c3d1f"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_skill_layout.py",
+      "size": 6337,
+      "sha256": "5b42bcc033288a28776c2872bdc27372e3b0714fad9915b201152e141124e1f1"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/e2e-shared/components.json",
+      "size": 5366,
+      "sha256": "4afcb3a380c43f373df6c6ffce6939acecb0b8eba20cea933119d48befb9c67e"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "size": 19982,
+      "sha256": "ae2b82bab0ae6e019e331c4920a934a531201ffd4c081e115eb895bc0d799382"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/grading-core.md",
+      "size": 12156,
+      "sha256": "c716c68ac1b3a73acbdad0038d0ca7a4b6f860f0eaafa9f5c7e2d1a3ef82ce0a"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/html-observation.md",
+      "size": 4715,
+      "sha256": "de76322e9a0d541ddac71455db3be1fe910bd7d37e605eb7f2d4211c53a2ba27"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "size": 287732,
+      "sha256": "1853652fae27d6ef3a19933fefa94bd31cfb8e5a721c8b7401e58b634fbd011d"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "size": 284,
+      "sha256": "2bd1fa1824be39a9c602ebc7bab55ce01327b3fe88a9c3c958040d6b71fe448e"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/validate-eval-dataset/scripts/validate_eval_dataset.py",
+      "size": 30838,
+      "sha256": "42fc6308d5f1d679d30a27f2753f14c9dfdf0a8d65583d2dc2a9266809823614"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/wildclawbench-case-generator/references/case-spec-schema.md",
+      "size": 5790,
+      "sha256": "f72a58ca19a6ee4d564a41c906bebe1598f33a09d4fd5679437404dadda5fee0"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/wildclawbench-case-generator/scripts/assemble_case.py",
+      "size": 52758,
+      "sha256": "236832dbb14b012a6473f3ab7043b8e5dc6babc9796bbfc2a720fd378e211b41"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/tests/test_wildclawbench_case_generator.py",
+      "size": 22555,
+      "sha256": "a8a7e64c8e9939dd0922bcc8dd03a06db750381571ccfbfead5080341bfc51a2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/authoring/validate_html_sdk.py",
+      "size": 5738,
+      "sha256": "e73cf150a2ace3f5f4efb6f1e31d466b889237e1e5f2df5d39a48d093dcda9e7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/authoring/validate_detached_html_sdk.py",
+      "size": 4208,
+      "sha256": "a3095bab89e068455e9a489fe73c56bf5a4fbe68a4fff9fa251101cf60340d7e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/authoring/run_static_validator_tests.py",
+      "size": 1077,
+      "sha256": "af591da014dde823a3b04e52e57a731b49c3871d03ef2d173cb348ca2b649f56"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/authoring/record_html_sdk.py",
+      "size": 5704,
+      "sha256": "5fb36278d7ac737990e59b503038bd924f78aae8711e91b00b2b9e3c8e7212ec"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/combined-runtime-lock.json",
+      "size": 24939,
+      "sha256": "22cc4835590d31243998c1606c3aff10d01249e36a18d93dded105f8a498fdab"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/attempt-manifest.json",
+      "size": 32059,
+      "sha256": "7ec3fee60e3ac7b86795aeb438db9ea9624cdb4290f0f0a2c1a187d8e00da9f9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/candidate-original/candidate-artifact.json",
+      "size": 773,
+      "sha256": "08a62f4e25447bd664eb2927d7a1b046ada14d61c09f5129c93822d31e48022a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/candidate-original/workspace/answer.txt",
+      "size": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/candidate-original/workspace/report.html",
+      "size": 25051,
+      "sha256": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/contract.json",
+      "size": 795,
+      "sha256": "d0ad6bf475c53107e4edf41eab6afa1505bafc25a8a5207d43e5147662d16dcb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/execution-record.json",
+      "size": 656,
+      "sha256": "d0a1c5cf304800a2bb4ea3a3cc7dc3ec2c18a8db77221da82c552973b16c72aa"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/gt/expected.json",
+      "size": 21,
+      "sha256": "2153f99da13bb6be165b095bbf578e2b41df50dc21db685d56b422a581a611f2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/gt/html_observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/gt/html_runtime.py",
+      "size": 20578,
+      "sha256": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/runtime-lock.json",
+      "size": 24939,
+      "sha256": "22cc4835590d31243998c1606c3aff10d01249e36a18d93dded105f8a498fdab"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/task.md",
+      "size": 15,
+      "sha256": "5dc916906d7cad248944797fa85f5c4ca96b556ba808fe50f7b8300f2d8d14f9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/private/transcript.jsonl",
+      "size": 48,
+      "sha256": "7742a65b7f97814c01cf8e3844854cbc8fd92f8618d17b7b81cef9fc1213213d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/rule-audit.json",
+      "size": 4154,
+      "sha256": "ecde1cdd66f53abaaa731c0a4787ffe35e96aa4f3f51e61577d97681bbca513c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/rule-component.json",
+      "size": 2071,
+      "sha256": "dae648ea6fffeaa7652e0656dcdcb5949437494ea65be98465424cfad4353da4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/score-audit.json",
+      "size": 1048,
+      "sha256": "395ab381e23059d3c0946ce80544cc70c8f4ebb2905923fa6af0e47f47889f42"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/score.json",
+      "size": 2117,
+      "sha256": "077dfbdd2996415fef2da5a8fde1f27c5ca172c92a05212819b8a92f9efe76c9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/semantic/evidence-catalog.json",
+      "size": 9017,
+      "sha256": "facd03a3f87e5b653cc3d0e69b37078b2411e3d600504afa2a0544daf011a2ac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/semantic/semantic-audit.json",
+      "size": 786,
+      "sha256": "7f5aeb956e63349412e9b4fb3b24b6ac86b12b13eefd837cca5f641bdf1a4f85"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/semantic/semantic-component.json",
+      "size": 199,
+      "sha256": "07bbdc6450b576bcc470f2d9c57b213e147cda66aa09af25471848a9878df357"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/html-audit.json",
+      "size": 1974,
+      "sha256": "d21b6b48dedfe99bd36dd6ceecc862e1aaf30861032bc629616cbb89a2049585"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/observation.json",
+      "size": 712369,
+      "sha256": "78dc624d2e605f80fae669f16f9b147fea75c2a7cc15ad0ac3e958c9866492de"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/page.png",
+      "size": 672452,
+      "sha256": "baf779412e88ddd87e1b6b9fb8c43c098aa6d52f0bb9b775eef1d0c2e5f19c13"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/process-info.json",
+      "size": 38,
+      "sha256": "f8581adf2b5f5c32b3785c4b49a3c7068df961c6f16046b27e34d180adf02322"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/rendered.html",
+      "size": 25152,
+      "sha256": "0fbe7154a16f7375a8b1579b99eada63655e7dec01b56ab62de4e644691e96fc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/request.json",
+      "size": 23069,
+      "sha256": "df5976d4fba663b1b2621bb1b1e95e93b6045683801db21d94f4a33fc448b7f5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/resources/ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b.bin",
+      "size": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/derived/html/source.html",
+      "size": 25051,
+      "sha256": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/html-runtime.json",
+      "size": 21393,
+      "sha256": "0e89dded5631aa795b7c0a60e2e1c609828c89c7eb1f9164162a1c34d098d710"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/request.json",
+      "size": 1048,
+      "sha256": "12086ec20c673cdae86ef4da88059342a37b223ac7ab56fe0942811e0c8eb162"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/result.json",
+      "size": 248,
+      "sha256": "eb5ef141e47c85daa4dac189b054df582c13f09b2c814be9a16c03200aef0099"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/attempts/batch-fixture__unit-fixture/task-fixture/html-sdk-v015/worker/stdout.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/scoring.zip",
+      "size": 46687,
+      "sha256": "c543c96a3efd0d238b1c702cb14097a70b7794a3fd0dabd6ed2bfde00fcb7e6a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/unit/evidence/candidate/candidate-artifact.json",
+      "size": 773,
+      "sha256": "08a62f4e25447bd664eb2927d7a1b046ada14d61c09f5129c93822d31e48022a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/unit/evidence/candidate/workspace/answer.txt",
+      "size": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/unit/evidence/candidate/workspace/report.html",
+      "size": 25051,
+      "sha256": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/unit/evidence/execution-record.json",
+      "size": 656,
+      "sha256": "d0a1c5cf304800a2bb4ea3a3cc7dc3ec2c18a8db77221da82c552973b16c72aa"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/unit/evidence/transcript.jsonl",
+      "size": 48,
+      "sha256": "7742a65b7f97814c01cf8e3844854cbc8fd92f8618d17b7b81cef9fc1213213d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/fixture/unit/manifest.json",
+      "size": 326,
+      "sha256": "474e4ee5b48a40857abd404a3d31e6ffab791c19812b56e5c2e4c4356ce3068a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/html-runtime-lock.json",
+      "size": 21393,
+      "sha256": "0e89dded5631aa795b7c0a60e2e1c609828c89c7eb1f9164162a1c34d098d710"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/html-audit.json",
+      "size": 2443,
+      "sha256": "c6fd29dda4c918627a3151d55323b09e794857aa6e4d4e7696c285d85efe73f6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/observation.json",
+      "size": 712369,
+      "sha256": "78dc624d2e605f80fae669f16f9b147fea75c2a7cc15ad0ac3e958c9866492de"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/page.png",
+      "size": 672452,
+      "sha256": "baf779412e88ddd87e1b6b9fb8c43c098aa6d52f0bb9b775eef1d0c2e5f19c13"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/process-info.json",
+      "size": 38,
+      "sha256": "23e6673994a6152ef0478ab584392c2593c4c5a62fb27673299777f384407e59"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/rendered.html",
+      "size": 25152,
+      "sha256": "0fbe7154a16f7375a8b1579b99eada63655e7dec01b56ab62de4e644691e96fc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/request.json",
+      "size": 23321,
+      "sha256": "9889131c204326faa6c7a3fb620c4dcc8d7a088219ac94482b419c1efeea6e89"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/resources/3e86642864e7f5856d67679008daeb4cb4e6492c602ab01fb77c4ddbd9c93053.bin",
+      "size": 15254,
+      "sha256": "3e86642864e7f5856d67679008daeb4cb4e6492c602ab01fb77c4ddbd9c93053"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/resources/e102aa0860043bfb87276ecae68219f530b748d1a0148ec645c624bc0144d56a.bin",
+      "size": 69036,
+      "sha256": "e102aa0860043bfb87276ecae68219f530b748d1a0148ec645c624bc0144d56a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/reference-observation/source.html",
+      "size": 25051,
+      "sha256": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/result.json",
+      "size": 2290,
+      "sha256": "17cbe2d1518b82e77bc6f29dfeb282ac84cdedde1466f68aea72d19e4e0f7337"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/source-snapshot/src/wildclawbench_grading_core/__init__.py",
+      "size": 2374,
+      "sha256": "dc18bb45d387254bea804351f73482a9e0f6ae66d3580da7d87c98d3a6e60b51"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/source-snapshot/src/wildclawbench_grading_core/html_observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/source-snapshot/src/wildclawbench_grading_core/html_runtime.py",
+      "size": 20578,
+      "sha256": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/source-snapshot/tests/general_e2e/test_html_runtime.py",
+      "size": 20692,
+      "sha256": "fed8ab6378f2b438267c7377c3a4a713d119b8c6caa9528707177f097c2c3d1f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/source-snapshot/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "size": 287732,
+      "sha256": "1853652fae27d6ef3a19933fefa94bd31cfb8e5a721c8b7401e58b634fbd011d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/source-snapshot/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "size": 284,
+      "sha256": "2bd1fa1824be39a9c602ebc7bab55ce01327b3fe88a9c3c958040d6b71fe448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-v015-20261028/validate_html_sdk.py",
+      "size": 5738,
+      "sha256": "e73cf150a2ace3f5f4efb6f1e31d466b889237e1e5f2df5d39a48d093dcda9e7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/attempt-manifest.json",
+      "size": 32063,
+      "sha256": "91fb74f2183fbe2dbf76b6cddcd46169b177573ce2e8293758601219b748ed27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/candidate-original/candidate-artifact.json",
+      "size": 773,
+      "sha256": "08a62f4e25447bd664eb2927d7a1b046ada14d61c09f5129c93822d31e48022a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/candidate-original/workspace/answer.txt",
+      "size": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/candidate-original/workspace/report.html",
+      "size": 25051,
+      "sha256": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/contract.json",
+      "size": 795,
+      "sha256": "d0ad6bf475c53107e4edf41eab6afa1505bafc25a8a5207d43e5147662d16dcb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/execution-record.json",
+      "size": 656,
+      "sha256": "d0a1c5cf304800a2bb4ea3a3cc7dc3ec2c18a8db77221da82c552973b16c72aa"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/gt/expected.json",
+      "size": 21,
+      "sha256": "2153f99da13bb6be165b095bbf578e2b41df50dc21db685d56b422a581a611f2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/gt/html_observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/gt/html_runtime.py",
+      "size": 20578,
+      "sha256": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/runtime-lock.json",
+      "size": 24939,
+      "sha256": "22cc4835590d31243998c1606c3aff10d01249e36a18d93dded105f8a498fdab"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/task.md",
+      "size": 15,
+      "sha256": "5dc916906d7cad248944797fa85f5c4ca96b556ba808fe50f7b8300f2d8d14f9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/private/transcript.jsonl",
+      "size": 48,
+      "sha256": "7742a65b7f97814c01cf8e3844854cbc8fd92f8618d17b7b81cef9fc1213213d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/rule-audit.json",
+      "size": 4144,
+      "sha256": "c230e61ee7c231f16232fc1d34ae0959bfe751f8ee7e135db81ee6ed27efbddd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/rule-component.json",
+      "size": 2071,
+      "sha256": "d3af4a97cc6a6f16ef8aef15c153cae56f3200b94be16da5961dcfa180604bca"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/score-audit.json",
+      "size": 1052,
+      "sha256": "7c3bec43b67d9415cf49156302b6d817f9759f61755a114ca3cd339bac70aa78"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/score.json",
+      "size": 2121,
+      "sha256": "81580f17120544d72089d2da0e7a3cbb43d6bec8d04be9551016aa6c9c366b57"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/semantic/evidence-catalog.json",
+      "size": 9021,
+      "sha256": "c6cbf762bb2b6b2810e5d28d5826a90f7e42323633df9084e862750dcc758ccc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/semantic/semantic-audit.json",
+      "size": 790,
+      "sha256": "8f5f0ee218782f46192c3eb0c24addcba83b563d80e9ad9b384a0435845f6a3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/semantic/semantic-component.json",
+      "size": 199,
+      "sha256": "07bbdc6450b576bcc470f2d9c57b213e147cda66aa09af25471848a9878df357"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/html-audit.json",
+      "size": 1974,
+      "sha256": "698f3a1c84d14f5ef4abe635f6684c47db865f3317302f95ba862ff347287441"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/observation.json",
+      "size": 712369,
+      "sha256": "78dc624d2e605f80fae669f16f9b147fea75c2a7cc15ad0ac3e958c9866492de"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/page.png",
+      "size": 672452,
+      "sha256": "baf779412e88ddd87e1b6b9fb8c43c098aa6d52f0bb9b775eef1d0c2e5f19c13"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/process-info.json",
+      "size": 38,
+      "sha256": "0024b814a01f16b68634eb7ce90da35b62044964ed18cdd0a9dad05b5c4783e1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/rendered.html",
+      "size": 25152,
+      "sha256": "0fbe7154a16f7375a8b1579b99eada63655e7dec01b56ab62de4e644691e96fc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/request.json",
+      "size": 23069,
+      "sha256": "df5976d4fba663b1b2621bb1b1e95e93b6045683801db21d94f4a33fc448b7f5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/resources/ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b.bin",
+      "size": 6,
+      "sha256": "ed1a545bb85e55816bbf9566b028b2a0bc456b88f49f6f266c0401048824194b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/derived/html/source.html",
+      "size": 25051,
+      "sha256": "c6daaaabe7c480364a88bf0e3e132b32e33e7a7026222e8d3454b98b778cfc8e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/html-runtime.json",
+      "size": 21393,
+      "sha256": "0e89dded5631aa795b7c0a60e2e1c609828c89c7eb1f9164162a1c34d098d710"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/request.json",
+      "size": 1053,
+      "sha256": "43ee6ff987958884b199bbf0768aff3d68358c41de9f6af89d07ac2fc6d7ae5f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/result.json",
+      "size": 248,
+      "sha256": "b4baa1d02fe4f44127f0b87e2d314672363f6f9d243a6fbebb8001f55aeebd00"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/attempts/batch-fixture__unit-fixture/task-fixture/detached-html-sdk/worker/stdout.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/bootstrap.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/bootstrap.stdout.json",
+      "size": 362,
+      "sha256": "722df24d94777aa701817ede0c9306d46d352d39c5f16e2e7919bfa283d80849"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/finalize.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/finalize.stdout.json",
+      "size": 3619,
+      "sha256": "5a7ce5dda2cc9e9ed42f5484899a6f5a5a5a24f036d2903270751dd0e1c02b87"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/SKILL.md",
+      "size": 19982,
+      "sha256": "ae2b82bab0ae6e019e331c4920a934a531201ffd4c081e115eb895bc0d799382"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/agents/openai.yaml",
+      "size": 274,
+      "sha256": "eb113d74ce0bc15256b34d40dd4b845eb7faa6c583dddb9b0910be49ce670899"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/bundled-components.json",
+      "size": 1372,
+      "sha256": "f24197b6b962320c2f7742195a6314bcd0fbf3e97d3b2bb35b50a6b835a7857f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/api-judge.md",
+      "size": 4264,
+      "sha256": "b5e3e456396afa7fdc1f6ebc51b6b326365733e7599e4221bd400776f24f3638"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/codex-agent-judge.md",
+      "size": 7330,
+      "sha256": "4eb123391564c614deefc0f24af3c59372dd05f1d1b36b6f4aa7a65086b0f296"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/grading-core.md",
+      "size": 12156,
+      "sha256": "c716c68ac1b3a73acbdad0038d0ca7a4b6f860f0eaafa9f5c7e2d1a3ef82ce0a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/html-observation.md",
+      "size": 4715,
+      "sha256": "de76322e9a0d541ddac71455db3be1fe910bd7d37e605eb7f2d4211c53a2ba27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/image-evidence.md",
+      "size": 5264,
+      "sha256": "b78e681d027b3d23075148f285ddb62c93ff87c543697a6568acd6a00775abfd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/local-rule-runtime.md",
+      "size": 7256,
+      "sha256": "e547aed07eb08f75cae04f31be93c1ebe1e24886fc5a3fcd2874f5d8c0dbff22"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/native-text-evidence.md",
+      "size": 6734,
+      "sha256": "46cc27ee0631eefbe9e12e3a8754f780d0a8b746a36e2207ff6efd7c3c37fdd2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/office-recalculation.md",
+      "size": 12771,
+      "sha256": "d8084362390524eda53cebc3d16d4a87baefdec582dd7312326cd99d006f98ed"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/office-rendering.md",
+      "size": 8778,
+      "sha256": "04034d6100bcd5c524f7184cfea3318727a60625b2a13ea3e183d613c30dd664"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/offline-browser-validation.md",
+      "size": 3006,
+      "sha256": "c48a004cc7bd04e736503eeb8ae3240598054f4254f3ea5b9bb960b7fc5dabaf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/rescore.md",
+      "size": 862,
+      "sha256": "5b1dd04c48fde67760439fb054cab5ee184dea8cb592e514168b85498b229392"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/reviewed-evidence-policy.json",
+      "size": 11393,
+      "sha256": "bc7314305f9c7395dc6f73238c0d298d1a1573d7d44f92baaef0b8f3271977c8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/reviewed-failure-evidence-policy.json",
+      "size": 812,
+      "sha256": "0201e02bf2b3e7bd5939ae244edc2c754ae649a383f632bc6c7b4c902a227f7e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/reviewed-fast-output-evidence-audit.json",
+      "size": 2174,
+      "sha256": "8da456479630df670e09461d66d002fb1a7087cb4c54245ccf96241f96939c84"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/scoring-runtime-lock.json",
+      "size": 1197,
+      "sha256": "2e2f86fb667c320e085363671b5d34939ede1d5799071119c9ce06514abcf554"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/references/scoring-runtime-requirements.txt",
+      "size": 14028,
+      "sha256": "f0225b6cf5baa31d232c4b12f838b48d43387c908458c16cccb14e19e03c31c9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/scripts/failure_evidence.py",
+      "size": 8555,
+      "sha256": "29109939c5889d90826cc62fbf325309d64c287696fcf59d3c197dcc48698581"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/scripts/offline_browser_validate.py",
+      "size": 8888,
+      "sha256": "59eb5e28cf925e232e8b046accfac917bc787643f97e7177e657d23787554c9b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/scripts/rule_worker.py",
+      "size": 4439,
+      "sha256": "ec3ff8ccb80bf545bec76fd7495ad197e7a4a60f9e9015b84e5fd55b96e4c35d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/scripts/score_general_e2e.py",
+      "size": 287732,
+      "sha256": "1853652fae27d6ef3a19933fefa94bd31cfb8e5a721c8b7401e58b634fbd011d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/scripts/trace_handoff.py",
+      "size": 4982,
+      "sha256": "42caf111b3242b2f72dcf8700599a347499e2fa474e1fb5db5d2dfb431f22c35"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/skill-metadata.json",
+      "size": 284,
+      "sha256": "2bd1fa1824be39a9c602ebc7bab55ce01327b3fe88a9c3c958040d6b71fe448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/handoff/workspace-integrity.mjs",
+      "size": 8411,
+      "sha256": "89572fb170d14fa3529ec893c7931f2234489ff032f7a8fd8b6a2d43fe89e451"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/__init__.py",
+      "size": 2374,
+      "sha256": "dc18bb45d387254bea804351f73482a9e0f6ae66d3580da7d87c98d3a6e60b51"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/_validation.py",
+      "size": 1675,
+      "sha256": "d6a199c8a47b4f257a68fd495f02e53abef174391f0fe7b881612ce423f9052a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/compat.py",
+      "size": 5840,
+      "sha256": "114f914802aab66959318771abb5145a9d9478c5f5ac51738c94ae246f2be6ab"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/dependencies.py",
+      "size": 5388,
+      "sha256": "f64a5a87dbf0f0467703b380a6e8ddcbae23014ed9de8868f9842a66551de04e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/errors.py",
+      "size": 751,
+      "sha256": "72915750287879fa9f6e36fd6d9c2cc51cf92c8f6d014c1f45e78da322604acb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/evidence.py",
+      "size": 7481,
+      "sha256": "f400cb46966cd6936ba84321577a82dda77642f80c4d52b06896c16620c7a76e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/finalize.py",
+      "size": 6306,
+      "sha256": "b1ff3e1b6e5bbeedbf039be9842d18210a0d01babb2fef2d6fe317ed8f646433"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/html_observer.mjs",
+      "size": 22396,
+      "sha256": "392b9e7178cac92e2280e04a291cd29d67a5daf1272961920c634664dd72b961"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/html_runtime.py",
+      "size": 20578,
+      "sha256": "3cbaa4e93bad92d1741a701d577ab8f7d3978d86b13cb46b52b970b112752310"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/image_evidence.py",
+      "size": 5005,
+      "sha256": "67814a7cacd7887e089ae4d68a4fcb751e6e911a05e9160b7bfe52db23c98a03"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/native_text.py",
+      "size": 39711,
+      "sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/office_runtime.py",
+      "size": 64169,
+      "sha256": "7dcb510b0a3a234799c8b4bf44f8fa0c8b2d047b43eded3e6010d239fd1c66ac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/rule-runtime-dependencies.json",
+      "size": 801,
+      "sha256": "b8abde79ce36014fca85bdbcd31da63e8c10f28d00c351255b4fcd8a929bbc69"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/rules.py",
+      "size": 7398,
+      "sha256": "795f267762d9ea5545f89d06fa31f62b66c5ee7b51f2c5c3d0225e5cfee25a27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/installed/score-general-e2e/vendor/e2e-shared/wildclawbench_grading_core/semantics.py",
+      "size": 9687,
+      "sha256": "cb1e1253b2fb593bbf2f50bed1ce788402fef4b3c273bab21d3da609975ad804"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/packages/score-general-e2e-skill-v0.23.0.zip",
+      "size": 655203,
+      "sha256": "49e602e33f3d871e52adc53c249a79746a60f3e5315b0b7a61d6f3de78dc346c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/packages/skills-build-manifest.json",
+      "size": 2018,
+      "sha256": "6c15a4bd44fa490345062841f68e2441bced10f419741fcebecb46c20dc86536"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/prepare.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/prepare.stdout.json",
+      "size": 33940,
+      "sha256": "c173a20b29c1ff27edf45d7cddeee3eafe8e7c2fa27e65384aa39741bcd3e286"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/result.json",
+      "size": 6869,
+      "sha256": "00e0a092fa3059492a285bc7ceb69c4aad7bd669d0aeed25e4c804fc202b13ac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/rules.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/rules.stdout.json",
+      "size": 6866,
+      "sha256": "57d6053d660bb559254fc60720cf05480572e6a5fb46234fa583c5d1a78daee4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/runtime-lock.json",
+      "size": 24939,
+      "sha256": "22cc4835590d31243998c1606c3aff10d01249e36a18d93dded105f8a498fdab"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/semantics-not-required.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/semantics-not-required.stdout.json",
+      "size": 552,
+      "sha256": "201a41bd4016e6e1c3c3a704c89ca2729b63ccd7ad7e44a6f17f437afe26f2ed"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/validate_detached_html_sdk.py",
+      "size": 4208,
+      "sha256": "a3095bab89e068455e9a489fe73c56bf5a4fbe68a4fff9fa251101cf60340d7e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/verify-archived.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/verify-archived.stdout.json",
+      "size": 345,
+      "sha256": "c99eb929ae01e274a035be24109ac81813350796fac894c1d0f59a42adc2d5d4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/verify-normal.stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h021/qa/html-sdk-detached-v015-20261028/verify-normal.stdout.json",
+      "size": 345,
+      "sha256": "c99eb929ae01e274a035be24109ac81813350796fac894c1d0f59a42adc2d5d4"
+    }
+  ]
+}

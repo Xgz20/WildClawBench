@@ -1,0 +1,951 @@
+{
+  "schema_version": "h012-reviewed-regions/v1",
+  "status": "approved",
+  "human_expert": false,
+  "images": {
+    "signed_pages/scan_01.png": {
+      "sha256": "dd05680866db8cf875985ffc8304fdc95bd296eb80f16d8b9aa5e921a64d2025",
+      "width": 1500,
+      "height": 2100
+    },
+    "signed_pages/scan_02.png": {
+      "sha256": "4ad7b38d450b188cb78ba474bca7e93dac37862da7ffbcdb7e4ba93afcd727cf",
+      "width": 1500,
+      "height": 2100
+    },
+    "signed_pages/scan_03.png": {
+      "sha256": "fdf55771e617001247a94154b5fb0a062a30acc6851e500cded26d463e431c71",
+      "width": 1500,
+      "height": 2100
+    },
+    "signed_pages/scan_04.png": {
+      "sha256": "de5860efdd2fc00874cc1d3ac81827dda3e259db7a3d13983b79ca5de60fc780",
+      "width": 1500,
+      "height": 2100
+    },
+    "signed_pages/scan_05.png": {
+      "sha256": "43bc8f4ff9981546e98cb3dc60d66abaae1e964766788fd003ca801f8921531a",
+      "width": 1500,
+      "height": 2100
+    }
+  },
+  "regions": [
+    {
+      "revision_id": "R01",
+      "file": "signed_pages/scan_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            315,
+            1150,
+            360
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“首次验收材料应在收到通知后10个工作日内提交。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            393,
+            1380,
+            443
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            519,
+            430,
+            575
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            497,
+            1040,
+            576
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R02",
+      "file": "signed_pages/scan_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            725,
+            1150,
+            770
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“复验材料应在收到通知后10个工作日内提交。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            803,
+            1380,
+            853
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部空白；B印记落在右侧备查框内。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            907,
+            1040,
+            986
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。本条乙方确认B框清晰空白；B样例印记在右侧备查框内，不计入本条确认。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部空白；B印记落在右侧备查框内。"
+        },
+        {
+          "key": "archive_is_not_confirmation",
+          "bbox": [
+            1158,
+            906,
+            1330,
+            986
+          ],
+          "observation_a": "备查标签下的独立方框内有B样例印记；左侧本条乙方确认B框为空白。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部空白；B印记落在右侧备查框内。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R03",
+      "file": "signed_pages/scan_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1135,
+            1150,
+            1180
+          ],
+          "observation_a": "底稿为单次到场服务费为1200元，横线划在底稿黑字一行；下一行红色提议为单次到场服务费为1000元，未被两道相交斜线划销。",
+          "observation_b": "可读红色提议为“单次到场服务费为1000元。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1213,
+            1380,
+            1263
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1339,
+            430,
+            1395
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1317,
+            1040,
+            1396
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "base_only_strike",
+          "bbox": [
+            180,
+            1083,
+            1110,
+            1135
+          ],
+          "observation_a": "底稿为单次到场服务费为1200元，横线划在底稿黑字一行；下一行红色提议为单次到场服务费为1000元，未被两道相交斜线划销。",
+          "observation_b": "底稿“单次到场服务费为1200元。”处有横向划线；划线位置在底稿行，不是红色提议的相交划销。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R04",
+      "file": "signed_pages/scan_01.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1545,
+            1150,
+            1590
+          ],
+          "observation_a": "底稿服务押金为6000元清晰；红色提议仅可读服务押金改为及元，金额数字被实色条与斜向涂抹遮盖，未见贯穿红色提议的两道相交斜线，不能读出新金额。",
+          "observation_b": "可读“服务押金改为”及“元。”；中间金额被深色条带和重复斜笔画覆盖，金额未知。未见足以据A1确认整项提议已被两道相交斜线划销的清晰图形。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1623,
+            1380,
+            1673
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1749,
+            430,
+            1805
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1727,
+            1040,
+            1806
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R05",
+      "file": "signed_pages/scan_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            300,
+            1130,
+            382
+          ],
+          "observation_a": "红色提议可读为维护期限为18个月。 两道红色斜线相交并横跨提议文字，构成明确划销。",
+          "observation_b": "红色文字“维护期限为18个月。”仍可读；两道长斜线在提议区域相交形成X，划销提议本身。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            393,
+            1380,
+            443
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            519,
+            430,
+            575
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            497,
+            1040,
+            576
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R06",
+      "file": "signed_pages/scan_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            725,
+            1150,
+            770
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“现场巡检每月安排2次。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            803,
+            1380,
+            853
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation_a": "仅不采用框明确勾选。",
+          "observation_b": "不采用框勾选，采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            907,
+            1040,
+            986
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "不采用框勾选，采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R07",
+      "file": "signed_pages/scan_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1135,
+            1150,
+            1180
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“备件采购费用由甲方先行承担。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1213,
+            1380,
+            1263
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1339,
+            430,
+            1395
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部清晰空白。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1317,
+            1040,
+            1396
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。本条乙方确认B框清晰空白。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部清晰空白。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R08",
+      "file": "signed_pages/scan_02.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1545,
+            1150,
+            1590
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“远程诊断支持时段为每日09:00至20:00。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1623,
+            1380,
+            1673
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1749,
+            430,
+            1805
+          ],
+          "observation_a": "采用与不采用两框均勾选。",
+          "observation_b": "采用与不采用均勾选。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1727,
+            1040,
+            1806
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用与不采用均勾选。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R09",
+      "file": "signed_pages/scan_03.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            315,
+            1150,
+            360
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“紧急备件在收到通知后24小时内交接。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            393,
+            1380,
+            493
+          ],
+          "observation_a": "附记条件可读为收齐试运行记录后执行；材料状态标注试运行记录已收齐，但其小方框未勾选。",
+          "observation_b": "红色附记为“收齐试运行记录后执行”；其下“材料状态：试运行记录已收齐”前的方框清晰空白。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            519,
+            430,
+            575
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            497,
+            1040,
+            576
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R10",
+      "file": "signed_pages/scan_03.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            725,
+            1150,
+            770
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“结算周期为验收后15个自然日。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            803,
+            1380,
+            853
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部被深色涂抹覆盖，无法辨认是否有对应B确认印记。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            907,
+            1040,
+            986
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。本条乙方确认B框被深色涂抹覆盖，不能辨认框内是否有有效B样例印记。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。本条乙方确认B框内部被深色涂抹覆盖，无法辨认是否有对应B确认印记。"
+        },
+        {
+          "key": "obscured_b",
+          "bbox": [
+            820,
+            936,
+            1038,
+            987
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。本条乙方确认B框被深色涂抹覆盖，不能辨认框内是否有有效B样例印记。",
+          "observation_b": "本条乙方确认B框内部有宽深色涂抹和重复斜笔画，遮住可用于判断B印记是否存在的区域。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R11",
+      "file": "signed_pages/scan_03.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1135,
+            1150,
+            1180
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“验收资料归档保管期限为3年。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1213,
+            1380,
+            1263
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1339,
+            430,
+            1395
+          ],
+          "observation_a": "采用与不采用两框均清晰空白。",
+          "observation_b": "采用与不采用均为空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1317,
+            1040,
+            1396
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用与不采用均为空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R12",
+      "file": "signed_pages/scan_04.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            315,
+            1150,
+            360
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“月度数据应在每月8日前报送。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            393,
+            1380,
+            443
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            519,
+            430,
+            575
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            497,
+            1040,
+            576
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R13",
+      "file": "signed_pages/scan_04.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            725,
+            1150,
+            770
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“二期扩容数量为2台。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            803,
+            1380,
+            903
+          ],
+          "observation_a": "附记条件可读为一期有效验收记录收齐后生效；材料状态一期有效验收记录已收齐的小方框明确打勾。",
+          "observation_b": "红色附记“ 一期有效验收记录收齐后生效”可读；其下“材料状态：一期有效验收记录已收齐”前方框有明确勾。该勾仅支持本题纸面材料状态。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            907,
+            1040,
+            986
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R14",
+      "file": "signed_pages/scan_04.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1120,
+            1130,
+            1202
+          ],
+          "observation_a": "红色提议可读为应急耗材由甲方单方领用。 两道红色斜线相交并横跨提议文字，构成明确划销。",
+          "observation_b": "可读“应急耗材由甲方单方领用。”；两条长斜线横跨红色提议并相交形成X。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1213,
+            1380,
+            1263
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1339,
+            430,
+            1395
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1317,
+            1040,
+            1396
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R15",
+      "file": "signed_pages/scan_05.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            315,
+            1150,
+            360
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“临时加班支援按260元每小时计费。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            393,
+            1380,
+            443
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            519,
+            430,
+            575
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            497,
+            1040,
+            576
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R16",
+      "file": "signed_pages/scan_05.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            725,
+            1150,
+            770
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“现场响应时限为4小时。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            803,
+            1380,
+            903
+          ],
+          "observation_a": "附记条件左侧可读仅在，右侧可读情形下执行；中间触发情形被实色条与斜向涂抹覆盖，无法读出条件或确定满足情况。",
+          "observation_b": "附记可读片段为“仅在”和“情形下执行”；两者间有宽深色涂抹与重复斜笔画，关键条件无法辨认。本条未见能确定该未知条件已满足的清晰材料状态勾选。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            929,
+            430,
+            985
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            907,
+            1040,
+            986
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    },
+    {
+      "revision_id": "R17",
+      "file": "signed_pages/scan_05.png",
+      "coordinate_space": "pixel_xyxy",
+      "features": [
+        {
+          "key": "proposal",
+          "bbox": [
+            205,
+            1135,
+            1150,
+            1180
+          ],
+          "observation_a": "黑色底稿和红色提议清晰可读；红色提议未见相交斜线划销。",
+          "observation_b": "可读红色提议为“月度对账资料以PDF扫描版与纸质版同时归档。”，未见提议本身被两道相交斜线划销。"
+        },
+        {
+          "key": "condition",
+          "bbox": [
+            105,
+            1213,
+            1380,
+            1263
+          ],
+          "observation_a": "附记条件栏清晰空白，未见指向本条的另注。",
+          "observation_b": "附记条件栏清晰空白；本条区域未见指向该条的另注。"
+        },
+        {
+          "key": "selection",
+          "bbox": [
+            114,
+            1339,
+            430,
+            1395
+          ],
+          "observation_a": "仅采用框明确勾选。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        },
+        {
+          "key": "local_confirmations",
+          "bbox": [
+            558,
+            1317,
+            1040,
+            1396
+          ],
+          "observation_a": "A样例印记位于本条甲方确认A框内。B样例印记位于本条乙方确认B框内。",
+          "observation_b": "采用框勾选，不采用框空白。A样例确认印记在本条对应确认框内部。B样例确认印记在本条对应确认框内部。"
+        }
+      ],
+      "region_basis": "Overlaps of two actual pixel annotations, checked against original pixels by author; no construction geometry."
+    }
+  ]
+}

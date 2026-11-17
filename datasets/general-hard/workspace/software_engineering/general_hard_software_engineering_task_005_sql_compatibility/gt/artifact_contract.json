@@ -1,0 +1,19 @@
+{
+  "mutable_sources": [
+    "project/query_builder.py"
+  ],
+  "reports": {
+    "audit": "results/query_audit.json",
+    "tests": "results/tests.txt"
+  },
+  "schemas": {
+    "audit": "h045-query-audit/v1",
+    "tests": "h045-public-test-run/v1"
+  },
+  "delivery_weights": {
+    "source": 0.3,
+    "protection": 0.4,
+    "audit": 0.15,
+    "tests": 0.15
+  }
+}

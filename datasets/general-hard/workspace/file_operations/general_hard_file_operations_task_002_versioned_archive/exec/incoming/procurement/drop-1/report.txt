@@ -1,0 +1,2 @@
+<?xml version='1.0' encoding='utf-8'?>
+<record><business_area>procurement</business_area><document_id>BUY-SPEC</document_id><version>1.9</version><state>approved</state><issued_at>2026-09-15T00:00:00Z</issued_at><body>Original fictional H036 procurement revision A. No operational instructions.</body></record>

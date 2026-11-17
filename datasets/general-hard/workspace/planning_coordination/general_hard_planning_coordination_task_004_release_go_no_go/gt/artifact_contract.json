@@ -1,0 +1,115 @@
+{
+  "schema": "h056.artifact-contract/v1",
+  "required": [
+    "results/release_plan.xlsx",
+    "results/decision.docx",
+    "results/alternatives.json"
+  ],
+  "tables": {
+    "schedule": {
+      "task_id": [
+        "任务编号"
+      ],
+      "summary": [
+        "任务说明"
+      ],
+      "owner": [
+        "责任角色"
+      ],
+      "venue": [
+        "场地"
+      ],
+      "start_date": [
+        "开始日期"
+      ],
+      "end_date": [
+        "结束日期"
+      ],
+      "status": [
+        "状态"
+      ],
+      "dependencies": [
+        "前置依赖"
+      ],
+      "acceptance": [
+        "验收"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "loads": {
+      "task_id": [
+        "任务编号"
+      ],
+      "date": [
+        "日期"
+      ],
+      "role": [
+        "角色"
+      ],
+      "hours": [
+        "小时"
+      ]
+    },
+    "cpm": {
+      "task_id": [
+        "任务编号"
+      ],
+      "duration": [
+        "工期"
+      ],
+      "es": [
+        "最早开始偏移"
+      ],
+      "ef": [
+        "最早完成偏移"
+      ],
+      "ls": [
+        "最晚开始偏移"
+      ],
+      "lf": [
+        "最晚完成偏移"
+      ],
+      "total_float": [
+        "总时差"
+      ],
+      "critical": [
+        "关键标记"
+      ]
+    },
+    "costs": {
+      "task_id": [
+        "任务编号"
+      ],
+      "selected": [
+        "选中"
+      ],
+      "fixed_cost": [
+        "固定费用"
+      ],
+      "extended_cost": [
+        "计入费用"
+      ]
+    },
+    "budget": {
+      "key": [
+        "键"
+      ],
+      "value": [
+        "值"
+      ]
+    }
+  },
+  "equivalence": [
+    "different source-feasible schedules and W1/W2 windows",
+    "arbitrary worksheet names and field order, blank gutters separate same-row tables",
+    "Chinese/English declared headers",
+    "ISO/native date including1900/1904 epoch",
+    "JSON BOM/key order, source code values preserved",
+    "at least one true critical path; no reference wording/date whitelist",
+    "independent scalar formula implementations; legal array/shared driver unsupported typed"
+  ],
+  "unsupported": "Missing trusted material/runtime and legal unsupported Office representation are typed evaluation exceptions, never candidate zero",
+  "semantic_boundary": "Narrative quality, meaningful risk/conditions and operational evidence interpretation remain blueprint .25 Judge"
+}

@@ -1,0 +1,30 @@
+{
+  "schema": "h056.counterexamples/v1",
+  "business": [
+    "ignore effectiveE02 mandatory2day T12",
+    "apply proposedE04 or stale budget/scope",
+    "omit source prerequisite or move mandatory task after dependent milestone",
+    "false W0 feasible or missing6 path/window reasoning",
+    "nonminimal or irrelevant gate blocker set",
+    "missing alternatives/risk handoff",
+    "hardcoded CPM or budget totals fail live interventions"
+  ],
+  "boundary": [
+    "daily role overload or assume overtime10",
+    "venue unavailable/parallel same venue",
+    "selected fees omit or mismatch source, exceed effective7000",
+    "unknown release/venue treated approved or currentgo",
+    "conditional downstream marked completed/real scope"
+  ],
+  "delivery": [
+    "missing/non-native outputs",
+    "cross-native10fact contradictions",
+    "protected input mutation only delivery protection"
+  ],
+  "infrastructure": [
+    "missing GT/native/arithmetic helper or Office lock context",
+    "legitimate array/shared driver unsupported typed"
+  ],
+  "minimality_definition": "Minimum-cardinality unsatisfied hard-gate set across A/B at originalW0, explicitly not MUS; B/W0 hasG_TIME+G_APPROVAL",
+  "causal_ownership": "Scope/duration/precedence/minimum provision affect business milestone closure; overload/venue/fee/approval independent boundary; input mutation delivery only"
+}

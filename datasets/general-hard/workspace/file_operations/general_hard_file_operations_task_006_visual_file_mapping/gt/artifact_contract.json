@@ -1,0 +1,40 @@
+{
+  "mapping": "UTF-8 or UTF-8 BOM JSON object; selections array; source_images array",
+  "required_selection_fields": [
+    "scene_id",
+    "source_path",
+    "sha256",
+    "target_path",
+    "visual_evidence"
+  ],
+  "required_image_fields": [
+    "scene_id",
+    "image_path",
+    "sha256"
+  ],
+  "outputs": [
+    "results/selected_files/",
+    "results/mapping.json"
+  ],
+  "equivalence": [
+    "arbitrary collision-safe regular-file archive names and subdirectories",
+    "relative source_tree paths or absolute /tmp_workspace source paths",
+    "results-relative selected_files targets or absolute /tmp_workspace/results paths",
+    "permuted array/object layout, Chinese evidence prose, BOM",
+    "bbox, polygon, normalized coordinates and resolvable custom region tables/IDs"
+  ],
+  "unsupported_geometry": "Valid unsupported geometric types produce typed H040_UNSUPPORTED_GEOMETRY infrastructure feedback, not an invented numeric score. Malformed candidate geometry is candidate evidence error.",
+  "protection_ownership": "Input/member/symlink/output-location protection failures affect delivery_integrity only; never global zero.",
+  "no_action_execution_required": true,
+  "root_review_v2_scoring_ownership": {
+    "business_correctness": "mean(object_copy_F1, unique_correct_mapping_F1); precision denominator counts all delivered objects/rows including duplicates and invalid entries",
+    "boundary_cases": "mean of three local geometry roles per expected selection; repeated claims take minimum, not maximum; extras have no second penalty here",
+    "sha256": "hex letter case insensitive",
+    "weights": {
+      "business_correctness": 0.55,
+      "boundary_cases": 0.25,
+      "delivery_integrity": 0.15,
+      "evidence_binding": 0.05
+    }
+  }
+}

@@ -1,0 +1,450 @@
+{
+  "records": {
+    "baseline_zh.docx#S01": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:4",
+      "text": "青澜服务中心负责提供本批服务支持。",
+      "text_sha256": "51c87eeb4d942120959d64f2b709e802d56cd1136fa9567900635193c3e978ac"
+    },
+    "baseline_zh.docx#S02": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:6",
+      "text": "所需数据清单由北澄项目组提供，青澜服务中心负责核对。",
+      "text_sha256": "a2adeadd0006e2f7957a392287c3d035c9855282fbf6e7d08373f0f5aab2828a"
+    },
+    "baseline_zh.docx#S03": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:8",
+      "text": "每批服务金额为人民币80000元，不含税，不更改币种或按汇率换算。",
+      "text_sha256": "bd786637331ac1450c22917a9dda5f8baf03d2a80ba3fc4923cdfd7a66bf40a6"
+    },
+    "baseline_zh.docx#S04": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:10",
+      "text": "服务期自2026年11月1日起至2027年10月31日止。",
+      "text_sha256": "31700cd1d72eed04007661d443c9804bc1655362a4f04e5265920197186b28c3"
+    },
+    "baseline_zh.docx#S05": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:12",
+      "text": "首次响应须在本次受理登记起4工作小时内完成。",
+      "text_sha256": "4af69523754546f9a28bab117049216cd12d05f16726b6ef13bbd0a3d1c0d06c"
+    },
+    "baseline_zh.docx#S06": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:14",
+      "text": "处理时限为所需资料齐备后2工作日，不从首次受理时提前起算。",
+      "text_sha256": "41381ee4ea60c7f8187142ab57f3d4efa35a045c8f9c6262946a4076db7c1cc9"
+    },
+    "baseline_zh.docx#S07": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:16",
+      "text": "试运行完成前，不得直接发布到正式环境。",
+      "text_sha256": "97a776549d6f7855362ca8c36291183784390842f08e25d1a6fa604669474f44"
+    },
+    "baseline_zh.docx#S08": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:18",
+      "text": "仅可外发脱敏样本，原始客户资料不得外发。",
+      "text_sha256": "c2f64ab3faa973d152d9046884613c6e87807738e0bcbf6dd17b41348bad3f26"
+    },
+    "baseline_zh.docx#S09": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:20",
+      "text": "验收须双方书面确认，单方或口头确认不构成验收。",
+      "text_sha256": "9b838637f49714c162feeab30b189ee1cc857cec419d385ba469018d28a62a27"
+    },
+    "baseline_zh.docx#S10": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:22",
+      "text": "超出既定范围的事项应通过变更申请单独登记，不自动并入本批范围。",
+      "text_sha256": "b47d7f605058d10c38b7494c4794790a456295747d19932406e4a1ab2835af26"
+    },
+    "baseline_zh.docx#S11": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:24",
+      "text": "统计共17个项目，其中3个待核，待核项不计入完成数。",
+      "text_sha256": "aa1936e3ee6e5ed93e5b4f444b978b733b618ae43c49c1fc5cf76507b21f18bb"
+    },
+    "baseline_zh.docx#S12": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:26",
+      "text": "只交付通知草稿，不向真实收件人发送。",
+      "text_sha256": "809ffbc18bd742388a82dd94bb26bfa54463af48d9a4aa23b365c37d926ca370"
+    },
+    "baseline_zh.docx#S13": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:28",
+      "text": "备用联系人为Linh，值班安排不变。",
+      "text_sha256": "d99fff6f9ef7c19e764ea955bfc99133d2c83fd577da6b97e6b0fbf3315bfdcd"
+    },
+    "baseline_zh.docx#S14": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:30",
+      "text": "不进行汇率换算，币种保持为人民币CNY。",
+      "text_sha256": "df1a27aae9887a46668eda0fec62b9deddbe98e7a090dae6bed152275582b305"
+    },
+    "baseline_zh.docx#S15": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:32",
+      "text": "正文提及的附件仅为数据清单与校验记录两项，不要求生成新附件。",
+      "text_sha256": "4a06b8ed3d7213eee2176675ad5cb6cee39c7e5521030c7abd4f34507794e7be"
+    },
+    "baseline_zh.docx#S16": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:34",
+      "text": "未提供回执状态，不能推定已验收或已结案。",
+      "text_sha256": "66d5e8c8555db18a05ee337a04a1ddc2d359ea6d3d5997df415fded97d2d32eb"
+    },
+    "baseline_zh.docx#AUTHORITY": {
+      "source": "baseline_zh.docx",
+      "source_sha256": "bbcca10e26a5d346f13c36d412ef1c5b5c41cd5866f99a8320d74ed730239574",
+      "locator": "paragraph:36",
+      "text": "本题为合成的双语条款样稿修订。中文基线及固定术语是事实与口径上限；越文意见是提案，冲突且无授权时不采纳或列待授权。只改越文及写中文说明，不改中文基线，不实际执行业务。样稿提及的附件、通知或业务状态不是额外执行依赖。"
+    },
+    "draft_vi.docx#S01": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:4",
+      "text": "Công ty Thanh Lam chịu trách nhiệm cung cấp hỗ trợ dịch vụ cho đợt này.",
+      "text_sha256": "6848b8238ac3fe8a2aa91711bcbc208f28d33489dea67fa3a3bd8a8ff2b2c092"
+    },
+    "draft_vi.docx#S02": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:6",
+      "text": "Trung tâm Dịch vụ Thanh Lam cung cấp danh mục dữ liệu cần thiết; Nhóm dự án Bắc Trừng kiểm tra danh mục.",
+      "text_sha256": "0b808cd3633bbc9e269945d93840e83d9adb07d1f953e7a1436b41866cda5184"
+    },
+    "draft_vi.docx#S03": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:8",
+      "text": "Giá trị dịch vụ cho mỗi đợt là 80.000.000 CNY, chưa bao gồm thuế; không đổi đơn vị tiền tệ hoặc quy đổi theo tỷ giá.",
+      "text_sha256": "e6fc71c52e13404d49858521e821811bb1d65cf4cb1fed5ed21404133e50d8c6"
+    },
+    "draft_vi.docx#S04": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:10",
+      "text": "Thời hạn dịch vụ bắt đầu từ ngày 01/11/2026 và kết thúc vào ngày 31/10/2027.",
+      "text_sha256": "c21b763279e958f9afa44593ee58f34e2d6dc61128971d417261dee4a7c2c427"
+    },
+    "draft_vi.docx#S05": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:12",
+      "text": "Phản hồi đầu tiên phải được thực hiện trong 4 ngày làm việc kể từ khi đăng ký tiếp nhận yêu cầu lần này.",
+      "text_sha256": "22f8784dab05c775d4e6548a1d74ba45e106485d377d0ca463598eaf3e311bfd"
+    },
+    "draft_vi.docx#S06": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:14",
+      "text": "Thời hạn xử lý là 2 ngày làm việc kể từ khi đã nhận đủ tài liệu cần thiết, không tính trước từ lần tiếp nhận đầu tiên.",
+      "text_sha256": "7dace0fec00c56c723cc20b72e58f5acdd690c389d0b1601ef568a1e61f5fed8"
+    },
+    "draft_vi.docx#S07": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:16",
+      "text": "Trước khi hoàn tất chạy thử, được phép phát hành trực tiếp lên môi trường chính thức.",
+      "text_sha256": "3318664f0fab0a485e192cc231908e59ee4c47df0f78fb88009fc006812be959"
+    },
+    "draft_vi.docx#S08": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:18",
+      "text": "Chỉ được gửi ra ngoài mẫu dữ liệu đã khử định danh; không được gửi ra ngoài dữ liệu khách hàng gốc.",
+      "text_sha256": "8f2ca30c59b18677bbdaa9a10f44447b560a7a41f3caa998ab38d9ceec548f74"
+    },
+    "draft_vi.docx#S09": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:20",
+      "text": "Việc nghiệm thu chỉ cần xác nhận miệng của bên cung cấp.",
+      "text_sha256": "bbe0f822ba218990f2434e2b23ee4184121334fdef0754224f90736e05f623a4"
+    },
+    "draft_vi.docx#S10": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:22",
+      "text": "Các hạng mục ngoài phạm vi đã chốt phải được ghi nhận riêng bằng phiếu yêu cầu mới và không tự động được đưa vào phạm vi đợt này.",
+      "text_sha256": "87bdf4947ef2909c61f9b54aa9b6a4841fb18e12e4ea6e86514da7124b4c3fa8"
+    },
+    "draft_vi.docx#S11": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:24",
+      "text": "Có tổng cộng 20 hạng mục, trong đó 3 hạng mục chờ xác minh; số hạng mục hoàn thành là 17.",
+      "text_sha256": "27619f5ae90db07b568510b5c4565829e004b6d316d154ee0eee9ab3752c5eea"
+    },
+    "draft_vi.docx#S12": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:26",
+      "text": "Chỉ bàn giao bản nháp thông báo; không gửi cho người nhận thực.",
+      "text_sha256": "70ae4a0bd5c4b7356020cb31571142b4cfddd0a058849e06d2e6a3835cc88fa5"
+    },
+    "draft_vi.docx#S13": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:28",
+      "text": "Người liên hệ dự phòng là Linh; lịch trực không thay đổi.",
+      "text_sha256": "24dc7bdd7e1c12ca84a53afcf056100f45f962495aa25dec243846b6c0e8ee48"
+    },
+    "draft_vi.docx#S14": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:30",
+      "text": "Không áp dụng quy đổi theo tỷ giá; đơn vị tiền tệ giữ nguyên là CNY.",
+      "text_sha256": "f7d8ba6e47e8e8f3075b9205577ce8171c9cba4d2abfb789c65fb72c75218c0f"
+    },
+    "draft_vi.docx#S15": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:32",
+      "text": "Phần phụ lục được nhắc đến trong nội dung chỉ gồm danh mục dữ liệu và bản ghi kiểm tra, tổng cộng hai mục; không yêu cầu tạo phụ lục mới.",
+      "text_sha256": "d3beaaf6e26f0c9ceec600b72448a05e293349215e864db453a2efb10aba2672"
+    },
+    "draft_vi.docx#S16": {
+      "source": "draft_vi.docx",
+      "source_sha256": "6a71a7128800103eecd91682eede195f21f41fa1daaa564d44d445501059ea15",
+      "locator": "paragraph:34",
+      "text": "Chưa có thông tin về biên nhận; không suy đoán rằng hồ sơ đã được nghiệm thu hoặc khép lại.",
+      "text_sha256": "e3dddd47aabd354002a0306812aed11cb1f42143b60d73c0a79c677eec731590"
+    },
+    "review_vi.docx#R01": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:4",
+      "text": "Dùng đúng tên tổ chức trong bảng thuật ngữ: thay “Công ty Thanh Lam” bằng “Trung tâm Dịch vụ Thanh Lam”; không tự đổi sang tên viết tắt.",
+      "text_sha256": "ca7b7332501a7dbc44d79d0c9b1715ebc1a2071ee25873337f26d08ad105bb33"
+    },
+    "review_vi.docx#R02": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:6",
+      "text": "Theo bản gốc tiếng Trung, Nhóm dự án Bắc Trừng cung cấp danh mục; Trung tâm Dịch vụ Thanh Lam kiểm tra. Hãy sửa lại chủ thể, không đảo hai vai trò.",
+      "text_sha256": "761dc7f1d2cee8764c69c62bf352040c748573606e038d19b06e9b007d264471"
+    },
+    "review_vi.docx#R03": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:8",
+      "text": "Số tiền đúng là 80.000 CNY cho mỗi đợt, chưa bao gồm thuế. Bỏ phần số không thừa; không đổi tiền tệ và không thêm thuế suất.",
+      "text_sha256": "35988e62d7fa020093d07ade004cc5d8665090182472d69a0223892acf1409d5"
+    },
+    "review_vi.docx#R04": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:10",
+      "text": "Đề nghị kéo dài ngày kết thúc dịch vụ đến 30/11/2027 để thuận tiện cho kế hoạch mới.",
+      "text_sha256": "7286619672e014375c82e09c283ca1972394f6116d76cf45da2cf70ec439a74b"
+    },
+    "review_vi.docx#R05": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:12",
+      "text": "Đổi đơn vị của phản hồi đầu tiên từ “ngày làm việc” thành “giờ làm việc”; giữ số 4 và mốc đăng ký tiếp nhận lần này.",
+      "text_sha256": "0264ba90eae0668d453c9ea930f673ab5a4fcabff1dd8cf77eae5ea958cb19b0"
+    },
+    "review_vi.docx#R06": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:14",
+      "text": "Đề nghị đổi thời hạn xử lý thành 24 giờ theo lịch kể từ khi tiếp nhận lần đầu, thay cho điều kiện nhận đủ tài liệu.",
+      "text_sha256": "41498f56010d6002cf15971271ec8c324f3a7a9a22f7aa2d880576d3926b3742"
+    },
+    "review_vi.docx#R07": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:16",
+      "text": "Cần thêm phủ định “không được” trước hành động phát hành; giữ nguyên điều kiện trước khi hoàn tất chạy thử.",
+      "text_sha256": "39ad3c901234da540e2b358477299d258718053e43d5fc46ae831dbfb5bb333a"
+    },
+    "review_vi.docx#R08": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:18",
+      "text": "Bỏ cụm “không được” ở vế nói về dữ liệu khách hàng gốc để câu ngắn hơn.",
+      "text_sha256": "431e12183fdf11fdf57b2766f87012a8b2e3f0fcefb761919bc61747a3fcb66b"
+    },
+    "review_vi.docx#R09": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:20",
+      "text": "Sửa điều kiện nghiệm thu thành xác nhận bằng văn bản của cả hai bên. Nêu rõ xác nhận đơn phương hoặc bằng lời nói không thay thế điều kiện này.",
+      "text_sha256": "e651b31fea9e26dabd42583e1ca18348dad39469e3dab5c9cccf5d4b17586d63"
+    },
+    "review_vi.docx#R10": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:22",
+      "text": "Thay “phiếu yêu cầu mới” bằng thuật ngữ cố định “phiếu đề nghị thay đổi”; không thay đổi cách xử lý các hạng mục ngoài phạm vi.",
+      "text_sha256": "1474b8eaac960aa930dd787876e2565ae689f206c21b565e9bb6bd711ad69604"
+    },
+    "review_vi.docx#R11": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:24",
+      "text": "Tổng số đúng là 17 hạng mục, giữ 3 hạng mục chờ xác minh. Tính lại số hoàn thành sau khi loại các mục chờ xác minh; không gộp chúng vào hoàn thành.",
+      "text_sha256": "83c477308999736424f029b7b47228cf026f9418c893b9b83a91c5850788277c"
+    },
+    "review_vi.docx#R12": {
+      "source": "review_vi.docx",
+      "source_sha256": "ff9b9b3e83273161dd4692ba76ff5a99815f758ac2cc8edd7c57e3b4eb42b758",
+      "locator": "paragraph:26",
+      "text": "Đổi câu thành “Đã gửi thông báo cho toàn bộ người nhận” để thể hiện công việc đã kết thúc.",
+      "text_sha256": "ae0cc518d2b45cb4f63e5a9fb0f2fca44fa790271e23ca3befe1cbe902385f61"
+    },
+    "terms.csv#T01": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:2",
+      "value": {
+        "term_id": "T01",
+        "zh": "青澜服务中心",
+        "vi": "Trung tâm Dịch vụ Thanh Lam",
+        "role": "SUP-01",
+        "sentence_ids": "S01;S02"
+      }
+    },
+    "terms.csv#T02": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:3",
+      "value": {
+        "term_id": "T02",
+        "zh": "北澄项目组",
+        "vi": "Nhóm dự án Bắc Trừng",
+        "role": "CLI-01",
+        "sentence_ids": "S02"
+      }
+    },
+    "terms.csv#T03": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:4",
+      "value": {
+        "term_id": "T03",
+        "zh": "正式环境",
+        "vi": "môi trường chính thức",
+        "role": "environment",
+        "sentence_ids": "S07"
+      }
+    },
+    "terms.csv#T04": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:5",
+      "value": {
+        "term_id": "T04",
+        "zh": "脱敏样本",
+        "vi": "mẫu dữ liệu đã khử định danh",
+        "role": "sample_type",
+        "sentence_ids": "S08"
+      }
+    },
+    "terms.csv#T05": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:6",
+      "value": {
+        "term_id": "T05",
+        "zh": "变更申请",
+        "vi": "phiếu đề nghị thay đổi",
+        "role": "request_type",
+        "sentence_ids": "S10"
+      }
+    },
+    "terms.csv#T06": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:7",
+      "value": {
+        "term_id": "T06",
+        "zh": "书面确认",
+        "vi": "xác nhận bằng văn bản",
+        "role": "acceptance_evidence",
+        "sentence_ids": "S09"
+      }
+    },
+    "terms.csv#T07": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:8",
+      "value": {
+        "term_id": "T07",
+        "zh": "验收",
+        "vi": "nghiệm thu",
+        "role": "acceptance",
+        "sentence_ids": "S09;S16"
+      }
+    },
+    "terms.csv#T08": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:9",
+      "value": {
+        "term_id": "T08",
+        "zh": "待核",
+        "vi": "chờ xác minh",
+        "role": "pending_status",
+        "sentence_ids": "S11"
+      }
+    },
+    "terms.csv#T09": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:10",
+      "value": {
+        "term_id": "T09",
+        "zh": "通知草稿",
+        "vi": "bản nháp thông báo",
+        "role": "notification_output",
+        "sentence_ids": "S12"
+      }
+    },
+    "terms.csv#T10": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:11",
+      "value": {
+        "term_id": "T10",
+        "zh": "工作小时",
+        "vi": "giờ làm việc",
+        "role": "time_basis",
+        "sentence_ids": "S05"
+      }
+    },
+    "terms.csv#T11": {
+      "source": "terms.csv",
+      "source_sha256": "4305023e4ac44495e3e93380860dc500b29d1aa14e5c77d1938d1034389a9950",
+      "locator": "row:12",
+      "value": {
+        "term_id": "T11",
+        "zh": "工作日",
+        "vi": "ngày làm việc",
+        "role": "time_basis",
+        "sentence_ids": "S06"
+      }
+    }
+  }
+}

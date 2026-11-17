@@ -1,0 +1,76 @@
+[
+  {
+    "plan_id": "P1",
+    "decision": "reject",
+    "reason_code": "SERVER_AUTHORITY",
+    "modules": [
+      "project/authorization.py",
+      "project/routes.py"
+    ],
+    "allowed_decisions": [
+      "reject",
+      "revise"
+    ]
+  },
+  {
+    "plan_id": "P2",
+    "decision": "revise",
+    "reason_code": "ALL_ENTRYPOINTS",
+    "modules": [
+      "project/routes.py",
+      "project/authorization.py"
+    ],
+    "allowed_decisions": [
+      "reject",
+      "revise"
+    ]
+  },
+  {
+    "plan_id": "P3",
+    "decision": "reject",
+    "reason_code": "TEXT_TYPES_ONLY",
+    "modules": [
+      "project/exporter.py"
+    ],
+    "allowed_decisions": [
+      "reject",
+      "revise"
+    ]
+  },
+  {
+    "plan_id": "P4",
+    "decision": "reject",
+    "reason_code": "PRESERVE_AUTHORIZED",
+    "modules": [
+      "project/routes.py"
+    ],
+    "allowed_decisions": [
+      "reject",
+      "revise"
+    ]
+  },
+  {
+    "plan_id": "P5",
+    "decision": "accept",
+    "reason_code": "SHARED_TYPED_CSV",
+    "modules": [
+      "project/exporter.py"
+    ],
+    "allowed_decisions": [
+      "accept"
+    ]
+  },
+  {
+    "plan_id": "P6",
+    "decision": "revise",
+    "reason_code": "CURRENT_JOB_AUTHORITY",
+    "modules": [
+      "project/routes.py",
+      "project/authorization.py"
+    ],
+    "allowed_decisions": [
+      "reject",
+      "revise"
+    ]
+  }
+]

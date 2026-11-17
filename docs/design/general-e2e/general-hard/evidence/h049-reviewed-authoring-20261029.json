@@ -1,0 +1,590 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 49,
+  "task_id": "general_hard_software_engineering_task_009_package_migration",
+  "registered_task_index": 52,
+  "registered": 52,
+  "remaining": 8,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 10,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6,
+    "content_operations": 1,
+    "planning_coordination": 2
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/software_engineering/general_hard_software_engineering_task_009_package_migration.md",
+      "sha256": "7c559a63e796a6921b99916dcfcbca850655bdd177387d9a945fc0e6e36c27c9",
+      "size": 7291
+    },
+    "exec": [
+      {
+        "path": "acceptance.md",
+        "sha256": "979488376df8995a907b66388ead02ca8a3493d4573522d611423ba706602f42",
+        "size": 3028
+      },
+      {
+        "path": "fixtures/configs.json",
+        "sha256": "35e10bc92cebcb39552f1168f04b6aad7aab23d66056a8d36a369637acf02686",
+        "size": 349
+      },
+      {
+        "path": "fixtures/records.json",
+        "sha256": "6b59d80fb7f9228f59b4674e916430ffd7be43448a03dd1d7b5aed099a5beed6",
+        "size": 303
+      },
+      {
+        "path": "mutable_paths.json",
+        "sha256": "0ab76ee04ca09419bfb0bdd7d7f9c17f9c9e5fabca8a11700a76567b53bb33ec",
+        "size": 701
+      },
+      {
+        "path": "offline_wheels/manifest.json",
+        "sha256": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+        "size": 2355
+      },
+      {
+        "path": "offline_wheels/pip-24.0-py3-none-any.whl",
+        "sha256": "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
+        "size": 2110226
+      },
+      {
+        "path": "offline_wheels/setuptools-79.0.1-py3-none-any.whl",
+        "sha256": "e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51",
+        "size": 1256281
+      },
+      {
+        "path": "project/LICENSE",
+        "sha256": "acc9d17d2f480cc5b6a020ce1960403aeca37a275d39467c730981bc07ef0715",
+        "size": 403
+      },
+      {
+        "path": "project/batchstamp/__init__.py",
+        "sha256": "47a0f52959364d41fc66b460b228b2c2cae3093b5e1ccc0458f6f5749208a0da",
+        "size": 20
+      },
+      {
+        "path": "project/batchstamp/__main__.py",
+        "sha256": "79ee6f134c5c5193377cf9b189cbdcc3e2095e49ba9cec310114441c15a917c4",
+        "size": 47
+      },
+      {
+        "path": "project/batchstamp/cli.py",
+        "sha256": "21cc2cf94423707d413db749276c83ae7a4b802aa91dd97b4d59ecacd5759652",
+        "size": 607
+      },
+      {
+        "path": "project/batchstamp/core.py",
+        "sha256": "50da1cea454377d49ef6932e19a62d1c46dd16ece727959eee89e5ccefa8cf71",
+        "size": 666
+      },
+      {
+        "path": "project/batchstamp/resources/banner.txt",
+        "sha256": "048664a2b6deaba210a00a88e4ea37c857ca742971f6417ceec40b9f0a556926",
+        "size": 29
+      },
+      {
+        "path": "project/batchstamp/resources/defaults.json",
+        "sha256": "83c0c273b5c545012e3f412cefa0140e60c858342423e8e5b0e82265d2439345",
+        "size": 90
+      },
+      {
+        "path": "project/legacy_cli.py",
+        "sha256": "37764c65ba719ed29094101d2ce68cf5d08dbd1fc0986d4b8e6205131269b436",
+        "size": 55
+      },
+      {
+        "path": "project/legacy_stamp.py",
+        "sha256": "c82ebcbf1bf42904ac27cb382a3795eee2fdc157857210f775beebc36007e350",
+        "size": 316
+      },
+      {
+        "path": "project/pyproject.toml",
+        "sha256": "7179b6fef7281849d9320648b905452f9b4c60310db7354d0f382ed2811d5456",
+        "size": 390
+      },
+      {
+        "path": "project/src/batchstamp/__init__.py",
+        "sha256": "47a0f52959364d41fc66b460b228b2c2cae3093b5e1ccc0458f6f5749208a0da",
+        "size": 20
+      },
+      {
+        "path": "project/src/batchstamp/__main__.py",
+        "sha256": "79ee6f134c5c5193377cf9b189cbdcc3e2095e49ba9cec310114441c15a917c4",
+        "size": 47
+      },
+      {
+        "path": "project/src/batchstamp/cli.py",
+        "sha256": "54cc5b50c49f18b8cf89a22e4aa867793d5f96b7a1594cfd76a322dd2b94a001",
+        "size": 75
+      },
+      {
+        "path": "project/src/batchstamp/core.py",
+        "sha256": "f6ef96d6ae4b95cdecb437c90e2e47f3ae99a35bc932cf9ac3d7d7a9f915526e",
+        "size": 84
+      },
+      {
+        "path": "project/src/batchstamp/resources/banner.txt",
+        "sha256": "048664a2b6deaba210a00a88e4ea37c857ca742971f6417ceec40b9f0a556926",
+        "size": 29
+      },
+      {
+        "path": "project/src/batchstamp/resources/defaults.json",
+        "sha256": "83c0c273b5c545012e3f412cefa0140e60c858342423e8e5b0e82265d2439345",
+        "size": 90
+      },
+      {
+        "path": "project/src/legacy_stamp.py",
+        "sha256": "7fd6391ba1473942344fb61f981f8378e1d1e343523c8b9a9272ca0f0bc4ebd0",
+        "size": 56
+      },
+      {
+        "path": "tests_public/test_compat.py",
+        "sha256": "7f04da89fedf751b95f8eb6381824296c4eaf41fd69d33362987eabd3d6734ab",
+        "size": 800
+      },
+      {
+        "path": "tools/installed_probe.py",
+        "sha256": "81da53dcec0665dc1325e549ace2489da707a1433c49b97a3864504e40361b9c",
+        "size": 1171
+      },
+      {
+        "path": "tools/offline_driver.py",
+        "sha256": "d7e977f26f6d02077cc5be5a98a0e18426414041781c0cf13dc37d85382a2f09",
+        "size": 1036
+      },
+      {
+        "path": "tools/package_matrix.py",
+        "sha256": "041d17512cfdcf219ac09a045c4e5139ff5df35729270a271376c1c128bcb921",
+        "size": 8638
+      },
+      {
+        "path": "tools/verify_install.py",
+        "sha256": "3c723a64c0699ed58e5b2a6299d547a5e1c0fdaa8ec3a5df22c9ebfe54a4634e",
+        "size": 1763
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "5ddad14b646f4faa4487ac7606302e61b97e273de6c2473e942494e81e14ff5f",
+        "size": 1238
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "2d061ba11b69ced382d179da71a7b3106ee02157b00ea052266772f9116aead7",
+        "size": 5254
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "12886f35d26a02b4a1cda74367f7b83cb8b0bc8b27fe41750734931bff09fe10",
+        "size": 565
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "7719aae391f4dcf726294091353c1a9d18ced9542c106df847c9e3cea4178ec9",
+        "size": 342
+      },
+      {
+        "path": "expected.json",
+        "sha256": "41a962913fb4d44d91007cbe4171c905bd46fc1dbf6c8db0bec53fca0c0b9153",
+        "size": 594
+      },
+      {
+        "path": "grader.py",
+        "sha256": "1815d172c77d7bb71f7c47c04d4f6ac4e47a25411de8471d86400acf11cf1336",
+        "size": 13019
+      },
+      {
+        "path": "private_data.json",
+        "sha256": "cb0ac0fe5b4666beba411714f93f0f0ed74a287e16d2b801278d58db2b6360fb",
+        "size": 437
+      },
+      {
+        "path": "private_matrix.py",
+        "sha256": "f0d57e4895f40dd4d1b021ea6d9646635c3a109b72b53b2063ef07c78af88687",
+        "size": 9175
+      },
+      {
+        "path": "private_probe.py",
+        "sha256": "b7ba27ce4a36908ebc7093860406e9251b2b87d3ff6b47ad388dd3786cb8f95b",
+        "size": 1205
+      },
+      {
+        "path": "protected_inputs/acceptance.md",
+        "sha256": "979488376df8995a907b66388ead02ca8a3493d4573522d611423ba706602f42",
+        "size": 3028
+      },
+      {
+        "path": "protected_inputs/fixtures/configs.json",
+        "sha256": "35e10bc92cebcb39552f1168f04b6aad7aab23d66056a8d36a369637acf02686",
+        "size": 349
+      },
+      {
+        "path": "protected_inputs/fixtures/records.json",
+        "sha256": "6b59d80fb7f9228f59b4674e916430ffd7be43448a03dd1d7b5aed099a5beed6",
+        "size": 303
+      },
+      {
+        "path": "protected_inputs/mutable_paths.json",
+        "sha256": "0ab76ee04ca09419bfb0bdd7d7f9c17f9c9e5fabca8a11700a76567b53bb33ec",
+        "size": 701
+      },
+      {
+        "path": "protected_inputs/offline_wheels/manifest.json",
+        "sha256": "60871485945e24e686ccb8d3f6da3bfdb592ec1876d73583983a2084192a1504",
+        "size": 2355
+      },
+      {
+        "path": "protected_inputs/offline_wheels/pip-24.0-py3-none-any.whl",
+        "sha256": "ba0d021a166865d2265246961bec0152ff124de910c5cc39f1156ce3fa7c69dc",
+        "size": 2110226
+      },
+      {
+        "path": "protected_inputs/offline_wheels/setuptools-79.0.1-py3-none-any.whl",
+        "sha256": "e147c0549f27767ba362f9da434eab9c5dc0045d5304feb602a0af001089fc51",
+        "size": 1256281
+      },
+      {
+        "path": "protected_inputs/project/LICENSE",
+        "sha256": "acc9d17d2f480cc5b6a020ce1960403aeca37a275d39467c730981bc07ef0715",
+        "size": 403
+      },
+      {
+        "path": "protected_inputs/project/batchstamp/resources/banner.txt",
+        "sha256": "048664a2b6deaba210a00a88e4ea37c857ca742971f6417ceec40b9f0a556926",
+        "size": 29
+      },
+      {
+        "path": "protected_inputs/project/batchstamp/resources/defaults.json",
+        "sha256": "83c0c273b5c545012e3f412cefa0140e60c858342423e8e5b0e82265d2439345",
+        "size": 90
+      },
+      {
+        "path": "protected_inputs/project/src/batchstamp/resources/banner.txt",
+        "sha256": "048664a2b6deaba210a00a88e4ea37c857ca742971f6417ceec40b9f0a556926",
+        "size": 29
+      },
+      {
+        "path": "protected_inputs/project/src/batchstamp/resources/defaults.json",
+        "sha256": "83c0c273b5c545012e3f412cefa0140e60c858342423e8e5b0e82265d2439345",
+        "size": 90
+      },
+      {
+        "path": "protected_inputs/tests_public/test_compat.py",
+        "sha256": "7f04da89fedf751b95f8eb6381824296c4eaf41fd69d33362987eabd3d6734ab",
+        "size": 800
+      },
+      {
+        "path": "protected_inputs/tools/installed_probe.py",
+        "sha256": "81da53dcec0665dc1325e549ace2489da707a1433c49b97a3864504e40361b9c",
+        "size": 1171
+      },
+      {
+        "path": "protected_inputs/tools/offline_driver.py",
+        "sha256": "d7e977f26f6d02077cc5be5a98a0e18426414041781c0cf13dc37d85382a2f09",
+        "size": 1036
+      },
+      {
+        "path": "protected_inputs/tools/package_matrix.py",
+        "sha256": "041d17512cfdcf219ac09a045c4e5139ff5df35729270a271376c1c128bcb921",
+        "size": 8638
+      },
+      {
+        "path": "protected_inputs/tools/verify_install.py",
+        "sha256": "3c723a64c0699ed58e5b2a6299d547a5e1c0fdaa8ec3a5df22c9ebfe54a4634e",
+        "size": 1763
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "6e6ddfde6917640ed872cedb55bde42e57bd712d51e54f90a04e82af87d68fc9",
+        "size": 1756
+      },
+      {
+        "path": "runtime_contract.json",
+        "sha256": "c0f2f883ed20c29f3d7c82923f5abe690438be2c7a2617052d66b81dd43e3e51",
+        "size": 876
+      },
+      {
+        "path": "trusted_manifest.json",
+        "sha256": "8831860b87bc13ae428e614f535b579fbab0046ff9deadea82db3d1eedc32522",
+        "size": 3264
+      },
+      {
+        "path": "wheel_evidence.py",
+        "sha256": "e25c66cc32caed21c166d0becc7bc54251ec8de0ea1b3a8cd81026cd000a6a92",
+        "size": 5019
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/root-final-v3/handoff.json",
+    "sha256": "8cb08bcf69ea07891e851bddf89428ccd1266a5c955caf1f57e8be2356d7da0f",
+    "size": 985
+  },
+  "review": {
+    "kind": "nonblind root model not human expert",
+    "previous_v2_frozen_files_verified_with_original_before_snapshot": 384,
+    "current_v3_GT": 30,
+    "v1_controls": 21,
+    "v2_focused_controls": 11,
+    "v3_focused_controls": 6,
+    "do_not_sum_as_distinct_or_all_current": true,
+    "reproduced_v2_truncated_wheel_false_A1": true,
+    "v3_artifact_corruption_owner": "E only .8, other keys1",
+    "source_missing_old_console_owner": "boundary .9375 E1"
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_software_engineering_task_009_package_migration",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/formal-detached-1793231673820691000/attempts/author-only-h049-formal__detached-zip-worker/general_hard_software_engineering_task_009_package_migration/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/formal-detached-1793231673820691000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/formal-detached-1793231673820691000/attempts/author-only-h049-formal__detached-zip-worker/general_hard_software_engineering_task_009_package_migration/author-only-formal-auto",
+      "candidate_sha256": "7fdc0e2ad304d381dddb4fc6c045c80fe39409c5aa641cb2a02e2afd6782368c",
+      "entry_count": 47
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/formal-detached-1793231673820691000/moved-without-runtime",
+      "candidate_sha256": "7fdc0e2ad304d381dddb4fc6c045c80fe39409c5aa641cb2a02e2afd6782368c",
+      "entry_count": 47
+    },
+    "nonruntime_same_byte_files": 84,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/built-wheels/3.11/batchstamp_h049-2.0.0-py3-none-any.whl",
+        "sha256": "dfeb171bb29c9b55a794326746d449578d802b1c569b6cf8e20cc458f2a9a87e",
+        "size": 4377
+      },
+      {
+        "path": "worker/derived/built-wheels/3.12/batchstamp_h049-2.0.0-py3-none-any.whl",
+        "sha256": "57a7863e713d0fbf3ffe729e9828f5032f03c3616b0ef8871a31198d46d245e1",
+        "size": 4377
+      },
+      {
+        "path": "worker/derived/h049-install-witness.json",
+        "sha256": "dda42d5d36cea435d3e0d875cc1a5f0194b5a2a800bd2edc3944911e07d87e09",
+        "size": 583610
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/built-wheels/3.11/batchstamp_h049-2.0.0-py3-none-any.whl",
+        "sha256": "dfeb171bb29c9b55a794326746d449578d802b1c569b6cf8e20cc458f2a9a87e",
+        "size": 4377
+      },
+      {
+        "path": "worker/derived/built-wheels/3.12/batchstamp_h049-2.0.0-py3-none-any.whl",
+        "sha256": "57a7863e713d0fbf3ffe729e9828f5032f03c3616b0ef8871a31198d46d245e1",
+        "size": 4377
+      },
+      {
+        "path": "worker/derived/h049-install-witness.json",
+        "sha256": "dda42d5d36cea435d3e0d875cc1a5f0194b5a2a800bd2edc3944911e07d87e09",
+        "size": 583610
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "def174e55faba1858f57afe9679aa1cd993d696da2249c57fe8380d4fefdd6f1",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "ef0c2eb895367d3c476ee3f1005d41984edcb12a11f0a7157fcdc4e07008b21d"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/built-wheels/3.11/batchstamp_h049-2.0.0-py3-none-any.whl",
+          "sha256": "dfeb171bb29c9b55a794326746d449578d802b1c569b6cf8e20cc458f2a9a87e",
+          "size": 4377
+        },
+        {
+          "path": "worker/derived/built-wheels/3.12/batchstamp_h049-2.0.0-py3-none-any.whl",
+          "sha256": "57a7863e713d0fbf3ffe729e9828f5032f03c3616b0ef8871a31198d46d245e1",
+          "size": 4377
+        },
+        {
+          "path": "worker/derived/h049-install-witness.json",
+          "sha256": "dda42d5d36cea435d3e0d875cc1a5f0194b5a2a800bd2edc3944911e07d87e09",
+          "size": 583610
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "89fdac8f5df40b922bd78f86ed56e523728c63096b99881e93f5c987c54f201d",
+        "file_count": 3,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T23:54:55.008367Z",
+      "identity": {
+        "batch_id": "author-only-h049-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_software_engineering_task_009_package_migration",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "408d81cd517ff010ec15c43cb748a8e3ee9ea9ffd5fd7692619c5180007633f3",
+        "root_result_count": 4,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "bcbbf785cfe08dd62892272e4e1dfbc72e65d6e379308a2f99845716f3864dae",
+        "initial_sha256": "bcbbf785cfe08dd62892272e4e1dfbc72e65d6e379308a2f99845716f3864dae"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T23:54:35.549460Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 19.308248,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "a9a13a6e6e3f067c700cc6a44a7454221d4f5007b57279c08e4b985a7f7b0910",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "b8b2f40a6a05e1ce57334a9b4e331380ad42a52d01c69c206dec5c43d2a236c6",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 69618
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": null,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/formal-detached-1793231673820691000/validation.json",
+    "sha256": "fad3f01c74b3d5164849b15aa4722a44f482aabc7c24a0c5b6d4fbefb05e45d8",
+    "size": 8590
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "58b5c3a2559d10e64815e6c7bdacad37c7ed697a1d7ed31d6e8680bdab776f46",
+    "size": 37936
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/static-root-single/20261028T235611Z_0af5844a78/report.json",
+      "sha256": "3855b7011569ffa235b553610332437d8d912ebdc83df0d24685e8df3cebe4b3",
+      "size": 1241
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h049/qa/static-root-full/20261028T235619Z_bdddada005/report.json",
+      "sha256": "ce8f96adc865d26daf97a563684291582a6c74181d32b43c2e1aa3bb2b65c5b3",
+      "size": 24479
+    },
+    "only_remaining_missing": 8
+  },
+  "source_summary": "29公开输入、30GT；双解释器离线构建安装、src迁移、资源及旧API/module/console兼容。10源配置在参考前独立双算。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-28T23:56:19.495981+00:00"
+}

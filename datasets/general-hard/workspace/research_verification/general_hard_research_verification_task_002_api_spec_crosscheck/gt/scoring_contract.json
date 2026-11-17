@@ -1,0 +1,58 @@
+{
+  "schema_version": "h028-scoring-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.75,
+  "semantic_weight": 0.25,
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "semantic_checkpoint_weights": {
+    "decision_grounding": 0.7,
+    "usable_handoff": 0.3
+  },
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "private_sha256": {
+    "api_io.py": "81abe74089d82367cab28c8e3d5b9894729a2e563a458ec06bbc68f7867774d5",
+    "api_snapshot.py": "d5120f83d29206dbb613a11be00ee168478f6a78b630edf68c67fbc95e421dd7",
+    "grader.py": "066f12e159818f6a7c99b697952e9ea600c50a797a46f4a3c7be96f13748e2ae",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "artifact_contract.json": "0331fe3a14a41263b8464caaf84d62743172685f467b655f70908f23cff8fce6",
+    "expected.json": "32edf32761effb4a22348440039b14252700655ec8f79013ced9bbc00b0f6859",
+    "protected_sha256.json": "dd04582e2e4afcb1a6d6d8362c4b2331231b8a7b7a18fa17dcb5057839c0debe",
+    "research_source_policy.json": "9f48d72a874bd45045fd7e1cb4d9ea22f445b79f15580a814ad8f6c87f821b42",
+    "document_snapshot.json": "f45035a5867eb813ed2721ca44579d3fb21871f6f803dc507a75986090e57052",
+    "reference_source_manifest.json": "fc764bcd69b30e8d89661241f3dc671292c6800af2af0a1693472eccf5363c7e",
+    "signature_math_verification.json": "316ea6e959444dad7cc0e2d1eb9c0cd7278ea66c2c831255cb43a026f5eb57ef",
+    "source_review_reconciliation.json": "f99e97ae624d638ec45d4f6d9f74337c1b59b5a7dd2530e62f9472c4d6b350f0",
+    "business_oracle.json": "3f5387f33f98efc5079a806add45166b7d191ce45a8c372bc1118a6d2956aeae",
+    "runtime_contract.json": "c58c5a98011f8714f3e9682576d65679ef61882821651fdfa17b364ba58c354a",
+    "evidence_requirements.json": "d589ee0a9ad2fbf34a93f56a1f6de84b879ce09012a72ca5a887889c13b9d2f4",
+    "counterexamples.json": "d3e7554313e58db515ab18cf6ddefee7fdcb494f80425e56cec99475b668cf8d"
+  },
+  "semantic_rubric": {
+    "decision_grounding": {
+      "weight": 0.7,
+      "focus": "Read the actual prose and independent official article: formal table/example/FAQ conflicts; rule/recommendation/interpretation/client policy/unknown; date/single-source/no-service-test limits; accuracy of additional claims. Typed tables alone do not prove explanation.",
+      "bands": {
+        "1.0": "关键结论有明确来源支撑，冲突与未知边界清楚，无重大矛盾或虚构保证。",
+        "0.5": "主结论成立且无关键错误，一处非关键解释或定位遗漏。",
+        "0.0": "核心解释矛盾、虚构证据或保证，或主要核对未完成。"
+      }
+    },
+    "usable_handoff": {
+      "weight": 0.3,
+      "focus": "Actual usable L01-L12 corrections, traceable fields and evidence, authorization/unknown follow-up, and substantive workbook/prose consistency. Identifier presence is not semantic completeness.",
+      "bands": {
+        "1.0": "三份交付可独立用于后续接入核查，修订与后续动作可追踪且一致。",
+        "0.5": "总体可用，一处非关键交接或定位遗漏。",
+        "0.0": "核心修订不可用、关键对象或依据未关联，或存在重大跨文件矛盾。"
+      }
+    }
+  }
+}

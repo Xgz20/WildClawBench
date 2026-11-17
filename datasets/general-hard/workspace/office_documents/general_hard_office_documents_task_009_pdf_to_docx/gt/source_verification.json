@@ -1,0 +1,153 @@
+{
+  "schema_version": "h009-source-pdf-verification/v1",
+  "status": "pass",
+  "source_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+  "source_pages": 6,
+  "paragraph_units": 22,
+  "paragraph_text_checks": {
+    "S00": true,
+    "H01": true,
+    "S01": true,
+    "S02": true,
+    "S03": true,
+    "H02": true,
+    "S04": true,
+    "S05": true,
+    "S06": true,
+    "H03": true,
+    "S07": true,
+    "S08": true,
+    "S09": true,
+    "H04": true,
+    "S10": true,
+    "S11": true,
+    "S12": true,
+    "S13": true,
+    "S14": true,
+    "H05": true,
+    "S15": true,
+    "S16": true
+  },
+  "footnote_text_checks": {
+    "F01": true,
+    "F02": true,
+    "F03": true,
+    "F04": true,
+    "F05": true,
+    "F06": true
+  },
+  "table_fragments": [
+    {
+      "table": "T01",
+      "source_page": 1,
+      "rows": 8,
+      "columns": 6,
+      "native_rectangles": 41,
+      "merged_rectangles": 6,
+      "actual_bbox": [
+        55.0,
+        229.0000000000001,
+        537.0,
+        493.00000000000006
+      ],
+      "cell_text_and_note_markers_match": true,
+      "merged_topology_matches": true
+    },
+    {
+      "table": "T02",
+      "source_page": 2,
+      "rows": 11,
+      "columns": 6,
+      "native_rectangles": 55,
+      "merged_rectangles": 5,
+      "actual_bbox": [
+        55.0,
+        210.0,
+        537.0,
+        678.0
+      ],
+      "cell_text_and_note_markers_match": true,
+      "merged_topology_matches": true
+    },
+    {
+      "table": "T02",
+      "source_page": 3,
+      "rows": 11,
+      "columns": 6,
+      "native_rectangles": 55,
+      "merged_rectangles": 5,
+      "actual_bbox": [
+        55.0,
+        77.00000000000011,
+        537.0,
+        545.0
+      ],
+      "cell_text_and_note_markers_match": true,
+      "merged_topology_matches": true
+    },
+    {
+      "table": "T03",
+      "source_page": 4,
+      "rows": 7,
+      "columns": 4,
+      "native_rectangles": 25,
+      "merged_rectangles": 2,
+      "actual_bbox": [
+        55.0,
+        150.0000000000001,
+        537.0,
+        417.00000000000006
+      ],
+      "cell_text_and_note_markers_match": true,
+      "merged_topology_matches": true
+    },
+    {
+      "table": "T04",
+      "source_page": 6,
+      "rows": 9,
+      "columns": 4,
+      "native_rectangles": 36,
+      "merged_rectangles": 0,
+      "actual_bbox": [
+        55.0,
+        150.0000000000001,
+        537.0,
+        489.00000000000006
+      ],
+      "cell_text_and_note_markers_match": true,
+      "merged_topology_matches": true
+    }
+  ],
+  "t02_numeric_fields_crosschecked": 54,
+  "images_in_source": 0,
+  "visual_review": "all six page PNGs viewed; text, merged tables, continuation, and note text readable; no clipping observed",
+  "reference_word_created_before_this_check": false,
+  "gt_inferred_from_reference": false,
+  "page_images": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-1.png",
+      "sha256": "330088930cc7b6b8212d15491a77492e109a0b60f244e37314785222809be37b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-2.png",
+      "sha256": "d839e7928a51f141dcbc20d0b7f95b7f512d63bfdee8f7fd1b618fdacb48c475"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-3.png",
+      "sha256": "44f45a363a06244b6387c81710ac31c2355ada46f30605d0800eef2b308782af"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-4.png",
+      "sha256": "028ad16ab3b730773db52220e760d708671c6552236fad430d91d6451426b43c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-5.png",
+      "sha256": "c0583699e86697ed5dd5d004dbe2bcdc0913dad44c8ddf01391c0b8f32b69988"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-6.png",
+      "sha256": "28eaa64c8c98d2f9e3e9f5b33da9e59acffbd73325616028240284f46921e99d"
+    }
+  ],
+  "limit": "Independent software read path and author visual inspection, not an independent human expert review or a Harness result."
+}

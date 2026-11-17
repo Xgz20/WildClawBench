@@ -1,0 +1,169 @@
+{
+  "schema_version": "h010-source-verification/v1",
+  "status": "pass",
+  "files": {
+    "approval.docx": "c59233ed40d34ed86a6cfa82744c89e98fd2456017ca35eb3d8298c260726c35",
+    "baseline.xlsx": "840e4c987eea88016f1830fe79fc5da26f0fec2971a9a50ebc1c16e3c311287a",
+    "constraints.md": "f23c13920c760a89b322df8140ce42cfc787605857eb42b358319655a94f3d45",
+    "quotes/quote_A.pdf": "2a09f48efd2df86493cdfcba65c3b3bf2bd5e2d8471dcad849174df58657034c",
+    "quotes/quote_C.pdf": "ff52ba00bcebebb35fd032eb2f110493e8343eb989a04a8a1d6b3fa2ba79187d",
+    "quotes/quote_B.pdf": "9c908322842335072ad1d4b46af1eb6b6edc1b3d50518fa9653594352382e682"
+  },
+  "quote_pdf_observations": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/quotes/quote_A.pdf",
+      "sha256": "2a09f48efd2df86493cdfcba65c3b3bf2bd5e2d8471dcad849174df58657034c",
+      "pages": 1,
+      "image_count": 0,
+      "extraction": "pypdf full text and pdfplumber actual table cells",
+      "parsed_quote": {
+        "vendor": "远川机电",
+        "valid_through": "2026-11-15",
+        "equipment_tax_rate": "0.13",
+        "equipment_tax_basis": "exclusive",
+        "freight_gross": "1200",
+        "lead_days": 28,
+        "CL": {
+          "threshold": 3,
+          "low": "18600",
+          "high": "17800",
+          "installation_net": "900",
+          "crew_days_per_unit": 2
+        },
+        "FAN": {
+          "threshold": 4,
+          "low": "6900",
+          "high": "6400",
+          "installation_net": "400",
+          "crew_days_per_unit": 1
+        }
+      }
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/quotes/quote_B.pdf",
+      "sha256": "9c908322842335072ad1d4b46af1eb6b6edc1b3d50518fa9653594352382e682",
+      "pages": 1,
+      "image_count": 0,
+      "extraction": "pypdf full text and pdfplumber actual table cells",
+      "parsed_quote": {
+        "vendor": "恒岳设备",
+        "valid_through": "2027-02-10",
+        "equipment_tax_rate": "0.13",
+        "equipment_tax_basis": "inclusive",
+        "freight_gross": "1000",
+        "lead_days": 21,
+        "CL": {
+          "threshold": 4,
+          "low": "20100",
+          "high": "19000",
+          "installation_net": "1100",
+          "crew_days_per_unit": 2
+        },
+        "FAN": {
+          "threshold": 3,
+          "low": "7900",
+          "high": "7400",
+          "installation_net": "450",
+          "crew_days_per_unit": 1
+        }
+      }
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h010/exec/quotes/quote_C.pdf",
+      "sha256": "ff52ba00bcebebb35fd032eb2f110493e8343eb989a04a8a1d6b3fa2ba79187d",
+      "pages": 1,
+      "image_count": 0,
+      "extraction": "pypdf full text and pdfplumber actual table cells",
+      "parsed_quote": {
+        "vendor": "青岚工业",
+        "valid_through": "2026-10-20",
+        "equipment_tax_rate": "0.13",
+        "equipment_tax_basis": "exclusive",
+        "freight_gross": "800",
+        "lead_days": 42,
+        "CL": {
+          "threshold": 2,
+          "low": "18100",
+          "high": "16800",
+          "installation_net": "1000",
+          "crew_days_per_unit": 1
+        },
+        "FAN": {
+          "threshold": 4,
+          "low": "6600",
+          "high": "6100",
+          "installation_net": "380",
+          "crew_days_per_unit": 2
+        }
+      }
+    }
+  ],
+  "actual_asset_rows": 12,
+  "actual_energy": {
+    "old_kwh": 126000,
+    "electricity_cny_per_kwh": 0.82,
+    "new_equipment_kwh": null,
+    "annual_savings": null,
+    "payback_years": null
+  },
+  "phases": {
+    "P1": {
+      "order_date": "2026-11-02",
+      "start": "2026-12-07",
+      "end": "2026-12-22",
+      "blackouts": [
+        "2026-12-14",
+        "2026-12-15"
+      ],
+      "capex_limit": "106000",
+      "opex_limit": "6000",
+      "quantities": {
+        "CL": 3,
+        "FAN": 4
+      }
+    },
+    "P2": {
+      "order_date": "2027-02-01",
+      "start": "2027-03-01",
+      "end": "2027-03-17",
+      "blackouts": [
+        "2027-03-08",
+        "2027-03-09"
+      ],
+      "capex_limit": "75000",
+      "opex_limit": "5000",
+      "quantities": {
+        "CL": 2,
+        "FAN": 3
+      }
+    }
+  },
+  "template_headings": [
+    "项目范围",
+    "推荐申请预算",
+    "实施安排",
+    "报价比较与选择",
+    "收益与待确认事项",
+    "审批与放行条件"
+  ],
+  "all_81_choices_decimal_rational_match": true,
+  "base_feasible": [
+    [
+      "AABB",
+      "178012.15"
+    ],
+    [
+      "BBBB",
+      "179354.05"
+    ],
+    [
+      "BABB",
+      "179685.85"
+    ],
+    [
+      "ABBB",
+      "179990.35"
+    ]
+  ],
+  "source_gt_precedes_reference": true
+}

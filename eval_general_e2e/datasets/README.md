@@ -10,6 +10,25 @@
 | `general-custom70-v3` | 归档题源，回灌后续8道Office规则修复 | 70 | 同一70题范围及独立五维 |
 | `general-custom70-v4` | 冻结杨联芬原刊参考 | 70 | 同一70题范围及独立五维 |
 | `general-custom70-v5` | 补齐Info002作者消歧与Info004董炳月、王吉鹏／荆亚平原刊证据 | 70 | 同一70题范围及独立五维 |
+| `general-custom70-v6` | 保留v5并补齐Info001冻结题源及参考 | 70 | 同一70题范围及独立五维 |
+| `general-hard-v1` | `datasets/general-hard/`，按系列定义与冻结清单选择 | 60 | 独立七维，7类，含6道必须理解视觉信息的题目 |
+
+挑战集使用注册系列入口构建，保留全部旧 `--dataset` 命令：
+
+```bash
+python -m eval_general_e2e.datasets.bundle build --dataset-id general-hard-v1
+python -m eval_general_e2e.datasets.bundle verify \
+  --bundle report-workspace/general-e2e/datasets/general-hard-v1/general-hard-v1.dataset.zip
+```
+
+`--dataset-id general-hard --release-id general-hard-v1` 可显式指定系列内版本。
+冻结版本按原源码锚点核对题面、输入、GT和评分契约；修改已发布内容时建立新版本，
+`update-lock` 对已有锁只接受内容一致的幂等调用。构建／验包不执行候选或启动Harness。
+
+CLI显式数据集执行从已核验的冻结材料生成独立的 `exec/gt` Workspace，缓存位于
+`<OUTPUT_DIR>/.dataset-sources/<backend>/<dataset-id>/<digest>/`，按完整路径、字节和
+模式复验后复用。归档题面与GT使用同一冻结版本，缓存漂移即拒绝调度。
+恢复输出检查真实 `evaluation_scope.json.planned_tasks` 的版本与digest，防止跨版混用结果。
 
 下一轮70题评测选择 `general-custom70-v5`，并配套 Score 0.10.94 / Orchestrate 0.11.78 或经核验的后续版本。
 新版私有评分材料可离线核对新增来源。构建使用 `python -m eval_general_e2e.datasets.bundle build --dataset general-custom70-v5`。
@@ -74,6 +93,8 @@ run、report 都沿用该 ID/digest 和冻结题目范围。旧 60 题使用原�
 新五维兼容视图与旧七维都保留有效样本覆盖，不做维度折算。
 
 `general-custom60-v1` 是首版冻结通用自建评测集。仓库提交 manifest lock，ZIP 作为构建制品输出到被忽略的 `report-workspace/`；General release catalog 锁定阶段 Skill，prepare 生成的批次 manifest 同时冻结 dataset、suite 和 Skill SHA。
+
+三套自建通用场景集合的名称、定位、版本、仓库位置与跨分支可用状态，统一见[通用场景自建评测集说明](../../docs/guides/general-e2e/通用场景自建评测集说明.md)。本文维护数据集构建、校验和分发操作。
 
 更新 manifest lock 是显式变更，只能在任务、exec 或私有评分素材经过审核后执行：
 

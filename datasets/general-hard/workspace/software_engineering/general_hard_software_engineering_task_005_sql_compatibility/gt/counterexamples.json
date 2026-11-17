@@ -1,0 +1,1139 @@
+{
+  "schema": "h045-boundary-oracle/v1",
+  "cases": [
+    {
+      "id": "N01_empty_in",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "in",
+          "value": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE 0 ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": []
+      }
+    },
+    {
+      "id": "N02_empty_not_in",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "not_in",
+          "value": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            201
+          ],
+          [
+            202
+          ],
+          [
+            203
+          ],
+          [
+            204
+          ],
+          [
+            205
+          ],
+          [
+            206
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N03_equal_null",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "group",
+          "op": "eq",
+          "value": null
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE \"group\" IS NULL ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            112
+          ],
+          [
+            116
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N04_not_equal_null",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "group",
+          "op": "ne",
+          "value": null
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE \"group\" IS NOT NULL ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            111
+          ],
+          [
+            113
+          ],
+          [
+            114
+          ],
+          [
+            115
+          ],
+          [
+            117
+          ],
+          [
+            118
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N05_mixed_in",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "in",
+          "value": [
+            null,
+            "north"
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE region IS NULL OR region=? ORDER BY id",
+      "check_params": [
+        "north"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            201
+          ],
+          [
+            203
+          ],
+          [
+            204
+          ],
+          [
+            205
+          ],
+          [
+            206
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N06_mixed_not_in",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "not_in",
+          "value": [
+            null,
+            "north"
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE region IS NOT NULL AND region<>? ORDER BY id",
+      "check_params": [
+        "north"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            202
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N07_not_in_keep_null",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "not_in",
+          "value": [
+            "north"
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE region IS NULL OR region<>? ORDER BY id",
+      "check_params": [
+        "north"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            202
+          ],
+          [
+            203
+          ],
+          [
+            206
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N08_ne_keep_null",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "ne",
+          "value": "north"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE region IS NULL OR region<>? ORDER BY id",
+      "check_params": [
+        "north"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            202
+          ],
+          [
+            203
+          ],
+          [
+            206
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N09_only_null_in",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "amount",
+          "op": "in",
+          "value": [
+            null,
+            null
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE amount IS NULL ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            113
+          ],
+          [
+            116
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N10_only_null_not_in",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "amount",
+          "op": "not_in",
+          "value": [
+            null,
+            null
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE amount IS NOT NULL ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            111
+          ],
+          [
+            112
+          ],
+          [
+            114
+          ],
+          [
+            115
+          ],
+          [
+            117
+          ],
+          [
+            118
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N11_empty_all",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "all": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            201
+          ],
+          [
+            202
+          ],
+          [
+            203
+          ],
+          [
+            204
+          ],
+          [
+            205
+          ],
+          [
+            206
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N12_empty_any",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "any": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE 0 ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": []
+      }
+    },
+    {
+      "id": "N13_unary_null",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "note",
+          "op": "is_null"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE note IS NULL ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            113
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N14_null_comparison",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "amount",
+          "op": "gte",
+          "value": 0
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE amount>=? ORDER BY id",
+      "check_params": [
+        0
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            111
+          ],
+          [
+            112
+          ],
+          [
+            115
+          ],
+          [
+            117
+          ],
+          [
+            118
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N15_quote_binding",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "note",
+          "op": "eq",
+          "value": "x' OR 1=1 --"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE note=? ORDER BY id",
+      "check_params": [
+        "x' OR 1=1 --"
+      ],
+      "binding": true,
+      "rebind": {
+        "old": "x' OR 1=1 --",
+        "new": "safe-target",
+        "sql": "SELECT id FROM \"order\" WHERE note=? ORDER BY id",
+        "params": [
+          "safe-target"
+        ],
+        "spec": {
+          "table": "order",
+          "columns": [
+            "id"
+          ],
+          "where": {
+            "column": "note",
+            "op": "eq",
+            "value": "safe-target"
+          },
+          "order_by": [
+            {
+              "column": "id",
+              "direction": "asc"
+            }
+          ]
+        },
+        "expected_rows": [
+          [
+            111
+          ],
+          [
+            115
+          ],
+          [
+            116
+          ],
+          [
+            118
+          ]
+        ]
+      },
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            112
+          ],
+          [
+            117
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N16_named_rebind",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "in",
+          "value": [
+            "north",
+            "south"
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE region IN (?,?) ORDER BY id",
+      "check_params": [
+        "north",
+        "south"
+      ],
+      "binding": true,
+      "rebind": {
+        "old": "south",
+        "new": "absent-region",
+        "sql": "SELECT id FROM customer WHERE region IN (?,?) ORDER BY id",
+        "params": [
+          "north",
+          "absent-region"
+        ],
+        "spec": {
+          "table": "customer",
+          "columns": [
+            "id"
+          ],
+          "where": {
+            "column": "region",
+            "op": "in",
+            "value": [
+              "north",
+              "absent-region"
+            ]
+          },
+          "order_by": [
+            {
+              "column": "id",
+              "direction": "asc"
+            }
+          ]
+        },
+        "expected_rows": [
+          [
+            201
+          ],
+          [
+            204
+          ],
+          [
+            205
+          ]
+        ]
+      },
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            201
+          ],
+          [
+            202
+          ],
+          [
+            204
+          ],
+          [
+            205
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N17_apostrophe_binding",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "name",
+          "op": "eq",
+          "value": "O'Neil"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM customer WHERE name=? ORDER BY id",
+      "check_params": [
+        "O'Neil"
+      ],
+      "binding": true,
+      "rebind": {
+        "old": "O'Neil",
+        "new": "Ada",
+        "sql": "SELECT id FROM customer WHERE name=? ORDER BY id",
+        "params": [
+          "Ada"
+        ],
+        "spec": {
+          "table": "customer",
+          "columns": [
+            "id"
+          ],
+          "where": {
+            "column": "name",
+            "op": "eq",
+            "value": "Ada"
+          },
+          "order_by": [
+            {
+              "column": "id",
+              "direction": "asc"
+            }
+          ]
+        },
+        "expected_rows": [
+          [
+            201
+          ],
+          [
+            205
+          ]
+        ]
+      },
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            202
+          ]
+        ]
+      }
+    },
+    {
+      "id": "N18_like_text_literal",
+      "group": "boundary",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "note",
+          "op": "eq",
+          "value": "café_%"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE note=? ORDER BY id",
+      "check_params": [
+        "café_%"
+      ],
+      "binding": true,
+      "rebind": {
+        "old": "café_%",
+        "new": "safe-target",
+        "sql": "SELECT id FROM \"order\" WHERE note=? ORDER BY id",
+        "params": [
+          "safe-target"
+        ],
+        "spec": {
+          "table": "order",
+          "columns": [
+            "id"
+          ],
+          "where": {
+            "column": "note",
+            "op": "eq",
+            "value": "safe-target"
+          },
+          "order_by": [
+            {
+              "column": "id",
+              "direction": "asc"
+            }
+          ]
+        },
+        "expected_rows": [
+          [
+            111
+          ],
+          [
+            115
+          ],
+          [
+            116
+          ],
+          [
+            118
+          ]
+        ]
+      },
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            114
+          ]
+        ]
+      }
+    },
+    {
+      "id": "V01_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "order; DROP TABLE customer",
+        "columns": [
+          "id"
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V02_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "name; DROP TABLE customer"
+        ],
+        "where": null,
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V03_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region\" OR 1=1 --",
+          "op": "eq",
+          "value": "north"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V04_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "credit",
+          "op": "gt",
+          "value": null
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V05_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "credit",
+          "op": "in",
+          "value": "0,1"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V06_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "all": [],
+          "any": []
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V07_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": []
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V08_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc; DROP TABLE customer"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V09_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "credit",
+          "op": "eq",
+          "value": true
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    },
+    {
+      "id": "V10_invalid",
+      "group": "boundary",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "region",
+          "op": "regex",
+          "value": "north"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": null,
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": true,
+      "expected": {
+        "error": "ValueError"
+      }
+    }
+  ]
+}

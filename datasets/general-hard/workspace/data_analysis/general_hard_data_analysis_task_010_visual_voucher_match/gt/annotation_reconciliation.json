@@ -1,0 +1,110 @@
+{
+  "schema_version": "h026-annotation-reconciliation/v1",
+  "status": "APPROVED_MODEL_OBSERVATIONS_AND_SOURCE_RECONCILIATION",
+  "source_sha256": {
+    "ledger.csv": "260b03a3dfa49ce38d596c4b28313bb0e48cd61359e2323583d65938329c68c0",
+    "policy.md": "0d0151d5f228d9d3462a44381cfb0d97328583421f90d62879a0dea66409f070",
+    "vouchers/voucher_01.png": "38cef001b47ebfddedc4416502fce0eb14dc3344b076957d8029c3bc2e7d6024",
+    "vouchers/voucher_02.png": "f02a9596b35e247882c567c66f4f15514706835445362fd55570af308ee61c54",
+    "vouchers/voucher_03.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "vouchers/voucher_04.png": "10202bded9197d6ddd5a346fe2578d233f68049f8be6832d78c3ef6285d681d2",
+    "vouchers/voucher_05.png": "bc1dc075b70b395198f2cb05c8205064b29051d1d5b2c56b8ff7f2d6cc7bd879",
+    "vouchers/voucher_06.png": "b8a12a8027fc52e49da160f9ff49c02625323fd582061fbb9d7380859dcaefa3",
+    "vouchers/voucher_07.png": "6efd35de4be34c1afadb5de1a7bb9e083af6bc26f3c91f6c0e539883eb14b8c3",
+    "vouchers/voucher_08.png": "d1268cf1160bf87c2398016c1792dcbd8d458cf02cdb7c5d3622bb53993f14d1",
+    "vouchers/voucher_09.png": "4a023e86420dab73b7b79dc3a2d67e9d11e14fb9cbb75900176d1c9f58005ee8",
+    "vouchers/voucher_10.png": "d7e33886797fb46efe246f0a1bdc542e8c9b9dee43000294780776afccfbb498",
+    "vouchers/voucher_11.png": "bd89a4ec0c9456e3813c37db4815af82f8f5b209dc5707c9606363a506d5ffdf",
+    "vouchers/voucher_12.png": "374ce07608e155d4167176553e60e6001a8e3ec0ac9872da23015146be1b75bf"
+  },
+  "reviewers": [
+    {
+      "reviewer": "a",
+      "agent": "/root/h026_annotator_a",
+      "fork_turns": "none",
+      "review_type": "independent_model_annotation",
+      "human_expert": false,
+      "image_first_then_ledger": true,
+      "actual_images_read": 12,
+      "ledger_rows_read": 18,
+      "records": [
+        {
+          "path": "model_annotations/image_annotations_a.json",
+          "sha256": "eb0abe3a00b7a885506d2d6171ad7d41c416ace600d5279a57339258afcd038f"
+        },
+        {
+          "path": "model_annotations/ledger_annotations_a.json",
+          "sha256": "05ed5b89800eaf630eb41ab180fdb9390a94244a5a9d3b50af9b075dbf882831"
+        }
+      ]
+    },
+    {
+      "reviewer": "b",
+      "agent": "/root/h026_annotator_b",
+      "fork_turns": "none",
+      "review_type": "independent_model_annotation",
+      "human_expert": false,
+      "image_first_then_ledger": true,
+      "actual_images_read": 12,
+      "ledger_rows_read": 18,
+      "records": [
+        {
+          "path": "model_annotations/image_annotations_b.json",
+          "sha256": "432be41f2245b201dd40fce41c634894ff8f7f7a901a62230e41cd42b9d643a0"
+        },
+        {
+          "path": "model_annotations/ledger_annotations_b.json",
+          "sha256": "5a97386addea2cd14c54cb438ae6267743a356c812fae15450f174b9eb681d5c"
+        }
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "reviewer": "a",
+      "visual_fields_agree": true,
+      "financial_decisions_agree": true,
+      "source_groups": 9,
+      "ledger_decisions": 18,
+      "proposals": 7
+    },
+    {
+      "reviewer": "b",
+      "visual_fields_agree": true,
+      "financial_decisions_agree": true,
+      "source_groups": 9,
+      "ledger_decisions": 18,
+      "proposals": 7
+    }
+  ],
+  "visual_images": 12,
+  "primitive_visual_fields_each": 14,
+  "ledger_rows": 18,
+  "voucher_groups": 9,
+  "proposals": 7,
+  "independent_math_checks": 721,
+  "review_financial_checks": 422,
+  "open_annotation_issues": [],
+  "representation_differences": [
+    "Void group effective_amount0.00 versus null expresses no confirmed fee in both raw records; accepted as equivalent for void only, while per-entry target remains0 and reversal is exact. Pending group null never normalizes to0.",
+    "scope_excluded/excluded and no_exact_key_match/unmatched/no_voucher are semantic aliases.",
+    "Excluded draft/reversed rows may retain exact-key source references for audit; scope exclusion and no financial action remain mandatory.",
+    "Region granularity and contextual rule lists differ; raw records are preserved."
+  ],
+  "author_actual_pixel_review": [
+    "vouchers/voucher_01.png",
+    "vouchers/voucher_02.png",
+    "vouchers/voucher_03.png",
+    "vouchers/voucher_04.png",
+    "vouchers/voucher_05.png",
+    "vouchers/voucher_06.png",
+    "vouchers/voucher_07.png",
+    "vouchers/voucher_08.png",
+    "vouchers/voucher_09.png",
+    "vouchers/voucher_10.png",
+    "vouchers/voucher_11.png",
+    "vouchers/voucher_12.png"
+  ],
+  "human_expert_review": false,
+  "limits": "Two isolated same-model annotations plus author reconciliation, not human expert review, independent scored candidate judgement or measured difficulty."
+}

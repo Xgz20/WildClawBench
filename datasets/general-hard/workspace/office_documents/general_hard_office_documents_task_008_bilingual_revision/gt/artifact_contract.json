@@ -1,0 +1,169 @@
+{
+  "document": "results/final_vi.docx",
+  "review": "results/review_zh.docx",
+  "ledger": "results/alignment.csv",
+  "alignment_columns": [
+    "sentence_id",
+    "comment_id",
+    "decision",
+    "facts_json",
+    "term_ids",
+    "final_ref",
+    "review_ref",
+    "source_refs",
+    "explanation_zh"
+  ],
+  "fact_schema": {
+    "provider_id": "服务提供方组织ID",
+    "materials_provider_id": "资料提供方组织ID",
+    "materials_checker_id": "资料核对方组织ID",
+    "amount": "金额数值",
+    "currency": "币种",
+    "amount_unit": "计价单位",
+    "tax_basis": "税口径",
+    "start_date": "开始日期",
+    "end_date": "结束日期",
+    "first_response_work_hours": "首次响应工作小时",
+    "clock_origin": "起算事件",
+    "handling_work_days": "处理工作日",
+    "release_before_trial_allowed": "试运行完成前允许发布",
+    "external_deidentified_sample_allowed": "允许外发脱敏样本",
+    "external_raw_customer_data_allowed": "允许外发原始资料",
+    "acceptance_written": "验收需要书面确认",
+    "acceptance_parties": "验收确认方",
+    "oral_or_single_side_acceptance": "口头或单方可视为验收",
+    "request_type": "超范围事项登记类型",
+    "automatically_included": "自动并入本批",
+    "total": "总数",
+    "pending": "待核数",
+    "completed": "完成数",
+    "notification_output": "通知交付形态",
+    "actual_send_allowed": "允许真实发送",
+    "backup_person": "备用联系人",
+    "rota_changed": "值班已变更",
+    "fx_conversion": "进行汇率换算",
+    "mentioned_attachment_count": "正文提及附件数",
+    "new_attachments_required": "要求新增附件",
+    "receipt_status": "回执状态",
+    "acceptance_status": "验收状态",
+    "closure_status": "结案状态"
+  },
+  "enum_aliases": {
+    "SUP-01": [
+      "SUP-01",
+      "青澜服务中心",
+      "Trung tâm Dịch vụ Thanh Lam"
+    ],
+    "CLI-01": [
+      "CLI-01",
+      "北澄项目组",
+      "Nhóm dự án Bắc Trừng"
+    ],
+    "CNY": [
+      "CNY",
+      "人民币",
+      "RMB"
+    ],
+    "per_batch": [
+      "per_batch",
+      "每批",
+      "mỗi đợt",
+      "cho mỗi đợt"
+    ],
+    "excluded": [
+      "excluded",
+      "不含税",
+      "chưa bao gồm thuế"
+    ],
+    "intake_registration": [
+      "intake_registration",
+      "本次受理登记",
+      "đăng ký tiếp nhận"
+    ],
+    "required_documents_complete": [
+      "required_documents_complete",
+      "所需资料齐备",
+      "nhận đủ tài liệu cần thiết"
+    ],
+    "both": [
+      "both",
+      "双方",
+      "cả hai bên"
+    ],
+    "change_request": [
+      "change_request",
+      "变更申请",
+      "phiếu đề nghị thay đổi"
+    ],
+    "draft": [
+      "draft",
+      "草稿",
+      "bản nháp"
+    ],
+    "unknown": [
+      "unknown",
+      "未知",
+      "未提供",
+      "待核实",
+      "chưa có thông tin"
+    ]
+  },
+  "rules_zh": "final_vi保留S01至S16的完整越文条款；可用带句ID的段落或原生表格。review_zh逐项写12条中文说明，并提供意见编号、句编号、处理结论、依据的原生索引表；允许拆表及行列重排。alignment覆盖16句，未涉及意见者decision为unchanged，comment_id/review_ref可空。facts_json只核本句键，不新增正文没有的事实；字段可用提供的英文标识或对应中文名。布尔值可用JSON true/false或是/否；日期用ISO或明确年月日，未知不能替成已完成。source_refs支持全文件名#ID或ZH/DV/RV/T简码。final_ref/review_ref指实际Word可见章节/句ID。",
+  "source_codes": {
+    "ZH": "baseline_zh.docx",
+    "DV": "draft_vi.docx",
+    "RV": "review_vi.docx",
+    "T": "terms.csv"
+  },
+  "fact_units_zh": "amount以CNY数值记录，计价per_batch，税口径excluded；日期明确起止；工作小时、工作日及起算事件不混用。组织ID可使用SUP-01/CLI-01或术语表中的全称。",
+  "decisions_zh": "applied/采用；not_applied/未采纳/拒绝/待授权；unchanged/无意见保持。未采纳意见须保留基线事实，说明冲突与待授权，不把提案当已发生或已批准。",
+  "review_table": [
+    "comment_id",
+    "sentence_id",
+    "decision",
+    "source_refs"
+  ],
+  "field_aliases": {
+    "sentence_id": [
+      "sentence_id",
+      "句编号",
+      "句ID"
+    ],
+    "comment_id": [
+      "comment_id",
+      "意见编号",
+      "意见ID"
+    ],
+    "decision": [
+      "decision",
+      "处理结论",
+      "处理"
+    ],
+    "facts_json": [
+      "facts_json",
+      "事实JSON",
+      "事实核对"
+    ],
+    "term_ids": [
+      "term_ids",
+      "术语编号"
+    ],
+    "final_ref": [
+      "final_ref",
+      "最终稿定位"
+    ],
+    "review_ref": [
+      "review_ref",
+      "说明定位"
+    ],
+    "source_refs": [
+      "source_refs",
+      "依据",
+      "来源引用"
+    ],
+    "explanation_zh": [
+      "explanation_zh",
+      "中文说明"
+    ]
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema": "h056.evidence/v1",
+  "candidate": "Source locators resolve to original task IDs, event IDs, resource days/windows/budget and G01-G07; declarations are not real execution evidence",
+  "trusted": [
+    "frozen original input/outputSHA",
+    "actual Office fresh recalculation plus T12/T08 duration and T09B fee variants",
+    "native document PDF/font/source custody"
+  ],
+  "formal_later": [
+    "冻结输入和产物SHA",
+    "绑定的执行attempt和终态",
+    "实际工具结果及错误恢复",
+    "规则/Judge逐项证据"
+  ],
+  "limits": [
+    "L4/discrimination unmeasured, all four clients requirepreflight",
+    "Model review not human expert review",
+    "No real release/accounts/messages/payments/reminders/network/install/Harness/model/Judge/finalize"
+  ]
+}

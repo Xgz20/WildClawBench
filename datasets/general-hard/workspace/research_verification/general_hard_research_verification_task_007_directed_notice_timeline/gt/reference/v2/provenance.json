@@ -1,0 +1,17 @@
+{
+  "schema_version": "h033-private-author-reference/v2",
+  "at_utc": "2026-10-28T21:36:05.648087+00:00",
+  "source_author_reference_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/authoring/reference-proposed/v2",
+  "source_author_freeze_manifest_sha256": "fa15db7de091824baa22c0e8f2fd7da1f97bade0313defe9565647e2b40489bb",
+  "source_truth_sha256": "86f83b9da693a5041283c18f9dff36b48f18192f9f05ce26418ef2239ae43a0d",
+  "files": {
+    "results/action_plan.docx": "858d224a19d8a451fcbc5176f20049f9a7ada0a89cf6ff307c9f1548d156bbda",
+    "results/notice_timeline.xlsx": "b529b1103089b7b73a1b612d2392eaf372192985cfc6597ee0b06c0d4cd63d68",
+    "results/source_ledger.json": "836a1bcbfc25f2ffd443de9be54c86a12b7a427c20aafafc82b57079274cd160"
+  },
+  "copy_byte_identical": true,
+  "authoring_mode": "source_first_nonblind_model_only",
+  "candidate_answer_or_source_URL_count_whitelist": false,
+  "used_by_automatic_grader_as_oracle": false,
+  "human_expert_Harness_Judge_validation": false
+}

@@ -1,0 +1,39 @@
+{
+  "boundary_groups": [
+    "dual_axis_and_units",
+    "stacked_components",
+    "cumulative_increment",
+    "unidentifiable_precision",
+    "truncated_axis_ratio",
+    "statistical_and_causal_unknown"
+  ],
+  "existing_source_controls": "Three same-literal-text graphics variants change four verdicts, plus identical-pixel precision witness; these are source proofs, not executions of a candidate grader.",
+  "semantic_only_controls": [
+    "correct_structured_fields_but_false_guarantees",
+    "region_ids_without_meaningful_explanation"
+  ],
+  "planned_candidate_controls": [
+    "wrong_axis",
+    "percent_as_people",
+    "stack_total_as_new",
+    "cumulative_as_weekly",
+    "overprecise_equality",
+    "significance_from_overlap",
+    "pillar_ratio_as_rate_ratio",
+    "broad_uninformative_interval",
+    "wrong_source_image",
+    "unrelated_region",
+    "hidden_correct_rows",
+    "missing_delivery",
+    "modified_input"
+  ],
+  "verified_control_summary": {
+    "total": 43,
+    "positive_rules": 15,
+    "candidate_negative": 22,
+    "semantic_only_rules_boundary": 2,
+    "infrastructure": 4,
+    "evidence": "authoring_validation.json",
+    "limit": "Semantic-only expectations are not formal Judge scores."
+  }
+}

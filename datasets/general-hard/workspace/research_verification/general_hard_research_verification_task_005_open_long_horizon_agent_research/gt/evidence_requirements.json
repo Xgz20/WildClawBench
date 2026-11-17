@@ -1,0 +1,50 @@
+{
+  "accepted_locator_semantics": {
+    "content_api": "Official content API encoded response may bind the raw content field and declared encoding to a deterministically decoded original file path/version/line location. Decoding is not a new GET, a separate independent source or executed code.",
+    "equivalent_quote_handling": "Formatting-only whitespace, line-wrap hyphenation and decoded entity differences may be normalized with the original and derivation retained. Do not drop semantic words/numbers or change the source to force a match.",
+    "html": "Actual section/paragraph/anchor or ordinary node/XPath position; equivalent unambiguous structured positions accepted.",
+    "json_or_xml": "Actual field/node/record position plus date/metadata field role where relevant.",
+    "no_execution": "Source-provided code, scripts and instructions are not executed to obtain research facts.",
+    "pdf": "Physical page numbered from 1 plus relevant paragraph/text-table location; do not substitute only printed page label, title or URL.",
+    "text_or_code": "Original file path, fixed actual version and 1-based original line position; not a run of source code."
+  },
+  "actual_process": "Bound trajectory of searches/navigation/reads with observed aware times or honest null+reason; no fixed first query/tool/locale/retry count.",
+  "candidate_contract_source": "artifact_contract.json copied from facts-free artifact-contract-proposal; no added candidate fields.",
+  "candidate_source_fields": [
+    "source_id",
+    "url",
+    "title",
+    "access_status",
+    "accessed_at",
+    "citations"
+  ],
+  "citation_fields": [
+    "citation_id",
+    "quote",
+    "locator",
+    "supports_fields",
+    "relation"
+  ],
+  "independent_proof": "Cited or read_full/read_excerpt sources require independently acquired original/receipt/projection binding. Reused verified old sources retain original GET time and reuse lineage. Candidate snapshot text is not independent truth.",
+  "ledger_path": "results/evidence_ledger.json",
+  "native_delivery": "XLSX editable visible logical matrix accepts public equivalent layouts; ordinary hyperlinks differ from external data connections. DOCX native editable; formulas actually recalculated on bound derivatives if used. No PDF output required.",
+  "no_mandatory_candidate_private_receipts_or_snapshots": true,
+  "original_source_text_in_gt": false,
+  "outer_case_spec_runtime_requirement_pending_registration": {
+    "office": true,
+    "research_sources": true
+  },
+  "pointer_rules": "Array of RFC6901 JSON Pointer strings into the submitted ledger. Block targets, leaf targets, one citation to multiple targets and reordered arrays are allowed. ~0 and ~1 retain RFC6901 meaning.",
+  "required_deliverables": [
+    "results/capability_matrix.xlsx",
+    "results/evidence_ledger.json",
+    "results/research_report.docx",
+    "results/coverage.json"
+  ],
+  "schema_version": "h031.evidence-requirements/v1",
+  "semantic_decisions_reserved_for_Judge": true,
+  "source_Gt_pool_is_nonexhaustive": true,
+  "source_collection_gate": "Scoring-side outer contract.json (manifest.paths.contract) must declare scoring_runtime.research_sources=true. Private business artifact_contract.json is not that runtime gate.",
+  "source_failure_vs_candidate_error": "Unavailable independent proof is not silently a zero; malformed/fabricated candidate claims after fair reachable conditions remain separate.",
+  "status": "frozen"
+}

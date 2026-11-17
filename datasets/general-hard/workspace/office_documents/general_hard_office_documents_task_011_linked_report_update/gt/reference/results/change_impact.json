@@ -1,0 +1,2427 @@
+{
+  "schema_version": 1,
+  "corrections": [
+    {
+      "correction_id": "C001",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:2",
+        "period": "2026-04",
+        "metric": "REV",
+        "old_value": "1800000",
+        "old_unit": "CNY",
+        "new_value": "2100000",
+        "new_unit": "CNY",
+        "normalized_new_cny": "2100000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C7",
+          "before": "-0.0056497175141242937853107345",
+          "after": "0.045685279187817258883248731",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D7",
+          "before": "-0.0416666666666666666666666667",
+          "after": "0.051724137931034482758620690",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!B7",
+          "before": "0.018018018018018018018018018",
+          "after": "0.034782608695652173913043478",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C9",
+          "before": "-0.0285204991087344028520499109",
+          "after": "0.006944444444444444444444444",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D9",
+          "before": "-0.0571428571428571428571428571",
+          "after": "0.081818181818181818181818182",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!B9",
+          "before": "-0.0028985507246376811594202899",
+          "after": "0.001146131805157593123209169",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D11",
+          "before": "1760000",
+          "after": "2060000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I11",
+          "before": "0.3115044247787610619469026549",
+          "after": "0.3462184873949579831932773109",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K11",
+          "before": "0.03008849557522123893805309735",
+          "after": "-0.005042016806722689075630252101",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F11",
+          "before": "920000",
+          "after": "1220000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J11",
+          "before": "0.1628318584070796460176991150",
+          "after": "0.2050420168067226890756302521",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!B11",
+          "before": "5650000",
+          "after": "5950000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D13",
+          "before": "5450000",
+          "after": "5800000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I13",
+          "before": "0.3168604651162790697674418605",
+          "after": "0.3319977103606182026330852891",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K13",
+          "before": "0.01395348837209302325581395349",
+          "after": "0.002289639381797366914710933028",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F13",
+          "before": "2970000",
+          "after": "3570000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J13",
+          "before": "0.1726744186046511627906976744",
+          "after": "0.2043503148254149971379507728",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!B13",
+          "before": "17200000",
+          "after": "17470000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:4/cell:3/paragraph:1",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:6/cell:3/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:2/cell:3/paragraph:1",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:1/point:1",
+          "before": "176",
+          "after": "206.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:2/point:1",
+          "before": "92",
+          "after": "122.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:2/shape:4/chart:1/series:2/point:3",
+          "before": "180",
+          "after": "210.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:4/paragraph:1",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:5/paragraph:1",
+          "before": "-0.29",
+          "after": "0.11",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:4/paragraph:1",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:4/paragraph:1",
+          "before": "31.69",
+          "after": "33.20",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:6/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:7/paragraph:1",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:5/paragraph:1",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:8/paragraph:1",
+          "before": "negative",
+          "after": "positive",
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!E18",
+          "before": "1800000",
+          "after": "2100000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:2/cell:2",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:3/cell:2",
+          "before": "-0.29",
+          "after": "0.11",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:4/cell:2",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:5/cell:2",
+          "before": "31.69",
+          "after": "33.20",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:6/cell:2",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:7/cell:2",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:3/row:5/cell:2",
+          "before": "1.40",
+          "after": "0.23",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:4",
+          "before": {
+            "revenue_yoy": "negative",
+            "op_yoy": "negative"
+          },
+          "after": {
+            "revenue_yoy": "positive",
+            "op_yoy": "positive"
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:3/cell:3",
+          "before": "176.00",
+          "after": "206.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:3/cell:4",
+          "before": "92.00",
+          "after": "122.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:3/cell:2",
+          "before": "565.00",
+          "after": "595.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:3",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:4",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:2",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        }
+      ]
+    },
+    {
+      "correction_id": "C002",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:3",
+        "period": "2025-04",
+        "metric": "REV",
+        "old_value": "1700000",
+        "old_unit": "CNY",
+        "new_value": "1900000",
+        "new_unit": "CNY",
+        "normalized_new_cny": "1900000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C7",
+          "before": "-0.0056497175141242937853107345",
+          "after": "0.045685279187817258883248731",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D7",
+          "before": "-0.0416666666666666666666666667",
+          "after": "0.051724137931034482758620690",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!B7",
+          "before": "0.018018018018018018018018018",
+          "after": "0.034782608695652173913043478",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C9",
+          "before": "-0.0285204991087344028520499109",
+          "after": "0.006944444444444444444444444",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D9",
+          "before": "-0.0571428571428571428571428571",
+          "after": "0.081818181818181818181818182",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!B9",
+          "before": "-0.0028985507246376811594202899",
+          "after": "0.001146131805157593123209169",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D7",
+          "before": "1770000",
+          "after": "1970000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I7",
+          "before": "0.3189189189189189189189189189",
+          "after": "0.3426086956521739130434782609",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K7",
+          "before": "0.02342342342342342342342342342",
+          "after": "0.02260869565217391304347826087",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F7",
+          "before": "960000",
+          "after": "1160000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J7",
+          "before": "0.1729729729729729729729729730",
+          "after": "0.2017391304347826086956521739",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!B7",
+          "before": "5550000",
+          "after": "5750000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D9",
+          "before": "5610000",
+          "after": "5760000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I9",
+          "before": "0.3252173913043478260869565217",
+          "after": "0.3300859598853868194842406877",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K9",
+          "before": "0.02898550724637681159420289855",
+          "after": "0.02865329512893982808022922636",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F9",
+          "before": "3150000",
+          "after": "3300000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J9",
+          "before": "0.1826086956521739130434782609",
+          "after": "0.1891117478510028653295128940",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!B9",
+          "before": "17250000",
+          "after": "17450000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:4/cell:2/paragraph:1",
+          "before": "561.00",
+          "after": "576.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:6/cell:2/paragraph:1",
+          "before": "315.00",
+          "after": "330.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:2/cell:2/paragraph:1",
+          "before": "1725.00",
+          "after": "1745.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:2/shape:4/chart:1/series:1/point:3",
+          "before": "170",
+          "after": "190.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:5/paragraph:1",
+          "before": "-0.29",
+          "after": "0.11",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:7/paragraph:1",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:5/paragraph:1",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:5/paragraph:1",
+          "before": "1725.00",
+          "after": "1745.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:8/paragraph:1",
+          "before": "negative",
+          "after": "positive",
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!E9",
+          "before": "1700000",
+          "after": "1900000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:4/row:4/cell:2",
+          "before": "561.00",
+          "after": "576.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:4/row:6/cell:2",
+          "before": "315.00",
+          "after": "330.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:4/row:2/cell:2",
+          "before": "1725.00",
+          "after": "1745.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "footnote:1",
+          "before": "1725.00",
+          "after": "1745.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:3/cell:2",
+          "before": "-0.29",
+          "after": "0.11",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:7/cell:2",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "561.00",
+          "after": "576.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "1725.00",
+          "after": "1745.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:4",
+          "before": {
+            "revenue_yoy": "negative",
+            "op_yoy": "negative"
+          },
+          "after": {
+            "revenue_yoy": "positive",
+            "op_yoy": "positive"
+          },
+          "unit": "direction_or_constraint"
+        }
+      ]
+    },
+    {
+      "correction_id": "C003",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:4",
+        "period": "2026-09",
+        "metric": "COGS",
+        "old_value": "1500000",
+        "old_unit": "CNY",
+        "new_value": "1420000",
+        "new_unit": "CNY",
+        "normalized_new_cny": "1420000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C8",
+          "before": "-0.0428571428571428571428571429",
+          "after": "0.019512195121951219512195122",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D8",
+          "before": "-0.0650406504065040650406504065",
+          "after": "0.254237288135593220338983051",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C9",
+          "before": "-0.0285204991087344028520499109",
+          "after": "0.006944444444444444444444444",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D9",
+          "before": "-0.0571428571428571428571428571",
+          "after": "0.081818181818181818181818182",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!C12",
+          "before": "4240000",
+          "after": "4160000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D12",
+          "before": "2010000",
+          "after": "2090000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I12",
+          "before": "0.3216",
+          "after": "0.3344",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F12",
+          "before": "1150000",
+          "after": "1480000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J12",
+          "before": "0.184",
+          "after": "0.2368",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!C13",
+          "before": "11750000",
+          "after": "11670000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D13",
+          "before": "5450000",
+          "after": "5800000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I13",
+          "before": "0.3168604651162790697674418605",
+          "after": "0.3319977103606182026330852891",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F13",
+          "before": "2970000",
+          "after": "3570000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J13",
+          "before": "0.1726744186046511627906976744",
+          "after": "0.2043503148254149971379507728",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:3/cell:3/paragraph:1",
+          "before": "1175.00",
+          "after": "1167.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:4/cell:3/paragraph:1",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:6/cell:3/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:1/point:2",
+          "before": "201",
+          "after": "209.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:2/point:2",
+          "before": "115",
+          "after": "148.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:4/paragraph:1",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:4/paragraph:1",
+          "before": "31.69",
+          "after": "33.20",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:6/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:7/paragraph:1",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:5/paragraph:1",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!F23",
+          "before": "1500000",
+          "after": "1420000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:4/cell:2",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:5/cell:2",
+          "before": "31.69",
+          "after": "33.20",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:6/cell:2",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:7/cell:2",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:4",
+          "before": {
+            "revenue_yoy": "negative",
+            "op_yoy": "negative"
+          },
+          "after": {
+            "revenue_yoy": "positive",
+            "op_yoy": "positive"
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:4/cell:3",
+          "before": "201.00",
+          "after": "209.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:4/cell:4",
+          "before": "115.00",
+          "after": "148.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:3",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:4",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        }
+      ]
+    },
+    {
+      "correction_id": "C004",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:5",
+        "period": "2026-08",
+        "metric": "OPEX",
+        "old_value": "250000",
+        "old_unit": "CNY",
+        "new_value": "0",
+        "new_unit": "CNY",
+        "normalized_new_cny": "0"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D8",
+          "before": "-0.0650406504065040650406504065",
+          "after": "0.254237288135593220338983051",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D9",
+          "before": "-0.0571428571428571428571428571",
+          "after": "0.081818181818181818181818182",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F12",
+          "before": "1150000",
+          "after": "1480000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!E12",
+          "before": "860000",
+          "after": "610000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J12",
+          "before": "0.184",
+          "after": "0.2368",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F13",
+          "before": "2970000",
+          "after": "3570000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!E13",
+          "before": "2480000",
+          "after": "2230000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J13",
+          "before": "0.1726744186046511627906976744",
+          "after": "0.2043503148254149971379507728",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:6/cell:3/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:5/cell:3/paragraph:1",
+          "before": "248.00",
+          "after": "223.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:2/point:2",
+          "before": "115",
+          "after": "148.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:6/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:7/paragraph:1",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!G22",
+          "before": "250000",
+          "after": "0",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:6/cell:2",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:7/cell:2",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:4",
+          "before": {
+            "revenue_yoy": "negative",
+            "op_yoy": "negative"
+          },
+          "after": {
+            "revenue_yoy": "positive",
+            "op_yoy": "positive"
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:4/cell:4",
+          "before": "115.00",
+          "after": "148.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:4",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        }
+      ]
+    },
+    {
+      "correction_id": "C005",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:6",
+        "period": "2026-06",
+        "metric": "OCF",
+        "old_value": "80000",
+        "old_unit": "CNY",
+        "new_value": "-120000",
+        "new_unit": "CNY",
+        "normalized_new_cny": "-120000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!F7",
+          "before": "40000",
+          "after": "-160000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!F9",
+          "before": "-260000",
+          "after": "-460000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!G11",
+          "before": "170000",
+          "after": "-30000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K11",
+          "before": "0.03008849557522123893805309735",
+          "after": "-0.005042016806722689075630252101",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!G13",
+          "before": "240000",
+          "after": "40000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K13",
+          "before": "0.01395348837209302325581395349",
+          "after": "0.002289639381797366914710933028",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/notes/shape:3/paragraph:1",
+          "before": {
+            "q2": "positive",
+            "ytd": "positive"
+          },
+          "after": {
+            "q2": "negative",
+            "ytd": "positive"
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:6/chart:1/series:1/point:1",
+          "before": "17",
+          "after": "-3.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:6/chart:1",
+          "before": {
+            "axis_min": "0"
+          },
+          "after": {
+            "axis_min_maximum": -3,
+            "auto_axis_allowed": true
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:8/paragraph:2",
+          "before": "24.00",
+          "after": "4.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:8/paragraph:1",
+          "before": "17.00",
+          "after": "-3.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!H20",
+          "before": "80000",
+          "after": "-120000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:10",
+          "before": {
+            "q2": "positive",
+            "ytd": "positive"
+          },
+          "after": {
+            "q2": "negative",
+            "ytd": "positive"
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:8/cell:2",
+          "before": "24.00",
+          "after": "4.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:3/row:2/cell:2",
+          "before": "17.00",
+          "after": "-3.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:3/row:5/cell:2",
+          "before": "1.40",
+          "after": "0.23",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:3/cell:5",
+          "before": "17.00",
+          "after": "-3.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:5",
+          "before": "24.00",
+          "after": "4.00",
+          "unit": "万元"
+        }
+      ]
+    },
+    {
+      "correction_id": "C006",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:7",
+        "period": "2026-09",
+        "metric": "AR",
+        "old_value": "480000",
+        "old_unit": "CNY",
+        "new_value": "42",
+        "new_unit": "万元",
+        "normalized_new_cny": "420000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!E8",
+          "before": "-0.0588235294117647058823529412",
+          "after": "-0.1764705882352941176470588235",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!E9",
+          "before": "-0.0588235294117647058823529412",
+          "after": "-0.1764705882352941176470588235",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!H12",
+          "before": "480000",
+          "after": "420000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!H13",
+          "before": "480000",
+          "after": "420000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:7/chart:1/series:1/point:2",
+          "before": "48",
+          "after": "42.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:9/paragraph:1",
+          "before": "48.00",
+          "after": "42.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:4/shape:9/paragraph:2",
+          "before": "-5.88",
+          "after": "-17.65",
+          "unit": "%"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!I23",
+          "before": "480000",
+          "after": "420000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:3/row:3/cell:2",
+          "before": "48.00",
+          "after": "42.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:3/row:4/cell:2",
+          "before": "-5.88",
+          "after": "-17.65",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:11",
+          "before": "480000",
+          "after": "420000",
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:4/cell:6",
+          "before": "48.00",
+          "after": "42.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:6",
+          "before": "48.00",
+          "after": "42.00",
+          "unit": "万元"
+        }
+      ]
+    },
+    {
+      "correction_id": "C007",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:8",
+        "period": "2026-03",
+        "metric": "REV",
+        "old_value": "1650000",
+        "old_unit": "CNY",
+        "new_value": "1620000",
+        "new_unit": "CNY",
+        "normalized_new_cny": "1620000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C6",
+          "before": "-0.0344827586206896551724137931",
+          "after": "-0.0517241379310344827586206897",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D6",
+          "before": "-0.0625",
+          "after": "-0.09375",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!B6",
+          "before": "-0.0185185185185185185185185185",
+          "after": "-0.0240740740740740740740740741",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C9",
+          "before": "-0.0285204991087344028520499109",
+          "after": "0.006944444444444444444444444",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D9",
+          "before": "-0.0571428571428571428571428571",
+          "after": "0.081818181818181818181818182",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!B9",
+          "before": "-0.0028985507246376811594202899",
+          "after": "0.001146131805157593123209169",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D10",
+          "before": "1680000",
+          "after": "1650000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I10",
+          "before": "0.3169811320754716981132075472",
+          "after": "0.3130929791271347248576850095",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K10",
+          "before": "0.009433962264150943396226415094",
+          "after": "0.009487666034155597722960151803",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F10",
+          "before": "900000",
+          "after": "870000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J10",
+          "before": "0.1698113207547169811320754717",
+          "after": "0.1650853889943074003795066414",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!B10",
+          "before": "5300000",
+          "after": "5270000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D13",
+          "before": "5450000",
+          "after": "5800000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I13",
+          "before": "0.3168604651162790697674418605",
+          "after": "0.3319977103606182026330852891",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!K13",
+          "before": "0.01395348837209302325581395349",
+          "after": "0.002289639381797366914710933028",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F13",
+          "before": "2970000",
+          "after": "3570000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J13",
+          "before": "0.1726744186046511627906976744",
+          "after": "0.2043503148254149971379507728",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!B13",
+          "before": "17200000",
+          "after": "17470000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:4/cell:3/paragraph:1",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:6/cell:3/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:2/cell:3/paragraph:1",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:1/point:0",
+          "before": "168",
+          "after": "165.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:5/chart:1/series:2/point:0",
+          "before": "90",
+          "after": "87.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:2/shape:4/chart:1/series:2/point:2",
+          "before": "165",
+          "after": "162.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:4/paragraph:1",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:5/paragraph:1",
+          "before": "-0.29",
+          "after": "0.11",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:4/paragraph:1",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:3/shape:4/paragraph:1",
+          "before": "31.69",
+          "after": "33.20",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:6/paragraph:1",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:7/paragraph:1",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:5/paragraph:1",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:8/paragraph:1",
+          "before": "negative",
+          "after": "positive",
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!E17",
+          "before": "1650000",
+          "after": "1620000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:2/cell:2",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:3/cell:2",
+          "before": "-0.29",
+          "after": "0.11",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:4/cell:2",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:5/cell:2",
+          "before": "31.69",
+          "after": "33.20",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:6/cell:2",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:7/cell:2",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:3/row:5/cell:2",
+          "before": "1.40",
+          "after": "0.23",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:4",
+          "before": {
+            "revenue_yoy": "negative",
+            "op_yoy": "negative"
+          },
+          "after": {
+            "revenue_yoy": "positive",
+            "op_yoy": "positive"
+          },
+          "unit": "direction_or_constraint"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:2/cell:3",
+          "before": "168.00",
+          "after": "165.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:2/cell:4",
+          "before": "90.00",
+          "after": "87.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:2/cell:2",
+          "before": "530.00",
+          "after": "527.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:3",
+          "before": "545.00",
+          "after": "580.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:4",
+          "before": "297.00",
+          "after": "357.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:2/row:5/cell:2",
+          "before": "1720.00",
+          "after": "1747.00",
+          "unit": "万元"
+        }
+      ]
+    },
+    {
+      "correction_id": "C008",
+      "source": {
+        "file": "corrections.csv",
+        "locator": "row:9",
+        "period": "2025-08",
+        "metric": "COGS",
+        "old_value": "1200000",
+        "old_unit": "CNY",
+        "new_value": "1250000",
+        "new_unit": "CNY",
+        "normalized_new_cny": "1250000"
+      },
+      "targets": [
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C8",
+          "before": "-0.0428571428571428571428571429",
+          "after": "0.019512195121951219512195122",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D8",
+          "before": "-0.0650406504065040650406504065",
+          "after": "0.254237288135593220338983051",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!C9",
+          "before": "-0.0285204991087344028520499109",
+          "after": "0.006944444444444444444444444",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Compare!D9",
+          "before": "-0.0571428571428571428571428571",
+          "after": "0.081818181818181818181818182",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!C8",
+          "before": "4200000",
+          "after": "4250000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D8",
+          "before": "2100000",
+          "after": "2050000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I8",
+          "before": "0.3333333333333333333333333333",
+          "after": "0.3253968253968253968253968254",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F8",
+          "before": "1230000",
+          "after": "1180000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J8",
+          "before": "0.1952380952380952380952380952",
+          "after": "0.1873015873015873015873015873",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!C9",
+          "before": "11640000",
+          "after": "11690000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!D9",
+          "before": "5610000",
+          "after": "5760000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!I9",
+          "before": "0.3252173913043478260869565217",
+          "after": "0.3300859598853868194842406877",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!F9",
+          "before": "3150000",
+          "after": "3300000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Summary!J9",
+          "before": "0.1826086956521739130434782609",
+          "after": "0.1891117478510028653295128940",
+          "unit": "ratio"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:3/cell:2/paragraph:1",
+          "before": "1164.00",
+          "after": "1169.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:4/cell:2/paragraph:1",
+          "before": "561.00",
+          "after": "576.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:4/table:1/row:6/cell:2/paragraph:1",
+          "before": "315.00",
+          "after": "330.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:1/shape:7/paragraph:1",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/deck_revised.pptx",
+          "locator": "slide:5/shape:5/paragraph:1",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/finance_revised.xlsx",
+          "locator": "Facts!F13",
+          "before": "1200000",
+          "after": "1250000",
+          "unit": "CNY"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:4/row:3/cell:2",
+          "before": "1164.00",
+          "after": "1169.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:4/row:4/cell:2",
+          "before": "561.00",
+          "after": "576.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:4/row:6/cell:2",
+          "before": "315.00",
+          "after": "330.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "table:1/row:7/cell:2",
+          "before": "-5.71",
+          "after": "8.18",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "561.00",
+          "after": "576.00",
+          "unit": "万元"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:15",
+          "before": "-2.85",
+          "after": "0.69",
+          "unit": "%"
+        },
+        {
+          "file": "results/report_revised.docx",
+          "locator": "paragraph:4",
+          "before": {
+            "revenue_yoy": "negative",
+            "op_yoy": "negative"
+          },
+          "after": {
+            "revenue_yoy": "positive",
+            "op_yoy": "positive"
+          },
+          "unit": "direction_or_constraint"
+        }
+      ]
+    }
+  ],
+  "preserved_source_values": [
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E6",
+      "value": "1800000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F6",
+      "value": "1200000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G6",
+      "value": "260000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H6",
+      "value": "50000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I6",
+      "value": "400000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E7",
+      "value": "1900000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F7",
+      "value": "1300000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G7",
+      "value": "250000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H7",
+      "value": "45000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I7",
+      "value": "430000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E8",
+      "value": "1700000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F8",
+      "value": "1160000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G8",
+      "value": "270000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H8",
+      "value": "55000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I8",
+      "value": "420000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F9",
+      "value": "1180000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G9",
+      "value": "260000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H9",
+      "value": "60000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I9",
+      "value": "450000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E10",
+      "value": "2000000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F10",
+      "value": "1350000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G10",
+      "value": "280000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H10",
+      "value": "-10000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I10",
+      "value": "460000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E11",
+      "value": "1850000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F11",
+      "value": "1250000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G11",
+      "value": "270000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H11",
+      "value": "80000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I11",
+      "value": "440000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E12",
+      "value": "2100000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F12",
+      "value": "1450000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G12",
+      "value": "290000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H12",
+      "value": "70000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I12",
+      "value": "480000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E13",
+      "value": "2000000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G13",
+      "value": "280000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H13",
+      "value": "65000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I13",
+      "value": "500000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E14",
+      "value": "2200000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F14",
+      "value": "1550000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G14",
+      "value": "300000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H14",
+      "value": "85000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I14",
+      "value": "510000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E15",
+      "value": "1750000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F15",
+      "value": "1190000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G15",
+      "value": "270000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H15",
+      "value": "30000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I15",
+      "value": "410000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E16",
+      "value": "1900000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F16",
+      "value": "1300000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G16",
+      "value": "250000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H16",
+      "value": "40000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I16",
+      "value": "420000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F17",
+      "value": "1130000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G17",
+      "value": "260000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H17",
+      "value": "-20000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I17",
+      "value": "400000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F18",
+      "value": "1230000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G18",
+      "value": "270000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H18",
+      "value": "40000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I18",
+      "value": "430000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E19",
+      "value": "1950000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F19",
+      "value": "1320000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G19",
+      "value": "280000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H19",
+      "value": "50000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I19",
+      "value": "440000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E20",
+      "value": "1900000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F20",
+      "value": "1340000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G20",
+      "value": "290000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I20",
+      "value": "470000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E21",
+      "value": "2000000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F21",
+      "value": "1350000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G21",
+      "value": "300000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H21",
+      "value": "-60000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I21",
+      "value": "460000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E22",
+      "value": "2050000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!F22",
+      "value": "1390000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H22",
+      "value": "70000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!I22",
+      "value": "450000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!E23",
+      "value": "2200000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!G23",
+      "value": "310000",
+      "unit": "CNY"
+    },
+    {
+      "file": "results/finance_revised.xlsx",
+      "locator": "Facts!H23",
+      "value": "10000",
+      "unit": "CNY"
+    }
+  ],
+  "preserved_sections": {
+    "report_revised.docx": [
+      "P11",
+      "P90",
+      "P99",
+      "P91",
+      "F02"
+    ],
+    "deck_revised.pptx": [
+      "slide:6"
+    ],
+    "finance_revised.xlsx": [
+      "Scope及所有未受影响公式、源行身份和期间"
+    ]
+  },
+  "unknowns": [
+    "Q4",
+    "所得税",
+    "财务费用",
+    "完整净利润",
+    "后续对外确认",
+    "付款及其他业务审批"
+  ],
+  "scope": "仅八项已批准重述及其传递影响。Q2现金-3万元，1至9月累计现金+4万元；AR按期末快照。",
+  "chart_editability": "四图原生可编辑，实际源内嵌字面工作簿保留并同步；现金轴下限-5万元，负3万元柱可见。"
+}

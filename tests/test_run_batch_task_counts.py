@@ -5,11 +5,36 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
+from contextlib import redirect_stderr
+import io
 
 from eval import run_batch
+from src.utils.cli_args import build_run_batch_parser, parse_run_batch_args
 
 
 class PendingTaskCountTests(unittest.TestCase):
+    def test_dataset_mode_is_explicit_and_cannot_mix_with_legacy_category_or_task(self) -> None:
+        parser = build_run_batch_parser("sample-model", 1)
+        args = parser.parse_args(["--dataset-id", "general-hard", "--release-id", "general-hard-v1"])
+        self.assertEqual(args.dataset_id, "general-hard")
+        self.assertIsNone(args.category)
+        for extra in (["--category", "all"], ["--task", "task.md"]):
+            with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                parser.parse_args(["--dataset-id", "general-hard", *extra])
+        with patch("sys.argv", ["run_batch.py", "--category", "all", "--release-id", "general-hard-v1"]), redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+            parse_run_batch_args("sample-model", 1)
+
+    def test_registered_tasks_are_counted_as_custom_and_keep_dataset_identity(self) -> None:
+        dataset = {"series_id": "general-hard", "release_id": "general-hard-v1", "dataset_digest": "a" * 64}
+        task = {"task_id": "general_hard_research_verification_task_001_case", "category": "research_verification",
+                "file_path": "/missing/datasets/general-hard/tasks/research_verification/case.md", "dataset_selection": dataset}
+        self.assertEqual(run_batch._pending_task_counts([task]), (0, 1))
+        with patch.object(run_batch, "_task_provenance_or_unavailable", return_value={}):
+            entry = run_batch._task_scope_entry(task)
+        self.assertEqual(entry["source"], "registered_dataset")
+        self.assertEqual(entry["category"], "research_verification")
+        self.assertEqual(entry["dataset"], dataset)
+
     def test_all_categories_includes_website_generation(self) -> None:
         self.assertIn("07_Website_Generation", run_batch.ALL_CATEGORIES)
 

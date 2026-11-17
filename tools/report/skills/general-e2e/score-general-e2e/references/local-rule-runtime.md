@@ -6,6 +6,14 @@
 
 专用虚拟环境、独立进程和环境白名单用于依赖复现、故障收口和凭据隔离，不是针对恶意 grader 的安全沙箱。只允许执行版本化数据集中的冻结规则；不要把任意第三方 Python 代码传给 Worker。
 
+## 通用规则派生证据
+
+从score 0.27开始，每次实际启动的Worker都获得`GENERAL_E2E_RULE_EVIDENCE_DIR`，指向候选目录以外的`worker/derived`。普通原生规则可在这里保存观察JSON或其它派生文件，无需声明Office或HTML能力。候选、GT和既有封存材料仍为输入，不在此阶段改写。
+
+`rule-audit.json`中的`derived_artifacts`逐文件记录相对路径、SHA256和大小；`derived_evidence`绑定整个索引及文件数，schema为`wildclawbench.rule-derived-evidence/v1`，purpose为`custody_only_not_business_validation`。普通verify、去runtime搬移后的verify、语义证据目录和查询均检查成员及字节。新文件、漏索引、改字节、重复/越界路径、文件或目录符号链接会明确失败，失败Worker的原始资料保留，不悄悄删除或忽略。
+
+该通用回执不解释业务JSON，不代替规则/Judge判成功。Office/HTML专用锁和观察回执仍由各自验证器检查。旧普通审计可以没有这两个派生字段，但不能带未索引文件；旧Office/HTML完整索引无需补写通用回执或重签历史审计。
+
 ## 固定运行时
 
 - Python `3.11`
@@ -46,6 +54,10 @@ python scripts/configure_native_office.py \
 只传实际存在的字体目录；有其他已安装字体可继续追加 `--font-dir`。入口拒绝已存在的 `bin/soffice` 或 support-root，保留原 runtime，不覆盖冻结轮次。回执记录真实二进制 SHA、版本、启动器和字体目录；每次调用核验二进制 SHA，独立临时字体缓存不需要扩大 Worker 环境白名单或继承 HOME。
 
 `CONFIGURED_REAL_RENDER_SMOKE_REQUIRED` 只证明已配置及版本命令成功。使用 `_sanitized_environment` 的真实环境，对合成 DOCX/PPTX 实际渲染、在副本编辑后保存重开，并查看含中文页面截图；只有文本提取成功仍可能漏画中文字形。保存命令、环境键、二进制/启动器/输入/输出 SHA 和截图。原规则明确要求 Windows WPS COM 时须提供对应环境；此配置不把 LibreOffice 当作该 COM 检查的替代品。
+
+score 0.29.0/core 0.16.0 保留默认运行时锁中的 `pypdf` 和 `pillow`（import root 为 `PIL`），两者使用 `freeze-in-managed-rule-runtime`；`pdfplumber` 继续为 `optional-freeze-in-supplied-managed-runtime`，不进入默认安装 Profile。规则可以直接写 `from PIL import Image`，但允许导入不等于实际 Worker 已安装：实际锁必须声明 import roots 和精确版本，运行前逐项 probe。缺声明报 `RUNTIME_DEPENDENCY_UNDECLARED`，缺包或导入失败报 `RUNTIME_PROBE_FAILED`，版本不符报 `RUNTIME_DEPENDENCY_MISMATCH`，均保留评测异常，不生成能力零分。旧冻结锁、requirements 和历史 attempt 不自动替换，也不从动态 GT helper 猜测依赖。
+
+归档 Office 取证校验同时兼容旧松散参考与 `canonical-office-reference-zip/v1` 容器。容器须通过原逻辑路径、单成员类型、SHA 和大小验证；校验器只在一次性临时目录读取成员字节以复核原生观察及派生谱系，不在 `private/gt` 展开 Office 文件，不改容器、候选或 proof，也不把临时视图当作候选交付或实际原生运行证据。
 
 ## 准备私有 attempt
 
@@ -114,7 +126,13 @@ Windows 的 Python 路径使用 `Scripts/python.exe`。bootstrap 生成的 marke
 
 超时、日志或结果过大、依赖/浏览器版本不符、Worker 异常、残留进程树以及评分材料漂移都产生失败审计，不补零，也不生成有效规则组件。失败 attempt 不可原地重跑；应使用新的 `scoring_attempt_id`。
 
+需要XLSX公式重算的任务另声明`scoring_runtime: {office: true}`，按[可信Office重算](office-recalculation.md)冻结引擎。Worker仅从评分侧接收锁与派生证据目录；派生文件位于`worker/derived/`，不进入候选原件或runtime Workspace。完成后回传保留派生文件和回执，`verify-score --archived`可在没有引擎和runtime副本时校验其完整性。
+
+PPTX渲染另声明`scoring_runtime: {office: true, office_render: true}`，通过[可信PPTX渲染](office-rendering.md)冻结程序与字体清单。Worker额外获得`GENERAL_E2E_OFFICE_RENDER_LOCK`，PDF及回执仍写同一派生证据目录；归档核验不要求原字体和引擎存在。
+
 ### 逐检查点理由与证据
+
+开放研究题可另声明`scoring_runtime: {research_sources: true}`并冻结GT policy，在prepare后、规则/语义准备前执行[独立公开来源取证](research-sources.md)。规则Worker仅增加可信bundle目录和manifest SHA环境变量；来源位于`private/research-sources/`及独立补充锁，不写入候选、GT或runtime Workspace。缺必要来源包/依赖或获取失败阻断评分，坏账本与候选缺交仍按原契约判断。
 
 新执行产生 `wildclawbench.general-e2e-rule-component/v2`。每个 criterion 都记录中文 `reason` 和 `decision`：分数为 `1.0` 时标记 `full_score`，为 `0.0` 时标记 `zero_score`，其余合法值标记 `partial_score`。理由只解释 Worker 已返回的分值状态，不让模型推测自动规则的业务含义。
 

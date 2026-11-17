@@ -1,0 +1,68 @@
+{
+  "phase": "after_annotation",
+  "input_directory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/independent-annotation-input-v1",
+  "files": [
+    {
+      "file": "figures/F01_budget.png",
+      "size_bytes": 77419,
+      "sha256": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61",
+      "matches_before": true
+    },
+    {
+      "file": "figures/F02_intervals.png",
+      "size_bytes": 71201,
+      "sha256": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8",
+      "matches_before": true
+    },
+    {
+      "file": "figures/F03_latency.png",
+      "size_bytes": 70616,
+      "sha256": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb",
+      "matches_before": true
+    },
+    {
+      "file": "figures/F04_grouping.png",
+      "size_bytes": 68539,
+      "sha256": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745",
+      "matches_before": true
+    },
+    {
+      "file": "annotation_instructions.md",
+      "size_bytes": 1704,
+      "sha256": "4772dd26b1c65e26e4ae8b64b0c63554fe61ecf78c3d6ea8e498e4ec92ba9ef3",
+      "matches_before": true
+    },
+    {
+      "file": "paper_excerpts.md",
+      "size_bytes": 3629,
+      "sha256": "ff890163fc46f1292a70279a1df8a21625c5e3cf5d0fa9c5fcad2e72010c7318",
+      "matches_before": true
+    },
+    {
+      "file": "reading_tolerance.json",
+      "size_bytes": 1976,
+      "sha256": "35d038372eb3dba02e7a146975adfc22659ccef46ff64f0b4f397975ff05271b",
+      "matches_before": true
+    }
+  ],
+  "public_image_sha_verification": [
+    {
+      "file": "figures/F01_budget.png",
+      "matches_public_tolerance_sha256": true
+    },
+    {
+      "file": "figures/F02_intervals.png",
+      "matches_public_tolerance_sha256": true
+    },
+    {
+      "file": "figures/F03_latency.png",
+      "matches_public_tolerance_sha256": true
+    },
+    {
+      "file": "figures/F04_grouping.png",
+      "matches_public_tolerance_sha256": true
+    }
+  ],
+  "all_inputs_unchanged": true,
+  "method": "read-only SHA-256; no input write performed"
+}

@@ -1,0 +1,19 @@
+{
+  "schema_version": "h025-evidence/v1",
+  "required": [
+    "113 visible complete source records",
+    "own allocation-derived cost/resource/deficit disclosures",
+    "one source-derived full-demand infeasibility certificate",
+    "all four source filenames and bound source row identifiers"
+  ],
+  "certificate_types": [
+    "factory_units",
+    "combined_material",
+    "material_requirement"
+  ],
+  "limits": [
+    "A full-demand unit lower bound is not by itself the exact priority-vector or cost optimum.",
+    "A solver name or asserted status is not proof and does not earn optimality credit.",
+    "No expert, open prose quality or actual Harness/model evidence."
+  ]
+}

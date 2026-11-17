@@ -1,0 +1,29 @@
+{
+  "schema_version": "h003-business-oracle/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "change_weights": {
+    "C01": 0.14285714285714285,
+    "C02": 0.14285714285714285,
+    "C03": 0.14285714285714285,
+    "C04": 0.14285714285714285,
+    "C05": 0.14285714285714285,
+    "C06": 0.14285714285714285,
+    "C07": 0.14285714285714285
+  },
+  "subrequirements": "Each change equal; requirements within each change equal. C03 verifies insertion, location, required native references and continuous numbers. C07 display and actual link each one half.",
+  "scope_gate": "Unapproved body/cell wording changes zero business and preservation group; missing cells/relationship defects remain independently scored. P01/P02 violations zero business and boundary. Input byte changes zero boundary/delivery/evidence.",
+  "forbidden": {
+    "total_cny": 60000,
+    "payment_cny": [
+      24000,
+      36000,
+      0
+    ],
+    "liability_cap_ratio": 0.2
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schema_version": "h023-business-oracle/v1",
+  "authoritative": "source_expected.json",
+  "independent": "independent_sql_model.py",
+  "verification": "independent_validation.json",
+  "baseline_source_rows": 270,
+  "customers": 12,
+  "months": 36,
+  "known_scope_only": true,
+  "accounting_expert_review": false
+}

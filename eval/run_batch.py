@@ -66,6 +66,7 @@ from src.utils.model_limits import (
     prepare_maas_max_tokens_resolution,
 )
 from src.utils.run_selection import write_rerun_metadata
+from eval_general_e2e.datasets.discovery import discover_frozen_tasks
 
 load_dotenv()
 # 终端：颜色 + emoji（stdout）。文件日志在 main() 里按 output_root 追加（纯文本 + emoji）。
@@ -234,8 +235,9 @@ def _build_run_configuration(
             if name.strip()
         )
 
-    mode = "dataset" if getattr(args,'dataset',None) else "task" if getattr(args, "task", None) else "category"
-    selection_value = getattr(args,'dataset',None) or getattr(args, "task", None) or getattr(args, "category", None)
+    selected_dataset = getattr(args, "dataset_id", None) or getattr(args, "dataset", None)
+    mode = "dataset" if selected_dataset else "task" if getattr(args, "task", None) else "category"
+    selection_value = selected_dataset or getattr(args, "task", None) or getattr(args, "category", None)
     backend_name = getattr(args, "agent_backend", None)
     if backend_name == "zcode":
         requested_api = getattr(args, "zcode_api", None)
@@ -259,6 +261,7 @@ def _build_run_configuration(
             "modality": getattr(args, "modality", None),
             "include_tags": sorted(getattr(args, "tags", None) or []),
             "exclude_tags": sorted(getattr(args, "exclude_tags", None) or []),
+            **({"dataset": args.dataset_selection} if getattr(args, "dataset_selection", None) else {}),
         },
         "execution": {
             "agent_backend": getattr(args, "agent_backend", None),
@@ -296,7 +299,8 @@ def _build_run_configuration(
             "cpus": str(env.get("WILDCLAW_DOCKER_CPUS", "")).strip() or None,
         },
         "paths": {
-            "tasks_root": str(TASKS_DIR),
+            "tasks_root": str(ROOT_DIR / args.dataset_selection["task_root"])
+                if getattr(args, "dataset_selection", None) else str(TASKS_DIR),
             "output_root": str(output_root),
             "models_config": getattr(args, "models_config", None),
             "lobster_workspace": getattr(args, "lobster_workspace", None),
@@ -459,13 +463,18 @@ def _is_extension_task(task: dict) -> bool:
 
 
 def _pending_task_counts(tasks: list[dict]) -> tuple[int, int]:
-    """Return (official, extension) counts for tasks that will be executed."""
-    extension_count = sum(1 for task in tasks if _is_extension_task(task))
+    """Return (official, custom) counts, including registered custom datasets."""
+    extension_count = sum(1 for task in tasks if _is_extension_task(task) or task.get("dataset_selection"))
     return len(tasks) - extension_count, extension_count
 
 
 def _log_pending_task_counts(tasks: list[dict]) -> None:
     official_count, extension_count = _pending_task_counts(tasks)
+    registered_count = sum(1 for task in tasks if task.get("dataset_selection"))
+    if registered_count:
+        logger.info("待执行用例数: %d（开源评测集: %d，旧扩展集: %d，注册数据集: %d）",
+                    len(tasks), official_count, extension_count - registered_count, registered_count)
+        return
     label = "tasks/general_e2e" if any("general_e2e" in Path(str(t.get('file_path', ''))).parts for t in tasks) else "tasks/extension"
     logger.info(
         "待执行用例数: %d（开源评测集: %d，自建评测集 %s: %d）",
@@ -513,13 +522,17 @@ def _task_scope_entry(task: dict) -> dict[str, Any]:
             category = relative.parts[0]
     except ValueError:
         pass
-    return {
+    entry = {
         "category": category,
         "task_id": str(task.get("task_id") or path.stem),
         "source": source,
         "provenance": _task_provenance_or_unavailable(task),
         **({'dataset':task['dataset']} if task.get('dataset') else {}),
     }
+    if task.get("dataset_selection"):
+        entry["source"] = "registered_dataset"
+        entry["dataset"] = dict(task["dataset_selection"])
+    return entry
 
 
 def _scope_task_key(item: Mapping[str, Any]) -> tuple[str, str]:
@@ -1389,18 +1402,37 @@ def main() -> None:
         default_model=DEFAULT_MODEL,
         default_parallel=DEFAULT_PARALLEL,
     )
+    frozen_source_cache = OUTPUT_DIR / ".dataset-sources" / args.agent_backend
+    registered_selection = None
+    if getattr(args, "dataset_id", None):
+        try:
+            registered_selection = discover_frozen_tasks(ROOT_DIR, args.dataset_id,
+                release_id=args.release_id, workspace_cache=frozen_source_cache)
+        except (OSError, ValueError) as exc:
+            raise SystemExit(f"Dataset selection failed: {exc}") from exc
+        if args.modality or args.tags or args.exclude_tags:
+            raise ValueError("显式冻结数据集不可通过modality/tag过滤缩小范围")
+        args.dataset_selection = registered_selection.identity
 
     # 内置文件日志：程序自己写 <output_root>/run.log（纯文本 + emoji），
     # 无需 shell `> run.log` 重定向；VS Code 打开干净、可随时 tail、随结果归档。
     # 尽早挂载，使 run.log 从第一行起完整（含下方 timeout 配置日志）。
     output_root = OUTPUT_DIR / args.agent_backend
     dataset_groups = None
+    if registered_selection:
+        from src.utils.dataset_selection import require_dataset_output_scope
+        output_root = output_root / registered_selection.identity["release_id"]
+        require_dataset_output_scope(output_root, {
+            "dataset_id": registered_selection.identity["release_id"],
+            "dataset_digest": registered_selection.identity["dataset_digest"],
+        })
     if getattr(args, 'dataset', None):
         from src.utils.dataset_selection import dataset_task_paths, require_dataset_output_scope
         if args.modality or args.tags or args.exclude_tags:
             raise ValueError("显式70题数据集不可通过modality/tag过滤缩小冻结范围")
         output_root = output_root / args.dataset
-        dataset_manifest, dataset_groups = dataset_task_paths(ROOT_DIR,args.dataset)
+        dataset_manifest, dataset_groups = dataset_task_paths(ROOT_DIR, args.dataset,
+                                                             materialize_root=frozen_source_cache)
         require_dataset_output_scope(output_root,dataset_manifest)
     try:
         output_root.mkdir(parents=True, exist_ok=True)
@@ -1543,7 +1575,9 @@ def main() -> None:
             if result.get("error") or (result.get("scores") or {}).get("error"):
                 sys.exit(1)
         return
-    if dataset_groups is not None:
+    if registered_selection:
+        categories = list(dict.fromkeys(task["category"] for task in registered_selection.tasks))
+    elif dataset_groups is not None:
         categories = list(dataset_groups)
         logger.info("Dataset: %s, digest: %s, frozen tasks: %d", args.dataset,
                     dataset_manifest['dataset_digest'], dataset_manifest['task_count'])
@@ -1559,37 +1593,45 @@ def main() -> None:
     planned_tasks: list[dict] = []
 
     for category in categories:
-        # Scan both official tasks/<category>/ and extension tasks/extension/<category>/
-        # so --category X and --category all can pick up extension tasks that share
-        # the same logical category (output_dir/reports group by category).
-        category_dir = TASKS_DIR / category
-        extension_dir = TASKS_DIR / "extension" / category
+        if registered_selection:
+            tasks = [task for task in registered_selection.tasks if task["category"] == category]
+            logger.info("Dataset: %s, category: %s, %d frozen tasks, parallelism: %d",
+                        registered_selection.identity["release_id"], category, len(tasks), args.parallel)
+        else:
+            # Scan both official tasks/<category>/ and extension tasks/extension/<category>/
+            # so --category X and --category all can pick up extension tasks that share
+            # the same logical category (output_dir/reports group by category).
+            category_dir = TASKS_DIR / category
+            extension_dir = TASKS_DIR / "extension" / category
 
-        task_files = []
-        if dataset_groups is not None:
-            task_files = dataset_groups[category]
-        elif category_dir.exists():
-            task_files.extend(sorted(category_dir.glob("*task_*.md")))
-        if dataset_groups is None and extension_dir.exists():
-            task_files.extend(sorted(extension_dir.glob("*task_*.md")))
+            task_files = []
+            if dataset_groups is not None:
+                task_files = dataset_groups[category]
+            elif category_dir.exists():
+                task_files.extend(sorted(category_dir.glob("*task_*.md")))
+            if dataset_groups is None and extension_dir.exists():
+                task_files.extend(sorted(extension_dir.glob("*task_*.md")))
 
-        if not task_files:
-            logger.error("No task_*.md files found in: %s (or %s)",
-                         category_dir, extension_dir)
-            continue
+            if not task_files:
+                logger.error("No task_*.md files found in: %s (or %s)",
+                             category_dir, extension_dir)
+                continue
 
-        logger.info("Category: %s, %d tasks (official + extension), parallelism: %d",
-                    category, len(task_files), args.parallel)
+            logger.info("Category: %s, %d tasks (official + extension), parallelism: %d",
+                        category, len(task_files), args.parallel)
 
-        tasks = []
-        for tf in task_files:
-            try:
-                parsed=parse_task_md(tf)
-                if dataset_groups is not None:
-                    parsed['dataset']={'id':dataset_manifest['dataset_id'],'digest':dataset_manifest['dataset_digest']}
-                tasks.append(parsed)
-            except Exception as exc:
-                logger.error("Parse failed %s: %s", tf, exc)
+            tasks = []
+            for tf in task_files:
+                try:
+                    parsed=parse_task_md(tf)
+                    if dataset_groups is not None:
+                        from eval_general_e2e.datasets.workspaces import frozen_workspace_path
+                        parsed["workspace_path"] = str(frozen_workspace_path(
+                            dataset_manifest, frozen_source_cache, parsed["task_id"]))
+                        parsed['dataset']={'id':dataset_manifest['dataset_id'],'digest':dataset_manifest['dataset_digest']}
+                    tasks.append(parsed)
+                except Exception as exc:
+                    logger.error("Parse failed %s: %s", tf, exc)
 
         if args.modality:
             before = len(tasks)
@@ -1637,7 +1679,7 @@ def main() -> None:
     _write_evaluation_scope(
         output_root,
         planned_tasks,
-        mode="category",
+        mode="dataset" if registered_selection else "category",
         categories=categories,
         modality=args.modality,
         include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},

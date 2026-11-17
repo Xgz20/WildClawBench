@@ -1,0 +1,518 @@
+{
+  "schema_version": "h025-authoring-validation/v1",
+  "status": "AUTHOR_RULES_AND_NATIVE_REFERENCE_VERIFIED",
+  "controls": {
+    "status": "PASS",
+    "count": 33,
+    "cases": [
+      {
+        "name": "reference",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.61,
+        "kind": "positive"
+      },
+      {
+        "name": "renamed_sheets",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.436,
+        "kind": "positive"
+      },
+      {
+        "name": "chinese_headers",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.37,
+        "kind": "positive"
+      },
+      {
+        "name": "complete_static_values",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.542,
+        "kind": "positive"
+      },
+      {
+        "name": "static_rows_columns_reordered",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.561,
+        "kind": "positive"
+      },
+      {
+        "name": "factory_units_certificate",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.386,
+        "kind": "positive"
+      },
+      {
+        "name": "single_material_certificate",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.431,
+        "kind": "positive"
+      },
+      {
+        "name": "unused_reference_matrix_removed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 1.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.528,
+        "kind": "positive"
+      },
+      {
+        "name": "cheaper_wrong_priority_self_consistent",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.445454545455,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.695
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.409,
+        "kind": "negative"
+      },
+      {
+        "name": "optimal_gaps_suboptimal_cost_self_consistent",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.970716009654,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 1.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.98389380531
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.325,
+        "kind": "negative"
+      },
+      {
+        "name": "fractional_plan_is_not_integer",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.0,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.404,
+        "kind": "negative"
+      },
+      {
+        "name": "min_batch_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.465,
+        "kind": "negative"
+      },
+      {
+        "name": "unavailable_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.963,
+        "kind": "negative"
+      },
+      {
+        "name": "route_upper_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.673,
+        "kind": "negative"
+      },
+      {
+        "name": "minimum_service_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 3.101,
+        "kind": "negative"
+      },
+      {
+        "name": "labour_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.6,
+        "kind": "negative"
+      },
+      {
+        "name": "shared_material_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.569,
+        "kind": "negative"
+      },
+      {
+        "name": "budget_only",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.25,
+          "boundary_cases": 0.4,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.2875
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.498,
+        "kind": "negative"
+      },
+      {
+        "name": "transport_fee_omitted",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.995490391274,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.847519715201
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.666,
+        "kind": "negative"
+      },
+      {
+        "name": "plant_activation_fee_repeated_per_sku",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.992389705882,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 1.0,
+          "overall_score": 0.845814338235
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.788,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_zero_route",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.0,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.646,
+        "kind": "negative"
+      },
+      {
+        "name": "false_full_service_claim",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 1.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.972727272727,
+          "overall_score": 0.848636363636
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.563,
+        "kind": "negative"
+      },
+      {
+        "name": "material_units_treated_as_finished_units",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 0.6,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.7,
+          "overall_score": 0.735
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.708,
+        "kind": "negative"
+      },
+      {
+        "name": "false_source_locator",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 0.6,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.7,
+          "overall_score": 0.735
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.534,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_decision",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 1.0,
+          "boundary_cases": 0.6,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.4,
+          "overall_score": 0.72
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.454,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_raw_source_field",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.6,
+          "overall_score": 0.305
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.756,
+        "kind": "negative"
+      },
+      {
+        "name": "malformed_workbook",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.0,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.0
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.038,
+        "kind": "negative"
+      },
+      {
+        "name": "protected_input_changed",
+        "status": "PASS",
+        "scores": {
+          "business_correctness": 0.5,
+          "boundary_cases": 0.0,
+          "delivery_integrity": 0.0,
+          "evidence_binding": 0.0,
+          "overall_score": 0.275
+        },
+        "infrastructure_error": null,
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.631,
+        "kind": "negative"
+      },
+      {
+        "name": "missing_gt_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "FileNotFoundError",
+          "message": "[Errno 2] No such file or directory: '/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h025/qa/controls-1793169030637316000/missing_gt_is_error/workspace/gt/expected.json'"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.008,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "helper_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "ValueError",
+          "message": "H025 private scoring drift allocation_io.py"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.008,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "missing_managed_context_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "RuntimeError",
+          "message": "H025 missing managed runtime GENERAL_E2E_OFFICE_LOCK"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.04,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "engine_identity_drift_is_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "OfficeRuntimeError",
+          "message": "OFFICE_EXECUTABLE_DRIFT: /Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/bin/override/soffice"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 0.046,
+        "kind": "infrastructure"
+      },
+      {
+        "name": "better_feasible_plan_is_oracle_error",
+        "status": "PASS",
+        "scores": null,
+        "infrastructure_error": {
+          "type": "ValueError",
+          "message": "H025 feasible candidate improves frozen optimum: oracle contradiction requires review, never candidate zero"
+        },
+        "workspace_unchanged": true,
+        "elapsed_seconds": 2.479,
+        "kind": "infrastructure"
+      }
+    ],
+    "scope": "Source-isolated hard failures, real priority/cost variants, allowed representations and infrastructure faults; author controls only.",
+    "counts": {
+      "positive": 8,
+      "negative": 20,
+      "infrastructure": 5
+    },
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h025/qa/controls-1793169030637316000",
+    "recovery": "All33 accepted cases ran in one successful sequence; no fixture generation or grading recovery."
+  },
+  "source_records": 113,
+  "dual_methods": [
+    "36 integer quantities +36 positive-line binaries +3 plant binaries",
+    "Complete integer feasible per-SKU allocations, one selected option per SKU; 3 plant binaries"
+  ],
+  "four_stages_each": 4,
+  "exact_feasibility_checks_each": 93,
+  "analytic_checks": 6,
+  "native_accounting_checks": 1125,
+  "budget_only_counterexample_cents": 523685,
+  "source_revision": "v2",
+  "reference_sha256": {
+    "allocation.xlsx": "3b8ffa9f97bda280f07ff04ddda8c2714441d9b203973779d7ce3136832a44b7",
+    "decision.md": "4863e28798f95ac4df206814f9115a8f898797ae92864795da4db0b4ecd1dead"
+  },
+  "limits": [
+    "No human supply-chain expert, real model/Harness result or measured L4/discrimination.",
+    "Formal MD/detached Worker acceptance recorded separately.",
+    "No independent alternative optimal matrix claimed; grading does not consume the author matrix, and its removal is a passing positive control."
+  ]
+}

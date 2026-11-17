@@ -1,0 +1,77 @@
+{
+  "schema_version": "h034-artifact-contract/v1",
+  "task_id": "general_hard_research_verification_task_008_visual_paper_figures",
+  "scope": "offline original controlled scientific-plot fiction",
+  "outputs": [
+    {
+      "path": "results/figure_review.xlsx",
+      "kind": "native editable visible self-contained workbook",
+      "logical_content": [
+        "all8 original claims once",
+        "actual judgment target and verdict",
+        "readable numeric values or intervals with units",
+        "axis scale and legend/mark binding",
+        "actual original image local regions",
+        "E01-E04 text linkage",
+        "limitations and unknowns"
+      ]
+    },
+    {
+      "path": "results/review_notes.docx",
+      "kind": "native editable prose/tables",
+      "logical_content": [
+        "comparable descriptions",
+        "invalid extrapolations and counterexamples",
+        "missing statistics quality and causal evidence",
+        "next verification steps"
+      ]
+    }
+  ],
+  "accepted_native_equivalents": [
+    "Chinese/English semantic headers",
+    "reorder/split/combined/long/wide logical tables",
+    "free readable DOCX structure",
+    "static values",
+    "formulas only with trusted actual recalculation"
+  ],
+  "image_regions": {
+    "source": "exact original PNG SHA and actual local evidence",
+    "forms": [
+      "pixel or normalized xyxy",
+      "xywh with declared convention",
+      "polygon",
+      "point plus explicit axis/mark/legend context"
+    ],
+    "forbidden_substitutes": [
+      "whole-image box alone",
+      "constructor geometry presented as independent reading",
+      "labels/numbers detached from source binding"
+    ]
+  },
+  "numeric_rule": "Readable anchor plus publicly specified tolerance; no hidden exact array value or artificially narrow model interval scoring.",
+  "verdict_rule": "Actual fact/compound/proof-sufficiency target matters; label alone never certifies interpretation. No verdict-frequency whitelist.",
+  "artifact_style_rule": "No fixed cell coordinates, Sheet names or reference color/page-count requirements; small structured region records allowed, giant JSON screenshots do not replace core native content.",
+  "private_scoring_boundary": "Missing original image/independent annotation/GT/helper/decoder or unsupported legal representation is evaluator error/pending review, not candidate0.",
+  "public_inputs_sha256": {
+    "figures/F01_budget.png": "08451e387cda7a74c9ffac2b6f15c96b8ab37b8a14aa938f61b2cc14343a7c61",
+    "figures/F02_intervals.png": "ff305b0b1bb655f73c71c087bf82f52bb9d89ac098da9f46610a83a3d80965b8",
+    "figures/F03_latency.png": "b9603a7773845b082db4a19162134af68bd09445f80731ef153cdae6f20b3eeb",
+    "figures/F04_grouping.png": "bf38edc61ed6fef6fb715802324b81f537f0f10a2a844840e377a8186245e745",
+    "paper_excerpts.md": "ff890163fc46f1292a70279a1df8a21625c5e3cf5d0fa9c5fcad2e72010c7318",
+    "reading_tolerance.json": "35d038372eb3dba02e7a146975adfc22659ccef46ff64f0b4f397975ff05271b"
+  },
+  "grading_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "automatic_keys": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "semantic_keys": {
+    "decision_grounding": 0.7,
+    "usable_handoff": 0.3
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": "h019-counterexamples/v1",
+  "date_probes": [
+    "2026-03-01",
+    "2028-02-29"
+  ],
+  "other_probes": [
+    "policy-inputs",
+    "fte-inputs",
+    "hire-inputs"
+  ],
+  "baseline_required_before_probes": true,
+  "targets": "Score changed business fields and total only; all other fields including displayed date must remain correct. Every 12 employee by four outputs plus total and displayed date checked, all six contexts. No changed-result response in all five probes caps business at .5.",
+  "failures": [
+    "constant formula with correct baseline",
+    "365.25 approximation",
+    "Feb29 anniversary on Feb28",
+    "inclusive upper thresholds",
+    "round to nearest half",
+    "zero fte treated as absent",
+    "missing date as zero",
+    "wrong AsOfDate name",
+    "stale cached values"
+  ]
+}

@@ -1,0 +1,199 @@
+{
+  "schema_version": "h027-candidate-answer-contract/v1",
+  "deliverables": [
+    "results/findings.xlsx",
+    "results/source_ledger.json",
+    "results/answer.md"
+  ],
+  "required_business_fields": [
+    "两年度版本、首次发布/修订日期和截止日选择依据",
+    "指标、单位、统计年或未知时间口径",
+    "各版已公布数值国家行的储量前三名，排除Other和World且不把NA当0",
+    "各版最新统计年度矿山产量前三名",
+    "中国/世界产量比及储量占比界限、分子分母与算式",
+    "共用产量统计年全表逐行重述，含未变行和世界原数，不用国家求和替代总计",
+    "实际搜索、读源、引用定位和证据强度",
+    "版本改变及未知/不可比/单源边界说明"
+  ],
+  "xlsx_tables": {
+    "versions": [
+      "report_year",
+      "version",
+      "publication_date",
+      "revision_date",
+      "latest_production_year",
+      "reserves_statistical_year",
+      "unit",
+      "citation_ids"
+    ],
+    "rankings": [
+      "report_year",
+      "metric",
+      "statistical_year",
+      "rank",
+      "country",
+      "value",
+      "unit",
+      "citation_ids"
+    ],
+    "shares": [
+      "report_year",
+      "metric",
+      "statistical_year",
+      "china_value",
+      "world_value",
+      "world_relation",
+      "share_relation",
+      "share_value",
+      "citation_ids"
+    ],
+    "revisions": [
+      "statistical_year",
+      "country",
+      "older_report",
+      "newer_report",
+      "older_value",
+      "newer_value",
+      "delta",
+      "unit",
+      "citation_ids"
+    ]
+  },
+  "xlsx_layout": "Sheet名、起始位置、行列顺序、分表合表、辅助列不限；各表用一行清楚语义表头，英文键或以下中文别名均接受；静态正确表或实际可重算公式均接受。不得隐藏核心结果。",
+  "aliases": {
+    "report_year": [
+      "报告年",
+      "报告年度"
+    ],
+    "version": [
+      "版本",
+      "卷版本"
+    ],
+    "publication_date": [
+      "首次发布日期",
+      "发布日期"
+    ],
+    "revision_date": [
+      "修订日期"
+    ],
+    "latest_production_year": [
+      "最新产量统计年"
+    ],
+    "reserves_statistical_year": [
+      "储量统计年"
+    ],
+    "unit": [
+      "单位"
+    ],
+    "citation_ids": [
+      "引用ID",
+      "引用编号"
+    ],
+    "metric": [
+      "指标"
+    ],
+    "statistical_year": [
+      "统计年"
+    ],
+    "rank": [
+      "排名"
+    ],
+    "country": [
+      "国家",
+      "国家或地区"
+    ],
+    "value": [
+      "数值",
+      "数量"
+    ],
+    "china_value": [
+      "中国数值",
+      "中国数量"
+    ],
+    "world_value": [
+      "世界数值",
+      "世界数量"
+    ],
+    "world_relation": [
+      "世界数关系"
+    ],
+    "share_relation": [
+      "占比关系"
+    ],
+    "share_value": [
+      "占比",
+      "占比值"
+    ],
+    "older_report": [
+      "旧版报告年"
+    ],
+    "newer_report": [
+      "新版报告年"
+    ],
+    "older_value": [
+      "旧版数值"
+    ],
+    "newer_value": [
+      "新版数值"
+    ],
+    "delta": [
+      "修订差额"
+    ]
+  },
+  "metrics": {
+    "mine_production": [
+      "矿山产量",
+      "产量"
+    ],
+    "reserves": [
+      "储量"
+    ]
+  },
+  "value_conventions": {
+    "quantities": "数量统一为公吨REO当量（tonnes_REO或吨REO），也接受单位清楚的万/百万吨REO并正确换算。不要用金属矿石毛重或资源量代替储量。",
+    "share_value": "用0至1数值比例（Excel可百分比显示），给出分子与世界分母；share_relation为approximately_equal/约等于、<或明确等价。若世界数仅为界限，world_value填阈值并在world_relation保留原比较符。 自动数值复核接受按百分比保留两位小数的常规舍入：比例绝对误差不超过0.00005（0.005个百分点）；这不改变上下界的方向或允许虚构精确世界总量。",
+    "unknown": "未知/未注明/NA用空白、null或明确未知文字，与真实0分开。储量统计年没有原文明示时不猜。",
+    "citation_ids": "一个或多个在source_ledger.json存在的citation_id，可JSON数组或清楚分隔的文本。",
+    "revisions": "全表共用产量统计年，列每一国家、Other及World；delta=新版减旧版，不要求相对变化百分比。",
+    "shares_coverage": "两年度版本各提供最新产量与储量占比；另提供新版对共用统计年的中国/世界产量比，以便比较同年重述。"
+  },
+  "source_ledger": {
+    "top": [
+      "searches",
+      "sources",
+      "limitations"
+    ],
+    "searches": "实际执行的query或导航条件、observed_at及candidate_source_ids；若只观察不到过程，明确unknown，不编造调用。",
+    "sources_fields": [
+      "source_id",
+      "url",
+      "access_status",
+      "accessed_at",
+      "title",
+      "publisher",
+      "citations"
+    ],
+    "access_status": [
+      "read_full",
+      "read_excerpt",
+      "search_only",
+      "unavailable"
+    ],
+    "source_dates": "可另填实际识别的report_year、reported_publication_date、reported_revision_label、reported_revision_date；日期仍须引用原文，不以网页HTTP日期代替。",
+    "citation_fields": [
+      "citation_id",
+      "locator",
+      "quote"
+    ],
+    "locator": "PDF用包含实际PDF页码的对象，如{\"page\":2,\"printed_page\":153}；全文卷的PDF页码与印刷页码可能不同，须区分。HTML/文本用实际标题或行段定位，可用{\"heading\":\"标题\"}或{\"lines\":[起,止]}。",
+    "quote": "实际读取来源中的短原文片段；保留足以定位事实的上下文，不能把自己的转述或搜索摘要标成已读全文。",
+    "source_identity": "不同有效的公开搜索策略、官方落地页、DOI、章PDF、完整卷或能支持主张的其它来源均可；参考网址不是唯一合法列表，转载不算独立一手支持。"
+  },
+  "answer_md": "写明主要结论、版本变化、同年修订与跨年变化的区别、单位/脚注及未知/单源/时点局限；引用稳定citation_id。数值事实放入工作簿，说明与表一致。",
+  "limits": {
+    "max_each_delivery_bytes": 5242880,
+    "input_immutable": true,
+    "no_account_or_messages_or_paid_api": true,
+    "requires_visual_understanding": false
+  }
+}

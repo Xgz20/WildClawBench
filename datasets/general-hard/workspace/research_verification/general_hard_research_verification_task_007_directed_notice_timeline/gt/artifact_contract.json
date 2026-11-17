@@ -1,0 +1,1405 @@
+{
+  "schema_version": "h033.artifact-contract/v2",
+  "status": "SOURCE_FIRST_PUBLIC_CONTRACT_ADOPTED_RULES_AND_REFERENCE_PENDING",
+  "facts_free": true,
+  "provenance": {
+    "authoring_mode": "source_first_nonblind_model_only",
+    "blueprint_sha256": "71a9a5f52c1e742a6b1862b05e0a0e8f4ace3e77230080c3ea2f450787807207",
+    "source_truth_sha256": "86f83b9da693a5041283c18f9dff36b48f18192f9f05ce26418ef2239ae43a0d",
+    "source_pool_is_not_whitelist": true,
+    "new_independent_discovery": false,
+    "network_in_this_stage": false,
+    "human_expert_review": false,
+    "Harness_or_Judge_validation": false
+  },
+  "blueprint_identity": {
+    "order": 33,
+    "task_id": "general_hard_research_verification_task_007_directed_notice_timeline",
+    "name": "定向官网检索：跨部门通知与办理时间线",
+    "category": "research_verification",
+    "category_name": "研究检索与证据核验",
+    "difficulty": "L4",
+    "difficulty_status": "design_estimate_unvalidated",
+    "tags": [
+      "custom",
+      "general-hard"
+    ],
+    "modality": "pure-text",
+    "requires_visual_input": false,
+    "coding_primary": false
+  },
+  "preserved_metadata": {
+    "timeout_seconds": 900,
+    "timeout_semantics": "900为任务元数据草案，General E2E不据此设置候选总执行截止或能力评分；评分Worker与基础设施保护独立配置。",
+    "attachment_size_limit_mb": 5,
+    "attachment_size_limit_interpretation": "原蓝图任务素材元数据；不是学校材料规则，不据此创造业务附件大小限制。",
+    "readiness": "design_only_not_release_ready"
+  },
+  "public_inputs": [
+    {
+      "path": "official_entries.json",
+      "workspace_path": "/tmp_workspace/official_entries.json",
+      "kind": "json",
+      "role": "three_official_entry_discovery_and_identity_scope",
+      "draft_file_sha256": "809d33911312c97b2f8ee21443f563bb0de634c06988cadc86541173e5019691"
+    },
+    {
+      "path": "research_window.json",
+      "workspace_path": "/tmp_workspace/research_window.json",
+      "kind": "json",
+      "role": "September_publication_window_date_roles_and_research_time",
+      "draft_file_sha256": "e1075587aeb53f6d8f4a2e34291342d88ddab7e9e0ad359a99dec41a80d68f07"
+    },
+    {
+      "path": "user_profile.md",
+      "workspace_path": "/tmp_workspace/user_profile.md",
+      "kind": "markdown",
+      "role": "explicit_synthetic_profile_and_unknown_personal_states",
+      "draft_file_sha256": "ae3fb0cac96f842d62606391e627ef30ed3ce1a21d0d9127aaa7a3212c403551"
+    },
+    {
+      "path": "delivery_contract.md",
+      "workspace_path": "/tmp_workspace/delivery_contract.md",
+      "kind": "markdown",
+      "role": "proposed_additional_public_input_for_equal_delivery_requirements",
+      "draft_file_sha256": "8a4cbe4ba0f246f3465793587e9f16038f695eea175a13219e7a5aae3958f5a1"
+    }
+  ],
+  "required_outputs": [
+    {
+      "path": "/tmp_workspace/results/notice_timeline.xlsx",
+      "kind": "native_xlsx",
+      "requirement": "通知身份、原发/转发、对象、期限、依赖和有效状态"
+    },
+    {
+      "path": "/tmp_workspace/results/source_ledger.json",
+      "kind": "utf8_json",
+      "requirement": "实际详情页、附件、版本关系与定位"
+    },
+    {
+      "path": "/tmp_workspace/results/action_plan.docx",
+      "kind": "native_docx",
+      "requirement": "对合成学生适用的待办、优先级、冲突及未知"
+    }
+  ],
+  "identity_semantics": {
+    "carrier_id": "一个URL/实际响应资源，保留请求/最终URL和原采集事件",
+    "document_id": "一份通知正文或附件文书的可区分版本；并行载体可归并但仍保留载体",
+    "matter_id": "同一业务目标的非穷尽范围，可含多个通知、层级和阶段",
+    "no_fixed_record_count": true,
+    "no_minimum_notices_or_queries": true,
+    "same_matter_is_not_same_document": true,
+    "missing_evidence_does_not_prove_repost_order": true
+  },
+  "public_profile": {
+    "institution": "河北大学法学院",
+    "cohort": "2023级",
+    "program_duration_years": 4,
+    "degree_level": "在籍法学本科",
+    "expected_graduating_class": "2027届",
+    "profile_is_explicit_author_assumption": true,
+    "all_individual_qualifications_membership_payment_registration_application_intent_and_personal_states": "unknown"
+  },
+  "office_equivalence": {
+    "language": "Chinese or semantically equivalent Chinese labels and prose",
+    "free_layout": true,
+    "fixed_sheet_or_column_or_cell_template": false,
+    "static_content_accepted": true,
+    "formulas_required": false,
+    "formula_presence_bonus": false,
+    "native_text_or_cells_extractable": true,
+    "renamed_HTML_images_or_PDF_as_Office_not_equivalent": true,
+    "screenshots_not_required": true,
+    "DOCX_XLSX_macros_or_external_link_execution": false,
+    "formula_check_if_present": {
+      "candidate_cache_is_not_truth": true,
+      "score_on_separate_frozen_copy": true,
+      "locked_actual_recalculation_engine_required": true,
+      "actual_recomputed_values_and_formula_errors_read_back": true,
+      "unavailable_engine_is_infrastructure_not_fabricated_PASS": true,
+      "perturbation_only_if_actual_claimed_dynamic_calculation_semantics_require_it": true
+    }
+  },
+  "source_ledger_schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "urn:h033:source-ledger:v2-canonical-nested-citations",
+    "type": "object",
+    "properties": {
+      "schema_version": {
+        "const": "h033.source-ledger/v1"
+      },
+      "research_context": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "const": "general_hard_research_verification_task_007_directed_notice_timeline"
+          },
+          "publication_window": {
+            "type": "object",
+            "properties": {
+              "timezone": {
+                "const": "Asia/Shanghai"
+              },
+              "start_inclusive": {
+                "const": "2026-09-01T00:00:00+08:00"
+              },
+              "end_exclusive": {
+                "const": "2026-10-01T00:00:00+08:00"
+              }
+            },
+            "required": [
+              "timezone",
+              "start_inclusive",
+              "end_exclusive"
+            ],
+            "additionalProperties": true
+          },
+          "profile_assumption": {
+            "type": "string"
+          },
+          "started_at_utc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "finished_at_utc": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "investigation_scope": {
+            "type": "string"
+          },
+          "limitations": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "task_id",
+          "publication_window",
+          "profile_assumption",
+          "started_at_utc",
+          "finished_at_utc",
+          "investigation_scope",
+          "limitations"
+        ],
+        "additionalProperties": true
+      },
+      "discovery_observations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "discovery_id": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string",
+              "enum": [
+                "web_search",
+                "site_search",
+                "site_navigation",
+                "other",
+                "unknown"
+              ]
+            },
+            "query_or_navigation_condition": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "candidate_urls": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "observed_at_utc": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "trace_refs": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "observation_state": {
+              "type": "string",
+              "enum": [
+                "candidate_record_only",
+                "observable_trace_reference",
+                "unknown"
+              ]
+            },
+            "limitation": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          "required": [
+            "discovery_id",
+            "method",
+            "query_or_navigation_condition",
+            "candidate_urls",
+            "observed_at_utc",
+            "trace_refs",
+            "observation_state",
+            "limitation"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "carriers": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "carrier_id": {
+              "type": "string"
+            },
+            "requested_url": {
+              "type": "string"
+            },
+            "final_url": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "department": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "title": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "parent_carrier_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "declared_filename": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "observed_content_kind": {
+              "type": "string",
+              "enum": [
+                "html_notice",
+                "native_docx",
+                "native_xlsx",
+                "native_xls",
+                "pdf_text",
+                "pdf_image_only",
+                "search_snippet",
+                "html_captcha",
+                "login_page",
+                "other",
+                "unknown"
+              ]
+            },
+            "access": {
+              "type": "object",
+              "properties": {
+                "attempted": {
+                  "type": "boolean"
+                },
+                "started_at_utc": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "finished_at_utc": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "http_status": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "observed_media_type": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "body_sha256_candidate_reported": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "read_status": {
+                  "type": "string",
+                  "enum": [
+                    "not_attempted",
+                    "accessed_unread",
+                    "read_excerpt",
+                    "read_relevant_body",
+                    "read_native_content",
+                    "blocked",
+                    "unknown"
+                  ]
+                },
+                "trace_refs": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "observation_state": {
+                  "type": "string",
+                  "enum": [
+                    "candidate_record_only",
+                    "observable_trace_reference",
+                    "unknown"
+                  ]
+                },
+                "error_or_limit": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "attempted",
+                "started_at_utc",
+                "finished_at_utc",
+                "read_status",
+                "trace_refs",
+                "observation_state",
+                "error_or_limit"
+              ],
+              "additionalProperties": true
+            },
+            "url": {
+              "type": "string"
+            },
+            "access_status": {
+              "type": "string",
+              "enum": [
+                "read_full",
+                "read_excerpt",
+                "search_only",
+                "unavailable"
+              ]
+            },
+            "accessed_at": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "unknown_reason": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "citations": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/citation"
+              }
+            }
+          },
+          "required": [
+            "carrier_id",
+            "final_url",
+            "department",
+            "title",
+            "parent_carrier_ids",
+            "observed_content_kind",
+            "url",
+            "access_status",
+            "accessed_at",
+            "citations"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "documents": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "document_id": {
+              "type": "string"
+            },
+            "document_kind": {
+              "type": "string",
+              "enum": [
+                "notice",
+                "attachment"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "carrier_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "date_fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/date_value"
+              }
+            },
+            "publication_window_status": {
+              "type": "string",
+              "enum": [
+                "in_window",
+                "out_of_window",
+                "unknown",
+                "not_a_notice"
+              ]
+            },
+            "version_status": {
+              "type": "string",
+              "enum": [
+                "observed_version",
+                "explicitly_revised",
+                "explicitly_superseded",
+                "unknown"
+              ]
+            },
+            "identity_or_version_citation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "document_id",
+            "document_kind",
+            "title",
+            "carrier_ids",
+            "date_fields",
+            "publication_window_status",
+            "version_status",
+            "identity_or_version_citation_ids"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "matters": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "matter_id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "document_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "selection": {
+              "type": "string",
+              "enum": [
+                "selected",
+                "excluded",
+                "context_only",
+                "unknown"
+              ]
+            },
+            "selection_reason": {
+              "type": "string"
+            },
+            "profile_relevance": {
+              "type": "string",
+              "enum": [
+                "potentially_applicable",
+                "not_applicable",
+                "context_only",
+                "unknown"
+              ]
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            },
+            "claim_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "matter_id",
+            "label",
+            "document_ids",
+            "selection",
+            "selection_reason",
+            "profile_relevance",
+            "conditions",
+            "claim_ids"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "claims": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "claim_id": {
+              "type": "string"
+            },
+            "statement": {
+              "type": "string"
+            },
+            "claim_kind": {
+              "type": "string",
+              "enum": [
+                "source_statement",
+                "author_inference",
+                "unknown"
+              ]
+            },
+            "entity_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entity_ref"
+              }
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            },
+            "citation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "support_status": {
+              "type": "string",
+              "enum": [
+                "supported",
+                "partial",
+                "unsupported",
+                "unknown"
+              ]
+            },
+            "boundary": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "claim_id",
+            "statement",
+            "claim_kind",
+            "entity_refs",
+            "conditions",
+            "citation_ids",
+            "support_status",
+            "boundary"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "actions": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "action_id": {
+              "type": "string"
+            },
+            "matter_id": {
+              "type": "string"
+            },
+            "label": {
+              "type": "string"
+            },
+            "actor": {
+              "type": "string"
+            },
+            "conditions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/condition"
+              }
+            },
+            "date_fields": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/date_value"
+              }
+            },
+            "prerequisite_claim_or_action_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exclusion_claim_or_action_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "citation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "personal_status": {
+              "const": "unknown"
+            },
+            "priority": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "priority_reason": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "action_id",
+            "matter_id",
+            "label",
+            "actor",
+            "conditions",
+            "date_fields",
+            "prerequisite_claim_or_action_ids",
+            "exclusion_claim_or_action_ids",
+            "citation_ids",
+            "personal_status",
+            "priority_reason"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "relations": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "relation_id": {
+              "type": "string"
+            },
+            "from": {
+              "$ref": "#/$defs/entity_ref"
+            },
+            "to": {
+              "$ref": "#/$defs/entity_ref"
+            },
+            "relation_type": {
+              "type": "string",
+              "enum": [
+                "same_document_carrier",
+                "explicit_repost",
+                "revision",
+                "supersedes",
+                "attachment_of",
+                "college_implements_school",
+                "stage_followup",
+                "prerequisite",
+                "conditional_exclusion",
+                "same_matter",
+                "other"
+              ]
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "supported",
+                "inferred",
+                "unknown"
+              ]
+            },
+            "citation_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "claim_ids": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "explanation": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "relation_id",
+            "from",
+            "to",
+            "relation_type",
+            "status",
+            "citation_ids",
+            "claim_ids",
+            "explanation"
+          ],
+          "additionalProperties": true
+        }
+      },
+      "unknowns": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "unknown_id": {
+              "type": "string"
+            },
+            "entity_refs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/entity_ref"
+              }
+            },
+            "field": {
+              "type": "string"
+            },
+            "reason": {
+              "type": "string"
+            },
+            "effect_on_conclusion_or_action": {
+              "type": "string"
+            },
+            "possible_followup": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "unknown_id",
+            "entity_refs",
+            "field",
+            "reason",
+            "effect_on_conclusion_or_action",
+            "possible_followup"
+          ],
+          "additionalProperties": true
+        }
+      }
+    },
+    "required": [
+      "schema_version",
+      "research_context",
+      "discovery_observations",
+      "carriers",
+      "documents",
+      "matters",
+      "claims",
+      "actions",
+      "relations",
+      "unknowns"
+    ],
+    "additionalProperties": true,
+    "$defs": {
+      "entity_ref": {
+        "type": "object",
+        "properties": {
+          "entity_type": {
+            "type": "string",
+            "enum": [
+              "carrier",
+              "document",
+              "matter",
+              "claim",
+              "action",
+              "unknown"
+            ]
+          },
+          "entity_id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "entity_type",
+          "entity_id"
+        ],
+        "additionalProperties": true
+      },
+      "date_value": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "webpage_publication",
+              "body_signoff",
+              "attachment_version",
+              "action_opens",
+              "action_deadline",
+              "action_window",
+              "system_unavailable",
+              "source_access",
+              "other",
+              "unknown"
+            ]
+          },
+          "raw_text": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "normalized_start": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "normalized_end": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "precision": {
+            "type": "string",
+            "enum": [
+              "date",
+              "minute",
+              "second",
+              "month",
+              "year",
+              "range",
+              "daily_recurrence",
+              "mixed",
+              "unknown"
+            ]
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "timezone_basis": {
+            "type": "string",
+            "enum": [
+              "source_explicit",
+              "task_context",
+              "unknown"
+            ]
+          },
+          "actor": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "citation_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "role",
+          "raw_text",
+          "normalized_start",
+          "normalized_end",
+          "precision",
+          "timezone",
+          "timezone_basis",
+          "actor",
+          "citation_ids"
+        ],
+        "additionalProperties": true
+      },
+      "condition": {
+        "type": "object",
+        "properties": {
+          "statement": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "source_condition",
+              "author_inference",
+              "unknown"
+            ]
+          },
+          "citation_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "statement",
+          "status",
+          "citation_ids"
+        ],
+        "additionalProperties": true
+      },
+      "locator": {
+        "oneOf": [
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "html"
+              },
+              "xpath": {
+                "type": "string"
+              },
+              "css_selector": {
+                "type": "string"
+              },
+              "text_anchor": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type"
+            ],
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "required": [
+                  "xpath"
+                ]
+              },
+              {
+                "required": [
+                  "css_selector"
+                ]
+              },
+              {
+                "required": [
+                  "text_anchor"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "pdf"
+              },
+              "physical_page_1based": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "section_or_table": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "physical_page_1based"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "docx"
+              },
+              "part": {
+                "type": "string"
+              },
+              "paragraph_1based": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "table_1based": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "row_1based": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "cell_1based": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "xpath": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "part"
+            ],
+            "additionalProperties": true,
+            "anyOf": [
+              {
+                "required": [
+                  "xpath"
+                ]
+              },
+              {
+                "required": [
+                  "paragraph_1based"
+                ]
+              },
+              {
+                "required": [
+                  "table_1based",
+                  "row_1based"
+                ]
+              }
+            ]
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "xlsx"
+              },
+              "sheet": {
+                "type": "string"
+              },
+              "cell_or_range": {
+                "type": "string"
+              },
+              "part": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "value_role": {
+                "type": "string",
+                "enum": [
+                  "literal_value",
+                  "formula_text",
+                  "cached_result_unverified",
+                  "recalculated_result_with_receipt",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "sheet",
+              "cell_or_range",
+              "value_role"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "legacy_xls"
+              },
+              "sheet": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cell_or_range": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "read_status": {
+                "type": "string",
+                "enum": [
+                  "native_read",
+                  "unparsed",
+                  "unknown"
+                ]
+              }
+            },
+            "required": [
+              "type",
+              "read_status"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "search_snippet"
+              },
+              "discovery_id": {
+                "type": "string"
+              },
+              "result_position": {
+                "type": [
+                  "integer",
+                  "null"
+                ],
+                "minimum": 1
+              }
+            },
+            "required": [
+              "type",
+              "discovery_id"
+            ],
+            "additionalProperties": true
+          },
+          {
+            "type": "object",
+            "properties": {
+              "type": {
+                "const": "unavailable"
+              },
+              "reason": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "type",
+              "reason"
+            ],
+            "additionalProperties": true
+          }
+        ]
+      },
+      "citation": {
+        "type": "object",
+        "properties": {
+          "citation_id": {
+            "type": "string"
+          },
+          "quote": {
+            "type": "string"
+          },
+          "locator": {
+            "$ref": "#/$defs/locator"
+          },
+          "supports_fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "relation": {
+            "type": "string",
+            "enum": [
+              "supports",
+              "refutes",
+              "qualifies"
+            ]
+          },
+          "carrier_id": {
+            "type": "string"
+          },
+          "evidence_kind": {
+            "type": "string",
+            "enum": [
+              "actual_html_body",
+              "native_docx_text",
+              "native_xlsx_cells",
+              "native_xls_cells",
+              "physical_pdf_text",
+              "search_snippet",
+              "barrier_response",
+              "unknown"
+            ]
+          },
+          "supports_claim_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "quote_normalization": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "citation_id",
+          "quote",
+          "locator",
+          "supports_fields",
+          "relation"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "semantic_integrity_requirements": [
+    "IDs各集合内唯一，所有实体/引用/条件/动作关联可解析；URI、ID及schema合法不证明语义。",
+    "date_value保留原文、精度、角色、主体及来源；unknown允许null并给限制；不得补日期、时刻或个人确认期限。",
+    "HTML文字定位须能在独立来源中重定位；不得靠删除数字/标点修复quote。节点边界空格规则需显式区分。",
+    "DOCX locator对应实际部件/段/表；XLSX对应实际工作表/单元格；不得从摘要或验证码HTML伪造原生定位。",
+    "carrier与document实际类型必须一致；HTML验证码HTTP200不是标称附件；旧XLS不可读时内容unknown。",
+    "公开统计/名单存在与个人资格/名单成员身份分开，actions.personal_status保持unknown。",
+    "跨Office与JSON核对关键事实/日期/主体/条件/状态，不以固定布局或相同字面措辞检查语义一致。",
+    "窗外关联材料允许context_only，不能计成九月发布通知；参考源池不构成URL/事项白名单。",
+    "不要求冲突、更正或延期存在；不同院校阶段/主体/动作的时点差异不自动形成该类事件。"
+  ],
+  "process_evidence_boundary": {
+    "candidate_ledger_is_claim_not_proof": true,
+    "actual_search_or_navigation_requires_bound_tool_observation": true,
+    "actual_reading_requires_content_return_and_relevant_trace_context": true,
+    "independent_source_fetch_proves_source_content_not_candidate_reading": true,
+    "cross_tool_name_normalization_required": true,
+    "unobserved_is_unknown_not_zero": true,
+    "absence_proven_only_with_complete_bound_trajectory_and_fair_tool_availability": true
+  },
+  "independent_source_evidence_gate": {
+    "required_framework": "collector policy-v2",
+    "integration_status": "required_pending_actual_parent_framework_binding_and_preflight",
+    "this_file_does_not_claim_an_implemented_adapter": true,
+    "offline_rules_or_Judge_must_not_trust_candidate_snapshots_as_independent_source": true,
+    "independent_collection_before_offline_scoring": true,
+    "native_DOCX_XLSX_actual_source_support_required": true,
+    "search_only_is_not_acceptable_for_native_DOCX_XLSX_source_verification": true,
+    "requirements": [
+      "实际GET原始字节与请求/最终URL、访问时间、状态、media type、SHA、collector版本回执绑定",
+      "重定向逐跳遵循相同官方范围/公开地址和TLS策略；HTTP与HTTPS证明边界分开",
+      "用实际响应magic/container判断内容，不以扩展名或HTTP200代替",
+      "DOCX/XLSX通过真实policy-v2框架受控原生解析到部件/段/表或工作表/单元格，保留原字节和派生hash/解析版本",
+      "不可读/验证码/登录/旧XLS不支持分别保留可用性状态，不转search_only假装原件可读",
+      "从候选池外合格URL同标准独立采集，不硬匹配作者池",
+      "将独立源字节/原生定位交给离线规则与供证Judge；规则本身不联网或调用LLM"
+    ],
+    "release_preflight_required": [
+      "真实HTML正文与DOCX/XLSX分别完成policy-v2端到端获取/解析/quote定位",
+      "验证码HTML和扩展名错认反例不能进入原生附件成功分支",
+      "来源异常、解析失败、工具轨迹缺口与候选错误的状态区分",
+      "三端输入映射、检索/读源轨迹、原生交付与统一重算能力分别确认"
+    ],
+    "missing_required_independent_evidence": "evaluation_input_incomplete_or_infrastructure_error_not_candidate_zero_or_assumed_PASS"
+  },
+  "scoring_proposal": {
+    "baseline_outer_weights": {
+      "automated": 0.4,
+      "llm_judge": 0.6
+    },
+    "baseline_automated_internal": [
+      {
+        "key": "record_contract",
+        "weight": 0.2
+      },
+      {
+        "key": "time_and_scope",
+        "weight": 0.25
+      },
+      {
+        "key": "citation_resolution",
+        "weight": 0.4
+      },
+      {
+        "key": "protected_delivery",
+        "weight": 0.15
+      }
+    ],
+    "baseline_judge_internal": [
+      {
+        "key": "factual_support",
+        "weight": 0.5
+      },
+      {
+        "key": "coverage_and_independence",
+        "weight": 0.3
+      },
+      {
+        "key": "bounded_conclusions",
+        "weight": 0.2
+      }
+    ],
+    "recommended_outer_weights": {
+      "automated": 0.3,
+      "llm_judge": 0.7
+    },
+    "recommended_internal_weights_unchanged_from_blueprint": true,
+    "recommendation_status": "requires_author_decision_not_applied_to_blueprint_or_repository",
+    "rationale": "开放相关性、对象条件、院校阶段和语义支持不能由格式/URL/日期匹配代替；降低自动层占比，保留可复算结构与引文定位检查。",
+    "details": "scoring-design-proposal.md"
+  },
+  "readiness": {
+    "public_inputs_drafted": true,
+    "native_Office_files_created": false,
+    "formal_exec_GT_reference_marker_created": false,
+    "collector_policy_v2_end_to_end_validated_in_this_stage": false,
+    "actual_formula_recalculation_validated_in_this_stage": false,
+    "human_expert_review": false,
+    "Harness_runs": false,
+    "Judge_runs": false,
+    "scientific_difficulty_or_scoring_validated": false
+  },
+  "root_resolution": {
+    "four_clients": [
+      "AstronStudio",
+      "WorkBuddy",
+      "QwenWork",
+      "DoubaoWork"
+    ],
+    "collector_mapping": {
+      "sources_key": "carriers",
+      "source_id_key": "carrier_id",
+      "url_key": "url",
+      "access_status_key": "access_status",
+      "citations_key": "citations"
+    },
+    "canonical_citations": "nested carriers[].citations with globally unique CID, quote/locator/supports_fields/relation; no compulsory duplicate flat collection",
+    "public_contract_authority": "exec/delivery_contract.md; reviewed root supplement supersedes draft flat-citation and three-client wording",
+    "weights": {
+      "automated": 0.4,
+      "llm_judge": 0.6
+    },
+    "weight_decision": "Retain approved blueprint baseline;30/70 proposal remains a calibration hypothesis, not a measured improvement.",
+    "source_pool_not_whitelist": true,
+    "fixed_notice_matter_or_conflict_count": null,
+    "personal_status": "unknown; no real individual identity or completion claim",
+    "model_review_not_human_expert": true,
+    "machine_schema_alignment": {
+      "previous_artifact_sha256": "36049efaf1cdf5cfe1dd0cfad3812d4633fa74a6a08444515ea5cfa29f686034",
+      "authority_unchanged": "exec/delivery_contract.md frozen supplement",
+      "only_machine_structure_changed": true,
+      "canonical_source_and_citation_mapping_unchanged": true,
+      "public_input_or_scientific_oracle_changed": false,
+      "flat_citation_index_required": false
+    }
+  }
+}

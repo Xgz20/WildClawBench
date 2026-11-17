@@ -1,0 +1,30 @@
+key	source_path	archive_path	sha256	bytes	status
+batch-01/report.txt	source_tree/batch-01/report.txt	archive/batch-01/report.txt	c978e17cd69bd7bcf5279fd4fe166fdb01ed1f028f893e9d27522fcc0450aa96	65	verified
+batch-01/资料 02.txt	source_tree/batch-01/资料 02.txt	archive/batch-01/资料 02.txt	18c35cd84958eeaf37812c89090b7c2a9e439873968dd15978cb978e0e4f8c27	65	verified
+batch-01/资料 03.txt	source_tree/batch-01/资料 03.txt	archive/batch-01/资料 03.txt	74a4967557225751b9ef01f77a64c2241c3eb80b97e9d503d58b90e790eb073b	65	verified
+batch-01/资料 04.txt	source_tree/batch-01/资料 04.txt	archive/batch-01/资料 04.txt	bac58fb22a8951aeb4a9d06d6bf9564792200d951f4edf3f8696b5695bae0b0b	65	verified
+batch-01/资料 05.txt	source_tree/batch-01/资料 05.txt	archive/batch-01/资料 05.txt	5229fe5d7332458e4ccfdab3e61515721cde711cba9cada8c40c3230b20e1bc1	65	verified
+batch-01/资料 06.txt	source_tree/batch-01/资料 06.txt	archive/batch-01/资料 06.txt	dc6c69c395f64282fe8320244ab60e977e80b15f07fbf04626cc5c1a1a2b0184	65	verified
+batch-01/资料 07.txt	source_tree/batch-01/资料 07.txt	archive/batch-01/资料 07.txt	4bd7f91ffa2717fe298dda7542d23000b91d9daf6316187033dae339614bb152	65	verified
+batch-01/资料 08.txt	source_tree/batch-01/资料 08.txt	archive/batch-01/资料 08.txt	7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984	65	verified
+batch-01/资料 08.txt	source_tree/batch-01/资料 08.txt	archive/batch-01/资料 08.txt	7e18052174aac57bde6d93965c77cf390b8cb19faf11ffe2240d47656f382984	65	pending
+batch-01/资料 09.txt	source_tree/batch-01/资料 09.txt	archive/batch-01/资料 09.txt	b81deedec858d31110bac381a51b68fbf8d6c0b69645cc883934a852cd8db79e	65	verified
+batch-01/资料 10.txt	source_tree/batch-01/资料 10.txt	archive/batch-01/资料 10.txt	b0ba9e640d5bc86a584c7476e6fc7233d6f99e7e35082543b0bf8eef7e47c122	65	verified
+batch-02/report.txt	source_tree/batch-02/report.txt	archive/batch-02/report.txt	db85251a0f874dd664e5ffc70e22e834dec2e3f42b2620ae57b4ae57fa382d39	65	verified
+batch-02/资料 02.txt	source_tree/batch-02/资料 02.txt	archive/batch-02/资料 02.txt	7e4651233122fb15ec3dc12706749907c2f81dd2f96bdea648835483a636411d	65	verified
+batch-02/资料 09.txt	source_tree/batch-02/资料 09.txt	archive/batch-02/资料 09.txt	4665f54528d8b88cfab136eac4bea1c2b6fe88c723e07d08b5e0d2950849f5f0	65	verified
+batch-02/资料 10.txt	source_tree/batch-02/资料 10.txt	archive/batch-02/资料 10.txt	3949597c656ad0f15280e05b4f06b489833fc56f5c98dcdbfceffad93e9635e6	65	verified
+batch-03/report.txt	source_tree/batch-03/report.txt	archive/batch-03/report.txt	1df5b107f37b9eea82dbd94a511f2e1729e2b885eccf9bd9f41f0ccebb7c92d2	65	verified
+batch-03/café.txt	source_tree/batch-03/café.txt	archive/batch-03/café.txt	ca727960e67a4f43e35c0c2e7de147d485c669d72b726546c9d171521d941d26	65	verified
+batch-03/资料 03.txt	source_tree/batch-03/资料 03.txt	archive/batch-03/资料 03.txt	66f4af898f784dd3e7425e1553c12fd354a14b212957fe4a6669494ea3960732	65	verified
+batch-03/资料 04.txt	source_tree/batch-03/资料 04.txt	archive/batch-03/资料 04.txt	afdbc3492b85cc036a8839a8d0d2670b851bd4adf1684010f3421aa5de8eab88	65	verified
+batch-03/资料 05.txt	source_tree/batch-03/资料 05.txt	archive/batch-03/资料 05.txt	711f4edb76c0ff134857f510f706dfe85afd3d33b08e22b2b8dfd1edd5cca718	65	verified
+batch-03/资料 06.txt	source_tree/batch-03/资料 06.txt	archive/batch-03/资料 06.txt	a0e138dc6581f821b7e688eaf7345e49c7f949a2c111e09c16c4682371c2850a	65	verified
+batch-03/资料 07.txt	source_tree/batch-03/资料 07.txt	archive/batch-03/资料 07.txt	ba43c10ada7592bd7d197216555f1bf16ef614deb56510ab83e1d7f37e0255b3	65	verified
+batch-03/资料 08.txt	source_tree/batch-03/资料 08.txt	archive/batch-03/资料 08.txt	8f3e388c8b2f74308d2f9c2202988c88b361fc0b1f5b83a91c276963d75228ab	65	verified
+batch-03/资料 09.txt	source_tree/batch-03/资料 09.txt	archive/batch-03/资料 09.txt	007392ad677990a7a5f1abefa4a61ceaff13f76eb3c1c67e393ea87fe05463df	65	verified
+batch-03/资料 10.txt	source_tree/batch-03/资料 10.txt	archive/batch-03/资料 10.txt	5a9040a5e4d382c4788e3b1eb1f734c6de46123123a5fc1232a2bac0a71712f6	65	verified
+batch-04/report.txt	source_tree/batch-04/report.txt	archive/batch-04/report.txt	0000000000000000000000000000000000000000000000000000000000000000	999	verified
+batch-04/资料 02.txt	source_tree/batch-04/资料 02.txt	archive/batch-04/资料 02.txt	0000000000000000000000000000000000000000000000000000000000000000	999	verified
+batch-04/资料 03.txt	source_tree/batch-04/资料 03.txt	archive/batch-04/资料 03.txt	0000000000000000000000000000000000000000000000000000000000000000	999	verified
+../not-a-source	source_tree/../outside-placeholder	../../escape.txt	ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff	123	verified

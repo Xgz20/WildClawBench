@@ -1,0 +1,15 @@
+{
+  "runner.py": "90018bd8966f55d3fcc9fbcfbd3315d167ae839f7a62d91d82c8b4e88aac1bb7",
+  "regression.py": "cfdc0ec053fcb4d6865e87243d9cff4fea20db63929c7248bc55cfb521314dd3",
+  "contract.md": "b27c3af02bd0277487840fc91f1e8b13c4840a380d6fb6ba5c67888a2606a8a2",
+  "repair_plan.md": "46ff3474586e546d84450af5dafef7f65cb13b683e25d5949e81a07510f9a10b",
+  "export_contract.json": "9baae02751e5effadca31831c4af2e3d017c2d64afb343919e544a0aa8fd7e9c",
+  "plan_items.json": "a88efb333aa2292344886bcd8523730a86ffa12984ad9c7f8347ee41abad22b3",
+  "permission_matrix.csv": "2d19118b0a02314df982a4f62781b7c3012b4c2f3ec166ad6f49f77b50ccb013",
+  "tests_public/test_happy.py": "fd46f72a0a72e14caafe15bd7eff39c4640d10f3aa80789d7e3e1250208d0461",
+  "project/health.py": "15485e15185d58d7546bde868d3c368fb9255496a5f3dea97dc736de8dc7e7e4",
+  "project/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "fixtures/public_expected.json": "d066127bd041f238ec2bcaa050a25fcfe5323d562ac23d97d6bd40f25604b073",
+  "fixtures/public_cases.json": "070366d50b2056cbe87ca3e328e9ab16bc899b14a9abbfe43483142707039d7b",
+  "fixtures/records.json": "bbea9a25457b521a912e46dada54f143eefcef0abf4c50c7d9dc38ddc2f708a0"
+}

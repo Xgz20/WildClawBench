@@ -1,0 +1,99 @@
+{
+  "schema_version": "h028-reference-source-manifest/v1",
+  "source_id": "official-standard-api",
+  "url": "https://www.xfyun.cn/doc/asr/rtasr/API.html",
+  "title": "实时语音转写(标准版)",
+  "capture_id": "xfyun-rtasr-standard-20261028",
+  "capture_date": "2026-10-28",
+  "body_sha256": "d6f65debe1937055d66c7263260cdfa18f2478e1dbbd8fd4f298c218c2a72760",
+  "main_text_sha256": "a4cd197142b319f574b9fb44ee9e94a48a3b85e1d8203aa484ce8e47dc70aad5",
+  "short_localizers": [
+    {
+      "citation_id": "C-title",
+      "heading": "实时语音转写(标准版)",
+      "quote": "实时语音转写(标准版)"
+    },
+    {
+      "citation_id": "C-requirements",
+      "heading": "接口要求",
+      "table_row": "音频属性",
+      "quote": "单声道"
+    },
+    {
+      "citation_id": "C-handshake",
+      "heading": "握手阶段",
+      "quote": "urlencode"
+    },
+    {
+      "citation_id": "C-signature",
+      "heading": "signa生成",
+      "quote": "HmacSHA1"
+    },
+    {
+      "citation_id": "C-upload",
+      "heading": "上传数据",
+      "quote": "15秒"
+    },
+    {
+      "citation_id": "C-end",
+      "heading": "上传结束标志",
+      "quote": "binary message"
+    },
+    {
+      "citation_id": "C-result",
+      "heading": "接收转写结果",
+      "quote": "data为转写结果的json字符串"
+    },
+    {
+      "citation_id": "C-errors",
+      "heading": "错误码",
+      "table_row": "16003",
+      "quote": "重试或向服务提供商反馈"
+    },
+    {
+      "citation_id": "C-whitelist",
+      "heading": "白名单",
+      "quote": "保存后五分钟左右生效"
+    },
+    {
+      "citation_id": "C-faq-license",
+      "heading": "调用实时语音转写接口报10110错误码，如何解决？",
+      "quote": "没有授权许可或授权数已满"
+    },
+    {
+      "citation_id": "C-faq-checksum",
+      "heading": "实时语音转写接口返回10105，如何解决？",
+      "quote": "checkSum"
+    },
+    {
+      "citation_id": "C-duration",
+      "heading": "实时语音转写支持的音频时长有什么限制？",
+      "quote": "理论上不做限制"
+    },
+    {
+      "citation_id": "C-envelope",
+      "heading": "返回值",
+      "table_row": "sid",
+      "quote": "会话ID"
+    },
+    {
+      "citation_id": "C-flags",
+      "heading": "接收转写结果",
+      "table_row": "type",
+      "quote": "0-最终结果"
+    },
+    {
+      "citation_id": "C-signa-error",
+      "heading": "返回值",
+      "quote": "illegal signa"
+    }
+  ],
+  "total_short_quote_characters": 136,
+  "quote_role": "Bounded location hints only. They are not separate fact or absence oracles; Judge reads independently obtained full article.",
+  "public_domain_claimed": false,
+  "full_original_and_reviews_distributed_in_GT": false,
+  "author_debug_records_retained_and_SHA_bound": true,
+  "publication_version": null,
+  "publication_date": null,
+  "review_summary": "Two isolated model source reviews; original full records remain in author evidence, not copied into published GT."
+}

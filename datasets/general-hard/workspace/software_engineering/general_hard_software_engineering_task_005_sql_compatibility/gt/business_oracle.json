@@ -1,0 +1,630 @@
+{
+  "schema": "h045-relational-oracle/v1",
+  "seed": 2026102645,
+  "cases": [
+    {
+      "id": "B01_plain",
+      "group": "business",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "where": null,
+        "order_by": []
+      },
+      "sql_check": "SELECT id,name FROM customer",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            201,
+            "Ada"
+          ],
+          [
+            202,
+            "O'Neil"
+          ],
+          [
+            203,
+            "王同学"
+          ],
+          [
+            204,
+            "café"
+          ],
+          [
+            205,
+            "Ada"
+          ],
+          [
+            206,
+            "合成余量"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B02_reserved_table",
+      "group": "business",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id",
+          "group",
+          "amount"
+        ],
+        "where": null,
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id,\"group\",amount FROM \"order\" ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            111,
+            "alpha",
+            10
+          ],
+          [
+            112,
+            null,
+            0
+          ],
+          [
+            113,
+            "beta",
+            null
+          ],
+          [
+            114,
+            "alpha",
+            -2
+          ],
+          [
+            115,
+            "beta",
+            10
+          ],
+          [
+            116,
+            null,
+            null
+          ],
+          [
+            117,
+            "beta",
+            0
+          ],
+          [
+            118,
+            "beta",
+            10
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B03_reserved_projection",
+      "group": "business",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "select",
+          "group",
+          "id"
+        ],
+        "where": null,
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT \"select\",\"group\",id FROM \"order\" ORDER BY id",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            "keep",
+            "alpha",
+            111
+          ],
+          [
+            null,
+            null,
+            112
+          ],
+          [
+            "keep",
+            "beta",
+            113
+          ],
+          [
+            "drop",
+            "alpha",
+            114
+          ],
+          [
+            "keep",
+            "beta",
+            115
+          ],
+          [
+            "keep",
+            null,
+            116
+          ],
+          [
+            null,
+            "beta",
+            117
+          ],
+          [
+            "keep",
+            "beta",
+            118
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B04_two_bind_order",
+      "group": "business",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "where": {
+          "all": [
+            {
+              "column": "region",
+              "op": "eq",
+              "value": "north"
+            },
+            {
+              "column": "credit",
+              "op": "gte",
+              "value": 0
+            }
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id,name FROM customer WHERE region=? AND credit>=? ORDER BY id",
+      "check_params": [
+        "north",
+        0
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            201,
+            "Ada"
+          ],
+          [
+            205,
+            "Ada"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B05_date_window",
+      "group": "business",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id",
+          "created_at"
+        ],
+        "where": {
+          "all": [
+            {
+              "column": "created_at",
+              "op": "gte",
+              "value": "2026-02-01"
+            },
+            {
+              "column": "created_at",
+              "op": "lt",
+              "value": "2026-03-01"
+            }
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id,created_at FROM \"order\" WHERE created_at>=? AND created_at<? ORDER BY id",
+      "check_params": [
+        "2026-02-01",
+        "2026-03-01"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            112,
+            "2026-02-01"
+          ],
+          [
+            113,
+            "2026-02-28"
+          ],
+          [
+            117,
+            "2026-02-28"
+          ],
+          [
+            118,
+            "2026-02-01"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B06_nested_precedence",
+      "group": "business",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "all": [
+            {
+              "any": [
+                {
+                  "column": "amount",
+                  "op": "eq",
+                  "value": 0
+                },
+                {
+                  "column": "amount",
+                  "op": "eq",
+                  "value": 10
+                }
+              ]
+            },
+            {
+              "column": "group",
+              "op": "eq",
+              "value": "beta"
+            }
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE (amount=0 OR amount=10) AND \"group\"=? ORDER BY id",
+      "check_params": [
+        "beta"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            115
+          ],
+          [
+            117
+          ],
+          [
+            118
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B07_numeric_negative",
+      "group": "business",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "name",
+          "credit"
+        ],
+        "where": {
+          "column": "credit",
+          "op": "lt",
+          "value": 0
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT name,credit FROM customer WHERE credit<? ORDER BY id",
+      "check_params": [
+        0
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            "café",
+            -2
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B08_unicode",
+      "group": "business",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "id",
+          "name"
+        ],
+        "where": {
+          "column": "name",
+          "op": "eq",
+          "value": "王同学"
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id,name FROM customer WHERE name=? ORDER BY id",
+      "check_params": [
+        "王同学"
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            203,
+            "王同学"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B09_repeated_values",
+      "group": "business",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "id"
+        ],
+        "where": {
+          "column": "amount",
+          "op": "in",
+          "value": [
+            10,
+            10,
+            0
+          ]
+        },
+        "order_by": [
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT id FROM \"order\" WHERE amount IN (?,?,?) ORDER BY id",
+      "check_params": [
+        10,
+        10,
+        0
+      ],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            111
+          ],
+          [
+            112
+          ],
+          [
+            115
+          ],
+          [
+            117
+          ],
+          [
+            118
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B10_multi_sort",
+      "group": "business",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "name",
+          "credit"
+        ],
+        "where": null,
+        "order_by": [
+          {
+            "column": "credit",
+            "direction": "desc"
+          },
+          {
+            "column": "id",
+            "direction": "asc"
+          }
+        ]
+      },
+      "sql_check": "SELECT name,credit FROM customer ORDER BY credit DESC,id ASC",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            "Ada",
+            20
+          ],
+          [
+            "Ada",
+            10
+          ],
+          [
+            "王同学",
+            0
+          ],
+          [
+            "café",
+            -2
+          ],
+          [
+            "O'Neil",
+            null
+          ],
+          [
+            "合成余量",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B11_duplicate_projection",
+      "group": "business",
+      "spec": {
+        "table": "customer",
+        "columns": [
+          "region",
+          "region"
+        ],
+        "where": null,
+        "order_by": []
+      },
+      "sql_check": "SELECT region,region FROM customer",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            "north",
+            "north"
+          ],
+          [
+            "north",
+            "north"
+          ],
+          [
+            "north",
+            "north"
+          ],
+          [
+            "south",
+            "south"
+          ],
+          [
+            null,
+            null
+          ],
+          [
+            null,
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "id": "B12_distinct_forbidden",
+      "group": "business",
+      "spec": {
+        "table": "order",
+        "columns": [
+          "note"
+        ],
+        "where": null,
+        "order_by": []
+      },
+      "sql_check": "SELECT note FROM \"order\"",
+      "check_params": [],
+      "binding": false,
+      "rebind": null,
+      "invalid": false,
+      "expected": {
+        "rows": [
+          [
+            "café_%"
+          ],
+          [
+            "safe-target"
+          ],
+          [
+            "safe-target"
+          ],
+          [
+            "safe-target"
+          ],
+          [
+            "safe-target"
+          ],
+          [
+            "x' OR 1=1 --"
+          ],
+          [
+            "x' OR 1=1 --"
+          ],
+          [
+            null
+          ]
+        ]
+      }
+    }
+  ]
+}

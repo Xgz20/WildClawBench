@@ -1,0 +1,4 @@
+option_id,name,module_kwp,module_area_m2,performance_factor,load_metal_kg_m2,load_flat_kg_m2,requires_replacement,module_price_ex_vat,mount_metal_cny_m2,mount_flat_cny_m2,installation_cny_kwp,adhesion_required
+A,刚性组件夹具系统,0.55,2.5,0.96,14,30,false,900,85,110,650,false
+B,装配式替换屋面系统,0.4,2,0.97,18,20,true,820,95,95,700,false
+C,轻质粘接组件系统,0.3,2,0.9,4.5,4.5,false,500,55,55,900,true

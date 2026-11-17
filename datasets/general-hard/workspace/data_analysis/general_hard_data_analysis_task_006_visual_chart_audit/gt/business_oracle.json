@@ -1,0 +1,340 @@
+{
+  "expected_sha256": "d28b289f214ca9b7efb13d5b018c9fbf061fde940a95c161b10302d6bcf97049",
+  "source_annotation_sha256": "10f2790b0586ddb6212faf9b883ccae94be5cb6079e6c72acf1ea237a75c718e",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "reading_rules": {
+    "R01": {
+      "chart": "A",
+      "unit": "千人",
+      "axis": "left",
+      "band": [
+        12.7,
+        13.3
+      ],
+      "center_margin": 1.0,
+      "max_width": 5.0,
+      "allowed_axes": [
+        "left"
+      ]
+    },
+    "R02": {
+      "chart": "A",
+      "unit": "%",
+      "axis": "right",
+      "band": [
+        10.7,
+        11.3
+      ],
+      "center_margin": 1.0,
+      "max_width": 4.0,
+      "allowed_axes": [
+        "right"
+      ]
+    },
+    "R03": {
+      "chart": "A",
+      "unit": "千人",
+      "axis": "left",
+      "band": [
+        17.6,
+        18.2
+      ],
+      "center_margin": 1.0,
+      "max_width": 5.0,
+      "allowed_axes": [
+        "left"
+      ]
+    },
+    "R04": {
+      "chart": "A",
+      "unit": "%",
+      "axis": "right",
+      "band": [
+        7.6,
+        8.2
+      ],
+      "center_margin": 1.0,
+      "max_width": 4.0,
+      "allowed_axes": [
+        "right"
+      ]
+    },
+    "R05": {
+      "chart": "B",
+      "unit": "人",
+      "axis": "single",
+      "band": [
+        115,
+        125
+      ],
+      "center_margin": 10.0,
+      "max_width": 100.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R06": {
+      "chart": "B",
+      "unit": "人",
+      "axis": "derived",
+      "band": [
+        170,
+        190
+      ],
+      "center_margin": 20.0,
+      "max_width": 200.0,
+      "allowed_axes": [
+        "single",
+        "left",
+        "derived"
+      ]
+    },
+    "R07": {
+      "chart": "B",
+      "unit": "人",
+      "axis": "single",
+      "band": [
+        295,
+        305
+      ],
+      "center_margin": 10.0,
+      "max_width": 100.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R08": {
+      "chart": "B",
+      "unit": "人",
+      "axis": "single",
+      "band": [
+        85,
+        95
+      ],
+      "center_margin": 10.0,
+      "max_width": 100.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R09": {
+      "chart": "B",
+      "unit": "人",
+      "axis": "derived",
+      "band": [
+        200,
+        220
+      ],
+      "center_margin": 20.0,
+      "max_width": 200.0,
+      "allowed_axes": [
+        "single",
+        "left",
+        "derived"
+      ]
+    },
+    "R10": {
+      "chart": "B",
+      "unit": "人",
+      "axis": "single",
+      "band": [
+        295,
+        305
+      ],
+      "center_margin": 10.0,
+      "max_width": 100.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R11": {
+      "chart": "C",
+      "unit": "千人",
+      "axis": "single",
+      "band": [
+        162,
+        168
+      ],
+      "center_margin": 5.0,
+      "max_width": 50.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R12": {
+      "chart": "C",
+      "unit": "千人",
+      "axis": "single",
+      "band": [
+        222,
+        228
+      ],
+      "center_margin": 5.0,
+      "max_width": 50.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R13": {
+      "chart": "C",
+      "unit": "千人",
+      "axis": "derived",
+      "band": [
+        54,
+        66
+      ],
+      "center_margin": 10.0,
+      "max_width": 100.0,
+      "allowed_axes": [
+        "derived"
+      ]
+    },
+    "R14": {
+      "chart": "D",
+      "unit": "%",
+      "axis": "single",
+      "band": [
+        46,
+        46.2
+      ],
+      "center_margin": 0.2,
+      "max_width": 2.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R15": {
+      "chart": "D",
+      "unit": "%",
+      "axis": "single",
+      "band": [
+        47.7,
+        47.9
+      ],
+      "center_margin": 0.2,
+      "max_width": 2.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R16": {
+      "chart": "D",
+      "unit": "%",
+      "axis": "single",
+      "band": [
+        45.1,
+        45.3
+      ],
+      "center_margin": 0.2,
+      "max_width": 2.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R17": {
+      "chart": "D",
+      "unit": "%",
+      "axis": "single",
+      "band": [
+        46.9,
+        47.1
+      ],
+      "center_margin": 0.2,
+      "max_width": 2.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R18": {
+      "chart": "D",
+      "unit": "%",
+      "axis": "single",
+      "band": [
+        46.5,
+        46.7
+      ],
+      "center_margin": 0.2,
+      "max_width": 2.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R19": {
+      "chart": "D",
+      "unit": "%",
+      "axis": "single",
+      "band": [
+        48.9,
+        49.1
+      ],
+      "center_margin": 0.2,
+      "max_width": 2.0,
+      "allowed_axes": [
+        "single",
+        "left"
+      ]
+    },
+    "R20": {
+      "chart": "D",
+      "unit": "倍",
+      "axis": "derived",
+      "band": [
+        1.032,
+        1.042
+      ],
+      "center_margin": 0.01,
+      "max_width": 0.2,
+      "allowed_axes": [
+        "derived"
+      ]
+    }
+  },
+  "derived_dependencies": {
+    "R06": [
+      "R07",
+      "R05",
+      "subtract"
+    ],
+    "R09": [
+      "R10",
+      "R08",
+      "subtract"
+    ],
+    "R13": [
+      "R12",
+      "R11",
+      "subtract"
+    ],
+    "R20": [
+      "R15",
+      "R14",
+      "divide"
+    ]
+  },
+  "semantic_limit": "Rules observe declarations, numeric intervals, actual native recalculation and geometric source locators. Correct IDs, labels or rectangles alone do not establish complete explanation, genuine visual tool use, statistical reasoning, absence of fabricated narrative, or usable visual layout.",
+  "no_mandatory_formula_model": true,
+  "boundary_groups": [
+    "dual_axis_and_units",
+    "stacked_components",
+    "cumulative_increment",
+    "unidentifiable_precision",
+    "truncated_axis_ratio",
+    "statistical_and_causal_unknown"
+  ]
+}

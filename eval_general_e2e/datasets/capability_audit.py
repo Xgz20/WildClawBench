@@ -18,6 +18,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterable, Mapping, Optional, Sequence
 
 from .bundle import (
+    DEFAULT_DEFINITION,
     _canonical_sha256,
     _parse_task_source,
     _strip_codeblock,
@@ -26,6 +27,7 @@ from .bundle import (
     default_manifest_path,
     load_manifest_lock,
 )
+from .catalog import load_registered_dataset
 
 
 AUDIT_SCHEMA_ID = "urn:wildclawbench:schema:general-e2e:capability-matrix:v1"
@@ -614,7 +616,7 @@ def _delivery_mode(
     mutation_evidence: Sequence[str],
 ) -> str:
     has_artifacts = bool(result_paths)
-    has_mutation = bool(mutation_evidence) and category == "02_Code_Intelligence"
+    has_mutation = bool(mutation_evidence) and category in {"02_Code_Intelligence", "software_engineering"}
     if has_artifacts and has_mutation:
         return "workspace_artifacts_and_mutation"
     if has_artifacts:
@@ -627,10 +629,12 @@ def _delivery_mode(
 def _task_audit(
     repo_root: Path,
     task: Mapping[str, Any],
+    source_entry: Mapping[str, Any] | None = None,
+    *, raw: bytes | None = None,
 ) -> dict[str, Any]:
     source = task.get("source") or {}
     task_path = repo_root / str(source.get("task_path") or "")
-    metadata, sections, raw = _parse_task_source(task_path)
+    metadata, sections, raw = _parse_task_source(task_path, raw=raw)
     task_id = str(task.get("task_id") or "")
     if metadata.get("id") != task_id:
         raise ValueError(f"task identity mismatch during capability audit: {task_id}")
@@ -656,6 +660,13 @@ def _task_audit(
         _strip_codeblock(sections.get("Automated Checks", ""))
     )
     network = _network_requirement(prompt)
+    if source_entry:
+        declared_network = source_entry["network"]
+        network = {"policy": "forbidden" if declared_network["mode"] == "offline" else "required",
+                   "mode": declared_network["mode"],
+                   "source_urls": declared_network.get("allowed_urls", []),
+                   "discovery_domains": declared_network.get("allowed_discovery_domains", []),
+                   "evidence": "Frozen release source registry declares the retrieval contract"}
     commands = _command_blocks(prompt)
     declared_paths = _dedupe(WORKSPACE_PATH_RE.findall(prompt))
     result_paths = [
@@ -682,11 +693,14 @@ def _task_audit(
         network,
         execution_materials,
     )
+    if source_entry and source_entry["attributes"]["requires_visual_input"]:
+        runtime_requirements.append("image_understanding")
+        tool_capabilities.append("image.understand")
     windows_risks = _windows_risks(
         task_id, prompt, commands, execution_materials, automated
     )
 
-    return {
+    result = {
         "order": task.get("order"),
         "task_id": task_id,
         "name": task.get("name"),
@@ -731,6 +745,10 @@ def _task_audit(
             },
         },
     }
+    if source_entry:
+        result["modality"] = metadata.get("modality")
+        result["attributes"] = source_entry["attributes"]
+    return result
 
 
 def _count_true(tasks: Sequence[Mapping[str, Any]], path: Sequence[str]) -> int:
@@ -847,14 +865,28 @@ def generate_capability_matrix(
     repo_root: Path,
     *,
     manifest_path: Optional[Path] = None,
+    dataset_id: str | None = None,
+    release_id: str | None = None,
 ) -> dict[str, Any]:
     """Build the deterministic audit after proving source/lock alignment."""
     repo_root = repo_root.resolve()
+    definition = DEFAULT_DEFINITION
+    if dataset_id:
+        registered = load_registered_dataset(repo_root, dataset_id, release_id=release_id)
+        if registered.status != "frozen":
+            raise ValueError("capability audit requires a frozen registered release")
+        if manifest_path and manifest_path.resolve() != registered.manifest_path:
+            raise ValueError("manifest override does not match the registered release")
+        definition = registered.definition
+        manifest_path = registered.manifest_path
+    elif release_id:
+        raise ValueError("release_id requires dataset_id")
     target_manifest = (manifest_path or default_manifest_path()).resolve()
     manifest = load_manifest_lock(target_manifest)
     _validate_manifest(manifest)
-    compiled, _ = compile_dataset(
+    compiled, members = compile_dataset(
         repo_root,
+        definition=definition,
         source_revision=str((manifest.get("source") or {}).get("revision") or ""),
     )
     if compiled != manifest:
@@ -862,7 +894,14 @@ def generate_capability_matrix(
             "current task sources or workspace materials do not match the frozen manifest lock"
         )
 
-    tasks = [_task_audit(repo_root, task) for task in manifest["tasks"]]
+    source_by_id = {}
+    if definition.task_id_prefix:
+        registry_bytes = next(member.data for member in members if member.path == "provenance/task_sources.yaml")
+        source_by_id = {entry["task_id"]: entry for entry in json.loads(registry_bytes)["tasks"]}
+    # Read the exact verified bundle bytes, including historical source overrides.
+    task_bytes = {member.path: member.data for member in members if member.path.endswith("/task.md")}
+    tasks = [_task_audit(repo_root, task, source_by_id.get(task["task_id"]),
+                         raw=task_bytes[task["bundle"]["task_path"]]) for task in manifest["tasks"]]
     matrix: dict[str, Any] = {
         "schema_id": AUDIT_SCHEMA_ID,
         "schema_version": AUDIT_SCHEMA_VERSION,
@@ -928,7 +967,7 @@ def render_markdown(matrix: Mapping[str, Any]) -> str:
     summary = matrix["summary"]
     trace = summary["automated_check_trace"]
     lines = [
-        "# General E2E 60 题能力审计矩阵",
+        f"# General E2E {summary['task_count']} 题能力审计矩阵",
         "",
         "> 本文由 `eval_general_e2e.datasets.capability_audit` 确定性生成；"
         "只做 Prompt、素材清单和 grader AST 静态审计，没有执行任务、评分代码、网络请求或 Judge。",
@@ -944,14 +983,17 @@ def render_markdown(matrix: Mapping[str, Any]) -> str:
         "",
         "## 1. 结论",
         "",
-        f"- 六类各 10 题；评分类型为 {summary['grading_type_counts'].get('automated', 0)} automated / "
+        ("- 六类各 10 题；评分类型为 " if dataset['dataset_id'] == DEFAULT_DEFINITION.dataset_id
+         else f"- {len(summary['category_counts'])}类共{summary['task_count']}题；评分类型为 ")
+        + f"{summary['grading_type_counts'].get('automated', 0)} automated / "
         f"{summary['grading_type_counts'].get('hybrid', 0)} hybrid / "
         f"{summary['grading_type_counts'].get('llm_judge', 0)} llm_judge。",
         f"- Env、Skills、Warmup 非空题数分别为 "
         f"{summary['environment']['tasks_with_env']} / "
         f"{summary['environment']['tasks_with_skills']} / "
         f"{summary['environment']['tasks_with_warmup']}。",
-        f"- Prompt 明确给出远端固定来源且未禁止联网的题共 "
+        ("- Prompt 明确给出远端固定来源且未禁止联网的题共 " if dataset['dataset_id'] == DEFAULT_DEFINITION.dataset_id
+         else "- 冻结来源登记明确要求联网的题共 ") +
         f"{len(summary['network_required_task_ids'])} 题；它们需要 `network.retrieve` 能力。",
         f"- grader AST 中 {trace['contains_transcript_scaffolding']} 题出现 transcript 接口或辅助代码；"
         f"当前可达路径中 {trace['accepts_transcript_input']} 题接收、"
@@ -1106,6 +1148,8 @@ def _build_parser() -> argparse.ArgumentParser:
     parser.add_argument("command", choices=("generate", "check"))
     parser.add_argument("--repo-root", type=Path, default=Path.cwd())
     parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--dataset-id")
+    parser.add_argument("--release-id")
     parser.add_argument("--json-output", type=Path)
     parser.add_argument("--markdown-output", type=Path)
     return parser
@@ -1115,7 +1159,8 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     args = _build_parser().parse_args(argv)
     repo_root = args.repo_root.resolve()
     manifest_path = args.manifest.resolve() if args.manifest else None
-    matrix = generate_capability_matrix(repo_root, manifest_path=manifest_path)
+    matrix = generate_capability_matrix(repo_root, manifest_path=manifest_path,
+                                        dataset_id=args.dataset_id, release_id=args.release_id)
     default_json, default_markdown = default_output_paths(
         repo_root, matrix["dataset"]["dataset_id"]
     )

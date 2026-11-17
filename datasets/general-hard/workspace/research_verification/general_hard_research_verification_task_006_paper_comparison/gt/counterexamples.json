@@ -1,0 +1,32 @@
+{
+  "schema_version": "h032-generic-rule-counterexamples/v1",
+  "scope": "Mechanism controls use synthetic in-memory logical records/native cell grids; source extraction preflight uses adopted originals, not future candidate/reference",
+  "mechanisms": [
+    "data_driven_owners_not_case_ID_branches",
+    "fixed5_7_and12_no_vacuous_binding",
+    "one_core_error_not_cross_partition",
+    "numeric_role_report_version_unit_arm_denominator",
+    "unknown_is_not_false_or_zero",
+    "fact_vs_proof_and_component_routes",
+    "all_actual_citations_no_padding_dilution",
+    "actual_physical_page_and_context_no_global_fallback",
+    "source_SHA_drift_missing_extractor_and_helper_error",
+    "Chinese_fields_mapping_wide_long_split_transpose",
+    "free_DOCX_optional_explicit_transfer_conflicts",
+    "formula_requires_trusted_Office_static_no_formula_requirement",
+    "unhandled_legal_scientific_prose_pending_not0",
+    "ordinary_native_semantic_headers_safe_phase_prefixes_and_combined_meanings",
+    "same_value_bilingual_verdicts_real_final_conflicts_preserved",
+    "auxiliary_quantities_and_historical_verdicts_do_not_override_current_decisions"
+  ],
+  "not_run": [
+    "future_reference_read_or_author_control",
+    "actual_Office_recomputation",
+    "markers",
+    "Harness",
+    "Judge",
+    "finalize",
+    "network",
+    "dependency_install"
+  ]
+}

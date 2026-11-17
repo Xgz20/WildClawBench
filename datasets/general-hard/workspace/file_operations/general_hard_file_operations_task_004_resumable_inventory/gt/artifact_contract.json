@@ -1,0 +1,37 @@
+{
+  "deliverables": [
+    "results/archive/",
+    "results/manifest.tsv",
+    "results/recovery.json"
+  ],
+  "auxiliary_behavior_contract": [
+    "results/resume_entry.json",
+    "local self-contained Python entry with arbitrary name"
+  ],
+  "source_files": 60,
+  "input_files": 91,
+  "partial_files": 28,
+  "partial_manifest_rows": 29,
+  "entry_api": "h038-resume/v1",
+  "actual_probe_cases": [
+    "final_replay twice",
+    "fresh_interruption twice",
+    "repair_replay twice"
+  ],
+  "probe_binding": "current candidate file/directory content SHA + entry/descriptor SHA + request/returncode/stdout/stderr + raw before/after SHA trees and semantic states; original candidate never executed/mutated",
+  "scoring_ownership": {
+    "business_correctness": "per source key .40 index facts + .60 actual independent archive file/SHA; missing/duplicate key one source opportunity; unexpected rows/files counted once",
+    "boundary_cases": "internal .30 initial/final correction report truth + .70 actual restricted entry replay across three cases; wrong original final is repaired before repeat-state check to avoid cascade",
+    "delivery_integrity": "internal .60 protected 91-input bytes/member set + .20 native TSV parse + .20 recovery JSON parse",
+    "evidence_binding": "internal .70 reported source/initial partial raw SHA identity + .30 input SHA map; omissions owned by report obligations"
+  },
+  "equivalence": [
+    "safe arbitrary archive filenames and auxiliary entry filename",
+    "English/Chinese aliases/BOM/reordering",
+    "NFC paths",
+    "hex and integer representations",
+    "semantic repeat state, recording raw bytes too"
+  ],
+  "infrastructure": "Missing GT/helper/runner/POSIX profile/evidence context is evaluation exception. Ordinary candidate subprocess policy failure, syntax/runtime error, timeout or wrong result is candidate failure. Input drift replay is typed not_assessed and neutral to avoid double penalty; it does not establish replay capability.",
+  "profile_limit": "Python audit restrictions only; not OS security sandbox; no Office/HTML runtime flag workaround"
+}

@@ -1,0 +1,200 @@
+{
+  "schema": "h058-source-catalog/v1",
+  "sources": [
+    {
+      "source_id": "S01",
+      "title": "归园田居 其一",
+      "author": "陶渊明",
+      "author_aliases": [
+        "陶潜"
+      ],
+      "era": "东晋",
+      "oldid": "3702704",
+      "page": "歸園田居",
+      "lines": [
+        "少无适俗韵，性本爱丘山。",
+        "误落尘网中，一去三十年。",
+        "羁鸟恋旧林，池鱼思故渊。",
+        "开荒南野际，守拙归园田。"
+      ],
+      "secondary_url": "https://www.classicalchineseliterature.org/article.php?article=歸園田居（其一）&lang=cs",
+      "variant_note": "取固定网页正文韵、丘、三十、羁、恋、南野；第二来源作邱，且注三十当作十三。此处保留采录字形与原文，不据诗句精确断定任职年数。",
+      "version_id": "S01-web-3702704-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=歸園田居&oldid=3702704",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S01.md",
+      "sha256": "b1c3e4927217410f7b2709c67c5780d3f478b96f68848c0791c0a6295c0dbe85"
+    },
+    {
+      "source_id": "S02",
+      "title": "饮酒二十首 其五",
+      "author": "陶渊明",
+      "author_aliases": [
+        "陶潜"
+      ],
+      "era": "东晋",
+      "oldid": "2692638",
+      "page": "飲酒二十首",
+      "lines": [
+        "结庐在人境，而无车马喧。",
+        "问君何能尔？心远地自偏。",
+        "采菊东篱下，悠然见南山。",
+        "山气日夕佳，飞鸟相与还。",
+        "此中有真意，欲辩已忘言。"
+      ],
+      "secondary_url": "https://www.classicalchineseliterature.org/article.php?article=飲酒（其五）",
+      "variant_note": "取固定页见、辩。第二来源作辨；本次引文只从所给行取字，不能把见换成望。",
+      "version_evidence_file": "web-open-3.json",
+      "version_id": "S02-web-2692638-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=飲酒二十首&oldid=2692638",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S02.md",
+      "sha256": "ad3fe74523019bc46e16bb40fd0139c74eb8168f6bf429bf1e35caa0aeec8897"
+    },
+    {
+      "source_id": "S03",
+      "title": "山居秋暝",
+      "author": "王维",
+      "author_aliases": [],
+      "era": "唐",
+      "oldid": "2276100",
+      "page": "山居秋暝",
+      "lines": [
+        "空山新雨后，天气晚来秋。",
+        "明月松间照，清泉石上流。",
+        "竹喧归浣女，莲动下渔舟。",
+        "随意春芳歇，王孙自可留。"
+      ],
+      "secondary_url": "https://www.classicalchineseliterature.org/article.php?article=山居秋暝&lang=cs",
+      "variant_note": "固定页简体转录；保留原句春芳与秋景，不把它误写成春夜或冬景。",
+      "version_id": "S03-web-2276100-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=山居秋暝&oldid=2276100",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S03.md",
+      "sha256": "810f6869e3d35b8a65b58c0841538c4f82c7cbc793857a9757967c646ef41297"
+    },
+    {
+      "source_id": "S04",
+      "title": "春夜喜雨",
+      "author": "杜甫",
+      "author_aliases": [],
+      "era": "唐",
+      "oldid": "2261431",
+      "page": "春夜喜雨",
+      "lines": [
+        "好雨知时节，当春乃发生。",
+        "随风潜入夜，润物细无声。",
+        "野径云俱黑，江船火独明。",
+        "晓看红湿处，花重锦官城。"
+      ],
+      "secondary_url": "https://www.ln.edu.hk/chs/cleac/resources/langduzhefrontpage/mr-yaoxishuang_thereader/ChunyeXiYu",
+      "variant_note": "固定页标注乃一作及，本次采用正文乃。",
+      "version_id": "S04-web-2261431-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=春夜喜雨&oldid=2261431",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S04.md",
+      "sha256": "8438c330fa0598304bb7b3caa4912b85c42b05ff5778372c19db56293db3d073"
+    },
+    {
+      "source_id": "S05",
+      "title": "赋得古原草送别",
+      "author": "白居易",
+      "author_aliases": [],
+      "era": "唐",
+      "oldid": "1981926",
+      "page": "賦得古原草送別",
+      "lines": [
+        "离离原上草，一岁一枯荣。",
+        "野火烧不尽，春风吹又生。",
+        "远芳侵古道，晴翠接荒城。",
+        "又送王孙去，萋萋满别情。"
+      ],
+      "secondary_url": "https://www.gushiwen.cn/shiwenv_b7820a12ebaa.aspx",
+      "variant_note": "采用完整八句而非小学节选四句，必须保留其送别语境的边界。",
+      "version_id": "S05-web-1981926-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=賦得古原草送別&oldid=1981926",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S05.md",
+      "sha256": "5889f541b61741c1dc2d077924f9164898ea122e28d5473b8f85e407abaeb343"
+    },
+    {
+      "source_id": "S06",
+      "title": "题西林壁",
+      "author": "苏轼",
+      "author_aliases": [
+        "苏东坡"
+      ],
+      "era": "北宋",
+      "oldid": "8732088",
+      "page": "題西林壁_(蘇軾)",
+      "lines": [
+        "横看成岭侧成峰，远近高低各不同。",
+        "不识庐山真面目，祇缘身在此山中。"
+      ],
+      "secondary_url": "https://www.classicalchineseliterature.org/article.php?article=題西林壁&lang=cs",
+      "variant_note": "本素材用固定页正文各、祇；第二来源正文作总、只且标总一作各。引用按所给字形；转述可用现代只。",
+      "version_id": "S06-web-8732088-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=題西林壁_(蘇軾)&oldid=8732088",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S06.md",
+      "sha256": "7cd6e7e9b8bc596bb444647f2b61bb964b2e625758b262428b4b7ab155732004"
+    },
+    {
+      "source_id": "S07",
+      "title": "观书有感 其一",
+      "author": "朱熹",
+      "author_aliases": [
+        "朱子"
+      ],
+      "era": "南宋",
+      "oldid": "1995632",
+      "page": "觀書有感",
+      "lines": [
+        "半亩方塘一鉴开，",
+        "天光云影共徘徊。",
+        "问渠那得清如许，",
+        "为有源头活水来。"
+      ],
+      "secondary_url": "https://www.gushiwen.cn/shiwenv_4c1364cb1da5.aspx",
+      "variant_note": "保留固定网页那字及逗号，不把那改作现代哪。此为网页固定转录本，不宣称已核纸本朱子大全。",
+      "version_id": "S07-web-1995632-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=觀書有感&oldid=1995632",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S07.md",
+      "sha256": "42f24ad9d259612b42001062133c583aa59647cd3c5b975ad9cfcbc0164c621f"
+    },
+    {
+      "source_id": "S08",
+      "title": "冬夜读书示子聿",
+      "author": "陆游",
+      "author_aliases": [
+        "陆放翁"
+      ],
+      "era": "南宋",
+      "oldid": "1655805",
+      "page": "冬夜讀書示子聿",
+      "lines": [
+        "古人学问无遗力，",
+        "少壮工夫老始成。",
+        "纸上得来终觉浅，",
+        "绝知此事要躬行。"
+      ],
+      "secondary_url": "https://www.gushiwen.cn/shiwenv_51c560529d2a.aspx",
+      "variant_note": "固定转录页面未给纸本版本，明确记录此缺口；作者页1125—1210及公版状态另已读取，未声称核纸本卷次。",
+      "version_id": "S08-web-1655805-hans-v1",
+      "source_url": "https://zh.wikisource.org/w/index.php?title=冬夜讀書示子聿&oldid=1655805",
+      "location_policy": "本素材 L01 起编号，行号定位原句；允许跨相邻行连续摘引，标点和空白差异不改字。",
+      "license": "古代原文本身公有领域；仅采录原文并自行分行，不复制现代译注。网页转录来源与版本保留；网页整理声明为CC BY-SA 4.0，原作公版与现代编辑层分开。",
+      "path": "source_texts/S08.md",
+      "sha256": "ef7b1f5c352acbfbf5078642d33bf785fb55a9caf4fceff307e73fe507974a10"
+    }
+  ],
+  "scope": "作者联网核验后冻结的八段古代原文；候选离线，不要求访问来源网页；不声称纸本校勘定本。"
+}

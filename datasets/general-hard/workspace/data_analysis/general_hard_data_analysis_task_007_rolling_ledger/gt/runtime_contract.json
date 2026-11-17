@@ -1,0 +1,29 @@
+{
+  "schema_version": "h023-runtime/v1",
+  "grading_type": "automated",
+  "scoring_runtime": {
+    "office": true
+  },
+  "sdk_version": "0.15.2",
+  "input_response_profile": "offline-xlsx-numeric-input-change/v1",
+  "native_time_basis": "Shanghai-local Excel serial with actual 1900/1904 system; numeric or t=d literal date encoding",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "business": "customer .20 / flow .25 / ageing .20 / months .15 / controls .10 / exceptions .10",
+  "boundary": "decision macro average .25 + actual changed-result response .75",
+  "business_cap": {
+    "maximum": 0.5,
+    "when": "protected source changed, missing native baseline, incomplete raw inputs, or no correct numerical response to all three late-entry probes"
+  },
+  "unimplemented_scope": [
+    "unrestricted prose judgement",
+    "accounting expert validation",
+    "full spreadsheet visual quality",
+    "real Harness behaviour"
+  ],
+  "source_binding": "Only matching visible native literal inputs qualify, not formula audit views; test every matching preserved copy, max eight before manual review; no author coordinate/sheet binding."
+}

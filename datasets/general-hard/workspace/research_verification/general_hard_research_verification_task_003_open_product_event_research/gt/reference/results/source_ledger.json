@@ -1,0 +1,1600 @@
+{
+  "schema_version": "h029-author-reference-ledger/v1",
+  "authoring_mode": "author_reference_not_candidate_trajectory",
+  "as_of_window_end": "2026-10-01T00:00:00+08:00",
+  "reference_not_exclusive_answer": true,
+  "sources": [
+    {
+      "source_id": "S01",
+      "url": "https://blog.google/products-and-platforms/products/search/football-features-google-search/",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:33:43.199141Z",
+      "title": "Get ready for the game with new football features in Search — Google",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C01-F",
+          "quote": "Yahoo Fantasy or Sleeper account with Search",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Manage your fantasy matchups with confidence",
+            "paragraph_context": "Now, you can link...through AI Mode；后段解释live roster/all leagues及start/sit、waiver建议"
+          }
+        },
+        {
+          "citation_id": "C01-A",
+          "quote": "now available in the U.S. in English",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Manage your fantasy matchups with confidence",
+            "paragraph_context": "明确指账户关联，不借用同文其他模块范围"
+          }
+        },
+        {
+          "citation_id": "C01-V",
+          "quote": "Sep 09, 2026",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article date",
+            "paragraph_context": "可见自然日，显示时区未述"
+          }
+        },
+        {
+          "citation_id": "C01-P",
+          "quote": "2026-09-09T16:00:00+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[name=published_time] / JSON-LD datePublished"
+          }
+        },
+        {
+          "citation_id": "C01-M",
+          "quote": "2026-09-09T16:00:02.714734+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "JSON-LD dateModified"
+          }
+        }
+      ],
+      "body_sha256": "c88466ce402b1eab1352a2142b6f3c642ce0393a1193c6412539370e0143f208",
+      "body_size": 975218,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/google-official/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/google-official/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S01-PUB",
+        "D-S01-VISIBLE"
+      ],
+      "modified_date_ids": [
+        "D-S01-MOD"
+      ],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S02",
+      "url": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:33:40.564424Z",
+      "title": "Introducing Gemini 3.8 Live and 3.8 Live Extended Thinking — Google",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C02-R",
+          "quote": "3.8 Live is rolling out starting today:",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Start using our latest Gemini Audio models",
+            "paragraph_context": "3.8 Live列表，非Extended Thinking列表"
+          }
+        },
+        {
+          "citation_id": "C02-A",
+          "quote": "For everyone: In Search Live",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Start using our latest Gemini Audio models",
+            "paragraph_context": "3.8 Live消费者部署位置；不等于全球所有资格"
+          }
+        },
+        {
+          "citation_id": "C02-F",
+          "quote": "Search Live",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Experience more fluid, intelligent conversations",
+            "paragraph_context": "Get step-by-step, real-time troubleshooting help powered by Gemini 3.8 Live—right inside Search Live段"
+          }
+        },
+        {
+          "citation_id": "C02-V",
+          "quote": "Sep 15, 2026",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article date",
+            "paragraph_context": "原发可见自然日"
+          }
+        },
+        {
+          "citation_id": "C02-U",
+          "quote": "Updated September 17, 2026",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article update note",
+            "paragraph_context": "更新提示；非实际rollout日"
+          }
+        },
+        {
+          "citation_id": "C02-P",
+          "quote": "2026-09-15T17:00:00+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[name=published_time] / JSON-LD datePublished"
+          }
+        },
+        {
+          "citation_id": "C02-M",
+          "quote": "2026-09-17T14:56:05.310570+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "JSON-LD dateModified"
+          }
+        }
+      ],
+      "body_sha256": "8d15d4814e1ecda45604f70a34bb24e41b694dcce89e93ef0765ed267534a894",
+      "body_size": 1043738,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/searchlive-official/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/searchlive-official/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S02-PUB",
+        "D-S02-VISIBLE"
+      ],
+      "modified_date_ids": [
+        "D-S02-MOD"
+      ],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S03",
+      "url": "https://blog.youtube/news-and-events/made-on-youtube-viewer-custom-feeds-shopping-tools/",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:33:37.655576Z",
+      "title": "Dive in and discover what’s next on YouTube with our latest viewer features — YouTube",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C03-F",
+          "quote": "We’re launching new capabilities to Ask YouTube",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Search and Shop on",
+            "paragraph_context": "商品评测购物能力，与Custom Feeds不同"
+          }
+        },
+        {
+          "citation_id": "C03-T",
+          "quote": "comparison table",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Search and Shop on",
+            "paragraph_context": "含product attributes/categories并可在video watch page继续问"
+          }
+        },
+        {
+          "citation_id": "C03-V",
+          "quote": "Sep 23, 2026",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article date",
+            "paragraph_context": "可见自然日"
+          }
+        },
+        {
+          "citation_id": "C03-P",
+          "quote": "2026-09-23T14:30:00+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[name=published_time] / JSON-LD datePublished"
+          }
+        },
+        {
+          "citation_id": "C03-M",
+          "quote": "2026-09-28T13:55:32.621325+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "JSON-LD dateModified"
+          }
+        }
+      ],
+      "body_sha256": "4aa820facba18eb18d7c251bd17721c94b6f4af9489b9ab44f5b98c0a35d1dd6",
+      "body_size": 117413,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/youtube-official/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/youtube-official/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S03-PUB",
+        "D-S03-VISIBLE"
+      ],
+      "modified_date_ids": [
+        "D-S03-MOD"
+      ],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S04",
+      "url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E6%96%B0%E5%8A%9F%E8%83%BD%E5%8F%91%E5%B8%83%E8%AE%B0%E5%BD%95_1792068421.pdf",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:33:47.275479Z",
+      "title": "豆包搜索：新功能发布记录 — 火山引擎",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C04-F",
+          "quote": "Global版本：新增图搜图能力",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 4,
+            "table_or_section": "1.新功能发布记录，2026-09行，印刷页1/5"
+          }
+        },
+        {
+          "citation_id": "C04-E",
+          "quote": "2026-09",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 4,
+            "table_or_section": "版本（月度）列，与新增图搜图同一行"
+          }
+        },
+        {
+          "citation_id": "C04-O",
+          "quote": "2026-08",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 4,
+            "table_or_section": "旧文搜图版本行，与9月图搜图不同"
+          }
+        }
+      ],
+      "body_sha256": "5d35f80a41f6cd6f85b8e71d17d3ce409bedf8ee62ad9dd10ff7bd78633ccabc",
+      "body_size": 4708818,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/doubao-changelog-pdf/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/doubao-changelog-pdf/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S04-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S05",
+      "url": "https://eps-common-private-online.tos-cn-beijing.volces.com/cloud-doc/eps-doc-center-pdf/%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2_%E8%B1%86%E5%8C%85%E6%90%9C%E7%B4%A2%20Global%E7%89%88_1790074639.pdf",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:33:47.260517Z",
+      "title": "豆包搜索 Global版 API — 火山引擎",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C05-V",
+          "quote": "visual为图搜",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 9,
+            "table_or_section": "Request—图搜图，SearchType行"
+          }
+        },
+        {
+          "citation_id": "C05-I",
+          "quote": "ImageQuery",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 10,
+            "table_or_section": "ImageQuery/Url/ImageBase64/RegionOfInterest；图片URL与纯Base64二选一，可选矩形区域"
+          }
+        },
+        {
+          "citation_id": "C05-A",
+          "quote": "提供 API Key 一种接入方式",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 4,
+            "table_or_section": "认证方式；同页Global仅按量后付费、不支持订阅套餐"
+          }
+        }
+      ],
+      "body_sha256": "aca2922858b9add6ed0f60b7138bfb35366d4752d3e1d02460054bab12c9f78c",
+      "body_size": 4798213,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/doubao-api-pdf/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/production-fetch-preflight-1793183616053485000/doubao-api-pdf/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S05-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S06",
+      "url": "https://policies.google.com/terms/embedded?hl=en-US",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T10:52:14.153276Z",
+      "title": "Google Terms of Service（实际取得Country version: Singapore）",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C06-E",
+          "quote": "Google LLC",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Service provider",
+            "paragraph_context": "服务提供方及签约实体"
+          }
+        },
+        {
+          "citation_id": "C06-L",
+          "quote": "organized under the laws of the State of Delaware, USA",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Service provider",
+            "paragraph_context": "主体美国法律及运营说明；实际页面Country version为Singapore"
+          }
+        },
+        {
+          "citation_id": "C06-S",
+          "quote": "apps and sites (like Search and Maps)",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Provide a broad range of useful services",
+            "paragraph_context": "Search为Google服务例子"
+          }
+        }
+      ],
+      "body_sha256": "651a59b3624614567142edfc50cc0bca3751c9398b7afcbb907abc2b1c8a2c6f",
+      "body_size": 496558,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/google-provider-terms/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/google-provider-terms/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S06-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S07",
+      "url": "https://docs.volcengine.com/docs/legal-agreements/products-and-services-agreement?lang=zh",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T10:52:14.101423Z",
+      "title": "火山引擎产品和服务协议",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C07-E",
+          "quote": "北京火山引擎科技有限公司",
+          "locator": {
+            "kind": "html_text",
+            "heading": "产品和服务协议",
+            "paragraph_context": "开头双方定义，服务提供方"
+          }
+        }
+      ],
+      "body_sha256": "479a807767d2dae3228f53d4359f89c18e0d96f4323ecc90cfe1e930676fea37",
+      "body_size": 221815,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-provider-terms/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-provider-terms/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S07-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S08",
+      "url": "https://banshi.whlyj.beijing.gov.cn/publish/6897521451094312.pdf",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:52:13.589814Z",
+      "title": "北京火山引擎科技有限公司网络文化经营许可证 — 北京市文化和旅游局",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C08-E",
+          "quote": "北京火山引擎科技有限公司",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 1,
+            "table_or_section": "名称"
+          }
+        },
+        {
+          "citation_id": "C08-L",
+          "quote": "北 京 市 海 淀 区",
+          "locator": {
+            "kind": "pdf",
+            "physical_page_1based": 1,
+            "table_or_section": "住所"
+          }
+        }
+      ],
+      "body_sha256": "96b9a8f5948d9bfbb1750186e702e7926c6a428fd72ce64f08e1cb2bedf7f787",
+      "body_size": 178242,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-government-license/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-identity-preflight-1793184732929324000/volcengine-government-license/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S08-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S09",
+      "url": "https://policies.google.com/",
+      "access_status": "read_excerpt",
+      "accessed_at": "2026-10-28T10:59:59.159075Z",
+      "title": "Privacy & Terms — Google",
+      "source_role": "first_party",
+      "citations": [
+        {
+          "citation_id": "C09-P",
+          "quote": "Search, YouTube, and other products from Google",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Google Product Privacy Guide",
+            "paragraph_context": "官方政策首页产品归属说明"
+          }
+        }
+      ],
+      "body_sha256": "c58c54c4379d357097ae01bd1e0ccf76bcbf3dd33424a1fece6faa6dc0794378",
+      "body_size": 538001,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-product-parent-target-1793185198159798000/receipt.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/provider-product-parent-target-1793185198159798000/text.txt",
+      "acquisition_actor": "root production fetch preflight",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S09-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "官方自述或官方行政记录；非独立功能效果实测"
+    },
+    {
+      "source_id": "S10",
+      "url": "https://9to5google.com/2026/09/09/google-search-kicks-off-the-nfl-season-with-live-game-feeds-and-fantasy-football-advice/",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:29:30.383531+00:00",
+      "title": "Google Search kicks off the NFL season with Live Game Feeds and fantasy football advice — 9to5Google",
+      "source_role": "derivative",
+      "citations": [
+        {
+          "citation_id": "C10-F",
+          "quote": "supporting Yahoo Fantasy and Sleeper account sync",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article body",
+            "paragraph_context": "Will Sattelberg关于AI Mode的段落"
+          }
+        },
+        {
+          "citation_id": "C10-P",
+          "quote": "2026-09-09T16:00:00+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[property=article:published_time] / JSON-LD datePublished"
+          }
+        },
+        {
+          "citation_id": "C10-UP",
+          "quote": "adding a Live Game Feed to search",
+          "locator": {
+            "kind": "html_link",
+            "anchor_text": "adding a Live Game Feed to search",
+            "href": "https://blog.google/products-and-platforms/products/search/football-features-google-search"
+          }
+        }
+      ],
+      "body_sha256": "bd170330f717653b3698aa5acc721d56b7d649fada4021b92b28082b454d437a",
+      "body_size": 155607,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-b/raw/google-9to5.fetch.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-b/text/google-9to5.txt",
+      "acquisition_actor": "source-review-b actual public fetch; author read in explicit non-blind reference stage",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S10-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "不同编辑机构对官方公告的报道；未证明独立运行复现"
+    },
+    {
+      "source_id": "S11",
+      "url": "https://www.seroundtable.com/google-search-live-gemini-3-8-42094.html",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:31:44.694871+00:00",
+      "title": "Google Search Live Now Powered By Gemini 3.8 Live — Search Engine Roundtable",
+      "source_role": "derivative",
+      "citations": [
+        {
+          "citation_id": "C11-X",
+          "quote": "wrote on X",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article body",
+            "paragraph_context": "Rajan Patel身份及官方帖转述；不是独立实测"
+          }
+        },
+        {
+          "citation_id": "C11-F",
+          "quote": "Google Search Live is now powered",
+          "locator": {
+            "kind": "html_text",
+            "heading": "article body",
+            "paragraph_context": "开头绑定Gemini3.8Live"
+          }
+        },
+        {
+          "citation_id": "C11-P",
+          "quote": "2026-09-15T13:58:00-04:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[name=article:published_time] / JSON-LD datePublished"
+          }
+        },
+        {
+          "citation_id": "C11-UP",
+          "quote": "Gemini 3.8 Live and 3.8 Live Extended Thinking",
+          "locator": {
+            "kind": "html_link",
+            "anchor_text": "Gemini 3.8 Live and 3.8 Live Extended Thinking",
+            "href": "https://blog.google/innovation-and-ai/models-and-research/gemini-models/gemini-3-8-live-gemini-3-8-live-extended-thinking/"
+          }
+        }
+      ],
+      "body_sha256": "8849705097fc7e7f52b8e148ef83447ba0eee27ab871f403d590b06c23b4d950",
+      "body_size": 106589,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-b/raw/searchlive-roundtable.fetch.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-b/text/searchlive-roundtable.txt",
+      "acquisition_actor": "source-review-b actual public fetch; author read in explicit non-blind reference stage",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S11-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "不同编辑机构对官方公告的报道；未证明独立运行复现"
+    },
+    {
+      "source_id": "S12",
+      "url": "https://www.searchenginejournal.com/youtube-shopping-ask-youtube-ai-search/590662/",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:29:58.860894+00:00",
+      "title": "YouTube Turns Ask YouTube AI Into A Product Discovery Surface — Search Engine Journal",
+      "source_role": "derivative",
+      "citations": [
+        {
+          "citation_id": "C12-UP",
+          "quote": "announced by YouTube",
+          "locator": {
+            "kind": "html_link",
+            "href": "https://blog.youtube/news-and-events/made-on-youtube-viewer-custom-feeds-shopping-tools/",
+            "anchor_text": "announced by YouTube"
+          }
+        },
+        {
+          "citation_id": "C12-L",
+          "quote": "still an experiment",
+          "locator": {
+            "kind": "html_text",
+            "heading": "Where Ask YouTube Stands Now",
+            "paragraph_context": "搜索版与观看页版本区分；当日报道上下文"
+          }
+        },
+        {
+          "citation_id": "C12-P",
+          "quote": "2026-09-23T22:37:15+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[property=article:published_time] / time@datetime"
+          }
+        },
+        {
+          "citation_id": "C12-M",
+          "quote": "2026-09-25T14:35:03+00:00",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "meta[property=article:modified_time]"
+          }
+        }
+      ],
+      "body_sha256": "e73e4ad8adae65f9536beff355fd6d2180d59e2b3f87a1110354013b84a58cf0",
+      "body_size": 250840,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/youtube_media.metadata.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/youtube_media.text.txt",
+      "acquisition_actor": "source-review-a actual public fetch",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S12-PUB"
+      ],
+      "modified_date_ids": [
+        "D-S12-MOD"
+      ],
+      "independence_basis": "独立编辑机构；事实仍来自官方公告/文档，不等于独立试用"
+    },
+    {
+      "source_id": "S13",
+      "url": "https://51allai.com/posts/2026/09/doubao-search-visual-search/",
+      "access_status": "read_full",
+      "accessed_at": "2026-10-28T10:29:59.775756+00:00",
+      "title": "豆包搜索 Global版新增图搜图 — 51AllAI",
+      "source_role": "derivative",
+      "citations": [
+        {
+          "citation_id": "C13-UP",
+          "quote": "火山引擎豆包搜索新功能发布记录",
+          "locator": {
+            "kind": "html_text",
+            "heading": "原始来源",
+            "paragraph_context": "清单第1项链接官方发布记录，第2项API文档"
+          }
+        },
+        {
+          "citation_id": "C13-P",
+          "quote": "2026-09-10T03:27:49.000Z",
+          "locator": {
+            "kind": "metadata",
+            "metadata_key": "JSON-LD NewsArticle.datePublished / article:published_time"
+          }
+        }
+      ],
+      "body_sha256": "dd708a30d306167dba13c56a3d34ddd12963588e07652b441ce92217b08513c9",
+      "body_size": 51370,
+      "receipt_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/doubao_media.metadata.json",
+      "external_projection_file": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/doubao_media.text.txt",
+      "acquisition_actor": "source-review-a actual public fetch",
+      "author_read_at": "2026-10-28T11:08:40.563787+00:00",
+      "publication_date_ids": [
+        "D-S13-PUB"
+      ],
+      "modified_date_ids": [],
+      "independence_basis": "独立编辑机构；事实仍来自官方公告/文档，不等于独立试用"
+    }
+  ],
+  "date_evidence": [
+    {
+      "date_id": "D-S01-PUB",
+      "source_id": "S01",
+      "role": "publication",
+      "raw_value": "2026-09-09T16:00:00+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-10T00:00:00+08:00",
+      "citation_ids": [
+        "C01-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S01-VISIBLE",
+      "source_id": "S01",
+      "role": "publication",
+      "raw_value": "2026-09-09",
+      "precision": "date",
+      "timezone": "unknown",
+      "normalized_value": "2026-09-09",
+      "citation_ids": [
+        "C01-V"
+      ],
+      "unknown_reason": null,
+      "status": "visible_source_calendar_date",
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S01-MOD",
+      "source_id": "S01",
+      "role": "modified",
+      "raw_value": "2026-09-09T16:00:02.714734+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-10T00:00:02.714734+08:00",
+      "citation_ids": [
+        "C01-M"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S02-PUB",
+      "source_id": "S02",
+      "role": "publication",
+      "raw_value": "2026-09-15T17:00:00+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-16T01:00:00+08:00",
+      "citation_ids": [
+        "C02-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S02-VISIBLE",
+      "source_id": "S02",
+      "role": "publication",
+      "raw_value": "2026-09-15",
+      "precision": "date",
+      "timezone": "unknown",
+      "normalized_value": "2026-09-15",
+      "citation_ids": [
+        "C02-V"
+      ],
+      "unknown_reason": null,
+      "status": "visible_source_calendar_date",
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S02-MOD",
+      "source_id": "S02",
+      "role": "modified",
+      "raw_value": "2026-09-17T14:56:05.310570+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-17T22:56:05.310570+08:00",
+      "citation_ids": [
+        "C02-M"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S03-PUB",
+      "source_id": "S03",
+      "role": "publication",
+      "raw_value": "2026-09-23T14:30:00+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-23T22:30:00+08:00",
+      "citation_ids": [
+        "C03-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S03-VISIBLE",
+      "source_id": "S03",
+      "role": "publication",
+      "raw_value": "2026-09-23",
+      "precision": "date",
+      "timezone": "unknown",
+      "normalized_value": "2026-09-23",
+      "citation_ids": [
+        "C03-V"
+      ],
+      "unknown_reason": null,
+      "status": "visible_source_calendar_date",
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S03-MOD",
+      "source_id": "S03",
+      "role": "modified",
+      "raw_value": "2026-09-28T13:55:32.621325+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-28T21:55:32.621325+08:00",
+      "citation_ids": [
+        "C03-M"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-E01",
+      "source_id": "S01",
+      "role": "event",
+      "raw_value": "2026-09-09",
+      "precision": "date",
+      "timezone": "unknown",
+      "normalized_value": "2026-09-09",
+      "citation_ids": [
+        "C01-V",
+        "C01-A"
+      ],
+      "unknown_reason": null,
+      "status": "official_available_by_announcement_display_day",
+      "window_relation": "in_window",
+      "semantic_note": "now available支持官方在该来源日作此声明；不是已验证开始可用瞬间。"
+    },
+    {
+      "date_id": "D-E02",
+      "source_id": "S02",
+      "role": "event",
+      "raw_value": {
+        "start": "2026-09-15T17:00:00+00:00",
+        "end": "2026-09-17T14:56:05.310570+00:00"
+      },
+      "precision": "interval",
+      "timezone": "UTC",
+      "normalized_value": {
+        "start": "2026-09-16T01:00:00+08:00",
+        "end": "2026-09-17T22:56:05.310570+08:00",
+        "start_inclusive": true,
+        "end_inclusive": true
+      },
+      "citation_ids": [
+        "C02-P",
+        "C02-M",
+        "C02-R"
+      ],
+      "unknown_reason": null,
+      "status": "inferred_bounded_announcement_window",
+      "window_relation": "in_window",
+      "inference": "当前文章初发和修订时间为内容公告出现的保守有界口径；无历史diff，不确定Search Live句子在何版本加入。此处不是实际rollout区间。"
+    },
+    {
+      "date_id": "D-E02-ROLLOUT",
+      "source_id": "S02",
+      "role": "event",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [
+        "C02-R",
+        "C02-U"
+      ],
+      "unknown_reason": "当前版本同时有9/15原发、9/17更新和starting today；无历史diff或账号证据，实际rollout起始日/完成日未知。",
+      "status": "unknown_actual_rollout"
+    },
+    {
+      "date_id": "D-E03",
+      "source_id": "S03",
+      "role": "event",
+      "raw_value": "2026-09-23T14:30:00+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-23T22:30:00+08:00",
+      "citation_ids": [
+        "C03-P",
+        "C03-F"
+      ],
+      "unknown_reason": null,
+      "status": "announcement_time_not_all_user_enablement",
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-E04",
+      "source_id": "S04",
+      "role": "event",
+      "raw_value": "2026-09",
+      "precision": "month",
+      "timezone": "unknown",
+      "normalized_value": "2026-09",
+      "citation_ids": [
+        "C04-E",
+        "C04-F"
+      ],
+      "unknown_reason": null,
+      "status": "source_natural_month_release_record",
+      "window_relation": "in_window",
+      "reporting_mode": "calendar_reporting_only",
+      "reporting_range": {
+        "source_calendar_label": "2026-09",
+        "meaning": "研究月显示范围，不是实际UTC起止"
+      }
+    },
+    {
+      "date_id": "D-S04-PUB",
+      "source_id": "S04",
+      "role": "publication",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [],
+      "unknown_reason": "本次取得正文/官方元数据未给可核验的该页面/PDF首次发表时间；合同生效、许可签发、HTTP Last-Modified及抓取时间不替代首发。",
+      "status": "unknown",
+      "absence_check": {
+        "checked": "source text plus available PDF/HTML metadata",
+        "not_inferred_from": "file name, HTTP date, copyright or effective date"
+      }
+    },
+    {
+      "date_id": "D-S05-PUB",
+      "source_id": "S05",
+      "role": "publication",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [],
+      "unknown_reason": "本次取得正文/官方元数据未给可核验的该页面/PDF首次发表时间；合同生效、许可签发、HTTP Last-Modified及抓取时间不替代首发。",
+      "status": "unknown",
+      "absence_check": {
+        "checked": "source text plus available PDF/HTML metadata",
+        "not_inferred_from": "file name, HTTP date, copyright or effective date"
+      }
+    },
+    {
+      "date_id": "D-S06-PUB",
+      "source_id": "S06",
+      "role": "publication",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [],
+      "unknown_reason": "本次取得正文/官方元数据未给可核验的该页面/PDF首次发表时间；合同生效、许可签发、HTTP Last-Modified及抓取时间不替代首发。",
+      "status": "unknown",
+      "absence_check": {
+        "checked": "source text plus available PDF/HTML metadata",
+        "not_inferred_from": "file name, HTTP date, copyright or effective date"
+      }
+    },
+    {
+      "date_id": "D-S07-PUB",
+      "source_id": "S07",
+      "role": "publication",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [],
+      "unknown_reason": "本次取得正文/官方元数据未给可核验的该页面/PDF首次发表时间；合同生效、许可签发、HTTP Last-Modified及抓取时间不替代首发。",
+      "status": "unknown",
+      "absence_check": {
+        "checked": "source text plus available PDF/HTML metadata",
+        "not_inferred_from": "file name, HTTP date, copyright or effective date"
+      }
+    },
+    {
+      "date_id": "D-S08-PUB",
+      "source_id": "S08",
+      "role": "publication",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [],
+      "unknown_reason": "本次取得正文/官方元数据未给可核验的该页面/PDF首次发表时间；合同生效、许可签发、HTTP Last-Modified及抓取时间不替代首发。",
+      "status": "unknown",
+      "absence_check": {
+        "checked": "source text plus available PDF/HTML metadata",
+        "not_inferred_from": "file name, HTTP date, copyright or effective date"
+      }
+    },
+    {
+      "date_id": "D-S09-PUB",
+      "source_id": "S09",
+      "role": "publication",
+      "raw_value": null,
+      "precision": "unknown",
+      "timezone": "unknown",
+      "normalized_value": null,
+      "citation_ids": [],
+      "unknown_reason": "本次取得正文/官方元数据未给可核验的该页面/PDF首次发表时间；合同生效、许可签发、HTTP Last-Modified及抓取时间不替代首发。",
+      "status": "unknown",
+      "absence_check": {
+        "checked": "source text plus available PDF/HTML metadata",
+        "not_inferred_from": "file name, HTTP date, copyright or effective date"
+      }
+    },
+    {
+      "date_id": "D-S10-PUB",
+      "source_id": "S10",
+      "role": "publication",
+      "raw_value": "2026-09-09T16:00:00+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-10T00:00:00+08:00",
+      "citation_ids": [
+        "C10-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S11-PUB",
+      "source_id": "S11",
+      "role": "publication",
+      "raw_value": "2026-09-15T13:58:00-04:00",
+      "precision": "timestamp",
+      "timezone": "-04:00",
+      "normalized_value": "2026-09-16T01:58:00+08:00",
+      "citation_ids": [
+        "C11-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S12-PUB",
+      "source_id": "S12",
+      "role": "publication",
+      "raw_value": "2026-09-23T22:37:15+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-24T06:37:15+08:00",
+      "citation_ids": [
+        "C12-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S13-PUB",
+      "source_id": "S13",
+      "role": "publication",
+      "raw_value": "2026-09-10T03:27:49.000Z",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-10T11:27:49+08:00",
+      "citation_ids": [
+        "C13-P"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    },
+    {
+      "date_id": "D-S12-MOD",
+      "source_id": "S12",
+      "role": "modified",
+      "raw_value": "2026-09-25T14:35:03+00:00",
+      "precision": "timestamp",
+      "timezone": "UTC",
+      "normalized_value": "2026-09-25T22:35:03+08:00",
+      "citation_ids": [
+        "C12-M"
+      ],
+      "unknown_reason": null,
+      "window_relation": "in_window"
+    }
+  ],
+  "claims": [
+    {
+      "claim_id": "CL-P-G",
+      "event_id_or_section_id": [
+        "E01",
+        "E02"
+      ],
+      "claim_text": "Search为Google服务，服务提供方Google LLC按美国法律组织和运营，按运营主体归outside_mainland_china；实际条款版本为Singapore，不写成美国版。",
+      "claim_kind": "fact",
+      "citation_ids": [
+        "C06-E",
+        "C06-L",
+        "C06-S"
+      ],
+      "uncertainties": [],
+      "supports_fields": [
+        "provider_region"
+      ]
+    },
+    {
+      "claim_id": "CL-P-Y",
+      "event_id_or_section_id": "E03",
+      "claim_text": "Google官方将YouTube列为Google产品，结合Google LLC美国运营主体证据，归outside_mainland_china；不用US可用性推总部。",
+      "claim_kind": "fact",
+      "citation_ids": [
+        "C09-P",
+        "C06-E",
+        "C06-L"
+      ],
+      "uncertainties": [
+        "未取得单独YouTube条款，不穷尽各国签约主体"
+      ],
+      "supports_fields": [
+        "provider_region"
+      ]
+    },
+    {
+      "claim_id": "CL-P-D",
+      "event_id_or_section_id": "E04",
+      "claim_text": "火山产品和服务协议提供方为北京火山引擎科技有限公司；政府许可列同名实体及北京住所，按运营主体归mainland_china。",
+      "claim_kind": "fact",
+      "citation_ids": [
+        "C07-E",
+        "C08-E",
+        "C08-L"
+      ],
+      "uncertainties": [],
+      "supports_fields": [
+        "provider_region"
+      ]
+    },
+    {
+      "claim_id": "CL01-F",
+      "event_id_or_section_id": "E01",
+      "claim_text": "AI Mode可关联Yahoo Fantasy/Sleeper，用实时阵容及联赛上下文给定制建议；官方表示美国英语现已可用，但未标GA/灰度，阶段记not_stated。",
+      "claim_kind": "official_claim",
+      "citation_ids": [
+        "C01-F",
+        "C01-A"
+      ],
+      "uncertainties": [
+        "套餐、客户端、年龄及全量时点未详；本次没有关联账号"
+      ],
+      "supports_fields": [
+        "change_summary",
+        "stage",
+        "availability"
+      ]
+    },
+    {
+      "claim_id": "CL01-T",
+      "event_id_or_section_id": "E01",
+      "claim_text": "可见来源日9/9，published_time换算为上海9/10 00:00；事件按now available的来源日保留日精度，不把文章发表瞬间当上线起点。",
+      "claim_kind": "fact",
+      "citation_ids": [
+        "C01-V",
+        "C01-P",
+        "C01-M",
+        "C01-A"
+      ],
+      "uncertainties": [
+        "可见自然日时区未知；实际开始可用瞬时未知"
+      ],
+      "supports_fields": [
+        "event_time"
+      ]
+    },
+    {
+      "claim_id": "CL02-F",
+      "event_id_or_section_id": "E02",
+      "claim_text": "官方将3.8 Live绑定Search Live的实时分步帮助并宣布开始逐步推出；选announced计数，不把Extended Thinking在其他产品的部署范围移给Search Live。",
+      "claim_kind": "official_claim",
+      "citation_ids": [
+        "C02-F",
+        "C02-R",
+        "C02-A"
+      ],
+      "uncertainties": [
+        "For everyone不穷尽国家/语言/账号；模型97语言不等于产品全球开放"
+      ],
+      "supports_fields": [
+        "change_summary",
+        "stage",
+        "availability"
+      ]
+    },
+    {
+      "claim_id": "CL02-T",
+      "event_id_or_section_id": "E02",
+      "claim_text": "原发和现版修订均在窗内；无历史diff判断today对应初发还是修订，仅以两个公开时间界定公告内容出现的保守区间，实际rollout日unknown。",
+      "claim_kind": "inference",
+      "citation_ids": [
+        "C02-P",
+        "C02-M",
+        "C02-V",
+        "C02-U",
+        "C02-R"
+      ],
+      "uncertainties": [
+        "这是公告内容时间推断，不是部署起止"
+      ],
+      "supports_fields": [
+        "event_time"
+      ]
+    },
+    {
+      "claim_id": "CL03-F",
+      "event_id_or_section_id": "E03",
+      "claim_text": "YouTube宣布商品评测比较表及观看页追问，以announced记数；购物段未给完整地区/套餐/账号表，不借用Custom Feeds条件。",
+      "claim_kind": "official_claim",
+      "citation_ids": [
+        "C03-F",
+        "C03-T"
+      ],
+      "uncertainties": [
+        "搜索版的实验上下文不等于全球GA；逐账号可用日未知"
+      ],
+      "supports_fields": [
+        "change_summary",
+        "stage",
+        "availability"
+      ]
+    },
+    {
+      "claim_id": "CL03-T",
+      "event_id_or_section_id": "E03",
+      "claim_text": "官方公告9/23 14:30 UTC即上海9/23 22:30，另列9/28修订；选公告阶段，不当成全量可用日。",
+      "claim_kind": "fact",
+      "citation_ids": [
+        "C03-P",
+        "C03-M",
+        "C03-V",
+        "C03-F"
+      ],
+      "uncertainties": [
+        "实际逐账号启用时点未知"
+      ],
+      "supports_fields": [
+        "event_time"
+      ]
+    },
+    {
+      "claim_id": "CL04-F",
+      "event_id_or_section_id": "E04",
+      "claim_text": "官方9月版本行记Global新增图搜图，API文档明确visual与图片输入；属于开发者搜索API变化，非App入口；GA/灰度未标，stage=not_stated。",
+      "claim_kind": "official_claim",
+      "citation_ids": [
+        "C04-F",
+        "C04-E",
+        "C05-V",
+        "C05-I"
+      ],
+      "uncertainties": [
+        "Global是版本名，不证明全球地区/用户开放；未调用API"
+      ],
+      "supports_fields": [
+        "change_summary",
+        "stage",
+        "availability"
+      ]
+    },
+    {
+      "claim_id": "CL04-T",
+      "event_id_or_section_id": "E04",
+      "claim_text": "按2026-09来源自然月归属研究月，时区和具体日未知；PDF首发未知，媒体9/10发文不能代替推出日，8月文搜图不能当本月新图搜图。",
+      "claim_kind": "fact",
+      "citation_ids": [
+        "C04-E",
+        "C04-F",
+        "C04-O",
+        "C13-P"
+      ],
+      "uncertainties": [
+        "不发明9/1或10/1实际UTC边界"
+      ],
+      "supports_fields": [
+        "event_time"
+      ]
+    },
+    {
+      "claim_id": "CL04-A",
+      "event_id_or_section_id": "E04",
+      "claim_text": "文档面向开发者，要求API Key；图片URL/纯Base64二选一、可选矩形区域。计费与账号准入应按API文档核对，不由Global推地域。",
+      "claim_kind": "official_claim",
+      "citation_ids": [
+        "C05-A",
+        "C05-I",
+        "C05-V"
+      ],
+      "uncertainties": [
+        "未登录、未使用免费额度、未开通或调用API"
+      ],
+      "supports_fields": [
+        "availability"
+      ]
+    },
+    {
+      "claim_id": "CL-DEDUP",
+      "event_id_or_section_id": [
+        "E01",
+        "E02",
+        "E03",
+        "E04"
+      ],
+      "claim_text": "Google账户上下文接入与Search Live交互/模型升级是两种可区分变更，但产品仅计Google Search一次；加Ask YouTube、豆包搜索共3产品。",
+      "claim_kind": "inference",
+      "citation_ids": [
+        "C01-F",
+        "C02-F",
+        "C02-R",
+        "C03-F",
+        "C04-F"
+      ],
+      "uncertainties": [],
+      "supports_fields": [
+        "change_summary"
+      ]
+    },
+    {
+      "claim_id": "CL-TR01",
+      "event_id_or_section_id": "TR01",
+      "claim_text": "这组事件扩大搜索信息输入和提问方式：个人阵容、实时交互、图片查询各接入不同工作流；这不构成统一准确率提升的证据。",
+      "claim_kind": "inference",
+      "citation_ids": [
+        "C01-F",
+        "C02-F",
+        "C02-R",
+        "C05-V",
+        "C05-I"
+      ],
+      "uncertainties": [
+        "产品/用户/条件不同，不做质量排名或行业外推"
+      ],
+      "supports_fields": [
+        "trend_basis"
+      ]
+    },
+    {
+      "claim_id": "CL-TR02",
+      "event_id_or_section_id": "TR02",
+      "claim_text": "YouTube将评测发现、比较和追问联系起来，Fantasy把回应联系到个人联赛背景；可能减少用户拼接上下文的步骤，但效率/效果未测。",
+      "claim_kind": "inference",
+      "citation_ids": [
+        "C03-F",
+        "C03-T",
+        "C01-F"
+      ],
+      "uncertainties": [
+        "观看页与搜索版、账户连接前提各不相同"
+      ],
+      "supports_fields": [
+        "trend_basis"
+      ]
+    },
+    {
+      "claim_id": "CL-ACT",
+      "event_id_or_section_id": "ACT01",
+      "claim_text": "团队按任务需要选下一步验证路线：多模态Agent看豆包visual，连续终端交互看Search Live/YouTube，个性化搜索看Fantasy连接。先列地区、账号、套餐、输入与引用，再决定另行授权体验；本次不登录或调API。",
+      "claim_kind": "inference",
+      "citation_ids": [
+        "C05-V",
+        "C05-I",
+        "C05-A",
+        "C02-A",
+        "C03-F",
+        "C03-T",
+        "C01-A",
+        "C01-F"
+      ],
+      "uncertainties": [
+        "仍需资格核对和同任务受控比较，不据宣传采购或排名"
+      ],
+      "supports_fields": [
+        "action_basis"
+      ]
+    }
+  ],
+  "brief_sections": [
+    {
+      "section_id": "TR01",
+      "kind": "trend",
+      "event_ids": [
+        "E01",
+        "E02",
+        "E04"
+      ],
+      "claim_ids": [
+        "CL-TR01"
+      ],
+      "citation_ids": [
+        "C01-F",
+        "C02-F",
+        "C02-R",
+        "C05-V",
+        "C05-I"
+      ]
+    },
+    {
+      "section_id": "TR02",
+      "kind": "trend",
+      "event_ids": [
+        "E01",
+        "E03"
+      ],
+      "claim_ids": [
+        "CL-TR02"
+      ],
+      "citation_ids": [
+        "C03-F",
+        "C03-T",
+        "C01-F"
+      ]
+    },
+    {
+      "section_id": "ACT01",
+      "kind": "action",
+      "event_ids": [
+        "E01",
+        "E02",
+        "E03",
+        "E04"
+      ],
+      "claim_ids": [
+        "CL-ACT"
+      ],
+      "citation_ids": [
+        "C05-V",
+        "C05-I",
+        "C05-A",
+        "C02-A",
+        "C03-F",
+        "C03-T",
+        "C01-A",
+        "C01-F"
+      ]
+    }
+  ],
+  "lineage": [
+    {
+      "source_id": "S10",
+      "upstream_source_id": "S01",
+      "relation": "editorial_report_based_on_official_announcement",
+      "basis_citation_ids": [
+        "C10-UP",
+        "C10-F"
+      ],
+      "independence_note": "不同组织记者写作，但明确回链；非两次独立效果实测"
+    },
+    {
+      "source_id": "S11",
+      "upstream_source_id": "S02",
+      "relation": "editorial_report_based_on_official_announcement",
+      "basis_citation_ids": [
+        "C11-X",
+        "C11-F",
+        "C11-UP"
+      ],
+      "additional_upstream_url": "https://x.com/rajanpatel/status/2099914244221489368",
+      "independence_note": "正文链接官方公告并转述官方X；不把X当本作者已读独立全文"
+    },
+    {
+      "source_id": "S12",
+      "upstream_source_id": "S03",
+      "relation": "editorial_report_based_on_official_announcement",
+      "basis_citation_ids": [
+        "C12-UP",
+        "C12-L"
+      ],
+      "independence_note": "有产品范围分析，购物事实仍源于同一官方公告"
+    },
+    {
+      "source_id": "S13",
+      "upstream_source_id": "S04",
+      "relation": "documentation_digest",
+      "basis_citation_ids": [
+        "C13-UP"
+      ],
+      "independence_note": "清单链接官方HTML；本账本以同文档PDF核月度时间，非独立API测试"
+    },
+    {
+      "source_id": "S05",
+      "upstream_source_id": "S04",
+      "relation": "same_provider_complementary_documents",
+      "basis_citation_ids": [
+        "C04-F",
+        "C05-V"
+      ],
+      "independence_note": "发布记录负责时间、API文档负责接口事实，同厂商非独立机构"
+    },
+    {
+      "source_id": "S08",
+      "upstream_source_id": "S07",
+      "relation": "independent_administrative_identity_corroboration",
+      "basis_citation_ids": [
+        "C07-E",
+        "C08-E",
+        "C08-L"
+      ],
+      "independence_note": "政府记录只核主体身份，不核功能效果"
+    }
+  ],
+  "discovery": {
+    "process": "第一阶段A真实中英16条Query开放发现；另有root给定实际URL的定向核验；当前明确非盲作者参考阶段整合源先行资料。",
+    "not_a_Harness_trace": true,
+    "search_record_files": [
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/search01.json",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/search02.json",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/search03-open02.json",
+      "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h029/qa/source-review-a/raw/search04.json"
+    ],
+    "candidates": [
+      {
+        "candidate_id": "DC01",
+        "product": "Google Search Fantasy account linking",
+        "decision": "selected",
+        "phase": "targeted_crosscheck",
+        "reason": "root提供实际URL后独立重取全文，不声称A初始自主发现；实质账户上下文变化。",
+        "event_ids": [
+          "E01"
+        ]
+      },
+      {
+        "candidate_id": "DC02",
+        "product": "Google Search Live Gemini3.8Live",
+        "decision": "selected",
+        "phase": "targeted_crosscheck",
+        "reason": "root提供实际URL后独立重取全文，绑定具体Search Live功能，不把整篇模型发布当产品变化。",
+        "event_ids": [
+          "E02"
+        ]
+      },
+      {
+        "candidate_id": "DC03",
+        "product": "Ask YouTube shopping",
+        "decision": "selected",
+        "phase": "A_independent_discovery_then_targeted",
+        "reason": "A初始Query发现媒体线索并沿实际官方链接读取，后定向重新取得。",
+        "event_ids": [
+          "E03"
+        ]
+      },
+      {
+        "candidate_id": "DC04",
+        "product": "豆包Global图搜图",
+        "decision": "selected",
+        "phase": "A_independent_discovery_then_PDF",
+        "reason": "A初始Query/媒体来源清单发现官方文档；第二阶段按真实PDF链接重取。",
+        "event_ids": [
+          "E04"
+        ]
+      },
+      {
+        "candidate_id": "DC05",
+        "product": "Google AI Mode Gemini3.8Flash",
+        "decision": "rejected",
+        "phase": "A_independent_discovery",
+        "reason": "已取得官方正文，为非穷尽合格备选；仅未纳入本参考四项，不宣称无效。",
+        "event_ids": []
+      },
+      {
+        "candidate_id": "DC06",
+        "product": "Perplexity Fast Search",
+        "decision": "rejected",
+        "phase": "A_independent_discovery",
+        "reason": "官方论坛已读，为备选；本参考四项未选，Photon博客403不冒充已读技术全文。",
+        "event_ids": []
+      },
+      {
+        "candidate_id": "DC07",
+        "product": "百度AI流量分析",
+        "decision": "rejected",
+        "phase": "A_independent_discovery",
+        "reason": "官方与媒体阶段措辞有差异，作为补充边界例；未选不等于该事件不合法。",
+        "event_ids": []
+      },
+      {
+        "candidate_id": "DC08",
+        "product": "Cloudflare AI Search GA",
+        "decision": "rejected",
+        "phase": "A_search_only",
+        "reason": "实际搜索摘要指向10月，且未读正文，不据此断言其具体功能。",
+        "event_ids": []
+      },
+      {
+        "candidate_id": "DC09",
+        "product": "小红书AI搜索整合",
+        "decision": "unresolved",
+        "phase": "A_search_only",
+        "reason": "遇到第三方线索但本路未取一手正文，不补足计数。",
+        "event_ids": []
+      }
+    ]
+  },
+  "limitations": [
+    "author_reference，不是候选Harness轨迹、正式Judge或人工专家意见；第一阶段开放发现与第二阶段给定URL核验分开，未伪造检索或账号行为。",
+    "原件于2026-10-28取得，依有日期元数据和月版本行回溯；不声称持有9月同时期存档。",
+    "官方文档不证明实际账号可用性、准确率、省时、转化；未登录、关联账户、发消息、购买或调用API。",
+    "媒体均有官方同源链，没有独立运行复现，不按URL数认定独立性。",
+    "Google两个变化只计一产品；Global为版本名，不作地域证明。主体归属与用户可用范围分开。",
+    "Search Live当前文today指代不明，只保守界定公告内容时间，实际rollout日unknown。",
+    "豆包仅支持9月自然月，具体日/时区未知；示例数字和HTTP时间不当产品推出日。",
+    "单独YouTube条款不可达，不列已读；Google官方产品归属及服务主体证据未穷尽每国签约实体。",
+    "作者代理获取不代表正式collector可得；核心5源另有真实生产fetch/project预检，完整attempt来源锁仍须正式采集。",
+    "全文仅外部QA保留；本交付只有必要短引与定位，各英文页面合计不超过25原文词。"
+  ],
+  "identity_resolution": {
+    "google-search": [
+      "E01",
+      "E02"
+    ],
+    "ask-youtube": [
+      "E03"
+    ],
+    "doubao-search": [
+      "E04"
+    ],
+    "distinct_products": 3,
+    "same_product_distinct_changes": "账户上下文接入与实时交互/模型升级不同，不以日期/URL拆组"
+  },
+  "planned_time_policy": "4个所选变化未声明另外明确未来生效日，planned_date_ids空是not_applicable，不是已证明没有未来计划。"
+}

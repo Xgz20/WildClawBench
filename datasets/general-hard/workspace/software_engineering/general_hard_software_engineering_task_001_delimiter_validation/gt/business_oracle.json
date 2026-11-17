@@ -1,0 +1,26 @@
+{
+  "phase_order": [
+    "configuration",
+    "io",
+    "encoding",
+    "csv_syntax",
+    "header",
+    "record_order"
+  ],
+  "row_order": [
+    "width",
+    "id_empty",
+    "id_format",
+    "id_duplicate",
+    "name_empty",
+    "courses"
+  ],
+  "course_error_order": [
+    "E_DELIMITER_INVALID",
+    "E_DELIMITER_MIXED",
+    "E_ESCAPE",
+    "E_COURSE_EMPTY",
+    "E_COURSE_DUP"
+  ],
+  "cases_file": "hidden_tests/cases.json"
+}

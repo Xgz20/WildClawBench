@@ -1,0 +1,19 @@
+{
+  "identity": [
+    "top archive path",
+    "container_id/member_id original central index chain",
+    "raw_name_hex",
+    "archive_sha256 of actual container bytes"
+  ],
+  "actual_verification": [
+    "Actual file bytes hashed independently in staging",
+    "No rejected payload file or link allowed",
+    "Header sizes and bounded observed sizes remain separate",
+    "Skipped container internal members remain unenumerated"
+  ],
+  "source_truth_before_reference": true,
+  "limits": [
+    "Final bytes cannot prove absence of transient writes or execution; formal run requires actual trace.",
+    "Model-authored independent source calculations are not human expert review or actual Harness/model performance."
+  ]
+}

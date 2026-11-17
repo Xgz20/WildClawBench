@@ -1,0 +1,217 @@
+{
+  "schema_version": "general-e2e-generic-evidence-native-reuse-review/v1",
+  "score_version": "0.27.0",
+  "core_version": "0.15.2",
+  "registered_tasks": 37,
+  "release": "building",
+  "scope": [
+    "All ordinary rule Workers get independent worker/derived custody directory and indexed SHA/size receipts without Office/HTML flags.",
+    "Native frozen record join within explicit DOCX paragraph/table-row/cell scope and XLSX ranges; identity conflicts fail.",
+    "Known trusted frozen0.26 v2 collector bytes verify old sealed origins without rewriting them."
+  ],
+  "trigger_evidence": {
+    "H038": "Actual ordinary Worker typed H038_RULE_EVIDENCE_CONTEXT_UNAVAILABLE before hook; no candidate score.",
+    "H033": "27 actual production source-only sealed origins; existing single-record check falsely rejected3 DOCX table row citations on one source."
+  },
+  "final_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-generic-evidence-20261029/handoff-v2.json",
+    "sha256": "126157bfb7bf822e37e917ac01a9f18795cb1f363941b7f1a33ad80fdc4242c1",
+    "data": {
+      "schema": "framework-generic-evidence-handoff/v2",
+      "status": "READY_FOR_ROOT_DIFF_REVIEW_NOT_COMMITTED",
+      "at_UTC": "2026-10-28T21:26:14.891998+00:00",
+      "worktree": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+      "HEAD": "a5642a07498520a5ef07091a53c8c8e2b670262c",
+      "score_version": "0.27.0",
+      "core_version_unchanged": "0.15.2",
+      "allowlist": [
+        {
+          "path": "tests/general_e2e/test_generic_rule_evidence.py",
+          "sha256": "06d077fe05ac197680aaec93afea7cfbed48229241ff1041d6e3fe7162382faf",
+          "bytes": 7236,
+          "snapshot": "proposed-v2/tests/general_e2e/test_generic_rule_evidence.py"
+        },
+        {
+          "path": "tests/general_e2e/test_local_scoring_runtime.py",
+          "sha256": "d5edc61e7986fd84fe20300abc328256569184662eee81a17aa5bd98e4ed6f12",
+          "bytes": 25417,
+          "snapshot": "proposed-v2/tests/general_e2e/test_local_scoring_runtime.py"
+        },
+        {
+          "path": "tests/general_e2e/test_research_sources_native.py",
+          "sha256": "618bfb574046348d007865f0c189d945e1f995ba515088e21eafbbd3d126e290",
+          "bytes": 34607,
+          "snapshot": "proposed-v2/tests/general_e2e/test_research_sources_native.py"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+          "sha256": "750b6c52b0aa6984863e6a481b990a1e82f0d9d79fd6206c0012c0c4c0c1e48e",
+          "bytes": 22951,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/SKILL.md"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/references/local-rule-runtime.md",
+          "sha256": "edc0945f477de8edfb7b080a78b92e5b462b2b8cc4bfd72115da294a9a360966",
+          "bytes": 8866,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/references/local-rule-runtime.md"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md",
+          "sha256": "09928a1d24b608eaf2b068dcdef580e24e7586c370f01ee638843885b69bd965",
+          "bytes": 19689,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/references/research-sources.md"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native.py",
+          "sha256": "74b3cd15234f366c55581dae694a080ad76c2a232bcaab50f9a1f7ca2cf38fd2",
+          "bytes": 39853,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native.py"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native_v026.py",
+          "sha256": "a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240",
+          "bytes": 31091,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native_v026.py"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+          "sha256": "794b08db5c61890a5c7067c12361b9bea6b204ea792c84371da0c032c0d006c6",
+          "bytes": 298554,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py"
+        },
+        {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+          "sha256": "f32aa54704f38a7dfb5f0cc1ef20b86837f07af70b2e379e38b498b006393646",
+          "bytes": 284,
+          "snapshot": "proposed-v2/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json"
+        },
+        {
+          "path": "tests/general_e2e/test_html_runtime.py",
+          "sha256": "a1f0fe7e728a4468c9683e1e17bb256ff8a549b76a3be14847180bed1ea37abc",
+          "bytes": 22284,
+          "snapshot": "proposed-v2/tests/general_e2e/test_html_runtime.py"
+        }
+      ],
+      "unchanged_pins": {
+        "v1": {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+          "sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a"
+        },
+        "v026_v2": {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native_v026.py",
+          "sha256": "a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240"
+        },
+        "projector": {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/native_source_projection.py",
+          "sha256": "48d12c6666207fd51dc9824c12602f87d4092de9903d5b0dd368b8e62b1724ef"
+        },
+        "worker": {
+          "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py",
+          "sha256": "ec3ff8ccb80bf545bec76fd7495ad197e7a4a60f9e9015b84e5fd55b96e4c35d"
+        },
+        "core": {
+          "path": "src/wildclawbench_grading_core/__init__.py",
+          "sha256": "72dc67273393111d89f0857081ee4a7262135890ca8b3c8dffe49831e56aacf9"
+        }
+      },
+      "test_command_record": "commands/1793221971560624000-targeted-regression-canonical-temp.json",
+      "targeted_tests_passed": 34,
+      "source_first_failure_records_preserved": true,
+      "historical_capture_validation": {
+        "path": "historical-readonly-validation.json",
+        "sha256": "84691474bf1ea91a147c13cf057b7712185b7075933e43d30097c61f091053c5",
+        "normal27": true,
+        "archived27": true,
+        "coverage27": true,
+        "original27_unchanged": true,
+        "old_Office_normal_and_archived_references": {
+          "False": 4,
+          "True": 4
+        }
+      },
+      "network": "No external network. Pure offline fixtures/loopback only; historical verification explicitly blocks DNS and GET.",
+      "dependencies": "No installation. Tests and ZIP builder host use original checkout .venv; historical normal PDF validation uses existing H005 Worker with matching pypdf.",
+      "no_dataset_GT_or_historical_QA_modification": true,
+      "changes_diff_sha256": "ad4d903f008c8701e3c3ef35af6fccdff093613c8bc7b80c915f866ca9529fd7",
+      "failure_log_sha256": "cd8b46c13aadaf4c392a989b0b8dd7fc22efef14e56180dc77eb0711e3e06798",
+      "commit": false,
+      "root_review_notes": [
+        "Root-requested explicit DOCX table/XPath identity conflict is reproduced and fixed; matching identity is accepted.",
+        "Existing Office worker/archive/tamper test and new no-browser HTML custody test now preserve OFFICE_/HTML_ error families. Ordinary generic receipt/member/path negative test still passes.",
+        "No broad retest or additional scope after root-requested4 targeted regressions.",
+        "Historical27 normal/archive/coverage proof and old0.26 Office positive proof retained; no capture, GT or historical QA bytes changed.",
+        "No commit or official release ZIP. Ready for root final diff review and scoped commit."
+      ],
+      "prior_handoff_sha256": "6b394a550c6f0feb89fd8ccd001ef11cfd1ef99a0c8041c306b4bfc4596df18f",
+      "focused_followup_tests": {
+        "record": "commands/1793222675862746000-root-requested-focused-fixed.json",
+        "sha256": "4363d5b4c85284958e55fa228bfd74098363e1ba3d807ad42f0343c117e96f22",
+        "count": 4,
+        "passed": true
+      },
+      "baseline_tests34_retained": true
+    }
+  },
+  "final_freeze": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/framework-generic-evidence-20261029/freeze-v2.json",
+    "sha256": "e2d3aafdcbfea7f62010fbd7bb85ddef6ad05f276c765668f0b0fbf8d4da13d1"
+  },
+  "tests": {
+    "baseline_modules3": 34,
+    "root_requested_focused": 4,
+    "root_explicit_table_XPath_conflict_reproduced_and_fixed": true,
+    "legacy_Office_HTML_error_families_reproduced_and_preserved": true,
+    "not38_distinct_tests": "The4 targeted checks rerun affected paths after root fixes; do not describe them as38 distinct tests."
+  },
+  "historical_compatibility": {
+    "path": "historical-readonly-validation.json",
+    "sha256": "84691474bf1ea91a147c13cf057b7712185b7075933e43d30097c61f091053c5",
+    "normal27": true,
+    "archived27": true,
+    "coverage27": true,
+    "original27_unchanged": true,
+    "old_Office_normal_and_archived_references": {
+      "False": 4,
+      "True": 4
+    }
+  },
+  "unchanged_pins": {
+    "v1": {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources.py",
+      "sha256": "4fcb5239474bf5d3749f817abdccd02054ba86e2d766458f78f70d2da8c8968a"
+    },
+    "v026_v2": {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/research_sources_native_v026.py",
+      "sha256": "a42f931a1b37906cde50d0a134e59fa90442dd36374252d1cf1498dc73e38240"
+    },
+    "projector": {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/native_source_projection.py",
+      "sha256": "48d12c6666207fd51dc9824c12602f87d4092de9903d5b0dd368b8e62b1724ef"
+    },
+    "worker": {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/rule_worker.py",
+      "sha256": "ec3ff8ccb80bf545bec76fd7495ad197e7a4a60f9e9015b84e5fd55b96e4c35d"
+    },
+    "core": {
+      "path": "src/wildclawbench_grading_core/__init__.py",
+      "sha256": "72dc67273393111d89f0857081ee4a7262135890ca8b3c8dffe49831e56aacf9"
+    }
+  },
+  "root_review": {
+    "all11_working_files_equal_final_snapshot": true,
+    "frozen0_26_v2_equal_original_HEAD_blob": true,
+    "candidate_and_GT_not_modified": true,
+    "no_frozen_source_receipt_rewritten": true,
+    "no_H029_H030_GT_QA_or_v1_collector_change": true
+  },
+  "boundaries": {
+    "custody_does_not_prove_business_success": true,
+    "source_reuse_not_current_GET": true,
+    "mechanism_fixture_finalization_not_real_Judge": true,
+    "actual_H033_complete_bundle_and_A": "Still pending complete explicit reuse and business rules at this checkpoint",
+    "actual_H038_final_author_acceptance": "Stable-framework comparison still pending",
+    "real_Harness": false,
+    "human_expert": false,
+    "no_external_network_or_install_for_framework_tests": true
+  }
+}

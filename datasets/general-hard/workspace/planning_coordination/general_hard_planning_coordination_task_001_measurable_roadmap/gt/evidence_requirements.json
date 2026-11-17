@@ -1,0 +1,23 @@
+{
+  "schema": "h053.evidence/v1",
+  "candidate": "Source locators in native tables resolve to actual source record/section; they do not prove actions were executed",
+  "trusted": [
+    "Candidate original SHA",
+    "independent recalculation and numerator/denominator intervention receipts",
+    "rendered DOCX source SHA and PDF custody",
+    "immutable source/oracle binding"
+  ],
+  "formal_required_later": [
+    "冻结输入和产物SHA",
+    "绑定的执行attempt和终态",
+    "实际工具结果及错误恢复",
+    "规则/Judge逐项证据"
+  ],
+  "no_claims": [
+    "no real candidate Harness/model run",
+    "no semantic Judge/finalize",
+    "model review is not human expert review",
+    "four-client preflight pending",
+    "difficulty and discrimination unmeasured"
+  ]
+}

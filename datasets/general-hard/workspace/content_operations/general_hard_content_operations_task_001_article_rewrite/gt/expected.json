@@ -1,0 +1,171 @@
+{
+  "schema_version": "h057-source-first-oracle/v1",
+  "task_id": "general_hard_content_operations_task_001_article_rewrite",
+  "facts": {
+    "F01": {
+      "fact_id": "F01",
+      "title": "试点对象",
+      "statement": "试点只涉及客户支持组的12名员工，不代表全公司。",
+      "value": "12",
+      "denominator": "",
+      "unit": "人",
+      "status": "observed"
+    },
+    "F02": {
+      "fact_id": "F02",
+      "title": "观察窗口",
+      "statement": "记录窗口为2026年9月14日至9月25日，共两个工作周。",
+      "value": "",
+      "denominator": "",
+      "unit": "date_range",
+      "status": "observed"
+    },
+    "F03": {
+      "fact_id": "F03",
+      "title": "样本来源",
+      "statement": "材料是40份已脱敏的历史答复草稿，非随机挑选，没有接入实时客户会话。",
+      "value": "40",
+      "denominator": "",
+      "unit": "份",
+      "status": "observed"
+    },
+    "F04": {
+      "fact_id": "F04",
+      "title": "原流程耗时",
+      "statement": "同一组记录中，原流程处理每20份草稿的耗时中位数为84分钟，包含人工核对。",
+      "value": "84",
+      "denominator": "20",
+      "unit": "分钟/20份",
+      "status": "observed"
+    },
+    "F05": {
+      "fact_id": "F05",
+      "title": "试点耗时",
+      "statement": "试点流程处理每20份草稿的耗时中位数为62分钟，同样包含人工核对；不能由此证明因果提效。",
+      "value": "62",
+      "denominator": "20",
+      "unit": "分钟/20份",
+      "status": "observed"
+    },
+    "F06": {
+      "fact_id": "F06",
+      "title": "复核结果",
+      "statement": "40份草稿经人工逐份复核后，36份可直接采用，4份需要实质修改。",
+      "value": "36",
+      "denominator": "40",
+      "unit": "复核后可采用份数",
+      "status": "observed"
+    },
+    "F07": {
+      "fact_id": "F07",
+      "title": "复核方式",
+      "statement": "两名审阅者交叉核对全部40份草稿，仍由编辑承担最后确认。",
+      "value": "2",
+      "denominator": "40",
+      "unit": "审阅者/份",
+      "status": "observed"
+    },
+    "F08": {
+      "fact_id": "F08",
+      "title": "问题分布",
+      "statement": "4份需实质修改的草稿中，3份为事实时效问题，1份漏掉适用限制。",
+      "value": "3",
+      "denominator": "1",
+      "unit": "时效问题份/漏限制份",
+      "status": "observed"
+    },
+    "F09": {
+      "fact_id": "F09",
+      "title": "输入边界",
+      "statement": "仅允许使用经批准的脱敏素材；未获批准，不得输入个人信息或客户机密。",
+      "value": "",
+      "denominator": "",
+      "unit": "policy",
+      "status": "confirmed_policy"
+    },
+    "F10": {
+      "fact_id": "F10",
+      "title": "发布前置",
+      "statement": "编辑核对事实、适用限制和引用后才能发布；模型不能代替人工批准。",
+      "value": "",
+      "denominator": "",
+      "unit": "policy",
+      "status": "confirmed_policy"
+    },
+    "F11": {
+      "fact_id": "F11",
+      "title": "未验证范围",
+      "statement": "本轮没有做不同模型比较，也没有记录许可费、API费或完整生产运维成本。",
+      "value": "",
+      "denominator": "",
+      "unit": "unknown_scope",
+      "status": "not_measured"
+    },
+    "F12": {
+      "fact_id": "F12",
+      "title": "后续状态",
+      "statement": "下一步拟新增10份脱敏历史案例，仍待审批，尚未执行。",
+      "value": "10",
+      "denominator": "",
+      "unit": "份",
+      "status": "proposed_not_approved"
+    }
+  },
+  "qualifiers": {
+    "Q01": "非随机、脱敏的历史样本，不能泛化到全公司、所有行业或实时客户场景。",
+    "Q02": "84与62都是小范围描述性中位数；缺少随机对照，不能把差异写成AI造成或必然达到的提效。",
+    "Q03": "36/40是经人工复核后的可采用比例，不能写成模型自动准确率或不需要人工。",
+    "Q04": "下一步10份历史案例仅为待审批计划；本轮未全量上线、未接入实时客户会话。"
+  },
+  "prohibited_claims": [
+    "保证所有团队省时一半或普遍达到固定降本幅度",
+    "模型100%准确、可以免人工复核或自动发布",
+    "试点已经全量上线并接入真实客户会话"
+  ],
+  "expected_ids": [
+    "F01",
+    "F02",
+    "F03",
+    "F04",
+    "F05",
+    "F06",
+    "F07",
+    "F08",
+    "F09",
+    "F10",
+    "F11",
+    "F12",
+    "Q01",
+    "Q02",
+    "Q03",
+    "Q04"
+  ],
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "independent_math": {
+    "reviewed": 40,
+    "adopted": 36,
+    "needs_revision": 4,
+    "revision_breakdown": [
+      3,
+      1
+    ],
+    "adopted_after_human_review_ratio": 0.9,
+    "median_difference_minutes_per20": 22,
+    "descriptive_relative_difference_numerator": 22,
+    "descriptive_relative_difference_denominator": 84,
+    "causal_effect": null,
+    "total_cost": null,
+    "next10_approved": false
+  },
+  "semantic_truth_scope": "original synthetic source records; numeric/semantic correspondence and argument require independent Judge, not arbitrary keyword tests",
+  "source_sha256": {
+    "draft.md": "80bf919d7206f79d14c0e55416fb6eb6847550b83d3f8d176c7eae885c93acab",
+    "editorial.md": "2c19939856d08fa436b18b31f0ad692a67fda46c7b265ee08e519c3f32d5f08c",
+    "facts.csv": "4164d4773ea6d5a1ffbc39c44746316dd13120d9f3b7165c26fe84220536ac00"
+  }
+}

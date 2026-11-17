@@ -11,6 +11,9 @@ from unittest.mock import patch
 from eval_general_e2e.contracts import validate_contract_file
 from eval_general_e2e.datasets.bundle import build_default_bundle
 from tests.general_e2e.test_local_scoring_runtime import Fixture, MAPPED_RESULTS_RULE, RUNTIME
+from tests.general_e2e.test_native_artifact_text import write_docx
+from tests.general_e2e.test_native_presentation_text import write_pptx
+from tests.general_e2e.test_native_word_structure import write_word
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -289,6 +292,126 @@ class GeneralSemanticScoringTests(unittest.TestCase):
         RUNTIME._remove_tree(attempt / "runtime")
         self.assertTrue(RUNTIME.verify_score_attempt(attempt, archived=True)["score_valid"])
 
+    def _synthetic_sealed_office_audit(self, attempt: Path) -> tuple[dict, Path]:
+        """Synthetic custody protocol only; no real Office execution is claimed."""
+        manifest = json.loads((attempt / "attempt-manifest.json").read_text())
+        source = manifest["private_scoring"]["storage"]["files"][0]
+        worker = attempt / "worker"
+        derived = worker / "derived/recalculation"
+        derived.mkdir(parents=True)
+        lock = {"profile": "synthetic-protocol-only", "engine_version": "fixture-engine",
+                "executable_sha256": "a" * 64}
+        lock_path = worker / "office-runtime.json"
+        lock_path.write_text(json.dumps(lock))
+        output = derived / "recalculated.xlsx"
+        output.write_bytes(b"synthetic derived workbook bytes")
+        receipt_path = derived / "office-audit.json"
+        receipt_path.write_text(json.dumps({
+            "schema_version": "wildclawbench.office-recalculation/v1", **lock,
+            "source_unchanged": True, "source_sha256": source["content_sha256"],
+            "derived_sha256": RUNTIME._sha256_file(output),
+        }))
+        artifacts = RUNTIME._rule_derived_inventory(attempt)
+        (attempt / "rule-audit.json").write_text(json.dumps({
+            "status": "completed",
+            "worker": {"office_runtime": {"path": "worker/office-runtime.json",
+                                          "sha256": RUNTIME._sha256_file(lock_path)}},
+            "derived_artifacts": artifacts,
+            "derived_evidence": RUNTIME._rule_derived_receipt(artifacts),
+        }))
+        return lock, receipt_path
+
+    def test_sealed_office_rule_source_survives_archive_and_reindexed_false_proof_fails(self) -> None:
+        attempt = self._hybrid_attempt("sealed-office-derived", office_reference=True)
+        lock, receipt_path = self._synthetic_sealed_office_audit(attempt)
+        manifest = json.loads((attempt / "attempt-manifest.json").read_text())
+        private_gt = attempt / manifest["paths"]["gt"]
+        before = {p.relative_to(private_gt).as_posix(): p.read_bytes()
+                  for p in private_gt.rglob("*") if p.is_file()}
+        with patch.object(RUNTIME, "_load_office_runtime", return_value=lock):
+            response, candidate_id, transcript_id = self._prepare_and_query(attempt)
+            for row in response["criteria"]:
+                row.update(status="judged", score=1.0, reason="合成证据支持本项采用完整分值档位。",
+                           evidence_ids=[candidate_id, transcript_id],
+                           review={"query_ids": ["query-0001", "query-0002"],
+                                   "supporting_evidence_checked": True, "contradicting_evidence_checked": True,
+                                   "absence_claim": False, "complete_event_range_checked": False})
+            # Use the actual query receipts; no synthetic query admission.
+            queries = json.loads((attempt / "semantic/query-log.json").read_text())["queries"]
+            for row in response["criteria"]:
+                row["review"] = {"query_ids": [q["query_id"] for q in queries],
+                                 "supporting_evidence_checked": True,
+                                 "contradicting_evidence_checked": True, "absence_claim": False,
+                                 "complete_event_range_checked": False}
+            response_path = attempt / "synthetic-office-response.json"
+            response_path.write_text(json.dumps(response, ensure_ascii=False))
+            RUNTIME.record_semantics_attempt(attempt_root=attempt, response_path=response_path)
+            RUNTIME.finalize_score_attempt(attempt_root=attempt)
+            RUNTIME._remove_tree(attempt / "runtime")
+            self.assertTrue(RUNTIME.verify_score_attempt(attempt, archived=True)["score_valid"])
+            self.assertEqual(before, {p.relative_to(private_gt).as_posix(): p.read_bytes()
+                                     for p in private_gt.rglob("*") if p.is_file()})
+            self.assertFalse((private_gt / "reference.xlsx").exists())
+            receipt = json.loads(receipt_path.read_text())
+            receipt["source_sha256"] = "0" * 64
+            receipt_path.write_text(json.dumps(receipt))
+            audit_path = attempt / "rule-audit.json"
+            audit = json.loads(audit_path.read_text())
+            audit["derived_artifacts"] = RUNTIME._rule_derived_inventory(attempt)
+            audit["derived_evidence"] = RUNTIME._rule_derived_receipt(audit["derived_artifacts"])
+            audit_path.write_text(json.dumps(audit))
+            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "OFFICE_RECALCULATION_AUDIT_INVALID"):
+                RUNTIME.verify_score_attempt(attempt, archived=True)
+
+    def test_sealed_office_native_query_and_api_source_keep_both_original_and_container_binding(self) -> None:
+        data = write_docx(self.root / "reference.docx").read_bytes()
+        fixture = Fixture(self.root / "sealed-native-text", rule="", grading_type="llm_judge",
+                          grading_weights={"automated": 0.0, "llm_judge": 1.0},
+                          llm_judge_rubric=RUBRIC, extra_gt_files={"nested/reference.docx": data})
+        attempt = fixture.prepare("sealed-native-text")
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        catalog = json.loads((attempt / "semantic/evidence-catalog.json").read_text())
+        entry = next(row for row in catalog["evidence_index"]["entries"]
+                     if row["reference"].get("path", "").endswith(".gtref.zip"))
+        reference = entry["reference"]
+        page = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="file", evidence_id=entry["id"])
+        self.assertIn("2026年制度", page["items"][0]["text"])
+        log = json.loads((attempt / "semantic/query-log.json").read_text())["queries"][-1]
+        projection = log["coverage"]["native_extraction"]
+        self.assertEqual(projection["source_sha256"], RUNTIME._sha256_bytes(data))
+        self.assertEqual(projection["reference_storage"]["container_sha256"], reference["sha256"])
+        self.assertEqual(projection["reference_storage"]["logical_path"], "nested/reference.docx")
+        rows = RUNTIME._api_evidence_sources(attempt, catalog, [])
+        row, content, status = next(row for row in rows if row[0]["evidence_id"] == entry["id"])
+        self.assertEqual(status, "native_text")
+        self.assertIn("2026年制度", content)
+        self.assertEqual(row["content_representation"], "sealed_private_reference_native_text_records")
+        self.assertEqual(row["sha256"], reference["sha256"])
+        self.assertEqual(row["native_extraction"]["source_sha256"], RUNTIME._sha256_bytes(data))
+        self.assertFalse((attempt / "private/gt/nested/reference.docx").exists())
+        RUNTIME._remove_tree(attempt / "runtime")
+        self.assertEqual(RUNTIME._sealed_office_reference_text(
+            attempt, attempt / reference["path"], reference["sha256"])["source_sha256"], RUNTIME._sha256_bytes(data))
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "SEMANTIC_EVIDENCE_DIGEST_MISMATCH"):
+            RUNTIME._sealed_office_reference_text(attempt, attempt / reference["path"], "0" * 64)
+
+    def test_sealed_office_verification_view_rejects_mapping_drift_and_path_escape(self) -> None:
+        attempt = self._hybrid_attempt("sealed-office-view-negative", office_reference=True)
+        path = attempt / "attempt-manifest.json"
+        original = path.read_text()
+        for value in ("../reference.xlsx", "changed.xlsx"):
+            with self.subTest(logical_path=value):
+                manifest = json.loads(original)
+                manifest["private_scoring"]["storage"]["files"][0]["logical_path"] = value
+                path.write_text(json.dumps(manifest))
+                with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "GT_REFERENCE_STORAGE_INVALID"):
+                    with RUNTIME._office_reference_verification_view(attempt):
+                        self.fail("invalid sealed mapping was admitted")
+        path.write_text(original)
+        with RUNTIME._office_reference_verification_view(attempt) as view:
+            self.assertEqual((view / "reference.xlsx").read_bytes(), b"opaque frozen Office reference bytes")
+        self.assertFalse(view.exists())
+
     def test_duplicate_query_references_are_mechanical_transport_not_an_evaluation_error(self) -> None:
         attempt=self._hybrid_attempt('duplicate-queries')
         response,candidate_id,transcript_id=self._prepare_and_query(attempt)
@@ -553,6 +676,68 @@ class GeneralSemanticScoringTests(unittest.TestCase):
                      {"mode": "file", "file_char_offset": 1, "offset": 1}]:
             with self.subTest(args=args), self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, "CHAR_PAGE_INVALID"):
                 RUNTIME.query_evidence_attempt(attempt_root=attempt, evidence_id=eid, **args)
+    def test_native_file_query_has_frozen_sha_record_locators_and_audited_paging(self) -> None:
+        fixture = Fixture(self.root / "native", grading_type="hybrid",
+            grading_weights={"automated": .5, "llm_judge": .5}, llm_judge_rubric=RUBRIC)
+        write_docx(fixture.candidate / "results/handoff.docx")
+        entries, digest = RUNTIME._inventory_tree(fixture.candidate)
+        path = fixture.candidate.parent / "candidate-artifact.json"
+        artifact = json.loads(path.read_text()); artifact.update(entries=entries, expected_sha256=digest)
+        path.write_text(json.dumps(artifact))
+        execution = json.loads(fixture.execution_record.read_text()); execution["candidate"]["frozen_sha256"] = digest
+        fixture.execution_record.write_text(json.dumps(execution))
+        attempt = fixture.prepare("native-query")
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        page = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="catalog", path_contains="handoff.docx")
+        evidence_id = page["items"][0]["id"]
+        response = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="file", evidence_id=evidence_id, offset=2, limit=2)
+        self.assertEqual(response["total_matches"], 5)
+        self.assertEqual(response["returned_count"], 2)
+        self.assertEqual([item["line"] for item in response["items"]], [3, 4])
+        self.assertEqual(json.loads(response["items"][0]["text"])["locator"], "table:1/row:1/cell:1")
+        log = json.loads((attempt / "semantic/query-log.json").read_text())["queries"][-1]
+        self.assertEqual(log["coverage"]["kind"], "native-text-records")
+        self.assertEqual(log["coverage"]["native_extraction"]["source_sha256"], page["items"][0]["reference"]["sha256"])
+
+    def test_presentation_query_pages_native_records_with_frozen_digest(self) -> None:
+        fixture = Fixture(self.root / "pptx-native", grading_type="hybrid",
+            grading_weights={"automated": .5, "llm_judge": .5}, llm_judge_rubric=RUBRIC)
+        write_pptx(fixture.candidate / "results/annual.pptx")
+        entries, digest = RUNTIME._inventory_tree(fixture.candidate)
+        path = fixture.candidate.parent / "candidate-artifact.json"
+        artifact = json.loads(path.read_text(encoding="utf-8")); artifact.update(entries=entries, expected_sha256=digest)
+        path.write_text(json.dumps(artifact), encoding="utf-8")
+        execution = json.loads(fixture.execution_record.read_text(encoding="utf-8"))
+        execution["candidate"]["frozen_sha256"] = digest
+        fixture.execution_record.write_text(json.dumps(execution), encoding="utf-8")
+        attempt = fixture.prepare("pptx-native-query")
+        RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        catalog = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="catalog", path_contains="annual.pptx")
+        evidence_id = catalog["items"][0]["id"]
+        page = RUNTIME.query_evidence_attempt(attempt_root=attempt, mode="file", evidence_id=evidence_id, offset=3, limit=4)
+        self.assertEqual([row["line"] for row in page["items"]], [4, 5, 6, 7])
+        self.assertGreater(page["total_matches"], 35)
+        self.assertEqual(json.loads(page["items"][0]["text"])["text"], "年度报告\n2026")
+        log = json.loads((attempt / "semantic/query-log.json").read_text(encoding="utf-8"))["queries"][-1]
+        self.assertEqual(log["coverage"]["kind"], "native-text-records")
+        self.assertEqual(log["coverage"]["native_extraction"]["source_sha256"], catalog["items"][0]["reference"]["sha256"])
+        self.assertEqual(log["coverage"]["native_extraction"]["engine"]["version"], "wildclawbench.pptx-text/v1")
+
+    def test_word_structure_query_keeps_frozen_cell_and_note_locators(self) -> None:
+        fixture=Fixture(self.root/'word-structure',rule='',grading_type='llm_judge',grading_weights={'automated':0.,'llm_judge':1.},llm_judge_rubric=RUBRIC)
+        write_word(fixture.candidate/'results/converted.docx')
+        entries,digest=RUNTIME._inventory_tree(fixture.candidate)
+        path=fixture.candidate.parent/'candidate-artifact.json';record=json.loads(path.read_text());record.update(entries=entries,expected_sha256=digest);path.write_text(json.dumps(record),encoding='utf-8')
+        record=json.loads(fixture.execution_record.read_text());record['candidate']['frozen_sha256']=digest;fixture.execution_record.write_text(json.dumps(record),encoding='utf-8')
+        attempt=fixture.prepare('word-structure-query');RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+        catalog=RUNTIME.query_evidence_attempt(attempt_root=attempt,mode='catalog',path_contains='converted.docx')
+        identity=catalog['items'][0]['id'];page=RUNTIME.query_evidence_attempt(attempt_root=attempt,mode='file',evidence_id=identity,offset=0,limit=1000,max_chars=100_000)
+        rows={r['locator']:r for r in (json.loads(item['text']) for item in page['items'])}
+        self.assertEqual(rows['table:1/row:3/cell:1']['table_structure']['vertical_anchor'],'table:1/row:2/cell:1')
+        self.assertEqual(rows['table:1/row:3/cell:4']['note_references'][0]['id'],'2')
+        log=json.loads((attempt/'semantic/query-log.json').read_text())['queries'][-1]
+        self.assertEqual(log['coverage']['native_extraction']['source_sha256'],catalog['items'][0]['reference']['sha256'])
+        self.assertEqual(log['coverage']['native_extraction']['engine']['version'],'wildclawbench.docx-text/v1')
 
     def test_absence_claim_requires_unfiltered_complete_transcript_pages(self) -> None:
         attempt = self._hybrid_attempt("absence")

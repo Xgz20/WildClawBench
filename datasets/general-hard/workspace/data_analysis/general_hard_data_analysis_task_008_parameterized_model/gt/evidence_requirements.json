@@ -1,0 +1,12 @@
+{
+  "schema_version": "h024-evidence/v1",
+  "required": [
+    "cache-cleared native baseline",
+    "selector2/3 input change",
+    "three parameter input changes with all affected/unaffected results checked",
+    "complete editable raw records/parameter rows",
+    "actual monthly test record with parameter/result native locators and restored baseline"
+  ],
+  "scope": "reported facts checked against source truth plus independent native replays; open prose and payroll expert quality not automatically judged",
+  "difficulty": "L4 design estimate only"
+}

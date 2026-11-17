@@ -1,0 +1,12 @@
+{
+  "case_id": "B03_legacy_all",
+  "defaults": {},
+  "project": {
+    "timeout_ms": 1500,
+    "retry_count": 3,
+    "cache_enabled": true,
+    "workers": 6,
+    "output_dir": "stage"
+  },
+  "user": {}
+}

@@ -1,0 +1,239 @@
+{
+  "schema": "h034-machine-observation-contract/v1",
+  "created_as": "nonblind rule author; source-first truth and public tolerance, no reference-derived answers",
+  "claim_ids": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08"
+  ],
+  "claims": {
+    "C01": {
+      "source_verdict": "supported",
+      "judgment_object": "预算10处两方法图示均值及同设置描述的边界",
+      "subclaims": [
+        {
+          "judgment_object": "A约72%、B约64%的均值读数",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "仅描述图示同设置均值",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        }
+      ]
+    },
+    "C02": {
+      "source_verdict": "refuted",
+      "judgment_object": "由图上等距推出预算绝对增量相等",
+      "subclaims": [
+        {
+          "judgment_object": "三个标出预算横向间距相等",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "两段预算绝对增量相同",
+          "normalized_verdict": "refuted",
+          "kind": "fact_or_scope"
+        }
+      ]
+    },
+    "C03": {
+      "source_verdict": "supported",
+      "judgment_object": "均值顺序和显示误差区间的交叠",
+      "subclaims": [
+        {
+          "judgment_object": "B均值高于A",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "两显示SD区间存在交叠",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        }
+      ]
+    },
+    "C04": {
+      "source_verdict": "refuted",
+      "judgment_object": "“交叠已证明不显著且等效”的证据充分性断言",
+      "subclaims": [
+        {
+          "judgment_object": "显示SD区间交叠",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "交叠足以证明差异不显著",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "真实差异是否不显著",
+          "normalized_verdict": "insufficient",
+          "kind": "statistical fact"
+        },
+        {
+          "judgment_object": "交叠足以证明效果相同",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "真实效果是否等效",
+          "normalized_verdict": "insufficient",
+          "kind": "statistical fact"
+        }
+      ]
+    },
+    "C05": {
+      "source_verdict": "supported",
+      "judgment_object": "8 workers处B/A耗时比及比较范围",
+      "subclaims": [
+        {
+          "judgment_object": "8 workers处B约为A的10倍耗时",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "比较限图示硬件/计时条件",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        }
+      ]
+    },
+    "C06": {
+      "source_verdict": "insufficient",
+      "judgment_object": "从低耗时推出最终目标质量更高；主判断为质量事实是否可由现有证据确定",
+      "subclaims": [
+        {
+          "judgment_object": "8 workers处A耗时较低",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "该耗时图足以推出A最终目标质量较高",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "A最终目标质量事实上是否较高",
+          "normalized_verdict": "insufficient",
+          "kind": "quality fact"
+        }
+      ]
+    },
+    "C07": {
+      "source_verdict": "refuted",
+      "judgment_object": "复合论述的组内方向与因果证据充分性；不是仅判断合并相关方向",
+      "subclaims": [
+        {
+          "judgment_object": "合并点位总体正关联",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "任一组内观测成功率都随长度增加而提高",
+          "normalized_verdict": "refuted",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "合并关联足以说明任一组内增加长度都会提高成功率",
+          "normalized_verdict": "refuted",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "judgment_object": "已建立因果关系",
+          "normalized_verdict": "refuted",
+          "kind": "causal-evidence metaproposition"
+        },
+        {
+          "judgment_object": "干预增加长度的真实因果效应",
+          "normalized_verdict": "insufficient",
+          "kind": "causal fact"
+        }
+      ]
+    },
+    "C08": {
+      "source_verdict": "supported",
+      "judgment_object": "合并/分组方向与现有观察的因果边界",
+      "subclaims": [
+        {
+          "judgment_object": "合并正关联",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "G1组内下降",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "G2组内下降",
+          "normalized_verdict": "supported",
+          "kind": "fact_or_scope"
+        },
+        {
+          "judgment_object": "现有观察不能确证增加长度提高成功率",
+          "normalized_verdict": "supported",
+          "kind": "evidence-limit metaproposition"
+        }
+      ]
+    }
+  },
+  "business_claims": [
+    "C01",
+    "C03",
+    "C05",
+    "C08"
+  ],
+  "boundary_claims": [
+    "C02",
+    "C04",
+    "C06",
+    "C07"
+  ],
+  "required_point_ids": [
+    "F01-A-10",
+    "F01-B-10",
+    "F02-A",
+    "F02-B",
+    "F03-A-8",
+    "F03-B-8",
+    "F04-G1-1",
+    "F04-G1-5",
+    "F04-G2-8",
+    "F04-G2-12"
+  ],
+  "point_owner": {
+    "F01-A-10": "C01",
+    "F01-B-10": "C01",
+    "F02-A": "C03",
+    "F02-B": "C03",
+    "F03-A-8": "C05",
+    "F03-B-8": "C05",
+    "F04-G1-1": "C08",
+    "F04-G1-5": "C08",
+    "F04-G2-8": "C08",
+    "F04-G2-12": "C08"
+  },
+  "required_readouts_are_claim_minimum_not_reference_28_point_template": true,
+  "all_reported_known_points_checked": true,
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "auxiliary_public_protected": {
+    "delivery_contract.md": "1806aadd10125109004e360dbbe706ca2d89e36a5358a7a770f67a21ff3c91dd"
+  },
+  "numeric_policy": "Source-first consensus readable hull plus unchanged public tolerance defines a conservative acceptance envelope; informative width at most the source hull width plus two tolerance margins. Scalars and independently bounded intervals accepted; no narrowing to a single model point or consensus midpoint, no hidden array precision.",
+  "open_semantic_routes": "Equivalent explicit fact/proof/component targets permitted; unhandled legal prose is typed pending review, not candidate0 or implicit1.",
+  "actual_looking_proof": false
+}

@@ -1,0 +1,330 @@
+{
+  "schema_version": "h018-runtime-contract/v1",
+  "grading_type": "automated",
+  "semantic_judge_required": false,
+  "raw_aliases": {
+    "record_id": [
+      "record_id",
+      "提交ID",
+      "记录ID"
+    ],
+    "respondent_id": [
+      "respondent_id",
+      "受访者ID",
+      "受访者编号"
+    ],
+    "submitted_at": [
+      "submitted_at",
+      "提交时间"
+    ],
+    "stratum": [
+      "stratum",
+      "分层",
+      "层"
+    ],
+    "consent": [
+      "consent",
+      "同意状态"
+    ],
+    "status": [
+      "status",
+      "提交状态"
+    ],
+    "q1_use": [
+      "q1_use",
+      "Q1使用",
+      "Q1回答"
+    ],
+    "q2_sat": [
+      "q2_sat",
+      "Q2满意度",
+      "Q2回答"
+    ],
+    "q3_barriers": [
+      "q3_barriers",
+      "Q3障碍",
+      "Q3回答"
+    ],
+    "q4_recommend": [
+      "q4_recommend",
+      "Q4推荐",
+      "Q4回答"
+    ],
+    "keep": [
+      "keep",
+      "保留",
+      "保留标记"
+    ],
+    "reason": [
+      "reason",
+      "排除原因"
+    ],
+    "related_record_id": [
+      "related_record_id",
+      "替代提交ID",
+      "关联提交ID"
+    ]
+  },
+  "model_aliases": {
+    "record_id": [
+      "record_id",
+      "提交ID",
+      "记录ID"
+    ],
+    "respondent_id": [
+      "respondent_id",
+      "受访者ID",
+      "受访者编号"
+    ],
+    "stratum": [
+      "stratum",
+      "分层",
+      "层"
+    ],
+    "weight": [
+      "weight",
+      "权重",
+      "分层权重"
+    ],
+    "q1_valid": [
+      "q1_valid",
+      "Q1有效"
+    ],
+    "q1_yes": [
+      "q1_yes",
+      "Q1使用命中"
+    ],
+    "q2_valid": [
+      "q2_valid",
+      "Q2有效"
+    ],
+    "q2_sat": [
+      "q2_sat",
+      "q2_sat_flag",
+      "q2_satisfied",
+      "Q2满意命中"
+    ],
+    "q3_valid": [
+      "q3_valid",
+      "Q3有效"
+    ],
+    "q3_A": [
+      "q3_A",
+      "Q3A",
+      "Q3流程不清命中"
+    ],
+    "q3_B": [
+      "q3_B",
+      "Q3B",
+      "Q3入口分散命中"
+    ],
+    "q3_C": [
+      "q3_C",
+      "Q3C",
+      "Q3材料不齐命中"
+    ],
+    "q3_D": [
+      "q3_D",
+      "Q3D",
+      "Q3时间安排命中"
+    ],
+    "q3_N": [
+      "q3_N",
+      "Q3N",
+      "Q3未遇障碍命中"
+    ],
+    "q4_valid": [
+      "q4_valid",
+      "Q4有效"
+    ],
+    "q4_yes": [
+      "q4_yes",
+      "Q4推荐命中"
+    ]
+  },
+  "long_model_aliases": {
+    "record_id": [
+      "record_id",
+      "提交ID",
+      "记录ID"
+    ],
+    "respondent_id": [
+      "respondent_id",
+      "受访者ID",
+      "受访者编号"
+    ],
+    "stratum": [
+      "stratum",
+      "分层",
+      "层"
+    ],
+    "weight": [
+      "weight",
+      "权重",
+      "分层权重"
+    ],
+    "marker_key": [
+      "marker_key",
+      "标记字段",
+      "field"
+    ],
+    "marker_value": [
+      "marker_value",
+      "标记值",
+      "value"
+    ]
+  },
+  "summary_aliases": {
+    "metric_id": [
+      "metric_id",
+      "指标ID",
+      "指标编号"
+    ],
+    "question_id": [
+      "question_id",
+      "题号"
+    ],
+    "label": [
+      "指标",
+      "label",
+      "指标名称"
+    ],
+    "raw_num": [
+      "raw_num",
+      "原始分子",
+      "未加权分子"
+    ],
+    "raw_den": [
+      "raw_den",
+      "有效分母",
+      "原始分母"
+    ],
+    "raw_rate": [
+      "raw_rate",
+      "原始比例",
+      "原始百分比"
+    ],
+    "weighted_num": [
+      "weighted_num",
+      "加权分子"
+    ],
+    "weighted_den": [
+      "weighted_den",
+      "加权分母"
+    ],
+    "weighted_rate": [
+      "weighted_rate",
+      "加权比例",
+      "加权百分比"
+    ]
+  },
+  "weight_aliases": {
+    "stratum": [
+      "stratum",
+      "分层",
+      "层"
+    ],
+    "weight": [
+      "weight",
+      "权重",
+      "分层权重"
+    ],
+    "record_id": [
+      "record_id",
+      "提交ID",
+      "记录ID"
+    ],
+    "metric_id": [
+      "metric_id",
+      "指标ID",
+      "指标编号"
+    ]
+  },
+  "word_metric_aliases": {
+    "metric_id": [
+      "metric_id",
+      "指标ID",
+      "指标编号"
+    ],
+    "label": [
+      "指标",
+      "label",
+      "指标名称"
+    ],
+    "raw_num": [
+      "raw_num",
+      "原始分子",
+      "未加权分子"
+    ],
+    "raw_den": [
+      "raw_den",
+      "有效分母",
+      "原始分母"
+    ],
+    "raw_rate": [
+      "raw_rate",
+      "原始比例",
+      "原始百分比"
+    ],
+    "weighted_rate": [
+      "weighted_rate",
+      "加权比例",
+      "加权百分比"
+    ]
+  },
+  "word_stat_aliases": {
+    "item": [
+      "item",
+      "统计项",
+      "项目"
+    ],
+    "value": [
+      "value",
+      "数值",
+      "人数"
+    ]
+  },
+  "stat_label_lookup": {
+    "原始提交数": "raw_records",
+    "原始记录数": "raw_records",
+    "rawrecords": "raw_records",
+    "保留人数": "kept_respondents",
+    "有效受访者数": "kept_respondents",
+    "keptrespondents": "kept_respondents",
+    "整条无效数": "global_invalid",
+    "无效提交数": "global_invalid",
+    "globalinvalid": "global_invalid",
+    "被替代数": "superseded",
+    "重复替代数": "superseded",
+    "superseded": "superseded",
+    "全部整条排除数": "excluded_records",
+    "整条排除数": "excluded_records",
+    "excludedrecords": "excluded_records"
+  },
+  "report_statistics": [
+    "raw_records",
+    "kept_respondents",
+    "global_invalid",
+    "superseded",
+    "excluded_records"
+  ],
+  "exclusion_fields": [
+    "stage",
+    "record_id",
+    "respondent_id",
+    "source_row",
+    "reason",
+    "related_record_id"
+  ],
+  "score_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "marker_intervention_scope": "All12 markers for each of30 selected record IDs, including currently-zero formulas;360 declared cells in4 steps,142 current semantic value changes.",
+  "raw_preservation": "Original string fields including ISO timestamps/timezone/case/whitespace retained; categorical numeric answer codes may be stored as equivalent numeric cells. Normalized keys are separate model fields.",
+  "equivalence": "Wide or long marker table, combined all-record cleaning/model table, row/column/sheet changes, repeated headers, merged identity labels and equivalent ordinary formulas allowed. Not author coordinates.",
+  "runtime_boundary": "Core0.13 scalar marker API. Shared/array/metadata markers and non-addressable merged marker cells preserve evaluation error. True editable weight inputs are numeric source cells; unsupported equivalent input forms are runtime errors, not fabricated candidate zeros.",
+  "authority": "This runtime contract, native expected/protected data and bound grading helpers. Older material contracts/pending-adapter records remain immutable historical specifications."
+}

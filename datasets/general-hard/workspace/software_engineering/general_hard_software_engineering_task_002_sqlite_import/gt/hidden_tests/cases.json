@@ -1,0 +1,3439 @@
+[
+  {
+    "id": "basic-committed",
+    "group": "boundary",
+    "requirement": "compatibility",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        },
+        {
+          "kind": "external",
+          "label": "committed"
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          }
+        },
+        "in_transaction": false
+      },
+      {
+        "label": "committed",
+        "state": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "retry-once",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "retry-twice",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        },
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          }
+        },
+        "in_transaction": false
+      },
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "identical-in-batch",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              },
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              },
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              },
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          },
+          "skipped": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "person-conflict-rolls-back-earlier",
+    "group": "business",
+    "requirement": "atomic_rollback",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p2",
+                "name": "乙"
+              },
+              {
+                "id": "p1",
+                "name": "改名"
+              }
+            ],
+            "rooms": [],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_ID_CONFLICT",
+            "entity": "people",
+            "index": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "room-conflict-rolls-back-parent",
+    "group": "business",
+    "requirement": "atomic_rollback",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p2",
+                "name": "乙"
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r2",
+                "capacity": 3
+              },
+              {
+                "id": "r1",
+                "capacity": 8
+              }
+            ],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_ID_CONFLICT",
+            "entity": "rooms",
+            "index": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "booking-conflict-before-reference",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "absent",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_ID_CONFLICT",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "missing-person",
+    "group": "business",
+    "requirement": "associations",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "absent",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_PERSON",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "missing-room",
+    "group": "business",
+    "requirement": "associations",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "absent",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_ROOM",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "same-batch-capacity-aggregate",
+    "group": "business",
+    "requirement": "associations",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              },
+              {
+                "id": "b2",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_CAPACITY",
+            "entity": "bookings",
+            "index": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "prior-capacity-aggregate",
+    "group": "business",
+    "requirement": "associations",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": [
+              {
+                "id": "b2",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 3
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_CAPACITY",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "exact-capacity",
+    "group": "boundary",
+    "requirement": "compatibility",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": [
+              {
+                "id": "b2",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ],
+            [
+              "b2",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 1
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "retry-when-full",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ],
+          [
+            "b2",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ],
+            [
+              "b2",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ],
+            [
+              "b2",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "inject-after-1",
+    "group": "business",
+    "requirement": "atomic_rollback",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          },
+          "fail_after": 1
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_INJECTED",
+            "entity": "people",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "inject-after-2",
+    "group": "business",
+    "requirement": "atomic_rollback",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          },
+          "fail_after": 2
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_INJECTED",
+            "entity": "rooms",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "inject-after-3",
+    "group": "business",
+    "requirement": "atomic_rollback",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          },
+          "fail_after": 3
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_INJECTED",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "inject-zero",
+    "group": "business",
+    "requirement": "atomic_rollback",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": []
+          },
+          "fail_after": 0
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_INJECTED",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "inject-beyond-inserts",
+    "group": "boundary",
+    "requirement": "compatibility",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          },
+          "fail_after": 10
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "skipped-does-not-inject",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          },
+          "fail_after": 1
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "invalid-injection-negative",
+    "group": "boundary",
+    "requirement": "error_priority",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": null,
+          "fail_after": -1
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_CONFIG",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "invalid-injection-boolean",
+    "group": "boundary",
+    "requirement": "error_priority",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": null,
+          "fail_after": true
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_CONFIG",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "invalid-injection-float",
+    "group": "boundary",
+    "requirement": "error_priority",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": null,
+          "fail_after": 1.0
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_CONFIG",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "bad-root-null",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": null
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_SCHEMA",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "bad-root-missing-key",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_SCHEMA",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "bad-root-extra-key",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": [],
+            "extra": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_SCHEMA",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "bad-root-non-list",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": {},
+            "rooms": [],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_SCHEMA",
+            "entity": "batch",
+            "index": null
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "bad-record-type",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              4
+            ],
+            "rooms": [],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_ROW",
+            "entity": "people",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "boolean-capacity",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": true
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_FIELD",
+            "entity": "rooms",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "float-seats",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2.0
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_FIELD",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "blank-name",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": "　 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_FIELD",
+            "entity": "people",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "invalid-identifier",
+    "group": "boundary",
+    "requirement": "field_types",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "P1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_FIELD",
+            "entity": "people",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "first-record-before-error-kind",
+    "group": "boundary",
+    "requirement": "error_priority",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [],
+            "bookings": [
+              {
+                "id": "b2",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 3
+              },
+              {
+                "id": "b3",
+                "person_id": "absent",
+                "room_id": "r1",
+                "seats": 1
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_CAPACITY",
+            "entity": "bookings",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "parent-group-before-child",
+    "group": "boundary",
+    "requirement": "error_priority",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 0
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "absent",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_FIELD",
+            "entity": "rooms",
+            "index": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "caller-failure-isolated",
+    "group": "business",
+    "requirement": "caller_transactions",
+    "scenario": {
+      "seed": {
+        "people": [
+          [
+            "p1",
+            " 小陈 "
+          ]
+        ],
+        "rooms": [
+          [
+            "r1",
+            4
+          ]
+        ],
+        "bookings": [
+          [
+            "b1",
+            "p1",
+            "r1",
+            2
+          ]
+        ]
+      },
+      "actions": [
+        {
+          "kind": "caller_person",
+          "row": [
+            "outer",
+            "调用者"
+          ]
+        },
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p2",
+                "name": "乙"
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r2",
+                "capacity": 3
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b2",
+                "person_id": "p2",
+                "room_id": "r2",
+                "seats": 3
+              }
+            ]
+          },
+          "fail_after": 2
+        },
+        {
+          "kind": "external",
+          "label": "outside-before-rollback"
+        },
+        {
+          "kind": "rollback"
+        },
+        {
+          "kind": "snapshot",
+          "label": "after-rollback"
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ],
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "after": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ],
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "error": {
+            "code": "E_INJECTED",
+            "entity": "rooms",
+            "index": 0
+          }
+        },
+        "in_transaction": true
+      },
+      {
+        "label": "outside-before-rollback",
+        "state": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        }
+      },
+      {
+        "label": "after-rollback",
+        "state": {
+          "people": [
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "caller-success-not-committed",
+    "group": "business",
+    "requirement": "caller_transactions",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "caller_person",
+          "row": [
+            "outer",
+            "调用者"
+          ]
+        },
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        },
+        {
+          "kind": "external",
+          "label": "uncommitted"
+        },
+        {
+          "kind": "rollback"
+        },
+        {
+          "kind": "snapshot",
+          "label": "after-rollback"
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ]
+          ],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ],
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          }
+        },
+        "in_transaction": true
+      },
+      {
+        "label": "uncommitted",
+        "state": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        }
+      },
+      {
+        "label": "after-rollback",
+        "state": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "caller-can-commit",
+    "group": "business",
+    "requirement": "caller_transactions",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "caller_person",
+          "row": [
+            "outer",
+            "调用者"
+          ]
+        },
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              }
+            ],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": [
+              {
+                "id": "b1",
+                "person_id": "p1",
+                "room_id": "r1",
+                "seats": 2
+              }
+            ]
+          }
+        },
+        {
+          "kind": "commit"
+        },
+        {
+          "kind": "external",
+          "label": "committed"
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ]
+          ],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ],
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        },
+        "result": {
+          "inserted": {
+            "people": 1,
+            "rooms": 1,
+            "bookings": 1
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          }
+        },
+        "in_transaction": true
+      },
+      {
+        "label": "committed",
+        "state": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ],
+            [
+              "p1",
+              " 小陈 "
+            ]
+          ],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": [
+            [
+              "b1",
+              "p1",
+              "r1",
+              2
+            ]
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "id": "schema-does-not-commit-caller",
+    "group": "business",
+    "requirement": "caller_transactions",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "caller_person",
+          "row": [
+            "outer",
+            "调用者"
+          ]
+        },
+        {
+          "kind": "schema_again"
+        },
+        {
+          "kind": "external",
+          "label": "still-uncommitted"
+        },
+        {
+          "kind": "snapshot",
+          "label": "local"
+        },
+        {
+          "kind": "rollback"
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "still-uncommitted",
+        "state": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        }
+      },
+      {
+        "label": "local",
+        "state": {
+          "people": [
+            [
+              "outer",
+              "调用者"
+            ]
+          ],
+          "rooms": [],
+          "bookings": []
+        },
+        "in_transaction": true
+      }
+    ]
+  },
+  {
+    "id": "conflicting-duplicate-in-batch",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "p1",
+                "name": " 小陈 "
+              },
+              {
+                "id": "p1",
+                "name": "different"
+              }
+            ],
+            "rooms": [],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "error": {
+            "code": "E_ID_CONFLICT",
+            "entity": "people",
+            "index": 1
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "parent-repeat-in-batch",
+    "group": "business",
+    "requirement": "idempotency",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [],
+            "rooms": [
+              {
+                "id": "r1",
+                "capacity": 4
+              },
+              {
+                "id": "r1",
+                "capacity": 4
+              }
+            ],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [],
+          "rooms": [
+            [
+              "r1",
+              4
+            ]
+          ],
+          "bookings": []
+        },
+        "result": {
+          "inserted": {
+            "people": 0,
+            "rooms": 1,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 1,
+            "bookings": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  },
+  {
+    "id": "raw-name-preserved",
+    "group": "boundary",
+    "requirement": "compatibility",
+    "scenario": {
+      "seed": {
+        "people": [],
+        "rooms": [],
+        "bookings": []
+      },
+      "actions": [
+        {
+          "kind": "import",
+          "batch": {
+            "people": [
+              {
+                "id": "person-a",
+                "name": " Éva\n用户 "
+              }
+            ],
+            "rooms": [],
+            "bookings": []
+          }
+        }
+      ]
+    },
+    "expected_events": [
+      {
+        "label": "import",
+        "before": {
+          "people": [],
+          "rooms": [],
+          "bookings": []
+        },
+        "after": {
+          "people": [
+            [
+              "person-a",
+              " Éva\n用户 "
+            ]
+          ],
+          "rooms": [],
+          "bookings": []
+        },
+        "result": {
+          "inserted": {
+            "people": 1,
+            "rooms": 0,
+            "bookings": 0
+          },
+          "skipped": {
+            "people": 0,
+            "rooms": 0,
+            "bookings": 0
+          }
+        },
+        "in_transaction": false
+      }
+    ]
+  }
+]

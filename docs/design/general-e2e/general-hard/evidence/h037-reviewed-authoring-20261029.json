@@ -1,0 +1,447 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 37,
+  "registered_task_index": 36,
+  "task_id": "general_hard_file_operations_task_003_nested_archives",
+  "release": "building",
+  "registered": 36,
+  "remaining": 24,
+  "author_handoff": {
+    "status": "AUTHORING_VALIDATED_READY_FOR_INDEPENDENT_REVIEW",
+    "task_id": "general_hard_file_operations_task_003_nested_archives",
+    "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037",
+    "case_spec": "authoring/case-spec.json",
+    "exec_files": 7,
+    "top_ZIPs": 6,
+    "gt_files": 9,
+    "raw_members_all_depths": 74,
+    "audited_reachable_members": 72,
+    "safe_regular_files_per_reference": 40,
+    "unvisited_containers": [
+      {
+        "member_id": "A06.0002.0002.0002",
+        "reason_code": "depth_limit"
+      },
+      {
+        "member_id": "A06.0004",
+        "reason_code": "declared_size"
+      }
+    ],
+    "references": [
+      "reference/canonical/results",
+      "reference/equivalent/results"
+    ],
+    "input_gt_file_allowlist": "qa/input-gt-allowlist.json",
+    "git_ignore_boundary": "Keep authentic fixture names/bytes; root independently checks index blobs and force-adds only expected ignored ZIP fixtures from allowlist.",
+    "freeze_manifest": "qa/freeze-v1/manifest.json",
+    "freeze_sha256": "136077bbd458a512376a1c364c4a17159dc09c3e3922163710c43c8cfd7bb4de",
+    "controls_summary": "qa/authoring-validation/controls-1793220228226220000/summary.json",
+    "static_summary": "qa/authoring-validation/static-1793220305616950000/summary.json",
+    "weights": {
+      "business_correctness": 0.55,
+      "boundary_cases": 0.25,
+      "delivery_integrity": 0.15,
+      "evidence_binding": 0.05
+    },
+    "next_owner_steps": [
+      "Independent review of public policy, raw member inventory, byte limits, allowed/typed-unknown outcomes and native outputs",
+      "Root assembles/registers in approved worktree, verifies full registered single-task gate",
+      "Root makes independent official score package normal/moved checks preserving candidate empty directories",
+      "Root commits only reviewed allowlisted task files and checks every source/GT index blob"
+    ],
+    "limitations": [
+      "Model-authored source verification is not a human expert review",
+      "No real Harness/model, Judge or finalize; L3 and discrimination remain estimates",
+      "Final bytes cannot rule out transient writes or execution; formal trajectories required",
+      "Author raw truth parser is bounded at 16384 bytes per original small payload; actual reference extraction uses public 4096/8192 and cumulative/depth policy",
+      "No package installation, Office, real symlink target, network or user files used"
+    ]
+  },
+  "root_review": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/root-review-v1/review.json",
+    "sha256": "b9ef64a22bec8212a6110240adc0841059ef64f9790f6cf64bb201073a4fa0c8"
+  },
+  "source_first_independent_verification": "Known-member Python source graph frozen first; public-input-only Node raw ZIP headers/GB18030/UTF8/CRC/bounded-zlib path independently agrees before either reference.",
+  "counts": {
+    "exec": 7,
+    "GT": 9,
+    "top_ZIPs": 6,
+    "raw_members": 74,
+    "reachable_member_opportunities": 72,
+    "actual_extracted_files_per_reference": 40
+  },
+  "controls": [
+    {
+      "name": "canonical_positive",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "equivalent_chinese_bom_reorder_typed_unknown",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "detached_moved_archive_old_paths_absent",
+      "status": "PASS",
+      "A": 1.0,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "ZipSlip_reject_falsely_reported_extract",
+      "status": "PASS",
+      "A": 0.9954166666666668,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9916666666666667,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "wrong_target_namespace",
+      "status": "PASS",
+      "A": 0.9969444444444445,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9944444444444444,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "unicode_name_collision_overwrite",
+      "status": "PASS",
+      "A": 0.9971153846153847,
+      "criteria": {
+        "boundary_cases": 0.9884615384615384,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "declared_size_reject_falsely_extract",
+      "status": "PASS",
+      "A": 0.9954166666666668,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9916666666666667,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "lying_declared_size_accepted",
+      "status": "PASS",
+      "A": 0.9954166666666668,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9916666666666667,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "wrong_declared_bytes",
+      "status": "PASS",
+      "A": 0.9998511904761905,
+      "criteria": {
+        "boundary_cases": 0.9994047619047618,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "unknown_actual_bytes_not_zero",
+      "status": "PASS",
+      "A": 0.9998511904761905,
+      "criteria": {
+        "boundary_cases": 0.9994047619047618,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "normal_member_unjustified_integrity_reject",
+      "status": "PASS",
+      "A": 0.9954166666666668,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9916666666666667,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "missing_member_after_failure",
+      "status": "PASS",
+      "A": 0.9923611111111112,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 0.9861111111111112,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "skipped_container_ledger_lost",
+      "status": "PASS",
+      "A": 0.9875000000000002,
+      "criteria": {
+        "boundary_cases": 0.95,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "raw_member_name_binding_wrong",
+      "status": "PASS",
+      "A": 0.9998888888888889,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 0.9977777777777779
+      },
+      "exception": null
+    },
+    {
+      "name": "execution_false_claim",
+      "status": "PASS",
+      "A": 0.9875000000000002,
+      "criteria": {
+        "boundary_cases": 0.95,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "input_changed",
+      "status": "PASS",
+      "A": 0.9100000000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.4,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "outside_staging_persistent_write",
+      "status": "PASS",
+      "A": 0.9700000000000001,
+      "criteria": {
+        "boundary_cases": 0.9999999999999999,
+        "business_correctness": 1.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "allowed_file_missing",
+      "status": "PASS",
+      "A": 0.9971153846153847,
+      "criteria": {
+        "boundary_cases": 0.9884615384615384,
+        "business_correctness": 1.0,
+        "delivery_integrity": 1.0,
+        "evidence_binding": 1.0
+      },
+      "exception": null
+    },
+    {
+      "name": "audit_missing",
+      "status": "PASS",
+      "A": 0.27,
+      "criteria": {
+        "boundary_cases": 0.6,
+        "business_correctness": 0.0,
+        "delivery_integrity": 0.8,
+        "evidence_binding": 0.0
+      },
+      "exception": null
+    },
+    {
+      "name": "missing_expected_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H037_TRUSTED_CONTEXT_MISSING_OR_DRIFT: expected.json'}"
+      }
+    },
+    {
+      "name": "missing_helper_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H037_TRUSTED_CONTEXT_MISSING_OR_DRIFT: native_io.py'}"
+      }
+    },
+    {
+      "name": "missing_trusted_manifest_infrastructure",
+      "status": "PASS",
+      "A": null,
+      "criteria": null,
+      "exception": {
+        "type": "ScoringRuntimeError",
+        "message": "RULE_WORKER_FAILED: {'code': 'RULE_WORKER_FAILED', 'detail': 'H037_TRUSTED_RULE_MISSING_OR_DRIFT: trusted_files.json'}"
+      }
+    }
+  ],
+  "control_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/authoring-validation/controls-1793220228226220000/summary.json",
+    "sha256": "4f44c36273a7853e778ee225fb918696bd66b467cdd8000c68320e563d0afd5d"
+  },
+  "formal_detached": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/formal-detached-1793220805612772000/validation.json",
+    "sha256": "aeb070449064e9a32ee7962752d1a1f06f9bb9698886618560a41cab0db36b88",
+    "raw_scores": {
+      "boundary_cases": 0.9999999999999999,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "same_byte_nonruntime_archive_files": 75,
+    "repository_sys_path_absent": true,
+    "normal_and_moved_verified": true,
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.26.0.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "c5d56c145923f0ab7f22a4548baf899bfeb33969b2862e7fbc0c3be2d9885e9d",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.2"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "099ac6bb6dcbaf45132ebfb00c92919c507e1eb7e8eecd695ca40917aa3bf444",
+      "development_repository_references": [],
+      "file_count": 46,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "3595625c36c85d48c9ea98dbc8187e71ca5559d8",
+      "version": "0.26.0",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "9c42ab11f22dd7d85a35df88a6d8a965c6c234a439d9719cbee014e238be6095"
+    },
+    "frozen_score_ZIP_reused_without_rebuild": true
+  },
+  "author_script_relocation": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/root-review-v1/generic-script-relocation.json",
+    "sha256": "5b083a22b0e970f7b1adaefacf72ca7c0398b0dc630ec7ab22a3c61d488fe973",
+    "source_GT_reference_unchanged": true
+  },
+  "static": {
+    "single_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/static-registered/20261028T205558Z_90e8230909/report.json",
+    "single_sha256": "3e6d69bb6f8e2bb9e8de8f9e9d6e1a065e9c9579b7c57d87057c96e76c3a5aec",
+    "single": "PASS",
+    "building_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/static-building/20261028T205604Z_393fbf059d/report.json",
+    "building_sha256": "769204bd4e4900b4df3c9fe93e950c56bcccc27221df44b1e99b7ed2eb7fd2a9",
+    "registered": 36,
+    "missing_only": 24
+  },
+  "frozen_QA": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h037/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "7243c710f9064d2477677ac217b6dde5392df21df806f107ec6f72105eb675b1",
+    "bound_files": 4596,
+    "bound_directories": 2827
+  },
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "history": [
+    {
+      "path": "qa/authoring-validation/controls-1793220126398910000",
+      "status": "FAIL",
+      "authoritative": false,
+      "summary_sha256": "8be6410968c1fd35a912f54422ab0a87604ae5058a46361b68a5eb11b571de7b"
+    },
+    {
+      "path": "qa/authoring-validation/controls-1793220228226220000",
+      "status": "PASS",
+      "authoritative": true,
+      "summary_sha256": "4f44c36273a7853e778ee225fb918696bd66b467cdd8000c68320e563d0afd5d"
+    }
+  ],
+  "limits": {
+    "author_A_not_Harness_score": true,
+    "model_review_not_human_expert": true,
+    "real_Harness": false,
+    "Judge": false,
+    "Office": false,
+    "difficulty": "L3 design estimate, uncalibrated",
+    "final_bytes_do_not_prove_transient_actions": true,
+    "source_GT_reference_unchanged": true
+  }
+}

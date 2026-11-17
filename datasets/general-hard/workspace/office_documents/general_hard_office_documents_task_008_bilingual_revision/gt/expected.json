@@ -1,0 +1,459 @@
+{
+  "schema_version": "h008-oracle/v1",
+  "sentences": [
+    {
+      "sentence_id": "S01",
+      "facts": {
+        "provider_id": "SUP-01"
+      },
+      "comment_id": "R01",
+      "decision": "applied",
+      "term_ids": [
+        "T01"
+      ]
+    },
+    {
+      "sentence_id": "S02",
+      "facts": {
+        "materials_provider_id": "CLI-01",
+        "materials_checker_id": "SUP-01"
+      },
+      "comment_id": "R02",
+      "decision": "applied",
+      "term_ids": [
+        "T01",
+        "T02"
+      ]
+    },
+    {
+      "sentence_id": "S03",
+      "facts": {
+        "amount": 80000,
+        "currency": "CNY",
+        "amount_unit": "per_batch",
+        "tax_basis": "excluded"
+      },
+      "comment_id": "R03",
+      "decision": "applied",
+      "term_ids": []
+    },
+    {
+      "sentence_id": "S04",
+      "facts": {
+        "start_date": "2026-11-01",
+        "end_date": "2027-10-31"
+      },
+      "comment_id": "R04",
+      "decision": "not_applied",
+      "term_ids": []
+    },
+    {
+      "sentence_id": "S05",
+      "facts": {
+        "first_response_work_hours": 4,
+        "clock_origin": "intake_registration"
+      },
+      "comment_id": "R05",
+      "decision": "applied",
+      "term_ids": [
+        "T10"
+      ]
+    },
+    {
+      "sentence_id": "S06",
+      "facts": {
+        "handling_work_days": 2,
+        "clock_origin": "required_documents_complete"
+      },
+      "comment_id": "R06",
+      "decision": "not_applied",
+      "term_ids": [
+        "T11"
+      ]
+    },
+    {
+      "sentence_id": "S07",
+      "facts": {
+        "release_before_trial_allowed": false
+      },
+      "comment_id": "R07",
+      "decision": "applied",
+      "term_ids": [
+        "T03"
+      ]
+    },
+    {
+      "sentence_id": "S08",
+      "facts": {
+        "external_deidentified_sample_allowed": true,
+        "external_raw_customer_data_allowed": false
+      },
+      "comment_id": "R08",
+      "decision": "not_applied",
+      "term_ids": [
+        "T04"
+      ]
+    },
+    {
+      "sentence_id": "S09",
+      "facts": {
+        "acceptance_written": true,
+        "acceptance_parties": "both",
+        "oral_or_single_side_acceptance": false
+      },
+      "comment_id": "R09",
+      "decision": "applied",
+      "term_ids": [
+        "T06",
+        "T07"
+      ]
+    },
+    {
+      "sentence_id": "S10",
+      "facts": {
+        "request_type": "change_request",
+        "automatically_included": false
+      },
+      "comment_id": "R10",
+      "decision": "applied",
+      "term_ids": [
+        "T05"
+      ]
+    },
+    {
+      "sentence_id": "S11",
+      "facts": {
+        "total": 17,
+        "pending": 3,
+        "completed": 14
+      },
+      "comment_id": "R11",
+      "decision": "applied",
+      "term_ids": [
+        "T08"
+      ]
+    },
+    {
+      "sentence_id": "S12",
+      "facts": {
+        "notification_output": "draft",
+        "actual_send_allowed": false
+      },
+      "comment_id": "R12",
+      "decision": "not_applied",
+      "term_ids": [
+        "T09"
+      ]
+    },
+    {
+      "sentence_id": "S13",
+      "facts": {
+        "backup_person": "Linh",
+        "rota_changed": false
+      },
+      "comment_id": "",
+      "decision": "unchanged",
+      "term_ids": []
+    },
+    {
+      "sentence_id": "S14",
+      "facts": {
+        "currency": "CNY",
+        "fx_conversion": false
+      },
+      "comment_id": "",
+      "decision": "unchanged",
+      "term_ids": []
+    },
+    {
+      "sentence_id": "S15",
+      "facts": {
+        "mentioned_attachment_count": 2,
+        "new_attachments_required": false
+      },
+      "comment_id": "",
+      "decision": "unchanged",
+      "term_ids": []
+    },
+    {
+      "sentence_id": "S16",
+      "facts": {
+        "receipt_status": "unknown",
+        "acceptance_status": "unknown",
+        "closure_status": "unknown"
+      },
+      "comment_id": "",
+      "decision": "unchanged",
+      "term_ids": [
+        "T07"
+      ]
+    }
+  ],
+  "comments": [
+    {
+      "comment_id": "R01",
+      "sentence_id": "S01",
+      "review_vi": "Dùng đúng tên tổ chức trong bảng thuật ngữ: thay “Công ty Thanh Lam” bằng “Trung tâm Dịch vụ Thanh Lam”; không tự đổi sang tên viết tắt.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "更正固定主体名称，不改变服务提供方。",
+      "proposed_facts": {
+        "provider_id": "SUP-01"
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R02",
+      "sentence_id": "S02",
+      "review_vi": "Theo bản gốc tiếng Trung, Nhóm dự án Bắc Trừng cung cấp danh mục; Trung tâm Dịch vụ Thanh Lam kiểm tra. Hãy sửa lại chủ thể, không đảo hai vai trò.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "中文基线明确客户提供、服务方核对，越文草稿角色颠倒。",
+      "proposed_facts": {
+        "materials_provider_id": "CLI-01",
+        "materials_checker_id": "SUP-01"
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R03",
+      "sentence_id": "S03",
+      "review_vi": "Số tiền đúng là 80.000 CNY cho mỗi đợt, chưa bao gồm thuế. Bỏ phần số không thừa; không đổi tiền tệ và không thêm thuế suất.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "改正千分位及多余零，金额80000、CNY、每批及不含税保持。",
+      "proposed_facts": {
+        "amount": 80000,
+        "currency": "CNY",
+        "amount_unit": "per_batch",
+        "tax_basis": "excluded"
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R04",
+      "sentence_id": "S04",
+      "review_vi": "Đề nghị kéo dài ngày kết thúc dịch vụ đến 30/11/2027 để thuận tiện cho kế hoạch mới.",
+      "author_declared_decision": "not_applied",
+      "author_reason_zh": "该提案改变中文基线日期，缺少授权，保持2027-10-31并记待授权。",
+      "proposed_facts": {
+        "end_date": "2027-11-30"
+      },
+      "computed_decision": "not_applied",
+      "conflicting_fields": {
+        "end_date": {
+          "baseline": "2027-10-31",
+          "proposed": "2027-11-30"
+        }
+      }
+    },
+    {
+      "comment_id": "R05",
+      "sentence_id": "S05",
+      "review_vi": "Đổi đơn vị của phản hồi đầu tiên từ “ngày làm việc” thành “giờ làm việc”; giữ số 4 và mốc đăng ký tiếp nhận lần này.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "首次响应为4工作小时，不能变成4工作日或更改起算事件。",
+      "proposed_facts": {
+        "first_response_work_hours": 4,
+        "clock_origin": "intake_registration"
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R06",
+      "sentence_id": "S06",
+      "review_vi": "Đề nghị đổi thời hạn xử lý thành 24 giờ theo lịch kể từ khi tiếp nhận lần đầu, thay cho điều kiện nhận đủ tài liệu.",
+      "author_declared_decision": "not_applied",
+      "author_reason_zh": "同时改变工作日口径和起算条件，中文基线未授权，不采纳。",
+      "proposed_facts": {
+        "handling_natural_hours": 24,
+        "clock_origin": "intake_registration"
+      },
+      "computed_decision": "not_applied",
+      "conflicting_fields": {
+        "handling_natural_hours": {
+          "baseline": "not_authorized",
+          "proposed": 24
+        },
+        "clock_origin": {
+          "baseline": "required_documents_complete",
+          "proposed": "intake_registration"
+        }
+      }
+    },
+    {
+      "comment_id": "R07",
+      "sentence_id": "S07",
+      "review_vi": "Cần thêm phủ định “không được” trước hành động phát hành; giữ nguyên điều kiện trước khi hoàn tất chạy thử.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "补回禁止性含义，保留试运行完成前这一条件。",
+      "proposed_facts": {
+        "release_before_trial_allowed": false
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R08",
+      "sentence_id": "S08",
+      "review_vi": "Bỏ cụm “không được” ở vế nói về dữ liệu khách hàng gốc để câu ngắn hơn.",
+      "author_declared_decision": "not_applied",
+      "author_reason_zh": "删除否定会把禁止外发改成允许，不能按压缩文字为由采纳。",
+      "proposed_facts": {
+        "external_raw_customer_data_allowed": true
+      },
+      "computed_decision": "not_applied",
+      "conflicting_fields": {
+        "external_raw_customer_data_allowed": {
+          "baseline": false,
+          "proposed": true
+        }
+      }
+    },
+    {
+      "comment_id": "R09",
+      "sentence_id": "S09",
+      "review_vi": "Sửa điều kiện nghiệm thu thành xác nhận bằng văn bản của cả hai bên. Nêu rõ xác nhận đơn phương hoặc bằng lời nói không thay thế điều kiện này.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "纠正单方口头确认，保留双方书面确认及排除条件。",
+      "proposed_facts": {
+        "acceptance_written": true,
+        "acceptance_parties": "both",
+        "oral_or_single_side_acceptance": false
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R10",
+      "sentence_id": "S10",
+      "review_vi": "Thay “phiếu yêu cầu mới” bằng thuật ngữ cố định “phiếu đề nghị thay đổi”; không thay đổi cách xử lý các hạng mục ngoài phạm vi.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "统一变更申请术语，超范围单独登记、不自动并入的含义保留。",
+      "proposed_facts": {
+        "request_type": "change_request",
+        "automatically_included": false
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R11",
+      "sentence_id": "S11",
+      "review_vi": "Tổng số đúng là 17 hạng mục, giữ 3 hạng mục chờ xác minh. Tính lại số hoàn thành sau khi loại các mục chờ xác minh; không gộp chúng vào hoàn thành.",
+      "author_declared_decision": "applied",
+      "author_reason_zh": "从17项中排除3项待核，完成数独立计算为14。",
+      "proposed_facts": {
+        "total": 17,
+        "pending": 3,
+        "completed": 14
+      },
+      "computed_decision": "applied",
+      "conflicting_fields": {}
+    },
+    {
+      "comment_id": "R12",
+      "sentence_id": "S12",
+      "review_vi": "Đổi câu thành “Đã gửi thông báo cho toàn bộ người nhận” để thể hiện công việc đã kết thúc.",
+      "author_declared_decision": "not_applied",
+      "author_reason_zh": "提案将草稿变成已发送事实，超出基线与任务权限，不采纳也不实际发送。",
+      "proposed_facts": {
+        "notification_output": "sent",
+        "actual_send_allowed": true
+      },
+      "computed_decision": "not_applied",
+      "conflicting_fields": {
+        "notification_output": {
+          "baseline": "draft",
+          "proposed": "sent"
+        },
+        "actual_send_allowed": {
+          "baseline": false,
+          "proposed": true
+        }
+      }
+    }
+  ],
+  "terms": [
+    {
+      "term_id": "T01",
+      "zh": "青澜服务中心",
+      "vi": "Trung tâm Dịch vụ Thanh Lam",
+      "role": "SUP-01",
+      "sentence_ids": "S01;S02"
+    },
+    {
+      "term_id": "T02",
+      "zh": "北澄项目组",
+      "vi": "Nhóm dự án Bắc Trừng",
+      "role": "CLI-01",
+      "sentence_ids": "S02"
+    },
+    {
+      "term_id": "T03",
+      "zh": "正式环境",
+      "vi": "môi trường chính thức",
+      "role": "environment",
+      "sentence_ids": "S07"
+    },
+    {
+      "term_id": "T04",
+      "zh": "脱敏样本",
+      "vi": "mẫu dữ liệu đã khử định danh",
+      "role": "sample_type",
+      "sentence_ids": "S08"
+    },
+    {
+      "term_id": "T05",
+      "zh": "变更申请",
+      "vi": "phiếu đề nghị thay đổi",
+      "role": "request_type",
+      "sentence_ids": "S10"
+    },
+    {
+      "term_id": "T06",
+      "zh": "书面确认",
+      "vi": "xác nhận bằng văn bản",
+      "role": "acceptance_evidence",
+      "sentence_ids": "S09"
+    },
+    {
+      "term_id": "T07",
+      "zh": "验收",
+      "vi": "nghiệm thu",
+      "role": "acceptance",
+      "sentence_ids": "S09;S16"
+    },
+    {
+      "term_id": "T08",
+      "zh": "待核",
+      "vi": "chờ xác minh",
+      "role": "pending_status",
+      "sentence_ids": "S11"
+    },
+    {
+      "term_id": "T09",
+      "zh": "通知草稿",
+      "vi": "bản nháp thông báo",
+      "role": "notification_output",
+      "sentence_ids": "S12"
+    },
+    {
+      "term_id": "T10",
+      "zh": "工作小时",
+      "vi": "giờ làm việc",
+      "role": "time_basis",
+      "sentence_ids": "S05"
+    },
+    {
+      "term_id": "T11",
+      "zh": "工作日",
+      "vi": "ngày làm việc",
+      "role": "time_basis",
+      "sentence_ids": "S06"
+    }
+  ],
+  "independence": "Compare declared source facts to separately represented proposed facts; compute before reference documents. Physical-source extraction must recheck later.",
+  "limit": "Not unique Vietnamese wording. Numerical/date/unit/term checks plus typed facts do not prove full role, polarity or translation meaning; independent Judge required."
+}

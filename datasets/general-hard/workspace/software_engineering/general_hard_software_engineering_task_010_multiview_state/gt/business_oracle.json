@@ -1,0 +1,12 @@
+{
+  "basis": "39 disjoint raw-source API/Store/View cases; initial37 before references, two contract coverage additions independently recalculated later; response and snapshot fixtures came from raw records, not repaired reference",
+  "case_aggregation": "one fixed source unit per case; no padding dilution",
+  "case_truth_sha256": "636425a4a339af0c4dc27382e99957a86a7b1c24ce9eddd43f244f059ec676d2",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "composed_trace": "factual evidence, not duplicated downstream semantic points"
+}

@@ -1,0 +1,603 @@
+{
+  "schema": "independent-claim-assessment-v1",
+  "annotator": "A",
+  "role": "独立模型像素标注；非人工专家，非Harness执行，非正式Judge，未生成语义分",
+  "raw_observations": "raw_visual_observations.json",
+  "region_index": "regions.json",
+  "verdict_definitions": {
+    "support": "现有图形与方法段支持指定判断对象；不外推未声称结论。",
+    "refute": "图中存在反证，或指定“证据已充分/已建立”的元命题与明示证据范围矛盾。",
+    "insufficient_evidence": "实质事实缺少所需测量/统计/干预信息，不能确定其真值。"
+  },
+  "claim_count": 8,
+  "assessments": [
+    {
+      "claim_id": "C01",
+      "claim_text": "F01在总工具预算10处，Method A的目标通过率约72%，Method B约64%；这只描述图示同设置均值，不宣称显著或因果优势。",
+      "judgment_object": "预算10处两方法图示均值及同设置描述的边界",
+      "verdict": "support",
+      "readings": {
+        "unit": "% target pass; difference in percentage points",
+        "budget": 10,
+        "A_interval": [
+          71.5,
+          72.6
+        ],
+        "B_interval": [
+          63.6,
+          64.7
+        ],
+        "approximate_reading": "A约72%，B约64%；A均值约高8个百分点。",
+        "axis_condition": "x刻度1、10、100等距而数值成十倍；选中间预算10点。y是线性百分比轴。",
+        "legend_condition": "A=蓝色空心圆；B=橙色实心方形。",
+        "tolerance_used": "F01允许均值绝对误差2个百分点；这里采用更窄的实际可辨读数区间。"
+      },
+      "source_regions": [
+        "F01-x-ticks",
+        "F01-y-ticks",
+        "F01-y-label",
+        "F01-legend-A",
+        "F01-legend-B",
+        "F01-A-10",
+        "F01-B-10"
+      ],
+      "text_evidence": {
+        "paragraph": "E01",
+        "relevant_text": "同一任务集、相同模型设置和统一最终目标谓词；每点是12个评估批次均值；没有发布配对差值或不确定性检验。"
+      },
+      "rationale": "中间点蓝圆位于70以上约2个百分点，橙方位于60以上约4个百分点；与约72%和64%一致。E01把这些点限定为给定设置的批次均值，论述也没有扩大到显著性或因果性。",
+      "unknowns_and_limits": [
+        "无法由这些均值证明统计显著性、因果优势或其它预算/任务条件的优势。",
+        "F01误差棒的SD含义来自E01，原始PNG只显示棒形本身。"
+      ],
+      "subclaims": [
+        {
+          "object": "A约72%、B约64%的均值读数",
+          "verdict": "support"
+        },
+        {
+          "object": "仅描述图示同设置均值",
+          "verdict": "support"
+        }
+      ]
+    },
+    {
+      "claim_id": "C02",
+      "claim_text": "F01三个预算点的横向间距相等，所以从第一个到第二个点的预算绝对增量，与从第二个到第三个点相同。",
+      "judgment_object": "由图上等距推出预算绝对增量相等",
+      "verdict": "refute",
+      "readings": {
+        "unit": "tool calls per task",
+        "budget_tick_values": [
+          1,
+          10,
+          100
+        ],
+        "absolute_increments": [
+          9,
+          90
+        ],
+        "ratio_per_step": [
+          10,
+          10
+        ],
+        "axis_condition": "等距位置对应1、10、100，显示对数刻度；等距对应倍数变化。",
+        "legend_condition": "两方法共享同一预算横轴。",
+        "tolerance_used": "按实际标出的预算刻度读尺度，不以像素距离假定线性。"
+      },
+      "source_regions": [
+        "F01-x-ticks",
+        "F01-x-label",
+        "F01-A-1",
+        "F01-A-10",
+        "F01-A-100"
+      ],
+      "text_evidence": {
+        "paragraph": "E01",
+        "relevant_text": "两方法仅在图示总工具调用预算下汇总；不同预算是不同设置。"
+      },
+      "rationale": "第一段是10−1=9次，第二段是100−10=90次。横向等距是可见事实，但“绝对增量相同”被轴上数值直接反驳。",
+      "unknowns_and_limits": [
+        "没有单独观察预算2至9等中间设置；这不影响读取三个已标预算的差值。"
+      ],
+      "subclaims": [
+        {
+          "object": "三个标出预算横向间距相等",
+          "verdict": "support"
+        },
+        {
+          "object": "两段预算绝对增量相同",
+          "verdict": "refute"
+        }
+      ]
+    },
+    {
+      "claim_id": "C03",
+      "claim_text": "F02中Method B的均值高于Method A，且两条误差区间存在交叠；该句只描述图形关系。",
+      "judgment_object": "均值顺序和显示误差区间的交叠",
+      "verdict": "support",
+      "readings": {
+        "unit": "% target pass",
+        "A_mean_interval": [
+          79.5,
+          80.5
+        ],
+        "B_mean_interval": [
+          83.5,
+          84.5
+        ],
+        "A_SD_lower_endpoint_interval": [
+          73.5,
+          74.5
+        ],
+        "A_SD_upper_endpoint_interval": [
+          85.5,
+          86.5
+        ],
+        "B_SD_lower_endpoint_interval": [
+          80.5,
+          81.5
+        ],
+        "B_SD_upper_endpoint_interval": [
+          86.5,
+          87.5
+        ],
+        "overlap_approximate": [
+          81,
+          86
+        ],
+        "axis_condition": "纵轴线性，60至95，每5个百分点一格。柱形基线60，不以柱高倍数判断。",
+        "legend_condition": "方法名在横轴直接标识；A蓝圆均值，B橙方均值。",
+        "tolerance_used": "F02均值/SD端点允许2个百分点；交叠明显可辨。"
+      },
+      "source_regions": [
+        "F02-y-ticks",
+        "F02-y-label",
+        "F02-x",
+        "F02-A-mean",
+        "F02-B-mean",
+        "F02-A",
+        "F02-B",
+        "F02-SD"
+      ],
+      "text_evidence": {
+        "paragraph": "E02",
+        "relevant_text": "相同12个配对评估批次；均值及标准差绘在图中；误差棒不是95%置信区间。"
+      },
+      "rationale": "B均值在约84%，A在约80%；A显示范围约74%—86%，B约81%—87%，共有约81%—86%的纵轴数值。该论述只声称可见顺序与交叠，均获图形支持。",
+      "unknowns_and_limits": [
+        "两条棒在不同横坐标，交叠指纵轴数值范围有共同部分。",
+        "交叠不是配对差值分布，不提供显著性或等效判断。"
+      ],
+      "subclaims": [
+        {
+          "object": "B均值高于A",
+          "verdict": "support"
+        },
+        {
+          "object": "两显示SD区间存在交叠",
+          "verdict": "support"
+        }
+      ]
+    },
+    {
+      "claim_id": "C04",
+      "claim_text": "F02误差棒交叠已经证明两方法差异不显著，并且效果相同。",
+      "judgment_object": "“交叠已证明不显著且等效”的证据充分性断言",
+      "verdict": "refute",
+      "readings": {
+        "unit": "% target pass",
+        "A_mean_approximate": 80,
+        "B_mean_approximate": 84,
+        "A_displayed_SD_approximate": [
+          74,
+          86
+        ],
+        "B_displayed_SD_approximate": [
+          81,
+          87
+        ],
+        "error_type": "SD，图中文字明示",
+        "pairing": "n=12 paired batches，图中文字明示",
+        "axis_condition": "线性百分比纵轴；图形交叠只涉及SD端点。",
+        "legend_condition": "A蓝色均值与棒，B橙色均值与棒。",
+        "tolerance_used": "F02交叠可目视确认；没有对显著性或等效给出视觉容差推断。"
+      },
+      "source_regions": [
+        "F02-y-ticks",
+        "F02-A-mean",
+        "F02-B-mean",
+        "F02-A",
+        "F02-B",
+        "F02-SD",
+        "F02-n"
+      ],
+      "text_evidence": {
+        "paragraph": "E02",
+        "relevant_text": "未提供原始配对差值、协方差、显著性检验或预先设定的等效界；不能仅由误差棒交叠/不交叠确定显著或等效。"
+      },
+      "rationale": "“已证明”这一元命题与公开证据范围矛盾：这里是SD，而不是差值检验或等效区间。可确认交叠，但不能据此证明不显著，更不能把不显著等同效果相同。该反驳针对证据已经充分的断言，不是声称真实差异必然显著或必然不等效。",
+      "unknowns_and_limits": [
+        "真实配对差异是否显著：未知。",
+        "在某个预设等效界内是否等效：未知，因为未给出等效界与等效检验。",
+        "不能用缺少检验编造显著差异或相反实验。"
+      ],
+      "subclaims": [
+        {
+          "object": "显示SD区间交叠",
+          "verdict": "support"
+        },
+        {
+          "object": "交叠足以证明差异不显著",
+          "verdict": "refute",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "object": "真实差异是否不显著",
+          "verdict": "insufficient_evidence",
+          "kind": "statistical fact"
+        },
+        {
+          "object": "交叠足以证明效果相同",
+          "verdict": "refute",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "object": "真实效果是否等效",
+          "verdict": "insufficient_evidence",
+          "kind": "statistical fact"
+        }
+      ]
+    },
+    {
+      "claim_id": "C05",
+      "claim_text": "F03在8 workers处，Method B的耗时约为Method A的10倍；该比较限图示硬件和计时条件。",
+      "judgment_object": "8 workers处B/A耗时比及比较范围",
+      "verdict": "support",
+      "readings": {
+        "unit": "ms",
+        "workers": 8,
+        "A_interval": [
+          290,
+          310
+        ],
+        "B_interval": [
+          2900,
+          3100
+        ],
+        "B_divided_by_A_readable_interval": [
+          9.35,
+          10.69
+        ],
+        "representative_ratio": 10,
+        "axis_condition": "x为线性workers，8在4与16之间；y为对数ms，300和3000刻度直接对应两点。",
+        "legend_condition": "A蓝色空心圆；B橙色实心方形。",
+        "tolerance_used": "F03单个耗时相对容差15%、比值相对容差20%；读数区间稳定支持约10倍。"
+      },
+      "source_regions": [
+        "F03-x-ticks",
+        "F03-x-label",
+        "F03-y-ticks",
+        "F03-y-label",
+        "F03-legend-A",
+        "F03-legend-B",
+        "F03-A-8",
+        "F03-B-8"
+      ],
+      "text_evidence": {
+        "paragraph": "E03",
+        "relevant_text": "同硬件和计时边界，仅记录图示worker设置下的耗时代表值；没有跨硬件或其它并发条件的保证。"
+      },
+      "rationale": "在8 workers同一横坐标处，A蓝圆基本落在300 ms水平线，B橙方落在3000 ms水平线；3000/300约10。没有使用对数图上纵向像素距离作为线性比值。论述的硬件和计时限定与E03一致。",
+      "unknowns_and_limits": [
+        "此比值只适用于图示条件的代表值，不是跨硬件保证。",
+        "图中未给出运行间波动或统计检验。"
+      ],
+      "subclaims": [
+        {
+          "object": "8 workers处B约为A的10倍耗时",
+          "verdict": "support"
+        },
+        {
+          "object": "比较限图示硬件/计时条件",
+          "verdict": "support"
+        }
+      ]
+    },
+    {
+      "claim_id": "C06",
+      "claim_text": "F03中Method A在8 workers处的耗时较低，因此其最终目标质量也比Method B更高。",
+      "judgment_object": "从低耗时推出最终目标质量更高；主判断为质量事实是否可由现有证据确定",
+      "verdict": "insufficient_evidence",
+      "readings": {
+        "unit": "ms for observed variable; no quality unit/measurement shown",
+        "workers": 8,
+        "A_interval": [
+          290,
+          310
+        ],
+        "B_interval": [
+          2900,
+          3100
+        ],
+        "observed_order": "A elapsed time < B elapsed time",
+        "axis_condition": "图的因变量仅为Elapsed time (ms)，不是目标质量。",
+        "legend_condition": "A蓝圆、B橙方绑定在耗时轴上。",
+        "tolerance_used": "F03读数支持耗时顺序；质量未记录，不能赋予数值或容差。"
+      },
+      "source_regions": [
+        "F03-x-ticks",
+        "F03-y-label",
+        "F03-y-ticks",
+        "F03-legend-A",
+        "F03-legend-B",
+        "F03-A-8",
+        "F03-B-8"
+      ],
+      "text_evidence": {
+        "paragraph": "E03",
+        "relevant_text": "该图没有记录最终目标质量，也没有给出跨硬件或其它并发条件的保证。"
+      },
+      "rationale": "A在8 workers处约300 ms、B约3000 ms，低耗时前提成立。但轴中没有质量观测，E03也明确未记录质量。无法确定A质量高、低或相同；“因此”所需的推论依据不成立。整体标为证据不足是针对质量事实，不能把缺少质量证据改写为A质量较差。",
+      "unknowns_and_limits": [
+        "A与B在8 workers处的最终目标质量及其顺序均未知。",
+        "耗时与质量的关系、测量方法、任务质量分布均未给出。"
+      ],
+      "subclaims": [
+        {
+          "object": "8 workers处A耗时较低",
+          "verdict": "support"
+        },
+        {
+          "object": "该耗时图足以推出A最终目标质量较高",
+          "verdict": "refute",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "object": "A最终目标质量事实上是否较高",
+          "verdict": "insufficient_evidence",
+          "kind": "quality fact"
+        }
+      ]
+    },
+    {
+      "claim_id": "C07",
+      "claim_text": "F04合并点位呈总体正关联，足以说明任一组内增加计划长度都会提高成功率，并已建立因果关系。",
+      "judgment_object": "复合论述的组内方向与因果证据充分性；不是仅判断合并相关方向",
+      "verdict": "refute",
+      "readings": {
+        "unit": "planning length in steps; target pass in %",
+        "G1_endpoint_readings": [
+          {
+            "steps": 1,
+            "pass_interval": [
+              79.5,
+              80.5
+            ]
+          },
+          {
+            "steps": 5,
+            "pass_interval": [
+              71.4,
+              72.4
+            ]
+          }
+        ],
+        "G2_endpoint_readings": [
+          {
+            "steps": 8,
+            "pass_interval": [
+              94.4,
+              95.4
+            ]
+          },
+          {
+            "steps": 12,
+            "pass_interval": [
+              86.4,
+              87.4
+            ]
+          }
+        ],
+        "pooled_relation": "总体正关联：高x的G2全体高于低x的G1。",
+        "within_group_relation": "G1、G2各自随x增加而下降；每组五点均呈这一方向。",
+        "axis_condition": "双轴线性；x单位steps，y百分比。",
+        "legend_condition": "G1=蓝色空心圆；G2=橙色实心方形，不能把跨组差异当成组内趋势。",
+        "tolerance_used": "F04点成功率允许1个百分点；每组端点约下降8个百分点，方向稳健。"
+      },
+      "source_regions": [
+        "F04-x-ticks",
+        "F04-x-label",
+        "F04-y-ticks",
+        "F04-y-label",
+        "F04-legend-G1",
+        "F04-legend-G2",
+        "F04-G1-1",
+        "F04-G1-2",
+        "F04-G1-3",
+        "F04-G1-4",
+        "F04-G1-5",
+        "F04-G2-8",
+        "F04-G2-9",
+        "F04-G2-10",
+        "F04-G2-11",
+        "F04-G2-12"
+      ],
+      "text_evidence": {
+        "paragraph": "E04",
+        "relevant_text": "每个点汇总一种不同工作负载，G1与G2来自不同任务分布；并非随机把同一任务分配到不同计划长度；没有控制所有混杂因素，没有因果干预试验。"
+      },
+      "rationale": "合并关联向上的子命题可保留。但蓝圆从约80%降至72%，橙方从约95%降至87%，直接反驳把合并图形解读为每组观测趋势都向上。E04又说明组间任务分布不同且无干预，不能声称已建立因果关系。“增加长度都会提高”若指干预后的真实因果效果则仍未知，不能由下降的观察相关性断言因果效果必为负。",
+      "unknowns_and_limits": [
+        "真实增加计划长度的因果效应未知，可能受任务分布等混杂影响。",
+        "组内观测点也不是同一任务的随机干预结果。",
+        "图未给出6或7 steps的点，不外插。"
+      ],
+      "subclaims": [
+        {
+          "object": "合并点位总体正关联",
+          "verdict": "support"
+        },
+        {
+          "object": "任一组内观测成功率都随长度增加而提高",
+          "verdict": "refute"
+        },
+        {
+          "object": "合并关联足以说明任一组内增加长度都会提高成功率",
+          "verdict": "refute",
+          "kind": "evidence-sufficiency metaproposition"
+        },
+        {
+          "object": "已建立因果关系",
+          "verdict": "refute",
+          "kind": "causal-evidence metaproposition"
+        },
+        {
+          "object": "干预增加长度的真实因果效应",
+          "verdict": "insufficient_evidence",
+          "kind": "causal fact"
+        }
+      ]
+    },
+    {
+      "claim_id": "C08",
+      "claim_text": "F04合并后整体关联向上，但按图例分别看G1、G2时两组内趋势都向下；这些观察不能确证增加计划长度会提高成功率。",
+      "judgment_object": "合并/分组方向与现有观察的因果边界",
+      "verdict": "support",
+      "readings": {
+        "unit": "steps and % target pass",
+        "G1_readable_sequence": [
+          [
+            1,
+            [
+              79.5,
+              80.5
+            ]
+          ],
+          [
+            2,
+            [
+              77.5,
+              78.5
+            ]
+          ],
+          [
+            3,
+            [
+              75.4,
+              76.4
+            ]
+          ],
+          [
+            4,
+            [
+              73.5,
+              74.5
+            ]
+          ],
+          [
+            5,
+            [
+              71.4,
+              72.4
+            ]
+          ]
+        ],
+        "G2_readable_sequence": [
+          [
+            8,
+            [
+              94.4,
+              95.4
+            ]
+          ],
+          [
+            9,
+            [
+              92.5,
+              93.5
+            ]
+          ],
+          [
+            10,
+            [
+              90.4,
+              91.4
+            ]
+          ],
+          [
+            11,
+            [
+              88.5,
+              89.5
+            ]
+          ],
+          [
+            12,
+            [
+              86.4,
+              87.4
+            ]
+          ]
+        ],
+        "pooled_relation": "正关联（跨分布的整体点云方向）",
+        "within_G1": "下降",
+        "within_G2": "下降",
+        "axis_condition": "x线性steps，y线性百分比。",
+        "legend_condition": "按蓝色空心圆G1与橙色实心方形G2分别判断。",
+        "tolerance_used": "F04允许点读数1个百分点；两组下降和两云团层次关系均清楚。"
+      },
+      "source_regions": [
+        "F04-x-ticks",
+        "F04-y-ticks",
+        "F04-y-label",
+        "F04-legend-G1",
+        "F04-legend-G2",
+        "F04-G1-1",
+        "F04-G1-2",
+        "F04-G1-3",
+        "F04-G1-4",
+        "F04-G1-5",
+        "F04-G2-8",
+        "F04-G2-9",
+        "F04-G2-10",
+        "F04-G2-11",
+        "F04-G2-12"
+      ],
+      "text_evidence": {
+        "paragraph": "E04",
+        "relevant_text": "观察性记录；不同工作负载与不同任务分布；没有控制所有混杂因素，没有因果干预试验。"
+      },
+      "rationale": "蓝圆和橙方各自向右下降，但橙方集中在更右、更高的区域，所以合并点云总体向上。E04说明分布不同且无随机干预，支持“这些观察不能确证增加长度提高成功率”的审慎限定；这不等于已经证明任何因果效果为负。",
+      "unknowns_and_limits": [
+        "具体混杂因素和各自贡献未知。",
+        "无法由此图判定增加计划长度的因果效应大小、正负或在新任务上的保证。"
+      ],
+      "subclaims": [
+        {
+          "object": "合并正关联",
+          "verdict": "support"
+        },
+        {
+          "object": "G1组内下降",
+          "verdict": "support"
+        },
+        {
+          "object": "G2组内下降",
+          "verdict": "support"
+        },
+        {
+          "object": "现有观察不能确证增加长度提高成功率",
+          "verdict": "support",
+          "kind": "evidence-limit metaproposition"
+        }
+      ]
+    }
+  ],
+  "global_limits": [
+    "未读取任何其它QA、GT、作者数组、构图几何、其它标注或参考。",
+    "图中数值均为可读区间/约值；不以隐藏精度判断。",
+    "SD不是95%置信区间；配对信息不等于已知配对差值方差。",
+    "耗时不替代质量；相关方向不替代干预效应。"
+  ]
+}

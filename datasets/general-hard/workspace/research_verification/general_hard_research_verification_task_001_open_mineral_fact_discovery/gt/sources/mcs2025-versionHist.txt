@@ -1,0 +1,31 @@
+Revision History for U.S. Geological Survey Mineral Commodity Summaries 2025
+
+By U.S. Geological Survey
+
+-----------------------------------------------------
+First posted online January 31, 2025
+
+-----------------------------------------------------
+Revised and reposted February 28, 2025, as version 1.1
+
+Revisions and changes incorporated into version 1.1 are described below:
+
+On p. 6, in paragraph 1, the year 2023 was changed to 2024 in the following statement: "The estimated value of nonfuel minerals produced at mines in the United States in 2024 was $106 billion."
+
+On p. 20, in paragraph 1, the word "metal" was added to the following statement: "China announced increases in cobalt refinery capacity in 2024, almost doubling its metal capacity from that in 2023."
+
+On p. 81, in paragraph 1, the phrase "increased by about 13%" was replaced by "decreased by about 8%" in the following statement: "U.S. imports of germanium metal and dioxide (germanium content) were estimated to have decreased by about 8% in 2024 from those in 2023 to 33,000 kilograms."
+
+On p. 144, in the "Salient Statistics--United States" table, a new footnote 3 callout was added to the row "Production: Compounds and metals." On p. 145, the footnote 3 itself was added, as follows: "In 2023 and 2024, reported production includes that for praseodymium and neodymium compounds in California and rare-earth compounds in Utah. Other rare-earth compounds were produced in California, but data were not in the reported totals shown. Total domestic production in 2023 and 2024 was 1,920 tons and 7,600 tons, respectively." Adding the new footnote 3 required that the previous footnotes 3 through 13 and their callouts be renumbered as footnotes 4 through 14 on p. 144 and 145.
+
+On p. 150, in the chapter on salt, the spelling of a name in the "Prepared by" line was changed from Macgregor to MacGregor.
+
+On p. 164, in the chapter on soda ash, the spelling of a name in the "Prepared by" line was changed from Macgregor to MacGregor.
+
+-----------------------------------------------------
+Revised and reposted March 3, 2025, as version 1.2
+
+Revisions and changes incorporated into version 1.2 are described below:
+
+On p. 23, in table 5, in the "Zinc" row, the number in column "Production in leading country" was changed from "4,000" to "4,000,000" and the number in column "World production total" was changed from "12,000" to "12,000,000" to accurately reflect the units of the table.
+

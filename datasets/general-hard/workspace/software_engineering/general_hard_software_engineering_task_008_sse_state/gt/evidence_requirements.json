@@ -1,0 +1,22 @@
+{
+  "public_ids": [
+    "B01_basic",
+    "B02_channels",
+    "B05_utf8_every_byte",
+    "B07_eof_incomplete",
+    "B09_out_of_order",
+    "N01_replay_resume",
+    "N04_partial_record_disconnect",
+    "N07_same_id_conflict",
+    "N10_error_sticky",
+    "N20_gap_interrupted"
+  ],
+  "test_count": 4,
+  "command_tail": [
+    "-B",
+    "-m",
+    "unittest",
+    "project.test_public",
+    "-v"
+  ]
+}

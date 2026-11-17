@@ -1,0 +1,19 @@
+{
+  "schema": "h044-trusted-files/v1",
+  "files": {
+    "artifact_contract.json": "efabdfbe32829e79624fe1b860d0530420a572e8dff1ea3d410a5bddf8d96a86",
+    "business_oracle.json": "4c23e5881518cca8570b4f0a125910554b916a9541fc16ac52d142b55ad68bd5",
+    "counterexamples.json": "35dd9e69c2d4f809f347bfed87ce732217ee4097cb9042a7afe4ee844948d7a5",
+    "evidence_requirements.json": "3fb496e3a21872c2884fdc0d54a18f23870628f6ffdeccb304a3a1f3357d2669",
+    "expected.json": "af92da870a1976f5967eaa2b16786dbb27e36623ddadaf963184b308aeba33f0",
+    "grader.py": "48431bf24ef4c76d82abe94eb3bd918653a98e549ef695da0b8e6ae0f1bba219",
+    "hidden_tests/runner.py": "da7701ba26d975acb2d6761bc986d4e1fe0c26f78b7b1a3afbaed5256f8c7308",
+    "protected_inputs/contract.md": "1502346dd44c0cd972390bd054aabce4c6c30ac5473865a4e7943b6aacbf5c05",
+    "protected_inputs/fixtures/users.json": "521eca03da2d800e8d207593b082e290f3160816997146013b466fdb699e5ee0",
+    "protected_inputs/project/__init__.py": "c7604ab46b681fe844b94efbb804c31a940b0b4e564e2bce6bb02efe55be398d",
+    "protected_inputs/requirements.lock": "17439f242d32c25f3e4e9da3c5b1e04224c544d0d2947957970748cb7080c5c0",
+    "protected_inputs/tests/test_public.py": "3bc69fb81ede1096650d3041a817b5fd8909e6aab41583c8f58761c684b4e413",
+    "protected_inputs/tools/run_security_tests.py": "5606265c7a10c9f4eeee1050a34f8aee333a8f97cab15a09e6d10e3a2b1ea93e",
+    "protected_sha256.json": "3125c3099b2807a50e0f0f7659a01a376990153b04db69d85cb0f4fc3897131a"
+  }
+}

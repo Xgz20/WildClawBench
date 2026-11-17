@@ -1,0 +1,20 @@
+{
+  "public_case_ids": [
+    "default",
+    "legacy",
+    "canonical_zero"
+  ],
+  "api_modules": [
+    "batchstamp.core",
+    "legacy_stamp"
+  ],
+  "entry_kinds": [
+    "console-new",
+    "console-old",
+    "module-new",
+    "module-old"
+  ],
+  "source_and_input_weight": 0.4,
+  "public_replay_weight": 0.4,
+  "preserved_wheel_weight": 0.2
+}

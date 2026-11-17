@@ -1,0 +1,5 @@
+{
+  "source": "project/importer.py",
+  "report": "results/test_report.json",
+  "basis": "Final source hash + captured public-test log hashes + independent re-execution of pristine public tests. This establishes consistency and reproduced behavior, not cryptographic proof of the candidate historical launch time."
+}

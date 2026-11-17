@@ -1,0 +1,12 @@
+{
+  "source_first_freeze_sha256": "7347c11e8d9921b01ec04fe07d1be608847dd335894a41c6ba81e6e49b0f5f23",
+  "source_review_node_sha256": "c451a2e938886b77e24005eac61ca980ccb649bcfbe636e2ee48fbb601bb5b7a",
+  "character_count": 1014,
+  "paragraphs": 9,
+  "model_authored_not_Harness_or_human_expert": true,
+  "files": {
+    "fact_map.csv": "3687e73f7339fb252daf5471fbdae9e6e92559798c22583adf2fb502246983c2",
+    "article.html": "d106b756601dbd5090e7ff287370ea3e63e18f10be39363eef81a7ed779e445e",
+    "edit_notes.md": "e25b3d2fa6af546cbe15c0acab7080a0fa085473bf8dc405acf8d034df92059f"
+  }
+}

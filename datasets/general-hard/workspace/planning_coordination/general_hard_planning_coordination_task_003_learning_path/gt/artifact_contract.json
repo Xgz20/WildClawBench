@@ -1,0 +1,157 @@
+{
+  "schema": "h055.artifact-contract/v1",
+  "required": [
+    "results/learning_plan.xlsx",
+    "results/portfolio.docx"
+  ],
+  "tables": {
+    "activities": {
+      "activity_id": [
+        "活动编号"
+      ],
+      "name": [
+        "名称"
+      ],
+      "kind": [
+        "类型"
+      ],
+      "first_week": [
+        "首次规划周"
+      ],
+      "last_week": [
+        "末次规划周"
+      ],
+      "hours_required": [
+        "材料小时"
+      ],
+      "planned_hours": [
+        "计划小时"
+      ],
+      "fee": [
+        "费用"
+      ],
+      "status": [
+        "状态"
+      ],
+      "prerequisites": [
+        "先修"
+      ],
+      "acceptance": [
+        "验收"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "allocations": {
+      "week_id": [
+        "规划周编号"
+      ],
+      "activity_id": [
+        "活动编号"
+      ],
+      "hours": [
+        "小时"
+      ]
+    },
+    "weekly": {
+      "week_id": [
+        "规划周编号"
+      ],
+      "month": [
+        "月份"
+      ],
+      "hours_cap": [
+        "小时上限"
+      ],
+      "planned_hours": [
+        "计划小时"
+      ],
+      "remaining_hours": [
+        "剩余小时"
+      ],
+      "overload_hours": [
+        "超出小时"
+      ]
+    },
+    "monthly": {
+      "month": [
+        "月份"
+      ],
+      "hours_cap": [
+        "小时上限"
+      ],
+      "planned_hours": [
+        "计划小时"
+      ],
+      "remaining_hours": [
+        "剩余小时"
+      ],
+      "fee": [
+        "费用"
+      ],
+      "year_fee": [
+        "当年累计费用"
+      ],
+      "cumulative_fee": [
+        "两年累计费用"
+      ],
+      "total_fee_remaining": [
+        "总费用余额"
+      ],
+      "focus": [
+        "月度重点"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "milestones": {
+      "activity_id": [
+        "活动编号"
+      ],
+      "criteria": [
+        "标准编号"
+      ],
+      "acceptance": [
+        "验收"
+      ],
+      "evidence_status": [
+        "证据状态"
+      ],
+      "capability_status": [
+        "能力状态"
+      ],
+      "adjustment_trigger": [
+        "调整触发"
+      ],
+      "next_action": [
+        "下一步"
+      ],
+      "source_ref": [
+        "依据"
+      ]
+    },
+    "settings": {
+      "key": [
+        "键"
+      ],
+      "value": [
+        "值"
+      ]
+    }
+  },
+  "equivalence": [
+    "different valid course and practice selections",
+    "different source-feasible allocations and monthly focus",
+    "arbitrary worksheet names and field order",
+    "multiple same-row tables with repeated anchor headers",
+    "Chinese/English declared headers",
+    "week IDs or global1-96 numeric indices for first/last",
+    "zero fees and unused weeks are genuine zero",
+    "optional charge_month/week_order helpers",
+    "different scalar formula implementations; original array/shared input intervention typed if unsupported"
+  ],
+  "semantic_boundary": "Measurable acceptance/adjustment record completeness is structural; Judge decides whether proposed works actually demonstrate target competence",
+  "unsupported": "Missing trusted GT/runtime and legal unsupported native/function/input representation are evaluation exceptions, never ability zero"
+}

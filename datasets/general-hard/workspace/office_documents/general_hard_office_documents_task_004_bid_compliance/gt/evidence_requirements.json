@@ -1,0 +1,17 @@
+{
+  "schema_version": "h004-evidence/v1",
+  "source_fields": [
+    "requirement_refs",
+    "draft_refs",
+    "fact_refs",
+    "certificate_refs",
+    "revised_refs"
+  ],
+  "locator_syntax": "requirements.docx#R001; response.docx#D001; response.docx#F001; certificates.pdf#C01; results/response_revised.docx#R001",
+  "role_rule": "Real record IDs must match the role and related requirement; missing draft/no required certificate is explicit empty, never a made-up record.",
+  "semantic_scope": [
+    "Actual capability promises versus source facts",
+    "Expiry/scope uncertainty and constraints",
+    "Mandatory gap actionability and cross-file consistency"
+  ]
+}

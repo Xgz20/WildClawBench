@@ -1,0 +1,127 @@
+{
+  "status": "PASS_SOURCE_DUAL_PATH",
+  "methods": [
+    "Decimal grouped events and sequential customer balances/FIFO",
+    "Independent SQLite integer cents, joins, aggregates and window frames"
+  ],
+  "actual_sources_read": true,
+  "source_sha256": {
+    "opening.csv": "b1a94b5fa80daf7f9146d80836c931769f9d40c2671fde2797784190767878d1",
+    "payments.csv": "1565e425b46c825e205d10db3880f150e9fca41b51e20515f16c19cdd2ea56e8",
+    "orders.xlsx": "a8995fef2e2c660c20a2dfd3803ab25293ad33990f8a4683b113fc1f1b18cd32",
+    "rules.md": "949f4d47ca9b7a66932f37878b2fbc45a6a199790a73023846f1d269d2614094"
+  },
+  "count": 25422,
+  "cases": [
+    {
+      "name": "baseline",
+      "record_id": null,
+      "checks": 6348,
+      "posted_events": 236,
+      "lots": 150,
+      "exceptions": 34,
+      "controls": {
+        "bank_known_net": "99951.31",
+        "matched_net_cash": "99721.30",
+        "known_suspense_net": "230.01",
+        "known_cash_gap": "0.00",
+        "closing_net_AR": "224793.49",
+        "remaining_receivables": "252378.86",
+        "customer_credit": "27585.37",
+        "unresolved_order_groups": 6,
+        "unresolved_payment_groups": 10,
+        "unquantified_bank_groups": 3,
+        "unresolved_order_rows": 7,
+        "unresolved_payment_rows": 11,
+        "fully_identified": false
+      },
+      "delta_cents": {}
+    },
+    {
+      "name": "late_invoice",
+      "record_id": "O169",
+      "checks": 6366,
+      "posted_events": 237,
+      "lots": 151,
+      "exceptions": 33,
+      "controls": {
+        "bank_known_net": "99951.31",
+        "matched_net_cash": "99721.30",
+        "known_suspense_net": "230.01",
+        "known_cash_gap": "0.00",
+        "closing_net_AR": "232293.49",
+        "remaining_receivables": "259878.86",
+        "customer_credit": "27585.37",
+        "unresolved_order_groups": 6,
+        "unresolved_payment_groups": 10,
+        "unquantified_bank_groups": 3,
+        "unresolved_order_rows": 7,
+        "unresolved_payment_rows": 11,
+        "fully_identified": false
+      },
+      "delta_cents": {
+        "closing_net_AR": 750000,
+        "bank_known_net": 0,
+        "matched_net_cash": 0
+      }
+    },
+    {
+      "name": "late_receipt",
+      "record_id": "P073",
+      "checks": 6354,
+      "posted_events": 237,
+      "lots": 150,
+      "exceptions": 33,
+      "controls": {
+        "bank_known_net": "100651.31",
+        "matched_net_cash": "100421.30",
+        "known_suspense_net": "230.01",
+        "known_cash_gap": "0.00",
+        "closing_net_AR": "224093.49",
+        "remaining_receivables": "251678.86",
+        "customer_credit": "27585.37",
+        "unresolved_order_groups": 6,
+        "unresolved_payment_groups": 10,
+        "unquantified_bank_groups": 3,
+        "unresolved_order_rows": 7,
+        "unresolved_payment_rows": 11,
+        "fully_identified": false
+      },
+      "delta_cents": {
+        "closing_net_AR": -70000,
+        "bank_known_net": 70000,
+        "matched_net_cash": 70000
+      }
+    },
+    {
+      "name": "late_refund",
+      "record_id": "P086",
+      "checks": 6354,
+      "posted_events": 237,
+      "lots": 150,
+      "exceptions": 33,
+      "controls": {
+        "bank_known_net": "99451.31",
+        "matched_net_cash": "99221.30",
+        "known_suspense_net": "230.01",
+        "known_cash_gap": "0.00",
+        "closing_net_AR": "225293.49",
+        "remaining_receivables": "252878.86",
+        "customer_credit": "27585.37",
+        "unresolved_order_groups": 6,
+        "unresolved_payment_groups": 10,
+        "unquantified_bank_groups": 3,
+        "unresolved_order_rows": 7,
+        "unresolved_payment_rows": 11,
+        "fully_identified": false
+      },
+      "delta_cents": {
+        "closing_net_AR": 50000,
+        "bank_known_net": -50000,
+        "matched_net_cash": -50000
+      }
+    }
+  ],
+  "elapsed_seconds": 0.441,
+  "limit": "Source oracle agreement and three source-level hypothetical late-entry activations. Candidate reference workbook and actual Office response have not yet been built/verified."
+}

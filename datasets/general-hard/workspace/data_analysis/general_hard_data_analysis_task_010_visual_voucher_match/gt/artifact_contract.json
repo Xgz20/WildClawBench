@@ -1,0 +1,153 @@
+{
+  "schema_version": "h026-artifact-contract/v1",
+  "outputs": [
+    "results/voucher_match.xlsx",
+    "results/adjustment_proposal.json",
+    "results/visual_evidence.json"
+  ],
+  "max_each_delivery_bytes": 5242880,
+  "xlsx_tables": {
+    "images": [
+      "file",
+      "voucher_no",
+      "counterparty_id",
+      "counterparty_name",
+      "business_date",
+      "currency",
+      "direction",
+      "printed_amount",
+      "has_handwritten_correction",
+      "handwritten_amount",
+      "status_selection",
+      "approval_location",
+      "approval_crossed_out",
+      "correction_status"
+    ],
+    "ledger": [
+      "entry_id",
+      "voucher_no",
+      "counterparty_id",
+      "business_date",
+      "currency",
+      "direction",
+      "ledger_amount",
+      "scope_status",
+      "match_status",
+      "canonical_entry_id",
+      "action",
+      "target_amount",
+      "proposed_delta",
+      "source_files",
+      "reason"
+    ],
+    "groups": [
+      "voucher_no",
+      "counterparty_id",
+      "business_date",
+      "currency",
+      "direction",
+      "state",
+      "effective_amount",
+      "canonical_entry_id",
+      "source_files",
+      "reason"
+    ],
+    "summary": [
+      "key",
+      "value"
+    ],
+    "preserved_raw_ledger": [
+      "entry_id",
+      "voucher_no",
+      "counterparty_id",
+      "counterparty_name",
+      "business_date",
+      "currency",
+      "direction",
+      "amount",
+      "book_status",
+      "posted_at"
+    ]
+  },
+  "summary_required": [
+    "eligible_book_amount",
+    "proposed_delta_sum",
+    "book_amount_after_proposals",
+    "unresolved_book_amount",
+    "unresolved_entry_count",
+    "proposal_count",
+    "unbooked_pending_group_count"
+  ],
+  "adjustment_json": {
+    "top_approval_required": true,
+    "top_approval_status": "pending",
+    "top_applied": false,
+    "proposals_count": 7,
+    "proposal_fields": [
+      "action",
+      "entry_id",
+      "key",
+      "delta_amount",
+      "target_amount",
+      "source_files",
+      "reason",
+      "approval_required",
+      "approval_status",
+      "applied"
+    ],
+    "pending_items_count": 5,
+    "pending_kinds": {
+      "ledger_hold": 4,
+      "unbooked_pending": 1
+    },
+    "pending_fields": [
+      "entry_id",
+      "key",
+      "source_files",
+      "reason"
+    ],
+    "kind_may_be_explicit_or_inferred_from_entry_id": true
+  },
+  "visual_json": {
+    "top": "images",
+    "count": 12,
+    "image_fields": [
+      "file",
+      "sha256",
+      "width",
+      "height",
+      "observations"
+    ],
+    "observation_fields": [
+      "feature",
+      "bbox",
+      "coordinate_system",
+      "observation"
+    ],
+    "features_all_images": [
+      "identity",
+      "date_currency_direction",
+      "amount",
+      "status_context"
+    ],
+    "local_review_required_images": [
+      "voucher_05.png",
+      "voucher_06.png",
+      "voucher_12.png"
+    ]
+  },
+  "equivalence": [
+    "native static values or formulas recalculated after removing all caches",
+    "one semantic header row; arbitrary sheet names, row/column order, offsets and blank spacer columns",
+    "English headers or declared clear Chinese aliases in voucher_io.py",
+    "raw18 ledger rows may be a separate table or merged with decisions",
+    "JSON array order immaterial; finite numeric amounts or two-decimal strings; null remains distinct from real0",
+    "key may be nested or flattened; filenames may use input/exec prefixes or unambiguous PNG basename",
+    "unmatched/no_exact_key_match/no_voucher equivalent; scope_excluded/excluded equivalent",
+    "void group amount null or0; pending group amount must be null",
+    "excluded rows may retain image audit citations only when all5 economic key fields match"
+  ],
+  "formula_count_threshold": null,
+  "input_response_required": false,
+  "input_immutable": true
+}

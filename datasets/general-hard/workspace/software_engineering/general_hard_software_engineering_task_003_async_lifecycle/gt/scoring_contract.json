@@ -1,0 +1,39 @@
+{
+  "schema_version": "h043-private-rule-binding/v1",
+  "grading_type": "automated",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "source_first_oracle_and_nonblind_ownership_alignment_documented": true,
+  "private_sha256": {
+    "artifact_contract.json": "a1b4fb8324ee313e005540a588fcaf8fabfaabfcad886c1579742531cea5b0b7",
+    "business_oracle.json": "eff95cbb88cc27a89f88b54a0eecba863d8611cbc97100684f22ed7dd7b89889",
+    "counterexamples.json": "a53e2727c4cdfb162bf174e7ef5a729e9d0db2528f6d8118e9225ead84606259",
+    "evidence_requirements.json": "131dadf86d958cec2b572173c98cfbae145749fc93c213eca3d26b6763b2b16e",
+    "expected.json": "df949fa0f7d2985c720d9c45e88da59ab3624b189e6e3e4b8001ff605b6bbce1",
+    "grader.py": "135e3db398862db645ed51879c70ce3ffcb0f5904a635eca2b2743b2926461ee",
+    "hidden_tests/run_oracle.py": "7e21a4f52a2dfa0f60b7c88ca78f69c73d80563d45faf7ee84965c1e17824771",
+    "hidden_tests/test_lifecycle.py": "8b347716b28c080b416dca00e3bb1805bfa3f54ac23d8ec1e1844eed614faa7e",
+    "protected_sha256.json": "f63f84f96ebe771289e497bf75ec3603740a3c3dc8e4ac35ae35dfe8ad496d64",
+    "provenance/oracle-ownership-v2-receipt.json": "85ed6304dc596c4df9304ef0aeb7fc383febfacdb6c53b2d66a49eb3572f11a8",
+    "provenance/source-truth-freeze.json": "d3bec75d6b6c6d1fe2e1c42dd5fb7d93e08857501512652e34daa21c312d4211",
+    "reference/v1/project/__init__.py": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+    "reference/v1/project/resources.py": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+    "reference/v1/project/worker.py": "d57ae062af2f39b536abc30912a9bc6036409aa758665f6f172e05e7c14d7af3",
+    "reference/v1/provenance.json": "afc5d69a4cbb1a33b25f6da12e59ac8fddac95a07bdcda0ee47f9b5d64b97504",
+    "reference/v1/results/lifecycle.md": "7aabe76bfdb13216b00d8fd357340e06241f47de0e47f516c7f0bbc56d06f32f",
+    "reference/v1/results/tests.txt": "b3f7d0a2253bb584bfd970fe2c1f43555589411ccb8c118d9a7699733b142f17",
+    "runtime_contract.json": "db06a5a1d70d3c9f9a9a2456487297b2e1d85d88ccee9cbd460a9d656feff2fb",
+    "source_originals/contract.md": "7c3403d775071d5518fe203e708e8d11849ff05ff04673e86f60e410ba8ce933",
+    "source_originals/project/__init__.py": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+    "source_originals/project/resources.py": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969",
+    "source_originals/project/worker.py": "d0d8596078ae4ed2773b7791fc89439da137f0c315271037879ff6af090d545b",
+    "source_originals/runtime.json": "189a110aa775762ff81075cce4768211beab1e1a9e2e6de3fb391899ceb4a37c",
+    "source_originals/tests_public/test_normal.py": "b9e4747534ae15825f6544d905288419292a5eeb35649f60ed5c139f8634a110",
+    "trusted_project/__init__.py": "a17f7c262b86de0e49b7c6a61212e311a585fcb9b6f7765177cccff212b811f0",
+    "trusted_project/resources.py": "f1499dcd4036f0f3d4f9c2a73ef1074a4317a055abf03b684089d93a6a6cb969"
+  }
+}

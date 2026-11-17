@@ -1,0 +1,308 @@
+{
+  "metrics": {
+    "M1": {
+      "n": 78,
+      "d": 100,
+      "rate": 0.78,
+      "status": "verified",
+      "period": "2026-10-01/2026-10-28",
+      "definition": "首次人工响应不超过1个营业日；排除测试和重复工单"
+    },
+    "M2": {
+      "n": 12,
+      "d": 20,
+      "rate": 0.6,
+      "status": "verified",
+      "period": "2026-10-01/2026-10-28",
+      "definition": "随机抽查20份已结束引导；12份具有完整必填核对项"
+    },
+    "M3": {
+      "n": 9,
+      "d": 15,
+      "rate": 0.6,
+      "status": "verified",
+      "period": "2026-10-01/2026-10-28",
+      "definition": "15项预先登记到期承诺；9项在原到期前通过验收，延期不重置到期"
+    },
+    "M4": {
+      "n": 7,
+      "d": null,
+      "rate": null,
+      "status": "unknown",
+      "period": "2026-10-01/2026-10-28",
+      "definition": "仅有7条激活事件，未去重且无合格新账户分母；不能计算激活率"
+    }
+  },
+  "capacities": {
+    "PM:P1": 16,
+    "PM:P2": 16,
+    "PM:P3": 16,
+    "PM:P4": 16,
+    "PM:P5": 16,
+    "PM:P6": 16,
+    "OPS:P1": 24,
+    "OPS:P2": 24,
+    "OPS:P3": 12,
+    "OPS:P4": 24,
+    "OPS:P5": 24,
+    "OPS:P6": 24,
+    "ANALYST:P1": 12,
+    "ANALYST:P2": 6,
+    "ANALYST:P3": 12,
+    "ANALYST:P4": 12,
+    "ANALYST:P5": 12,
+    "ANALYST:P6": 12
+  },
+  "goals": {
+    "G1": {
+      "metric_id": "M1",
+      "minimum_rate": 0.85,
+      "minimum_sample": 40,
+      "due": 6,
+      "baseline_status": "verified"
+    },
+    "G2": {
+      "metric_id": "M2",
+      "minimum_rate": 0.9,
+      "minimum_sample": 20,
+      "due": 6,
+      "baseline_status": "verified"
+    },
+    "G3": {
+      "metric_id": "M3",
+      "minimum_rate": 0.8,
+      "minimum_sample": 10,
+      "due": 6,
+      "baseline_status": "verified"
+    },
+    "G4": {
+      "metric_id": "M4",
+      "minimum_rate": null,
+      "minimum_sample": null,
+      "due": 1,
+      "baseline_status": "unknown"
+    }
+  },
+  "periods": [
+    {
+      "period": "P1",
+      "start": "2027-01-04",
+      "end": "2027-01-17"
+    },
+    {
+      "period": "P2",
+      "start": "2027-01-18",
+      "end": "2027-01-31"
+    },
+    {
+      "period": "P3",
+      "start": "2027-02-01",
+      "end": "2027-02-14"
+    },
+    {
+      "period": "P4",
+      "start": "2027-02-15",
+      "end": "2027-02-28"
+    },
+    {
+      "period": "P5",
+      "start": "2027-03-01",
+      "end": "2027-03-14"
+    },
+    {
+      "period": "P6",
+      "start": "2027-03-15",
+      "end": "2027-03-28"
+    }
+  ],
+  "outcomes": [
+    {
+      "outcome": "O1",
+      "goals": [
+        "G1",
+        "G2",
+        "G3",
+        "G4"
+      ],
+      "method": "definitions",
+      "effort": {
+        "PM": 6,
+        "OPS": 2,
+        "ANALYST": 6
+      },
+      "predecessors": [],
+      "latest": 1,
+      "gate": "none"
+    },
+    {
+      "outcome": "O2",
+      "goals": [
+        "G1"
+      ],
+      "method": "triage",
+      "effort": {
+        "PM": 2,
+        "OPS": 10,
+        "ANALYST": 2
+      },
+      "predecessors": [
+        "O1"
+      ],
+      "latest": 3,
+      "gate": "none"
+    },
+    {
+      "outcome": "O2",
+      "goals": [
+        "G1"
+      ],
+      "method": "scripts",
+      "effort": {
+        "PM": 4,
+        "OPS": 6,
+        "ANALYST": 4
+      },
+      "predecessors": [
+        "O1"
+      ],
+      "latest": 3,
+      "gate": "none"
+    },
+    {
+      "outcome": "O3",
+      "goals": [
+        "G1"
+      ],
+      "method": "ticket_sample",
+      "effort": {
+        "PM": 0,
+        "OPS": 14,
+        "ANALYST": 4
+      },
+      "predecessors": [
+        "O2"
+      ],
+      "latest": 5,
+      "gate": "none"
+    },
+    {
+      "outcome": "O4",
+      "goals": [
+        "G2"
+      ],
+      "method": "checklist",
+      "effort": {
+        "PM": 4,
+        "OPS": 8,
+        "ANALYST": 2
+      },
+      "predecessors": [
+        "O1"
+      ],
+      "latest": 3,
+      "gate": "none"
+    },
+    {
+      "outcome": "O5",
+      "goals": [
+        "G2"
+      ],
+      "method": "retrospective",
+      "effort": {
+        "PM": 2,
+        "OPS": 8,
+        "ANALYST": 4
+      },
+      "predecessors": [
+        "O4"
+      ],
+      "latest": 5,
+      "gate": "none"
+    },
+    {
+      "outcome": "O5",
+      "goals": [
+        "G2"
+      ],
+      "method": "live_pilot",
+      "effort": {
+        "PM": 2,
+        "OPS": 12,
+        "ANALYST": 4
+      },
+      "predecessors": [
+        "O4"
+      ],
+      "latest": 5,
+      "gate": "Q1"
+    },
+    {
+      "outcome": "O6",
+      "goals": [
+        "G3"
+      ],
+      "method": "commitment_log",
+      "effort": {
+        "PM": 6,
+        "OPS": 2,
+        "ANALYST": 2
+      },
+      "predecessors": [
+        "O1"
+      ],
+      "latest": 3,
+      "gate": "none"
+    },
+    {
+      "outcome": "O7",
+      "goals": [
+        "G3"
+      ],
+      "method": "closure_sample",
+      "effort": {
+        "PM": 4,
+        "OPS": 4,
+        "ANALYST": 2
+      },
+      "predecessors": [
+        "O6"
+      ],
+      "latest": 5,
+      "gate": "none"
+    },
+    {
+      "outcome": "O8",
+      "goals": [
+        "G1",
+        "G2",
+        "G3",
+        "G4"
+      ],
+      "method": "review",
+      "effort": {
+        "PM": 6,
+        "OPS": 4,
+        "ANALYST": 8
+      },
+      "predecessors": [
+        "O3",
+        "O5",
+        "O7"
+      ],
+      "latest": 6,
+      "gate": "none"
+    }
+  ],
+  "gate": {
+    "decision_id": "Q1",
+    "status": "unknown",
+    "owner": "PM",
+    "review": 2,
+    "earliest_live": 4
+  },
+  "source_sha256": {
+    "baseline.csv": "97c837afd6ec867f821a2f49585e3b8f7a61bc037d06a4a0825b5ea8447ed0e5",
+    "constraints.md": "437b9067c49cdae933f626a552fe6885855d50a1b2b490510aea421c38cdbeef",
+    "strategy_notes.docx": "521b1d5f20a5320bbe25bcd71656f26dba1afad96ab925e4580cac52eddd7d68"
+  }
+}

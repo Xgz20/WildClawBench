@@ -1,0 +1,19 @@
+{
+  "customer": {
+    "id": "number",
+    "name": "text",
+    "group": "text",
+    "region": "text",
+    "joined_at": "text",
+    "credit": "number"
+  },
+  "order": {
+    "id": "number",
+    "customer_id": "number",
+    "group": "text",
+    "amount": "number",
+    "note": "text",
+    "created_at": "text",
+    "select": "text"
+  }
+}

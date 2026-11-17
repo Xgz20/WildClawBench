@@ -1,0 +1,366 @@
+{
+  "status": "PASS_NATIVE_DATE_RUNTIME",
+  "core_version": "0.15.2",
+  "score_skill_version": "0.23.2",
+  "source_base_revision": "8df67a328a973ecb5478e337db05aae5d5b675b4",
+  "repository_state": "scoped uncommitted patch at acceptance; individual source hashes bound below",
+  "unit_tests": {
+    "run": 65,
+    "passed": 57,
+    "skipped": 8,
+    "failed": 0,
+    "scope": "counterfactual/native-date replay and Worker/archive protocol, numeric intervention, Office runtime, core, package/layout registry"
+  },
+  "native_math": {
+    "checks": 33086,
+    "cases": [
+      {
+        "case": "baseline",
+        "checks": 8259,
+        "source_audit": {
+          "schema_version": "wildclawbench.office-recalculation/v1",
+          "profile": "offline-xlsx-remove-formula-caches/v1",
+          "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+          "executable_sha256": "81c7db1c6dbcdd606d95abef337b4529aeda6a4fa1cf23a5a567f9c5655c8b66",
+          "source_sha256": "37ff1225111943008b99cf65f58c56e9817c26061c2df918a6a2e27f36d24411",
+          "normalized_input_sha256": "3943abdfa32c914ec7d89f0076ee9e06db5b75629bc9425e7de3978946e9f5e8",
+          "derived_sha256": "79fb1e441c91b93c6a1aa3aa85accbcc04509f8a7b246d0cc4086260979b1d21",
+          "formula_caches_cleared": 19059,
+          "source_unchanged": true,
+          "stdout": "convert /private/tmp/wcb-office-_vfypo15/input/workbook.xlsx as a Calc document -> /private/tmp/wcb-office-_vfypo15/output/workbook.xlsx using filter : Calc MS Excel 2007 XML\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/@.__________________________________________________OOO/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n"
+        },
+        "prepared_audit": null
+      },
+      {
+        "case": "late_invoice",
+        "checks": 8285,
+        "source_audit": {
+          "schema_version": "wildclawbench.office-recalculation/v1",
+          "profile": "offline-xlsx-remove-formula-caches/v1",
+          "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+          "executable_sha256": "81c7db1c6dbcdd606d95abef337b4529aeda6a4fa1cf23a5a567f9c5655c8b66",
+          "source_sha256": "b7a47775999bc56c889b04757a1c4ddaeade14fa0b8dd3ac745fa4479348c195",
+          "normalized_input_sha256": "2224688f232b6069553571a5c744e8ff9f991aa317fd9b2f484e73aa0151714d",
+          "derived_sha256": "c5d2451645c9574c2c15b4b64560d127ce727782a8f8e76b3dc2313fd62b50c6",
+          "formula_caches_cleared": 19059,
+          "source_unchanged": true,
+          "stdout": "convert /private/tmp/wcb-office-cw1jxkgc/input/workbook.xlsx as a Calc document -> /private/tmp/wcb-office-cw1jxkgc/output/workbook.xlsx using filter : Calc MS Excel 2007 XML\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/@.__________________________________________________OOO/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n"
+        },
+        "prepared_audit": {
+          "schema_version": "wildclawbench.office-xlsx-counterfactual/v1",
+          "profile": "offline-xlsx-numeric-input-change/v1",
+          "source_sha256": "37ff1225111943008b99cf65f58c56e9817c26061c2df918a6a2e27f36d24411",
+          "prepared_sha256": "b7a47775999bc56c889b04757a1c4ddaeade14fa0b8dd3ac745fa4479348c195",
+          "source_unchanged": true,
+          "changes": [
+            {
+              "sheet": "原始订单",
+              "cell": "G71",
+              "value": "46299.5",
+              "original_value": "2026-10-10T12:00:00.000Z"
+            }
+          ]
+        }
+      },
+      {
+        "case": "late_receipt",
+        "checks": 8271,
+        "source_audit": {
+          "schema_version": "wildclawbench.office-recalculation/v1",
+          "profile": "offline-xlsx-remove-formula-caches/v1",
+          "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+          "executable_sha256": "81c7db1c6dbcdd606d95abef337b4529aeda6a4fa1cf23a5a567f9c5655c8b66",
+          "source_sha256": "f37ff3db32bed9b567d06df694e5b7dcd10471185d34f9426af03f27d1039e32",
+          "normalized_input_sha256": "df37e1cf0756136b481dd49f953ce9b68c55f2630dde9b28091467097ee7ebe6",
+          "derived_sha256": "6a870946c858cdc109cb8fd4152cf998defe6eb6bb0b82e2cc22be357beb00d0",
+          "formula_caches_cleared": 19059,
+          "source_unchanged": true,
+          "stdout": "convert /private/tmp/wcb-office-8cg5b9lz/input/workbook.xlsx as a Calc document -> /private/tmp/wcb-office-8cg5b9lz/output/workbook.xlsx using filter : Calc MS Excel 2007 XML\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/@.__________________________________________________OOO/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n"
+        },
+        "prepared_audit": {
+          "schema_version": "wildclawbench.office-xlsx-counterfactual/v1",
+          "profile": "offline-xlsx-numeric-input-change/v1",
+          "source_sha256": "37ff1225111943008b99cf65f58c56e9817c26061c2df918a6a2e27f36d24411",
+          "prepared_sha256": "f37ff3db32bed9b567d06df694e5b7dcd10471185d34f9426af03f27d1039e32",
+          "source_unchanged": true,
+          "changes": [
+            {
+              "sheet": "原始回款",
+              "cell": "F38",
+              "value": "46299.5",
+              "original_value": "2026-10-10T12:00:00.000Z"
+            }
+          ]
+        }
+      },
+      {
+        "case": "late_refund",
+        "checks": 8271,
+        "source_audit": {
+          "schema_version": "wildclawbench.office-recalculation/v1",
+          "profile": "offline-xlsx-remove-formula-caches/v1",
+          "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+          "executable_sha256": "81c7db1c6dbcdd606d95abef337b4529aeda6a4fa1cf23a5a567f9c5655c8b66",
+          "source_sha256": "a89ad1f67024997e49881a5f952c0bf734ccb69583584ecb20dbdd6848808fe7",
+          "normalized_input_sha256": "58d941c5e2059bf60e75cc27c593583526ac15104fee5b7c6dbd0d43f49bc396",
+          "derived_sha256": "5f04213652c5ffc2890085cd945a3080c1fb9837c6abf8c1d34df4ffb94eb95b",
+          "formula_caches_cleared": 19059,
+          "source_unchanged": true,
+          "stdout": "convert /private/tmp/wcb-office-s4qsjvmh/input/workbook.xlsx as a Calc document -> /private/tmp/wcb-office-s4qsjvmh/output/workbook.xlsx using filter : Calc MS Excel 2007 XML\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/@.__________________________________________________OOO/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n"
+        },
+        "prepared_audit": {
+          "schema_version": "wildclawbench.office-xlsx-counterfactual/v1",
+          "profile": "offline-xlsx-numeric-input-change/v1",
+          "source_sha256": "37ff1225111943008b99cf65f58c56e9817c26061c2df918a6a2e27f36d24411",
+          "prepared_sha256": "a89ad1f67024997e49881a5f952c0bf734ccb69583584ecb20dbdd6848808fe7",
+          "source_unchanged": true,
+          "changes": [
+            {
+              "sheet": "原始回款",
+              "cell": "F49",
+              "value": "46299.5",
+              "original_value": "2026-10-10T10:00:00.000Z"
+            }
+          ]
+        }
+      }
+    ],
+    "current_archive_replay": true,
+    "engine": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5"
+  },
+  "artifacts": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/gt/source_expected.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/gt/source_expected.json",
+      "bytes": 427522,
+      "sha256": "fece1b63a92d9f36655d6d9527596e3dffa1ea8bb0e14bc91821736ecf3f8af2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/baseline/calculated/recalculated.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/baseline/calculated/recalculated.xlsx",
+      "bytes": 378218,
+      "sha256": "79fb1e441c91b93c6a1aa3aa85accbcc04509f8a7b246d0cc4086260979b1d21"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/baseline/calculated/office-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/baseline/calculated/office-audit.json",
+      "bytes": 1121,
+      "sha256": "05a9362fa14a2a92be067e8169036a981d8535a3a3c10bacecf030c91952cf1e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_invoice/prepared/prepared.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_invoice/prepared/prepared.xlsx",
+      "bytes": 349628,
+      "sha256": "b7a47775999bc56c889b04757a1c4ddaeade14fa0b8dd3ac745fa4479348c195"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_invoice/prepared/counterfactual-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_invoice/prepared/counterfactual-audit.json",
+      "bytes": 488,
+      "sha256": "940bab265e50cea360873a0ba13805c953f444c256adc517977b792f0c197b9f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/gt/scenarios/late_invoice/source_expected.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/gt/scenarios/late_invoice/source_expected.json",
+      "bytes": 428067,
+      "sha256": "ad30ca702b8d313f60d3a2c5e135d170f46a5f34eaf29cbf66e77613ee2ed8fd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_invoice/calculated/recalculated.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_invoice/calculated/recalculated.xlsx",
+      "bytes": 378260,
+      "sha256": "c5d2451645c9574c2c15b4b64560d127ce727782a8f8e76b3dc2313fd62b50c6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_invoice/calculated/office-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_invoice/calculated/office-audit.json",
+      "bytes": 1121,
+      "sha256": "87e10ce15e3e482053ab135fe21ea42ae3e4ac5ce12323fab144ac1909cba132"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_receipt/prepared/prepared.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_receipt/prepared/prepared.xlsx",
+      "bytes": 349370,
+      "sha256": "f37ff3db32bed9b567d06df694e5b7dcd10471185d34f9426af03f27d1039e32"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_receipt/prepared/counterfactual-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_receipt/prepared/counterfactual-audit.json",
+      "bytes": 488,
+      "sha256": "72fecbbb55230c5b868e168420a2b7230a07dc9fde20da9c226eaf12c0d718b7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/gt/scenarios/late_receipt/source_expected.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/gt/scenarios/late_receipt/source_expected.json",
+      "bytes": 427622,
+      "sha256": "671762f19c52505ba1c67e264c04e64094b85fb4e685cbcecd629283849b8130"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_receipt/calculated/recalculated.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_receipt/calculated/recalculated.xlsx",
+      "bytes": 378227,
+      "sha256": "6a870946c858cdc109cb8fd4152cf998defe6eb6bb0b82e2cc22be357beb00d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_receipt/calculated/office-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_receipt/calculated/office-audit.json",
+      "bytes": 1121,
+      "sha256": "f058ab35f41b3c37dc553c00a565db5d2f8e84665aefabfcd476ab5b2ab901c3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_refund/prepared/prepared.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_refund/prepared/prepared.xlsx",
+      "bytes": 349367,
+      "sha256": "a89ad1f67024997e49881a5f952c0bf734ccb69583584ecb20dbdd6848808fe7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_refund/prepared/counterfactual-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_refund/prepared/counterfactual-audit.json",
+      "bytes": 488,
+      "sha256": "b84c5cc3e6f810f016291af25d3da210bf247c72e96670b6bd47c664616b1d28"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/gt/scenarios/late_refund/source_expected.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/gt/scenarios/late_refund/source_expected.json",
+      "bytes": 427629,
+      "sha256": "a4a02a57c356715e621e0aeed34e06143b318f9601d7a494dc2df4b89aa7cefb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_refund/calculated/recalculated.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_refund/calculated/recalculated.xlsx",
+      "bytes": 378275,
+      "sha256": "5f04213652c5ffc2890085cd945a3080c1fb9837c6abf8c1d34df4ffb94eb95b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/late_refund/calculated/office-audit.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/late_refund/calculated/office-audit.json",
+      "bytes": 1121,
+      "sha256": "2ff53f614552e4e58418e4aa6e781fc82e781c011995195b6471e270e6ce3b46"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/authoring/proposed/v1/results/ledger.xlsx",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/authoring/proposed/v1/results/ledger.xlsx",
+      "bytes": 346746,
+      "sha256": "37ff1225111943008b99cf65f58c56e9817c26061c2df918a6a2e27f36d24411"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/native-v1-1793162087811550000/validation.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/native-v1-1793162087811550000/validation.json",
+      "bytes": 1404683,
+      "sha256": "a2b05a717aab8c298d81b5115614b4ee5731c7e77d7587a6a0d68edda74b83db"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-regressions-final.log",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/qa/date-runtime-regressions-final.log",
+      "bytes": 176,
+      "sha256": "5d06fcd5ce5f6f526a2508a77c2e8f2ae67e135d7a9a0843cc5ff74a965c6cac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h015/qa/office-lock.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/runtime/office-lock.json",
+      "bytes": 411,
+      "sha256": "eb73a21f130e9db548d2aba00a5c090a6a6f5062a9ddbda1d957f9fe0b5ee4cf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/authoring/record_date_runtime_evidence.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/authoring/record_date_runtime_evidence.py",
+      "bytes": 4495,
+      "sha256": "f36e318def1d6f678d6b9a126cbb0369d330504fef988213d90a7a915fc36118"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/gt/ledger_io.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/gt/ledger_io.py",
+      "bytes": 19435,
+      "sha256": "9e983c2f7c2a85fa4e70b11be1f02c8bfd97ea60cbb03657d7c6881d973a7748"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/gt/xlsx_observations.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/author/gt/xlsx_observations.py",
+      "bytes": 10334,
+      "sha256": "992dbe965ed3aad3f5ee4e15f2a0e2facd751ea80fb9c279e20f46d9d670a089"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/stages.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/eval_general_e2e/stages.py",
+      "bytes": 5181,
+      "sha256": "1f597f741d91752d8c618f0d70184cb6be36e9059fd98fad2c0613d1b752d471"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/eval_general_e2e/adapters/components.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/eval_general_e2e/adapters/components.py",
+      "bytes": 12887,
+      "sha256": "45c325141fa06912f938eee37c15782390f9841bb665597c9de2b5618305c5bb"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/__init__.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/src/wildclawbench_grading_core/__init__.py",
+      "bytes": 2374,
+      "sha256": "72dc67273393111d89f0857081ee4a7262135890ca8b3c8dffe49831e56aacf9"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/src/wildclawbench_grading_core/office_runtime.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/src/wildclawbench_grading_core/office_runtime.py",
+      "bytes": 65333,
+      "sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_counterfactual_office_evidence.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tests/general_e2e/test_counterfactual_office_evidence.py",
+      "bytes": 12916,
+      "sha256": "2e2b887992b4680a18e71007853212ebf48b118c82b4b802057a07f46a7a310f"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_e2e_build.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tests/general_e2e/test_e2e_build.py",
+      "bytes": 37997,
+      "sha256": "5f9298b5dbc84bed2422a8824dc5b84870de277ba88cdd0c5c4d1cbf04e5e347"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_grading_core.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tests/general_e2e/test_grading_core.py",
+      "bytes": 14252,
+      "sha256": "7128a5b6422700b9c634d768bc47d80341c8198439eebdc9b06f1de2161852ee"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tests/general_e2e/test_skill_layout.py",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tests/general_e2e/test_skill_layout.py",
+      "bytes": 6337,
+      "sha256": "63e33f38890bc98a51261a8a02d918d7a18b231a008f13bf1186d6466db78a97"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/e2e-shared/components.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tools/report/e2e-shared/components.json",
+      "bytes": 5366,
+      "sha256": "af319dca04a9e801eaaba90b16539bc922b76c0c87b3923bfc319bc14b9bdbd9"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "bytes": 284,
+      "sha256": "3ef20703a76433b2ff2afb250a2ab15c0b8052b2143bee1417718fdc9964199d"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tools/report/skills/general-e2e/score-general-e2e/SKILL.md",
+      "bytes": 20736,
+      "sha256": "da337239e3e2c321f289885151027ea7b3f0c17dd02e649a2cdcccc4c1d9b933"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/grading-core.md",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tools/report/skills/general-e2e/score-general-e2e/references/grading-core.md",
+      "bytes": 12841,
+      "sha256": "a5824f0babc39e1a8224432cc88d31e9c297106b49cdfc2a2494544362ced9b3"
+    },
+    {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/tools/report/skills/general-e2e/score-general-e2e/references/office-recalculation.md",
+      "snapshot_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h023/qa/date-runtime-evidence-20261028/repository/tools/report/skills/general-e2e/score-general-e2e/references/office-recalculation.md",
+      "bytes": 13363,
+      "sha256": "7c9f4098d69e9076f01d4effffa1c170b27a6d643dd40d6afb227e33f0eeb12d"
+    }
+  ],
+  "limit": "H023 author reference v1 used only for actual date-input math/replay proof; ISO audit-text presentation is being revised in later author versions. This is framework compatibility acceptance, not registered H023 task/grader acceptance, real Harness/model score, accounting expert review or L4 calibration. Registered set remains 24/60; general-hard-v1 building, no manifest."
+}

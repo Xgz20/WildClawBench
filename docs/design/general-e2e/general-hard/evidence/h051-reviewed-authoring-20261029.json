@@ -1,0 +1,635 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 51,
+  "task_id": "general_hard_software_engineering_task_011_security_regression",
+  "registered_task_index": 57,
+  "registered": 57,
+  "remaining": 3,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 12,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 6,
+    "content_operations": 2,
+    "planning_coordination": 4
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/software_engineering/general_hard_software_engineering_task_011_security_regression.md",
+      "sha256": "b0b776a569efeed7c89b5c90598a72e70ce8ff3ed3487d2691083e5040cdd1d0",
+      "size": 8143
+    },
+    "exec": [
+      {
+        "path": "contract.md",
+        "sha256": "b27c3af02bd0277487840fc91f1e8b13c4840a380d6fb6ba5c67888a2606a8a2",
+        "size": 5697
+      },
+      {
+        "path": "export_contract.json",
+        "sha256": "9baae02751e5effadca31831c4af2e3d017c2d64afb343919e544a0aa8fd7e9c",
+        "size": 683
+      },
+      {
+        "path": "fixtures/public_cases.json",
+        "sha256": "070366d50b2056cbe87ca3e328e9ab16bc899b14a9abbfe43483142707039d7b",
+        "size": 21102
+      },
+      {
+        "path": "fixtures/public_expected.json",
+        "sha256": "d066127bd041f238ec2bcaa050a25fcfe5323d562ac23d97d6bd40f25604b073",
+        "size": 28550
+      },
+      {
+        "path": "fixtures/records.json",
+        "sha256": "bbea9a25457b521a912e46dada54f143eefcef0abf4c50c7d9dc38ddc2f708a0",
+        "size": 1691
+      },
+      {
+        "path": "permission_matrix.csv",
+        "sha256": "2d19118b0a02314df982a4f62781b7c3012b4c2f3ec166ad6f49f77b50ccb013",
+        "size": 245
+      },
+      {
+        "path": "plan_items.json",
+        "sha256": "a88efb333aa2292344886bcd8523730a86ffa12984ad9c7f8347ee41abad22b3",
+        "size": 1046
+      },
+      {
+        "path": "project/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "project/authorization.py",
+        "sha256": "14686b241d259ec336b072c66ac0ab550f101fcb9053da459a8efc8a3901d6a1",
+        "size": 647
+      },
+      {
+        "path": "project/exporter.py",
+        "sha256": "0562cde2a716306283b96898618ee14eea97b44c6615b52120266fdc244d2834",
+        "size": 253
+      },
+      {
+        "path": "project/health.py",
+        "sha256": "15485e15185d58d7546bde868d3c368fb9255496a5f3dea97dc736de8dc7e7e4",
+        "size": 68
+      },
+      {
+        "path": "project/routes.py",
+        "sha256": "e9299ab078df5c095a03e366824564266516286061bfba0719513d92d7bb8a40",
+        "size": 1364
+      },
+      {
+        "path": "regression.py",
+        "sha256": "cfdc0ec053fcb4d6865e87243d9cff4fea20db63929c7248bc55cfb521314dd3",
+        "size": 1228
+      },
+      {
+        "path": "repair_plan.md",
+        "sha256": "46ff3474586e546d84450af5dafef7f65cb13b683e25d5949e81a07510f9a10b",
+        "size": 847
+      },
+      {
+        "path": "runner.py",
+        "sha256": "90018bd8966f55d3fcc9fbcfbd3315d167ae839f7a62d91d82c8b4e88aac1bb7",
+        "size": 5227
+      },
+      {
+        "path": "tests_public/test_happy.py",
+        "sha256": "fd46f72a0a72e14caafe15bd7eff39c4640d10f3aa80789d7e3e1250208d0461",
+        "size": 715
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "6164c968c57e085144507e3191ac251a11b77c0659aa47cddc6780c45db885be",
+        "size": 599
+      },
+      {
+        "path": "audit_expected.json",
+        "sha256": "3c85725ca91adb290bee1b740de376729498db900d81d766c23d5056d6482e18",
+        "size": 1353
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "b312ec0b1875e4997772b006c78f1c62c68f7a8df3349d1aa2d5c42499ea3685",
+        "size": 582
+      },
+      {
+        "path": "cases.json",
+        "sha256": "c8c128998d0edec2f45ecf4ef44d408efbffbdace33db30a4caa3d7dc900ba94",
+        "size": 131748
+      },
+      {
+        "path": "counterexamples.json",
+        "sha256": "23df4410639cdf496cb50edcfca94f2c02ee683a444eae1e0fa51843b5157a2d",
+        "size": 664
+      },
+      {
+        "path": "docx_reader.py",
+        "sha256": "f32ab64882cbedcb3cdbf07c55c743f7e3e5344392df0a227c079a54993f6f34",
+        "size": 2448
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "ff957ef9c4827860f61d0143322d5db4f5ea05cd7d47e7c4210e85c8a1288616",
+        "size": 398
+      },
+      {
+        "path": "expected.json",
+        "sha256": "71b4fc0343dfbb78ed04cbf467fd612218afd1325335db07c47f913d63da1bf0",
+        "size": 191975
+      },
+      {
+        "path": "grader.py",
+        "sha256": "f84470975e7822641732f592c9d1acddeaa359d3e52b0bd46a5758e3706aadec",
+        "size": 7880
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "8ab0d5aa68db4560fb48fbda753a87fadce16bbcc5bc2c76e9fb296c1751f2f7",
+        "size": 1206
+      },
+      {
+        "path": "source_originals/contract.md",
+        "sha256": "b27c3af02bd0277487840fc91f1e8b13c4840a380d6fb6ba5c67888a2606a8a2",
+        "size": 5697
+      },
+      {
+        "path": "source_originals/export_contract.json",
+        "sha256": "9baae02751e5effadca31831c4af2e3d017c2d64afb343919e544a0aa8fd7e9c",
+        "size": 683
+      },
+      {
+        "path": "source_originals/fixtures/public_cases.json",
+        "sha256": "070366d50b2056cbe87ca3e328e9ab16bc899b14a9abbfe43483142707039d7b",
+        "size": 21102
+      },
+      {
+        "path": "source_originals/fixtures/public_expected.json",
+        "sha256": "d066127bd041f238ec2bcaa050a25fcfe5323d562ac23d97d6bd40f25604b073",
+        "size": 28550
+      },
+      {
+        "path": "source_originals/fixtures/records.json",
+        "sha256": "bbea9a25457b521a912e46dada54f143eefcef0abf4c50c7d9dc38ddc2f708a0",
+        "size": 1691
+      },
+      {
+        "path": "source_originals/permission_matrix.csv",
+        "sha256": "2d19118b0a02314df982a4f62781b7c3012b4c2f3ec166ad6f49f77b50ccb013",
+        "size": 245
+      },
+      {
+        "path": "source_originals/plan_items.json",
+        "sha256": "a88efb333aa2292344886bcd8523730a86ffa12984ad9c7f8347ee41abad22b3",
+        "size": 1046
+      },
+      {
+        "path": "source_originals/project/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "source_originals/project/authorization.py",
+        "sha256": "14686b241d259ec336b072c66ac0ab550f101fcb9053da459a8efc8a3901d6a1",
+        "size": 647
+      },
+      {
+        "path": "source_originals/project/exporter.py",
+        "sha256": "0562cde2a716306283b96898618ee14eea97b44c6615b52120266fdc244d2834",
+        "size": 253
+      },
+      {
+        "path": "source_originals/project/health.py",
+        "sha256": "15485e15185d58d7546bde868d3c368fb9255496a5f3dea97dc736de8dc7e7e4",
+        "size": 68
+      },
+      {
+        "path": "source_originals/project/routes.py",
+        "sha256": "e9299ab078df5c095a03e366824564266516286061bfba0719513d92d7bb8a40",
+        "size": 1364
+      },
+      {
+        "path": "source_originals/regression.py",
+        "sha256": "cfdc0ec053fcb4d6865e87243d9cff4fea20db63929c7248bc55cfb521314dd3",
+        "size": 1228
+      },
+      {
+        "path": "source_originals/repair_plan.md",
+        "sha256": "46ff3474586e546d84450af5dafef7f65cb13b683e25d5949e81a07510f9a10b",
+        "size": 847
+      },
+      {
+        "path": "source_originals/runner.py",
+        "sha256": "90018bd8966f55d3fcc9fbcfbd3315d167ae839f7a62d91d82c8b4e88aac1bb7",
+        "size": 5227
+      },
+      {
+        "path": "source_originals/tests_public/test_happy.py",
+        "sha256": "fd46f72a0a72e14caafe15bd7eff39c4640d10f3aa80789d7e3e1250208d0461",
+        "size": 715
+      },
+      {
+        "path": "trusted_files.json",
+        "sha256": "c3ca92c108bd671bea19f3d4acfb2c599fa9ea0c95f72bc8fd679f381901005b",
+        "size": 2674
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/root-final-v4/handoff.json",
+    "sha256": "975ef1ff98fe0a7b1fa36a07c76204799ee8a53bb4ae0b873d9cb1f3eac574b1",
+    "size": 1696
+  },
+  "review": {
+    "kind": "source-first independent Python/Node plus root nonblind model not human expert",
+    "old_v3_freeze_files_verified": 80,
+    "source_truth_cases": 37,
+    "normal_cases": 10,
+    "boundary_cases": 27,
+    "objective_audit_decisions": 6,
+    "old_current_v3_controls": 38,
+    "current_v4_affected_controls": 7,
+    "do_not_sum_as_distinct_or_all_current": true,
+    "old_valid_reject_label_A": 0.9633333333333334,
+    "v4_reject_revise_equivalent_A": 1,
+    "v4_wrong_accept_safe_reject_wrong_reason_only_business_loss": true,
+    "root_native_reference_images_seen": 2,
+    "actual_source_report_DOCX_SHA_bindings_checked": true,
+    "natural_DOCX_prose_semantics_scored": false
+  },
+  "formal_detached": {
+    "status": "PASS",
+    "task_id": "general_hard_software_engineering_task_011_security_regression",
+    "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/formal-detached-1793236119688978000/attempts/author-only-h051-formal__detached-zip-worker/general_hard_software_engineering_task_011_security_regression/author-only-formal-auto",
+    "moved_without_runtime": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/formal-detached-1793236119688978000/moved-without-runtime",
+    "raw_scores": {
+      "boundary_cases": 1.0,
+      "business_correctness": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.9999999999999999,
+      "overall_score": 1.0
+    },
+    "A": 1.0,
+    "tolerance": 1e-12,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/formal-detached-1793236119688978000/attempts/author-only-h051-formal__detached-zip-worker/general_hard_software_engineering_task_011_security_regression/author-only-formal-auto",
+      "candidate_sha256": "d57b52e86c51a8322cb876d6b34709f81c00fbd7f7d84e9c06426b5bf18e5980",
+      "entry_count": 22
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/formal-detached-1793236119688978000/moved-without-runtime",
+      "candidate_sha256": "d57b52e86c51a8322cb876d6b34709f81c00fbd7f7d84e9c06426b5bf18e5980",
+      "entry_count": 22
+    },
+    "nonruntime_same_byte_files": 74,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/actual-calls/captured/project/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/authorization.py",
+        "sha256": "f1f2fc6eb11e05f8f2266f668f218eaecc6175814f296b1a0399a69662d6945c",
+        "size": 1688
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/exporter.py",
+        "sha256": "1e31511d0be156e8ec1fac4829c407fbbee90b1e9b03b635a6fb68151f216fda",
+        "size": 810
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/health.py",
+        "sha256": "15485e15185d58d7546bde868d3c368fb9255496a5f3dea97dc736de8dc7e7e4",
+        "size": 68
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/routes.py",
+        "sha256": "525f3a5dbc948bb82bd5be03f4d032244e8d3ae5cacbfc02af7c03133f8cac6f",
+        "size": 2044
+      },
+      {
+        "path": "worker/derived/actual-calls/invocation.json",
+        "sha256": "7fd5cd3790fd2ef41512db5800528a9f115db0553feb763c077e62ea34574609",
+        "size": 1376
+      },
+      {
+        "path": "worker/derived/actual-calls/request.json",
+        "sha256": "23be48173f1f72dc11c5123a3e0b7547d7750e3629d58314cab03f6d866d7912",
+        "size": 143682
+      },
+      {
+        "path": "worker/derived/actual-calls/response.json",
+        "sha256": "64d44e111c2bb50b3a18c20b2818ae75dbaa12b67788f3c6e8ad808a3b815fbe",
+        "size": 235938
+      },
+      {
+        "path": "worker/derived/actual-calls/scoring-observations.json",
+        "sha256": "8c8ffaf5e819f96fd21e3fc75279122097657d856a54967cc1743c8f3e175354",
+        "size": 6228
+      },
+      {
+        "path": "worker/derived/actual-calls/stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "worker/derived/actual-calls/stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      }
+    ],
+    "archive_derived_evidence": [
+      {
+        "path": "worker/derived/actual-calls/captured/project/__init__.py",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/authorization.py",
+        "sha256": "f1f2fc6eb11e05f8f2266f668f218eaecc6175814f296b1a0399a69662d6945c",
+        "size": 1688
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/exporter.py",
+        "sha256": "1e31511d0be156e8ec1fac4829c407fbbee90b1e9b03b635a6fb68151f216fda",
+        "size": 810
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/health.py",
+        "sha256": "15485e15185d58d7546bde868d3c368fb9255496a5f3dea97dc736de8dc7e7e4",
+        "size": 68
+      },
+      {
+        "path": "worker/derived/actual-calls/captured/project/routes.py",
+        "sha256": "525f3a5dbc948bb82bd5be03f4d032244e8d3ae5cacbfc02af7c03133f8cac6f",
+        "size": 2044
+      },
+      {
+        "path": "worker/derived/actual-calls/invocation.json",
+        "sha256": "7fd5cd3790fd2ef41512db5800528a9f115db0553feb763c077e62ea34574609",
+        "size": 1376
+      },
+      {
+        "path": "worker/derived/actual-calls/request.json",
+        "sha256": "23be48173f1f72dc11c5123a3e0b7547d7750e3629d58314cab03f6d866d7912",
+        "size": 143682
+      },
+      {
+        "path": "worker/derived/actual-calls/response.json",
+        "sha256": "64d44e111c2bb50b3a18c20b2818ae75dbaa12b67788f3c6e8ad808a3b815fbe",
+        "size": 235938
+      },
+      {
+        "path": "worker/derived/actual-calls/scoring-observations.json",
+        "sha256": "8c8ffaf5e819f96fd21e3fc75279122097657d856a54967cc1743c8f3e175354",
+        "size": 6228
+      },
+      {
+        "path": "worker/derived/actual-calls/stderr.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      },
+      {
+        "path": "worker/derived/actual-calls/stdout.log",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "size": 0
+      }
+    ],
+    "repository_sys_path_absent": true,
+    "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "def174e55faba1858f57afe9679aa1cd993d696da2249c57fe8380d4fefdd6f1",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "bbfd03a6f7dc84589e5264d23f7e7b8c853862d3",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "ef0c2eb895367d3c476ee3f1005d41984edcb12a11f0a7157fcdc4e07008b21d"
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/actual-calls/captured/project/__init__.py",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "worker/derived/actual-calls/captured/project/authorization.py",
+          "sha256": "f1f2fc6eb11e05f8f2266f668f218eaecc6175814f296b1a0399a69662d6945c",
+          "size": 1688
+        },
+        {
+          "path": "worker/derived/actual-calls/captured/project/exporter.py",
+          "sha256": "1e31511d0be156e8ec1fac4829c407fbbee90b1e9b03b635a6fb68151f216fda",
+          "size": 810
+        },
+        {
+          "path": "worker/derived/actual-calls/captured/project/health.py",
+          "sha256": "15485e15185d58d7546bde868d3c368fb9255496a5f3dea97dc736de8dc7e7e4",
+          "size": 68
+        },
+        {
+          "path": "worker/derived/actual-calls/captured/project/routes.py",
+          "sha256": "525f3a5dbc948bb82bd5be03f4d032244e8d3ae5cacbfc02af7c03133f8cac6f",
+          "size": 2044
+        },
+        {
+          "path": "worker/derived/actual-calls/invocation.json",
+          "sha256": "7fd5cd3790fd2ef41512db5800528a9f115db0553feb763c077e62ea34574609",
+          "size": 1376
+        },
+        {
+          "path": "worker/derived/actual-calls/request.json",
+          "sha256": "23be48173f1f72dc11c5123a3e0b7547d7750e3629d58314cab03f6d866d7912",
+          "size": 143682
+        },
+        {
+          "path": "worker/derived/actual-calls/response.json",
+          "sha256": "64d44e111c2bb50b3a18c20b2818ae75dbaa12b67788f3c6e8ad808a3b815fbe",
+          "size": 235938
+        },
+        {
+          "path": "worker/derived/actual-calls/scoring-observations.json",
+          "sha256": "8c8ffaf5e819f96fd21e3fc75279122097657d856a54967cc1743c8f3e175354",
+          "size": 6228
+        },
+        {
+          "path": "worker/derived/actual-calls/stderr.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        },
+        {
+          "path": "worker/derived/actual-calls/stdout.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "size": 0
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "42d91fbd1babdf8fd6c633149a636ff589a7376f9616cac5898827e82bf4d179",
+        "file_count": 11,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-29T01:08:41.585778Z",
+      "identity": {
+        "batch_id": "author-only-h051-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_software_engineering_task_011_security_regression",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "b1b42452989728b8a3e351fdbb145cd0252adc3b8038106a434586dfbc6e07d3",
+        "root_result_count": 2,
+        "workspace_argument": "runtime/workspace"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "ca7ed3ab200053fa2c6b1d56ba5adbd9f5c87e32402a5c28ad67059d35c4eaea",
+        "initial_sha256": "ca7ed3ab200053fa2c6b1d56ba5adbd9f5c87e32402a5c28ad67059d35c4eaea"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-29T01:08:41.096145Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 0.359002,
+        "environment_keys": [
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "bb8ea0879b6f13f7d140178e1612a6f5719f3a7c01096aaea1f4182691c4b331",
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "b8b2f40a6a05e1ce57334a9b4e331380ad42a52d01c69c206dec5c43d2a236c6",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "6a5e197966a3a9e06bc8a6859a345ec30192fa474c65347fe4f89435a8c5f6ec",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 6119
+      }
+    },
+    "source_collection": null,
+    "copied_origins_retired_not_required_for_verification": true,
+    "semantic_probe": null,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "formal_validation_receipt": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/formal-detached-1793236119688978000/validation.json",
+    "sha256": "f53ac698f37d9f753a8adf2c7c84b6df94efd47f82c90ff52cf23cfc805d3c03",
+    "size": 12934
+  },
+  "registered_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "8968849e56ff21786cba54569c83c77492bab913567900628de0ab9e00b38451",
+    "size": 31027
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/static-root-single/20261029T012536Z_7a8ea06169/report.json",
+      "sha256": "f25014853be0d4d3ee844fe772ea024d5a1cb391d65c9fcabed748fc270f1278",
+      "size": 1247
+    },
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h051/qa/static-root-full/20261029T012546Z_d4b6d67ccd/report.json",
+      "sha256": "5809cd30552b3b6d2ed15a55a597725f62047adfdf9691f9cc38b660ebc0b138",
+      "size": 22708
+    },
+    "only_remaining_missing": 3
+  },
+  "source_summary": "16公开输入、27GT，3可变源码/13保护；实际多入口授权、任务快照当前授权、类型化CSV与6项坏修复计划决策。",
+  "boundary": {
+    "author_automatic_component_only": true,
+    "real_Harness": false,
+    "Judge": false,
+    "hybrid_score": null,
+    "human_expert": false,
+    "difficulty_calibrated": false
+  },
+  "created_at_utc": "2026-10-29T01:25:47.151266+00:00"
+}

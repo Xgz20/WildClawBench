@@ -1,0 +1,511 @@
+{
+  "schema_version": "wildclawbench.general-hard-docx-render-evidence/v1",
+  "recorded_date": "2026-10-27",
+  "scope": "author_protocol_validation_only",
+  "formal_harness_execution": false,
+  "independent_semantic_score": null,
+  "implemented_dataset_tasks": 9,
+  "dataset_tasks_added": 0,
+  "version_state": "building_without_manifest",
+  "skill_version": "0.18.0",
+  "core_version": "0.10.0",
+  "render_profile": "offline-docx-to-pdf-with-fonts/v1",
+  "build_source_revision": "248000bf22f6af74b62dc65fcbc1d0287956a386",
+  "build_includes_uncommitted_source_snapshot": true,
+  "checks": {
+    "real_managed_worker": {
+      "status": "pass",
+      "source_sha256": "5e3ac0018da83e560749d0acef2a0bc9d899ebb1993760975a80ff958dc0a0d8",
+      "source_unchanged": true,
+      "workspace_unchanged": true,
+      "rendered_pages": 1,
+      "pdf_font_names": [
+        "/BAAAAA+STHeitiSC-Light",
+        "/CAAAAA+STHeitiSC-Light",
+        "/DAAAAA+STHeitiSC-Light",
+        "/EAAAAA+STHeitiSC-Light"
+      ],
+      "font_names_match_locked_inventory": true,
+      "normal_and_archived_verification": true,
+      "runtime_removed_before_archive_check": true,
+      "missing_delivery_protocol_score": 0.0,
+      "wrong_profile_worker_error": "RULE_WORKER_FAILED",
+      "wrong_profile_cause": "OFFICE_RENDER_PROFILE_MISMATCH",
+      "wrong_profile_score_created": false
+    },
+    "detached_skill_cli": {
+      "status": "pass",
+      "archive_sha256": "9e59d33f6e44b1e9567c531123a78ecead8604e5a4b6465765cce4b8a732a552",
+      "successful_cli_calls": 12,
+      "isolated_python": true,
+      "path_empty": true,
+      "repository_fixture_helpers_used_only_for_setup": true,
+      "actual_native_word_to_pdf": true,
+      "normal_and_archived_verification": true,
+      "actual_pdf_query_records": 1,
+      "query_only_semantic_status": "awaiting_response",
+      "semantic_model_called": false,
+      "pdf_query_cli": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/bin/python3",
+      "pdf_query_pypdf_version": "6.10.0",
+      "prior_missing_dependency_preserved": "NATIVE_TEXT_DEPENDENCY_MISSING",
+      "prior_terminal_query_gate_preserved": "SEMANTIC_ATTEMPT_ALREADY_TERMINAL"
+    },
+    "visual_reviews": {
+      "real_worker": {
+        "status": "viewed",
+        "observations": "All final pages viewed: body, merged table, two footnotes and endnote text readable; no table clipping or overlap observed. Display numbering and target Word editability are not established.",
+        "images": [
+          {
+            "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/word-page-1.png",
+            "sha256": "ac030498fcbd73cb44d51d38d5e8d16ed584aba557e03ba86634617746256bae"
+          }
+        ]
+      },
+      "detached": {
+        "status": "viewed",
+        "observations": "All final pages viewed: body, merged table, two footnotes and endnote text readable; no table clipping or overlap observed. Display numbering and target Word editability are not established.",
+        "images": [
+          {
+            "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/automated-page-1.png",
+            "sha256": "ac030498fcbd73cb44d51d38d5e8d16ed584aba557e03ba86634617746256bae"
+          },
+          {
+            "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-page-1.png",
+            "sha256": "ac030498fcbd73cb44d51d38d5e8d16ed584aba557e03ba86634617746256bae"
+          }
+        ]
+      }
+    },
+    "regressions": [
+      {
+        "observed_tool_session_id": 38766,
+        "test_count": 33,
+        "exit_code": 0,
+        "modules": [
+          "test_docx_render_runtime",
+          "test_office_render_runtime",
+          "test_office_runtime",
+          "test_embedded_office_evidence"
+        ]
+      },
+      {
+        "observed_tool_session_id": 26756,
+        "test_count": 76,
+        "exit_code": 0,
+        "modules": [
+          "test_grading_core",
+          "test_skill_layout",
+          "test_e2e_build",
+          "test_general_api_judge",
+          "test_general_semantic_scoring",
+          "test_native_word_structure"
+        ]
+      }
+    ],
+    "total_regression_tests": 109,
+    "legacy_pptx_helper_compatibility": {
+      "old_helper": "datasets/general-hard/workspace/office_documents/general_hard_office_documents_task_005_annual_deck/gt/office_runtime.py",
+      "old_helper_sha256": "efd68cc0eef1ec52ad97069e5725ee9ea198caf3cc7d7ca05519d9a45c7ee246",
+      "new_default_lock_equals_prior_real_pptx_lock": true,
+      "old_helper_validates_new_default_lock": true,
+      "new_real_pptx_render_claimed": false
+    }
+  },
+  "limits": [
+    "Source structure counts describe OOXML, not actual source pages or table geometry.",
+    "Render and protocol-only scores are not H009 task or actual Harness scores.",
+    "PDF parsing requires pypdf in the chosen scoring CLI; repository venv remains without it.",
+    "The hybrid query fixture remains awaiting response; no semantic result or finalized score exists.",
+    "Fixed fonts and PDF export do not prove Word editability or all field/revision display semantics.",
+    "Existing frozen attempts and task-private helpers are not rewritten."
+  ],
+  "source_bindings": [
+    {
+      "path": "src/wildclawbench_grading_core/office_runtime.py",
+      "sha256": "7cdb1cc362b992c49d2e71207fb352d527f2acbd2c393ca89eb675ec872e9cb7"
+    },
+    {
+      "path": "src/wildclawbench_grading_core/__init__.py",
+      "sha256": "3f8480f7992bed649aacc6791d47cf98e771214fc363deaec7028cd07b9038d3"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/scripts/score_general_e2e.py",
+      "sha256": "2d1808d2a40909eb538de6253e05474fff7623d8c76c525cb23950358f20317d"
+    },
+    {
+      "path": "tools/report/skills/general-e2e/score-general-e2e/skill-metadata.json",
+      "sha256": "fec1d03100fb65dd828e4fd7bd1d526bfe2d48c2c2464f615dacce6f3a350075"
+    },
+    {
+      "path": "tests/general_e2e/test_docx_render_runtime.py",
+      "sha256": "aabf738518f3aa96b0cbdd1dc70027da7a56b454ea818f2c006b98d7a8d657bb"
+    }
+  ],
+  "artifact_bindings": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/validation.json",
+      "sha256": "bff6085e530aec0094f91a929cfc096cf97c1cb956e06d53147b1ad0689d1933",
+      "bytes": 65070
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/runtime-with-word.json",
+      "sha256": "e79ee39d862f8192552b03767c4715a5b48aadb5af37f1e3ee001d0c6141ba08",
+      "bytes": 44722
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/word-page-1.png",
+      "sha256": "ac030498fcbd73cb44d51d38d5e8d16ed584aba557e03ba86634617746256bae",
+      "bytes": 86089
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/validation.json",
+      "sha256": "3d4c9fa5fea0737d9a8338cdb8f27571af3f94217492e66345ff050eb107950e",
+      "bytes": 35180
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/runtime-with-word.json",
+      "sha256": "eba27d473ae9d4ee207b6cecddb2248b66e6fbd9ddd6115afb7bb92c2641dff0",
+      "bytes": 44722
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/automated-page-1.png",
+      "sha256": "ac030498fcbd73cb44d51d38d5e8d16ed584aba557e03ba86634617746256bae",
+      "bytes": 86089
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-page-1.png",
+      "sha256": "ac030498fcbd73cb44d51d38d5e8d16ed584aba557e03ba86634617746256bae",
+      "bytes": 86089
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/docx-render-distribution/skills-build-manifest.json",
+      "sha256": "bc87881c8d852fcf3bc4b143b60d7325b99367051cb57b5e1be3b36c683f2c5f",
+      "bytes": 1954
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/docx-render-distribution/score-general-e2e-skill-v0.18.0.zip",
+      "sha256": "9e59d33f6e44b1e9567c531123a78ecead8604e5a4b6465765cce4b8a732a552",
+      "bytes": 556825
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/validate_real_word_render.py",
+      "sha256": "0b6f7414559a5d3e4d1100f56394626e1e8d262d27857d96687c34df36f356e9",
+      "bytes": 10441
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/validate_docx_render_distribution.py",
+      "sha256": "4f614f346dc95b9df218bca1c9308f782299ba94f3051baeda9a9f30962d03aa",
+      "bytes": 9979
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/attempt-manifest.json",
+      "sha256": "8a62e542b633fe1a45a5507958886ec3d6b55cd57a9433cbc28ffda22334aea0",
+      "bytes": 51546
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/rule-audit.json",
+      "sha256": "8d8b8694729a0a4962f63b6f1490b35bf30667ed4d2565e27a5ccdd092e3c6e8",
+      "bytes": 3114
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/worker/request.json",
+      "sha256": "48002cdd496b038e71446589bc7c613605eeb9c95c42288dab0ed9df826ef9d5",
+      "bytes": 1076
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/worker/result.json",
+      "sha256": "d6fcb172a92ff1dae425f058958d938c62798f427ae72f4074fc356d62ddffc7",
+      "bytes": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/worker/derived/word/render-audit.json",
+      "sha256": "74c6fabaab42343c1c0e98ed9d4106bc1c3ec3a0a17ecb1b04555295560e00d0",
+      "bytes": 16807
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/worker/derived/word/rendered.pdf",
+      "sha256": "8fc42bbd1c9d391dc9c8ac2f7af2cf9209d96ba371067c23fee853f469b173f0",
+      "bytes": 61046
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/semantic/evidence-catalog.json",
+      "sha256": "ac792d39effdb2300e4e2bd42d3c72d4145bb5a650a5c6e6d01d3fde686affb2",
+      "bytes": 6491
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/positive-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/positive-protocol-fixture/score.json",
+      "sha256": "62b71f7c1b34f288ab24334143966a99db595139925c46db4db217a5709fa937",
+      "bytes": 2113
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/attempt-manifest.json",
+      "sha256": "d2f54c1bc31dc9df8e9d2e2c214003a11401814a0b5de730d58fc4b23e6b1754",
+      "bytes": 51543
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/rule-audit.json",
+      "sha256": "b47a143795b9e538c002d29b1b09069abea11d1c0f75d47c1df756ec6c62d3dd",
+      "bytes": 3098
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/worker/request.json",
+      "sha256": "d056b308446c8455f367fd511b778a4c876255c6f7f91557a1bb8c9e7db8d603",
+      "bytes": 1051
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/worker/result.json",
+      "sha256": "81dd00accea00825eba622d26bb5d0d47f105f229bdb8707c849f1a69c4d7e15",
+      "bytes": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/worker/derived/word/render-audit.json",
+      "sha256": "e554d6cb8a014560c179b3c8566fcea7c6d0297f1800c25b4eb8df572df7644a",
+      "bytes": 16807
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/worker/derived/word/rendered.pdf",
+      "sha256": "4b65e9b54aba6d5f70009d12a8b64d8e6f4230f3030ed7a8aed0bdf955441fca",
+      "bytes": 61046
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/semantic/evidence-catalog.json",
+      "sha256": "52028a9f7e3f05ffbaec83073e8d9989bac5548b0011ca8fdb16ae839c93faac",
+      "bytes": 6488
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/attempts/batch-fixture__unit-fixture/task-fixture/detached-word-protocol/score.json",
+      "sha256": "34e2aafc0b7c34f0cb9b2eccac977c3708a96986884ca76baa787f34dfb43a8a",
+      "bytes": 2110
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/attempt-manifest.json",
+      "sha256": "1c53d614b06594b15b4bd9333b625f0b2115a2a33b7ec73462d1d26488c2359d",
+      "bytes": 51819
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/rule-audit.json",
+      "sha256": "ae1420d1d3196811e9ab47fc7731e805d0fa999f28b4e776dab9d2a396c79851",
+      "bytes": 3097
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/worker/request.json",
+      "sha256": "4b5cec708d706e32db84f44627d9d52548fa2c56cc7a99615c99964dec3f505d",
+      "bytes": 1056
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/worker/result.json",
+      "sha256": "08c7f4d4cd17e1b564ef8b1c5a72576dedaca6f1b278d59ceaaf628ef8d82134",
+      "bytes": 232
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/worker/derived/word/render-audit.json",
+      "sha256": "659957f8c7d56e910ab5f23303d8c01da0d6e2106dec093478ac6d8e2b1f368b",
+      "bytes": 16807
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/worker/derived/word/rendered.pdf",
+      "sha256": "d2c1ad6a7e7ba6a57ff0de9e5613c2a20c0e289aa3740d183c2cc98ae19ae477",
+      "bytes": 61046
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/semantic/evidence-catalog.json",
+      "sha256": "d123818b866f300e21ba0d4f96214ddc1120f5a8741064012383129467330101",
+      "bytes": 6487
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/query-attempts/batch-fixture__unit-fixture/task-fixture/hybrid-word-query-pdf/semantic/query-log.json",
+      "sha256": "527f4b22e08bdb436d27568d718d7ea2fa28634d9044c250587c8486a1c5f2d2",
+      "bytes": 2311
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/bootstrap-word.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/bootstrap-word.stdout",
+      "sha256": "e7169593b6b3b055649a6415f479044d034bdca6b7fe2c07878755c0ff50be4f",
+      "bytes": 475
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/catalog.stderr",
+      "sha256": "420189562ef451ebda5ac186b52cb64070dd5eb45c8da2ab1649f7f171880f1d",
+      "bytes": 89
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/catalog.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/finalize.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/finalize.stdout",
+      "sha256": "60a517bf7cd5c7902bd1611909fdf7b31f13c7b56524d3954cf0729c5f2a5541",
+      "bytes": 3627
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-prepare-query-fixture.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-prepare-query-fixture.stdout",
+      "sha256": "48a5b4cd89da993c70eac20f976b5ced8c60c3b694a4beafc95ac8ed22b9de57",
+      "bytes": 53757
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-catalog.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-catalog.stdout",
+      "sha256": "4d82c256578bc1c1836bae5266dfa7d55f9067df482bd9aefaee6771091496e9",
+      "bytes": 495
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-pdf-file.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-pdf-file.stdout",
+      "sha256": "fd681fefa38b76d4bde90c5c070ddc012173b09ee9c38bbb4406bd6e4df74edc",
+      "bytes": 992
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-prepare-semantics.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-prepare-semantics.stdout",
+      "sha256": "966d2712c2296b5a7a47697e24db7675cd4272ab9f73c1e81025a46b264dfacf",
+      "bytes": 1110
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-run-rules.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/pdf-ready-query-run-rules.stdout",
+      "sha256": "e2690bc13d95fb8df31495f019796311579bf9ce22536b3cfed7235cb13a7977",
+      "bytes": 5682
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/prepare-query-fixture.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/prepare-query-fixture.stdout",
+      "sha256": "e801fd8fb3238d796a2df105058341c824d7b61e13af4ca9a05c53151b8da413",
+      "bytes": 53745
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/prepare-semantics.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/prepare-semantics.stdout",
+      "sha256": "06ae341db92089bbf51a0382bf81abbeede7b87c0049bd919ad3b2b58935c7c2",
+      "bytes": 580
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/prepare.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/prepare.stdout",
+      "sha256": "7bba5c7fe10c618b8f4a3a9449a3c00931c3eeb91f2cdde18ab2e83ae4cb6bbf",
+      "bytes": 53460
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-catalog.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-catalog.stdout",
+      "sha256": "7d715521ad20d93a1103abf9d020e654851de09c823a3b07fdcabfb4dc6de1b5",
+      "bytes": 495
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-pdf-file.stderr",
+      "sha256": "59c708d91f62cb3ea0885c41d51409a00f948342d35fea106ad5e84eea7418d6",
+      "bytes": 143
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-pdf-file.stdout",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-prepare-semantics.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-prepare-semantics.stdout",
+      "sha256": "996f14036e63d20feb34b4d29467750f1f8b807ded86ddbff4fba66bf6aa44f8",
+      "bytes": 1094
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-run-rules.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/query-run-rules.stdout",
+      "sha256": "f4143b24d16ce93751e6806a98bdb7a121fbbbf8c433e76f323c983c26a38cd9",
+      "bytes": 5672
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/run-rules.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/run-rules.stdout",
+      "sha256": "8f505e2449d6a0d952efaf0a1cc34ee20e6a40794e960d823f5a5df31e19de0c",
+      "bytes": 5678
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/verify-score-archived.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/verify-score-archived.stdout",
+      "sha256": "9aed310d180831583dd59e36b3a4a830de3a439f5810f951b67f4b90fd4c7f55",
+      "bytes": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/verify-score.stderr",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/detached-word-render-1793063472144032000/cli-logs/verify-score.stdout",
+      "sha256": "9aed310d180831583dd59e36b3a4a830de3a439f5810f951b67f4b90fd4c7f55",
+      "bytes": 359
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/wrong-profile-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/wrong-profile-protocol-fixture/rule-audit.json",
+      "sha256": "877a692ba0d4dd9ea760637f70b5bfacccd8dc32253341824a2f05f320e7afe8",
+      "bytes": 2912
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/real-word-render-1793063302840543000/wrong-profile-protocol-fixture/attempts/batch-fixture__unit-fixture/task-fixture/wrong-profile-protocol-fixture/worker/result.json",
+      "sha256": "c722aaaf0c8bce973d55fbaa76f270eb9a085056339712ec876bb96117ae8852",
+      "bytes": 1888
+    }
+  ]
+}

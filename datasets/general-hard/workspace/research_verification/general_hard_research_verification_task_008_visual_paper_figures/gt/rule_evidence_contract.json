@@ -1,0 +1,12 @@
+{
+  "schema": "h034-rule-evidence-context/v1",
+  "managed_env": [
+    "GENERAL_E2E_RULE_EVIDENCE_DIR"
+  ],
+  "formula_conditional": [
+    "GENERAL_E2E_OFFICE_LOCK"
+  ],
+  "writes": "managed derived evidence only, outside candidate root",
+  "source_bindings": "Exact source SHA; actual decoder/dimension records; each claim local region checks and native locations. Not a claim of actual candidate viewing.",
+  "score_semantics": "Return automatic checkpoint values only when supported representation parses; scientific semantics remain separate. No final/hybrid output without independent semantic Judge."
+}

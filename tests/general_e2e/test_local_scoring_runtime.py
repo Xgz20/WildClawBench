@@ -131,6 +131,8 @@ class Fixture:
         candidate_text: str = "ready\n",
         task_id: str = 'task-fixture',
         candidate_files: dict[str, bytes] | None = None,
+        scoring_runtime: dict | None = None,
+        extra_gt_files: dict[str, bytes] | None = None,
     ):
         self.root = root
         self.grading_type = grading_type
@@ -236,6 +238,8 @@ class Fixture:
             "llm_judge_rubric": llm_judge_rubric,
         }
         contract.update(contract_overrides or {})
+        if scoring_runtime is not None:
+            contract["scoring_runtime"] = scoring_runtime
         contract_bytes = json.dumps(contract).encode("utf-8")
         task_bytes = b"# Fixture task\n"
         gt_bytes = b'{"answer":"ready\\n"}\n'
@@ -246,7 +250,9 @@ class Fixture:
             "size": len(gt_bytes),
             "sha256": sha256_bytes(gt_bytes),
         }
-        gt_entries = [gt_entry]
+        extra_gt_files = extra_gt_files or {}
+        gt_entries = [gt_entry, *[{"kind": "file", "path": name, "mode": "0644", "size": len(content),
+                                  "sha256": sha256_bytes(content)} for name, content in sorted(extra_gt_files.items())]]
         office_bytes = b"opaque frozen Office reference bytes"
         if office_reference:
             gt_entries.append({"kind": "file", "path": "reference.xlsx", "mode": "0644",
@@ -306,9 +312,14 @@ class Fixture:
             )
             if office_reference:
                 archive.writestr(zip_info(f"{package_root}/{private_root}/gt/reference.xlsx"), office_bytes)
+            for name, content in extra_gt_files.items():
+                archive.writestr(zip_info(f"{package_root}/{private_root}/gt/{name}"), content)
         self.output_root = root / "attempts"
 
-    def prepare(self, attempt_id: str = "score-attempt", *, protect_runtime_office_inputs: bool = False) -> Path:
+    def prepare(
+        self, attempt_id: str = "score-attempt", *, runtime_lock_path: Path = LOCK_PATH,
+        protect_runtime_office_inputs: bool = False,
+    ) -> Path:
         semantic = self.grading_type != "automated"
         result = RUNTIME.prepare_attempt(
             unit_root=self.unit_root,
@@ -317,7 +328,7 @@ class Fixture:
             task_id=self.task_id,
             scoring_attempt_id=attempt_id,
             output_root=self.output_root,
-            runtime_lock_path=LOCK_PATH,
+            runtime_lock_path=runtime_lock_path,
             judge_protocol="codex-agent-judge-v1" if semantic else None,
             judge_model="gpt-fixture" if semantic else None,
             judge_reasoning_effort="high" if semantic else None,
@@ -436,7 +447,7 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         self.assertFalse(result["audit"]["docker_used"])
         self.assertEqual(
             result["audit"]["worker"]["environment_keys"],
-            sorted(RUNTIME._sanitized_environment(self.runtime_python)),
+            sorted([*RUNTIME._sanitized_environment(self.runtime_python), "GENERAL_E2E_RULE_EVIDENCE_DIR"]),
         )
         self.assertFalse(result["audit"]["runtime_workspace"]["drifted"])
         self.assertTrue(result["audit"]["criterion_evidence"]["complete"])
@@ -666,6 +677,9 @@ class LocalScoringRuntimeTests(unittest.TestCase):
         }
         self.assertEqual(versions["PyYAML"], "6.0.3")
         self.assertEqual(versions["playwright"], "1.55.0")
+        self.assertEqual(versions["pillow"], "12.0.0")
+        self.assertEqual(versions["pypdf"], "6.2.0")
+        self.assertNotIn("pdfplumber", versions)
         browser = next(
             asset
             for item in lock["dependencies"]
@@ -692,6 +706,39 @@ class LocalScoringRuntimeTests(unittest.TestCase):
                 runtime_lock_path=LOCK_PATH,
                 required_import_roots=["playwright"],
             )
+
+    def test_pillow_runtime_failures_remain_evaluation_errors(self) -> None:
+        rule = "from PIL import Image\ndef grade(**kwargs): return {'fixture': 1.0, 'overall_score': 1.0}"
+        for declared, code in (
+            (False, "RUNTIME_DEPENDENCY_UNDECLARED"),
+            (True, "RUNTIME_PROBE_FAILED"),
+        ):
+            with self.subTest(declared=declared):
+                case_root = self.root / code
+                case_root.mkdir()
+                lock = json.loads(LOCK_PATH.read_text(encoding="utf-8"))
+                lock["python"] = {"major": sys.version_info.major, "minor": sys.version_info.minor}
+                lock["dependencies"] = ([{
+                    "distribution": "pillow", "version": "12.3.0",
+                    "import_roots": ["PIL"], "runtime_assets": [],
+                }] if declared else [])
+                lock_path = case_root / "runtime-lock.json"
+                lock_path.write_text(json.dumps(lock), encoding="utf-8")
+                fixture = Fixture(case_root, rule=rule)
+                attempt = fixture.prepare(runtime_lock_path=lock_path)
+                with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, code):
+                    RUNTIME.run_rules_attempt(
+                        attempt_root=attempt, runtime_python=self.runtime_python,
+                        timeout_seconds=10,
+                    )
+                audit = json.loads((attempt / "rule-audit.json").read_text(encoding="utf-8"))
+                self.assertEqual(audit["error"]["code"], code)
+                self.assertFalse((attempt / "rule-component.json").exists())
+                RUNTIME.prepare_semantics_attempt(attempt_root=attempt)
+                score = RUNTIME.finalize_score_attempt(attempt_root=attempt)["score"]
+                self.assertEqual(score["evaluation"]["status"], "evaluation_error")
+                self.assertIsNone(score["result"]["total_score"])
+                self.assertFalse(score["result"]["valid"])
 
     def test_package_paths_duplicates_and_symlink_escape_are_rejected(self) -> None:
         traversal = self.root / "traversal.zip"

@@ -1,0 +1,65 @@
+{
+  "schema_version": "wildclawbench.authoring-validation/v1",
+  "task": "H041",
+  "status": "passed",
+  "case_count": 49,
+  "results": {
+    "reference": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 1.0
+    },
+    "missing_gt": {
+      "status": "infrastructure_exception_preserved",
+      "exception": "FileNotFoundError"
+    },
+    "original_buggy": {
+      "business_correctness": 0.22857142857142856,
+      "boundary_cases": 0.9684210526315788,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.5678195488721804
+    },
+    "swallow_errors": {
+      "business_correctness": 0.0,
+      "boundary_cases": 0.022727272727272728,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.2056818181818182
+    },
+    "csv_only": {
+      "business_correctness": 0.75,
+      "boundary_cases": 0.75,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.8000000000000002
+    },
+    "changed_public_test": {
+      "business_correctness": 1.0,
+      "boundary_cases": 0.0,
+      "delivery_integrity": 0.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.55
+    },
+    "missing_delivery": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 0.0,
+      "evidence_binding": 1.0,
+      "overall_score": 0.8500000000000001
+    },
+    "stale_evidence": {
+      "business_correctness": 1.0,
+      "boundary_cases": 1.0,
+      "delivery_integrity": 1.0,
+      "evidence_binding": 0.0,
+      "overall_score": 0.9500000000000001
+    }
+  },
+  "reference_sha256": "9302f4045f3f9068a9303fd71ee764b3623ce18b6d10ed0d208789f55fdeccaf",
+  "oracle_sha256": "50718b7b3d3280504ebcef42e537a6b7cfe3889a7dec1b3fd24f510d4e0af2d0",
+  "grader_sha256": "8232567b28dfd2f985f5589ebe9af1a57d81e348bd142b5f1b8e31d2ca8a77b6",
+  "scope": "Local Python author controls only; not Docker rule-worker verification, four-Harness execution or empirical difficulty proof."
+}

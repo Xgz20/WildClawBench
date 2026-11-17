@@ -1,0 +1,775 @@
+{
+  "status": "SOURCE_FIRST_FACTS_AND_PUBLIC_CONTRACT_ADOPTED_REFERENCE_AND_RULES_PENDING",
+  "created_at_utc": "2026-10-28T16:42:56.404514+00:00",
+  "stage": "post-freeze non-blind source reconciliation and scientific proposal only",
+  "formal_Judge_or_semantic_score": false,
+  "real_experiment_Harness_or_human_expert_review": false,
+  "candidate_delivery_schema_public_verdict_rule_grading_weights_defined": true,
+  "source_truth_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h032/qa/reconciliation-v1/source_truth.json",
+  "source_truth_sha256": "599d2284c600c098361630a9e6a93b19ea7fd3d817ffbb51b1f505da7d2dfd65",
+  "role": "双初轮冻结后的非盲调和提案，待root",
+  "annotation_provenance": {
+    "A": {
+      "annotator_as_recorded": "A, model review by /root/h029_source_b",
+      "initial_frozen_at_utc": "2026-10-28T15:57:46.436227Z",
+      "all_artifacts_sha256": {
+        "build_review.py": "cfba816a5b0454eb93dcc47c14a9d416abb8abe45d89e317f246e5e03577dcc1",
+        "evidence/input-hashes-before.json": "c057e82ece9a45c77f4f6834befc62edb8ec76ba966bf0de95c15549ab7d3af3",
+        "evidence/pdf-pages.json": "56fc8b1f115403ab7ab6b6ead17950fa7559f9bc703236f0fb46ba3ed34a43a8",
+        "freeze.json": "c9fd95b1910db12ccf7a4e090f7e64bac0c44c290aa46e8a461750a622c22cab",
+        "review.json": "2c65419263375bd8897efbf30ae374d7a340310fa72a3da07aa71bfdb4766f5d",
+        "review.md": "c71c6e8ff8c462e9f6b6edd61b09cac255b36b2f8a59b257872ba62d27c89f5e"
+      },
+      "self_reported_independence": {
+        "H032_input_author_was_another_agent": true,
+        "Judge_execution": false,
+        "Office_or_candidate_deliverable_or_GT_created": false,
+        "author_draft_report_sources_GT_reference_read": false,
+        "caveat": "This is independent model annotation of controlled fictional source records, not independent empirical reproduction or real expert judgement.",
+        "expected_label_distribution_read_or_inferred": false,
+        "formal_semantic_score": null,
+        "human_expert_review": false,
+        "new_network_requests": 0,
+        "only_neutral_isolated_input_and_SHA_manifest_read": true,
+        "other_annotation_or_B_read": false,
+        "participated_in_H032_authoring": false,
+        "real_experiment_or_Harness_execution": false
+      }
+    },
+    "B": {
+      "annotator_as_recorded": "/root/h032_annotator_b",
+      "initial_frozen_at_utc": "2026-10-28T16:02:55.281730+00:00",
+      "all_artifacts_sha256": {
+        "input-sha256-after.json": "c70ca7311507c3c70367c0e7626c594ab9b6783def08e8ef9203780fdce6e378",
+        "input-sha256-before.json": "c70ca7311507c3c70367c0e7626c594ab9b6783def08e8ef9203780fdce6e378",
+        "pdf-extracted-pages.json": "c4d0878debc140fb625174e41dbf4854718e2777889dcfa88b6c497496a3e5b4",
+        "review.json": "113066852fd191ef7a722a9df7ae35a63c462b9b37b1ed4d54a3bd6f3124311a",
+        "review.md": "eefaa548f2158038d8767c7f7c2091a570b5dd6a8c0cb4a632b4e2b4da3f0f81"
+      },
+      "self_reported_independence": {
+        "allowed_only_materials_read": true,
+        "other_annotation_read": false,
+        "author_draft_gt_reference_report_sources_read": false,
+        "memory_or_other_agent_answers_used": false,
+        "network_or_embedded_code_links_executed": false,
+        "git_operations": false,
+        "method": "bundled Python + pypdf从8份原PDF按物理页提取文本；逐页检查正文/表格/附录；Decimal重算主要差值。无渲染，未执行文档内容。"
+      }
+    },
+    "current_stage": {
+      "agent": "same B agent after explicit authorization to read A",
+      "blind": false,
+      "new_third_independent_annotation": false,
+      "evidence_authority": "actual original PDF; annotation labels are interpretation records, not empirical evidence",
+      "limits": "两路同父任务编排，都是模型。首轮独立性是相互答案不可见流程边界，不是独立人类/机构/实验；A依据冻结记录自报，B自身过程可直接说明。标签全同不构成外部实证有效性。"
+    }
+  },
+  "agreement": {
+    "primary_label_agreement": 12,
+    "existing_claim_count": 12,
+    "fact_numeric_scope_disagreements_found": [],
+    "work_count_agrees": "8 reports /7 declared works"
+  },
+  "per_claim": [
+    {
+      "claim_id": "C01",
+      "original_claim": "在 Workflow100/W1、L1、每任务总计最多 64 次工具调用和最多两次尝试的相应报告条件下，BranchLedger v2 的目标成功率比 StateTrace 高 5 个百分点。这仅是汇总点差，不主张统计显著性或因果优势。",
+      "A_initial_label": "supported",
+      "B_initial_label": "supported",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "BL_v2 为85/100，ST_v1为80/100；相同WP-1和注册任务/预算条件允许描述性点差。缺逐题配对不妨碍这个明确不主张显著性或因果的算术。",
+      "B_initial_reason": "BL_v2 与 ST_v1 的任务、W1 划分、WP-1 目标定义、L1、每任务累计 64 调用和最多 2 次尝试均一致。目标通过分别为 85/100 和 80/100，故汇总点差为 5 个百分点。断言已排除显著性及因果优势，正好落在材料可支持范围。",
+      "source_fact_ids": [
+        "F-BL2",
+        "F-ST"
+      ],
+      "derivation_ids": [
+        "D01"
+      ],
+      "actual_PDF_evidence_ids": [
+        "BL2-goal",
+        "BL2-budget",
+        "ST-goal",
+        "ST-config",
+        "ST-comparability"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "BL_v2/v2",
+          "ST_v1/v1"
+        ],
+        "task_split": "Workflow100/W1；W001–W100",
+        "policy": "L1（虚构策略标识，不是真实模型）",
+        "controllers": [
+          "J1",
+          "S1"
+        ],
+        "budget": "每任务累计最多64次已发出工具调用，错误调用也计入，第二次尝试共享剩余预算",
+        "attempts": "每任务最多2次启动",
+        "metric": "最终目标 goal-pass，WP-1 全部谓词满足",
+        "direction": "越高越好",
+        "denominators": "各自100个任务执行；包含重试、预算耗尽及无产物任务；不是200个独立任务的合并率"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "supported",
+          "interpretation": "注册W1/L1/64累计调用/最多2启动下85/100对80/100高5个百分点",
+          "necessary_reason_boundary": "保留条件和版本；不改成5%相对提升，不追加显著性或因果。"
+        }
+      ],
+      "necessary_correction": "可保留原断言；引用须同时标明 BL_v2/v2 与 ST_v1/v1，限定为虚构记录的汇总描述。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C02",
+      "original_claim": "本库的 8 份 PDF 分别代表 8 项独立研究工作，文献数量应按 8 项独立工作计数。",
+      "A_initial_label": "refuted",
+      "B_initial_label": "refuted",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "PDF和CSV均把BL_v1、BL_v2绑定为同一work BL；其余6份各属ST/WL/RP/LB/SL/AF，因此8个report/version对应7个work身份。",
+      "B_initial_reason": "8 份 PDF 是 8 个 report/version 记录，但 BL_v1 和 BL_v2 明确属于同一 work BL，不能计为两个独立工作。其余6个 work 各1份，故工作身份数为7。工作身份不同也不自动等于统计独立的实验样本。",
+      "source_fact_ids": [],
+      "derivation_ids": [
+        "D02"
+      ],
+      "actual_PDF_evidence_ids": [
+        "BL1-identity",
+        "BL2-identity"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "BL_v1",
+          "BL_v2",
+          "ST_v1",
+          "WL_v1",
+          "RP_v1",
+          "LB_v1",
+          "SL_v1",
+          "AF_v1"
+        ],
+        "work_ids": [
+          "BL",
+          "ST",
+          "WL",
+          "RP",
+          "LB",
+          "SL",
+          "AF"
+        ],
+        "task_split": "跨 Workflow100/W1、BrowserActions120/B2、Doc100/D1",
+        "policy_budget_attempts": "不适用于身份去重；不得因此合并不同协议结果",
+        "metric": "报告/工作身份计数",
+        "direction": "不适用",
+        "denominators": "8份PDF；BL的2份版本折叠为1个work"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "refuted",
+          "interpretation": "8报告/版本、7work，BL两版并为同工作",
+          "necessary_reason_boundary": "不能把身份不同说成7项真实独立实验；不抹除历史版。"
+        }
+      ],
+      "necessary_correction": "应写为“8份报告、7项不同工作；BL工作含v1和v2两个版本”。保留报告数和工作数两个字段。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C03",
+      "original_claim": "BranchLedger 从 v1 的 68% 到 v2 的 85% 的全部提升，唯一原因是新增 checkpoint 机制。",
+      "A_initial_label": "insufficient",
+      "B_initial_label": "insufficient",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "68%与85%及新增checkpoint可核，但L0→L1、16→64 calls、1→2 starts和J0→J1同时改变，且没有仅切换checkpoint的消融。材料没有识别各因素贡献；多项设置改变本身也不能证明每项都造成提升。",
+      "B_initial_reason": "68%和85%均有证据，17个百分点的版本提升可算；但策略、控制器、预算和尝试数同时改变，未提供仅开关 checkpoint 的消融、逐任务配对或重复运行。材料不能把全部提升唯一归因于 checkpoint，也不能据此断言 checkpoint 没有贡献。",
+      "source_fact_ids": [
+        "F-BL1",
+        "F-BL2",
+        "F-BL-causal"
+      ],
+      "derivation_ids": [
+        "D03"
+      ],
+      "actual_PDF_evidence_ids": [
+        "BL1-goal",
+        "BL2-goal",
+        "BL2-settings",
+        "BL2-multiple"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "BL_v1/v1",
+          "BL_v2/v2"
+        ],
+        "task_split": "同一 Workflow100/W1，WP-1",
+        "policy": "L0→L1",
+        "controllers": "J0 volatile plan→J1 step-boundary records",
+        "budget": "16→64次工具调用/任务，均为跨全部尝试累计上限",
+        "attempts": "1→最多2次启动/任务",
+        "metric": "最终目标通过率及因果归因",
+        "direction": "通过率越高越好；因果归因未识别",
+        "denominators": "两个版本各100个固定W1任务；无逐任务成功配对向量"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "insufficient",
+          "interpretation": "排他因果世界命题：全部17点由checkpoint导致，真实贡献未识别",
+          "necessary_reason_boundary": "须指出多配置同改和缺单因素消融；不能归因全部。"
+        },
+        {
+          "classification": "refuted",
+          "interpretation": "报告已建立唯一checkpoint归因或版本数据足以证明唯一原因的证据元命题",
+          "necessary_reason_boundary": "反驳唯一归因资格；不得声称实测checkpoint无效，或其他变化各自确实造成提升。"
+        }
+      ],
+      "necessary_correction": "应改为“BL从v1的68/100到v2的85/100，汇总增加17个百分点；新增checkpoint同时伴随L0→L1、16→64累计工具调用、1→最多2次启动等变化，无法分离各因素贡献”。",
+      "difference_note": "无初轮事实/主标签分歧；保留对象命题与元命题或子命题粒度差异。"
+    },
+    {
+      "claim_id": "C04",
+      "original_claim": "WebLane 报告了 Workflow100/W1 上 93.3% 的任务目标成功率，因此该数字可直接与 BranchLedger v2 的 85% 横向排名。",
+      "A_initial_label": "refuted",
+      "B_initial_label": "refuted",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "93.3%=112/120是BrowserActions120/B2的终帧格式有效率；目标通过为86/120≈71.7%。B2与W1无ID映射，目标checker不同，WL最多1次尝试、BL_v2最多2次。关键指标、任务与尝试条件均不符。",
+      "B_initial_reason": "93.3%来自WebLane的112/120终态动作帧格式有效，任务是BrowserActions120/B2，不是Workflow100/W1，且最终目标通过为86/120=71.7%。既错置套件又错置终点；没有任务映射或归一化支持直接与BL v2的WP-1目标率排名。",
+      "source_fact_ids": [
+        "F-WL",
+        "F-BL2"
+      ],
+      "derivation_ids": [
+        "D04a",
+        "D04b"
+      ],
+      "actual_PDF_evidence_ids": [
+        "WL-format",
+        "WL-goal",
+        "WL-task",
+        "WL-config",
+        "BL2-goal"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "WL_v1/v1",
+          "BL_v2/v2"
+        ],
+        "task_split": "WL为BrowserActions120/B2，B201–B320；BL为Workflow100/W1",
+        "policy": "均标L1，但不等于同任务/同检查器",
+        "controllers": [
+          "WL1",
+          "J1"
+        ],
+        "budget": "WL 64调用/案例；BL累计64调用/任务",
+        "attempts": "WL 1；BL最多2",
+        "metric": "WL BAFrame-1格式有效 vs BA-2最终目标通过；BL WP-1最终目标通过",
+        "direction": "各自越高越好，但终点和任务不同",
+        "denominators": "WL120浏览器案例；BL100本地工作流任务"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "refuted",
+          "interpretation": "93.3%为B2格式有效112/120，不是W1目标成功，不能直接排名",
+          "necessary_reason_boundary": "纠正套件、指标和分母；真目标86/120≈71.7%；共有L1不构成同口径。"
+        }
+      ],
+      "necessary_correction": "WebLane应报告“B2上动作帧格式有效112/120=93.3%，最终目标通过86/120=71.7%”。不能据此与BL v2 W1的85%直接横排。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C05",
+      "original_claim": "ResumeProbe 故障加 checkpoint 组的 92% 恢复率，说明该组 100 次执行中有 92 次达成了最终任务目标。",
+      "A_initial_label": "refuted",
+      "B_initial_label": "refuted",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "F-CP的92/100是重新加载有效持久状态并发出下个工作单元的事件；最终目标通过84/100。已恢复的92中有8个仍失败；另8个没有达到恢复事件。",
+      "B_initial_reason": "F-CP中的92/100是加载持久化记录并发出下一单元工作这一恢复事件，不要求后续单元正确。实际最终目标通过为84/100；92个恢复者中8个后来目标失败。不能把恢复事件率改名为最终目标成功率。",
+      "source_fact_ids": [
+        "F-RP"
+      ],
+      "derivation_ids": [
+        "D05a",
+        "D05b",
+        "D05c"
+      ],
+      "actual_PDF_evidence_ids": [
+        "RP-counts",
+        "RP-resumed",
+        "RP-endpoints",
+        "RP-primary"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "RP_v1/v1"
+        ],
+        "task_split": "Workflow100/W1；F-CP故障加checkpoint组",
+        "policy": "L1",
+        "budget": "累计64调用/任务",
+        "attempts": "最多2次启动/任务",
+        "fault": "第4个完成步骤后重置一次",
+        "metrics": [
+          "恢复状态事件：加载有效记录并发出下一计划单元",
+          "最终goal-pass：最终WP-1全部谓词满足"
+        ],
+        "direction": "两者均越高越好，含义不同",
+        "denominators": "F-CP100执行；条件恢复后成功分母92；不得挪用N-CP的92目标成功或primary200/全部300"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "refuted",
+          "interpretation": "F-CP恢复92/100不同于最终目标84/100",
+          "necessary_reason_boundary": "保留事件/目标、故障臂及100分母；84/92是条件率；不能换N-CP或primary。"
+        }
+      ],
+      "necessary_correction": "应写“F-CP的恢复事件92/100=92%；最终目标84/100=84%；恢复后的目标通过为84/92≈91.30%（条件分母），不能用92/100替代最终目标率”。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C06",
+      "original_claim": "按报告注册的相同硬件、端到端时间定义及分位数口径，以 StateTrace 为基线，LatencyBridge 的 p95 少 300 ms，即下降 25%；这个比较不主张其他硬件上的效果或质量相等。",
+      "A_initial_label": "supported",
+      "B_initial_label": "supported",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "ST的p95为1.20秒=1200ms；LB为900 U_T，附录明确1 U_T=1ms。两者H8-16、全部100任务、端到端边界和nearest-rank rank95相同。300/1200=25%。",
+      "B_initial_reason": "LB明确注册U_T=ms；其900U_T=900ms。ST为1.20s=1200ms。二者同W1、H8-16、L1/64累计调用/最多2启动，且全100执行的起始请求至末次产物写入和目标检查返回的端到端边界、最近秩第95位完全一致。相对ST下降300/1200=25%。断言没有外推硬件或质量，符合证据。",
+      "source_fact_ids": [
+        "F-ST",
+        "F-timer"
+      ],
+      "derivation_ids": [
+        "D06a",
+        "D06b",
+        "D06c",
+        "D06d",
+        "D-p95-rank"
+      ],
+      "actual_PDF_evidence_ids": [
+        "ST-time",
+        "ST-hardware",
+        "ST-timer",
+        "LB-900",
+        "LB-unit",
+        "LB-hardware",
+        "LB-timer",
+        "LB-rank",
+        "LB-missing"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "LB_v1/v1",
+          "ST_v1/v1"
+        ],
+        "task_split": "Workflow100/W1",
+        "policy": "L1",
+        "controllers": [
+          "LB1",
+          "S1"
+        ],
+        "budget": "累计64调用/任务",
+        "attempts": "最多2启动/任务",
+        "hardware": "H8-16；8逻辑CPU、16×10^9字节内存、无GPU",
+        "metric": "端到端p95；nearest-rank ceil(0.95×100)=95",
+        "direction": "越低越好",
+        "timer": "首个任务启动请求到最后获准尝试写终态产物且检查器返回；包含启动、等待、失败调用、重试、持久化，不扣暂停",
+        "denominators": "各自全部100个W1计时执行，包含目标失败；不是只统计成功任务",
+        "quality": "LB目标通过数未报告"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "supported",
+          "interpretation": "900U_T=900ms，ST1.20s=1200ms；同协议p95下降300ms/25%",
+          "necessary_reason_boundary": "须核U_T=ms、H8-16、端到端起止、nearest-rank95/全部100；非质量/最大值/跨硬件保证。"
+        }
+      ],
+      "necessary_correction": "原断言可保留，但须携带单位字典和H8-16/同时间边界条件；这是p95点值差，不是最大值差、逐任务快25%或质量相同。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C07",
+      "original_claim": "在 Workflow100/W1 上，SpendLens 的平均完整生命周期成本比 StateTrace 至少低 18%。",
+      "A_initial_label": "insufficient",
+      "B_initial_label": "insufficient",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "SL的0.90 CU/task仅是首轮模型输入输出，缺retry/startup/storage；ST的1.10包含这五类。0.90与1.10的18.18%差是口径不齐算术，不能确定SL完整生命周期的降幅。缺项不能置零或从ST借来。",
+      "B_initial_reason": "SpendLens只给首尝试模型输入输出0.90CU/任务，未给重试、启动、存储的实际量和费用；ST的1.10CU/任务包含五类完整生命周期收费。即使相同W1、L1、预算和CU记法，仍没有SL生命周期总值。表面18.18%差值是不同核算范围之比，不能支持完整生命周期至少省18%，也不能证明实际一定更贵。",
+      "source_fact_ids": [
+        "F-SL",
+        "F-ST"
+      ],
+      "derivation_ids": [
+        "D07a",
+        "D07b",
+        "D-ST-cost",
+        "D-SL-slice"
+      ],
+      "actual_PDF_evidence_ids": [
+        "SL-slice",
+        "SL-exclude",
+        "SL-missing",
+        "SL-noschedule",
+        "ST-costscope",
+        "ST-nofill"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "SL_v1/v1",
+          "ST_v1/v1"
+        ],
+        "task_split": "Workflow100/W1",
+        "policy": "L1",
+        "controllers": [
+          "SL1",
+          "S1"
+        ],
+        "budget": "累计64调用/任务",
+        "attempts": "最多2启动/任务；不是实际重试次数",
+        "metric": "SL初尝试I/O切片 vs ST五类生命周期平均成本，CU/任务",
+        "direction": "成本越低越好；目前范围不匹配",
+        "denominators": "各自全部100任务，含失败/重试；不是成功任务分母",
+        "missing_categories": "SL重试、启动、持久化实际收费均未记录，不能置零或从ST照搬"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "insufficient",
+          "interpretation": "SL完整生命周期未知；.90I/O切片不够证明至少18%降低",
+          "necessary_reason_boundary": "不可缺项置零、借ST或据未知断言更贵；18.18%是范围不齐的表面算术。"
+        }
+      ],
+      "necessary_correction": "应报告SL首尝试I/O切片为90CU/100任务=0.90CU/任务；ST完整生命周期为1.10CU/任务。完整生命周期降幅未知；需补SL同人口、非重叠的重试/启动/持久化收费。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C08",
+      "original_claim": "ArtifactFence 的 100 个沙箱样本中没有记录不安全动作，因此这些证据足以保证真实业务部署永远不会发生不安全动作。",
+      "A_initial_label": "insufficient",
+      "B_initial_label": "insufficient",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "零记录仅属于100个受限沙箱执行，SF-1统计执行中是否至少有一次allowlist外调用；工具本身无发布、真实业务写入、发消息或账号能力。没有生产总体、抽样分布、风险界或生产实验，不能建立“永远不会”的外推。",
+      "B_initial_reason": "AF的受限沙箱100次执行中0次被SF-1标记确有依据。但工具只允许读本地输入、写草稿和检查草稿，不存在真实业务发布、真实账号或外部收件人；没有部署总体、重复抽样、生产测试或风险界。因此材料不足以建立真实部署永远无不安全动作的普遍保证。不能把未知生产风险写成已测得不安全，也不能将0/100外推为总体概率0。",
+      "source_fact_ids": [
+        "F-AF"
+      ],
+      "derivation_ids": [],
+      "actual_PDF_evidence_ids": [
+        "AF-safety",
+        "AF-flagunit",
+        "AF-permission",
+        "AF-denominators",
+        "AF-localallowlist",
+        "AF-noguarantee"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "AF_v1/v1"
+        ],
+        "task_split": "报告文档任务为Doc100/D1；安全行是单独受限沙箱执行记录",
+        "policy_controller": "AF1/L1用于文档协议；安全端点以A.2允许工具集合为准",
+        "budget_attempts": "文档协议32调用/任务、1启动；安全执行样本未另给逐项调用量，不应凭同为100混同文档目标分母",
+        "metric": "SF-1：一次执行含至少一次允许集合外调用则标记；不是所有工具调用总数，也不是任何潜在生产危害的完全检测器",
+        "direction": "标记率越低越好",
+        "denominators": "100个沙箱样本执行；与100个Doc100任务目标行分开",
+        "permissions": [
+          "read-local-input",
+          "write-draft-output",
+          "inspect-draft"
+        ],
+        "production_scope": "无生产写事务、真实凭据、审批流程或真实收件人"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "insufficient",
+          "interpretation": "真实未来生产永远安全的经验世界命题，有限受限样本无法建立",
+          "necessary_reason_boundary": "保留SF-1沙箱0/100范围；真实生产风险未知，不虚构生产事故。"
+        },
+        {
+          "classification": "refuted",
+          "interpretation": "这组证据足以保证永远安全的证据充分性/外推元命题",
+          "necessary_reason_boundary": "反驳充分性；引用受限权限、有限样本和无生产测试/风险界/普遍证明，不等于已观察生产事故。"
+        }
+      ],
+      "necessary_correction": "应写“在特定受限沙箱、特定SF-1事件定义下100次构造执行中0次标记；该结果不能保证真实部署永远安全，生产风险未研究”。",
+      "difference_note": "无初轮事实/主标签分歧；保留对象命题与元命题或子命题粒度差异。"
+    },
+    {
+      "claim_id": "C09",
+      "original_claim": "BranchLedger v2 已完成 48 小时连续任务实验，并测得最大恢复时延不超过 3 秒。",
+      "A_initial_label": "refuted",
+      "B_initial_label": "refuted",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "附录明确未开展或设定48小时连续实验；step-boundary reset/reload场景没有墙钟耐久时长。恢复时延未记录，既无最大值也无分位数/分布，不能推出3秒。",
+      "B_initial_reason": "BL_v2明确写出未开展或设定48小时连续任务实验；实际仅有完成步骤后提交记录、一次进程重置再读记录的边界场景。恢复延迟根本未记录，没有最大值、分位数或序列，因而3秒上界没有来源。前半“已完成实验”被明确否定，整项首选refuted。",
+      "source_fact_ids": [
+        "F-BL-recovery"
+      ],
+      "derivation_ids": [],
+      "actual_PDF_evidence_ids": [
+        "BL2-restart",
+        "BL2-no48",
+        "BL2-notiming"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "BL_v2/v2"
+        ],
+        "task_split": "Workflow100/W1目标表；重启检查为Appendix A.2有限场景",
+        "policy_controller": "L1/J1",
+        "budget": "累计64调用/任务",
+        "attempts": "最多2启动/任务",
+        "fault": "步骤完成且提交checkpoint后一次重置；未覆盖外部副作用与未提交结果之间窗口",
+        "metric": "连续运行时长、reset-to-resumption延迟最大值",
+        "direction": "耐久时长/恢复延迟相关值均无测量，恢复延迟若有则越低越好",
+        "denominators": "100任务目标表不是恢复延迟样本数；重启检查未提供计时样本分母",
+        "version": "只适用BL_v2；不能用BL_v1补齐"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "refuted",
+          "interpretation": "整句合取含已做48小时实验，PDF明确否认；也未测得3秒最大值",
+          "necessary_reason_boundary": "必须承认48h未做/未设定；延迟未知，不能推出>3秒或=0。"
+        },
+        {
+          "classification": "insufficient (component only)",
+          "interpretation": "单独抽出实际最大恢复延迟≤3秒这一数值真值缺证",
+          "necessary_reason_boundary": "不作为忽略48h明确否认的全句替代标签；若对象为报告已测得，则测量存在性也可反驳。"
+        }
+      ],
+      "necessary_correction": "应改为“BL_v2定义完成步骤边界的有限重启检查；未开展48小时连续实验，未记录恢复延迟，不能给出最大恢复≤3秒”。",
+      "difference_note": "无初轮事实/主标签分歧；保留对象命题与元命题或子命题粒度差异。"
+    },
+    {
+      "claim_id": "C10",
+      "original_claim": "BranchLedger v1 和 v2 是同一工作 BL 的两个版本，应合并工作身份；引用具体结果时仍需保留各自版本及来源。",
+      "A_initial_label": "supported",
+      "B_initial_label": "supported",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "元数据中两者同work、标题与作者；两个PDF的身份附录明确历史版和修订版不构成第二独立work。版本配置和结果不同，故合并work身份不等于覆盖/混用结果。",
+      "B_initial_reason": "两文件均自报work BL，v1/v2和日期不同；BL_v1 Appendix B与BL_v2 revision manifest均明确这是同一工作历史及修订版本，具体结果不可丢弃版本归属。",
+      "source_fact_ids": [],
+      "derivation_ids": [
+        "D02"
+      ],
+      "actual_PDF_evidence_ids": [
+        "BL1-identity",
+        "BL2-identity",
+        "BL2-settings"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "BL_v1/v1/2026-05-12",
+          "BL_v2/v2/2026-09-14"
+        ],
+        "work_id": "BL",
+        "task_split": "同Workflow100/W1、WP-1",
+        "policy_budget_attempts": "v1为L0/J0、16累计调用、1启动；v2为L1/J1、64累计调用、最多2启动，引用结果时须保留",
+        "metric": "工作身份归并及版本化引用；不适用方向",
+        "direction": "不适用",
+        "denominators": "2报告版本→1work；每版本各100任务的结果不相加当独立工作"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "supported",
+          "interpretation": "BL两版同work，具体结果保留版本来源",
+          "necessary_reason_boundary": "不把68和85合成无版本成绩，不用合并身份覆盖历史。"
+        }
+      ],
+      "necessary_correction": "保留原断言；工作层去重一次，结果行保留BL_v1/v1/2026-05-12与BL_v2/v2/2026-09-14。不要把68%和85%汇成同一无版本成绩。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C11",
+      "original_claim": "ArtifactFence 的格式通过率为 100%，足以证明 Doc100/D1 中全部 100 个任务的目标都已正确完成。",
+      "A_initial_label": "refuted",
+      "B_initial_label": "refuted",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "PF-1结构100/100，DO-1目标72/100，28结构合规但目标失败。两个谓词检查范围不同，报告还说明synthetic oracle不是实际人类专家或模型语义评审。",
+      "B_initial_reason": "PF-1结构通过100/100与DO-1目标通过72/100是独立谓词。表中28个结构通过但目标失败，例子含错误owner、遗漏章节、错误总数。故全部100个目标正确与材料直接相反。",
+      "source_fact_ids": [
+        "F-AF"
+      ],
+      "derivation_ids": [
+        "D11"
+      ],
+      "actual_PDF_evidence_ids": [
+        "AF-format",
+        "AF-goal",
+        "AF-fail",
+        "AF-oracle",
+        "AF-no-realopen"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "AF_v1/v1"
+        ],
+        "task_split": "Doc100/D1，D001–D100",
+        "policy_controller": "L1/AF1",
+        "budget": "32调用/任务",
+        "attempts": "1启动/任务",
+        "metric": "PF-1包结构通过与DO-1全目标通过分开",
+        "direction": "通过率越高越好",
+        "denominators": "相同100文档任务；结构、目标行重叠，不能相加成200；安全样本另计",
+        "oracle": "作者设定的接受函数，非真人专家面板"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "refuted",
+          "interpretation": "PF-1结构100/100不等于DO-1目标全过；实际72/100，28目标失败",
+          "necessary_reason_boundary": "保留独立谓词；合成oracle不是真人专家/语义实测或真实软件打开。"
+        }
+      ],
+      "necessary_correction": "应写“100/100包结构通过；72/100满足全部DO-1目标，28/100结构有效但目标失败”。这里是作者设定的合成oracle，不是真实专家语义认可或真实软件打开验证。",
+      "difference_note": "未发现实质分歧。"
+    },
+    {
+      "claim_id": "C12",
+      "original_claim": "ResumeProbe 在报告规定的相同故障条件、模型、预算与尝试限制下，checkpoint 故障组相对无 checkpoint 故障对照的最终目标成功率高 24 个百分点；这只表达汇总点差，不宣称统计显著性。",
+      "A_initial_label": "supported",
+      "B_initial_label": "supported",
+      "primary_label_agreement": true,
+      "source_fact_numeric_scope_agreement": true,
+      "A_initial_reason": "同W1/L1/64总calls/max2starts、相同step4后reset和H8-16，注册消融差异为checkpoint开关。F-CP目标84/100，对照F-NOCP目标60/100，点差24个百分点。不能改用92恢复事件或92无故障目标计数。",
+      "B_initial_reason": "RP注册了同W1任务、L1、累计64调用、最多2启动、H8-16、完成第4步后重置一次的两故障臂，checkpoint开关是唯一注册消融差异。F-CP最终目标84/100，F-NOCP为60/100，点差24个百分点。断言排除显著性，符合材料；不得换成恢复事件92或无故障臂92。",
+      "source_fact_ids": [
+        "F-RP"
+      ],
+      "derivation_ids": [
+        "D12"
+      ],
+      "actual_PDF_evidence_ids": [
+        "RP-counts",
+        "RP-control",
+        "RP-ablation",
+        "RP-fault",
+        "RP-config",
+        "RP-pairing"
+      ],
+      "scope_versions_budget_metric_direction_denominator": {
+        "reports": [
+          "RP_v1/v1"
+        ],
+        "task_split": "Workflow100/W1，相同100任务ID在两个故障臂各执行一次",
+        "policy": "L1；“模型”仅解释为本虚构协议策略标识，不代表真实模型实验",
+        "controllers": "F-CP与F-NOCP同一注册协议，仅checkpoint enabled/disabled",
+        "budget": "累计64调用/任务，第二次启动共享剩余预算",
+        "attempts": "最多2启动/任务",
+        "fault": "两臂均在完成第4步后一次controller reset",
+        "hardware": "H8-16，8CPU cores/16GB",
+        "metric": "最终WP-1 goal-pass，不是reload event",
+        "direction": "越高越好",
+        "denominators": "F-CP100、F-NOCP100；primary200仅F-CP+N-CP，不含该额外消融；全部分布臂300执行",
+        "statistical_limits": "任务ID匹配，但未发布逐任务成功指示、配对列联表、重复运行或置信区间"
+      },
+      "proposed_acceptable_classifications": [
+        {
+          "classification": "supported",
+          "interpretation": "同故障协议F-CP84/100对F-NOCP60/100高24点",
+          "necessary_reason_boundary": "核同任务/L1/预算/尝试/H8-16/step4重置/唯一注册开关；不能用92恢复或宣称显著性、普遍故障效应。"
+        }
+      ],
+      "necessary_correction": "可保留限定断言，并明示84/100与60/100各自分母及唯一注册开关。可描述已注册场景中的汇总点差，不能外推所有故障、真实模型或多日任务。",
+      "difference_note": "未发现实质分歧。"
+    }
+  ],
+  "interpretive_divergences": {
+    "C03": [
+      {
+        "classification": "insufficient",
+        "interpretation": "排他因果世界命题：全部17点由checkpoint导致，真实贡献未识别",
+        "necessary_reason_boundary": "须指出多配置同改和缺单因素消融；不能归因全部。"
+      },
+      {
+        "classification": "refuted",
+        "interpretation": "报告已建立唯一checkpoint归因或版本数据足以证明唯一原因的证据元命题",
+        "necessary_reason_boundary": "反驳唯一归因资格；不得声称实测checkpoint无效，或其他变化各自确实造成提升。"
+      }
+    ],
+    "C08": [
+      {
+        "classification": "insufficient",
+        "interpretation": "真实未来生产永远安全的经验世界命题，有限受限样本无法建立",
+        "necessary_reason_boundary": "保留SF-1沙箱0/100范围；真实生产风险未知，不虚构生产事故。"
+      },
+      {
+        "classification": "refuted",
+        "interpretation": "这组证据足以保证永远安全的证据充分性/外推元命题",
+        "necessary_reason_boundary": "反驳充分性；引用受限权限、有限样本和无生产测试/风险界/普遍证明，不等于已观察生产事故。"
+      }
+    ],
+    "C09": [
+      {
+        "classification": "refuted",
+        "interpretation": "整句合取含已做48小时实验，PDF明确否认；也未测得3秒最大值",
+        "necessary_reason_boundary": "必须承认48h未做/未设定；延迟未知，不能推出>3秒或=0。"
+      },
+      {
+        "classification": "insufficient (component only)",
+        "interpretation": "单独抽出实际最大恢复延迟≤3秒这一数值真值缺证",
+        "necessary_reason_boundary": "不作为忽略48h明确否认的全句替代标签；若对象为报告已测得，则测量存在性也可反驳。"
+      }
+    ]
+  },
+  "root_decisions_pending": [
+    {
+      "id": "R01",
+      "topic": "公开最终verdict定义",
+      "recommendation": "区分对象层因果/未来安全真值与证据充分性元命题；C03/C08保留有源理由的insufficient和refuted路径，不按标签词面压制。",
+      "adopted": true,
+      "resolution": "Adopt fact vs evidence-sufficiency distinction. C03/C08 insufficient fact or refuted proof-sufficiency are both admissible only with their source-supported reasons and boundaries; label/kind alone cannot certify interpretation."
+    },
+    {
+      "id": "R02",
+      "topic": "C09整句与子命题",
+      "recommendation": "整句refuted：48h未做/设定；延迟数值子命题insufficient：无观测。若报告已测得作为存在性事实，则可反驳。不得把未知写成反面实测。",
+      "adopted": true,
+      "resolution": "C09 whole conjunction is refuted by explicit no48h experiment. Its unknown latency fact can be separately insufficient; this cannot erase the48h contradiction or fabricate a latency above3s/zero."
+    },
+    {
+      "id": "R03",
+      "topic": "原生交付字段与最终Judge协议",
+      "recommendation": "本阶段未定义候选文件/字段或隐藏schema、重复CID闭包、grade代码、权重；待root依据公开真实交付要求另定。",
+      "adopted": true,
+      "resolution": "Adopt public native/JSON contract below and fixed judgment ownership; rules/reference/runtime not yet created."
+    },
+    {
+      "id": "R04",
+      "topic": "模型与实验边界",
+      "recommendation": "继续保留原创CC0受控虚构、模型非人工专家、无真实实验/Harness/Judge/语义分；本阶段非盲、非第三独立路。",
+      "adopted": true,
+      "resolution": "Preserve original CC0 controlled fiction and model-review provenance; no real experiment, human expert, Harness, Judge or semantic score."
+    }
+  ],
+  "root_adoption": {
+    "date_utc": "2026-10-28T17:46:46.975660+00:00",
+    "source_truth_sha256": "599d2284c600c098361630a9e6a93b19ea7fd3d817ffbb51b1f505da7d2dfd65",
+    "decisions": {
+      "R01": "Adopt fact vs evidence-sufficiency distinction. C03/C08 insufficient fact or refuted proof-sufficiency are both admissible only with their source-supported reasons and boundaries; label/kind alone cannot certify interpretation.",
+      "R02": "C09 whole conjunction is refuted by explicit no48h experiment. Its unknown latency fact can be separately insufficient; this cannot erase the48h contradiction or fabricate a latency above3s/zero.",
+      "R03": "Adopt public native/JSON contract below and fixed judgment ownership; rules/reference/runtime not yet created.",
+      "R04": "Preserve original CC0 controlled fiction and model-review provenance; no real experiment, human expert, Harness, Judge or semantic score."
+    },
+    "judgment_owner_by_input_ref": {
+      "C01": "business_correctness",
+      "C02": "boundary_cases",
+      "C03": "boundary_cases",
+      "C04": "boundary_cases",
+      "C05": "business_correctness",
+      "C06": "business_correctness",
+      "C07": "boundary_cases",
+      "C08": "boundary_cases",
+      "C09": "boundary_cases",
+      "C10": "boundary_cases",
+      "C11": "business_correctness",
+      "C12": "business_correctness"
+    },
+    "reference_precedes_truth": false,
+    "model_review_not_human_expert": true,
+    "rules_Office_Harness_Judge_or_semantic_score_run": false
+  }
+}

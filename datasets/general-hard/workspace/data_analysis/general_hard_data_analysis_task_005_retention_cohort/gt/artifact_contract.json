@@ -1,0 +1,26 @@
+{
+  "schema_version": "h021-material-artifacts/v1",
+  "stage": "materials_not_runtime_scoring_authority",
+  "inputs": [
+    "events.csv",
+    "definitions.md",
+    "old_dashboard.xlsx"
+  ],
+  "outputs": [
+    "results/cohorts.xlsx",
+    "results/anomalies.json",
+    "results/report.html"
+  ],
+  "max_each_bytes": 5242880,
+  "summary_rows": 30,
+  "membership_rows": 476,
+  "user_day_rows": 500,
+  "audit_rows": 1200,
+  "native_old_chart_points": 14,
+  "source_chart_cache_points": 0,
+  "actual_office_chart_cache_points": 14,
+  "report": "Offline visible table and new/old curves consistent with actual memberships and anomalies, correct gaps for missing/unfinished observations. SVG, Canvas and other reasonable offline charts remain allowed; do not require author CSS/coordinates.",
+  "correct_static_detail_is_legal": true,
+  "input_modification_forbidden": true,
+  "missing_runtime_not_candidate_zero": true
+}

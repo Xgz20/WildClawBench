@@ -1,0 +1,41 @@
+{
+  "schema_version": "h033-source-first-rule-binding/v1",
+  "grading_type": "hybrid",
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "semantic_judge_required": true,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "facts_free_rule_criteria": true,
+  "private_sha256": {
+    "artifact_contract.json": "cd5027a5509e02fa12844359199d56b8a88e21479f01062fd57246c4de669c1a",
+    "business_oracle.json": "28ba3c21a8aef64b3a7000d6033b2b8a90ec842bffa36d8a531548e93ba9900c",
+    "evidence_requirements.json": "274e161e7bd1c00df2b4cf40077b91ea8a8cea1837643f798aa7ded643c9af29",
+    "expected.json": "79d884053e2b7cad2fecb838e5a5f716e4b0e2f2789a042735617223a15e7bbf",
+    "grader.py": "91bd1a2a80b124a5c9d7ad38e85a7f708ed26699b3def74f1c74b315fa7f6ae5",
+    "helper_provenance.json": "d2c3fbfa11fb4001af34899b243749c86b8cb1eb6b7777b2b80d4d6846d0ba47",
+    "ledger_rules.py": "581faab8635ec8ffc1e5cdba1adb5cdb46da3b3f5d6525cd9c525adee052ad47",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "protected_sha256.json": "7db2387dc5e2386e9ca822ba9c1691da97e5fe38f66f52ee76b38f421e6133be",
+    "reference/v2/provenance.json": "7198edbdec55788d82e3ca1816700fa7d8d1d7bb5e542d0b04d7778bc526180d",
+    "reference/v2/results/action_plan.docx": "858d224a19d8a451fcbc5176f20049f9a7ada0a89cf6ff307c9f1548d156bbda",
+    "reference/v2/results/notice_timeline.xlsx": "b529b1103089b7b73a1b612d2392eaf372192985cfc6597ee0b06c0d4cd63d68",
+    "reference/v2/results/source_ledger.json": "836a1bcbfc25f2ffd443de9be54c86a12b7a427c20aafafc82b57079274cd160",
+    "reference_source_manifest.json": "c8a6814f6bca748169cae3b183194e9168c3797d990a5982b7a7f71dfe08c45a",
+    "research_source_policy.json": "557fdd2fc6de7006fbd1a28863493cb532669ead532133a456e836feaa54120b",
+    "rule_evidence_contract.json": "2fa0c2b6053e0ec4688655c427153a52ee92c509f4fbd922961982b7a2aebaf2",
+    "runtime_contract.json": "a1bbf1f42e6374d2a9ae208ca6bca387e3449f86872034ef27c8c42e753d602a",
+    "source_review_reconciliation.json": "e3c82cac172d65dc9b381efde78aa078e1ae6892845226700ec0becea45a450c",
+    "verified_sources.py": "36b8165f704b872a1dc37a2f98f577de380d73dfa004e2b597b1a785ebf8b10d"
+  }
+}

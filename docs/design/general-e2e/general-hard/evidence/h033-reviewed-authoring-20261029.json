@@ -1,0 +1,681 @@
+{
+  "schema_version": "general-hard-reviewed-authoring/v1",
+  "order": 33,
+  "registered_task_index": 39,
+  "task_id": "general_hard_research_verification_task_007_directed_notice_timeline",
+  "registered": 39,
+  "remaining": 21,
+  "release": "building",
+  "category_counts": {
+    "software_engineering": 2,
+    "research_verification": 7,
+    "data_analysis": 10,
+    "office_documents": 16,
+    "file_operations": 4
+  },
+  "registered_materials": {
+    "task": {
+      "path": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard/datasets/general-hard/tasks/research_verification/general_hard_research_verification_task_007_directed_notice_timeline.md",
+      "sha256": "a6c1ed653b35f9ced34e5a20e75e2d19a3a80b55a670717754d3f57731da8d92",
+      "size": 10473
+    },
+    "exec_files": 4,
+    "gt_files": 21,
+    "exec": [
+      {
+        "path": "delivery_contract.md",
+        "sha256": "94092e0a8f6dac17fd4335a925169d2318aec924495b2165efbce85e5d492741",
+        "size": 10975
+      },
+      {
+        "path": "official_entries.json",
+        "sha256": "1c2238d76772ceb415b5cb2a8861d1f36e4a288a99ae32f5255ca2228643405d",
+        "size": 3728
+      },
+      {
+        "path": "research_window.json",
+        "sha256": "c0e38fac612e4fcde84d65c3d60f51eef189b00e72f8b6d38f97aca2322a6678",
+        "size": 2536
+      },
+      {
+        "path": "user_profile.md",
+        "sha256": "ae3fb0cac96f842d62606391e627ef30ed3ce1a21d0d9127aaa7a3212c403551",
+        "size": 1714
+      }
+    ],
+    "gt": [
+      {
+        "path": "artifact_contract.json",
+        "sha256": "cd5027a5509e02fa12844359199d56b8a88e21479f01062fd57246c4de669c1a",
+        "size": 40580
+      },
+      {
+        "path": "business_oracle.json",
+        "sha256": "28ba3c21a8aef64b3a7000d6033b2b8a90ec842bffa36d8a531548e93ba9900c",
+        "size": 41561
+      },
+      {
+        "path": "evidence_requirements.json",
+        "sha256": "274e161e7bd1c00df2b4cf40077b91ea8a8cea1837643f798aa7ded643c9af29",
+        "size": 497
+      },
+      {
+        "path": "expected.json",
+        "sha256": "79d884053e2b7cad2fecb838e5a5f716e4b0e2f2789a042735617223a15e7bbf",
+        "size": 706910
+      },
+      {
+        "path": "grader.py",
+        "sha256": "91bd1a2a80b124a5c9d7ad38e85a7f708ed26699b3def74f1c74b315fa7f6ae5",
+        "size": 12527
+      },
+      {
+        "path": "helper_provenance.json",
+        "sha256": "d2c3fbfa11fb4001af34899b243749c86b8cb1eb6b7777b2b80d4d6846d0ba47",
+        "size": 972
+      },
+      {
+        "path": "ledger_rules.py",
+        "sha256": "581faab8635ec8ffc1e5cdba1adb5cdb46da3b3f5d6525cd9c525adee052ad47",
+        "size": 19833
+      },
+      {
+        "path": "native_text.py",
+        "sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+        "size": 39711
+      },
+      {
+        "path": "office_runtime.py",
+        "sha256": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+        "size": 65333
+      },
+      {
+        "path": "protected_sha256.json",
+        "sha256": "7db2387dc5e2386e9ca822ba9c1691da97e5fe38f66f52ee76b38f421e6133be",
+        "size": 375
+      },
+      {
+        "path": "reference/v2/provenance.json",
+        "sha256": "7198edbdec55788d82e3ca1816700fa7d8d1d7bb5e542d0b04d7778bc526180d",
+        "size": 1034
+      },
+      {
+        "path": "reference/v2/results/action_plan.docx",
+        "sha256": "858d224a19d8a451fcbc5176f20049f9a7ada0a89cf6ff307c9f1548d156bbda",
+        "size": 44527
+      },
+      {
+        "path": "reference/v2/results/notice_timeline.xlsx",
+        "sha256": "b529b1103089b7b73a1b612d2392eaf372192985cfc6597ee0b06c0d4cd63d68",
+        "size": 27057
+      },
+      {
+        "path": "reference/v2/results/source_ledger.json",
+        "sha256": "836a1bcbfc25f2ffd443de9be54c86a12b7a427c20aafafc82b57079274cd160",
+        "size": 208683
+      },
+      {
+        "path": "reference_source_manifest.json",
+        "sha256": "c8a6814f6bca748169cae3b183194e9168c3797d990a5982b7a7f71dfe08c45a",
+        "size": 86101
+      },
+      {
+        "path": "research_source_policy.json",
+        "sha256": "557fdd2fc6de7006fbd1a28863493cb532669ead532133a456e836feaa54120b",
+        "size": 775
+      },
+      {
+        "path": "rule_evidence_contract.json",
+        "sha256": "2fa0c2b6053e0ec4688655c427153a52ee92c509f4fbd922961982b7a2aebaf2",
+        "size": 2261
+      },
+      {
+        "path": "runtime_contract.json",
+        "sha256": "a1bbf1f42e6374d2a9ae208ca6bca387e3449f86872034ef27c8c42e753d602a",
+        "size": 6344
+      },
+      {
+        "path": "scoring_contract.json",
+        "sha256": "0f48cb80f0e2097abf7ea908b87ca859d0a264a92dd2d47ac9173df11bbd5170",
+        "size": 2515
+      },
+      {
+        "path": "source_review_reconciliation.json",
+        "sha256": "e3c82cac172d65dc9b381efde78aa078e1ae6892845226700ec0becea45a450c",
+        "size": 341260
+      },
+      {
+        "path": "verified_sources.py",
+        "sha256": "36b8165f704b872a1dc37a2f98f577de380d73dfa004e2b597b1a785ebf8b10d",
+        "size": 17603
+      }
+    ],
+    "author_and_registered_bytes_equal": true
+  },
+  "author_handoff": {
+    "receipt": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/grader-v1/final-handoff.json",
+      "sha256": "c9697db1bc7c2df3d72d044bf69dbfb2e04fa732f549b07cd1b7d04ebb09c38d",
+      "size": 14093
+    },
+    "freeze": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/grader-v1/final-freeze.json",
+      "sha256": "fe29b9744abdef879286d8d1a5495e60f64c3b5932fad6d4479bd41ba314d7d2",
+      "size": 11489
+    },
+    "case_spec": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/authoring/case-spec.json",
+      "sha256": "c4f1c712ac4a35c37fc2928c1c352395ba06ec7b25075d667c36eb0234c0b900",
+      "size": 19191
+    },
+    "review_kind": "source_first_nonblind_model_only",
+    "source_truth_sha256": "86f83b9da693a5041283c18f9dff36b48f18192f9f05ce26418ef2239ae43a0d",
+    "source_facts": 65,
+    "nonexhaustive": true,
+    "original_GT8_exec4_freeze_alignment14_unchanged": true,
+    "private_scoring_contract_sha256": "0f48cb80f0e2097abf7ea908b87ca859d0a264a92dd2d47ac9173df11bbd5170",
+    "artifact_contract_v2_sha256": "cd5027a5509e02fa12844359199d56b8a88e21479f01062fd57246c4de669c1a",
+    "immutable_reference3": {
+      "source_ledger.json": {
+        "author_sha256": "836a1bcbfc25f2ffd443de9be54c86a12b7a427c20aafafc82b57079274cd160",
+        "private_sha256": "836a1bcbfc25f2ffd443de9be54c86a12b7a427c20aafafc82b57079274cd160"
+      },
+      "notice_timeline.xlsx": {
+        "author_sha256": "b529b1103089b7b73a1b612d2392eaf372192985cfc6597ee0b06c0d4cd63d68",
+        "private_sha256": "b529b1103089b7b73a1b612d2392eaf372192985cfc6597ee0b06c0d4cd63d68"
+      },
+      "action_plan.docx": {
+        "author_sha256": "858d224a19d8a451fcbc5176f20049f9a7ada0a89cf6ff307c9f1548d156bbda",
+        "private_sha256": "858d224a19d8a451fcbc5176f20049f9a7ada0a89cf6ff307c9f1548d156bbda"
+      }
+    },
+    "mechanisms": {
+      "count": 69,
+      "all_pass": true,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/grader-v1/mechanisms-1793223115950669000/results.json",
+        "sha256": "eab20f35873eb423c35ff77799318b464b03ab0da916b130b8eb3ed7c96d1c16",
+        "size": 154509
+      }
+    },
+    "controls": {
+      "selected": 16,
+      "selected_met": 16,
+      "retained_preflight_probe": 1,
+      "receipt": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/grader-v1/managed-controls-final.json",
+        "sha256": "0ef7c1dc3c2b0cc18c69c3907281ee640109bd898dc57954315d3346fea1c33d",
+        "size": 27897
+      },
+      "do_not_claim_17_Worker_passes": true
+    },
+    "actual_formula_cache_clear": {
+      "original_cache_injected": "999999",
+      "recomputed_cells": [
+        {
+          "cached_value_available": true,
+          "formula": "1+1",
+          "formula_attributes": {
+            "aca": "false"
+          },
+          "locator": "条件时间线!A1000",
+          "number_format": "General",
+          "number_format_id": 164,
+          "type": "n",
+          "value": "2"
+        }
+      ],
+      "actual_engine_audit": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/managed-rules-v1-1793223382541439000/actual-formula-cache-cleared/fixture/attempts/h033-source-author__actual-formula-cache-cleared/general_hard_research_verification_task_007_directed_notice_timeline/prepared-01/worker/derived/recalculated/recalculated.xlsx",
+        "audit_path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/managed-rules-v1-1793223382541439000/actual-formula-cache-cleared/fixture/attempts/h033-source-author__actual-formula-cache-cleared/general_hard_research_verification_task_007_directed_notice_timeline/prepared-01/worker/derived/recalculated/office-audit.json",
+        "audit": {
+          "schema_version": "wildclawbench.office-recalculation/v1",
+          "profile": "offline-xlsx-remove-formula-caches/v1",
+          "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5",
+          "executable_sha256": "81c7db1c6dbcdd606d95abef337b4529aeda6a4fa1cf23a5a567f9c5655c8b66",
+          "source_sha256": "43e5069a84489c8397655ba3b6438c293abc7da77df8b1708d6dcd27789fbd54",
+          "normalized_input_sha256": "8410645220c779bddf0faa05aa522c0729ef30549ca40f3b72a2f2b598a185e9",
+          "derived_sha256": "1d50adbd69a03894f1877df515f4fa9d8bb42e00f329e1ba85afd118607bbc14",
+          "formula_caches_cleared": 1,
+          "source_unchanged": true,
+          "stdout": "convert /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/managed-rules-v1-1793223382541439000/actual-formula-cache-cleared/fixture/attempts/h033-source-author__actual-formula-cache-cleared/general_hard_research_verification_task_007_directed_notice_timeline/prepared-01/worker/derived/h033-office-0w_wbnbj/input/workbook.xlsx as a Calc document -> /Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/managed-rules-v1-1793223382541439000/actual-formula-cache-cleared/fixture/attempts/h033-source-author__actual-formula-cache-cleared/general_hard_research_verification_task_007_directed_notice_timeline/prepared-01/worker/derived/h033-office-0w_wbnbj/output/workbook.xlsx using filter : Calc MS Excel 2007 XML\n",
+          "stderr": "Fontconfig warning: no <cachedir> elements found. Check configuration.\nFontconfig warning: adding <cachedir>/@.__________________________________________________OOO/var/cache/fontconfig</cachedir>\nFontconfig warning: adding <cachedir prefix=\"xdg\">fontconfig</cachedir>\n"
+        }
+      }
+    },
+    "prior_source_acquisition": {
+      "original_production_GETs": 27,
+      "original_HTTP_responses": 27,
+      "additional_GETs": 0,
+      "verified_reused_source_records_across_controls": 378,
+      "max_original_attempts_per_URL": 1,
+      "allowed_attempt_cap": 2
+    },
+    "prior_nonruntime_archive_files": 854,
+    "author_version_scope": {
+      "framework_commit": "f6b34a5718dabc22f5b06428d97af5233cfead1d",
+      "score": "0.27.0",
+      "core": "0.15.2",
+      "score_entry_sha256": "794b08db5c61890a5c7067c12361b9bea6b204ea792c84371da0c032c0d006c6",
+      "control_reuse_boundary": "69 mechanisms and 16 selected managed controls retain their original receipts and versions; current formal package executes a new baseline, not a rerun claim for all controls."
+    }
+  },
+  "formal_detached": {
+    "validation": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226299836083000/validation.json",
+      "sha256": "e4d929df2fbdc0cd869658d265359465d0ae58468453205a150d9644700f811b",
+      "size": 12965
+    },
+    "source_revision": "fad29dea2f3a71f7409baa88b63dd2c1a8aad2a2",
+    "skill_build": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "components": [
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "9332b5351b55b1a11d706d19746502d1070d6321551ba87b15926a07083a2657",
+          "entrypoints": [
+            "workspace-integrity.mjs"
+          ],
+          "name": "workspace-integrity",
+          "source_revision": "fad29dea2f3a71f7409baa88b63dd2c1a8aad2a2",
+          "source_root": "tools/report/e2e-shared/handoff",
+          "vendor_root": "vendor/e2e-shared/handoff",
+          "version": "1.0.0"
+        },
+        {
+          "content_hash_algorithm": "wildclawbench.component-content-sha256/v1",
+          "content_sha256": "cbf3d53a19e09c249b690110fdd58f5c63c75c9ce70c175bf077964a726c70c5",
+          "entrypoints": [
+            "__init__.py",
+            "native_text.py",
+            "office_runtime.py",
+            "image_evidence.py",
+            "html_runtime.py",
+            "html_observer.mjs"
+          ],
+          "name": "grading-core",
+          "source_revision": "fad29dea2f3a71f7409baa88b63dd2c1a8aad2a2",
+          "source_root": "src/wildclawbench_grading_core",
+          "vendor_root": "vendor/e2e-shared/wildclawbench_grading_core",
+          "version": "0.15.3"
+        }
+      ],
+      "content_hash_algorithm": "wildclawbench.skill-content-sha256/v1",
+      "content_sha256": "9e88bb0803ba4118bb35ab9f0d7f57d4cfe91a6c1fb0540f88e02cf08b7f1584",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "scene": "general-e2e",
+      "source_revision": "fad29dea2f3a71f7409baa88b63dd2c1a8aad2a2",
+      "version": "0.27.1",
+      "zip_hash_algorithm": "sha256",
+      "zip_sha256": "abd7e3506a36256a74da9e168d7da2d19f510a04f52c8ebbd58eeade53dce972"
+    },
+    "skill_verification": {
+      "archive": "score-general-e2e-skill-v0.27.1.zip",
+      "checked_relative_imports": 0,
+      "content_sha256": "9e88bb0803ba4118bb35ab9f0d7f57d4cfe91a6c1fb0540f88e02cf08b7f1584",
+      "development_repository_references": [],
+      "file_count": 47,
+      "name": "score-general-e2e",
+      "status": "PASS",
+      "version": "0.27.1",
+      "zip_sha256": "abd7e3506a36256a74da9e168d7da2d19f510a04f52c8ebbd58eeade53dce972"
+    },
+    "actual_installed_score_entry_sha256": "794b08db5c61890a5c7067c12361b9bea6b204ea792c84371da0c032c0d006c6",
+    "actual_installed_native_collector_sha256": "74b3cd15234f366c55581dae694a080ad76c2a232bcaab50f9a1f7ca2cf38fd2",
+    "A": 1.0,
+    "raw_scores": {
+      "citation_resolution": 1.0,
+      "overall_score": 1.0,
+      "protected_delivery": 1.0,
+      "record_contract": 1.0,
+      "time_and_scope": 1.0
+    },
+    "Worker": {
+      "criterion_evidence": {
+        "complete": true,
+        "policy": "per-criterion-rule-source-and-worker-result/v1",
+        "reason_language": "zh-CN"
+      },
+      "derived_artifacts": [
+        {
+          "path": "worker/derived/rule-observations.json",
+          "sha256": "59b5c409ea0535d42180825630e65cdf7d2ead56a3ab55373296b7aae270c6a2",
+          "size": 402474
+        }
+      ],
+      "derived_evidence": {
+        "directory": "worker/derived",
+        "entries_sha256": "cc3f61959211a48a4ef4402bf094d7b778ab4f2a9cf04932391b2787e2a59997",
+        "file_count": 1,
+        "purpose": "custody_only_not_business_validation",
+        "schema_version": "wildclawbench.rule-derived-evidence/v1"
+      },
+      "docker_used": false,
+      "error": null,
+      "finished_at": "2026-10-28T22:25:19.717190Z",
+      "identity": {
+        "batch_id": "author-only-h033-formal",
+        "execution_attempt_id": "author-only-prepared-handoff",
+        "scoring_attempt_id": "author-only-formal-auto",
+        "task_id": "general_hard_research_verification_task_007_directed_notice_timeline",
+        "unit_id": "detached-zip-worker"
+      },
+      "path_resolution": {
+        "mapped_result_count": 0,
+        "mode": "direct",
+        "policy": "frozen-prompt-mapping-aware/v1",
+        "prompt_sha256": "0ded9a708fc6aa204c2a6c0609ffea99de6d5747e4b394430f0b481bd52896cc",
+        "root_result_count": 3,
+        "workspace_argument": "runtime/workspace"
+      },
+      "research_sources": {
+        "lock_path": "research-sources.lock.json",
+        "lock_sha256": "c5fdd3b67b45ee9a489eecf108a83c8d096cdce08a096e10280477b1fd5c4c93",
+        "manifest_sha256": "a8c67a7656260a6c0af25c03567d86333dd82d4961f0c1078e2394dfe07cdda5",
+        "path": "private/research-sources"
+      },
+      "runtime_kind": "local-managed-python-worker",
+      "runtime_workspace": {
+        "drifted": false,
+        "final_sha256": "26ca0cf49aeeebbd6c3db4b1dfbd1b2a19bc951e6cfb8abf22ffff85e7001279",
+        "initial_sha256": "26ca0cf49aeeebbd6c3db4b1dfbd1b2a19bc951e6cfb8abf22ffff85e7001279"
+      },
+      "schema_version": "wildclawbench.general-e2e-rule-runtime-audit/v1",
+      "started_at": "2026-10-28T22:25:16.623776Z",
+      "status": "completed",
+      "worker": {
+        "duration_seconds": 0.931814,
+        "environment_keys": [
+          "GENERAL_E2E_OFFICE_LOCK",
+          "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE",
+          "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256",
+          "GENERAL_E2E_RULE_EVIDENCE_DIR",
+          "LANG",
+          "LC_ALL",
+          "PATH",
+          "PYTHONDONTWRITEBYTECODE",
+          "PYTHONNOUSERSITE",
+          "PYTHONUTF8",
+          "TMPDIR"
+        ],
+        "log_too_large": false,
+        "office_runtime": {
+          "path": "worker/office-runtime.json",
+          "sha256": "9b982e7ded3f925dedfa312727c3728f0970a6e5abf28235a97a11bb768f2da5"
+        },
+        "process_tree_cleanup": {
+          "actions": [],
+          "remaining": false
+        },
+        "request_sha256": "e9c67fe8c421ddaa741469e9d48d7d2369f64a7828ea3333678b5f972b98db6e",
+        "research_sources": {
+          "lock_path": "research-sources.lock.json",
+          "lock_sha256": "c5fdd3b67b45ee9a489eecf108a83c8d096cdce08a096e10280477b1fd5c4c93",
+          "manifest_sha256": "a8c67a7656260a6c0af25c03567d86333dd82d4961f0c1078e2394dfe07cdda5",
+          "path": "private/research-sources"
+        },
+        "return_code": 0,
+        "runtime_probe": {
+          "probe": {
+            "browser": null,
+            "dependencies": {},
+            "imports": [],
+            "python": {
+              "executable": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h005/qa/existing-worker/venv/bin/python",
+              "in_virtualenv": true,
+              "major": 3,
+              "minor": 12,
+              "patch": 14
+            }
+          },
+          "runtime_lock_sha256": "50e96bd778853d339e1bf33ffb3c086db4efe400a355af28568707bb779b4065",
+          "status": "PASS"
+        },
+        "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "stdout_sha256": "06e5d5ba6492c0f1f11f8e1aa8edc74be42c88f5f7a1f30b6ea36ed12e17c69c",
+        "timed_out": false,
+        "timeout_seconds": 180.0,
+        "worker_pid": 89717
+      }
+    },
+    "source_collection": {
+      "acquired_count": 27,
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226299836083000/attempts/author-only-h033-formal__detached-zip-worker/general_hard_research_verification_task_007_directed_notice_timeline/author-only-formal-auto",
+      "bundle_manifest_sha256": "a8c67a7656260a6c0af25c03567d86333dd82d4961f0c1078e2394dfe07cdda5",
+      "bundle_path": "private/research-sources",
+      "candidate_input_status": "valid",
+      "fresh_get_count": 0,
+      "lock_path": "research-sources.lock.json",
+      "reused_snapshot_count": 27,
+      "status": "PASS"
+    },
+    "source_formats": {
+      ".html": 23,
+      ".docx": 2,
+      ".xlsx": 1,
+      ".pdf": 1
+    },
+    "pure_reuse_preflight": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226299836083000/reuse-preflight.json",
+      "sha256": "32b9ddbed9c335d8eb15a81e7f816057b9a5ca05730de3c0349aff7feaa65a58",
+      "size": 7915
+    },
+    "all27_eligible_before_collection": true,
+    "source_count": 27,
+    "citation_count": 85,
+    "date_objects": 43,
+    "normal_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226299836083000/attempts/author-only-h033-formal__detached-zip-worker/general_hard_research_verification_task_007_directed_notice_timeline/author-only-formal-auto",
+      "candidate_sha256": "90f496d6e6eadfadb2d3a2d818ed0b7054fb67222d074dca22d56b273f95e58f",
+      "entry_count": 8
+    },
+    "archive_verify": {
+      "status": "PASS",
+      "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226299836083000/moved-without-runtime",
+      "candidate_sha256": "90f496d6e6eadfadb2d3a2d818ed0b7054fb67222d074dca22d56b273f95e58f",
+      "entry_count": 8
+    },
+    "same_byte_nonruntime_files": 865,
+    "derived_evidence": [
+      {
+        "path": "worker/derived/rule-observations.json",
+        "sha256": "59b5c409ea0535d42180825630e65cdf7d2ead56a3ab55373296b7aae270c6a2",
+        "size": 402474
+      },
+      {
+        "path": "worker/office-runtime.json",
+        "sha256": "9b982e7ded3f925dedfa312727c3728f0970a6e5abf28235a97a11bb768f2da5"
+      }
+    ],
+    "new_copied_origins_retired_before_normal_and_archive_verification": true,
+    "original_origins_and_author_materials_unchanged": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226299836083000/source-postcheck.json",
+      "sha256": "6fcc92711f82afe75f5ec1f204d47c0d15450b948498012accb2a344390e431f",
+      "size": 105
+    },
+    "repository_sys_path_absent": true,
+    "isolated_CLI": true,
+    "author_only_prepared_handoff": true,
+    "real_Harness": false,
+    "semantic_catalog_query_only": {
+      "catalog_sha256": "617201f8f353e007eb5242f07477f88dbdd3c1ae6840aa703a1d2eb1131bf868",
+      "prepared_status": "awaiting_response",
+      "frozen_configuration_only": true,
+      "queries": [
+        {
+          "evidence_id": "evidence-0118",
+          "path": "private/research-sources/sources/source-0024/body.docx",
+          "receipt": "semantic-query-1.json",
+          "sha256": "a83f2039fe25bf4d7016c04423ff3cd4595e4dbe361947709fcc0d4bd33e257f",
+          "scope": "representative native/image query only, not a semantic-support verdict",
+          "returned_count": 50,
+          "has_more": true,
+          "coverage": null,
+          "Judge_called": false
+        },
+        {
+          "evidence_id": "evidence-0128",
+          "path": "private/research-sources/sources/source-0026/body.xlsx",
+          "receipt": "semantic-query-2.json",
+          "sha256": "6d4a04012450f5df841241e60f3d1941d9eb2e93c9ab56e3657af3aeaff50e39",
+          "scope": "representative native/image query only, not a semantic-support verdict",
+          "returned_count": 50,
+          "has_more": true,
+          "coverage": null,
+          "Judge_called": false
+        },
+        {
+          "evidence_id": "evidence-0145",
+          "path": "candidate-original/workspace/results/action_plan.docx",
+          "receipt": "semantic-query-3.json",
+          "sha256": "5563cbbec708a3a06f7a8ae5dc12ddd6367c02d7f07b3e9c019d4a2816a7fa85",
+          "scope": "representative native/image query only, not a semantic-support verdict",
+          "returned_count": 50,
+          "has_more": true,
+          "coverage": null,
+          "Judge_called": false
+        },
+        {
+          "evidence_id": "evidence-0146",
+          "path": "candidate-original/workspace/results/notice_timeline.xlsx",
+          "receipt": "semantic-query-4.json",
+          "sha256": "6ec19378252c4adf271085d7a4324ec70e69106936dc419c9ca399359a9d3f16",
+          "scope": "representative native/image query only, not a semantic-support verdict",
+          "returned_count": 50,
+          "has_more": true,
+          "coverage": null,
+          "Judge_called": false
+        },
+        {
+          "evidence_id": "evidence-0160",
+          "path": "private/gt/reference/v2/results/action_plan.docx",
+          "receipt": "semantic-query-5.json",
+          "sha256": "9bf2f3a80f29fc443415d5eb3ba685147148dd87559243a9ca760247ed6a8069",
+          "scope": "representative native/image query only, not a semantic-support verdict",
+          "returned_count": 50,
+          "has_more": true,
+          "coverage": null,
+          "Judge_called": false
+        },
+        {
+          "evidence_id": "evidence-0161",
+          "path": "private/gt/reference/v2/results/notice_timeline.xlsx",
+          "receipt": "semantic-query-6.json",
+          "sha256": "2d0ed37ce1074e581e32457c2236c674e0f88ef8430e07004f0ce82058c47281",
+          "scope": "representative native/image query only, not a semantic-support verdict",
+          "returned_count": 50,
+          "has_more": true,
+          "coverage": null,
+          "Judge_called": false
+        }
+      ],
+      "Judge_called": false,
+      "semantic_response_submitted": false,
+      "semantic_score": null
+    },
+    "Judge": false,
+    "hybrid_score": null,
+    "standard_score_json": false,
+    "finalize": false
+  },
+  "retained_formal_failures": [
+    {
+      "root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226229493960000",
+      "error": {
+        "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226229493960000/driver.stderr.log",
+        "sha256": "97b0f4c97a5df34f9175f841e158218924af736e61bedd42c928ad8e0945d32f",
+        "size": 1242
+      },
+      "error_code": "JUDGE_CONFIG_REQUIRED",
+      "source_collection": {
+        "acquired_count": 27,
+        "attempt_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/formal-detached-1793226229493960000/attempts/author-only-h033-formal__detached-zip-worker/general_hard_research_verification_task_007_directed_notice_timeline/author-only-formal-auto",
+        "bundle_manifest_sha256": "9b301822e8f50ddf5aa40a81fc30d4c0569541631bcd3fecfa4bf77820b630f2",
+        "bundle_path": "private/research-sources",
+        "candidate_input_status": "valid",
+        "fresh_get_count": 0,
+        "lock_path": "research-sources.lock.json",
+        "reused_snapshot_count": 27,
+        "status": "PASS"
+      },
+      "remedy": "Only author driver prepare arguments changed; freeze catalog-only configuration, no Judge dispatched; new output directory used."
+    }
+  ],
+  "retained_document_driver_failure": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/document-closure-failure-v1/failure.json",
+    "sha256": "25483dafc2ec50149949a5e2450233133e71a05430cc28053418af5bca477499",
+    "size": 693
+  },
+  "retained_previous_snapshot": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/registered-snapshot-v1/qa-sha256.json",
+    "sha256": "ac13fce0256810cc879859f1e69b250b3fcfffcf77a71ef607877d6343fce910",
+    "size": 29088
+  },
+  "static": {
+    "single": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/static-registered/20261028T222357Z_357f0466d0/report.json",
+      "sha256": "7d62e8ef1ab83e5b126bfb42863fa049902b41aaf152d0f0f58c164d8bb1edd7",
+      "size": 1267
+    },
+    "single_status": "PASS",
+    "registered": 39,
+    "building": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/static-building/20261028T222404Z_b02c8d36a7/report.json",
+      "sha256": "470f10169c7a35f9b48a027612c119cf04b0450b232f84b6c47e4499813a1265",
+      "size": 29069
+    },
+    "building_status": "FAIL",
+    "missing_only": 21,
+    "issue_codes": [
+      "TASK_ID_NOT_FOUND"
+    ],
+    "all_other_issues": 0
+  },
+  "frozen_QA": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h033/qa/registered-snapshot-v2/qa-sha256.json",
+    "sha256": "62ce82dd3211e0bd25ba5f66b14fede6a61140b21a2e2de4716cf23a6933ede8",
+    "size": 29432,
+    "bound_files": 75,
+    "scope": "Explicit registered MD/exec/GT and small evidence receipts only; no runtimes or HTTP source bodies in Git."
+  },
+  "weights": {
+    "outer": {
+      "automated": 0.4,
+      "llm_judge": 0.6
+    },
+    "automatic": {
+      "record_contract": 0.2,
+      "time_and_scope": 0.25,
+      "citation_resolution": 0.4,
+      "protected_delivery": 0.15
+    },
+    "semantic": {
+      "factual_support": 0.5,
+      "coverage_and_independence": 0.3,
+      "bounded_conclusions": 0.2
+    }
+  },
+  "limits": {
+    "Harness": false,
+    "Judge": false,
+    "human_expert": false,
+    "semantic_score": null,
+    "hybrid_score": null,
+    "difficulty_calibrated": false,
+    "four_harness_validation": false,
+    "A1_does_not_prove": [
+      "source semantic support",
+      "autonomous investigation",
+      "coverage",
+      "personal applicability",
+      "native application usability"
+    ],
+    "later_sources_do_not_prove_historical_publication_day_bytes_or_global_latest_version": true,
+    "seven_unavailable_uncited_carriers_stay_unavailable": true,
+    "unsupported_legal_locator_or_missing_infrastructure": "typed evaluation exception/review; never fabricated candidate zero",
+    "reference_and_65_facts_are_not_URL_notice_matter_query_or_citation_count_whitelists": true
+  }
+}

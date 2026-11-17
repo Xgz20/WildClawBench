@@ -1,0 +1,75 @@
+{
+  "schema_version": "h029-scoring-contract/v1",
+  "grading_type": "hybrid",
+  "semantic_judge_required": true,
+  "automatic_weight": 0.4,
+  "semantic_weight": 0.6,
+  "checkpoint_weights": {
+    "record_contract": 0.2,
+    "time_and_scope": 0.25,
+    "citation_resolution": 0.4,
+    "protected_delivery": 0.15
+  },
+  "semantic_checkpoint_weights": {
+    "factual_support": 0.5,
+    "coverage_and_independence": 0.3,
+    "bounded_conclusions": 0.2
+  },
+  "time_subcheck_weights": {
+    "independent_dual_time_binding": 0.3,
+    "precision_and_normalization": 0.3,
+    "window_arithmetic": 0.2,
+    "scope_version_evidence_trace": 0.2
+  },
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_answer_is_oracle": false,
+  "reference_pool_is_non_exhaustive": true,
+  "private_sha256": {
+    "artifact_contract.json": "e300ecb083987ca3afcf91b5437398383f2459aba242237cfd62668968b1c6a2",
+    "business_oracle.json": "9af995c87c62153cfeb67ef27d29abf3412b5c268e630d76c9f2333c3f1856c0",
+    "counterexamples.json": "c47925a8a0e784a4acbbf57d5c00a83f127192d08e87d60650dc525df943d9e0",
+    "evidence_requirements.json": "ac6d4debb8cc5fe96f6b680d5bc9a34224f5dd720e64f258aa3ea3efed5746a0",
+    "expected.json": "f7d9fc41861f9a6c29c8905366b5eb04eca012c2ba42c90eceff7bd4a8f9d493",
+    "grader.py": "76daee27b7491d3d79fa490268395ed16f94c7745d39722d9b89af3bc56cab20",
+    "native_io.py": "52f844ac28f4529053bfae2b5e6b1e900907fdab1d1d3ae190411e39f1930cdc",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "protected_sha256.json": "c2b7f58ae4ce4827a08aef0c23b4cfe7f5a68f55014300385d1f04b59844b419",
+    "provider_identity_oracle.json": "9b1dedeaa9f869731e1464dde278545292db19929e37724304441402488237fd",
+    "reference_provenance.json": "b738d0a59386c99d1d8a6ad23290c4e2b1093ba79541dfbf4b426493f2354bbb",
+    "reference_source_manifest.json": "d3b46af0b38e8cd73e5a4f4a1e244a7014a63e0dcfc0b002c86b78ac66571060",
+    "research_source_policy.json": "45f7e9dd361a8b655eed21e414fcc03239c2066ecdc578cb5f3e86104aa002e1",
+    "runtime_contract.json": "d7e77ad3cebb94c211ce66834a0bce31accb05c4edea9ebfa0b3f324b7acebde",
+    "source_projection.py": "a505c0a2f5a73e69ee369fedecb2b2eb5b380fb262f41cbacc4e9040e5278e36",
+    "source_review_reconciliation.json": "a06113fe58633fb2c346b9b79380c17e149e405100ee2a266a463f8a10385562"
+  },
+  "semantic_rubric": {
+    "factual_support": {
+      "weight": 0.5,
+      "focus": "每计数项真实产品变更、历史时间关联、阶段/可用性/归属及关键用户影响；两趋势/一建议的事实前提。逐主张读实际独立正文，引用存在不等于支持。已诚实unknown不算捏造，但不能替代事件入窗证据。",
+      "bands": {
+        "1.0": "关键事实与时空口径均被真实证据支持，无捏造或阶段升级。",
+        "0.5": "主结论成立，存在非关键事实或支撑缺口。",
+        "0.0": "核心事实/时间/阶段与证据矛盾、虚构来源或未完成核心核验。"
+      }
+    },
+    "coverage_and_independence": {
+      "weight": 0.3,
+      "focus": "实际4个实质变更组、至少3实际产品、国内与海外运营归属；产品身份、同功能多阶段去重、筛选和转载谱系。允许准确披露单源，不强制每项双源。池外同标准，不按参考名单。",
+      "bands": {
+        "1.0": "核心覆盖真实合格，重复和谱系处理准确，单源限制诚实。",
+        "0.5": "主范围满足，漏一个非关键分支且未凑数。",
+        "0.0": "核心覆盖不足或用旧闻、同组阶段、非搜索事项、转载冒充有效覆盖。"
+      }
+    },
+    "bounded_conclusions": {
+      "weight": 0.2,
+      "focus": "完整DOCX两项跨事件观察和一项面向信息检索团队的行动；逐条事实前提、可比性、适用范围、下一步验证与未知。不同有证据的结论可满分，不把宣传或公告写成实测效果。",
+      "bands": {
+        "1.0": "观察和行动有可追溯依据、适用条件与限制，不作无依据效果外推。",
+        "0.5": "主建议有依据，漏一项非关键条件或验证。",
+        "0.0": "主要建议/趋势与证据矛盾、无依据排名或保证。"
+      }
+    }
+  }
+}

@@ -1,0 +1,58 @@
+{
+  "schema_version": "h001-boundaries/v1",
+  "groups": [
+    {
+      "key": "effective_date_and_tenure",
+      "case_ids": [
+        "C01",
+        "C02",
+        "C03",
+        "C04",
+        "C05",
+        "C12",
+        "C18"
+      ],
+      "fields": [
+        "rule_set",
+        "status",
+        "grant_cny"
+      ]
+    },
+    {
+      "key": "transition_scope_and_priority",
+      "case_ids": [
+        "C06",
+        "C07",
+        "C08",
+        "C09",
+        "C10",
+        "C11",
+        "C12"
+      ],
+      "fields": [
+        "rule_set",
+        "status",
+        "rate",
+        "cap_cny",
+        "grant_cny"
+      ]
+    },
+    {
+      "key": "zero_unknown_and_denial_priority",
+      "case_ids": [
+        "C11",
+        "C13",
+        "C14",
+        "C15",
+        "C16",
+        "C17",
+        "C18"
+      ],
+      "fields": [
+        "rule_set",
+        "status",
+        "grant_cny"
+      ]
+    }
+  ]
+}

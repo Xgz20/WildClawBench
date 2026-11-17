@@ -1,0 +1,18 @@
+{
+  "schema_version": "h030-evidence-requirements/v1",
+  "facts_free": true,
+  "required_context": [
+    "GENERAL_E2E_RULE_EVIDENCE_DIR",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"
+  ],
+  "conditional_context": {
+    "GENERAL_E2E_OFFICE_LOCK": "required when candidate XLSX has any formula"
+  },
+  "independent_sources": "Verified source0.25 bundle and ledger/deliverable/policy binding; original bytes/text/projection/receipt hashes and acquisition identity; fresh GET or explicit verified reuse preserving complete origin capsule.",
+  "projection": "Actual native source bytes, safe offline projection, PDF physical page/XML exact node attributes/namespace/offset mapping and body SHA; same-parent XML dates preserve original role.",
+  "candidate_evidence": "Native XLSX/DOCX and strict evidence_matrix JSON; normal hyperlinks allowed, no required new candidate files.",
+  "judge_evidence": "All native artifacts, independently acquired originals and derived receipts, actual complete Harness trace when available. Automatic declarations do not prove search/read execution.",
+  "errors": "Missing evaluator evidence is TrustedEvidenceError/evaluation_error, never candidate zero. Actual candidate defects reduce only related opportunities.",
+  "no_sources_or_reference_facts_embedded": true
+}

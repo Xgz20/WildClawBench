@@ -1,0 +1,19 @@
+{
+  "schema_version": "h017-scoring-contract/v1",
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "expected.json": "a440716a1184bf388ee6f6a18d7fdcec10747ce66b1eb5ac9d19e4c95e9f6b1f",
+    "protected_sha256.json": "fd70ffe2756bea5b247210eee5d6655451c41f023414688d64efbe410ce00c0b",
+    "runtime_contract.json": "0546560bd51d4fa6bf6fe0f6e6940daa6138621438a7a05ec152c4124541cf26",
+    "xlsx_observations.py": "c8585b2d6ce34401699ae7443000819bfd03eb29b1b2824826a8f0bd9d61d3c1",
+    "join_checks.py": "2fa2dc23981a4523ec9b669f48735292c60d5dfd156f6da1df268c2e4523a060",
+    "grader.py": "0cce2371c7abfe079e75378f4109cc20c2c4c9558b02ea8e5e8769f0c94f9044",
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+  },
+  "semantic_judge_required": false
+}

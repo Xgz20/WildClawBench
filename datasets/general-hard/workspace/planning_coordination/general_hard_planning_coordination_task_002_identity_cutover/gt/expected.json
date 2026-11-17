@@ -1,0 +1,34 @@
+{
+  "schema": "h054.expected/v1",
+  "task_id": "general_hard_planning_coordination_task_002_identity_cutover",
+  "blueprint_order": 54,
+  "difficulty": "L3",
+  "difficulty_status": "design_estimate_unvalidated",
+  "work_items": 14,
+  "core_CPM_items": 13,
+  "roles": 6,
+  "workdays": 19,
+  "identity_cohorts": [
+    "EMP",
+    "VENDOR",
+    "SERVICE"
+  ],
+  "window_feasibility": {
+    "W0": false,
+    "W1": true,
+    "W2": true
+  },
+  "current_go": "no_go",
+  "no_resource_CPM_duration": 12,
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "hybrid_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "reference_schedule_is_not_an_oracle": true
+}

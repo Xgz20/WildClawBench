@@ -1,0 +1,48 @@
+{
+  "schema_version": "h025-optimal-business-oracle/v1",
+  "source_revision": "v2",
+  "optimal_gap_vector": [
+    0,
+    7,
+    22
+  ],
+  "optimal_total_cents": 481355,
+  "optimal_objective": [
+    0,
+    7,
+    22,
+    481355
+  ],
+  "stage_objectives": [
+    -22,
+    -14,
+    0,
+    481355
+  ],
+  "equivalent_allocations_allowed": true,
+  "reference_matrix_is_not_a_grading_target": true,
+  "analytic_certificates": [
+    {
+      "kind": "total_factory_units",
+      "required": 65,
+      "available": 48,
+      "full_demand_infeasible": true,
+      "minimum_total_unmet_bound": 17
+    },
+    {
+      "kind": "sum_two_material_constraints",
+      "weights": {
+        "M1": 1,
+        "M2": 1
+      },
+      "each_finished_item_coefficient": 2,
+      "combined_supply": 72,
+      "integer_finished_units_upper_bound": 36,
+      "priority1_full_units": 22,
+      "priority2_max_after_priority1": 14,
+      "priority2_unmet_lower_bound": 7,
+      "priority3_unmet_after_optimal_higher_priorities": 22,
+      "matches_feasible_witness": true
+    }
+  ]
+}

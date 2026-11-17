@@ -1,0 +1,66 @@
+{
+  "schema_version": "h003-boundaries/v1",
+  "group_weights": {
+    "preservation": 0.3333333333333333,
+    "native_references": 0.3333333333333333,
+    "table_structure": 0.3333333333333333
+  },
+  "reference_edges": [
+    [
+      "clause:交付安排",
+      "验收"
+    ],
+    [
+      "clause:交付安排",
+      "保密"
+    ],
+    [
+      "clause:交付安排",
+      "交付确认"
+    ],
+    [
+      "clause:交付确认",
+      "验收"
+    ],
+    [
+      "clause:费用与付款",
+      "验收"
+    ],
+    [
+      "clause:费用与付款",
+      "违约与责任"
+    ],
+    [
+      "table:milestones",
+      "验收"
+    ],
+    [
+      "clause:终止",
+      "保密"
+    ],
+    [
+      "clause:终止",
+      "违约与责任"
+    ]
+  ],
+  "table_shapes": {
+    "milestones": [
+      4,
+      4
+    ],
+    "services": [
+      6,
+      4
+    ]
+  },
+  "controls": [
+    "rewrite_unapproved",
+    "wrong_reference_target",
+    "stale_reference_display",
+    "flatten_native_refs",
+    "drop_table_column",
+    "display_only_email",
+    "modify_protected_total",
+    "modify_protected_cap"
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": "h047-runtime/v1",
+  "child_timeout_seconds": 15,
+  "child_timeout_is_candidate_zero": false,
+  "stop_work_units": 5000000,
+  "execution_profile": "h047-pure-matcher/v2",
+  "work_profile": "h047-counted-keys/v1",
+  "third_party": [],
+  "candidate_source_limit_bytes": 65536,
+  "OS_security_sandbox": false,
+  "supported_profile_exercised_with_authored_variants_only": true,
+  "unsupported_legal_profile": "typed unassessed evaluation exception; no fabricated candidate score",
+  "matching_core_count_excludes": [
+    "raw JSON parsing",
+    "normalization in view creation",
+    "serialization",
+    "complete native CPU/memory cost"
+  ],
+  "candidate_source_editable_path": "project/matcher.py",
+  "new_deliveries": "results/"
+}

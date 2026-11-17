@@ -1,0 +1,144 @@
+{
+  "selected_vendors": {
+    "P1-CL": "A",
+    "P1-FAN": "A",
+    "P2-CL": "B",
+    "P2-FAN": "B"
+  },
+  "phase_totals": {
+    "P1": {
+      "capex": 99779.4,
+      "opex": 4171.2,
+      "total_cash": 103950.6
+    },
+    "P2": {
+      "capex": 70521.15,
+      "opex": 3540.4,
+      "total_cash": 74061.55
+    }
+  },
+  "schedule": [
+    {
+      "line_id": "P1-CL",
+      "work_dates": [
+        "2026-12-07",
+        "2026-12-08",
+        "2026-12-09",
+        "2026-12-10",
+        "2026-12-11",
+        "2026-12-16"
+      ],
+      "source_refs": [
+        "quotes/quote_A.pdf#page:1/QA-06",
+        "constraints.md#C01"
+      ]
+    },
+    {
+      "line_id": "P1-FAN",
+      "work_dates": [
+        "2026-12-17",
+        "2026-12-18",
+        "2026-12-21",
+        "2026-12-22"
+      ],
+      "source_refs": [
+        "quotes/quote_A.pdf#page:1/QA-06",
+        "constraints.md#C01"
+      ]
+    },
+    {
+      "line_id": "P2-CL",
+      "work_dates": [
+        "2027-03-01",
+        "2027-03-02",
+        "2027-03-03",
+        "2027-03-04"
+      ],
+      "source_refs": [
+        "quotes/quote_B.pdf#page:1/QB-06",
+        "constraints.md#C01"
+      ]
+    },
+    {
+      "line_id": "P2-FAN",
+      "work_dates": [
+        "2027-03-05",
+        "2027-03-10",
+        "2027-03-11"
+      ],
+      "source_refs": [
+        "quotes/quote_B.pdf#page:1/QB-06",
+        "constraints.md#C01"
+      ]
+    }
+  ],
+  "quote_exclusions": [
+    {
+      "phase": "P2",
+      "vendor": "A",
+      "reason": "有效期截至2026-11-15，早于该阶段下单日；续价未确认，不纳入确定申请",
+      "source_refs": [
+        "quotes/quote_A.pdf#page:1/QA-01",
+        "quotes/quote_A.pdf#page:1/QA-07",
+        "constraints.md#C02"
+      ]
+    },
+    {
+      "phase": "P1",
+      "vendor": "C",
+      "reason": "有效期截至2026-10-20，早于该阶段下单日；续价未确认，不纳入确定申请",
+      "source_refs": [
+        "quotes/quote_C.pdf#page:1/QC-01",
+        "quotes/quote_C.pdf#page:1/QC-07",
+        "constraints.md#C02"
+      ]
+    },
+    {
+      "phase": "P2",
+      "vendor": "C",
+      "reason": "有效期截至2026-10-20，早于该阶段下单日；续价未确认，不纳入确定申请",
+      "source_refs": [
+        "quotes/quote_C.pdf#page:1/QC-01",
+        "quotes/quote_C.pdf#page:1/QC-07",
+        "constraints.md#C02"
+      ]
+    }
+  ],
+  "unknowns": {
+    "new_equipment_kwh": null,
+    "annual_savings": null,
+    "payback_years": null,
+    "next_checks": "工程负责人确认可比工况、运行小时、测量边界和新设备实测能耗，再由财务核验收益；不能用旧设备电费当节省。"
+  },
+  "gates": {
+    "supplier_approval": "pending",
+    "p1_acceptance": "pending",
+    "p2_release": "pending"
+  },
+  "evidence": [
+    {
+      "phase": "P1",
+      "budget_ref": "Summary!A6:R6",
+      "application_ref": "table:1/row:2",
+      "html_ref": "#recommended/tbody/tr:1",
+      "source_refs": [
+        "baseline.xlsx#Assets/rows:6-17",
+        "constraints.md#C01",
+        "constraints.md#C03",
+        "quotes/quote_A.pdf#page:1"
+      ]
+    },
+    {
+      "phase": "P2",
+      "budget_ref": "Summary!A7:R7",
+      "application_ref": "table:1/row:3",
+      "html_ref": "#recommended/tbody/tr:2",
+      "source_refs": [
+        "baseline.xlsx#Assets/rows:6-17",
+        "constraints.md#C01",
+        "constraints.md#C03",
+        "quotes/quote_B.pdf#page:1"
+      ]
+    }
+  ]
+}

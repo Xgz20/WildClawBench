@@ -1,0 +1,148 @@
+{
+  "schema_version": "h050-records/v1",
+  "version": 1,
+  "records": [
+    {
+      "id": "r09",
+      "title": "Budget 青山",
+      "owner": "Lin",
+      "status": "approved",
+      "revision": 1,
+      "createdSeq": 4
+    },
+    {
+      "id": "r02",
+      "title": "Alpha travel",
+      "owner": "Wen",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 1
+    },
+    {
+      "id": "r12",
+      "title": "Archived audit",
+      "owner": "Lin",
+      "status": "rejected",
+      "revision": 1,
+      "createdSeq": 7
+    },
+    {
+      "id": "r01",
+      "title": "Alpha laptop",
+      "owner": "Zhao",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 1
+    },
+    {
+      "id": "r05",
+      "title": "BETA renewal",
+      "owner": "Chen",
+      "status": "approved",
+      "revision": 1,
+      "createdSeq": 3
+    },
+    {
+      "id": "r03",
+      "title": "Team plan",
+      "owner": "Lin",
+      "status": "approved",
+      "revision": 1,
+      "createdSeq": 2
+    },
+    {
+      "id": "r08",
+      "title": "青山 review",
+      "owner": "Wen",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 4
+    },
+    {
+      "id": "r04",
+      "title": "Alpha denied",
+      "owner": "Zhao",
+      "status": "rejected",
+      "revision": 1,
+      "createdSeq": 2
+    },
+    {
+      "id": "r13",
+      "title": "Last draft",
+      "owner": "Chen",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 9
+    },
+    {
+      "id": "r06",
+      "title": "beta floor",
+      "owner": "Lin",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 3
+    },
+    {
+      "id": "r11",
+      "title": "Écho brief",
+      "owner": "Wen",
+      "status": "approved",
+      "revision": 1,
+      "createdSeq": 6
+    },
+    {
+      "id": "r07",
+      "title": "Budget open",
+      "owner": "Chen",
+      "status": "pending",
+      "revision": 1,
+      "createdSeq": 4
+    },
+    {
+      "id": "r10",
+      "title": "Budget closed",
+      "owner": "Lin",
+      "status": "approved",
+      "revision": 1,
+      "createdSeq": 5
+    }
+  ],
+  "commits": [
+    {
+      "event_id": "approval-2",
+      "revision": 2,
+      "changes": [
+        {
+          "id": "r01",
+          "status": "approved"
+        },
+        {
+          "id": "r02",
+          "status": "approved"
+        },
+        {
+          "id": "r06",
+          "status": "approved"
+        },
+        {
+          "id": "r07",
+          "status": "approved"
+        },
+        {
+          "id": "r08",
+          "status": "approved"
+        }
+      ]
+    },
+    {
+      "event_id": "approval-3",
+      "revision": 3,
+      "changes": [
+        {
+          "id": "r13",
+          "status": "rejected"
+        }
+      ]
+    }
+  ]
+}

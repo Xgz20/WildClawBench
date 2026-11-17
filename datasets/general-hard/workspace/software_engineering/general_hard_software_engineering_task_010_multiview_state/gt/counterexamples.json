@@ -1,0 +1,22 @@
+{
+  "negative_controls": [
+    "page-local counts",
+    "filter after page",
+    "stale token",
+    "same-query race",
+    "mismatched query echo",
+    "stale version current token",
+    "filter page reset",
+    "duplicate/old notification",
+    "instance contamination",
+    "fake report",
+    "padding dilution",
+    "protected helper mutation"
+  ],
+  "neutral_errors": [
+    "unsupported Python/TS profile",
+    "missing trusted GT",
+    "missing frozen Node",
+    "independent infrastructure timeout"
+  ]
+}

@@ -1,0 +1,37 @@
+[
+  {
+    "id": "a",
+    "amount": -4,
+    "region": "cn"
+  },
+  {
+    "id": "b",
+    "amount": 0,
+    "region": "eu"
+  },
+  {
+    "id": "c",
+    "amount": 7,
+    "region": null
+  },
+  {
+    "id": "d",
+    "amount": 11,
+    "region": "cn"
+  },
+  {
+    "id": "e",
+    "amount": 3,
+    "region": ""
+  },
+  {
+    "id": "私有甲",
+    "amount": 4.25,
+    "region": "cn"
+  },
+  {
+    "id": "z",
+    "amount": -1.5,
+    "region": null
+  }
+]

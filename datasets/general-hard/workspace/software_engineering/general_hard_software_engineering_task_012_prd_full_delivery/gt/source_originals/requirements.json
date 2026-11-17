@@ -1,0 +1,98 @@
+[
+  {
+    "id": "R01",
+    "priority": "P0",
+    "title": "迁移与持久化",
+    "criterion": "PRAGMA user_version=2，重复启动不丢旧成员；真实SQLite提交后跨连接/进程重启保持。",
+    "owner": "project/repository.py",
+    "public_test_id": "PUB-R01"
+  },
+  {
+    "id": "R02",
+    "priority": "P1",
+    "title": "列表和会话",
+    "criterion": "GET /session使用服务器当前成员角色；GET /members支持q/status/role过滤，稳定id顺序，total等于完整结果。",
+    "owner": "project/api.py",
+    "public_test_id": "PUB-R02"
+  },
+  {
+    "id": "R03",
+    "priority": "P0",
+    "title": "创建与规范化",
+    "criterion": "管理员创建；id/email/name/role验证；email规范化后全库唯一（含停用记录），新成员active/version1。",
+    "owner": "project/service.py",
+    "public_test_id": "PUB-R03"
+  },
+  {
+    "id": "R04",
+    "priority": "P0",
+    "title": "编辑与权限",
+    "criterion": "管理员可编辑name/email/role，manager只可改active非admin的name，viewer不能写；body中的role不能提权。",
+    "owner": "project/service.py",
+    "public_test_id": "PUB-R04"
+  },
+  {
+    "id": "R05",
+    "priority": "P0",
+    "title": "服务器权限",
+    "criterion": "未知actor401，inactive actor403，所有写请求查真实DB角色；审计读取仅admin；UI隐藏按钮不能代替后端拒绝。",
+    "owner": "project/api.py",
+    "public_test_id": "PUB-R05"
+  },
+  {
+    "id": "R06",
+    "priority": "P0",
+    "title": "停用与管理员保护",
+    "criterion": "停用为软删除，version+1；停用或降级最后一名active admin返回409 LAST_ADMIN，其他信息不变。",
+    "owner": "project/service.py",
+    "public_test_id": "PUB-R06"
+  },
+  {
+    "id": "R07",
+    "priority": "P0",
+    "title": "并发版本",
+    "criterion": "编辑/停用必须给整数version，原子比较当前版本；过期409 VERSION_CONFLICT，无覆盖/审计/receipt。",
+    "owner": "project/repository.py",
+    "public_test_id": "PUB-R07"
+  },
+  {
+    "id": "R08",
+    "priority": "P0",
+    "title": "幂等与重试",
+    "criterion": "actor+request_key范围内相同规范命令只成功一次，重放返回原data/status/code但replayed=true；改payload409 KEY_REUSE；失败不占key。",
+    "owner": "project/service.py",
+    "public_test_id": "PUB-R08"
+  },
+  {
+    "id": "R09",
+    "priority": "P0",
+    "title": "事务审计",
+    "criterion": "每次新成功写入仅追加一条audit，失败/拒绝/重放不追加；成员/审计/receipt原子提交，注入审计失败必须完全回滚。",
+    "owner": "project/repository.py",
+    "public_test_id": "PUB-R09"
+  },
+  {
+    "id": "R10",
+    "priority": "P1",
+    "title": "前端真实数据与操作",
+    "criterion": "client createController使用transport访问/session及/members，snapshot包含实际rows/actor/form/error/loading；动作能力据角色与行状态。",
+    "owner": "project/client.mjs",
+    "public_test_id": "PUB-R10"
+  },
+  {
+    "id": "R11",
+    "priority": "P1",
+    "title": "前端反馈与安全文本",
+    "criterion": "提交真实POST/PATCH后按服务器结果刷新；失败保持原form并显示code，成功清空；render生成table行和disabled按钮，所有用户文本HTML转义。",
+    "owner": "project/client.mjs",
+    "public_test_id": "PUB-R11"
+  },
+  {
+    "id": "R12",
+    "priority": "P1",
+    "title": "兼容入口与验收",
+    "criterion": "保留GET /health和/legacy-export，启动不依赖cwd；12项追踪、实际tests.txt和handoff绑定最终四源码，不只输出计划。",
+    "owner": "project/api.py",
+    "public_test_id": "PUB-R12"
+  }
+]

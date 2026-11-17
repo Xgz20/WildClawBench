@@ -1,0 +1,2744 @@
+{
+  "schema_version": "general-hard-h016-reviewed-authoring/v1",
+  "date_local": "2026-10-28",
+  "task_id": "general_hard_office_documents_task_016_docx_structure_repair",
+  "name": "长文档结构修复与引用完整性",
+  "status": "registered_author_validation_pass",
+  "completed_dataset_task_count": 17,
+  "remaining_dataset_tasks": 43,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "branch": "feat/general-hard",
+  "base_commit_before_task": "bbf00468f7cf94c44b6e1183bdfd24e5a47dca93",
+  "modality": "pure-text",
+  "network": "offline",
+  "coding_primary": false,
+  "source_role": "WorkBuddy Office methods only; all inputs and reference content synthetic, no production prototype claim",
+  "release_status": "building",
+  "manifest_created": false,
+  "difficulty_status": "design_estimate_unvalidated",
+  "author_control_count": 43,
+  "author_control_kinds": {
+    "positive": 9,
+    "negative": 27,
+    "semantic_counterexample": 1,
+    "infrastructure": 6
+  },
+  "control_scope_summary": "37项最终有效候选控制加6项基础设施门禁。34项完整矩阵后，两个重启负例修正其重复编号定义的作者样本错误并重跑；另补深色底白字、可选批注缩写省略正例及白底白字负例。评分器仅扩大这两项合法表达，旧矩阵33份现存Word的最终原生读取与检查结果逐项不变，渲染器/聚合器摘要相同；没有宣称43项都在最终同一源码下重新执行完整Office流程。",
+  "actual_generated_md_worker": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/validation.json",
+  "rule_score": 1.0,
+  "core_version": "0.12.0",
+  "normal_and_archived_evidence_match": true,
+  "verified_derived_artifacts": 5,
+  "workspace_unchanged": true,
+  "word_pages": 18,
+  "actual_heading_count": 26,
+  "protected_paragraphs": 180,
+  "tables": 6,
+  "original_comments": 6,
+  "source_defects": 12,
+  "preview_review_method": "all eighteen actual managed-worker PNGs byte-identical to prior reviewed material PNGs",
+  "new_current_worker_visual_view_calls": 0,
+  "static_task_status": "PASS",
+  "static_release_missing_tasks": 43,
+  "static_release_other_issues": 0,
+  "framework_unittest_count": 44,
+  "framework_function_count": 15,
+  "task_id_unique": true,
+  "registry_count": 17,
+  "canonical_external_byte_equality": true,
+  "prior_material_file_bindings_unchanged": 147,
+  "original_input_and_reference_bytes_unchanged": true,
+  "immutable_registered_snapshot": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot",
+  "independent_semantic_score": null,
+  "harness_score": null,
+  "human_expert_review": false,
+  "limits": [
+    "Rule 1.0 does not prove complete task correctness, independent semantic quality, measured L4 difficulty or model/Harness discrimination.",
+    "False Word GUI/four-client validation claims intentionally retain rule 1.0; independent semantic Judge must assess honesty, full source/result support and all visual usability.",
+    "The first two restart-negative fixtures had duplicate numbering definitions; they were excluded and corrected. Native invariance checks reuse older complete Office renders only where final parsing and structural results are identical and renderer/aggregator hashes did not change.",
+    "The standalone validator first correctly rejected an output directory inside its author Workspace. Its registered-source CLI smoke then used a separate external directory and passed.",
+    "Full sixty-task freeze and twelve-task four-Harness calibration remain incomplete; H014 separate language-review authorization is still pending."
+  ],
+  "files": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/derived/h016-analysis.json",
+      "size": 47400,
+      "sha256": "a894ff0a1b59c9fa6b19d30621db4313522cd72c27bc1350b331d83253947d5e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "75194044e0684c90355c2bc330f9cc43ae129b816d0b12b49bfa0444c2783a81"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/derived/word-render/rendered.pdf",
+      "size": 426008,
+      "sha256": "81f9b5dfd4faf903082269685650ad31a75ce92b1fa145c17f6651e053a71a2b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/validation.json",
+      "size": 275,
+      "sha256": "f775fe2571b46cdbe7667394cc8364de4634a94ec506002616622bdade546de2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/added_business_prose/workspace/results/repaired.docx",
+      "size": 55964,
+      "sha256": "7d379fd0e19d8da4ffe5043e0118036d8ac7dd670d0d9010afa8a52c01017fcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/bad_zip/derived/h016-analysis.json",
+      "size": 799,
+      "sha256": "136aa94fde18295fb9713e740b91efcc2d7623d5ea69447fe3a97f095e82da46"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/bad_zip/validation.json",
+      "size": 261,
+      "sha256": "06831360e0447434916355c611f1cfc9854262845829f5d32cdb9faddd0ac55c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/bad_zip/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/bad_zip/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/bad_zip/workspace/results/repaired.docx",
+      "size": 10,
+      "sha256": "a2aa2861e1785cac8572d37d73c3fa1eed89d2c953b40a49b958a25756671507"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/derived/h016-analysis.json",
+      "size": 47136,
+      "sha256": "d7d25452cc14dc79b1282de8298d420480519ff30691e6f6ba42d1d2f405a7fb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "f9078e9d21d3ed91052895af32368c2f7a01cc62430e70471e6e5cee1ad0124d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/derived/word-render/rendered.pdf",
+      "size": 425774,
+      "sha256": "907c19fc77d27dd2ae8f3100c7971007bfdf796946d4304a7a0afecec9b71e65"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/validation.json",
+      "size": 268,
+      "sha256": "588e16257bb12f6e670d4852e0b914273296b9d6ef33e40ee3bb6bb06ca29fe8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/changed_prose/workspace/results/repaired.docx",
+      "size": 55866,
+      "sha256": "7a8296f8606b12e3a49216eb002e0d0cf982303acb5e05ed9e1142c19c73cf23"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/derived/h016-analysis.json",
+      "size": 47333,
+      "sha256": "120bec4f6557c970264728ee24e522b3ac1eff81a1ff2aa412f654800a6fe977"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "c0a194f11617f91d7241937bfee163223e5fe34fba9e4dc1bb092a4faeea8ab3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/derived/word-render/rendered.pdf",
+      "size": 423879,
+      "sha256": "7ec084adcda4f820f3fd78a257b967f3ed8c0f7e13ee894cb708e67bb6c1ad28"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/validation.json",
+      "size": 296,
+      "sha256": "e81b8a60b10c27fdbf09784d9e0f8e183bf93262bd6fe0d095347491d2051bf0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_01/workspace/results/repaired.docx",
+      "size": 55963,
+      "sha256": "ac041c840bfdeefd93f615bc8f1e8092be6e640b82ea4d70b83541a3cec4b29f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/derived/h016-analysis.json",
+      "size": 47333,
+      "sha256": "c173e76eb0ffd01d46b82ea254e675255efc642ff221424508f65e16049ab3f6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "aa9efb01ad35171430dfad17f2082761aa974a884017a3761a0ba9699f245ef5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/derived/word-render/rendered.pdf",
+      "size": 425997,
+      "sha256": "0043aa8f8d8918cc7ca8af79a827c91ad2a1bfe2bbe2bb06406c454b87f2c861"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/validation.json",
+      "size": 296,
+      "sha256": "638b212ae924b401c5705cafd833fea78d009677df07ef0f3a12e918a7429869"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_02/workspace/results/repaired.docx",
+      "size": 55944,
+      "sha256": "c8b8daccb98a9fd3c89e0397315caeabd49a8277fc160e4b4dbd645305b467b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/derived/h016-analysis.json",
+      "size": 47333,
+      "sha256": "74e9e782ac4ef5c6b593b2ede03335ac987c2d34d4f2830007ade5ac0ee7db79"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "5453dff0f26df66675ebd4f9865d720d07f3acdc1b159dc30f299d4885b3522a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/derived/word-render/rendered.pdf",
+      "size": 425974,
+      "sha256": "f3a4b2aae14c96ea793f02cf6dc8eb0106114a9fd562cfcd0bf6fe0713e2f3e5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/validation.json",
+      "size": 296,
+      "sha256": "78a7699bfd9762f22d27b25e6ad785ba6ca6ac0acf0fb6f45a45977f70fc4130"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_03/workspace/results/repaired.docx",
+      "size": 55964,
+      "sha256": "1351226234d9e5cd49a6066de8ef53f41c1214b5ed5a5bd077109b66935e7e7b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_04/derived/h016-analysis.json",
+      "size": 801,
+      "sha256": "276f028b47150f164c298bb24db040fb37ddcdeb39eae8abc96111d92f304319"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_04/validation.json",
+      "size": 263,
+      "sha256": "cece7e6a4f433bfd6c25a36a9b7c7735704854cc87fc2ff2da2a0281f897b620"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_04/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_04/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_04/workspace/results/repaired.docx",
+      "size": 55956,
+      "sha256": "c8bb0fa4db4d8647469755dd9824f1df31aac40066e764dc4b80379e8e275471"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_05/derived/h016-analysis.json",
+      "size": 801,
+      "sha256": "276f028b47150f164c298bb24db040fb37ddcdeb39eae8abc96111d92f304319"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_05/validation.json",
+      "size": 263,
+      "sha256": "9e298eff2478e630b1fa58f768b540ed1590ba416a605023f90daad48e1a8acb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_05/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_05/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_05/workspace/results/repaired.docx",
+      "size": 55955,
+      "sha256": "97d4a2bdda6f79502372c6134a11b7fc2e5235c77dbe5e63fc643b11b453aff7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/derived/h016-analysis.json",
+      "size": 47340,
+      "sha256": "81a45640ee6f138ddf25f0c137c17d8ebc0008338293c965cd59fce870bd92f8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "48b6c2ba8865dcfc50dceb407ab7453d79ee6e4aa0ce48052403ce5aae59e9e1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/derived/word-render/rendered.pdf",
+      "size": 425989,
+      "sha256": "5e26d8d4638d8d18f8bb512f52cec8fa9953fcc56e1aa3c83e0735c88752d999"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/validation.json",
+      "size": 296,
+      "sha256": "961a129072817eb635ab493cd84df8ffbfa36db12042efe7f28cdd99e14f09f2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_06/workspace/results/repaired.docx",
+      "size": 55952,
+      "sha256": "4a3e4599615ef1ae10a9e1cf1ce9817315512bb2bd03482600a6b519b15fa370"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/derived/h016-analysis.json",
+      "size": 47295,
+      "sha256": "b2585d5a95199002682e9d1f3596093387b8e3819b7a4ab8aa5cc54954f1b75d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "e5286bafc3917c63af4a419bcfc930cc328bade6a5003fbfb135ba0023ee149b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "17f9fab806efa5b9ec807a9302a2f46e3e42ef65085f2dd186da84144fcaea98"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/validation.json",
+      "size": 286,
+      "sha256": "f8114be97b663a0c57c3586e878317dc14fa8a91c197fbb0399512058eafbe43"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_07/workspace/results/repaired.docx",
+      "size": 55944,
+      "sha256": "c43d7d4ae6e180a5914f0ebc60b496d5c614f5a3726452d24467a71d4c64e114"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/derived/h016-analysis.json",
+      "size": 47369,
+      "sha256": "d38716eda15306bf9f7e42a3391989159b323bf9a77b9355a736ff88a84f8bfd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "cac47a8d85c77e0cdbda15864f881d1c5480d97846dac144ddbfef52b6dccd76"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/derived/word-render/rendered.pdf",
+      "size": 425973,
+      "sha256": "65b10c7914ef66752edc3d2b797e938307e1573c339236dc599f8803d632221b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/validation.json",
+      "size": 296,
+      "sha256": "136d26532fcbd486b736bebc432375a6d9eb9a1423ce8a5cfdce777030a35540"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_08/workspace/results/repaired.docx",
+      "size": 55963,
+      "sha256": "6afffd76b227a42d3647e70209b1a3f621d31718bfb9c945fb93ad8ab077ed85"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/derived/h016-analysis.json",
+      "size": 47340,
+      "sha256": "5647a6247a8c7c1c5a7702c519911ee702079a3ceea8201681316ea889faecae"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "13ddde2cda068048d41ab9ed40863f33cb44c2a8ea2d937e2f52efe573640415"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/derived/word-render/rendered.pdf",
+      "size": 425974,
+      "sha256": "edb6241319d8361afaba5c3412222dac857f074b5d0a37a2aace351c764cc9d7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/validation.json",
+      "size": 296,
+      "sha256": "db8170e34ae1414717199788fc72799bfb4574d879682a797e5a0ca24f0b01fe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_09/workspace/results/repaired.docx",
+      "size": 55957,
+      "sha256": "5efd4d89628578f5eccf229b4d94032bd542c3362e5a83add05c57f5e17369d1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/derived/h016-analysis.json",
+      "size": 47336,
+      "sha256": "e13825824e224bc1d7bfac5fdcc801f2ac6236e817f69c906e659ae33b4aff3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "4ef7a1b6773fd5ab841776d72c258e5c3b04310191de1fff538b2b0ebbbd5762"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/derived/word-render/rendered.pdf",
+      "size": 425978,
+      "sha256": "f8a69c70f51448453dfd51c434e7815c404ed61213b804ec18966a9986767846"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/validation.json",
+      "size": 296,
+      "sha256": "b126e59dc29fe454868231ca7653cf9fa753d697518840f7a76bb9b7daf5d28e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_10/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "c5dffe337672bfc777d3d7d640d0f0317de2a7e3e8e93f38a0011de9cf46570c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/derived/h016-analysis.json",
+      "size": 47368,
+      "sha256": "bc5f645e5c3f59c6fb91923e99e1587f3bc63293d2bdcc66c80861e9296645d2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "122d5c677d8817c3a1bbafc9093e942dd037571845ff11c2059889baf1d443bd"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/derived/word-render/rendered.pdf",
+      "size": 427065,
+      "sha256": "ed069b56204165b8d4f68726708a7787332ac58f540dd13038f93939906134b5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/validation.json",
+      "size": 296,
+      "sha256": "a442ad91f1518af216ca88dd3500ae7afb0933b94151b8d85227278e8de9de1a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_11/workspace/results/repaired.docx",
+      "size": 55933,
+      "sha256": "e60a910f83374199880187442f9dd0c255737e5f2fa494920d80e5eaafc803a2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/derived/h016-analysis.json",
+      "size": 47319,
+      "sha256": "f4534202866b9a7d4c26bbb881f44e8ef4249b69502da1c57a1667dc64ec4fd6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "c510b8ed5a47835470e64b80164119d43b726340fe8200b47416616c65e06c2b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "e04e9e9af1657a7873c26a438d854dbf0c1252af80cfbaacb8c76b3154e7efe1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/validation.json",
+      "size": 296,
+      "sha256": "cb8f601e656a6cfb14bd742a1e4642b3fbf532e1ccf1cc67ad8e1e2459488767"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/defect_12/workspace/results/repaired.docx",
+      "size": 55944,
+      "sha256": "dccc827128a2c814978893ae620a4634a16aa84b1e9eb798f1040c4ac7904abf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/derived/h016-analysis.json",
+      "size": 47274,
+      "sha256": "4b3a909e690216883392140dab2127922fd0ad9ca8b3688b63d7dbfc3c6193fa"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "24fe50333456608491a0cceafd5515517091cbc4539b057e3c70f718d9c06dc9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "2dcf21dc6d5eeac4fdabe5b49957bf5aab29a959410a299e22c8badb5f122f64"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/validation.json",
+      "size": 284,
+      "sha256": "6a8c7b6b0539676b9381639ea5523c0fd29694717895943342f2fdc134f22978"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/workspace/results/readme.md",
+      "size": 1238,
+      "sha256": "d3f5c73066924ab95af9bde1776d2e96c6dffc74441eb5402f7ead8507167463"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_GUI_claim/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/derived/h016-analysis.json",
+      "size": 47286,
+      "sha256": "cba8a6f5ca98b38874c78af8b104953829b138c58be0166c5a2f82a0587e3a90"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "1f017d156bac3ad30aa741b4bce61dffacb5d3e4fcc4d4738a1f86c684b331f0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "da4699c136458ee11e3b8780b67503240ebd3d09a3043761d950e530a99b1c50"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/validation.json",
+      "size": 269,
+      "sha256": "4af4520fe98b5506bd9378afc4eb9464e7578368c61ffa5621057a4f02892352"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/workspace/results/repair_log.json",
+      "size": 7031,
+      "sha256": "7058bdc233eaf16aaad1805982101a89791cbb3a56db89f62a47509cd249e2bc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/false_locators/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/exec/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/exec/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/exec/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/candidate_graph.py",
+      "size": 18542,
+      "sha256": "f16b8fd69b6cda702a07fc3bed414725d520768695cad737859bf403209bbea3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "2f43e73ad2b328c13a69bd6f99af0f44b24eca642d9d6d81b839215b0de4fb93"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/gt/structure_checks.py",
+      "size": 8910,
+      "sha256": "71da9e48fd25134f7beb60514d00f59eced327a3e5a787b33444431855cc0f87"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/reference/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/reference/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/frozen-author-input/reference/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/derived/h016-analysis.json",
+      "size": 47341,
+      "sha256": "38c576fa730cd168b7cf238687ef921b424dc0b6331c784a2132ea566e2f7c7f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "0c1bb66e4f9b7b2be0e1b72965e7705759d84509a3bc11ca81d589c619b5d173"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "fd39c6fcbc3d1c22d929a8e2099b15e968ddc126dc93e685d78b811c08827671"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/validation.json",
+      "size": 269,
+      "sha256": "a4918317f6419efdee21045485a90e01664665dd740947587c9cf0b622b0d746"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/hidden_heading/workspace/results/repaired.docx",
+      "size": 55959,
+      "sha256": "e4274274f6b3780e3b3407b1d689296ab6fc346ce2c48ccd9b2c4a524fd52cc4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/derived/h016-analysis.json",
+      "size": 47274,
+      "sha256": "127f4d385d7c784b526bb25ba770b350bd2744003d64e3d601d27a35742de717"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "5d2e88d70a3fa988b0575d0a4d9a21a27a050097c2389dd01a52bce12feda63e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "a7849c0561b7d13f1bb81a3d95324e56be6b84c3f278c558a3f54e8a5e122f3e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/validation.json",
+      "size": 268,
+      "sha256": "3fc99a7a96ad749a0f1861940178975b9b70e8bca85745badd5ce03d60a80140"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/input_changed/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/derived/h016-analysis.json",
+      "size": 46770,
+      "sha256": "f31026fa0a2662c20d3056ce0225c873ecf4428ceb1911a2d83128ba0ceff1f5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "fbee231f8f3d2475b04045c3aba328ce753488b1c5a10c36b8316a8f330e4337"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "bc6d225a2e0f9ce5d3aa9e47417cf87f2981ef929bd531a5447933428430ebad"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/validation.json",
+      "size": 265,
+      "sha256": "d79af9e9639b73488d677fd6284296e6cd558606b2efee1e0e24547c583f836f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/workspace/results/repair_log.json",
+      "size": 7,
+      "sha256": "be302461cda285db3ed2d45fb767b23e08ca8808b35a638009937df22b332d73"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/invalid_log/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/derived/h016-analysis.json",
+      "size": 47346,
+      "sha256": "ac4a699ec879708f1b434850c13f15efd7fa1d4501466e63b791bd6976599cf4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "1a23722edb6064dba575854827b4bd0f330fb5163837b13dae163d02532275fe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/derived/word-render/rendered.pdf",
+      "size": 425952,
+      "sha256": "69a7dc4aef948ad2e0a9f89a6bbb937bdc1a3cf6c8f13415084d56d4320b8878"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/validation.json",
+      "size": 268,
+      "sha256": "4ebeffc5b2582d72d246d12060c7dbe8eb0a80fdd505f693017c91704e573f93"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/lost_comments/workspace/results/repaired.docx",
+      "size": 55812,
+      "sha256": "a01a9b68c20a44d002a5b2c5cfdd5199399b0dd2429308f8df6aaa520bb31d9d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/derived/h016-analysis.json",
+      "size": 47256,
+      "sha256": "e262e9ec7a47cd1aeed36bc6af524d5bc6e0032b1e220d231c5eb3dc6db9d796"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "7a8b8596fa385e6e799126633f2763cfe531e7785c37ae912d4f111f21c43e2c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/derived/word-render/rendered.pdf",
+      "size": 425972,
+      "sha256": "95ac61c2e839c9680906215c29be39b3df8588342a11624f73816a12dfda1172"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/validation.json",
+      "size": 272,
+      "sha256": "df40b7e961f1cf036342ca5eaca913a6fa7d01d61f81a661d2934ae2f52a7061"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/merged_equal_cells/workspace/results/repaired.docx",
+      "size": 55990,
+      "sha256": "04a8bd97053f5c01ffd26882f1facd41ce59482f4a5dacde53372e47db878f9b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_docx/derived/h016-analysis.json",
+      "size": 817,
+      "sha256": "e9267bdc4d426fe463a8eb2633d6275066b996615d61005353974c7c96ab05ba"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_docx/validation.json",
+      "size": 266,
+      "sha256": "15e62a729b97bcf1a0e231763fb25f695c45fd6f7370350613459e6f72c3ab71"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_docx/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_docx/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_readme/derived/h016-analysis.json",
+      "size": 47330,
+      "sha256": "b38c1fb1d7a510d542884232b87a7888e3dcb647792227265fa64252539aafec"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_readme/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "54414df757001b832556c8cbdd2307058ddf8acb387d5cc567aa843a2baf3368"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_readme/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "d7d4fd380bc4e3db197feec41d2217b0a41eb15dc7e8efd48cb25e16a1f23d1d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_readme/validation.json",
+      "size": 269,
+      "sha256": "9c79204fa868bc403b0964ed62c5d6a8e09387225536d6aa10842627d74917b9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_readme/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/missing_readme/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/derived/h016-analysis.json",
+      "size": 47348,
+      "sha256": "94ae5e2ad3fc7cff2c2a021503b96e33d0ed9d9581acd2b1513956c4852792ac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "dcc805c4c990187e2689aa10935b231fa2a966e43bc7b12b504404fb6198e11e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "4e02e1d57e0c070c9c5f966fe2c79fa85a5afd144ca59106a8e116c70c1fc436"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/validation.json",
+      "size": 275,
+      "sha256": "d2c3fc4bb89ced5f6f950266f8b8922c16637a2ffe7336158608fa495bc5c23f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/moved_comment_anchor/workspace/results/repaired.docx",
+      "size": 55951,
+      "sha256": "c100a9ebcff962ff192541fd4e4f7644b70ac53c938a299cf35202a26935d697"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/derived/h016-analysis.json",
+      "size": 47268,
+      "sha256": "06204bc1b99c5abc44e2c5f55467149f21e76487a8fd82eb9ddb46d7ac322497"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "7551fe05071d2712d1441bb93f870b7717a781863a60e8830f213e129c44379c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "4826b60047cf1ade757c21d39388db9a2ce14974e722fb2a2e7a97bc578fe25a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/validation.json",
+      "size": 263,
+      "sha256": "ea797234147cbb35f59889c9a946d116d0b1f4eac66fd93b3e31a1d2de722d44"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/reference/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/derived/h016-analysis.json",
+      "size": 47270,
+      "sha256": "671be75977b97f0dbd8eadcea821aaa8958962194b125e0bc71e92f9c05cf1bc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "b65fee7aa57ef697144d6f57ea27b2947222fe375f326353405390fb7784db25"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/derived/word-render/rendered.pdf",
+      "size": 426024,
+      "sha256": "53ff0fd696a39a88686a7e16c68e03aa3663c8fea2e2e0bc19b77653c03e8c0a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/validation.json",
+      "size": 265,
+      "sha256": "946d26266fabfba78c69ae6a0612be37c766317e98fdadcd36bccf2a75b1ab1a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/renamed_ids/workspace/results/repaired.docx",
+      "size": 56022,
+      "sha256": "a450a72d55b56981fd84fd1c225218522baa35dfe400cca53df2239508d4b4c4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/derived/h016-analysis.json",
+      "size": 47344,
+      "sha256": "b848971f16eb77a4bfb0a87e36c10b8ec52ee8943ec198d40dc4b206a69f0555"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "eaff7fba8846a4e78cea88b7267cc4e4c297b5e81cb8590eee1ed8f848a70b79"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "b7dda13fd08a14910ecccb8be0fbd6360849c1293811dfb6f1b2d92d17826e1a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/validation.json",
+      "size": 271,
+      "sha256": "ee127d738371fdfc0e4d576d0f2041ac8879c461e1802bb27719f93b8df7aebc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/resolved_comment/workspace/results/repaired.docx",
+      "size": 55958,
+      "sha256": "d22844af6898b54c553b519c26752e0402b440c3e6dce544540ea3dcd0818c4a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/derived/h016-analysis.json",
+      "size": 47266,
+      "sha256": "ca291eff66238efd5297a8912a36506e185aac839b256c8095930b03828c75c4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "6f1f5298d715ab9b42029d2374931107cc434c96469cd729a41cb6c761872521"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "04b1f8f3b1d12063880d887c4876bff4e305ddb4d0c3ac0078e5280e843fc875"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/validation.json",
+      "size": 261,
+      "sha256": "97bca2c6484921c0dc47981cadef9b3044243c19dd4f374223a4cf890d04f9dc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/sdt_toc/workspace/results/repaired.docx",
+      "size": 55971,
+      "sha256": "ee8762ecc3e5d3a7dc6c42043da31d894d78a67fdf6dd2de9a7c5fbd6d5c240b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/derived/h016-analysis.json",
+      "size": 47272,
+      "sha256": "b615c526d2221f6ef29104ebbbcac104fd35a0d5aefd09b95ebd508721810c5c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "abeda3963483bdfa1203edad9c0e8a2ab0c7391acd4616cba5cc9c68908ad3cf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "3793e45177a585db1919a62022973f64fa94b7879b304061b86c107086c4e4d7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/validation.json",
+      "size": 267,
+      "sha256": "cabe14af30ad4188f4ff431445af24c27e3c975d72b6aca8f14e38b6ca4751bc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/simple_fields/workspace/results/repaired.docx",
+      "size": 55872,
+      "sha256": "5f5a15d6389c3734a633e8f1c906f6e04ea57c5aa521354aa8c380b24f8f50cc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/derived/h016-analysis.json",
+      "size": 47269,
+      "sha256": "554d5ab849ab56fd831686d938039047a3c48ca370ee7b0964e7aa0991164b5c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "bbf94fd685d00d7cce62d5d30e35be2fc36948251e2dcffc4f6d54a7322b0e71"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/derived/word-render/rendered.pdf",
+      "size": 425928,
+      "sha256": "7e7bd436b0d23792fea05c803b2616ad7d22eacf9ea0b2a2b28cbfee9a15b59e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/validation.json",
+      "size": 264,
+      "sha256": "fec210afb7ee197d14c5c7287e45bc4a3fd0e4e976ecd7d372302f63f4254495"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/split_runs/workspace/results/repaired.docx",
+      "size": 56964,
+      "sha256": "f50eccc0dc056d68a545e020a595d57880b2ed49eb58ecea5166376fd30f2fac"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/derived/h016-analysis.json",
+      "size": 47278,
+      "sha256": "d25f6f328a1c911d13f10cbed7a0b9b7298d398996dfc8cad7a2050789148a4f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "3ab8b38ef0f89caf733fd28dee63c4544a522f1917ab0b664c367653232f946a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "386deccb130eb1ca0af3cbae4f3e430449fa1535edd0c2ab7df5dc58bc585fad"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/validation.json",
+      "size": 273,
+      "sha256": "76ef596ec8815b896d51a3c17f1112c69d9bc34afb56534629765a7fcf35440f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/stale_native_caches/workspace/results/repaired.docx",
+      "size": 55897,
+      "sha256": "42137de7ddb39bb955d02b1c20916337bc0bf39b7bbd815bdcb812570b5fd599"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/derived/h016-analysis.json",
+      "size": 48329,
+      "sha256": "c1dcd6e969294fd31010581de2ca05321dc131b3a44fadaab4aff671a9fdb96a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "13537d275f0f328fc73477a9bae8614c11608ea423ef01a7746ba88430fede3d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/derived/word-render/rendered.pdf",
+      "size": 425370,
+      "sha256": "3f80f17ba8d8f2e6ad6a610686076a6c253e977c065fbc09e23db1619bb21a38"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/validation.json",
+      "size": 271,
+      "sha256": "bfd7e132ef15d2dcddff1c10ed921eb31155fb97ea5da10cba6ebd4509202253"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/static_fields/workspace/results/repaired.docx",
+      "size": 55536,
+      "sha256": "b282b9eefd017616da85ad275ff4ecad7cefee81094407d3da703ac7e72e0b75"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/validation.json",
+      "size": 11324,
+      "sha256": "dd3bfc2986d7ef62f0668d6ef5c2ded51668c5dfdbefaadbfe85d9390e308765"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/derived/h016-analysis.json",
+      "size": 47344,
+      "sha256": "141e8c2f80ca7e670d2723442b4a83ce25c69e9fbe271a9d536f0902a234b12b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "1e50104162f0d8d684b24438e5ce0bac176c69fac9b162f53474c7b1a20d9953"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/derived/word-render/rendered.pdf",
+      "size": 425979,
+      "sha256": "5cad9610a920d6b758031de31736ca256c63448e25e657abddae6495668241d8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/validation.json",
+      "size": 269,
+      "sha256": "97d4bb0ba7f8ecbdfd5dee0901e1a626a00f08eb0a005307c6cac9acec2e67b0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127044238474000/zero_for_blank/workspace/results/repaired.docx",
+      "size": 55954,
+      "sha256": "1ebdd54d921a64274215ea1e2f143fbb40262c1c17820dd6cac92f1a3558b0ee"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/derived/h016-analysis.json",
+      "size": 47436,
+      "sha256": "527d0f7b6a25e297654b19e7ebc6471a418775bfd68d200a2e8e0085246012d3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "fcbe544b5bdb4695170dfbce1517586751f07eb8e26ccb590791dc2615f4ac56"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/derived/word-render/rendered.pdf",
+      "size": 425467,
+      "sha256": "cbd3890c7b4add17f34354b625b9147cc134698c6083d12bae5e343027863e1d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/validation.json",
+      "size": 295,
+      "sha256": "69f57da22b85ca4843d914508d7d2cdfb73bf500f98f0e7fb36e53c29ec0ff5a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_04/workspace/results/repaired.docx",
+      "size": 55954,
+      "sha256": "644601464ebe01c01d121599fbca6d040e17c7c35fa61fff4ab5a2a379aa304e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/derived/h016-analysis.json",
+      "size": 47328,
+      "sha256": "1c9ea977d99ee58ae2a8b837c62d6c7c61ca8c8398e345c95ce83aabaf33937a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "7a1a9c6a016fdd328a109f2bfcc9daf92355bfc028320e5949adfaa14e9af09a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/derived/word-render/rendered.pdf",
+      "size": 425857,
+      "sha256": "b473ec713ddd836009bfa11b4a522e68db0e3985960e3c7370bcdd111c50f01b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/validation.json",
+      "size": 287,
+      "sha256": "d82eb6d26af87b3354767a905e681ae79686c6657e35dca1309b972b9ea3534f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/defect_05/workspace/results/repaired.docx",
+      "size": 55952,
+      "sha256": "cbfcea6ca1fe79ed2bdcd516bb047a2a1d63dda37ebfca36277410f576f897eb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/exec/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/exec/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/exec/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/candidate_graph.py",
+      "size": 18913,
+      "sha256": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "8a10896149950ed581b0e0fa5b4b94b3286ca0f934f56ec75ba2a07913ba7dcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/gt/structure_checks.py",
+      "size": 8899,
+      "sha256": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/reference/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/reference/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/frozen-author-input/reference/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/derived/h016-analysis.json",
+      "size": 47281,
+      "sha256": "422907193e9259e3a87faab2f0ecc44f1580f089a5b51dc84112ca4671a7f3c8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "cb1d1d55c63680d43fe02f7e4a81d17d5f088d5e2fb40da4adec858d620605b6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "9cb51aa8988a50a1e685eeedc8e8089e57821f72e461b5b78da1da4ee01e7186"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/validation.json",
+      "size": 276,
+      "sha256": "e80dcd5c91fed6b0b68c90578c716dc596e66448c8e78009dc583445bebab231"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/omit_optional_initials/workspace/results/repaired.docx",
+      "size": 55929,
+      "sha256": "c80365b325566c3b2bc5de3600f8fadb6191cdb27cc36767814095d1fbfc3131"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/derived/h016-analysis.json",
+      "size": 47268,
+      "sha256": "0d6af3aeb7ef6715c880c6264078c5c02300da2aee03b06f6592e7b3c891ca1a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "05bb3db7ad828e51ada2e33eac283696ccf2427d818ee61864376546842251b1"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "ca911da8ab27b0da7281d27988fdd3decb6ddd0ec74ba4e6a15b59075cd4f81d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/validation.json",
+      "size": 263,
+      "sha256": "ea797234147cbb35f59889c9a946d116d0b1f4eac66fd93b3e31a1d2de722d44"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/reference/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/validation.json",
+      "size": 2108,
+      "sha256": "b3942c18259269b2b275a0e1c21cb1715d4a52065cb89327f21392681f6cee8f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/derived/h016-analysis.json",
+      "size": 47272,
+      "sha256": "ae8c15da285e98a68741ae6aae65d0f780876177528a83562997c7f20dbc3536"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "a4fe044f9788e0ad3cf114e9a0bfa1b479845bec817f2a1446b3891fbe3ccce9"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/derived/word-render/rendered.pdf",
+      "size": 426028,
+      "sha256": "68fd1f520b6370811fe29d4385260166a5ae9a30ecf73afbaf6d3a4f232db93c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/validation.json",
+      "size": 267,
+      "sha256": "6af6d5a7575f073baf6451f60ca837c70ac10f10ca9e4bb46bc676472f43efee"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_dark/workspace/results/repaired.docx",
+      "size": 55974,
+      "sha256": "1b1cd749de58be598f416361805e005f45bd6e2ad3bc987af11175893b1bb434"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/derived/h016-analysis.json",
+      "size": 47341,
+      "sha256": "1c734ce68d7fd312cd7c3c5692d27e911958cd82344e053d7edf27f18da0420f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/derived/word-render/render-audit.json",
+      "size": 1853,
+      "sha256": "f45e616fb8cea46fbd2f3d647a9933585b4e47ec3fdc518b2e795b0634acbe1b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/derived/word-render/rendered.pdf",
+      "size": 426012,
+      "sha256": "78cd57a84aab49d11ca3827e672b2c84e2a9ca99326eeccb40dadab578ca44c2"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/validation.json",
+      "size": 269,
+      "sha256": "8b25723af2065b8550b935eb7af440aab8079ea89a54c3221a3f8d94cca4c2ef"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/candidate-controls-1793127323403069000/white_on_white/workspace/results/repaired.docx",
+      "size": 55971,
+      "sha256": "a932eefa3dacf81a8142374a142eb518903430975feb17783800a899d3dc4796"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/framework-regression.json",
+      "size": 1989,
+      "sha256": "8925d9cfd28115d013a7f7957dcb17a5035b3f319a9ff49a30b186354296f030"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/framework-unittest.txt",
+      "size": 9307,
+      "sha256": "2185cb32841a029df81b6715c9e45c4fdc7bdcbbd88a0bc35e8569e217cfe894"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/font_lock_drift/bad-render-lock.json",
+      "size": 790,
+      "sha256": "2f52ef4a31118a43d301d03c1c68f6a2e3411971e844dd948aff59d91ef7a06d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/font_lock_drift/validation.json",
+      "size": 387,
+      "sha256": "40739654d4d9693062227fd912a3e7558deda9a4dee20fba316f748137823079"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/font_lock_drift/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/font_lock_drift/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/font_lock_drift/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_gt/validation.json",
+      "size": 436,
+      "sha256": "480b3845689d9b5988264ab7c436fd01acef18ec8edc63013ab20c7b1dbae00d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_gt/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_gt/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_gt/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_helper/validation.json",
+      "size": 449,
+      "sha256": "abe2fa47f2e0a625c7d4cfa4af4448e241e0cfa68496c1fb27f71d2421309f74"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_helper/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_helper/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_helper/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_render_runtime/validation.json",
+      "size": 299,
+      "sha256": "57e2154411bd8b6521bea0ec976585e28c959144f3a43171e77844ed5db7271f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_render_runtime/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_render_runtime/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_render_runtime/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_runtime/validation.json",
+      "size": 285,
+      "sha256": "5dac91a612284c975fec5f2638be69cc4720d7ca6f0da279b74b93be527d46ed"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_runtime/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_runtime/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/missing_runtime/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/private_drift/validation.json",
+      "size": 274,
+      "sha256": "fb457d26774e78e93337a5c021d665b907766c880e79ec3f7672259d258e5dae"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/private_drift/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/private_drift/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/private_drift/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/infrastructure-controls-1793127382545660000/validation.json",
+      "size": 4011,
+      "sha256": "f3bd88baa8adcbda47ad2b369c12c02c12cf4488ce06ec252f8193b0898fc5b4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/candidate-original/workspace/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/candidate-original/workspace/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/candidate-original/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/candidate-original/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/candidate-original/workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/candidate-original/workspace/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/authoring_validation.json",
+      "size": 22036,
+      "sha256": "94460eacf37eeb9475c90afbad17aadd5f5bc2c8be19944fd99242cd4df1debe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/candidate_graph.py",
+      "size": 18913,
+      "sha256": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/reference/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/reference/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/reference/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "8a10896149950ed581b0e0fa5b4b94b3286ca0f934f56ec75ba2a07913ba7dcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/structure_checks.py",
+      "size": 8899,
+      "sha256": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/gt/validate_authoring.py",
+      "size": 13263,
+      "sha256": "ec4d43992d8b6b15cb18fb59459bd2dc078d809d35cb70dbc3e656401d94b31a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/case-workspace/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/authoring_validation.json",
+      "size": 22036,
+      "sha256": "94460eacf37eeb9475c90afbad17aadd5f5bc2c8be19944fd99242cd4df1debe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/candidate_graph.py",
+      "size": 18913,
+      "sha256": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/reference/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/reference/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/reference/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "8a10896149950ed581b0e0fa5b4b94b3286ca0f934f56ec75ba2a07913ba7dcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/structure_checks.py",
+      "size": 8899,
+      "sha256": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/private/gt/validate_authoring.py",
+      "size": 13263,
+      "sha256": "ec4d43992d8b6b15cb18fb59459bd2dc078d809d35cb70dbc3e656401d94b31a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/rule-audit.json",
+      "size": 2410,
+      "sha256": "c4af0f2d96bc891453ec9166e57069441ef36ef787958d0121cddacc07e4e903"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/runtime-lock.json",
+      "size": 45861,
+      "sha256": "fcd54d44a453c2ac93c7e22c75bb21e5121fe7396fc19d1beb4113e9e5b1c18f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/undeclared-pdf-dependency/rejection.json",
+      "size": 131,
+      "sha256": "f3a1bd2a5bc6d1371d58292c6e0ad1d16615258517c5628fa3b2b63c50d0db37"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/validation.json",
+      "size": 7798,
+      "sha256": "6d832d0b8da8df54e0e2534ffbbb39a547570c8f5b05fddc405d76a30a1cd978"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-01.png",
+      "size": 360220,
+      "sha256": "85a191e8a3401582ed1f4683cfe5c65b3892933aaaf7c9003369382aca48f71d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-02.png",
+      "size": 190010,
+      "sha256": "6a863d200a7030285a57f7c917d4e9f02a92f9576a3b9ee19d6cf16324798c9b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-03.png",
+      "size": 399081,
+      "sha256": "6df89af16ccc1a08dde5a3a3dd1f6db248d978471c797a45a7878392fb6e3778"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-04.png",
+      "size": 366437,
+      "sha256": "9751478d1ea0b4fc8bcbde5b845edb89d5b0cf1c7887050800f535567f66b4ea"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-05.png",
+      "size": 341538,
+      "sha256": "d95f2b48f670fb181bed6b02c21709a6299d8f44d66fe5b6753dc02836f92bfe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-06.png",
+      "size": 394556,
+      "sha256": "5a35023ce61da3403f8204defbc2ff3239167b96e5bc9ca16a081b2f3c06f9a6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-07.png",
+      "size": 282471,
+      "sha256": "a1813495bf02ac13f092a26d814481ff4a86b2364b5df6f32877ed14403e365c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-08.png",
+      "size": 420116,
+      "sha256": "40a262c0253add246fe548c3cd16f21cfadffbc202301e8389ba5e0f6af9b50c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-09.png",
+      "size": 350594,
+      "sha256": "fa09dea732682581d2c8d436ce9f222d1c3fff541a1a95aee74809e787ba9acb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-10.png",
+      "size": 361735,
+      "sha256": "1256f11f4de3e4a54844d680cc2d929060fd2f6984a2750ef03a49bac4368778"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-11.png",
+      "size": 381743,
+      "sha256": "a7a790e77bf1b2c44306e9a4564cebf0fb34875ff2090438234e6b483c8000ee"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-12.png",
+      "size": 385898,
+      "sha256": "ca7989ed4fee7aeedcab71c225775bcafd52dd6b4a298e2dcd03a69d0c5bd22c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-13.png",
+      "size": 302221,
+      "sha256": "7f33d92316ecd8ec7ff92ff8540d8b11c31cf1fc63f8623551d877558b80d0fc"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-14.png",
+      "size": 364034,
+      "sha256": "a80e05cfe5ef794fcac57660684fa8f82be1f8d36347ca766cdb8463401f8101"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-15.png",
+      "size": 389223,
+      "sha256": "529686da33adb15d43b56fe6796621aeeb883c1eddaf7811a40e17b2746d0bc3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-16.png",
+      "size": 382732,
+      "sha256": "2b41f0ee1904e1c5f073517aec518abceb7c4de75b7808cbfe0869fa110c48a6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-17.png",
+      "size": 362272,
+      "sha256": "aa35070c0af999e32a6657a9c2a1c08b3fb45972a96794523f206d076f617af4"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/page-18.png",
+      "size": 376606,
+      "sha256": "240a4fda338315c53571f47afaffba5c851fe77f4dd8715e74c4a92ef69d7b03"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/render-bindings.json",
+      "size": 9152,
+      "sha256": "c6270a3770307de2082a8d75c1040c3ecaad5d74cc7440dcf3c9687b535850b3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/visual-pages/visual-review.json",
+      "size": 9959,
+      "sha256": "d4ca53115fd74b196c4a6823e8e7c945b006ac6e2dac7d3e83fb7f747bb2ef0b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/derived/h016-analysis.json",
+      "size": 64248,
+      "sha256": "7fbfcd4a54f45b797b38eff8925a357842990bca9cec4dcb78a0b863e39d7002"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/derived/word-render/render-audit.json",
+      "size": 16808,
+      "sha256": "6ca38601ddce43979504cf88aef8c88fbf82d228735166617114842f05cd2384"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/derived/word-render/rendered.pdf",
+      "size": 425976,
+      "sha256": "1d797d00586f9bfe6361a7393c1eb85d0b6b21f28e22ebeb35bcfd00d255dc2c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/office-render-runtime.json",
+      "size": 41687,
+      "sha256": "6caf383b5292b38d5b525ea36b1045e03a9df4637458beabf973c4093355f978"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/office-runtime.json",
+      "size": 472,
+      "sha256": "db4ec7e53a47f31b709febaadd76c677008df6d3046e0d56d10d6739c5fe1cf5"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/request.json",
+      "size": 765,
+      "sha256": "6574f6679c77185992a66ca7058bc854e46a4052fcef378ec9664ab0b48b024d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/result.json",
+      "size": 330,
+      "sha256": "92fee6dafb6ab812f89500477e78bea0a477c8225aff7cdc0565fa5fcb0af246"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/stderr.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker/stdout.log",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/managed-worker-1793127435508337000/worker-validation.json",
+      "size": 5537,
+      "sha256": "5b5a7760cd9a3918b1fd694c8f7e81f83969e6fe0d36b3b58872ad1716cd4a0b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/blueprint-snapshot.json",
+      "size": 12504,
+      "sha256": "52a86d464835d09b040062b242d1c66289c4c41a854e2e5467eace66ab820d0f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/build_clean_original.py",
+      "size": 18989,
+      "sha256": "cbbcf521224e273364f7ff971aadcac7c6426e0fb177b0b902849fadbd0af2ff"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/build_reference.py",
+      "size": 7920,
+      "sha256": "3cc1b5fcb604fff3285a8a041e53ba8b245b03401bc19ff2386385fbe6bf65b6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/build_registered_evidence.py",
+      "size": 8273,
+      "sha256": "94a4293afc088ef765a7136890c0f536d4ab77f1a5031e057513b5cfa2bd9f46"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/case-spec-draft.json",
+      "size": 14132,
+      "sha256": "824f55ff41a83530ba62e1f64cebdd135b1e6b2223ece013718e0b524e2701d6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/case-spec.json",
+      "size": 14569,
+      "sha256": "8d9e3cddc6a30720339b262de6b31342086652d12f55978a1611d61e8db551a3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/clean_original.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/declare_materials.py",
+      "size": 31127,
+      "sha256": "d5b3b1588e2437b2eafda709333828fb07d16693d73ffb176faeb72cfc5dde34"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/export_author_validator.py",
+      "size": 2536,
+      "sha256": "8313ab137ceb7bae8194045d1813dd48406050394cbfbbf9374525596e4647df"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/facts.json",
+      "size": 46737,
+      "sha256": "bab0c3358fa49ec94d860c13dd67f4ed876ac1d23ec75c0d73f26f4e033f5e35"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/finalize_controls.py",
+      "size": 4990,
+      "sha256": "ef2d8c622574b646712405b48633a4c26010d6837033bc5f7e8a42ea33874dc6"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/finalize_materials.py",
+      "size": 8195,
+      "sha256": "80fb63a186fe5ad90b4da2a0a271686df8fa408a341d7751c4962ff6518be934"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/fix_source_r03.py",
+      "size": 3246,
+      "sha256": "39b8aff71e4aa16450a52ccee984a6a094cb083a35366217a16a93dab47fc13b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/marker_status.json",
+      "size": 176,
+      "sha256": "3606a733488b0ebb5151d11f0b6b71cb8c3c6f5c1c0f2619e886b91f56ea7782"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/original-manifest.json",
+      "size": 15694,
+      "sha256": "5c9c10444e391caa53728ee3f13a2600ad42540121a8f13521f72dc8244ff64e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/prepare_case_spec.py",
+      "size": 7780,
+      "sha256": "fb6bbcf65dbab1f942939e95845362ead1ed58732dbd6e1a0844a2f255c5d1ba"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/prepare_scoring.py",
+      "size": 1237,
+      "sha256": "2b1b7f284658ab31b12ff7089f0b1c0ed3958d225c627942deaa280079a6c6ad"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/probe_field_cache_and_numbering.py",
+      "size": 4268,
+      "sha256": "de6e17a44bfcd268b98fc56fa0d68d762b7e227c3f25b81b327460e9d9046cce"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/render_damaged.py",
+      "size": 1153,
+      "sha256": "23dd26aaa5c181a85c6bf5fa39a66c198cbb59cd6e9c8997a9bd970afc1ba850"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/render_originals.py",
+      "size": 1609,
+      "sha256": "b592dc67576185306dc777331aa08b38dde6062be41e86f2d9115441f1663a4d"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/repair_numbering_audit.py",
+      "size": 1806,
+      "sha256": "52819461fe3992ecb3819c2e12eb94bb3aae4ce6e717707e31a6869bd28d8f6a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/run_candidate_controls.py",
+      "size": 11974,
+      "sha256": "e77d05bc12228163ec9a3b7f601325f86d4ef9b1961e6b56589ba6ecde672e0c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/run_framework_regressions.py",
+      "size": 1855,
+      "sha256": "5e3a8a917f2919f0d2970237267a23186f3e72530dfd006dd19f105ee0629b50"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/run_infrastructure_controls.py",
+      "size": 2632,
+      "sha256": "85c8d1104c8d638b1faeb885ad988882f3bb5bea2e65ef6f8eb79c83631697c7"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/run_managed_worker.py",
+      "size": 5086,
+      "sha256": "8dc06eda2838efb37203617e92d0f0c0bc18ff12a64a00f322ae0eb8ac143162"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/run_reference_rules.py",
+      "size": 1656,
+      "sha256": "61d1eed0badb28ca23e2a231c0661bb0ca4715797857ea435d2b1a5bc89d4298"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/authoring/verify_original_and_inject.py",
+      "size": 12756,
+      "sha256": "c2d1bdefd259906611b316a47a327bb80eacf0c2255e3218d780591544a5c99a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/capability-entry.json",
+      "size": 394,
+      "sha256": "ed1fa29512e15abf5e3dc034acebb132f4a5543e48b23bab543078676dd5e980"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/general_hard_office_documents_task_016_docx_structure_repair.md",
+      "size": 8959,
+      "sha256": "c5bf29e17cd129732566beb4d9b116c6d1fcf729bfbe32ee5b70f8d9315ba123"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/registry-contract.json",
+      "size": 264,
+      "sha256": "92ce63f331f3446967bc013e7572aade567e8db6d09d76f11d745e6e702d0a37"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/source-entry.json",
+      "size": 450,
+      "sha256": "910ec33eb4fc2406eb62c02e4878322b4d412a26e40f0fa31d4213ee0a078e1c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/exec/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/exec/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/exec/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/authoring_validation.json",
+      "size": 22036,
+      "sha256": "94460eacf37eeb9475c90afbad17aadd5f5bc2c8be19944fd99242cd4df1debe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/candidate_graph.py",
+      "size": 18913,
+      "sha256": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/reference/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/reference/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/reference/results/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "8a10896149950ed581b0e0fa5b4b94b3286ca0f934f56ec75ba2a07913ba7dcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/structure_checks.py",
+      "size": 8899,
+      "sha256": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/registered-stage-snapshot/workspace/gt/validate_authoring.py",
+      "size": 13263,
+      "sha256": "ec4d43992d8b6b15cb18fb59459bd2dc078d809d35cb70dbc3e656401d94b31a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/runtime/runtime-lock.json",
+      "size": 45861,
+      "sha256": "fcd54d44a453c2ac93c7e22c75bb21e5121fe7396fc19d1beb4113e9e5b1c18f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/runtime/validation.json",
+      "size": 982,
+      "sha256": "19e9b1223c96ecd6be81dc819d23dd5fbfd60eda51757396dd27631936a6f304"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/static-release/20261027T185753Z_1a6c423122/report.json",
+      "size": 36907,
+      "sha256": "e3a71a30afd8c69cd43e98b9691bf242c87def4d4ae3990d8c447087bc85a9d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/static-release/20261027T185753Z_1a6c423122/report.md",
+      "size": 22466,
+      "sha256": "875c9c6346346b296a9c21b79c13fc657c48029a149f5c48a77b18042d31415e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/static-task/20261027T185746Z_ec81487247/report.json",
+      "size": 1233,
+      "sha256": "834880fc9bda864edcf9c1ceb1e40c2afb93f5e7cd58b22673125ff54e4159fe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/static-task/20261027T185746Z_ec81487247/report.md",
+      "size": 1029,
+      "sha256": "02fa77c552911042c04770db138dfdd201db0430b9cc0207c3d499a21f9cd1ef"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/exec/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/exec/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/exec/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/authoring_validation.json",
+      "size": 22036,
+      "sha256": "94460eacf37eeb9475c90afbad17aadd5f5bc2c8be19944fd99242cd4df1debe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/candidate_graph.py",
+      "size": 18913,
+      "sha256": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "8a10896149950ed581b0e0fa5b4b94b3286ca0f934f56ec75ba2a07913ba7dcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/structure_checks.py",
+      "size": 8899,
+      "sha256": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/gt/validate_authoring.py",
+      "size": 13263,
+      "sha256": "ec4d43992d8b6b15cb18fb59459bd2dc078d809d35cb70dbc3e656401d94b31a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/reference/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/reference/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/frozen-author-input/reference/repaired.docx",
+      "size": 55948,
+      "sha256": "087f49ebdf03425f58739af75970a79ccc8b8474521ed31b9fc9e07329cd9f2e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/derived/h016-analysis.json",
+      "size": 817,
+      "sha256": "e9267bdc4d426fe463a8eb2633d6275066b996615d61005353974c7c96ab05ba"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/validation.json",
+      "size": 266,
+      "sha256": "15e62a729b97bcf1a0e231763fb25f695c45fd6f7370350613459e6f72c3ab71"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/damaged_styles.docx",
+      "size": 56003,
+      "sha256": "638b72375f38805e91ad517885f9032fbb8871a8aa47227f993524ef27cb5b27"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/artifact_contract.json",
+      "size": 1142,
+      "sha256": "bac175812dce76c1c7e99f56877f400a4d03d833de392b56de4dfa130d3506bf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/authoring_validation.json",
+      "size": 22036,
+      "sha256": "94460eacf37eeb9475c90afbad17aadd5f5bc2c8be19944fd99242cd4df1debe"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/business_oracle.json",
+      "size": 4151,
+      "sha256": "54d7d976edb8c2e596fe5cff9592a3aa55c770dfc6897abaf2e0e8ae96b4448e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/candidate_graph.py",
+      "size": 18913,
+      "sha256": "0831e23cfb169949b599e7e0fb3e136ab6028b23fc90215e14c2a57dcdec7bdb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/counterexamples.json",
+      "size": 1300,
+      "sha256": "39e8d2a008402d991674a09d2ec5f1afa1f237426ddfab33b7029d505682659c"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/damaged_graph.json",
+      "size": 278850,
+      "sha256": "864ab8041aea7504cf951d0ac80c6f4c3e12acec9ea61acb34cf50d8c438f4d0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/document_graph.py",
+      "size": 11975,
+      "sha256": "ef228db76e394b5d3728625c5f83a52501094671be85333ecf1abc06c4b88ed8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/evidence_requirements.json",
+      "size": 326,
+      "sha256": "f9b36020cc1f62ae13f58bb3b62b3e2ed5105577bae394326962119d7894484f"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/expected.json",
+      "size": 55881,
+      "sha256": "b0d9f8a9ea618db96fd123b9655b7730a6e0145173648f064a8c09442f4d3e0e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/grader.py",
+      "size": 5875,
+      "sha256": "e9738a37734f21dd670e70c5d63f045354414348191a751c5887c3d36b757865"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/office_runtime.py",
+      "size": 49901,
+      "sha256": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/original_graph.json",
+      "size": 279058,
+      "sha256": "09bc41c39d3b5d1edad0d66f05aca3e38daae51ce91bc3035b46c71ccc794efb"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/protected_sha256.json",
+      "size": 286,
+      "sha256": "4feca7979c6cafc4f3c5b760c4693cfeee78fab95d61376b2e0fea4e187e810e"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/render_checks.py",
+      "size": 2833,
+      "sha256": "264e0fa8042023d07b049f6553fc0d166a4085ff7c24657d7214c7e562d149b8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/scoring_contract.json",
+      "size": 1203,
+      "sha256": "8a10896149950ed581b0e0fa5b4b94b3286ca0f934f56ec75ba2a07913ba7dcf"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/structure_checks.py",
+      "size": 8899,
+      "sha256": "b6c0e907787ad8417a11ea2f53e0d07b868b6178406b82b5925dae8943ec2b3b"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/gt/validate_authoring.py",
+      "size": 13263,
+      "sha256": "ec4d43992d8b6b15cb18fb59459bd2dc078d809d35cb70dbc3e656401d94b31a"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/protected_content.json",
+      "size": 28475,
+      "sha256": "72e05d8af4d39a7a53d7c38082f706fcd2b3abd8bea1899ae0d9b605f7d70366"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/results/readme.md",
+      "size": 1123,
+      "sha256": "b83628ada743cdf39e227a91c4a333f6938dc60a6e33b79842b89b052eec54e8"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/results/repair_log.json",
+      "size": 6809,
+      "sha256": "7a595288a85c21a0aa08689ae0f8befcb39fc5bd14bff03232acd3e01e2c8bb3"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/missing_docx/workspace/style_reference.docx",
+      "size": 40303,
+      "sha256": "bbda653393f8f21be637d1705adac1baa85317ccbb4111ef4fe473ea4ea15af0"
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h016/qa/validator-cli-smoke/validation.json",
+      "size": 452,
+      "sha256": "4193e95e9fb42a4a1042e2893ae59ed60ae27c6ef6b1fa82e3b5d234fed80c65"
+    }
+  ]
+}

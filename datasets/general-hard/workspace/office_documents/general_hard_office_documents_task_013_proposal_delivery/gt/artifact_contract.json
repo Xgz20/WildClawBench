@@ -1,0 +1,504 @@
+{
+  "schema_version": "h013-artifact-contract/v1",
+  "files": {
+    "proposal": "results/proposal.docx",
+    "quote": "results/quote.xlsx",
+    "email": "results/customer_email.md",
+    "exceptions": "results/exceptions.csv"
+  },
+  "field_aliases": {
+    "site_id": [
+      "site_id",
+      "场地",
+      "场地编号"
+    ],
+    "option_id": [
+      "option_id",
+      "方案",
+      "方案编号"
+    ],
+    "module_count": [
+      "module_count",
+      "组件数",
+      "组件数量"
+    ],
+    "dc_kwp": [
+      "dc_kwp",
+      "DC容量",
+      "容量kWp"
+    ],
+    "area_m2": [
+      "area_m2",
+      "占用面积",
+      "面积m2"
+    ],
+    "design_load_kg_m2": [
+      "design_load_kg_m2",
+      "设计荷载",
+      "新增荷载"
+    ],
+    "annual_energy_kwh": [
+      "annual_energy_kwh",
+      "年量kWh",
+      "年发电量",
+      "年度年量"
+    ],
+    "inverter_count": [
+      "inverter_count",
+      "逆变器数",
+      "逆变器数量"
+    ],
+    "replacement_area_m2": [
+      "replacement_area_m2",
+      "屋面更换面积",
+      "整屋面施工范围"
+    ],
+    "cost_module": [
+      "cost_module",
+      "组件未税额",
+      "组件费"
+    ],
+    "cost_inverter": [
+      "cost_inverter",
+      "逆变器未税额",
+      "逆变器费"
+    ],
+    "cost_cable": [
+      "cost_cable",
+      "电缆未税额",
+      "电缆费"
+    ],
+    "cost_isolation": [
+      "cost_isolation",
+      "隔离防护未税额",
+      "保护件费"
+    ],
+    "cost_mounting": [
+      "cost_mounting",
+      "安装结构未税额",
+      "支架施工费"
+    ],
+    "cost_installation": [
+      "cost_installation",
+      "安装施工未税额",
+      "安装费"
+    ],
+    "cost_replacement": [
+      "cost_replacement",
+      "屋面更换未税额",
+      "屋面更换费"
+    ],
+    "cost_drainage": [
+      "cost_drainage",
+      "排水配套未税额",
+      "排水费"
+    ],
+    "cost_design": [
+      "cost_design",
+      "设计未税额",
+      "设计费"
+    ],
+    "cost_inspection": [
+      "cost_inspection",
+      "独立检验未税额",
+      "独立检验费"
+    ],
+    "cost_adhesion": [
+      "cost_adhesion",
+      "粘接验收未税额",
+      "施工粘接验收费"
+    ],
+    "cost_corrosion": [
+      "cost_corrosion",
+      "腐蚀专项核验未税额",
+      "腐蚀核验费"
+    ],
+    "subtotal_goods": [
+      "subtotal_goods",
+      "供货未税额",
+      "供货小计"
+    ],
+    "subtotal_construction": [
+      "subtotal_construction",
+      "施工未税额",
+      "施工小计"
+    ],
+    "subtotal_services": [
+      "subtotal_services",
+      "技术服务未税额",
+      "技术服务小计"
+    ],
+    "tax_goods": [
+      "tax_goods",
+      "供货税额"
+    ],
+    "tax_construction": [
+      "tax_construction",
+      "施工税额"
+    ],
+    "tax_services": [
+      "tax_services",
+      "服务税额"
+    ],
+    "gross_total": [
+      "gross_total",
+      "含税基础额",
+      "基础含税总额",
+      "含税总价",
+      "基础含税额",
+      "已知基础含税额"
+    ],
+    "budget_margin": [
+      "budget_margin",
+      "预算余量",
+      "预算差额",
+      "基础预算余量"
+    ],
+    "status": [
+      "status",
+      "状态",
+      "可行性"
+    ],
+    "selected_option": [
+      "selected_option",
+      "推荐方案",
+      "选定方案"
+    ],
+    "AREA": [
+      "AREA",
+      "面积约束"
+    ],
+    "LOAD": [
+      "LOAD",
+      "荷载约束"
+    ],
+    "GRID": [
+      "GRID",
+      "容量约束"
+    ],
+    "REPLACEMENT": [
+      "REPLACEMENT",
+      "换屋面权限"
+    ],
+    "BUDGET": [
+      "BUDGET",
+      "预算约束"
+    ],
+    "ADHESION": [
+      "ADHESION",
+      "粘接材料"
+    ],
+    "CORROSION": [
+      "CORROSION",
+      "腐蚀材料"
+    ],
+    "REPAIR_SCOPE": [
+      "REPAIR_SCOPE",
+      "修复范围"
+    ]
+  },
+  "status_aliases": {
+    "feasible": [
+      "feasible",
+      "可行"
+    ],
+    "conditional": [
+      "conditional",
+      "附条件",
+      "有条件"
+    ],
+    "infeasible": [
+      "infeasible",
+      "不可行"
+    ]
+  },
+  "money_unit": "CNY",
+  "technical_units": {
+    "dc_kwp": "kWp",
+    "area_m2": "m2",
+    "design_load_kg_m2": "kg/m2",
+    "annual_energy_kwh": "kWh/year"
+  },
+  "numeric_tolerance": ".005",
+  "integer_fields": [
+    "module_count",
+    "inverter_count"
+  ],
+  "source_input_ids": {
+    "sites": [
+      "S1",
+      "S2",
+      "S3"
+    ],
+    "options": [
+      "A",
+      "B",
+      "C"
+    ],
+    "parameter_ids": [
+      "inverter_block_kwp",
+      "inverter_unit_ex_vat",
+      "cable_per_module_ex_vat",
+      "isolation_per_site_ex_vat",
+      "design_per_site_ex_vat",
+      "inspection_per_site_ex_vat",
+      "adhesion_acceptance_ex_vat",
+      "corrosion_review_ex_vat",
+      "replacement_roof_cny_m2",
+      "drainage_cny_m2",
+      "vat_goods",
+      "vat_construction",
+      "vat_services"
+    ]
+  },
+  "template_headings": [
+    "三个方案与九个场地组合比较",
+    "分场地推荐与前置条件",
+    "逐项需求响应",
+    "例外和后续确认"
+  ],
+  "exceptions_required": [
+    "site_id",
+    "option_id",
+    "rule_id",
+    "status",
+    "observed",
+    "limit",
+    "source_file",
+    "source_locator",
+    "next_action"
+  ],
+  "equivalence": "Scoring must find actual business IDs and logical fields, accept English/Chinese aliases, renamed/reordered sheets and rows, equivalent formulas and native layouts. Author-verifier physical row/column positions are not a candidate scoring restriction.",
+  "formula_scope": "Test all source-dependent nonzero business amounts and quantity/constraint propagation with real Office input changes. Structural zeros for fixed inapplicable items may be literal zero. Do not impose arbitrary author formula counts or styles.",
+  "unknowns": "Keep S3 verified load and roof repair cost unknown; no made-up subsidy or repair-cost zero. Recommendation snapshot is labelled current-input choice; dynamic optimization is not requested.",
+  "limit": "Logical-field candidate observations and real source-input responses; author acceptance is recorded separately in authoring_validation.json.",
+  "source_fields_by_kind": {
+    "site": [
+      "roof_type",
+      "usable_area_m2",
+      "verified_load_kg_m2",
+      "load_status",
+      "max_dc_kwp",
+      "annual_target_kwh",
+      "yield_kwh_kwp",
+      "shading_factor",
+      "budget_gross_cny",
+      "replacement_allowed",
+      "adhesion_evidence",
+      "corrosion_evidence",
+      "roof_repair_cost"
+    ],
+    "option": [
+      "module_kwp",
+      "module_area_m2",
+      "performance_factor",
+      "load_metal_kg_m2",
+      "load_flat_kg_m2",
+      "requires_replacement",
+      "module_price_ex_vat",
+      "mount_metal_cny_m2",
+      "mount_flat_cny_m2",
+      "installation_cny_kwp",
+      "adhesion_required"
+    ]
+  },
+  "source_field_aliases": {
+    "max_dc_kwp": [
+      "max_dc_kwp",
+      "DC容量上限"
+    ],
+    "load_status": [
+      "load_status",
+      "荷载核验状态"
+    ],
+    "installation_cny_kwp": [
+      "installation_cny_kwp",
+      "安装施工单价"
+    ],
+    "adhesion_required": [
+      "adhesion_required",
+      "需要粘接验收"
+    ],
+    "verified_load_kg_m2": [
+      "verified_load_kg_m2",
+      "核验荷载上限"
+    ],
+    "annual_target_kwh": [
+      "annual_target_kwh",
+      "年度目标"
+    ],
+    "load_metal_kg_m2": [
+      "load_metal_kg_m2",
+      "金属屋面新增荷载"
+    ],
+    "replacement_allowed": [
+      "replacement_allowed",
+      "允许更换屋面"
+    ],
+    "corrosion_evidence": [
+      "corrosion_evidence",
+      "腐蚀核验材料"
+    ],
+    "mount_metal_cny_m2": [
+      "mount_metal_cny_m2",
+      "金属屋面安装结构单价"
+    ],
+    "usable_area_m2": [
+      "usable_area_m2",
+      "可用面积"
+    ],
+    "roof_type": [
+      "roof_type",
+      "屋面类型"
+    ],
+    "roof_repair_cost": [
+      "roof_repair_cost",
+      "修复费用"
+    ],
+    "yield_kwh_kwp": [
+      "yield_kwh_kwp",
+      "单位装机年量"
+    ],
+    "load_flat_kg_m2": [
+      "load_flat_kg_m2",
+      "平屋面新增荷载"
+    ],
+    "mount_flat_cny_m2": [
+      "mount_flat_cny_m2",
+      "平屋面安装结构单价"
+    ],
+    "requires_replacement": [
+      "requires_replacement",
+      "必须更换屋面"
+    ],
+    "performance_factor": [
+      "performance_factor",
+      "系统因子"
+    ],
+    "budget_gross_cny": [
+      "budget_gross_cny",
+      "含税预算"
+    ],
+    "module_area_m2": [
+      "module_area_m2",
+      "单片面积"
+    ],
+    "module_price_ex_vat": [
+      "module_price_ex_vat",
+      "组件未税单价"
+    ],
+    "shading_factor": [
+      "shading_factor",
+      "遮阴因子"
+    ],
+    "adhesion_evidence": [
+      "adhesion_evidence",
+      "前置粘接材料"
+    ],
+    "name": [
+      "name",
+      "方案名称"
+    ],
+    "module_kwp": [
+      "module_kwp",
+      "单片容量"
+    ]
+  },
+  "parameter_aliases": {
+    "inverterblockkwp": "inverter_block_kwp",
+    "inverterunitexvat": "inverter_unit_ex_vat",
+    "cablepermoduleexvat": "cable_per_module_ex_vat",
+    "isolationpersiteexvat": "isolation_per_site_ex_vat",
+    "designpersiteexvat": "design_per_site_ex_vat",
+    "inspectionpersiteexvat": "inspection_per_site_ex_vat",
+    "adhesionacceptanceexvat": "adhesion_acceptance_ex_vat",
+    "corrosionreviewexvat": "corrosion_review_ex_vat",
+    "replacementroofcnym2": "replacement_roof_cny_m2",
+    "drainagecnym2": "drainage_cny_m2",
+    "vatgoods": "vat_goods",
+    "vatconstruction": "vat_construction",
+    "vatservices": "vat_services"
+  },
+  "exception_aliases": {
+    "site_id": [
+      "site_id",
+      "场地"
+    ],
+    "option_id": [
+      "option_id",
+      "方案"
+    ],
+    "rule_id": [
+      "rule_id",
+      "检查项"
+    ],
+    "status": [
+      "status",
+      "状态"
+    ],
+    "observed": [
+      "observed",
+      "实际值"
+    ],
+    "limit": [
+      "limit",
+      "限制值"
+    ],
+    "source_file": [
+      "source_file",
+      "来源文件"
+    ],
+    "source_locator": [
+      "source_locator",
+      "来源位置"
+    ],
+    "next_action": [
+      "next_action",
+      "下一步"
+    ],
+    "rule_source": [
+      "rule_source",
+      "规则来源"
+    ]
+  },
+  "private_helper_sha256": {
+    "office_runtime.py": "e789f06be15587ff28f280a67887f083f7dd473694b6f3059ce9da6cdca22534",
+    "native_text.py": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79",
+    "word_model.py": "01a8167879e075dd18c1af435acb97328c042b394e42014b039e4ec5ad07ba33"
+  },
+  "word_required_numeric_fields": [
+    "module_count",
+    "dc_kwp",
+    "area_m2",
+    "annual_energy_kwh",
+    "inverter_count",
+    "gross_total",
+    "budget_margin"
+  ],
+  "status": "business_grading_contract",
+  "check_aliases": {
+    "pass": [
+      "pass",
+      "满足",
+      "通过",
+      true
+    ],
+    "fail": [
+      "fail",
+      "不满足",
+      "失败",
+      false
+    ],
+    "unknown": [
+      "unknown",
+      "未知",
+      "待核实",
+      "未核实"
+    ],
+    "not_applicable": [
+      "not_applicable",
+      "不适用",
+      "N/A"
+    ]
+  }
+}

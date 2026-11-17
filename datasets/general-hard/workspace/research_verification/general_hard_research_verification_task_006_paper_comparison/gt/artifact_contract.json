@@ -1,0 +1,254 @@
+{
+  "schema_version": "h032-facts-free-artifact-contract-proposal/v1",
+  "task_id": "general_hard_research_verification_task_006_paper_comparison",
+  "status": "ADOPTED_PUBLIC_CONTRACT_SOURCE_FACTS_FROZEN_RULES_PENDING",
+  "review_context": {
+    "reviewer_kind": "model",
+    "human_expert": false,
+    "source_or_answer_values_read": false,
+    "rules_implemented": false,
+    "Office_created": false,
+    "network_used": false
+  },
+  "scope": {
+    "mode": "offline local supplied papers only",
+    "input_paths": [
+      "papers/",
+      "metadata.csv",
+      "claims.md"
+    ],
+    "supplied_PDF_count_from_blueprint": 8,
+    "input_claim_count_from_blueprint": 12,
+    "expected_verdicts": null,
+    "document_or_work_roster": null,
+    "cutoff_or_year_lower_bound": null,
+    "network_or_link_following_authorization": false,
+    "new_experiments_or_implementation_required": false,
+    "source_images_are_not_required_input_modality": true,
+    "protect": "All supplied input bytes; only results is writable"
+  },
+  "artifacts": [
+    {
+      "path": "results/bibliography.json",
+      "format": "strict UTF-8 JSON object",
+      "schema_ref": "bibliography",
+      "additional_useful_fields_allowed": true,
+      "English_only_keys_or_fixed_ID_prefix_required": false
+    },
+    {
+      "path": "results/evidence_matrix.xlsx",
+      "format": "native visible editable self-contained XLSX",
+      "required_logical_content": [
+        "12 input-claim correspondences",
+        "assessed proposition and verdict/rationale",
+        "task/data/split/metric-direction/result/budget/version conditions as actually available",
+        "citation association and limits"
+      ],
+      "accepted_forms": [
+        "Chinese or English semantic headers",
+        "row/column reorder",
+        "multiple/split/combined sheets",
+        "wide or long records",
+        "transposition",
+        "merged headers",
+        "clear field mapping",
+        "static values",
+        "ordinary source hyperlinks as inactive offline bibliography"
+      ],
+      "not_required": [
+        "fixed sheets/cells",
+        "all JSON repeated verbatim",
+        "all quotes/authors duplicated",
+        "mandatory formulas",
+        "native PDF export"
+      ],
+      "prohibited_core_substitutes": [
+        "screenshots",
+        "one giant JSON cell",
+        "opaque ID-only shell without human-readable judgments/conditions/limits"
+      ],
+      "formula_policy": "Static cells accepted. Any formula must be actually recomputed after clearing caches on a trusted derivative, source bound and original unchanged. Missing trusted Office/helper or unsupported legal representation is evaluator error, never cached fallback.",
+      "active_content": "No macro or active external data connection; ordinary hyperlinks alone are not external data connections"
+    },
+    {
+      "path": "results/review.docx",
+      "format": "native visible editable DOCX",
+      "required_logical_content": [
+        "comparability and applicable conditions",
+        "invalid comparisons with reasons",
+        "versions/evidence limits/counterexamples",
+        "research gaps and unresolved next checks",
+        "readable cross-reference to per-claim evidence"
+      ],
+      "accepted_forms": [
+        "free prose/tables",
+        "Chinese or English",
+        "topic grouping",
+        "references to matrix/bibliography",
+        "different justified logical interpretations"
+      ],
+      "not_required": [
+        "fixed headings/paragraphs",
+        "12 JSON claims copied verbatim",
+        "fixed vocabulary as correctness proof",
+        "new experiments",
+        "system construction priorities"
+      ]
+    }
+  ],
+  "bibliography": {
+    "root_fields": [
+      "schema_version",
+      "documents",
+      "claims",
+      "citations"
+    ],
+    "schema_version_value": "h032-bibliography/v1",
+    "published_key_aliases": {
+      "schema_version": [
+        "模式版本"
+      ],
+      "documents": [
+        "文献文件",
+        "资料文件"
+      ],
+      "claims": [
+        "断言",
+        "结论核查"
+      ],
+      "citations": [
+        "引文",
+        "证据定位"
+      ],
+      "verdict": [
+        "判定",
+        "结论标签"
+      ],
+      "assessment_target": [
+        "被评估命题",
+        "判断对象"
+      ]
+    },
+    "field_map": "Optional explicit mapping for other clear semantic field names; it does not change scientific requirements or create credit by keyword",
+    "documents": {
+      "type": "array",
+      "required_meanings": [
+        "document_id",
+        "file",
+        "title",
+        "authors",
+        "work_id",
+        "version"
+      ],
+      "file": "Exact actual local papers-relative file; no traversal/external file/network target",
+      "authors_and_version": "Clear text/object/list as actually available, unknown plus explanation accepted; no mandatory DOI, author-array or exact date",
+      "work_id": "Candidate stable identity for established relationships; same known work versions share identity or clear equivalent grouping. Null/explicit unknown with existing reason/checked scope is accepted. Unknown placeholders establish neither duplication nor independence.",
+      "citation_inventory": "Cover actual used/read/cited files; do not require invented citations or conclusions for every unused distractor among 8",
+      "optional_meanings": [
+        "identifiers",
+        "actual precision date",
+        "catalog_ref",
+        "version_relationship",
+        "reviewed_or_unreviewed_scope"
+      ]
+    },
+    "claims": {
+      "type": "array",
+      "exact_input_claim_count": 12,
+      "required_meanings": [
+        "claim_id",
+        "input_ref",
+        "assessment_target",
+        "verdict",
+        "rationale",
+        "comparison",
+        "limitations"
+      ],
+      "input_ref": "Existing claims.md identifier, otherwise original 1-based ordinal with actual heading/short text as useful; each original exactly once, arrays may reorder",
+      "assessment_target": {
+        "representation": "Clear text or object; object kind/text is recommended",
+        "kinds": [
+          "fact",
+          "evidence_sufficiency",
+          "compound",
+          "other_explicit"
+        ],
+        "Chinese_equivalents_allowed": true,
+        "optional_components": "May separate factual subclaim and proof-sufficiency metaproposition, with distinct verdicts and conditions; no uniform nested template required"
+      },
+      "verdict_values": [
+        "supported",
+        "refuted",
+        "insufficient"
+      ],
+      "verdict_aliases": {
+        "supported": [
+          "支持",
+          "有支持"
+        ],
+        "refuted": [
+          "反驳",
+          "被反驳"
+        ],
+        "insufficient": [
+          "证据不足",
+          "未定"
+        ]
+      },
+      "verdict_logic": "Verdict is about the explicitly assessed proposition. A justified refutation of 'already proved/evidence sufficient' may coexist with insufficient factual outcome. Not-found alone does not refute a factual experiment. Accepted interpretations are source-adjudicated, never preset by this proposal or accepted by label alone.",
+      "comparison": "Text/object recording actual task/data/split/metric/value/unit/direction/budget/conditions/version; unknowns with examined scope accepted, no numeric quota",
+      "rationale_and_limits": "Actual support/counterevidence/qualification and checked scope; no fabricated no-result quotation or required per-claim refutation",
+      "copied_CID_or_reverse_closure_required": false
+    },
+    "citations": {
+      "type": "array",
+      "required_meanings": [
+        "citation_id",
+        "document_id",
+        "locator",
+        "quote",
+        "supports_fields",
+        "relation"
+      ],
+      "locator": "Actual 1-based physical PDF page or page range plus necessary paragraph/section/appendix/table/caption location; printed page label is optional, not a substitute",
+      "quote": "Short literal from one actual local file/version; cross-page locations explicit, no multi-source concatenation, no private word quota",
+      "supports_fields": "Nonempty RFC6901 pointer array into bibliography; block/leaf/multi-target/reorder/~0/~1 accepted",
+      "relation_values": [
+        "supports",
+        "refutes",
+        "qualifies"
+      ],
+      "literal_not_semantic": "Actual fragment/position does not establish support; preserve source context, version and normalization lineage",
+      "unknown": "Insufficient/unknown does not require invented citation; actual reviewed scope/reason may be explained in existing rationale",
+      "ID_uniqueness": "document/claim IDs unique within own namespaces, citation ID unique across citation array"
+    }
+  },
+  "trusted_evidence": {
+    "mode": "scoring-side frozen local originals, independently bound to supplied input package; no web collector GET",
+    "candidate_private_SHA_or_source_snapshot_required": false,
+    "authority": "Actual frozen PDF/CSV/claim bytes and source-first adjudication. Candidate modified copies/self-written text cannot replace originals.",
+    "formula_derivatives": "Trusted Office identity/cache-clearing/recalculated file and provenance bound separately; originals preserved",
+    "unsupported_or_missing_baseline": "Typed evaluator error/pending evidence, never candidate zero or silent reweight",
+    "no_hidden_inherited_limits": "Do not inherit H031 date cutoff/5MiB limit/roster/source-count rules; any future capacity bound must be treated and documented as such"
+  },
+  "future_acceptance": "Root source-first fact adjudication, then public contract adoption/implementation authorization; model review is not human expert review",
+  "root_resolution": {
+    "judgment_owners": {
+      "C01": "business_correctness",
+      "C02": "boundary_cases",
+      "C03": "boundary_cases",
+      "C04": "boundary_cases",
+      "C05": "business_correctness",
+      "C06": "business_correctness",
+      "C07": "boundary_cases",
+      "C08": "boundary_cases",
+      "C09": "boundary_cases",
+      "C10": "boundary_cases",
+      "C11": "business_correctness",
+      "C12": "business_correctness"
+    },
+    "public_contract_sha256": "f36892d117a767dd81d08e5ebb0263671ac96e39a9b69309888b642f2d55f534",
+    "author_materials": "8 original CC0 synthetic text PDFs,4 physical pages each,7 works; original materials unchanged",
+    "source_evidence": "reference_source_manifest original annotation-package paths are provenance, not candidate runtime paths; exact source file SHA and relative papers paths remain binding."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema": "h034-counterexamples/v1",
+  "controls": [
+    "reference actual managed Worker baseline",
+    "public tolerance boundary and informative ranges",
+    "range endpoints correct but scalar false",
+    "missing/whole-image/one-figure wrong source region binding",
+    "log tick trap",
+    "SD versus95%CI and overlap inference",
+    "C04 fact/proof target equivalence",
+    "C06 metaproposition and unknown quality",
+    "C07 actual within-group counterevidence",
+    "native transpose, source registry IDs, normalized coordinates and sheet names",
+    "cross artifact true transfer conflict versus different judgment targets",
+    "missing DOCX/empty native results and missing DOCX",
+    "formula actual locked Office derivative",
+    "private source/helper/decoder missing typed evaluator error",
+    "source inputs protected drift",
+    "copied private/runtime fixtures and relocation check"
+  ],
+  "authorship": "nonblind rule author controls, not independent review or real Harness/Judge",
+  "additional_mechanisms": [
+    "inline role-linked reads without a separate point table",
+    "explicit inverted B/A ratio despite correct individual point values",
+    "original publicly specified tolerance boundary accepted",
+    "actual native percent number format and equivalent fact/proof targets",
+    "source consensus envelope plus public tolerance outer boundaries, including SD endpoint hulls"
+  ],
+  "not_proved_by_controls": [
+    "candidate actually looked at source images",
+    "scientific explanation fully correct",
+    "every possible legal natural-language/geometry form",
+    "native screenshot-only package and all hidden-style variants",
+    "English header aliases beyond code/static review",
+    "Harness/Judge/final score or four-platform availability"
+  ]
+}

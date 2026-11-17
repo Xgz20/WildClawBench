@@ -1,0 +1,19 @@
+{
+  "schema_version": "h043-business-oracle/v1",
+  "public_API": [
+    "BatchTimeoutError subclass of TimeoutError",
+    "async run_batch(items, pool, work, sink, *, concurrency=2, deadline=None)"
+  ],
+  "source_original_worker_sha256": "d0d8596078ae4ed2773b7791fc89439da137f0c315271037879ff6af090d545b",
+  "rules": [
+    "Complete success preserves input order and exact work values.",
+    "Only returned opaque leases are owned; release once and await completion.",
+    "Each acquired item attempts terminal emit once; emit acceptance/ack is not retried.",
+    "Work errors, caller cancellation and signalled expiry are failures, never success/partial list.",
+    "Return/raise only after owned work/watchers/cleanup settle; repeated cancellation cannot abandon release.",
+    "Independent batches and legal scheduling variations are preserved."
+  ],
+  "error_ownership": "Five B opportunities own ordinary public outcomes, five E opportunities own distinct lifecycle edge conditions. Protection and report/binding observations do not globally clear business scores.",
+  "source_first_reference_not_yet_written": true,
+  "ownership_revision": "v2: failure propagation is scored in B02/B03/B04/B05; E opportunities observe their resource/publication/isolation obligation without repeating the same exception-label loss"
+}

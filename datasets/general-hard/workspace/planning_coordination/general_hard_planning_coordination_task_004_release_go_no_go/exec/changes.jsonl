@@ -1,0 +1,4 @@
+{"event_id": "E03", "seq": 3, "status": "approved", "signers": ["FIN"], "kind": "budget", "patch": {"budget_cap": 7000}, "reason": "冻结可支配预算，覆盖E01初始8500"}
+{"event_id": "E01", "seq": 1, "status": "approved", "signers": ["PM"], "kind": "baseline", "patch": {"target_window": "W0", "budget_cap": 8500}, "reason": "原目标窗口与基础预算"}
+{"event_id": "E04", "seq": 4, "status": "proposed", "signers": ["INTERN"], "kind": "scope", "patch": {"T12_required": false, "T12_duration": 0, "budget_cap": 9000, "daily_hours": 10}, "reason": "为赶原目标提出删验收/加班请求；未获批准，不生效"}
+{"event_id": "E02", "seq": 2, "status": "approved", "signers": ["PM", "SEC"], "kind": "scope", "patch": {"T12_required": true, "T12_duration": 2}, "reason": "全部发布路径必须完成两日无障碍与字幕验证，不能以远程路径豁免"}

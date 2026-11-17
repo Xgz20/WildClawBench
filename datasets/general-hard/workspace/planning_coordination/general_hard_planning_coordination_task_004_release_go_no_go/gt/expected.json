@@ -1,0 +1,133 @@
+{
+  "schema": "h056.expected/v1",
+  "task_id": "general_hard_planning_coordination_task_004_release_go_no_go",
+  "order": 56,
+  "difficulty": "L4",
+  "difficulty_status": "design_estimate_unvalidated",
+  "window_paths": [
+    {
+      "path": "A",
+      "window_id": "W0",
+      "schedule_feasible": false,
+      "within_budget": false,
+      "conditional_feasible": false,
+      "blockers": [
+        "G_TIME",
+        "G_BUDGET",
+        "G_APPROVAL",
+        "G_VENUE_APPROVAL"
+      ],
+      "total_cost": 7850
+    },
+    {
+      "path": "A",
+      "window_id": "W1",
+      "schedule_feasible": true,
+      "within_budget": false,
+      "conditional_feasible": false,
+      "blockers": [
+        "G_BUDGET",
+        "G_APPROVAL",
+        "G_VENUE_APPROVAL"
+      ],
+      "total_cost": 7850
+    },
+    {
+      "path": "A",
+      "window_id": "W2",
+      "schedule_feasible": true,
+      "within_budget": false,
+      "conditional_feasible": false,
+      "blockers": [
+        "G_BUDGET",
+        "G_APPROVAL",
+        "G_VENUE_APPROVAL"
+      ],
+      "total_cost": 7850
+    },
+    {
+      "path": "B",
+      "window_id": "W0",
+      "schedule_feasible": false,
+      "within_budget": true,
+      "conditional_feasible": false,
+      "blockers": [
+        "G_TIME",
+        "G_APPROVAL"
+      ],
+      "total_cost": 6700
+    },
+    {
+      "path": "B",
+      "window_id": "W1",
+      "schedule_feasible": true,
+      "within_budget": true,
+      "conditional_feasible": true,
+      "blockers": [
+        "G_APPROVAL"
+      ],
+      "total_cost": 6700
+    },
+    {
+      "path": "B",
+      "window_id": "W2",
+      "schedule_feasible": true,
+      "within_budget": true,
+      "conditional_feasible": true,
+      "blockers": [
+        "G_APPROVAL"
+      ],
+      "total_cost": 6700
+    }
+  ],
+  "effective_state": {
+    "target_window": "W0",
+    "budget_cap": 7000,
+    "T12_required": true,
+    "T12_duration": 2
+  },
+  "effective_events": [
+    {
+      "event_id": "E01",
+      "status": "applied"
+    },
+    {
+      "event_id": "E02",
+      "status": "applied"
+    },
+    {
+      "event_id": "E03",
+      "status": "applied"
+    },
+    {
+      "event_id": "E04",
+      "status": "rejected"
+    }
+  ],
+  "minimum_blocker_sets": [
+    {
+      "path": "B",
+      "window_id": "W0",
+      "blockers": [
+        "G_TIME",
+        "G_APPROVAL"
+      ]
+    }
+  ],
+  "budget": {
+    "A": 7850,
+    "B": 6700,
+    "cap": 7000
+  },
+  "checkpoint_weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "hybrid_weights": {
+    "automated": 0.75,
+    "llm_judge": 0.25
+  },
+  "reference_schedule_is_not_oracle": true
+}

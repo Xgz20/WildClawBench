@@ -1,0 +1,797 @@
+{
+  "GT_authoring_provenance": {
+    "author_role": "informed, nonblind source-GT author; model review, not human expert or semantic Judge",
+    "current_phase": "offline_gt_proposal_preparation_no_new_GET",
+    "new_GET_count": 0,
+    "raw_source_text_policy": "Complete original bodies, decodings and projections remain external QA. GT carries author statements, bounded metadata, quote hashes, locators and proof bindings only.",
+    "source_facts_derived_from_candidate_or_reference": false,
+    "source_json_record_hash_algorithm": "SHA256 of UTF-8 JSON sort_keys=true indent=2 ensure_ascii=false plus LF",
+    "source_truth": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/source-truth-proposal/source_truth.json",
+      "sha256": "a0f88bfd16b869b323c259591ee222060d43720eb20efe59b3e857ac7980341c",
+      "size": 551235
+    }
+  },
+  "all_original_fact_ids": [
+    "A-F01",
+    "A-F02",
+    "A-F03",
+    "A-F04",
+    "A-F05",
+    "A-F06",
+    "A-F07",
+    "A-F08",
+    "A-F09",
+    "A-F10",
+    "A-F11",
+    "A-F12",
+    "A-F13",
+    "A-P01",
+    "A-P02",
+    "A-P03",
+    "A-P04",
+    "A-P05",
+    "A-P06",
+    "A-P07",
+    "A-P08",
+    "A-P09",
+    "A-P10",
+    "B-K01",
+    "B-K02",
+    "B-K03",
+    "B-K04",
+    "B-K05",
+    "B-K06",
+    "B-K07",
+    "B-K08",
+    "B-K09",
+    "B-K10",
+    "B-K11",
+    "B-K12",
+    "B-K13",
+    "B-K14",
+    "B-K15",
+    "B-K16",
+    "B-K17",
+    "B-K18",
+    "B-K19",
+    "B-K20",
+    "B-K21",
+    "B-K22",
+    "B-K23",
+    "B-K24",
+    "B-K25",
+    "B-K26",
+    "B-K27",
+    "B-K28"
+  ],
+  "complementary_or_noncomparable_relations": [
+    {
+      "explanation": "成功图节点 pending writes、整段 agent 委派、task/activity 重试边界不同；都不能推出任意外部副作用 exactly-once。不是相互矛盾或同一命题。",
+      "fact_ids": [
+        "A-F02",
+        "A-F08",
+        "B-K02",
+        "B-K13"
+      ],
+      "group_id": "REL-01",
+      "relation": "complementary_replay_boundaries"
+    },
+    {
+      "explanation": "数据库/浏览器状态/patch+tests 的验收机制可作方法比较；任务、版本和分母不同，不合并成功率。",
+      "fact_ids": [
+        "A-P07",
+        "A-P08",
+        "B-K24",
+        "B-K26"
+      ],
+      "group_id": "REL-02",
+      "relation": "different_environment_artifact_acceptance_mechanisms"
+    },
+    {
+      "explanation": "会话量、检索阅读、历史商业助手小样本和人类时间校准 horizon 不同；不能替代进程跨日存活或 Office 交付。",
+      "fact_ids": [
+        "A-P01",
+        "A-P03",
+        "A-P09",
+        "B-K19",
+        "B-K21"
+      ],
+      "group_id": "REL-03",
+      "relation": "different_measurement_axes"
+    },
+    {
+      "explanation": "框架模式、可选 planning 分支、MEA 角色方法与受预算限制的作者实验分别保留，不转写为通用规划可靠性。",
+      "fact_ids": [
+        "A-F09",
+        "B-K10",
+        "B-K16",
+        "B-K17"
+      ],
+      "group_id": "REL-04",
+      "relation": "planning_pattern_vs_conditional_experiment"
+    }
+  ],
+  "date_version_policy": {
+    "actual_acquisition_date": "2026-10-28",
+    "cutoff_inclusive": "2026-09-30 Asia/Shanghai",
+    "date_notes": {
+      "A:hell-or-high-water": {
+        "Asia_Shanghai": "2025-08-15T03:21:09+08:00",
+        "basis": "recovery-landing actual version submission history",
+        "first_public_visibility_established": false,
+        "selected_revision": "v1",
+        "selected_revision_submitted_UTC": "2025-08-14T19:21:09Z"
+      },
+      "A:locomo": {
+        "DOI": "10.18653/v1/2024.acl-long.747",
+        "basis": "locomo-landing actual citation_publication_date=2024/8",
+        "conference_basis": "selected PDF physical p1 header",
+        "conference_interval": "2024-08-11/2024-08-16",
+        "first_online_date": null,
+        "normalized_publication_date": "2024-08",
+        "precision": "month",
+        "qualification": "A original conference interval retained; proceedings month is not proved first upload; PDF CreationDate not publication."
+      },
+      "A:longmemeval": {
+        "basis": "longmemeval-landing actual citation_publication_date=2025-05-01",
+        "first_online_date": null,
+        "normalized_publication_date": "2025-05-01",
+        "precision": "day",
+        "qualification": "Proceedings citation date, not separately proved first-online date; PDF creation time does not prove equivalence to B arXiv v2.",
+        "selected_carrier": "ICLR 2025 proceedings PDF"
+      },
+      "A:metr-long-tasks": {
+        "Asia_Shanghai": "2025-03-31T01:53:28+08:00",
+        "basis": "selected v2 h1 plus metr-arxiv-metadata actual submission history",
+        "current_metadata_title": "Measuring AI Ability to Complete Long Software Tasks",
+        "qualification": "Current citation_online_date=2026/07/10 belongs v4, not v2; first-public visibility not independently archived.",
+        "selected_revision": "v2",
+        "selected_revision_submitted_UTC": "2025-03-30T17:53:28Z",
+        "selected_title": "Measuring AI Ability to Complete Long Tasks",
+        "v1_submitted_UTC": "2025-03-18T17:59:31Z",
+        "v3_submitted_UTC": "2026-02-25T02:20:56Z",
+        "v4_submitted_UTC": "2026-07-10T21:48:09Z"
+      },
+      "A:workarena": {
+        "Asia_Shanghai": "2024-04-21T22:38:00+08:00",
+        "basis": "workarena-v2-metadata-retry actual history",
+        "other_carrier": "A:workarena-pmlr-landing",
+        "qualification": "citation_date=2024/03/12 is original submission; citation_online_date=2024/04/21 belongs selected version, not first-public proof.",
+        "selected_revision": "v2",
+        "selected_revision_instance_count": 18050,
+        "selected_revision_submitted_UTC": "2024-04-21T14:38:00Z",
+        "selected_revision_task_count": 29,
+        "v1_submitted_UTC": "2024-03-12T14:58:45Z"
+      },
+      "B-longmemeval": {
+        "carrier": "arXiv 2410.10813v2 complete HTML",
+        "date_citation": "META-LME-history",
+        "qualification": "Distinct carrier/version from A ICLR PDF. Agreement on checked facts does not prove whole-document identity.",
+        "selected_revision": "v2",
+        "selected_revision_submitted_UTC": "2025-03-04T22:19:41Z",
+        "v1_submitted_UTC": "2024-10-14T17:59:44Z"
+      }
+    },
+    "date_types_separate": [
+      "release published_at",
+      "PyPI file upload timestamp",
+      "official proceedings citation date",
+      "arXiv revision submission history",
+      "Git commit timestamp",
+      "actual GET timestamp",
+      "offline reread timestamp"
+    ],
+    "first_public_availability": "not independently established for every object; do not rename commit, creation date, revision-online date or conference date as first_public"
+  },
+  "differences_and_scope_qualifications": [
+    {
+      "evidence_ids": [
+        "a-workarena-v2-task-count",
+        "a-workarena-pmlr-task-count"
+      ],
+      "id": "DIFF-01",
+      "kind": "different_version_or_carrier",
+      "records": [
+        "A:workarena",
+        "A:workarena-pmlr-landing"
+      ],
+      "resolution": "选择 arXiv v2 正文作论文事实底座；PMLR33单独保留，不判任何载体为错误，不转移数量。",
+      "values": {
+        "PMLR_abstract_tasks": 33,
+        "arxiv_v2_tasks": 29
+      }
+    },
+    {
+      "evidence_ids": [
+        "a-metr-v2-title"
+      ],
+      "id": "DIFF-02",
+      "kind": "current_metadata_vs_selected_revision",
+      "metadata_source_id": "metr-arxiv-metadata",
+      "records": [
+        "A:metr-long-tasks",
+        "A:metr-current-metadata-v4"
+      ],
+      "resolution": "v2 标题无 Software 且时间为2025-03-30；当前元数据标题/2026-07-10日期属v4。日期以实际版本史绑定。"
+    },
+    {
+      "evidence_ids": [
+        "a-lme-iclr-header",
+        "a-lme-iclr-length",
+        "a-lme-iclr-commercial",
+        "a-lme-iclr-commercial-date",
+        "a-lme-iclr-reading"
+      ],
+      "id": "DIFF-03",
+      "kind": "same_work_distinct_carriers",
+      "records": [
+        "A:longmemeval",
+        "B-longmemeval"
+      ],
+      "resolution": "ICLR PDF与arXiv v2各自保留；已核具体方法/指标相符，不证明全文同版或按PDF创建日期定先后。"
+    },
+    {
+      "id": "DIFF-04",
+      "kind": "framework_API_version_separation",
+      "records": [
+        "A:langgraph",
+        "B-langgraph",
+        "A:pydantic-ai",
+        "B-pydantic-ai"
+      ],
+      "resolution": "保留不同 commit/release；A TemporalDurability 不能写进 B v1.0.0 TemporalAgent，A特性不能无证继承到B旧版。"
+    },
+    {
+      "evidence_ids": [
+        "a-mastra-policy-exception"
+      ],
+      "fact_ids": [
+        "A-F07"
+      ],
+      "id": "QUAL-01",
+      "kind": "default_policy_exception",
+      "resolution": "默认off策略获支持；同时记录自定义谓词可保留running及手动恢复。"
+    },
+    {
+      "evidence_ids": [
+        "a-maf-name-if-set"
+      ],
+      "fact_ids": [
+        "A-F10"
+      ],
+      "id": "QUAL-02",
+      "kind": "conditional_identity_requirement",
+      "resolution": "same Id；Name if set。原简述需加条件，不强制所有Agent设置Name。"
+    },
+    {
+      "evidence_ids": [
+        "b-smol-max-callback",
+        "b-smol-provide-final"
+      ],
+      "fact_ids": [
+        "B-K11"
+      ],
+      "id": "QUAL-03",
+      "kind": "validation_hook_scope",
+      "resolution": "max-steps path未调用该final_answer_checks，但仍调step_callbacks；不写成绕过全部验证或安全漏洞。"
+    },
+    {
+      "evidence_ids": [
+        "a-hohw-validation-test",
+        "a-hohw-failure-denominator",
+        "a-hohw-models",
+        "a-hohw-metric",
+        "a-hohw-search-setting"
+      ],
+      "fact_ids": [
+        "A-P05",
+        "A-P06"
+      ],
+      "id": "QUAL-04",
+      "kind": "experimental_denominator",
+      "resolution": "830test+92validation分别记录；53–66%分母是特定tool-search setting中的failures。"
+    }
+  ],
+  "equivalence_groups": [
+    {
+      "common_proposition": "checkpointer 与 thread_id 组织线程图状态",
+      "differences": "A 截止 commit 还指 superstep/checkpoint_id；B 1.0.0 另区分 Store 跨线程记忆。",
+      "fact_ids": [
+        "A-F01",
+        "B-K01"
+      ],
+      "group_id": "EQ-01",
+      "independent_corroboration": false,
+      "merge_whole_facts": false,
+      "relation": "partial_same_project_cross_version_overlap"
+    },
+    {
+      "common_proposition": "Temporal workflow/activities 分离且部分失败 activity 可从头重试",
+      "differences": "A 使用 TemporalDurability，B v1.0.0 使用 TemporalAgent；API、装配方式和部署条件各自保留。",
+      "fact_ids": [
+        "A-F05",
+        "A-F06",
+        "B-K13"
+      ],
+      "group_id": "EQ-02",
+      "independent_corroboration": false,
+      "merge_whole_facts": false,
+      "relation": "partial_same_project_cross_version_overlap"
+    },
+    {
+      "common_proposition": "LongMemEval 五种记忆能力",
+      "differences": "A ICLR PDF 含助手信息范围；B arXiv v2 还含七题型及 S/M 规模。具体重合命题可互见，整条不去重。",
+      "fact_ids": [
+        "A-P03",
+        "B-K19"
+      ],
+      "group_id": "EQ-03",
+      "independent_corroboration": false,
+      "merge_whole_facts": false,
+      "relation": "partial_same_work_cross_carrier_overlap"
+    },
+    {
+      "common_proposition": "gpt-4o-2024-08-06 judge、>97% 元评估一致性、Recall/NDCG 分开",
+      "differences": "同一 work 的不同载体；只对已核命题建立等价，不声称两篇文档逐字相同。",
+      "fact_ids": [
+        "A-P04",
+        "B-K20"
+      ],
+      "group_id": "EQ-04",
+      "independent_corroboration": false,
+      "merge_whole_facts": false,
+      "relation": "same_work_cross_carrier_checked_proposition_equivalence"
+    }
+  ],
+  "initial_counts_preserved": {
+    "A": {
+      "acquisition_attempts": 63,
+      "acquisition_complete": 39,
+      "acquisition_failed": 24,
+      "framework_objects": 5,
+      "paper_benchmark_objects_with_complete_body_and_pre_cutoff_version": 5,
+      "query_strings_executed": 14,
+      "runtime_guarantees_verified": 0,
+      "traceable_facts": 23
+    },
+    "B": {
+      "complete_official_benchmark_main_documents": 3,
+      "complete_paper_main_HTML": 2,
+      "key_facts": 28,
+      "pending_paper_benchmark": 1,
+      "qualified_papers_benchmarks": 5,
+      "qualified_products_frameworks": 5
+    },
+    "B_count_boundary": "5paper/benchmark entity minimum is2complete papers+3complete official benchmark main documents, NOT5complete manuscripts. LHTBpending is excluded from that minimum; allpartial/failure observations are retained."
+  },
+  "nonindependent_overlap_policy": "51 original records retained; checked proposition equivalence/overlap does not increase independent evidence count. No whole-document equality is inferred.",
+  "original_statements_preserved_in": "expected.json /source_facts[*]/original_statement",
+  "phase_provenance_preserved": {
+    "A_initial_phase": "independent collection/discovery before reading B/reference",
+    "A_semantic_rereading_by_B_performed": true,
+    "B_initial_phase": "independent collection/discovery before reading A/reference",
+    "current_phase": "authorized nonblind offline reading of frozen A and B source bodies, metadata, PDFs, HTML and fixed docs",
+    "independent_blind_review_of_A": false,
+    "model_only": true,
+    "new_network_GETs_in_current_phase": 0,
+    "original_independent_counts_unchanged": {
+      "A_facts": 23,
+      "B_complete_official_benchmark_docs": 3,
+      "B_complete_paper_manuscripts": 2,
+      "B_facts": 28
+    }
+  },
+  "root_independent_B_check": {
+    "actual_location_proofs": [
+      {
+        "body_sha256": "4c8871f4a7fe1af971d36f2977346eb0d2f34460930814b7c2b3cf1063ef990d",
+        "citation_id": "LG-thread",
+        "locator": {
+          "lines_1based": [
+            22,
+            22
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "6ca37c0776c081defc34214308bc9484f31d7892dddac42193465dd42fd3f5c8",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "7c5b745fec517934a508677c03475d5981e12102137a1fbf533ee04038cde84b",
+        "citation_id": "LG-store",
+        "locator": {
+          "lines_1based": [
+            645,
+            645
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "8a83ea2de8917831c504fe5f66fbd7aaf719a9e982afeb14b7a6546ae613fafc",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "4c8871f4a7fe1af971d36f2977346eb0d2f34460930814b7c2b3cf1063ef990d",
+        "citation_id": "LG-replay",
+        "locator": {
+          "lines_1based": [
+            38,
+            38
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "8c1d0f1577353daeeb8e6fc981a2e72bd55176f66434d7375614fc7eaa63fe29",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "4c8871f4a7fe1af971d36f2977346eb0d2f34460930814b7c2b3cf1063ef990d",
+        "citation_id": "LG-idempotent",
+        "locator": {
+          "lines_1based": [
+            46,
+            46
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "b533840982d42de1b2e209df65e73daa33e9217e318c23926756258a0abcfb04",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "4c8871f4a7fe1af971d36f2977346eb0d2f34460930814b7c2b3cf1063ef990d",
+        "citation_id": "LG-exit",
+        "locator": {
+          "lines_1based": [
+            82,
+            82
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "787a0599129b5fbb51d70be3a452b186db81931a9040ee50e88b24c7003df06f",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "4c8871f4a7fe1af971d36f2977346eb0d2f34460930814b7c2b3cf1063ef990d",
+        "citation_id": "LG-async",
+        "locator": {
+          "lines_1based": [
+            86,
+            86
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "ae3fbcfe3553ac96276c96a15f0e250c1575aed624fbb2c825c5959fec71e170",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "4c8871f4a7fe1af971d36f2977346eb0d2f34460930814b7c2b3cf1063ef990d",
+        "citation_id": "LG-sync",
+        "locator": {
+          "lines_1based": [
+            90,
+            90
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "e7cdb3ad154a91cbd330a5a45f09b16c2275e50cb7168a7fdf9ab51f6414d11e",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "c3ac2a05e3e9d19055ac46835707da2b20dd28d2efa71ca1373cfa0400c0b152",
+        "citation_id": "AG-state-scope",
+        "locator": {
+          "html_id": null,
+          "reading_block": null,
+          "type": "actual_HTML",
+          "xpath": "/html/body/div[5]/div/main/div/div[1]/article/section/section[1]/div[4]/p[2]"
+        },
+        "selected_text_sha256": "03dc836186b9cefdeb8eac6ee3edecadfa418042c4de016889ce2d71ede76c29",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "c3ac2a05e3e9d19055ac46835707da2b20dd28d2efa71ca1373cfa0400c0b152",
+        "citation_id": "AG-persist",
+        "locator": {
+          "html_id": null,
+          "reading_block": null,
+          "type": "actual_HTML",
+          "xpath": "/html/body/div[5]/div/main/div/div[1]/article/section/section[3]/p"
+        },
+        "selected_text_sha256": "d2bb82685d1bfe2df85d4b2b00b78b152b4a948fe4cc2311c5980157c4c809e0",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "13f8c321ff42c2f6b6379a7854df93a5e34d07fed443688f2029fd83f0f06be3",
+        "citation_id": "AG-max-stop",
+        "locator": {
+          "html_id": null,
+          "reading_block": null,
+          "type": "actual_HTML",
+          "xpath": "/html/body/div[5]/div/main/div/div[1]/article/section/ol/li[1]"
+        },
+        "selected_text_sha256": "eb3e7dfa01712aafca922245f0bae442602f1b663a0c592e5210247cf3dc3526",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "13f8c321ff42c2f6b6379a7854df93a5e34d07fed443688f2029fd83f0f06be3",
+        "citation_id": "AG-text-stop",
+        "locator": {
+          "html_id": null,
+          "reading_block": null,
+          "type": "actual_HTML",
+          "xpath": "/html/body/div[5]/div/main/div/div[1]/article/section/ol/li[2]"
+        },
+        "selected_text_sha256": "c20831a2340fc907bbff0cda6a8498211765b836bef848aa862db0dc1e6e516e",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "77fb5a73e63d5b3c4a8510853b148829dec1adab52d60bd84e10bf7ff7a1288f",
+        "citation_id": "OH-tools",
+        "locator": {
+          "lines_1based": [
+            9,
+            14
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "221b705036297c7dc9b0adefbb4b951bea112387185da1c7125602095c9dd9a5",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "77fb5a73e63d5b3c4a8510853b148829dec1adab52d60bd84e10bf7ff7a1288f",
+        "citation_id": "OH-background",
+        "locator": {
+          "lines_1based": [
+            24,
+            26
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "4cd9368e2bb4a2ecaa3d8c8ffc19d7cff38d64523b4d549bcc8b87f0bf21dd7a",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "38885afba0c7c5000d90fa099bc7669610dae8f090a558e104cc5729382ae315",
+        "citation_id": "OH-condense",
+        "locator": {
+          "lines_1based": [
+            9,
+            10
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "1ddf4af93e93b809b097966f345b70a1f10301dc6ae59633737c19c47630670a",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "38885afba0c7c5000d90fa099bc7669610dae8f090a558e104cc5729382ae315",
+        "citation_id": "OH-summary-state",
+        "locator": {
+          "lines_1based": [
+            18,
+            18
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "cd255747d9d8d47553c0954266b3f4292667b2e6497380054adbf1da865fc9ab",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "1b3cd57dfcdcb871efd34d33d6b3f7a7b2230aa782b114036a5788f31a729561",
+        "citation_id": "PY-temporal-wrap",
+        "locator": {
+          "lines_1based": [
+            72,
+            72
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "86a7820be2c111e3d2592c6b8e2e9444cbbce94673b8c4adf41637d582f4eb87",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "1b3cd57dfcdcb871efd34d33d6b3f7a7b2230aa782b114036a5788f31a729561",
+        "citation_id": "PY-activity-restart",
+        "locator": {
+          "lines_1based": [
+            22,
+            22
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "4b4a88b2a0484e3ddf722629100b8d946a60e0ba237555c7cec801cc3f5affdb",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "1b3cd57dfcdcb871efd34d33d6b3f7a7b2230aa782b114036a5788f31a729561",
+        "citation_id": "PY-serialization",
+        "locator": {
+          "lines_1based": [
+            174,
+            174
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "5e3139d4670e9841cd33ef81fda94ac83f2fdb43142844c5907ba8e7a54a9861",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "1b3cd57dfcdcb871efd34d33d6b3f7a7b2230aa782b114036a5788f31a729561",
+        "citation_id": "PY-retry-layer",
+        "locator": {
+          "lines_1based": [
+            207,
+            207
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "150a0911f96beacd68d1a78c1635a2adf344d90d7cbc6a63267cf64380f6b9b6",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "8d35f97a4aa3fd74fbd316629aac710e69c6835d045464f01e5bceb67ecf4136",
+        "citation_id": "PY-output-args",
+        "locator": {
+          "lines_1based": [
+            124,
+            124
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "898b089b8ea603c46353cbda3ad56b3d4010238f2cb389db2683d20bd8731bb8",
+        "whitespace_normalization_only": true
+      },
+      {
+        "body_sha256": "8d35f97a4aa3fd74fbd316629aac710e69c6835d045464f01e5bceb67ecf4136",
+        "citation_id": "PY-output-validator",
+        "locator": {
+          "lines_1based": [
+            421,
+            421
+          ],
+          "type": "text_file_lines"
+        },
+        "selected_text_sha256": "d0ae79e03aaa6fec5b1784ca8d7d4b3a79dbad5f40a2850a089de7a308f4e7a2",
+        "whitespace_normalization_only": true
+      }
+    ],
+    "binding": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/qa/root-source-b-verification-v1.json",
+      "sha256": "b20c1dda02d9ff4e1ab8f093bfdc195266e2aaee4c1b15ce46fa3a0e0865ede0",
+      "size": 13989
+    },
+    "dates": [
+      {
+        "body_sha256": "bdee26570261ecfb86db1206df61c34d023c50911bc1a4fc1bf74cfdbce39969",
+        "citation_id": "META-LG-release-1",
+        "locator": {
+          "JSONPointer": "/published_at",
+          "type": "actual_JSON_field"
+        },
+        "value": "2025-10-17T20:23:59Z",
+        "within_cutoff": true
+      },
+      {
+        "body_sha256": "dc3f539cd59ccb540b3bb6e26148215a8e7a5d12ca6ea50f9cb0a22e17e49c74",
+        "citation_id": "META-SM-release-118",
+        "locator": {
+          "JSONPointer": "/published_at",
+          "type": "actual_JSON_field"
+        },
+        "value": "2025-06-10T14:15:08Z",
+        "within_cutoff": true
+      },
+      {
+        "body_sha256": "03903d86f19fd5737d5ff68bfc2aa240650255cd5e261fe6818363f16dbf6529",
+        "citation_id": "META-PY-release-1",
+        "locator": {
+          "JSONPointer": "/published_at",
+          "type": "actual_JSON_field"
+        },
+        "value": "2025-09-05T00:15:29Z",
+        "within_cutoff": true
+      },
+      {
+        "body_sha256": "131c571844f80848ea6adf2807e31305a17a0d40db7497026a5643ebdbbc96ea",
+        "citation_id": "META-OH-release-039",
+        "locator": {
+          "JSONPointer": "/published_at",
+          "type": "actual_JSON_field"
+        },
+        "value": "2025-05-20T15:40:06Z",
+        "within_cutoff": true
+      },
+      {
+        "body_sha256": "056775ec183743e025e07f106ba477a2923388187e3aa99f4f525566b6602c23",
+        "citation_id": "META-AG-PyPI-upload",
+        "locator": {
+          "JSONPointer": "/urls/0/upload_time_iso_8601",
+          "type": "actual_JSON_field"
+        },
+        "value": "2025-01-21T21:06:52.794208Z",
+        "within_cutoff": true
+      }
+    ],
+    "decoded_sources": [
+      {
+        "actual_source_function_ranges_read": {
+          "__getstate__": [
+            170,
+            180
+          ],
+          "restore_from_session": [
+            130,
+            168
+          ],
+          "save_to_session": [
+            107,
+            127
+          ]
+        },
+        "code_executed": false,
+        "decoded_sha256": "ed714a38f3d6634b87d3a0f5064bd03708f0fe5119251f16a4ffa8d2de19e09a",
+        "git_blob_sha": "84a75928a6bbebe5df566c72cef5e7c1193060ed",
+        "raw_body_sha256": "d3a21a16b9a039b3d5887d64f3d42751f7d6291a9921e0d0f40bfac39ab75267",
+        "source_id": "OH-state-api-039"
+      },
+      {
+        "actual_source_function_ranges_read": {
+          "_execute_step": [
+            505,
+            515
+          ],
+          "_finalize_step": [
+            524,
+            530
+          ],
+          "_handle_max_steps_reached": [
+            532,
+            544
+          ],
+          "_validate_final_answer": [
+            517,
+            522
+          ],
+          "provide_final_answer": [
+            722,
+            764
+          ]
+        },
+        "code_executed": false,
+        "decoded_sha256": "0f46a1c94c7e95c8492bf3bc6508de155e68416b855d98ce2f1a99058780655e",
+        "git_blob_sha": "28c109c49698d331f225a52e691bd17ad22ccea4",
+        "raw_body_sha256": "3c64802eaacc0881f42a77e902b57d598ecda8736a98e207a6b129586135e0ea",
+        "source_id": "SM-code-api-118"
+      }
+    ],
+    "formal_semantic_score": null,
+    "model_review_not_human_expert": true,
+    "new_network": false,
+    "not_all_51_facts_independently_reviewed_by_root": true,
+    "scope": "Five selected framework date fields, actual docs for B-K01..15 and bounded static code paths; not all51 facts or formal Judge.",
+    "semantic_assessment": [
+      "LangGraph selected1.0.0 documents thread/store separation, replay/idempotency and durability modes; no execution or database setup proven.",
+      "AutoGen custom state defaults empty and termination predicates do not independently validate business delivery; this does not say custom validation is impossible.",
+      "OpenHands state serialization explicitly excludes history; external files/event stream atomic consistency is not proven by these methods.",
+      "smolagents built-in max-step handler calls provide_final_answer and step_callbacks, without the regular final_answer_checks hook. Custom step callbacks can still validate; this is not a reproduced vulnerability or universal bypass.",
+      "smolagents base to_dict omits final_answer_checks/step_callbacks; subclass can add fields and application can rebind them, so no universal impossibility claimed.",
+      "Pydantic AI selected1.0.0 Temporal activities/retry/payload and output-validator docs support bounded mechanisms, not infrastructure availability or final artifact correctness."
+    ],
+    "target_code_executed": false
+  },
+  "schema_version": "h031.source-review-reconciliation/v1",
+  "semantic_overlap_never_counts_as_independent_experiment": true,
+  "source_truth_accepted_by_root_message": "Parent explicitly accepted the eight reconciliation items and B-five-framework/A-five-paper nonexhaustive example basis; this is model source-GT authoring, not a human panel or semantic Judge run.",
+  "source_truth_binding": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/source-truth-proposal/source_truth.json",
+    "sha256": "a0f88bfd16b869b323c259591ee222060d43720eb20efe59b3e857ac7980341c",
+    "size": 551235
+  },
+  "source_truth_proposal_freeze": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h031/authoring/source-truth-proposal/freeze.json",
+    "sha256": "92a81354e3b50b9a3dc64243e8afd94f0e895ee8fa1427e9d84c2f3c15108303",
+    "size": 896
+  },
+  "status": "frozen",
+  "unresolved_direct_same_version_contradictions_found": [],
+  "whole_fact_records_removed_by_deduplication": 0
+}

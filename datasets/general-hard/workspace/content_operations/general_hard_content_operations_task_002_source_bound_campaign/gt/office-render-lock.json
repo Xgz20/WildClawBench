@@ -1,0 +1,24 @@
+{
+  "schema_version": "wildclawbench.office-render-runtime-lock/v1",
+  "profile": "offline-docx-to-pdf-with-fonts/v1",
+  "office_runtime": {
+    "schema_version": "wildclawbench.office-runtime-lock/v1",
+    "profile": "offline-xlsx-remove-formula-caches/v1",
+    "executable": "/Users/gzx/.cache/codex-runtimes/codex-primary-runtime/dependencies/native/libreoffice-headless/libreoffice/LibreOfficeDev.app/Contents/MacOS/soffice",
+    "executable_sha256": "38936fe8d6fdd43effb49caef6a62107f568b5db5ec18de98899ebd78230f67b",
+    "engine_version": "LibreOfficeDev 26.8.0.0.alpha0 2c87e51eeaa2b413ff4ae097b2705eea1995d8e5"
+  },
+  "fonts": [
+    {
+      "path": "/System/Library/Fonts/STHeiti Light.ttc",
+      "sha256": "a57b0316cc0544f682b8fb9855e14ade79ae77340ef6a01ba9210e25b4c5a5b7",
+      "size": 55783456
+    },
+    {
+      "path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "size": 773236
+    }
+  ],
+  "font_directories": []
+}

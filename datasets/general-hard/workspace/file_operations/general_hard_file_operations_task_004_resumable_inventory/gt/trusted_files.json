@@ -1,0 +1,12 @@
+{
+  "artifact_contract.json": "c1e213d8101f3a4fa286698e9c0828ac1e7f15aab40f589d8c514110e4b9b4eb",
+  "business_oracle.json": "f3b11d37477206b5fcd29e4334fa0d3694723953f9916a6f24e1cb87d4adb104",
+  "counterexamples.json": "152c339e97dbbce1388fd384431c55e726530f0d9951a458c666c397e660772e",
+  "evidence_requirements.json": "4dfe74e998535251a96a393d71fac7e0b380413fd17715963a200e016018b366",
+  "expected.json": "e128d6bcd376413203691f87286170af5c8ebabd80d945cd6a2059802802e38e",
+  "grader.py": "eb9a6da122eb8a05694db62e47e0efe3c6c8d10fc410feff03c7ef191b9e2aa4",
+  "native_io.py": "c64ae8d109025e9d0239ac2c553cd6a1bfa7c7563632090f07c2c3da226ce0d8",
+  "protected_sha256.json": "9650347e4ccb658cace9801b981d2c0072c965adfe0461a8bf93e8d8417c2d0f",
+  "recovery_probe.py": "13c050d05fdbb07c4e4f5be0b814284b69fe2cb8264c66c63e582d76c6644506",
+  "restricted_runner.py": "3f18f4d959ba48dc7a4cb68b36301629929f0fb6f07e454e7980d8e11f06a8ad"
+}

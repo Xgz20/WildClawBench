@@ -5,7 +5,9 @@ from __future__ import annotations
 
 import argparse
 import ast
+import base64
 from collections.abc import Mapping, Sequence
+from contextlib import contextmanager
 from datetime import datetime, timezone
 import hashlib
 import json
@@ -81,6 +83,8 @@ import quadrant_metric_layout
 import native_response_transport
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"vendor/e2e-shared/general-contracts"))
 import utf8_redecode
+import research_sources
+import research_source_dispatch
 
 ATTEMPT_SCHEMA = "wildclawbench.general-e2e-local-scoring-attempt/v1"
 AUDIT_SCHEMA = "wildclawbench.general-e2e-rule-runtime-audit/v1"
@@ -173,6 +177,53 @@ class ApiJudgeAttemptError(ScoringRuntimeError):
         self.http_status = http_status
         self.response_text = response_text
         super().__init__(code, detail)
+
+
+def _research_source_binding(root: Path, *, required: bool = False, archived: bool = False) -> dict | None:
+    try:
+        binding = research_source_dispatch.verify(root, required=required, archived=archived, attempt_verifier=verify_attempt)
+    except research_sources.ResearchSourceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.detail) from exc
+    if binding is None:
+        return None
+    audit_path = root / "rule-audit.json"
+    if audit_path.is_file():
+        audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+        expected = {key: binding[key] for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}
+        worker_binding = audit.get("worker")
+        if (audit.get("research_sources") != expected
+                or worker_binding and worker_binding.get("research_sources") != expected
+                or audit.get("status") == "completed" and not worker_binding):
+            raise ScoringRuntimeError("RESEARCH_SOURCE_RULE_BINDING_INVALID")
+    catalog_path = root / "semantic/evidence-catalog.json"
+    if catalog_path.is_file():
+        catalog = _read_json(catalog_path, code="SEMANTIC_CATALOG_INVALID")
+        references = [row.get("reference") for row in catalog.get("evidence_index", {}).get("entries", [])]
+        if any(reference not in references for reference in binding["references"]):
+            raise ScoringRuntimeError("RESEARCH_SOURCE_SEMANTIC_BINDING_INVALID")
+    return binding
+
+
+def _frozen_research_source_view(root: Path, path: Path, expected_sha: str | None, **kwargs) -> dict | None:
+    try:
+        return research_source_dispatch.frozen_file_view(root, path, expected_sha, **kwargs)
+    except research_sources.ResearchSourceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.detail) from exc
+
+
+def collect_research_sources_attempt(*, attempt_root: Path, curl: Path | None = None,
+                                     reuse_sources_from: tuple[Path, ...] = (),
+                                     trusted_http_connect_proxy: str | None = None) -> dict:
+    root = attempt_root.expanduser().resolve(strict=True)
+    verify_attempt(root)
+    try:
+        result = research_source_dispatch.collect(root, curl=curl, reuse_sources_from=reuse_sources_from,
+                                          trusted_http_connect_proxy=trusted_http_connect_proxy,
+                                          attempt_verifier=verify_attempt)
+    except research_sources.ResearchSourceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.detail) from exc
+    _research_source_binding(root, required=True)
+    return {**result, "attempt_root": str(root)}
 
 
 def _now() -> str:
@@ -373,7 +424,7 @@ def _load_api_runtime_config(path: Path) -> dict[str, Any]:
         "temperature",
         "reasoning_parameter",
     }
-    if set(raw) != expected_keys or raw.get("schema_version") != API_JUDGE_CONFIG_SCHEMA:
+    if set(raw) - {"image_input"} != expected_keys or raw.get("schema_version") != API_JUDGE_CONFIG_SCHEMA:
         raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "keys or schema")
     provider = _required_string(raw.get("provider"), "api.provider")
     if provider not in API_PROVIDERS:
@@ -453,7 +504,21 @@ def _load_api_runtime_config(path: Path) -> dict[str, Any]:
             maximum=1.0,
         ),
         "reasoning_parameter": reasoning_parameter,
+        **({"image_input": _image_input_config(raw["image_input"], provider)} if "image_input" in raw else {}),
     }
+
+
+def _image_input_config(value: object, provider: str) -> dict[str, Any]:
+    keys = {"max_images", "max_image_bytes", "max_total_bytes", "max_pixels", "detail"}
+    if not isinstance(value, dict) or set(value) != keys:
+        raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "image_input keys")
+    result = {key: _bounded_int(value[key], f"image_input.{key}", minimum=1, maximum=maximum)
+              for key, maximum in (("max_images", 20), ("max_image_bytes", 5_000_000),
+                                   ("max_total_bytes", 20_000_000), ("max_pixels", 16_000_000))}
+    details = {"native"} if provider == "anthropic-messages" else {"auto", "low", "high", "original"}
+    if not isinstance(value["detail"], str) or value["detail"] not in details or result["max_image_bytes"] > result["max_total_bytes"]:
+        raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "image_input detail or budgets")
+    return {**result, "detail": value["detail"]}
 
 
 def _sha256(value: object, label: str) -> str:
@@ -2396,6 +2461,8 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         if request.get('rule_result_adapter')!=_effective_worker_adapter(manifest,contract):
             raise ScoringRuntimeError('RULE_RESULT_ADAPTER_PROFILE_DRIFT')
     glob_reader=generated_evidence_globs.descriptor(manifest,contract)
+    _research_source_binding(root, archived=not require_runtime)
+    _verify_generic_rule_evidence(root)
     return {
         "status": "PASS",
         "attempt_root": str(root),
@@ -2549,6 +2616,9 @@ def probe_runtime(
     )
     lock, lock_sha = _load_runtime_lock(runtime_lock_path)
     required = None if required_import_roots is None else set(required_import_roots)
+    declared = {root for item in lock["dependencies"] for root in item["import_roots"]}
+    if required is not None and required - declared:
+        raise ScoringRuntimeError("RUNTIME_DEPENDENCY_UNDECLARED", repr(sorted(required - declared)))
     dependencies = [
         item
         for item in lock["dependencies"]
@@ -2724,12 +2794,22 @@ class _WorkerExecutor:
         playwright_browsers_path: Path | None,
         rule_result_adapter: Mapping[str, Any] | None = None,
         rule_review_configuration: Mapping[str, Any] | None = None,
+        office_runtime: dict | None = None,
+        office_render_runtime: dict | None = None,
+        html_runtime: dict | None = None,
+        research_source_binding: dict | None = None,
     ) -> None:
         self.attempt_root = attempt_root
         self.runtime_python = runtime_python
         self.runtime_lock_path = runtime_lock_path
         self.timeout_seconds = timeout_seconds
         self.playwright_browsers_path = playwright_browsers_path
+        self.office_runtime = office_runtime
+        self.office_render_runtime = office_render_runtime
+        self.html_runtime = html_runtime
+        self.research_source_binding = research_source_binding
+        if office_render_runtime is not None and (office_runtime is None or office_render_runtime.get("office_runtime") != office_runtime):
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
         self.audit: dict[str, Any] = {}
         self.rule_result_adapter = rule_result_adapter
         self.rule_review_configuration = rule_review_configuration
@@ -2744,6 +2824,13 @@ class _WorkerExecutor:
             required_import_roots=dependency_roots,
             playwright_browsers_path=self.playwright_browsers_path,
         )
+        if self.html_runtime is not None:
+            _import_grading_core()
+            from wildclawbench_grading_core import HtmlRuntimeError, validate_html_lock
+            try:
+                validate_html_lock(self.html_runtime)
+            except HtmlRuntimeError as exc:
+                raise ScoringRuntimeError(exc.code, exc.message) from exc
         work_root = self.attempt_root / "worker"
         work_root.mkdir(parents=False, exist_ok=False)
         request_path = work_root / "request.json"
@@ -2764,6 +2851,30 @@ class _WorkerExecutor:
             self.runtime_python,
             playwright_browsers_path=self.playwright_browsers_path,
         )
+        derived = work_root / "derived"
+        derived.mkdir()
+        env["GENERAL_E2E_RULE_EVIDENCE_DIR"] = str(derived)
+        if self.research_source_binding is not None:
+            env["GENERAL_E2E_RESEARCH_SOURCE_BUNDLE"] = str(self.attempt_root / self.research_source_binding["path"])
+            env["GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"] = self.research_source_binding["manifest_sha256"]
+        office_binding = None
+        render_binding = None
+        html_binding = None
+        if self.office_runtime is not None:
+            lock_path = work_root / "office-runtime.json"
+            _write_new_json(lock_path, self.office_runtime)
+            env["GENERAL_E2E_OFFICE_LOCK"] = str(lock_path)
+            office_binding = {"path": "worker/office-runtime.json", "sha256": _sha256_file(lock_path)}
+        if self.office_render_runtime is not None:
+            render_path = work_root / "office-render-runtime.json"
+            _write_new_json(render_path, self.office_render_runtime)
+            env["GENERAL_E2E_OFFICE_RENDER_LOCK"] = str(render_path)
+            render_binding = {"path": "worker/office-render-runtime.json", "sha256": _sha256_file(render_path)}
+        if self.html_runtime is not None:
+            html_path = work_root / "html-runtime.json"
+            _write_new_json(html_path, self.html_runtime)
+            env["GENERAL_E2E_HTML_LOCK"] = str(html_path)
+            html_binding = {"path": "worker/html-runtime.json", "sha256": _sha256_file(html_path)}
         creationflags = 0
         popen_kwargs: dict[str, Any] = {"start_new_session": os.name != "nt"}
         if os.name == "nt":
@@ -2828,6 +2939,12 @@ class _WorkerExecutor:
             "request_sha256": _sha256_file(request_path),
             "stdout_sha256": _sha256_file(stdout_path),
             "stderr_sha256": _sha256_file(stderr_path),
+            **({"office_runtime": office_binding} if office_binding else {}),
+            **({"office_render_runtime": render_binding} if render_binding else {}),
+            **({"html_runtime": html_binding} if html_binding else {}),
+            **({"research_sources": {key: self.research_source_binding[key]
+                                     for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}}
+               if self.research_source_binding is not None else {}),
         }
         if timed_out:
             raise ScoringRuntimeError("RULE_WORKER_TIMEOUT")
@@ -2867,6 +2984,424 @@ def _import_grading_core() -> tuple[Any, Any]:
             "install the packaged vendor/e2e-shared directory on PYTHONPATH",
         ) from exc
     return run_rules, GradingCoreError
+
+
+def _load_office_runtime(path: Path, *, archived: bool = False) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import OfficeRuntimeError, validate_office_lock
+    lock = _read_json(path, code="OFFICE_LOCK_INVALID")
+    try:
+        validate_office_lock(lock, require_executable=not archived)
+    except OfficeRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    return lock
+
+
+def bootstrap_office_runtime(executable: Path, output: Path, runtime_lock_path: Path | None = None) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import OfficeRuntimeError, create_office_lock
+    try:
+        lock = create_office_lock(executable)
+    except OfficeRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    if runtime_lock_path is None:
+        value = lock
+    else:
+        value, _ = _load_runtime_lock(runtime_lock_path)
+        value = {**value, "office_runtime": lock}
+    _write_new_json(output, value)
+    return {"status": "PASS", "office_runtime_lock": str(output.resolve()), "sha256": _sha256_file(output), "engine_version": lock["engine_version"]}
+
+
+def bootstrap_office_render_runtime(office_lock_path: Path, font_files: list[Path], output: Path, runtime_lock_path: Path,
+                                   font_directories: list[Path] | None = None, document_format: str = "pptx") -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import OfficeRuntimeError, create_office_render_lock, office_render_lock_formats
+    office = _load_office_runtime(office_lock_path)
+    try:
+        render = create_office_render_lock(office, font_files, font_directories=font_directories or (), document_format=document_format)
+    except OfficeRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    value, _ = _load_runtime_lock(runtime_lock_path)
+    if value.get("office_runtime") is not None and value["office_runtime"] != office:
+        raise ScoringRuntimeError("OFFICE_RUNTIME_CONFLICT", "render engine differs from Python/runtime lock")
+    value = {**value, "office_runtime": office, "office_render_runtime": render}
+    _write_new_json(output, value)
+    return {"status": "PASS", "runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
+            "font_count": len(render["fonts"]), "engine_version": office["engine_version"],
+            "document_format": document_format, "document_formats": list(office_render_lock_formats(render)), "profile": render["profile"]}
+
+
+def bootstrap_html_runtime(node: Path, library: Path, browser: Path, output: Path,
+                           runtime_lock_path: Path | None = None, font_files: list[Path] | None = None) -> dict:
+    _import_grading_core()
+    from wildclawbench_grading_core import HtmlRuntimeError, create_html_lock
+    try:
+        html = create_html_lock(node, library, browser, font_files=font_files or ())
+    except HtmlRuntimeError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    value = html
+    if runtime_lock_path is not None:
+        value, _ = _load_runtime_lock(runtime_lock_path)
+        value = {**value, "html_runtime": html}
+    _write_new_json(output, value)
+    return {"status": "PASS", "html_runtime_lock": str(output.resolve()), "sha256": _sha256_file(output),
+            "browser_version": html["browser"]["version"], "playwright_core_version": html["playwright_core"]["version"]}
+
+
+def _verify_html_rule_evidence(root: Path, *, required: bool = False, archived: bool = False) -> list[dict]:
+    audit_path = root / "rule-audit.json"
+    if not audit_path.is_file():
+        if required:raise ScoringRuntimeError("HTML_RULE_AUDIT_MISSING")
+        return []
+    audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+    binding = (audit.get("worker") or {}).get("html_runtime")
+    if not binding:
+        if required:raise ScoringRuntimeError("HTML_RUNTIME_BINDING_MISSING")
+        return []
+    path = _resolve_within(root, binding.get("path"), "HTML runtime")
+    if binding.get("path") != "worker/html-runtime.json" or path.is_symlink() or _sha256_file(path) != binding.get("sha256"):
+        raise ScoringRuntimeError("HTML_RUNTIME_LOCK_DRIFT")
+    _import_grading_core()
+    from wildclawbench_grading_core import HtmlRuntimeError, validate_html_lock, verify_html_observation
+    lock = _read_json(path, code="HTML_RUNTIME_LOCK_INVALID")
+    try:validate_html_lock(lock, require_assets=not archived)
+    except HtmlRuntimeError as exc:raise ScoringRuntimeError(exc.code, exc.message) from exc
+    artifacts = audit.get("derived_artifacts")
+    if not isinstance(artifacts, list):raise ScoringRuntimeError("HTML_DERIVED_INDEX_INVALID")
+    seen = set()
+    for row in artifacts:
+        relative = row.get("path", "")
+        if not relative.startswith("worker/derived/") or relative in seen:raise ScoringRuntimeError("HTML_DERIVED_INDEX_INVALID")
+        seen.add(relative);file = _resolve_within(root, relative, "HTML derived artifact")
+        if file.is_symlink() or not file.is_file() or file.stat().st_size != row.get("size") or _sha256_file(file) != row.get("sha256"):
+            raise ScoringRuntimeError("HTML_DERIVED_ARTIFACT_DRIFT", relative)
+    if seen != {p.relative_to(root).as_posix() for p in (root / "worker/derived").rglob("*") if p.is_file()}:
+        raise ScoringRuntimeError("HTML_DERIVED_INDEX_DRIFT")
+    sources = {}
+    for boundary in [root / "candidate-original/workspace", root / "private/gt"]:
+        for file in _regular_evidence_files(boundary):
+            if file.suffix.lower() in {".html", ".htm"}:sources.setdefault(_sha256_file(file), []).append((file, boundary))
+    for row in artifacts:
+        if not row["path"].endswith("/html-audit.json"):continue
+        receipt_path = root / row["path"];receipt = _read_json(receipt_path, code="HTML_AUDIT_INVALID")
+        request = _read_json(receipt_path.with_name("request.json"), code="HTML_AUDIT_INVALID")
+        relative = request.get("source_resource_path")
+        if not isinstance(relative, str) or not relative or any(p in {"", ".", ".."} for p in relative.replace("\\", "/").split("/")):
+            raise ScoringRuntimeError("HTML_AUDIT_INVALID", "resource-root relation")
+        accepted = False
+        for source, boundary in sources.get(receipt.get("source_sha256"), []):
+            resource_root = source
+            for _ in relative.split("/"):resource_root = resource_root.parent
+            if resource_root != boundary and boundary not in resource_root.parents:continue
+            try:
+                verify_html_observation(source, receipt_path.parent, receipt, lock, resource_root=resource_root, archived=archived)
+            except (HtmlRuntimeError, OSError, ValueError, KeyError, TypeError):continue
+            accepted = True;break
+        if not accepted:raise ScoringRuntimeError("HTML_AUDIT_INVALID", row["path"])
+    return [{"path": binding["path"], "sha256": binding["sha256"]}, *artifacts]
+
+
+def _rule_derived_inventory(root: Path) -> list[dict]:
+    """Inventory only custody facts; no interpretation of rule JSON or success."""
+    derived = root / "worker/derived"
+    if (root / "worker").is_symlink() or derived.is_symlink():
+        raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", "linked directory")
+    if not derived.exists():
+        return []
+    if not derived.is_dir():
+        raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", "not a directory")
+    rows = []
+    try:
+        for path in sorted(derived.rglob("*")):
+            if path.is_symlink() or not (path.is_file() or path.is_dir()):
+                raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", path.relative_to(root).as_posix())
+            if path.is_file():
+                rows.append({"path": path.relative_to(root).as_posix(),
+                             "sha256": _sha256_file(path), "size": path.stat().st_size})
+    except OSError as exc:
+        raise ScoringRuntimeError("RULE_DERIVED_PATH_INVALID", str(exc)) from exc
+    return rows
+
+
+def _rule_derived_receipt(artifacts: list[dict]) -> dict:
+    return {"schema_version": "wildclawbench.rule-derived-evidence/v1",
+            "directory": "worker/derived", "file_count": len(artifacts),
+            "entries_sha256": _sha256_bytes(json.dumps(artifacts, ensure_ascii=False,
+                sort_keys=True, separators=(",", ":")).encode("utf-8")),
+            "purpose": "custody_only_not_business_validation"}
+
+
+def _verify_generic_rule_evidence(root: Path) -> list[dict]:
+    actual = _rule_derived_inventory(root)
+    audit_path = root / "rule-audit.json"
+    if not audit_path.exists():
+        if actual:
+            raise ScoringRuntimeError("RULE_DERIVED_INDEX_MISSING")
+        return []
+    if audit_path.is_symlink() or not audit_path.is_file():
+        raise ScoringRuntimeError("RULE_DERIVED_INDEX_INVALID", "audit path")
+    audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+    artifacts = audit.get("derived_artifacts")
+    receipt = audit.get("derived_evidence")
+    worker = audit.get("worker")
+    worker = worker if isinstance(worker, dict) else {}
+    # Preserve the already-published engine-specific index error families.
+    # Ordinary rules remain independent of either capability/binding.
+    family = "OFFICE" if worker.get("office_runtime") else "HTML" if worker.get("html_runtime") else "RULE"
+    if artifacts is None and receipt is None:
+        # Pre-0.27 ordinary audits did not create/index this directory.
+        if actual:
+            raise ScoringRuntimeError("RULE_DERIVED_INDEX_MISSING")
+        return []
+    if not isinstance(artifacts, list):
+        raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_INVALID")
+    seen = set()
+    for row in artifacts:
+        if not isinstance(row, dict) or set(row) != {"path", "size", "sha256"}:
+            raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_INVALID", "member shape")
+        relative = row["path"]
+        if (not isinstance(relative, str) or not relative.startswith("worker/derived/")
+                or PurePosixPath(relative).as_posix() != relative
+                or any(part in {".", ".."} for part in PurePosixPath(relative).parts)
+                or relative in seen or type(row["size"]) is not int or row["size"] < 0
+                or not SHA256_RE.fullmatch(str(row["sha256"]))):
+            raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_INVALID", str(relative))
+        seen.add(relative)
+    actual_by_path = {row["path"]: row for row in actual}
+    for row in artifacts:
+        if actual_by_path.get(row["path"]) != row:
+            raise ScoringRuntimeError(f"{family}_DERIVED_ARTIFACT_DRIFT", row["path"])
+    if seen != set(actual_by_path):
+        raise ScoringRuntimeError(f"{family}_DERIVED_INDEX_DRIFT")
+    if receipt is not None and receipt != _rule_derived_receipt(artifacts):
+        raise ScoringRuntimeError("RULE_DERIVED_RECEIPT_DRIFT")
+    # Legacy Office/HTML audits already have a complete file index but no
+    # generic receipt. Their existing engine-specific validation still runs.
+    return artifacts
+
+
+def _verify_rule_derived_evidence(root: Path, requirements: dict, *, archived: bool = False) -> list[dict]:
+    generic = _verify_generic_rule_evidence(root)
+    office = _verify_office_rule_evidence(root, required=bool(requirements.get("office")),
+        render_required=bool(requirements.get("office_render")), archived=archived)
+    html = _verify_html_rule_evidence(root, required=bool(requirements.get("html_render")), archived=archived)
+    return list({row["path"]: row for row in [*generic, *office, *html]}.values())
+
+
+@contextmanager
+def _office_reference_verification_view(root: Path):
+    """Read sealed originals into a disposable view, never beside private inputs."""
+    manifest = _read_json(root / "attempt-manifest.json")
+    private = manifest["private_scoring"]
+    private_gt = _resolve_within(root, manifest["paths"]["gt"], "private GT")
+    storage = private.get("storage")
+    if storage is None:
+        yield private_gt
+        return
+    _validate_gt_storage(private_gt, private)
+    with tempfile.TemporaryDirectory(prefix="general-e2e-office-reference-verify-") as temporary:
+        view = Path(temporary)
+        for row, entry in zip(storage["files"], _office_gt_entries(private["entries"])):
+            target = view.joinpath(*_safe_relative(row["logical_path"], "GT logical path").parts)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes(_read_office_gt_member(private_gt, row, entry))
+            target.chmod(0o444)
+        yield view
+
+
+def _verify_office_rule_evidence(root: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
+    audit_path = root / "rule-audit.json"
+    if not audit_path.is_file() or not (_read_json(audit_path).get("worker") or {}).get("office_runtime"):
+        return _verify_office_rule_evidence_with_references(root, root / "private/gt", required=required,
+                                                          render_required=render_required, archived=archived)
+    with _office_reference_verification_view(root) as private_gt:
+        return _verify_office_rule_evidence_with_references(root, private_gt, required=required,
+                                                          render_required=render_required, archived=archived)
+
+
+def _verify_office_rule_evidence_with_references(root: Path, private_gt: Path, *, required: bool = False, render_required: bool = False, archived: bool = False) -> list[dict]:
+    audit_path = root / "rule-audit.json"
+    if not audit_path.is_file():
+        if required or render_required:
+            raise ScoringRuntimeError("OFFICE_RULE_AUDIT_MISSING")
+        return []
+    audit = _read_json(audit_path, code="RULE_AUDIT_INVALID")
+    binding = (audit.get("worker") or {}).get("office_runtime")
+    if not binding:
+        if required or render_required:
+            raise ScoringRuntimeError("OFFICE_RUNTIME_BINDING_MISSING")
+        return []
+    path = _resolve_within(root, binding.get("path"), "office_runtime")
+    if binding.get("path") != "worker/office-runtime.json" or path.is_symlink() or _sha256_file(path) != binding.get("sha256"):
+        raise ScoringRuntimeError("OFFICE_RUNTIME_LOCK_DRIFT")
+    lock = _load_office_runtime(path, archived=archived)
+    render_binding = (audit.get("worker") or {}).get("office_render_runtime")
+    render_lock = None
+    if render_required and not render_binding:
+        raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_BINDING_MISSING")
+    if render_binding:
+        render_path = _resolve_within(root, render_binding.get("path"), "office_render_runtime")
+        if (render_binding.get("path") != "worker/office-render-runtime.json" or render_path.is_symlink()
+                or _sha256_file(render_path) != render_binding.get("sha256")):
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_LOCK_DRIFT")
+        _import_grading_core()
+        from wildclawbench_grading_core import OfficeRuntimeError, validate_office_render_lock
+        render_lock = _read_json(render_path, code="OFFICE_RENDER_LOCK_INVALID")
+        try:
+            validate_office_render_lock(render_lock, require_files=not archived)
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+        if render_lock["office_runtime"] != lock:
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
+    artifacts = audit.get("derived_artifacts")
+    if not isinstance(artifacts, list):
+        raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_INVALID")
+    seen = set()
+    for artifact in artifacts:
+        relative = artifact.get("path", "")
+        if not relative.startswith("worker/derived/") or relative in seen:
+            raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_INVALID")
+        seen.add(relative)
+        file = _resolve_within(root, relative, "office derived artifact")
+        if not file.is_file() or file.is_symlink() or _sha256_file(file) != artifact.get("sha256") or file.stat().st_size != artifact.get("size"):
+            raise ScoringRuntimeError("OFFICE_DERIVED_ARTIFACT_DRIFT", relative)
+    actual = {file.relative_to(root).as_posix() for file in (root / "worker/derived").rglob("*") if file.is_file()}
+    if actual != seen:
+        raise ScoringRuntimeError("OFFICE_DERIVED_INDEX_DRIFT")
+    candidate_hashes = {_sha256_file(file) for file in _regular_evidence_files(root / "candidate-original/workspace") if file.suffix.lower() == ".xlsx"}
+    reference_hashes = {_sha256_file(file) for file in _regular_evidence_files(private_gt) if file.suffix.lower() == ".xlsx"}
+    workbooks = {_sha256_file(file): file for folder in (root / "candidate-original/workspace", private_gt)
+                 for file in _regular_evidence_files(folder) if file.suffix.lower() == ".xlsx"}
+    presentations = {_sha256_file(file): file for folder in (root / "candidate-original/workspace", private_gt)
+                     for file in _regular_evidence_files(folder) if file.suffix.lower() == ".pptx"}
+    presentation_hashes = set(presentations)
+    documents = {_sha256_file(file): file for folder in (root / "candidate-original/workspace", private_gt)
+                 for file in _regular_evidence_files(folder) if file.suffix.lower() == ".docx"}
+    embedded_hashes = set()
+    for artifact in artifacts:
+        if not artifact["path"].endswith("/embedded-xlsx-audit.json"):
+            continue
+        _import_grading_core()
+        from wildclawbench_grading_core.office_runtime import EMBEDDED_AUDIT_SCHEMA, OfficeRuntimeError, read_embedded_xlsx
+        receipt_path = root / artifact["path"]
+        receipt = _read_json(receipt_path, code="OFFICE_EMBEDDED_AUDIT_INVALID")
+        source = presentations.get(receipt.get("source_presentation_sha256"))
+        extracted = receipt_path.with_name("embedded.xlsx")
+        if (source is None or receipt.get("schema_version") != EMBEDDED_AUDIT_SCHEMA
+                or receipt.get("source_unchanged") is not True or not extracted.is_file()):
+            raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", artifact["path"])
+        try:
+            data = read_embedded_xlsx(source, receipt.get("part"))
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", exc.message) from exc
+        digest = _sha256_bytes(data)
+        if receipt.get("embedded_sha256") != digest or _sha256_file(extracted) != digest:
+            raise ScoringRuntimeError("OFFICE_EMBEDDED_AUDIT_INVALID", artifact["path"])
+        embedded_hashes.add(digest)
+    counterfactual_hashes = set()
+    variants = []
+    prepared_paths = set()
+    for artifact in artifacts:
+        marker = artifact["path"].endswith("/marker-intervention-audit.json")
+        numeric = artifact["path"].endswith("/numeric-intervention-audit.json")
+        if not marker and not numeric and not artifact["path"].endswith("/counterfactual-audit.json"):
+            continue
+        _import_grading_core()
+        from wildclawbench_grading_core.office_runtime import (
+            OfficeRuntimeError, verify_xlsx_counterfactual, verify_xlsx_marker_intervention,
+            verify_xlsx_numeric_intervention,
+        )
+        receipt_path = root / artifact["path"]
+        code = ("OFFICE_NUMERIC_INTERVENTION_AUDIT_INVALID" if numeric else
+                "OFFICE_MARKER_INTERVENTION_AUDIT_INVALID" if marker else "OFFICE_COUNTERFACTUAL_AUDIT_INVALID")
+        receipt = _read_json(receipt_path, code=code)
+        prepared = receipt_path.with_name("prepared.xlsx")
+        parent = receipt.get("source_sha256")
+        if (not isinstance(parent, str) or not re.fullmatch(r"[0-9a-f]{64}", parent)
+                or not prepared.is_file() or prepared in prepared_paths):
+            raise ScoringRuntimeError(code, artifact["path"])
+        prepared_paths.add(prepared)
+        variants.append((artifact["path"], parent, prepared, receipt,
+                         verify_xlsx_numeric_intervention if numeric else
+                         verify_xlsx_marker_intervention if marker else verify_xlsx_counterfactual, code))
+    if len(variants) > 1024:
+        raise ScoringRuntimeError("OFFICE_VARIANT_GRAPH_LIMIT")
+    # Artifact-index order is not provenance order. Only an exactly replayed
+    # child of an authorized root/parent becomes a source for later variants.
+    pending = sorted(variants, key=lambda row: row[0])
+    while pending:
+        ready, waiting = [], []
+        for item in pending:
+            (ready if item[1] in workbooks else waiting).append(item)
+        if not ready:
+            raise ScoringRuntimeError(waiting[0][5], "unrooted or cyclic variant parents: " + repr([r[0] for r in waiting]))
+        for relative, parent, prepared, receipt, verify, code in ready:
+            try:
+                verify(workbooks[parent], prepared, receipt)
+            except (OfficeRuntimeError, ValueError, TypeError, KeyError, UnicodeError, zipfile.BadZipFile) as exc:
+                raise ScoringRuntimeError(code, str(exc)) from exc
+            digest = _sha256_file(prepared)
+            workbooks[digest] = prepared
+            counterfactual_hashes.add(digest)
+        pending = waiting
+    for artifact in artifacts:
+        if artifact["path"].endswith("/render-audit.json"):
+            _import_grading_core()
+            from wildclawbench_grading_core.office_runtime import (
+                RENDER_AUDIT_SCHEMA, RENDER_PROFILE, RENDER_FILTER, office_render_lock_digest,
+                DOCX_RENDER_AUDIT_SCHEMA, DOCX_RENDER_PROFILE, DOCX_RENDER_FILTER,
+                OfficeRuntimeError, _inspect_docx_render_package, _inspect_render_package,
+                MULTI_RENDER_LOCK_SCHEMA, office_render_lock_formats,
+            )
+            receipt_path = root / artifact["path"]
+            receipt = _read_json(receipt_path, code="OFFICE_RENDER_AUDIT_INVALID")
+            derived_path = receipt_path.with_name("rendered.pdf")
+            is_word = receipt.get("schema_version") == DOCX_RENDER_AUDIT_SCHEMA
+            expected_profile = DOCX_RENDER_PROFILE if is_word else RENDER_PROFILE
+            expected_filter = DOCX_RENDER_FILTER if is_word else RENDER_FILTER
+            source_hash = receipt.get("source_sha256")
+            source = documents.get(source_hash) if is_word and isinstance(source_hash, str) else None
+            if is_word and source is not None:
+                try:
+                    source_info = _inspect_docx_render_package(source.read_bytes())
+                except (OfficeRuntimeError, ValueError, zipfile.BadZipFile) as exc:
+                    raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", str(exc)) from exc
+                source_valid = all(receipt.get(key) == value and type(receipt.get(key)) is type(value) for key, value in source_info.items())
+            elif not is_word and isinstance(source_hash, str) and source_hash in presentations and render_lock is not None and render_lock.get("schema_version") == MULTI_RENDER_LOCK_SCHEMA:
+                try:
+                    source_info = _inspect_render_package(presentations[source_hash].read_bytes())
+                except (OfficeRuntimeError, ValueError, zipfile.BadZipFile) as exc:
+                    raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", str(exc)) from exc
+                source_valid = all(receipt.get(key) == value and type(receipt.get(key)) is type(value) for key, value in source_info.items())
+            else:
+                source_valid = (not is_word and isinstance(source_hash, str) and source_hash in presentation_hashes
+                                and type(receipt.get("source_slide_count")) is int and receipt["source_slide_count"] > 0)
+            if (render_lock is None or receipt.get("schema_version") not in (RENDER_AUDIT_SCHEMA, DOCX_RENDER_AUDIT_SCHEMA)
+                    or receipt.get("profile") != expected_profile or ("docx" if is_word else "pptx") not in office_render_lock_formats(render_lock)
+                    or receipt.get("engine_version") != lock["engine_version"] or receipt.get("executable_sha256") != lock["executable_sha256"]
+                    or receipt.get("render_lock_sha256") != office_render_lock_digest(render_lock) or receipt.get("source_unchanged") is not True
+                    or not source_valid or receipt.get("export_filter") != expected_filter
+                    or receipt.get("environment_profile") != "isolated-fontconfig/v1"
+                    or receipt.get("font_assets") != [{key: font[key] for key in ("sha256", "size")} for font in render_lock["fonts"]]
+                    or not derived_path.is_file() or receipt.get("derived_sha256") != _sha256_file(derived_path)):
+                raise ScoringRuntimeError("OFFICE_RENDER_AUDIT_INVALID", artifact["path"])
+            continue
+        if not artifact["path"].endswith("/office-audit.json"):
+            continue
+        receipt_path = root / artifact["path"]
+        receipt = _read_json(receipt_path, code="OFFICE_RECALCULATION_AUDIT_INVALID")
+        derived_path = receipt_path.with_name("recalculated.xlsx")
+        if (receipt.get("schema_version") != "wildclawbench.office-recalculation/v1"
+                or receipt.get("profile") != lock["profile"] or receipt.get("engine_version") != lock["engine_version"]
+                or receipt.get("executable_sha256") != lock["executable_sha256"] or receipt.get("source_unchanged") is not True
+                or receipt.get("source_sha256") not in candidate_hashes | reference_hashes | embedded_hashes | counterfactual_hashes
+                or not derived_path.is_file() or receipt.get("derived_sha256") != _sha256_file(derived_path)):
+            raise ScoringRuntimeError("OFFICE_RECALCULATION_AUDIT_INVALID", artifact["path"])
+    # Missing/invalid deliveries may legitimately yield no workbook receipt.
+    # The frozen task grader decides that score; this generic verifier checks
+    # every derived artifact that was actually produced, not delivery semantics.
+    return [{"path": binding["path"], "sha256": binding["sha256"]}, *([render_binding] if render_binding else []), *artifacts]
 
 
 def _rule_file_evidence(
@@ -2925,6 +3460,9 @@ def _materialize_rule_component_evidence(
             "candidate_artifact",
         ),
     ]
+    research_binding = _research_source_binding(attempt_root, required=True)
+    if research_binding is not None:
+        shared_evidence.extend(research_binding["references"])
     correction_path = attempt_root / "rule-source-correction.json"
     if correction_path.is_file():
         shared_evidence.append(
@@ -3280,6 +3818,7 @@ def run_rules_attempt(
     runtime_python: Path,
     timeout_seconds: float,
     playwright_browsers_path: Path | None = None,
+    office_runtime_lock_path: Path | None = None,
 ) -> dict[str, Any]:
     attempt_root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(attempt_root)
@@ -3288,6 +3827,51 @@ def run_rules_attempt(
     manifest = _read_json(attempt_root / "attempt-manifest.json")
     contract_path = _resolve_within(attempt_root, manifest["paths"]["contract"], "contract")
     contract = _read_json(contract_path, code="SCORING_CONTRACT_INVALID")
+    requirements = contract.get("scoring_runtime") or {}
+    if (not isinstance(requirements, dict) or set(requirements) - {"office", "office_render", "html_render", "research_sources"}
+            or any(type(value) is not bool for value in requirements.values())
+            or requirements.get("office_render") and not requirements.get("office")):
+        raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "scoring_runtime")
+    research_binding = _research_source_binding(attempt_root, required=True)
+    office_runtime = None
+    if office_runtime_lock_path is not None:
+        office_runtime = _load_office_runtime(office_runtime_lock_path)
+    frozen_runtime_lock = _read_json(_resolve_within(attempt_root, manifest["paths"]["runtime_lock"], "runtime_lock"))
+    inherited_office = frozen_runtime_lock.get("office_runtime") if requirements.get("office") else None
+    if inherited_office is not None:
+        if office_runtime is not None and office_runtime != inherited_office:
+            raise ScoringRuntimeError("OFFICE_RUNTIME_CONFLICT", "explicit Office lock disagrees with the frozen Python/runtime lock")
+        _import_grading_core()
+        from wildclawbench_grading_core import OfficeRuntimeError, validate_office_lock
+        try:
+            validate_office_lock(inherited_office)
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+        office_runtime = inherited_office
+    if requirements.get("office") and office_runtime is None:
+        raise ScoringRuntimeError("OFFICE_RUNTIME_REQUIRED", "freeze and provide --office-runtime-lock before evaluating this task")
+    render_runtime = frozen_runtime_lock.get("office_render_runtime") if requirements.get("office_render") else None
+    html_runtime = frozen_runtime_lock.get("html_runtime") if requirements.get("html_render") else None
+    if requirements.get("html_render"):
+        if html_runtime is None:
+            raise ScoringRuntimeError("HTML_RUNTIME_REQUIRED", "freeze browser/Node/Playwright assets with bootstrap-html")
+        _import_grading_core()
+        from wildclawbench_grading_core import HtmlRuntimeError, validate_html_lock
+        try:
+            validate_html_lock(html_runtime)
+        except HtmlRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+    if requirements.get("office_render"):
+        if render_runtime is None:
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_REQUIRED", "freeze engine and font files with bootstrap-office-render")
+        _import_grading_core()
+        from wildclawbench_grading_core import OfficeRuntimeError, validate_office_render_lock
+        try:
+            validate_office_render_lock(render_runtime)
+        except OfficeRuntimeError as exc:
+            raise ScoringRuntimeError(exc.code, exc.message) from exc
+        if render_runtime["office_runtime"] != office_runtime:
+            raise ScoringRuntimeError("OFFICE_RENDER_RUNTIME_CONFLICT")
     automated_checks = contract.get("automated_checks")
     if not isinstance(automated_checks, str):
         raise ScoringRuntimeError("SCORING_CONTRACT_INVALID", "automated_checks")
@@ -3335,6 +3919,10 @@ def run_rules_attempt(
         playwright_browsers_path=playwright_browsers_path,
         rule_result_adapter=_effective_worker_adapter(manifest,contract),
         rule_review_configuration=review_configuration,
+        office_runtime=office_runtime,
+        office_render_runtime=render_runtime,
+        html_runtime=html_runtime,
+        research_source_binding=research_binding,
     )
     run_rules, grading_error_type = _import_grading_core()
     transcript_relative = manifest["paths"].get("transcript")
@@ -3413,6 +4001,19 @@ def run_rules_attempt(
         },
         "error": error,
     }
+    if research_binding is not None:
+        audit["research_sources"] = {key: research_binding[key] for key in ("path", "manifest_sha256", "lock_path", "lock_sha256")}
+    if (attempt_root / "worker/derived").exists() or (attempt_root / "worker/derived").is_symlink():
+        try:
+            artifacts = _rule_derived_inventory(attempt_root)
+            audit["derived_artifacts"] = artifacts
+            audit["derived_evidence"] = _rule_derived_receipt(artifacts)
+        except ScoringRuntimeError as exc:
+            # Keep the failed Worker's raw files, including offending links;
+            # never silently omit them from an otherwise successful index.
+            error = {"code": exc.code, "detail": exc.detail}
+            audit.update(status="failed", error=error)
+            component = None
     if component is not None:
         _write_new_json(attempt_root / "rule-component.json", component)
     if context_receipt:
@@ -3699,6 +4300,9 @@ def _semantic_reference_inputs(
 ) -> tuple[list[dict[str, Any]], dict[str, dict[str, Any]]]:
     references: list[dict[str, Any]] = []
     event_locations: dict[str, dict[str, Any]] = {}
+    research_binding = _research_source_binding(attempt_root, required=True)
+    if research_binding is not None:
+        references.extend(research_binding["references"])
 
     def add_file(evidence_type: str, path: Path) -> None:
         references.append(
@@ -3742,6 +4346,9 @@ def _semantic_reference_inputs(
     rule_audit = attempt_root / "rule-audit.json"
     if rule_audit.is_file() and not rule_audit.is_symlink():
         add_file("rule_audit", rule_audit)
+        contract = _read_json(attempt_root / manifest["paths"]["contract"])
+        for artifact in _verify_rule_derived_evidence(attempt_root, contract.get("scoring_runtime") or {}):
+            add_file("rule_derived_artifact", attempt_root / artifact["path"])
     context_receipt = attempt_root / "rule-input-context.json"
     if context_receipt.is_file():
         add_file("rule_audit", context_receipt)
@@ -3818,6 +4425,8 @@ def _load_judge_config(root: Path, manifest: Mapping[str, Any]) -> dict[str, Any
             )
         ):
             raise ScoringRuntimeError("API_JUDGE_CONFIG_INVALID", "frozen runtime")
+        if "image_input" in api_runtime:
+            _image_input_config(api_runtime["image_input"], api_runtime["provider"])
     elif api_runtime is not None:
         raise ScoringRuntimeError("JUDGE_CONFIG_INVALID", "unexpected api runtime")
     return config
@@ -3845,6 +4454,7 @@ def _api_evidence_sources(
     root: Path,
     catalog: Mapping[str, Any],
     transcript: Sequence[Mapping[str, Any]],
+    *, images_enabled: bool = False,
 ) -> list[tuple[dict[str, Any], str | None, str]]:
     events = {
         str(event.get("event_id")): event
@@ -3883,23 +4493,173 @@ def _api_evidence_sources(
             else:
                 path = _resolve_within(root, relative, "api evidence")
                 try:
-                    if reference["type"] == "raw_trace":
+                    frozen = _frozen_research_source_view(root, path, reference.get("sha256"))
+                    if frozen is not None:
+                        content, status = frozen["text"], "native_text"
+                        row["native_extraction"] = {key:value for key,value in frozen.items() if key != "text"}
+                        row["content_representation"] = "verified_frozen_source_records"
+                    elif (sealed := _sealed_office_reference_text(root, path, reference.get("sha256"))) is not None:
+                        content, status = sealed["text"], "native_text"
+                        row["native_extraction"] = {key: value for key, value in sealed.items() if key != "text"}
+                        row["content_representation"] = "sealed_private_reference_native_text_records"
+                    elif images_enabled and path.suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+                        content, status = None, "image_pending"
+                    elif path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
+                        projection = _native_evidence_text(path, reference.get("sha256"))
+                        content, status = projection["text"], "native_text"
+                        row["native_extraction"] = {key: value for key, value in projection.items() if key != "text"}
+                        row["content_representation"] = "native_text_records"
+                    elif reference["type"] == "raw_trace":
                         with path.open(encoding="utf-8") as handle:
                             content = handle.read(MAX_EVIDENCE_TEXT_PAGE_CHARS)
                         if path.stat().st_size > len(content.encode("utf-8")):
                             content += "\n[原始轨迹节选；完整原件保存在评分目录 trace/raw。]"
+                        status = "text"
                     else:
                         content = path.read_text(encoding="utf-8")
+                        status = "text"
                 except UnicodeDecodeError:
                     content = None
                     status = "binary_or_non_utf8"
-                else:
-                    status = "text"
+                except ScoringRuntimeError as exc:
+                    if exc.code not in {"NATIVE_TEXT_INVALID", "NATIVE_TEXT_UNAVAILABLE", "NATIVE_TEXT_LIMIT"}:
+                        raise
+                    content, status = None, "native_text_unavailable"
+                    row["extraction_error"] = {"code": exc.code, "message": str(exc)}
         row["content_status"] = (
             "omitted_budget" if content is not None else status
         )
         sources.append((row, content, status))
     return sources
+
+
+def _sealed_office_reference_text(root: Path, path: Path, expected_sha: str | None = None, **kwargs) -> dict | None:
+    """Bind a text projection to both the stored container and original member."""
+    if not path.name.endswith(".gtref.zip"):
+        return None
+    manifest = _read_json(root / "attempt-manifest.json")
+    private = manifest["private_scoring"]
+    storage = private.get("storage") or {}
+    private_gt = _resolve_within(root, manifest["paths"]["gt"], "private GT")
+    matches = [row for row in storage.get("files", []) if private_gt / row.get("stored_path", "") == path]
+    if not matches:
+        return None
+    _validate_gt_storage(private_gt, private)
+    row = matches[0]
+    if expected_sha is not None and row["container_sha256"] != expected_sha:
+        raise ScoringRuntimeError("SEMANTIC_EVIDENCE_DIGEST_MISMATCH", str(path))
+    with _office_reference_verification_view(root) as view:
+        original = view.joinpath(*_safe_relative(row["logical_path"], "GT logical path").parts)
+        projection = _native_evidence_text(original, row["content_sha256"], **kwargs)
+    return {**projection, "reference_storage": {
+        "profile": storage["profile"], "logical_path": row["logical_path"],
+        "container_path": path.relative_to(root).as_posix(),
+        "container_sha256": row["container_sha256"], "content_sha256": row["content_sha256"],
+        "content_size": row["content_size"], "temporary_view_only": True,
+    }}
+
+
+def _native_evidence_text(path: Path, expected_sha: str | None = None, **kwargs) -> dict:
+    _import_semantic_grading_core()
+    from wildclawbench_grading_core import NativeTextError, extract_native_text
+    try:
+        projection = extract_native_text(path, **kwargs)
+    except NativeTextError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+    if expected_sha is not None and projection["source_sha256"] != expected_sha:
+        raise ScoringRuntimeError("SEMANTIC_EVIDENCE_DIGEST_MISMATCH", str(path))
+    return projection
+
+
+def _image_evidence(path: Path, expected_sha: str | None = None, **kwargs) -> dict:
+    _import_semantic_grading_core()
+    from wildclawbench_grading_core import ImageEvidenceError, read_image_evidence
+    try:
+        return read_image_evidence(path, expected_sha256=expected_sha, **kwargs)
+    except ImageEvidenceError as exc:
+        raise ScoringRuntimeError(exc.code, exc.message) from exc
+
+
+def _attach_api_images(root: Path, source_rows: list, config: Mapping[str, Any]) -> list[dict]:
+    attachments: list[dict] = []
+    total_bytes = 0
+    for row, _, status in source_rows:
+        if status != "image_pending":
+            continue
+        path = _resolve_within(root, row["path"], "image evidence")
+        row["content_representation"] = "original_raster_bytes"
+        try:
+            image = _image_evidence(path, row["sha256"], max_bytes=config["max_image_bytes"], max_pixels=config["max_pixels"])
+        except ScoringRuntimeError as exc:
+            if exc.code not in {"IMAGE_EVIDENCE_INVALID", "IMAGE_EVIDENCE_UNSUPPORTED", "IMAGE_EVIDENCE_LIMIT"}:
+                raise
+            row["content_status"] = "image_unavailable"
+            row["extraction_error"] = {"code": exc.code, "message": str(exc)}
+            continue
+        row["image"] = {key: value for key, value in image.items() if key != "data_base64"}
+        if len(attachments) >= config["max_images"] or total_bytes + image["source_bytes"] > config["max_total_bytes"]:
+            row["content_status"] = "image_omitted_budget"
+            continue
+        row["content_status"] = "image_complete"
+        total_bytes += image["source_bytes"]
+        attachments.append({"evidence_id": row["evidence_id"], "path": row["path"], **image})
+    return attachments
+
+
+def _validate_api_image_bindings(root: Path, packet: Mapping[str, Any], catalog: Mapping[str, Any],
+                                 judge: Mapping[str, Any], *, decode_images: bool = False) -> None:
+    """Rebind transport bytes to frozen evidence; archived verification needs no decoder."""
+    config = judge["api_runtime"].get("image_input")
+    attachments = packet.get("image_attachments", [])
+    if config is None:
+        if attachments:
+            raise ScoringRuntimeError("API_JUDGE_IMAGE_BINDING_INVALID", "images not enabled")
+        return
+    config = _image_input_config(config, judge["api_runtime"]["provider"])
+    try:
+        if packet.get("transport", {}).get("image_input") != config:
+            raise ValueError("frozen image config")
+        rows = json.loads(packet["user_prompt"])["evidence"]
+        by_id = {entry["id"]: entry["reference"] for entry in catalog["evidence_index"]["entries"]}
+        image_rows = {row["evidence_id"]: row for row in rows if row["content_status"] == "image_complete"}
+        if not isinstance(attachments, list) or len(attachments) != len(image_rows) or len(attachments) > config["max_images"]:
+            raise ValueError("image count")
+        seen = set(); total = 0
+        for item in attachments:
+            identity = item["evidence_id"]; row = image_rows[identity]; reference = by_id[identity]
+            if identity in seen or item["path"] != reference["path"] or row["path"] != item["path"]:
+                raise ValueError("image identity")
+            seen.add(identity)
+            raw = base64.b64decode(item["data_base64"], validate=True)
+            path = _resolve_within(root, item["path"], "image attachment")
+            expected_mime = {".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp", ".gif": "image/gif"}.get(path.suffix.lower())
+            if (len(raw) != item["source_bytes"] or len(raw) > config["max_image_bytes"]
+                or _sha256_bytes(raw) != reference["sha256"] or item["source_sha256"] != reference["sha256"]
+                or item["mime_type"] != expected_mime
+                or type(item["width"]) is not int or type(item["height"]) is not int
+                or min(item["width"], item["height"]) < 1 or max(item["width"], item["height"]) > 8000
+                or item["width"] * item["height"] > config["max_pixels"]
+                or row["sha256"] != reference["sha256"] or raw != path.read_bytes()
+                or row["image"] != {key: value for key, value in item.items() if key not in {"data_base64", "path", "evidence_id"}}
+                or identity not in packet["packet_summary"]["usable_evidence_ids"]):
+                raise ValueError("image content binding")
+            if decode_images:
+                observed = _image_evidence(path, reference["sha256"], max_bytes=config["max_image_bytes"], max_pixels=config["max_pixels"])
+                if observed != {key: value for key, value in item.items() if key not in {"path", "evidence_id"}}:
+                    raise ValueError("image decoder/metadata drift")
+            total += len(raw)
+        if total > config["max_total_bytes"]:
+            raise ValueError("total image bytes")
+        summary = packet["packet_summary"]
+        if summary["image_count"] != len(attachments) or summary["image_bytes"] != total:
+            raise ValueError("image summary")
+        for row in rows:
+            if row["content_status"] in {"image_unavailable", "image_omitted_budget"} and row["evidence_id"] in summary["usable_evidence_ids"]:
+                raise ValueError("unavailable image marked usable")
+    except ScoringRuntimeError:
+        raise
+    except (KeyError, TypeError, ValueError) as exc:
+        raise ScoringRuntimeError("API_JUDGE_IMAGE_BINDING_INVALID", str(exc)) from exc
 
 
 def _build_api_input(
@@ -3930,7 +4690,9 @@ def _build_api_input(
         response_contract['claim_reviews']={key:[{'unit':1, 'claim_id':'unique', 'claim':'实质命题',
             'status':'supported|contradicted|evaluator_reference_unavailable',
             'evidence_refs':['evidence-0001']}] for key in request_document['claim_review_policy']['criterion_keys']}
-    source_rows = _api_evidence_sources(root, catalog, transcript)
+    image_config = api_runtime.get("image_input")
+    source_rows = _api_evidence_sources(root, catalog, transcript, images_enabled=image_config is not None)
+    images = _attach_api_images(root, source_rows, image_config) if image_config is not None else []
     packet_entries = [row for row, _, _ in source_rows]
     user_document: dict[str, Any] = {
         "task": {
@@ -3942,6 +4704,9 @@ def _build_api_input(
             "evidence_ids_are_frozen": True,
             "omitted_or_truncated_content_is_not_proof": True,
             "cite_only_ids_present_in_this_packet": True,
+            **({"image_bytes_supplied_as_separate_content_blocks": True,
+                "image_metadata_alone_is_not_visual_proof": True,
+                "unavailable_images_cannot_support_visual_decisions": True} if image_config is not None else {}),
         },
         "evidence": packet_entries,
         "required_response": response_contract,
@@ -3973,10 +4738,11 @@ def _build_api_input(
         def include(characters: int) -> None:
             row["content"] = content[:characters] if characters else None
             row["included_chars"] = characters
-            row["truncated"] = characters < len(content)
+            extraction_truncated = bool(row.get("native_extraction", {}).get("truncated"))
+            row["truncated"] = characters < len(content) or extraction_truncated
             if characters == 0:
                 row["content_status"] = "omitted_budget"
-            elif characters < len(content):
+            elif characters < len(content) or extraction_truncated:
                 row["content_status"] = "truncated"
             else:
                 row["content_status"] = "complete"
@@ -3990,6 +4756,12 @@ def _build_api_input(
                 high = middle - 1
         include(low)
     user_prompt = serialized_user()
+    research_binding = _research_source_binding(root, required=True)
+    if research_binding is not None:
+        required_paths = research_source_dispatch.required_api_paths(root, research_binding)
+        supplied = {row["path"] for row in packet_entries if row["content_status"] == "complete"}
+        if not required_paths <= supplied:
+            raise ScoringRuntimeError("RESEARCH_SOURCE_API_INPUT_INCOMPLETE", "required independent source content was omitted or truncated")
     if len(system_prompt) + len(user_prompt) > maximum:
         raise ScoringRuntimeError("API_JUDGE_INPUT_BUDGET_EXCEEDED")
     included_ids = [row["evidence_id"] for row in packet_entries]
@@ -3999,7 +4771,7 @@ def _build_api_input(
         "usable_evidence_ids": [
             row["evidence_id"]
             for row in packet_entries
-            if row["content_status"] in {"complete", "truncated"}
+            if row["content_status"] in {"complete", "truncated", "image_complete"}
         ],
         "complete_content_count": sum(
             row["content_status"] == "complete" for row in packet_entries
@@ -4009,12 +4781,13 @@ def _build_api_input(
         ),
         "omitted_content_count": sum(
             row["content_status"]
-            in {"omitted_budget", "binary_or_non_utf8", "event_missing", "path_missing"}
+            in {"omitted_budget", "binary_or_non_utf8", "event_missing", "path_missing", "native_text_unavailable", "image_unavailable", "image_omitted_budget"}
             for row in packet_entries
         ),
         "system_chars": len(system_prompt),
         "user_chars": len(user_prompt),
         "maximum_input_chars": maximum,
+        **({"image_count": len(images), "image_bytes": sum(item["source_bytes"] for item in images)} if image_config is not None else {}),
     }
     value = {
         "schema_version": API_JUDGE_INPUT_SCHEMA,
@@ -4038,11 +4811,12 @@ def _build_api_input(
                 "temperature",
                 "reasoning_parameter",
             )
-        },
+        } | ({"image_input": image_config} if image_config is not None else {}),
         "packet_summary": packet_summary,
         "system_prompt": system_prompt,
         "user_prompt": user_prompt,
         "response_contract": response_contract,
+        **({"image_attachments": images} if image_config is not None else {}),
     }
     value["input_digest"] = _sha256_bytes(_canonical_json_bytes(value))
     return value
@@ -4197,6 +4971,7 @@ def prepare_semantics_attempt(*, attempt_root: Path) -> dict[str, Any]:
                     "absence_claim_requires_complete_transcript_coverage": True,
                     "unresolved_is_not_zero": True,
                     "reason_language": REASON_LANGUAGE,
+                    "image_citations_require_image_query_and_actual_pixel_inspection": True,
                 },
             }
             independent_policy=business_capability.policy(manifest,contract)
@@ -4383,6 +5158,22 @@ def _api_request_document(
     runtime = judge["api_runtime"]
     provider = runtime["provider"]
     requested_model = judge["model"]
+    images = api_input.get("image_attachments", [])
+    user_content: Any = api_input["user_prompt"]
+    if images:
+        text_type = "input_text" if provider == "openai-responses" else "text"
+        user_content = [{"type": text_type, "text": api_input["user_prompt"]}]
+        for image in images:
+            label = {key: image[key] for key in ("evidence_id", "path", "source_sha256", "width", "height")}
+            user_content.append({"type": text_type, "text": "Frozen image evidence: " + json.dumps(label, ensure_ascii=False, sort_keys=True)})
+            if provider == "anthropic-messages":
+                block = {"type": "image", "source": {"type": "base64", "media_type": image["mime_type"], "data": image["data_base64"]}}
+            else:
+                data_url = "data:" + image["mime_type"] + ";base64," + image["data_base64"]
+                detail = runtime["image_input"]["detail"]
+                block = ({"type": "input_image", "image_url": data_url, "detail": detail} if provider == "openai-responses"
+                         else {"type": "image_url", "image_url": {"url": data_url, "detail": detail}})
+            user_content.append(block)
     if provider == "anthropic-messages":
         send_model = (
             requested_model.removeprefix("anthropic/")
@@ -4394,7 +5185,7 @@ def _api_request_document(
             "max_tokens": runtime["max_output_tokens"],
             "temperature": runtime["temperature"],
             "system": api_input["system_prompt"],
-            "messages": [{"role": "user", "content": api_input["user_prompt"]}],
+            "messages": [{"role": "user", "content": user_content}],
         }
         header_names = [
             "authorization",
@@ -4410,7 +5201,7 @@ def _api_request_document(
             "response_format": {"type": "json_object"},
             "messages": [
                 {"role": "system", "content": api_input["system_prompt"]},
-                {"role": "user", "content": api_input["user_prompt"]},
+                {"role": "user", "content": user_content},
             ],
         }
         if runtime["reasoning_parameter"] == "reasoning_effort":
@@ -4424,12 +5215,14 @@ def _api_request_document(
             "text": {"format": {"type": "json_object"}},
             "input": [
                 {"role": "system", "content": api_input["system_prompt"]},
-                {"role": "user", "content": api_input["user_prompt"]},
+                {"role": "user", "content": user_content},
             ],
         }
         if runtime["reasoning_parameter"] == "reasoning_effort":
             body["reasoning"] = {"effort": judge["reasoning_effort"]}
         header_names = ["authorization", "content-type"]
+    if images and len(_canonical_json_bytes(body)) > 32_000_000:
+        raise ScoringRuntimeError("API_JUDGE_IMAGE_REQUEST_TOO_LARGE", "encoded request exceeds local 32 MB guard")
     return body, header_names
 
 
@@ -4808,6 +5601,7 @@ def run_api_judge_attempt(*, attempt_root: Path) -> dict[str, Any]:
     ):
         raise ScoringRuntimeError("API_JUDGE_INPUT_INVALID", "locks or digest")
     runtime = judge["api_runtime"]
+    _validate_api_image_bindings(root, api_input, catalog, judge, decode_images=True)
     body, header_names = _api_request_document(api_input, judge)
     credential = os.environ.get(runtime["credential_env"], "").strip()
     prior_attempts = sorted(paths["api_attempts"].glob("attempt-*")) if paths["api_attempts"].exists() else []
@@ -5129,7 +5923,7 @@ def query_evidence_attempt(
 ) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
     verify_attempt(root)
-    if mode not in {"catalog", "transcript", "file"}:
+    if mode not in {"catalog", "transcript", "file", "image"}:
         raise ScoringRuntimeError("SEMANTIC_QUERY_MODE_INVALID", mode)
     if offset < 0 or limit < 1 or limit > 1000:
         raise ScoringRuntimeError("SEMANTIC_QUERY_PAGE_INVALID")
@@ -5161,6 +5955,7 @@ def query_evidence_attempt(
         "catalog": {"evidence_id", "evidence_type", "path_contains"},
         "transcript": {"event_id", "call_id", "path_contains", "text"},
         "file": {"evidence_id"},
+        "image": {"evidence_id"},
     }[mode]
     unsupported_filters = sorted(set(filters) - allowed_filters)
     if unsupported_filters:
@@ -5258,6 +6053,24 @@ def query_evidence_attempt(
         returned_evidence_ids = [evidence_id] if items else []
         coverage = {"kind": "file-characters", "path": relative,
                     "start": file_char_offset, "end": max(end, file_char_offset), "total": len(content)}
+    elif mode == "image":
+        if evidence_id is None or evidence_id not in by_id:
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_ID_UNKNOWN", repr(evidence_id))
+        if offset != 0:
+            raise ScoringRuntimeError("SEMANTIC_QUERY_PAGE_INVALID", "image has one unmodified byte item")
+        reference = by_id[evidence_id].get("reference", {})
+        relative = reference.get("path")
+        if not isinstance(relative, str):
+            raise ScoringRuntimeError("SEMANTIC_EVIDENCE_FILE_REQUIRED", evidence_id)
+        path = _resolve_within(root, relative, "semantic image evidence")
+        projection = _image_evidence(path, reference.get("sha256"))
+        metadata = {key: value for key, value in projection.items() if key != "data_base64"}
+        items = [{"evidence_id": evidence_id, "path": relative, "view_image_path": str(path),
+                  "pixel_inspection_required": True, **metadata}]
+        matches = items
+        returned_evidence_ids = [evidence_id]
+        coverage = {"kind": "image-bytes", "path": relative, "image": metadata,
+                    "pixel_inspection_required": True}
     else:
         if evidence_id is None or evidence_id not in by_id:
             raise ScoringRuntimeError(
@@ -5272,27 +6085,43 @@ def query_evidence_attempt(
         total_lines = 0
         emitted_chars = 0
         truncated_by_chars = False
+        projection = None
         try:
-            with path.open("r", encoding="utf-8") as handle:
-                for line_number, line in enumerate(handle, start=1):
-                    total_lines = line_number
-                    if (
-                        line_number <= offset
-                        or len(selected_lines) >= limit
-                        or truncated_by_chars
-                    ):
-                        continue
-                    normalized = line.rstrip("\n")
-                    remaining = max_chars - emitted_chars
-                    if len(normalized) > remaining:
-                        truncated_by_chars = True
-                        if not selected_lines and remaining > 0:
-                            selected_lines.append(
-                                (line_number, normalized[:remaining], True)
-                            )
-                        continue
-                    selected_lines.append((line_number, normalized, False))
-                    emitted_chars += len(normalized)
+            projection = _frozen_research_source_view(root, path, reference.get("sha256"),
+                record_offset=offset, record_limit=limit, max_chars=max_chars)
+            if projection is None:
+                projection = _sealed_office_reference_text(root, path, reference.get("sha256"),
+                    record_offset=offset, record_limit=limit, max_chars=max_chars)
+            if projection is not None or path.suffix.lower() in {".docx", ".xlsx", ".pptx", ".pdf"}:
+                if projection is None:
+                    projection = _native_evidence_text(path, reference.get("sha256"),
+                        record_offset=offset, record_limit=limit, max_chars=max_chars)
+                total_lines = projection["record_count"]
+                lines = projection["text"].splitlines()
+                truncated_by_chars = projection["truncated"]
+                selected_lines = [(offset + index, line, truncated_by_chars and index == len(lines))
+                                  for index, line in enumerate(lines, 1)]
+            else:
+                with path.open("r", encoding="utf-8") as handle:
+                    for line_number, line in enumerate(handle, start=1):
+                        total_lines = line_number
+                        if (
+                            line_number <= offset
+                            or len(selected_lines) >= limit
+                            or truncated_by_chars
+                        ):
+                            continue
+                        normalized = line.rstrip("\n")
+                        remaining = max_chars - emitted_chars
+                        if len(normalized) > remaining:
+                            truncated_by_chars = True
+                            if not selected_lines and remaining > 0:
+                                selected_lines.append(
+                                    (line_number, normalized[:remaining], True)
+                                )
+                            continue
+                        selected_lines.append((line_number, normalized, False))
+                        emitted_chars += len(normalized)
         except UnicodeDecodeError as exc:
             raise ScoringRuntimeError(
                 "SEMANTIC_EVIDENCE_NOT_UTF8", relative
@@ -5309,12 +6138,14 @@ def query_evidence_attempt(
         ]
         returned_evidence_ids = [evidence_id] if items else []
         coverage = {
-            "kind": "file-lines",
+            "kind": "native-text-records" if projection else "file-lines",
             "path": relative,
             "start_line": offset + 1,
             "end_line": selected_lines[-1][0] if selected_lines else offset,
             "total_lines": total_lines,
             "truncated_by_chars": truncated_by_chars,
+            **({"native_extraction": {key: value for key, value in projection.items() if key != "text"}}
+               if projection else {}),
         }
     character_page = mode == "file" and file_char_offset is not None
     total_matches = len(content) if character_page else len(matches) if mode != "file" else total_lines
@@ -5540,6 +6371,13 @@ def record_semantics_attempt(
                     "SEMANTIC_CITATION_NOT_QUERIED", row["key"]
                 )
             if status == "judged":
+                for identity in evidence_ids:
+                    reference = evidence_by_id[identity]
+                    if Path(reference.get("path", "")).suffix.lower() in {".png", ".jpg", ".jpeg", ".webp", ".gif"}:
+                        image_queries = [query_by_id[q] for q in query_ids if query_by_id[q].get("mode") == "image"
+                                         and identity in query_by_id[q].get("returned_evidence_ids", [])]
+                        if not any(query.get("coverage", {}).get("image", {}).get("source_sha256") == reference["sha256"] for query in image_queries):
+                            raise ScoringRuntimeError("SEMANTIC_IMAGE_QUERY_REQUIRED", row["key"])
                 if (
                     not query_ids
                     or review.get("supporting_evidence_checked") is not True
@@ -5913,7 +6751,7 @@ def _score_source_digests(root: Path) -> dict[str, str | None]:
     def digest_if_file(path: Path) -> str | None:
         return _sha256_file(path) if path.is_file() and not path.is_symlink() else None
 
-    return {
+    result = {
         "attempt_manifest_sha256": _sha256_file(root / "attempt-manifest.json"),
         "rule_component_sha256": digest_if_file(root / "rule-component.json"),
         "rule_audit_sha256": digest_if_file(root / "rule-audit.json"),
@@ -5924,6 +6762,12 @@ def _score_source_digests(root: Path) -> dict[str, str | None]:
         **({'capability_evaluation_sha256':digest_if_file(root/'capability-evaluation.json')}
            if (root/'capability-evaluation.json').is_file() else {}),
     }
+    # verify_score already validates the bundle with the appropriate normal or
+    # archive policy. Digests themselves must not require the collection tools.
+    manifest = _read_json(root / "attempt-manifest.json")
+    if (_read_json(root / manifest["paths"]["contract"]).get("scoring_runtime") or {}).get("research_sources"):
+        result["research_sources_lock_sha256"] = digest_if_file(root / research_sources.LOCK_PATH)
+    return result
 
 
 def _independent_capability_sources(root,manifest,response_sha,component_sha):
@@ -6068,6 +6912,18 @@ def _verify_semantic_terminal(
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "api_audit_sha256")
             api_audit = _read_json(paths["api_audit"], code="API_JUDGE_AUDIT_INVALID")
             runtime = judge["api_runtime"]
+            if runtime.get("image_input") is not None:
+                packet = _read_json(paths["api_input"], code="API_JUDGE_INPUT_INVALID")
+                catalog = _load_semantic_catalog(root)
+                _validate_api_image_bindings(root, packet, catalog, judge)
+                expected_body, _ = _api_request_document(packet, judge)
+                for item in api_audit.get("attempts", []):
+                    request_path = _resolve_within(root, item["request_path"], "API image request")
+                    sent = _read_json(request_path, code="API_JUDGE_AUDIT_INVALID")
+                    if (_sha256_file(request_path) != item["request_sha256"]
+                        or sent.get("body") != expected_body
+                        or sent.get("body_sha256") != _sha256_bytes(_canonical_json_bytes(expected_body))):
+                        raise ScoringRuntimeError("API_JUDGE_IMAGE_BINDING_INVALID", "recorded provider body differs from frozen image packet")
             if (
                 api_audit.get("schema_version") != API_JUDGE_AUDIT_SCHEMA
                 or api_audit.get("identity") != manifest.get("identity")
@@ -6224,6 +7080,9 @@ def finalize_score_attempt(*, attempt_root: Path, archived: bool = False) -> dic
     grading_type = manifest["grading"]["type"]
     _, _, finalize_score, grading_error_type = _import_semantic_grading_core()
     try:
+        contract = _read_json(root / manifest["paths"]["contract"])
+        _research_source_binding(root, required=True)
+        _verify_rule_derived_evidence(root, contract.get("scoring_runtime") or {})
         _verify_semantic_terminal(root, manifest)
         score = _build_standard_score(
             root, manifest, finalize_score=finalize_score
@@ -6353,6 +7212,9 @@ def verify_score_attempt(attempt_root: Path, *, archived: bool = False) -> dict[
         root / "attempt-manifest.json", code="ATTEMPT_MANIFEST_INVALID"
     )
     _verify_rule_source_correction(root, manifest)
+    contract = _read_json(root / manifest["paths"]["contract"])
+    _research_source_binding(root, required=True, archived=archived)
+    _verify_rule_derived_evidence(root, contract.get("scoring_runtime") or {}, archived=archived)
     if (
         audit.get("schema_version") != SCORE_AUDIT_SCHEMA
         or audit.get("status") != "completed"
@@ -6744,6 +7606,10 @@ def prepare_rescore_attempt(
         }
         _write_new_json(staging / "attempt-manifest.json", manifest)
         execution_supplement.copy_frozen(sys.modules[__name__], source_root, staging, manifest)
+        try:
+            research_source_dispatch.copy_for_rescore(source_root, staging, attempt_verifier=verify_attempt)
+        except research_sources.ResearchSourceError as exc:
+            raise ScoringRuntimeError(exc.code, exc.detail) from exc
         os.replace(staging, destination)
     except BaseException:
         _remove_tree(staging)
@@ -6764,6 +7630,7 @@ def run_api_score_attempt(
     runtime_python: Path | None = None,
     timeout_seconds: float = 120.0,
     playwright_browsers_path: Path | None = None,
+    office_runtime_lock_path: Path | None = None,
 ) -> dict[str, Any]:
     root = attempt_root.expanduser().resolve(strict=True)
     verification = verify_attempt(root)
@@ -6785,6 +7652,7 @@ def run_api_score_attempt(
                 runtime_python=runtime_python,
                 timeout_seconds=timeout_seconds,
                 playwright_browsers_path=playwright_browsers_path,
+                office_runtime_lock_path=office_runtime_lock_path,
             )
         except ScoringRuntimeError:
             if not (root / "rule-audit.json").is_file():
@@ -6989,11 +7857,40 @@ def main(argv: list[str] | None = None) -> int:
     verify = subparsers.add_parser("verify")
     verify.add_argument("--attempt-root", required=True, type=Path)
 
+    research = subparsers.add_parser("collect-research-sources")
+    research.add_argument("--attempt-root", required=True, type=Path)
+    research.add_argument("--curl", type=Path)
+    research.add_argument("--trusted-http-connect-proxy", help="Explicit trusted HTTP loopback proxy, e.g. http://127.0.0.1:7897; policy v1 only")
+    research.add_argument("--reuse-sources-from", type=Path, action="append", default=[],
+                          help="Explicit prior successful source attempt; exact requested-URL reuse only (repeatable)")
+
     run = subparsers.add_parser("run-rules")
     run.add_argument("--attempt-root", required=True, type=Path)
     run.add_argument("--runtime-python", required=True, type=Path)
     run.add_argument("--timeout-seconds", type=float, default=120.0)
     run.add_argument("--playwright-browsers-path", type=Path)
+    run.add_argument("--office-runtime-lock", type=Path)
+
+    office = subparsers.add_parser("bootstrap-office")
+    office.add_argument("--executable", required=True, type=Path)
+    office.add_argument("--output", required=True, type=Path)
+    office.add_argument("--runtime-lock", type=Path, help="Embed Office identity in a copied managed Python runtime lock")
+
+    render = subparsers.add_parser("bootstrap-office-render")
+    render.add_argument("--office-runtime-lock", required=True, type=Path)
+    render.add_argument("--font-file", action="append", type=Path, default=[])
+    render.add_argument("--font-directory", action="append", type=Path, default=[])
+    render.add_argument("--runtime-lock", required=True, type=Path)
+    render.add_argument("--output", required=True, type=Path)
+    render.add_argument("--document-format", choices=("pptx", "docx", "both"), default="pptx")
+
+    html = subparsers.add_parser("bootstrap-html")
+    html.add_argument("--node", required=True, type=Path)
+    html.add_argument("--playwright-core", required=True, type=Path)
+    html.add_argument("--browser", required=True, type=Path)
+    html.add_argument("--font-file", action="append", type=Path, default=[])
+    html.add_argument("--runtime-lock", type=Path)
+    html.add_argument("--output", required=True, type=Path)
 
     review_prepare=subparsers.add_parser('prepare-rule-review')
     review_prepare.add_argument('--attempt-root',required=True,type=Path)
@@ -7013,7 +7910,7 @@ def main(argv: list[str] | None = None) -> int:
     query_evidence = subparsers.add_parser("query-evidence")
     query_evidence.add_argument("--attempt-root", required=True, type=Path)
     query_evidence.add_argument(
-        "--mode", required=True, choices=("catalog", "transcript", "file")
+        "--mode", required=True, choices=("catalog", "transcript", "file", "image")
     )
     query_evidence.add_argument("--offset", type=int, default=0)
     query_evidence.add_argument("--limit", type=int, default=50)
@@ -7044,6 +7941,7 @@ def main(argv: list[str] | None = None) -> int:
     run_api_score.add_argument("--runtime-python", type=Path)
     run_api_score.add_argument("--timeout-seconds", type=float, default=120.0)
     run_api_score.add_argument("--playwright-browsers-path", type=Path)
+    run_api_score.add_argument("--office-runtime-lock", type=Path)
 
     finalize = subparsers.add_parser("finalize")
     finalize.add_argument("--attempt-root", required=True, type=Path)
@@ -7120,12 +8018,17 @@ def main(argv: list[str] | None = None) -> int:
                 raise ScoringRuntimeError('REFERENCE_SUPPLEMENT_INVALID', str(error)) from error
         elif args.command == "verify":
             result = verify_attempt(args.attempt_root)
+        elif args.command == "collect-research-sources":
+            result = collect_research_sources_attempt(attempt_root=args.attempt_root, curl=args.curl,
+                                                      reuse_sources_from=tuple(args.reuse_sources_from),
+                                                      trusted_http_connect_proxy=args.trusted_http_connect_proxy)
         elif args.command == "run-rules":
             result = run_rules_attempt(
                 attempt_root=args.attempt_root,
                 runtime_python=args.runtime_python,
                 timeout_seconds=args.timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
+                office_runtime_lock_path=args.office_runtime_lock,
             )
         elif args.command == 'prepare-rule-review':
             result=rule_review_runtime.prepare(sys.modules[__name__],attempt_root=args.attempt_root,
@@ -7134,6 +8037,14 @@ def main(argv: list[str] | None = None) -> int:
             result=rule_review_runtime.query(sys.modules[__name__],attempt_root=args.attempt_root,offset=args.offset,limit=args.limit)
         elif args.command == 'record-rule-review':
             result=rule_review_runtime.record(sys.modules[__name__],attempt_root=args.attempt_root,response_path=args.response)
+        elif args.command == "bootstrap-office":
+            result = bootstrap_office_runtime(args.executable, args.output, args.runtime_lock)
+        elif args.command == "bootstrap-html":
+            result = bootstrap_html_runtime(args.node, args.playwright_core, args.browser, args.output,
+                args.runtime_lock, args.font_file)
+        elif args.command == "bootstrap-office-render":
+            result = bootstrap_office_render_runtime(args.office_runtime_lock, args.font_file, args.output, args.runtime_lock,
+                                                    args.font_directory, args.document_format)
         elif args.command == "prepare-semantics":
             result = prepare_semantics_attempt(attempt_root=args.attempt_root)
         elif args.command == "query-evidence":
@@ -7166,6 +8077,7 @@ def main(argv: list[str] | None = None) -> int:
                 runtime_python=args.runtime_python,
                 timeout_seconds=args.timeout_seconds,
                 playwright_browsers_path=args.playwright_browsers_path,
+                office_runtime_lock_path=args.office_runtime_lock,
             )
         elif args.command == "finalize":
             result = finalize_score_attempt(attempt_root=args.attempt_root)

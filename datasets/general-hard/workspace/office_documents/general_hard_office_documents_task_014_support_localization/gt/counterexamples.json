@@ -1,0 +1,25 @@
+{
+  "rule_controls": [
+    "incorrect_case_route",
+    "swapped_locale",
+    "missing_case",
+    "duplicate_case",
+    "missing_FAQ",
+    "wrong_source",
+    "corrupt_docx",
+    "missing_output",
+    "hidden_native_text",
+    "modified_input"
+  ],
+  "semantic_controls": [
+    "negated_prohibited_claim_is_allowed",
+    "unsupported_immediate_refund",
+    "preview_not_stable",
+    "unknown_not_zero",
+    "opposite_polarity_same_literals",
+    "garbage_same_ids_and_refs",
+    "cross_language_inconsistency",
+    "per_export_not_import_cap"
+  ],
+  "limit": "Semantic control files have source-grounded expected failures but no independent formal Judge scores in this authoring run."
+}

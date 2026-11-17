@@ -1,0 +1,8 @@
+{
+  "business_area": "finance|sales",
+  "document_id": "AMBIGUOUS",
+  "version": "1.0",
+  "state": "approved",
+  "issued_at": "2026-09-01T00:00:00Z",
+  "body": "Fictional conflicting area metadata."
+}

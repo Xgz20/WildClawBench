@@ -1,0 +1,80 @@
+{
+  "schema_version": "h034-independent-annotation-freeze-v1",
+  "status": "FROZEN",
+  "annotator": "model-annotator-B",
+  "frozen_at_utc": "2026-10-28 18:53:14 UTC",
+  "output_directory": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h034/qa/annotation-b-v1",
+  "role_boundary": "Independent model pixel annotation only; not human expert, formal Judge, Harness run or semantic score.",
+  "read_order": [
+    "Read neutral annotation_instructions.md.",
+    "Computed seven input hashes.",
+    "Actually opened all four original PNGs with original detail.",
+    "Saved raw_visual_observations.json and computed preclaim SHA.",
+    "Only then read paper_excerpts.md and reading_tolerance.json.",
+    "Wrote eight assessments, regions/uncertainties and review.",
+    "Validated JSON and raw observation immutability; rehashed all seven inputs.",
+    "Saved input SHA receipt and froze artifact hashes."
+  ],
+  "coverage": {
+    "images_opened": 4,
+    "claims_assessed": 8,
+    "required_image_objects_unresolved": 0,
+    "claim_ids": [
+      "C01",
+      "C02",
+      "C03",
+      "C04",
+      "C05",
+      "C06",
+      "C07",
+      "C08"
+    ]
+  },
+  "verdicts": {
+    "C01": "supported",
+    "C02": "refuted",
+    "C03": "supported",
+    "C04": "refuted",
+    "C05": "supported",
+    "C06": "insufficient",
+    "C07": "refuted",
+    "C08": "supported"
+  },
+  "verification": {
+    "all_json_parsed": true,
+    "all_8_claim_ids_present": true,
+    "raw_observation_sha_matches_preclaim_save": true,
+    "all_7_input_sha_and_byte_sizes_unchanged": true
+  },
+  "artifacts": {
+    "claim_assessments.json": {
+      "sha256": "50d93ba7ca797dbbfd56ab14c188cfad2c8b26df309a7883a4aa459ce893a034",
+      "bytes": 20381
+    },
+    "input_sha_receipt.json": {
+      "sha256": "2490eeae4676aa23427cd002ec0e7bc9794083bb434aeb6169086d246d9fa898",
+      "bytes": 3305
+    },
+    "raw_visual_observations.json": {
+      "sha256": "d01226e1fcd8940135a5c770802993881667dcd0caa6ff942ae43d15af7b70a8",
+      "bytes": 13039
+    },
+    "regions_and_uncertainties.json": {
+      "sha256": "d0378dfd9d60815b0e8dcd64be356f97f8b1ae0d30a4a811631e44f995e7d029",
+      "bytes": 3802
+    },
+    "review.md": {
+      "sha256": "814cb24d64f2566a8d57eae70707cf2dd65e6a4c557791865f84eacff36593db",
+      "bytes": 3859
+    }
+  },
+  "raw_observation_preclaim_sha256": "d01226e1fcd8940135a5c770802993881667dcd0caa6ff942ae43d15af7b70a8",
+  "scientific_unknowns_retained": [
+    "F02 actual significance and equivalence/equality",
+    "F03 final target quality at8 workers",
+    "F04 intervention causal effect"
+  ],
+  "no_prior_label_frequency_assumed": true,
+  "no_hidden_arrays_or_other_annotators_read": true,
+  "freeze_policy": "This manifest fixes the five deliverables by SHA-256. The manifest itself is excluded from its own hash list. No subsequent deliverable edits are intended."
+}

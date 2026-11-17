@@ -1,0 +1,269 @@
+{
+  "schema_version": "general-hard-h009-materials/v1",
+  "date_local": "2026-10-27",
+  "task_id": "general_hard_office_documents_task_009_pdf_to_docx",
+  "status": "source_and_reference_verified_scoring_not_built",
+  "canonical_task_registered": false,
+  "completed_dataset_task_count": 10,
+  "repository_root": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard",
+  "authoring_root": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009",
+  "checkpoint": {
+    "status": "material_native_and_visual_checks_pass",
+    "task_id": "general_hard_office_documents_task_009_pdf_to_docx",
+    "source_pdf_sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+    "source_pages": 6,
+    "native_source_images": 0,
+    "logical_tables": 4,
+    "source_table_fragments": 5,
+    "logical_data_rows": 38,
+    "paragraph_units": 22,
+    "reference_docx_sha256": "1b6c64614372d8f79b671fcb4ef9b7391a315281b4093f96e4273c29e2e8d926",
+    "reference_pages": 6,
+    "anchor_cells": 203,
+    "merged_anchors": 14,
+    "native_footnotes": 6,
+    "correct_note_attachments": 6,
+    "audit_rows": 32,
+    "source_gt_before_reference": true,
+    "source_and_reference_pages_viewed": 12,
+    "docx_marker_executed_once": true,
+    "pdf_marker_executed_once": true,
+    "source_reverification_without_gt_mutation": true,
+    "formal_task_registered": false,
+    "dataset_task_count_added": 0,
+    "limit": "Materials and author reference only; no business grader, negative controls, actual MD Worker, semantic result or final release."
+  },
+  "source_verification": {
+    "pypdf_text": true,
+    "pdfplumber_cell_rectangles": true,
+    "paragraph_units": 22,
+    "table_fragments": 5,
+    "native_source_images": 0,
+    "t02_numeric_fields_independently_checked": 54,
+    "source_labels_constructed_before_reference": true,
+    "reverification_no_gt_mutation": true,
+    "paragraph_note_marker_after_reference_check": {
+      "F06": {
+        "paragraph": "S13",
+        "actual_marker_bbox": [
+          323.796,
+          246.76,
+          344.45099999999996,
+          255.76
+        ],
+        "actual_marker_top": 246.76,
+        "paragraph_start_top": 250.53999999999996,
+        "next_paragraph_top": 293.53999999999996,
+        "correct_source_attachment": true
+      }
+    }
+  },
+  "reference_native_verification": {
+    "anchor_cells": 203,
+    "merged_anchors": 14,
+    "native_footnotes": 6,
+    "correct_note_attachments": 6,
+    "body_order_matches": true,
+    "audit_rows": 32,
+    "engine": {
+      "name": "stdlib-word-ooxml",
+      "version": "wildclawbench.docx-text/v1"
+    },
+    "native_helper_sha256": "c92f7367c026497bc1594fc58b7e46809d0b163f9a930064fbfb027dacd5eb79"
+  },
+  "visual_review": {
+    "source_pages_viewed": 6,
+    "final_reference_pages_viewed": 6,
+    "reference_border_gap_corrected": true,
+    "final_render_source_sha_bound": true,
+    "pre_final_render_outputs_not_used_as_final_proof": true
+  },
+  "author_runtime_observation": {
+    "bundle_version": "26.1025.11240",
+    "python": "3.12.14",
+    "libraries": {
+      "python-docx": "1.2.0",
+      "reportlab": "4.4.9",
+      "pypdf": "6.10.0",
+      "pdfplumber": "0.11.9"
+    }
+  },
+  "remaining": [
+    "Business grading contracts and grader including equivalent continuation tables and arbitrary package note IDs.",
+    "Managed Word rendering and immutable source/derived evidence in actual task Worker.",
+    "Positive/negative author controls, missing dependency/GT classification, actual MD Worker and static gate.",
+    "Canonical task registration, 60-task freeze, four-client checks and 12-task calibration."
+  ],
+  "artifact_bindings": [
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/business_facts.json",
+      "sha256": "f67e3ea8d8b380a6517cdd197ca5981899b36afe4e6c6b62d5ec02f1291e4fb0",
+      "bytes": 17541
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/prepare_business_facts.py",
+      "sha256": "255b01e090349083d5ac7cb1dad75127253bdda290a69916e17b88f475151276",
+      "bytes": 11845
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/build_source_pdf.py",
+      "sha256": "1deab5a89920cc253ad237a749bd4706556393be13efa95b6880e65a42cba24e",
+      "bytes": 9477
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/verify_source_pdf.py",
+      "sha256": "e479631928027c46e86d02a6a77923097c0fe133f1c2078199585c087417b581",
+      "bytes": 10563
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/build_reference_word.py",
+      "sha256": "cfe8d504d0031fad873bc5710d69d8a43a592ceeb2402bf933bc6e1c68bcf20a",
+      "bytes": 11312
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/authoring/verify_reference_native.py",
+      "sha256": "992c2c6f7b156d4f1d572103296c92f003652b43ad8007612c50d97b6426cb50",
+      "bytes": 7193
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/render_reference_final.py",
+      "sha256": "b545187a4248def02c10d0ebcb0ed75d549f3c950c4b4843725bab379a9e52b8",
+      "bytes": 1735
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/exec/source.pdf",
+      "sha256": "1d1e5af01f4b05c2b38af9aeaf6553a946502f72c65cb27036333e24bc94b2bf",
+      "bytes": 171833
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/exec/layout_contract.json",
+      "sha256": "f260742a107ffbe41fd382746dced0c6b79c8eea689dc01a7f79afbdd5ea6dbd",
+      "bytes": 5835
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/expected.json",
+      "sha256": "941260c3b104b2d7d582db4f4f2d384fb296b8034f5fbad535ca89975d38ed85",
+      "bytes": 56753
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/source_evidence_index.json",
+      "sha256": "37e6f1f07cf0737602962ac8618fe8bbf3b0803c6985960dcc5affa86e225fc7",
+      "bytes": 5498
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/source_verification.json",
+      "sha256": "114f68b6240c3b98333162bfaaf2aa30142def6f10eb8c79f0cad7ca053ad62c",
+      "bytes": 4357
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/reference_native_verification.json",
+      "sha256": "c75cd26317cb97100654807ee062b3a2f1737a0ea8511eac79098c756f21e73b",
+      "bytes": 3479
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/protected_sha256.json",
+      "sha256": "10c66f579e85b11c63a695d3382c02f43faa8899db5165f5ce86b438c69b7764",
+      "bytes": 181
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/reference/results/converted.docx",
+      "sha256": "1b6c64614372d8f79b671fcb4ef9b7391a315281b4093f96e4273c29e2e8d926",
+      "bytes": 45858
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/gt/reference/results/conversion_audit.csv",
+      "sha256": "fa5faa8b15406dddb79102540e36ce3a5c400a76fbcbdeaa2604650fed2f34a1",
+      "bytes": 1748
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-reverification.json",
+      "sha256": "50cd8fcd8f796ae2ad5ba161df3a6a42db69bb5d0b840aa6338b90f6c494cc87",
+      "bytes": 4767
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/material-native-checkpoint.json",
+      "sha256": "df02bbeb12179dd2249ada67005a381de2929ab2c32b4e61be4d7c64e501a6f8",
+      "bytes": 1032
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-authoring.json",
+      "sha256": "afa6c1fd54eaf2d2f4172c1d7f21fb0ccd548d55be1037be21c4a9e3ba55ba54",
+      "bytes": 581
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/render-binding.json",
+      "sha256": "436665db0a107bc483a58cca5f2591db66bd5d9b171fbec53a801b17e4aa4a87",
+      "bytes": 2762
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/converted.pdf",
+      "sha256": "b64c849ea4615d60d6be21a4f77b8a09d354f99fe0ff7d2ffd7b2aac9a77a2ed",
+      "bytes": 419577
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-1.png",
+      "sha256": "330088930cc7b6b8212d15491a77492e109a0b60f244e37314785222809be37b",
+      "bytes": 189553
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-2.png",
+      "sha256": "d839e7928a51f141dcbc20d0b7f95b7f512d63bfdee8f7fd1b618fdacb48c475",
+      "bytes": 194890
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-3.png",
+      "sha256": "44f45a363a06244b6387c81710ac31c2355ada46f30605d0800eef2b308782af",
+      "bytes": 151441
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-4.png",
+      "sha256": "028ad16ab3b730773db52220e760d708671c6552236fad430d91d6451426b43c",
+      "bytes": 162650
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-5.png",
+      "sha256": "c0583699e86697ed5dd5d004dbe2bcdc0913dad44c8ddf01391c0b8f32b69988",
+      "bytes": 165406
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/source-render/page-6.png",
+      "sha256": "28eaa64c8c98d2f9e3e9f5b33da9e59acffbd73325616028240284f46921e99d",
+      "bytes": 138539
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/page-1.png",
+      "sha256": "4c6b1d4cdbdde2ce3a74f1d4bb150d402a7e94c55cebff6002c4b5b5c4cf6072",
+      "bytes": 325840
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/page-2.png",
+      "sha256": "4c51d6d377423aaf65a6eb913bc544c08a6f46b105911b60d3bc83c5c23c3f10",
+      "bytes": 328060
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/page-3.png",
+      "sha256": "18913cbf9265ce0393609cc85e22deb5a3d6fffe41d65c6e98c68e2d02772a9c",
+      "bytes": 274493
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/page-4.png",
+      "sha256": "8164d9745a557ed377d4f409da47cffb0a2b7aca7e765ed63ed1873a607af7e7",
+      "bytes": 279875
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/page-5.png",
+      "sha256": "da43158f2434318c9806c6f5c4fabb813f107ceb2c55ed913f2435a7ae05a09e",
+      "bytes": 281057
+    },
+    {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h009/qa/reference-render-final/page-6.png",
+      "sha256": "24bc807005a409f56c6f0063f3790782db18424ffb40614e9f0a619f63b5258a",
+      "bytes": 241067
+    }
+  ],
+  "limits": [
+    "Materials and author references only; not a completed task or a score.",
+    "Native structure/provenance observations do not establish actual Harness behavior or independent semantic correctness.",
+    "No canonical H009 MD/workspace, release manifest or formal execution record created."
+  ]
+}

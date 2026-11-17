@@ -1,0 +1,47 @@
+{
+  "schema_version": "h002-boundaries/v1",
+  "groups": [
+    {
+      "key": "approved_versus_proposed",
+      "issue_ids": [
+        "A16",
+        "A17"
+      ],
+      "fields": [
+        "status",
+        "owner_id",
+        "owner_role",
+        "due_date"
+      ]
+    },
+    {
+      "key": "withdrawal_and_reinstatement",
+      "issue_ids": [
+        "A12",
+        "A13",
+        "A14",
+        "A15"
+      ],
+      "fields": [
+        "status",
+        "owner_id",
+        "due_date"
+      ]
+    },
+    {
+      "key": "identity_authority_and_order",
+      "issue_ids": [
+        "A02",
+        "A03",
+        "A04",
+        "A09"
+      ],
+      "fields": [
+        "status",
+        "owner_id",
+        "owner_role",
+        "due_date"
+      ]
+    }
+  ]
+}

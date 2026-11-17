@@ -1,0 +1,14 @@
+{
+  "schema_version": "wildclawbench.research-source-policy/v1",
+  "ledger_path": "results/source_ledger.json",
+  "deliverable_paths": [
+    "results/event_matrix.xlsx",
+    "results/source_ledger.json",
+    "results/brief.docx"
+  ],
+  "as_of_inclusive": "2026-09-30",
+  "timezone": "Asia/Shanghai",
+  "max_sources": 25,
+  "max_bytes_per_source": 20971520,
+  "timeout_seconds": 60
+}

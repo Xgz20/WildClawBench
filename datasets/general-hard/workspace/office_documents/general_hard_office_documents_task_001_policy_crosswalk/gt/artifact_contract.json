@@ -1,0 +1,77 @@
+{
+  "schema_version": "h001-artifacts/v1",
+  "workbook": "results/applicability.xlsx",
+  "handoff": "results/handoff.docx",
+  "required_fields": [
+    "case_id",
+    "rule_set",
+    "status",
+    "rate",
+    "cap_cny",
+    "grant_cny",
+    "clause_ids",
+    "evidence",
+    "pending_inputs",
+    "next_action"
+  ],
+  "field_aliases": {
+    "case_id": [
+      "case_id",
+      "案例ID",
+      "案例编号"
+    ],
+    "rule_set": [
+      "rule_set",
+      "规则组合",
+      "适用版本"
+    ],
+    "status": [
+      "status",
+      "办理状态",
+      "结论"
+    ],
+    "rate": [
+      "rate",
+      "资助比例"
+    ],
+    "cap_cny": [
+      "cap_cny",
+      "金额上限 元",
+      "金额上限"
+    ],
+    "grant_cny": [
+      "grant_cny",
+      "核定金额 元",
+      "核定金额"
+    ],
+    "clause_ids": [
+      "clause_ids",
+      "依据条款",
+      "条款号"
+    ],
+    "evidence": [
+      "evidence",
+      "证据定位"
+    ],
+    "pending_inputs": [
+      "pending_inputs",
+      "待确认事项",
+      "缺项"
+    ],
+    "next_action": [
+      "next_action",
+      "下一步",
+      "经办动作"
+    ]
+  },
+  "table_rule": "One uniquely identified 18-case table; any sheet name/header row/column order; optional helper sheets allowed.",
+  "missing_amount_markers": [
+    "",
+    "n.a.",
+    "N/A",
+    "待核实",
+    "未覆盖",
+    "待补正"
+  ],
+  "formula_policy": "Numeric constants or equivalent supported formulas accepted; formula values independently recalculated with frozen Office engine."
+}

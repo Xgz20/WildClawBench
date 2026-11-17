@@ -1,0 +1,40 @@
+{
+  "schema_version": "h047-source-truth/v1",
+  "normalization": "ASCII trim/lower; phone explicit separators and ASCII digits; pair needs both values.",
+  "priority": [
+    "email",
+    "phone",
+    "name_region"
+  ],
+  "preserve": [
+    "all matches",
+    "catalog order",
+    "duplicate record IDs",
+    "query order and duplicate query IDs"
+  ],
+  "work_bound_formula": "32*(n+q)+4*expected_output_ID_count+128",
+  "formula_origin": "Source-first broad linear allowance for two legitimate index directions; not an exact reference counter whitelist.",
+  "wall_clock_gate": false,
+  "performance_cases": [
+    "public_workload",
+    "scale_mixed_a",
+    "scale_mixed_b",
+    "scale_all_miss"
+  ],
+  "semantic_cases": [
+    "public_smoke",
+    "public_adversarial",
+    "public_workload",
+    "priority_email",
+    "fallback_phone",
+    "fallback_name_pair",
+    "normalization_preserves_nonascii_and_zeros",
+    "empty_and_partial_keys",
+    "duplicates_and_query_order",
+    "hash_collisions_are_not_identity",
+    "empty_catalog",
+    "empty_queries",
+    "phone_invalid_not_empty_match"
+  ],
+  "case_count": 16
+}

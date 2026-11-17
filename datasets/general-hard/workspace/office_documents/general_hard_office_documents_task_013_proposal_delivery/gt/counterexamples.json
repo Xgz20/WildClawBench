@@ -1,0 +1,37 @@
+{
+  "boundary_groups": [
+    "minimum_module_ceiling",
+    "capacity_and_area",
+    "roof_type_load",
+    "replacement_permission",
+    "whole_roof_replacement",
+    "mandatory_electrical_bom",
+    "adhesion_and_corrosion_fees",
+    "separate_tax_rounding",
+    "known_gross_budget",
+    "unknown_not_zero",
+    "hard_failure_priority",
+    "conditional_recommendation",
+    "no_subsidy_deduction",
+    "cross_artifact_consistency",
+    "actual_source_binding"
+  ],
+  "planned_negatives": [
+    "floor module/inverter count",
+    "missing factor or applying shading twice",
+    "use metal load for flat roof",
+    "recommend low-price infeasible A/C at S2",
+    "B construction area equals modules instead of whole roof",
+    "omit inverter/cable/isolation or duplicate isolation",
+    "omit C acceptance or S3 corrosion fee",
+    "single VAT rate or wrong half-up tax",
+    "ignore S1-C or S3-B budget failure",
+    "turn S3 unknowns into zero/verified",
+    "recommend S3 unconditionally",
+    "deduct invented subsidy",
+    "only spreadsheet correct but Word/email wrong",
+    "exception count matches but tuples/values/locators wrong",
+    "static cached values/constant formulas"
+  ],
+  "status": "control_scenarios"
+}

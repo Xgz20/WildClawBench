@@ -1,0 +1,920 @@
+[
+  {
+    "id": "legacy-comma",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aHxQaHlzaWNzCkEwMDIsIkJvYiwgSnIuIixNdXNpYwo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "A001",
+          "name": "Alice",
+          "raw_courses": "Math|Physics",
+          "courses": [
+            "Math",
+            "Physics"
+          ]
+        },
+        {
+          "id": "A002",
+          "name": "Bob, Jr.",
+          "raw_courses": "Music",
+          "courses": [
+            "Music"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 2,
+        "enrollments": 3
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "tsv-semicolon",
+    "group": "boundary",
+    "input_base64": "77u/aWQJbmFtZQljb3Vyc2VzDQpCMDAzCeadjuWbmwnmlbDlraY754mp55CGDQo=",
+    "format": "tsv",
+    "separator": ";",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "B003",
+          "name": "李四",
+          "raw_courses": "数学;物理",
+          "courses": [
+            "数学",
+            "物理"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_tsv"
+  },
+  {
+    "id": "column-permutation",
+    "group": "boundary",
+    "input_base64": "Y291cnNlcyxpZCxuYW1lCiDmlbDlraYgfCDniannkIYgLCBBMDA1ICwg5byg5LiJIAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "A005",
+          "name": " 张三 ",
+          "raw_courses": " 数学 | 物理 ",
+          "courses": [
+            "数学",
+            "物理"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "quoted-newline",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzDQpDMDAyLCLnlLINCuS5mSIsTWF0aHxNdXNpYw0K",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "C002",
+          "name": "甲\r\n乙",
+          "raw_courses": "Math|Music",
+          "courses": [
+            "Math",
+            "Music"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "quote-preserved",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkQwMDksIkEgIiJxdW90ZWQiIiBuYW1lIiwi6Z+zIiLkuZB85paH5a2mIgo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "D009",
+          "name": "A \"quoted\" name",
+          "raw_courses": "音\"乐|文学",
+          "courses": [
+            "音\"乐",
+            "文学"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "escaped-active-separator",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkUwMTAs55SyLOWHoOS9lVx86L+b6Zi2fOeJqeeQhgo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "E010",
+          "name": "甲",
+          "raw_courses": "几何\\|进阶|物理",
+          "courses": [
+            "几何|进阶",
+            "物理"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "escaped-other-separator",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkYwMTEs55SyLExvZ2ljXDtQcm9vZnxNYXRoCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "F011",
+          "name": "甲",
+          "raw_courses": "Logic\\;Proof|Math",
+          "courses": [
+            "Logic;Proof",
+            "Math"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "literal-backslash",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkcwMTIs55SyLEFcXEJ8Qwo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "G012",
+          "name": "甲",
+          "raw_courses": "A\\\\B|C",
+          "courses": [
+            "A\\B",
+            "C"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "raw-nfd-preserved",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkgwMTMsIENhZmXMgSAsIENhZmXMgSB8IOeJqeeQhiAK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "H013",
+          "name": " Café ",
+          "raw_courses": " Café | 物理 ",
+          "courses": [
+            "Café",
+            "物理"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "same-course-across-students",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkkwMTQs55SyLE1hdGgKSTAxNSzkuZksTWF0aAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "I014",
+          "name": "甲",
+          "raw_courses": "Math",
+          "courses": [
+            "Math"
+          ]
+        },
+        {
+          "id": "I015",
+          "name": "乙",
+          "raw_courses": "Math",
+          "courses": [
+            "Math"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 2,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "header-only",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [],
+      "stats": {
+        "students": 0,
+        "enrollments": 0
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "tsv-quoted-tab",
+    "group": "boundary",
+    "input_base64": "aWQJbmFtZQljb3Vyc2VzCkowMTYJIueUsgnkuZkiCUFcO0I7Qwo=",
+    "format": "tsv",
+    "separator": ";",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "J016",
+          "name": "甲\t乙",
+          "raw_courses": "A\\;B;C",
+          "courses": [
+            "A;B",
+            "C"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 2
+      }
+    },
+    "requirement": "valid_tsv"
+  },
+  {
+    "id": "blank-logical-record",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCgpLMDE3LEthaSxNYXRoCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": true,
+      "records": [
+        {
+          "id": "K017",
+          "name": "Kai",
+          "raw_courses": "Math",
+          "courses": [
+            "Math"
+          ]
+        }
+      ],
+      "stats": {
+        "students": 1,
+        "enrollments": 1
+      }
+    },
+    "requirement": "valid_csv"
+  },
+  {
+    "id": "invalid-config-precedes-decode",
+    "group": "boundary",
+    "input_base64": "/w==",
+    "format": "csv",
+    "separator": "||",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_CONFIG",
+        "row": null,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "encoding",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEs/yxNYXRoCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ENCODING",
+        "row": null,
+        "field": null
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "header-missing",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZQpBMDAxLEFsaWNlCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_HEADER",
+        "row": 1,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "header-duplicate",
+    "group": "boundary",
+    "input_base64": "aWQsaWQsY291cnNlcwpBMDAxLEEwMDEsTWF0aAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_HEADER",
+        "row": 1,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "row-width",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aCxleHRyYQo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ROW_WIDTH",
+        "row": 2,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "id-empty",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCixBbGljZSxNYXRoCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ID_EMPTY",
+        "row": 2,
+        "field": "id"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "id-invalid-ascii",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkHvvJHvvJLvvJMsQWxpY2UsTWF0aAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ID_FORMAT",
+        "row": 2,
+        "field": "id"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "id-duplicate",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aAogQTAwMSAsQm9iLE11c2ljCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ID_DUP",
+        "row": 3,
+        "field": "id"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "name-empty",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEs44CAICxNYXRoCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_NAME_EMPTY",
+        "row": 2,
+        "field": "name"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "fullwidth-pipe",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aO+9nFBoeXNpY3MK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_DELIMITER_INVALID",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "fullwidth-semicolon",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aO+8m1BoeXNpY3MK",
+    "format": "csv",
+    "separator": ";",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_DELIMITER_INVALID",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "mixed-pipe",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aDtQaHlzaWNzCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_DELIMITER_MIXED",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "delimiter_fix"
+  },
+  {
+    "id": "mixed-semicolon",
+    "group": "business",
+    "input_base64": "aWQJbmFtZQljb3Vyc2VzDQpBMDAxCUFsaWNlCU1hdGh8UGh5c2ljcw0K",
+    "format": "tsv",
+    "separator": ";",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_DELIMITER_MIXED",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "cross_format_fix"
+  },
+  {
+    "id": "unknown-escape",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aFxxUGh5c2ljcwo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ESCAPE",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "trailing-escape",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aFwK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ESCAPE",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "empty-field",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "delimiter_fix"
+  },
+  {
+    "id": "leading-empty",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsfE1hdGgK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "delimiter_fix"
+  },
+  {
+    "id": "trailing-empty",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aHwK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "delimiter_fix"
+  },
+  {
+    "id": "middle-empty",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aHwgIHxQaHlzaWNzCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "delimiter_fix"
+  },
+  {
+    "id": "duplicate-casefold",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsIE1hdGggfCBNQVRICg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_DUP",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "unicode_duplicates"
+  },
+  {
+    "id": "duplicate-nfc",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsQ2Fmw6l8Q2FmZcyBCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_DUP",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "unicode_duplicates"
+  },
+  {
+    "id": "duplicate-casefold-expansion",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsU3RyYcOfZXxTVFJBU1NFCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_DUP",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "unicode_duplicates"
+  },
+  {
+    "id": "priority-id-before-courses",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCixBbGljZSxNYXRofHxQaHlzaWNzCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ID_EMPTY",
+        "row": 2,
+        "field": "id"
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "priority-name-before-courses",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsICxNYXRoO1BoeXNpY3N8Cg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_NAME_EMPTY",
+        "row": 2,
+        "field": "name"
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "priority-first-record",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aHwKLEJvYixNYXRoCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "priority-invalid-before-escape",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aFzvvZxQaHlzaWNzCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_DELIMITER_INVALID",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "priority-mixed-before-empty",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aDt8Cg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_DELIMITER_MIXED",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "delimiter_fix"
+  },
+  {
+    "id": "priority-escape-before-empty",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsQWxpY2UsTWF0aFxxfAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ESCAPE",
+        "row": 2,
+        "field": "courses"
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "quoted-logical-row",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCkEwMDEsIkFsaWNlClNtaXRoIixNYXRoCkEwMDIsQm9iLE1hdGh8fFBoeXNpY3MK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 3,
+        "field": "courses"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "blank-record-still-counted",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCgpBMDAxLEFsaWNlLE1hdGh8fFBoeXNpY3MK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_COURSE_EMPTY",
+        "row": 3,
+        "field": "courses"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "strict-csv-before-business",
+    "group": "business",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCixBbGljZSxNYXRoCkEwMDIsQm9iLCJ1bmNsb3NlZAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_CSV_SYNTAX",
+        "row": null,
+        "field": null
+      }
+    },
+    "requirement": "phase_and_record_routing"
+  },
+  {
+    "id": "empty-file",
+    "group": "boundary",
+    "input_base64": "",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_HEADER",
+        "row": 1,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "header-literal",
+    "group": "boundary",
+    "input_base64": "IGlkLG5hbWUsY291cnNlcwpBMDAxLEFsaWNlLE1hdGgK",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_HEADER",
+        "row": 1,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "interior-bom-is-not-stripped",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCu+7v0EwMDEsQWxpY2UsTWF0aAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ID_FORMAT",
+        "row": 2,
+        "field": "id"
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "wrong-file-format-not-guessed",
+    "group": "boundary",
+    "input_base64": "aWQJbmFtZQljb3Vyc2VzCkEwMDEJQWxpY2UJTWF0aAo=",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_HEADER",
+        "row": 1,
+        "field": null
+      }
+    },
+    "requirement": "other_errors"
+  },
+  {
+    "id": "only-empty-fields-not-a-blank-line",
+    "group": "boundary",
+    "input_base64": "aWQsbmFtZSxjb3Vyc2VzCiwsCg==",
+    "format": "csv",
+    "separator": "|",
+    "expected": {
+      "ok": false,
+      "error": {
+        "code": "E_ID_EMPTY",
+        "row": 2,
+        "field": "id"
+      }
+    },
+    "requirement": "other_errors"
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "schema_version": "h030-business-oracle/v1",
+  "source_precedes_reference": true,
+  "candidate_answer_used_for_truth": false,
+  "reference_pool_is_non_exhaustive": true,
+  "minimum_unique_candidate_works": 6,
+  "minimum_included_fulltext_works": 4,
+  "claim_fields": [
+    "research_task",
+    "input_data",
+    "method",
+    "evaluation",
+    "results",
+    "limitations"
+  ],
+  "selected_example_pool": {
+    "works": 6,
+    "records": 7,
+    "facts": 43
+  },
+  "example_counts_are_not_required_candidate_counts": true,
+  "field_opportunities": "All declared entries, at least6 works/4 includes/24 claim categories; no reference-product/URL/name match",
+  "semantic_required": [
+    "Actual original spatial-omics learning method eligibility and report/work identity",
+    "Publication/submission role and selected version history, not merely a literal date token",
+    "Actual main-text support for each claim, metric, data, ground-truth or proxy and evaluation condition",
+    "Honest unknown, inference and author-reported result attribution",
+    "Meaningful cross-study comparability and actual discovery/reading as observable in full bound trace"
+  ],
+  "no_scientific_reproduction_or_human_expert_certification": true
+}

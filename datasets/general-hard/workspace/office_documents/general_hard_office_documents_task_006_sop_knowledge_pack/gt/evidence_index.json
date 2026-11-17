@@ -1,0 +1,760 @@
+{
+  "records": {
+    "manuals/01_customer.docx#CS01": {
+      "source": "manuals/01_customer.docx",
+      "source_sha256": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+      "locator": "paragraph:4",
+      "text_sha256": "6458f1c0965ee1b995d87dd2df4a766394e69e63da8ceed2056e883c8567ac2c",
+      "text": "统一入口为售后工单台。REG仅登记本次联系并核对订单身份，不代表新建第二个退款案。保存订单号、回访渠道和实际联系时间。"
+    },
+    "manuals/01_customer.docx#CS02": {
+      "source": "manuals/01_customer.docx",
+      "source_sha256": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+      "locator": "paragraph:6",
+      "text_sha256": "fdc3429cdd61724e7c51822cd149897afeb2b3b95664160f974f40537962df90",
+      "text": "首次响应为4工作小时，从本次联系登记起算。补证、审批、检验或风险暂停均不能暂停此首次响应时钟。不得把内部处理时限作为首次响应承诺。"
+    },
+    "manuals/01_customer.docx#CS03": {
+      "source": "manuals/01_customer.docx",
+      "source_sha256": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+      "locator": "paragraph:8",
+      "text_sha256": "bcf30c031e921f2c0fa518cdf4a94892b8f6f5767c91b76a5c80cdeb4351b36b",
+      "text": "DOC核验订单、申请说明、金额、购买凭证和授权记录。资料不齐时REQUEST_DOCS由CS补证；缺证据不等于最终拒绝退款。不能为了快捷而代填不存在的资料。"
+    },
+    "manuals/01_customer.docx#CS04": {
+      "source": "manuals/01_customer.docx",
+      "source_sha256": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+      "locator": "paragraph:10",
+      "text_sha256": "11ad1d940d736e5f80f33ab14dd5f286e69632e6e4991a2984e196029d4e3bf1",
+      "text": "操作员仅核对与交接，不能自行审批、换收款账户或划款。没有财务回执不得使用CLAIM_PAID表示已退款；不要把已转财务写成已付款。"
+    },
+    "manuals/01_customer.docx#CS99": {
+      "source": "manuals/01_customer.docx",
+      "source_sha256": "0a79cf4249adf73fe150774a65979ddfdab54adf00cc690c8fef99a594d4aa7a",
+      "locator": "paragraph:12",
+      "text_sha256": "bc1c5b3da43451a77e1ddbd48fb4abaf3172c6dc66fdf0c1b809bc4e442955f9",
+      "text": "早期坐席附录曾写首次响应为2工作日。是否仍适用必须按authority.yaml的控制项裁决，不能把它与CS02并列为可任选口径。"
+    },
+    "manuals/02_warehouse.docx#WH01": {
+      "source": "manuals/02_warehouse.docx",
+      "source_sha256": "e1e936b50b4eac600e5f1f499d0c3c5deb9898441800ef570dc1a12ea7704bd1",
+      "locator": "paragraph:4",
+      "text_sha256": "00017e595062982466ee011f110049c9ea4b8a551db5353cfb20b5eaea4e85cf",
+      "text": "RECV指包裹签收登记与保管，入口为仓储收货队列，责任岗位WH。未收到实物时WAIT_RECEIPT，不虚构签收单。"
+    },
+    "manuals/02_warehouse.docx#WH02": {
+      "source": "manuals/02_warehouse.docx",
+      "source_sha256": "e1e936b50b4eac600e5f1f499d0c3c5deb9898441800ef570dc1a12ea7704bd1",
+      "locator": "paragraph:6",
+      "text_sha256": "cf2f108e29f8d9c4a297c415d7755cf1f3917286571b361c49e543f319eb2c7d",
+      "text": "签收入仓核对为24自然小时，限定物流接收事项，不能推成实物验收已通过，也不是财务付款时限。"
+    },
+    "manuals/02_warehouse.docx#WH03": {
+      "source": "manuals/02_warehouse.docx",
+      "source_sha256": "e1e936b50b4eac600e5f1f499d0c3c5deb9898441800ef570dc1a12ea7704bd1",
+      "locator": "paragraph:8",
+      "text_sha256": "c34b36e9ee84995e04a1fa187bce21fe00b3f553f1e258ca8664f48d0495b2a4",
+      "text": "签收和实物验收是不同节点。INSPECT由QA完成；仅有签收不得满足财务实物验收门禁。安全风险存在时不得处置、销毁或自行放行。"
+    },
+    "manuals/02_warehouse.docx#WH99": {
+      "source": "manuals/02_warehouse.docx",
+      "source_sha256": "e1e936b50b4eac600e5f1f499d0c3c5deb9898441800ef570dc1a12ea7704bd1",
+      "locator": "paragraph:10",
+      "text_sha256": "4e6a8239010d1c75da728b9579797b3577fa88772939f4d3579610574675b36c",
+      "text": "旧仓储附录将实物验收写为24小时。最终质检时效由其职权域的有效条款决定，不按签收任务的名称或时限直接套用。"
+    },
+    "manuals/03_quality.docx#QA01": {
+      "source": "manuals/03_quality.docx",
+      "source_sha256": "de09c6829ded6802a8b3c4869f756026250f1003f6d79be9e0ec57e98217ab16",
+      "locator": "paragraph:4",
+      "text_sha256": "2953b2531fe820d7ad2623b504214dd2ddf392ed226265015e354daac872eaf8",
+      "text": "实物验收为2工作日，由QA负责，入口为质检验收队列。仓储签收不能代替验收，附录24小时不能覆盖本事项时限。"
+    },
+    "manuals/03_quality.docx#QA02": {
+      "source": "manuals/03_quality.docx",
+      "source_sha256": "de09c6829ded6802a8b3c4869f756026250f1003f6d79be9e0ec57e98217ab16",
+      "locator": "paragraph:6",
+      "text_sha256": "61ed744517d9e0ae6beaf367696b9027f2b7417aa5cda56ad10783dad66a508d",
+      "text": "发现安全风险先SAFE_HOLD，暂停资金和实物处置，再SAFE_REPORT报QA。安全解除确认必须来自QA，财务批准或OPS协调均不代替安全解除。"
+    },
+    "manuals/03_quality.docx#QA03": {
+      "source": "manuals/03_quality.docx",
+      "source_sha256": "de09c6829ded6802a8b3c4869f756026250f1003f6d79be9e0ec57e98217ab16",
+      "locator": "paragraph:8",
+      "text_sha256": "9fd3071b2410f5f14616c5da0bf1df1257b89274c1c54bd0d998a1cbf08b0e3b",
+      "text": "安全报告为1工作小时的内部升级事项，不替代客户首次响应4工作小时。原财务时钟已经开始时暂停，未开始仍不开始；解除后接续剩余处理额度，不RESET_CLOCK重新起算。"
+    },
+    "manuals/03_quality.docx#QA04": {
+      "source": "manuals/03_quality.docx",
+      "source_sha256": "de09c6829ded6802a8b3c4869f756026250f1003f6d79be9e0ec57e98217ab16",
+      "locator": "paragraph:10",
+      "text_sha256": "4a4ef909cbb84c1978e2601128a986ecf6f68855a35595653be4e1a1b0460138",
+      "text": "在当前材料只有风险标记、没有解除记录时，路径止于报告和风险交接，不假设已经检验通过或已解除。RELEASE_WITHOUT_CLEARANCE不允许。"
+    },
+    "manuals/04_finance.docx#FI01": {
+      "source": "manuals/04_finance.docx",
+      "source_sha256": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+      "locator": "paragraph:4",
+      "text_sha256": "c1b8561ef7ff85abe111cb21c74bcc6192cb2f1e43bf6d98f04277aaf62f2380",
+      "text": "含税退款金额不足5000元由OPS审批；达到5000元（含）由FC审批。批准须书面且在实物验收之后形成，口头担保、角色不符或预审批均不能作为有效资金批准。"
+    },
+    "manuals/04_finance.docx#FI02": {
+      "source": "manuals/04_finance.docx",
+      "source_sha256": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+      "locator": "paragraph:6",
+      "text_sha256": "0585dbd8785d212b140f42bc4e903db6744fe0cff172f4b82d0c888bd718972a",
+      "text": "资金执行岗位为FE。VERIFY_APPR核对有效批准，VERIFY_BANK核对当前收款账户，之后才HANDOFF_FIN转财务执行。OPS_PAY不允许。任何风险未解除、资料不齐、实物未验收或批准无效时，都不能PAY_BEFORE_GATE。"
+    },
+    "manuals/04_finance.docx#FI03": {
+      "source": "manuals/04_finance.docx",
+      "source_sha256": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+      "locator": "paragraph:8",
+      "text_sha256": "221cd01577251d2f9af395715a781d879d4a4e8a52c5fcd75b4b1f97b5fb0000",
+      "text": "资金处理额度为2工作日，从资料齐备、实物验收、有效书面批准三个门禁最后满足之时启动。账户异常、撤回请求、安全或隐私风险使已运行时钟暂停；首次响应不随之暂停。暂停解除后保留已有起算点与剩余额度，不能重置为新的2工作日。"
+    },
+    "manuals/04_finance.docx#FI04": {
+      "source": "manuals/04_finance.docx",
+      "source_sha256": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+      "locator": "paragraph:10",
+      "text_sha256": "529683eaabeebb831993c1f525ad505693c3bb45d0927ba01ff6ef38b500de94",
+      "text": "收到撤回请求时先PAUSE_PAYMENT，再WITHDRAW_REVIEW交FC确认和审批撤回，即使工单显示尚未划款也不能由CS直接关单。CLOSE_WITHOUT_FIN和删除审计不允许；不假设账务已冲回。"
+    },
+    "manuals/04_finance.docx#FI05": {
+      "source": "manuals/04_finance.docx",
+      "source_sha256": "fac147fe9b5fcf963fd8982dd89a39625fa29b5e0a1e766cf2ca012ee86b332a",
+      "locator": "paragraph:12",
+      "text_sha256": "c56deb43f0043d7eff4329c524d7afb302e68e98e04ddb5ec284f03ab047dfb6",
+      "text": "账户发生变更且当前账户未核验时，PAUSE_PAYMENT并BANK_REVIEW交FC。不得沿用旧账户验证，不得SWITCH_BANK_UNVERIFIED，也不能因紧急而先付。有效退款批准的金额权限不因账户核验流程变更。"
+    },
+    "manuals/05_operations.docx#OP01": {
+      "source": "manuals/05_operations.docx",
+      "source_sha256": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+      "locator": "paragraph:4",
+      "text_sha256": "8b2ed69f87681c4482f91cab4220aac6e3f921c93b04c696b1739c8de0488615",
+      "text": "运营早期说明将所有受理和内部流转默认写成3工作日。它不能不分事项地覆盖客户首次响应、实物验收和资金处理控制项。"
+    },
+    "manuals/05_operations.docx#OP02": {
+      "source": "manuals/05_operations.docx",
+      "source_sha256": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+      "locator": "paragraph:6",
+      "text_sha256": "3846c40d0f08051bc48c05e2bf37e8b42a7d8dc3fc8b7d411e973410da313931",
+      "text": "历史运营说明写不超过5000元可由OPS批准，恰好5000元的边界与财务控制不同。采用何者取决于授权矩阵，不按文档日期较新自动覆盖。"
+    },
+    "manuals/05_operations.docx#OP03": {
+      "source": "manuals/05_operations.docx",
+      "source_sha256": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+      "locator": "paragraph:8",
+      "text_sha256": "4fe6cd2a35fd59f2dbdb4edc845a34a18e5911262c2645c1fdb0d439209fc925",
+      "text": "历史绿色通道曾建议紧急申请先付款后补单。紧急仅可升级内部协作，不改变审批、门禁、执行岗位及风险解除条件。"
+    },
+    "manuals/05_operations.docx#OP04": {
+      "source": "manuals/05_operations.docx",
+      "source_sha256": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+      "locator": "paragraph:10",
+      "text_sha256": "bcea909eedd4a9a794a52e06c6af1c65ca6b521a4018131d79a9c88e6169d5bd",
+      "text": "安全与隐私并发时，由OPS作JOINT_COORD协调。先完成两类暂停，再分别报告；两域报告顺序可交换，QA与PR分别确认解除。OPS不能代替任一域签字放行。"
+    },
+    "manuals/05_operations.docx#OP05": {
+      "source": "manuals/05_operations.docx",
+      "source_sha256": "89d10ba8702ea5ae71d38984607511bed1c1c81bcbf0e5969f10f77edaba14ce",
+      "locator": "paragraph:12",
+      "text_sha256": "01812751f5863ca6dcf61dfe11da4394ca26bc42615c4a7729dc36fc2d6f40f4",
+      "text": "已有linked_case_id时，LINK关联原案，本次联系仍REG并响应。不得NEW_CASE新建独立退款流程，不得另起付款、重复补证或RESET_CLOCK；沿用原案时钟状态而非宣称已重启。"
+    },
+    "manuals/06_compliance.docx#CO01": {
+      "source": "manuals/06_compliance.docx",
+      "source_sha256": "b95381a5f56c2dfca1bc687170a85996b5fef47cac07ba7af175270b97383521",
+      "locator": "paragraph:4",
+      "text_sha256": "a351728334e21979ee083f44d7734bfb7d08f596aebb0454ea3848a5250e8264",
+      "text": "发现隐私风险先PRIV_HOLD停止对外扩散，再PRIV_ISOLATE登记隔离请求并PRIV_REPORT报PR。内部报告额度为1工作小时。隐私解除由PR确认，不能由CS删数据或OPS、FC代替解除。"
+    },
+    "manuals/06_compliance.docx#CO02": {
+      "source": "manuals/06_compliance.docx",
+      "source_sha256": "b95381a5f56c2dfca1bc687170a85996b5fef47cac07ba7af175270b97383521",
+      "locator": "paragraph:6",
+      "text_sha256": "47031c6123b51c79e135ad2b351fb2b6e580d1d7184f2dc6ae89ff93f11688fd",
+      "text": "本文件的强制权限域是隐私和审计，不拥有退款资金SLA、金额审批或质检验收控制项。不能因为本文件日期最新，就用其跨域建议覆盖财务或质检规则。"
+    },
+    "manuals/06_compliance.docx#CO03": {
+      "source": "manuals/06_compliance.docx",
+      "source_sha256": "b95381a5f56c2dfca1bc687170a85996b5fef47cac07ba7af175270b97383521",
+      "locator": "paragraph:8",
+      "text_sha256": "59806305e21aee05562091b2a2d3f5b5200c49eb009c5682e0e02e34d1e3775e",
+      "text": "所有路线保留原案、资料、批准及异常轨迹，DELETE_AUDIT不允许。缺回执不得声称已付款，缺解除不得声称已恢复，规划手册本身不代表真实业务动作发生。"
+    },
+    "manuals/06_compliance.docx#CO99": {
+      "source": "manuals/06_compliance.docx",
+      "source_sha256": "b95381a5f56c2dfca1bc687170a85996b5fef47cac07ba7af175270b97383521",
+      "locator": "paragraph:10",
+      "text_sha256": "9362f2202b81d0a038510deae12db578e52eee497513137b9713d2634e8d5da5",
+      "text": "最新合规FAQ曾建议正常退款1工作日结清，这属于无财务授权的建议。正式资金处理额度仍按财务职权域的有效控制项裁决。"
+    },
+    "authority.yaml#AUTH-ACK": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-ACK",
+      "value": {
+        "domain_owner": "CS",
+        "winner": "CS02",
+        "overrides": [
+          "CS99",
+          "OP01"
+        ]
+      }
+    },
+    "authority.yaml#AUTH-INSPECT": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-INSPECT",
+      "value": {
+        "domain_owner": "QA",
+        "winner": "QA01",
+        "overrides": [
+          "WH99"
+        ],
+        "distinct_event": "WH02只控制物流签收"
+      }
+    },
+    "authority.yaml#AUTH-APPROVAL": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-APPROVAL",
+      "value": {
+        "domain_owner": "FC",
+        "winner": "FI01",
+        "overrides": [
+          "OP02"
+        ]
+      }
+    },
+    "authority.yaml#AUTH-EXECUTE": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-EXECUTE",
+      "value": {
+        "domain_owner": "FC",
+        "winner": "FI02",
+        "overrides": [
+          "OP03"
+        ]
+      }
+    },
+    "authority.yaml#AUTH-CLOCK": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-CLOCK",
+      "value": {
+        "domain_owner": "FC",
+        "winner": "FI03",
+        "overrides": [
+          "OP01",
+          "CO99"
+        ]
+      }
+    },
+    "authority.yaml#AUTH-SAFETY": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-SAFETY",
+      "value": {
+        "domain_owner": "QA",
+        "winner": "QA02",
+        "support": [
+          "QA03",
+          "QA04"
+        ]
+      }
+    },
+    "authority.yaml#AUTH-PRIVACY": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-PRIVACY",
+      "value": {
+        "domain_owner": "PR",
+        "winner": "CO01",
+        "support": [
+          "CO02",
+          "CO03"
+        ]
+      }
+    },
+    "authority.yaml#AUTH-JOINT": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-JOINT",
+      "value": {
+        "domain_owner": "OPS",
+        "winner": "OP04",
+        "limited_to": "协调，不能替代QA或PR解除"
+      }
+    },
+    "authority.yaml#AUTH-DUP": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-DUP",
+      "value": {
+        "domain_owner": "OPS",
+        "winner": "OP05"
+      }
+    },
+    "authority.yaml#AUTH-WITHDRAW": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-WITHDRAW",
+      "value": {
+        "domain_owner": "FC",
+        "winner": "FI04"
+      }
+    },
+    "authority.yaml#AUTH-BANK": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/controls/AUTH-BANK",
+      "value": {
+        "domain_owner": "FC",
+        "winner": "FI05"
+      }
+    },
+    "authority.yaml#FLOW": {
+      "source": "authority.yaml",
+      "source_sha256": "af9d5f29a0a342c6c2224b77993629a95e83da4c5bf1730c1df64bdf0dc3a85a",
+      "locator": "/FLOW",
+      "value": {
+        "dependencies": {
+          "ready_finance": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "RECV"
+            ],
+            [
+              "RECV",
+              "INSPECT"
+            ],
+            [
+              "INSPECT",
+              "VERIFY_APPR"
+            ],
+            [
+              "VERIFY_APPR",
+              "VERIFY_BANK"
+            ],
+            [
+              "VERIFY_BANK",
+              "HANDOFF_FIN"
+            ]
+          ],
+          "request_approval": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "RECV"
+            ],
+            [
+              "RECV",
+              "INSPECT"
+            ],
+            [
+              "INSPECT",
+              "REQUEST_APPROVAL"
+            ]
+          ],
+          "request_documents": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "REQUEST_DOCS"
+            ]
+          ],
+          "await_receipt": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "WAIT_RECEIPT"
+            ]
+          ],
+          "await_inspection": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "RECV"
+            ],
+            [
+              "RECV",
+              "INSPECT"
+            ]
+          ],
+          "safety_hold": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "SAFE_HOLD"
+            ],
+            [
+              "SAFE_HOLD",
+              "SAFE_REPORT"
+            ]
+          ],
+          "privacy_hold": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "PRIV_HOLD"
+            ],
+            [
+              "PRIV_HOLD",
+              "PRIV_ISOLATE"
+            ],
+            [
+              "PRIV_ISOLATE",
+              "PRIV_REPORT"
+            ]
+          ],
+          "joint_hold": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "SAFE_HOLD"
+            ],
+            [
+              "DOC",
+              "PRIV_HOLD"
+            ],
+            [
+              "PRIV_HOLD",
+              "PRIV_ISOLATE"
+            ],
+            [
+              "PRIV_ISOLATE",
+              "PRIV_REPORT"
+            ],
+            [
+              "SAFE_HOLD",
+              "SAFE_REPORT"
+            ],
+            [
+              "PRIV_HOLD",
+              "SAFE_REPORT"
+            ],
+            [
+              "SAFE_HOLD",
+              "PRIV_REPORT"
+            ],
+            [
+              "SAFE_REPORT",
+              "JOINT_COORD"
+            ],
+            [
+              "PRIV_REPORT",
+              "JOINT_COORD"
+            ]
+          ],
+          "link_existing": [
+            [
+              "REG",
+              "LINK"
+            ]
+          ],
+          "withdrawal_review": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "PAUSE_PAYMENT"
+            ],
+            [
+              "PAUSE_PAYMENT",
+              "WITHDRAW_REVIEW"
+            ]
+          ],
+          "bank_review": [
+            [
+              "REG",
+              "DOC"
+            ],
+            [
+              "DOC",
+              "PAUSE_PAYMENT"
+            ],
+            [
+              "PAUSE_PAYMENT",
+              "VERIFY_APPR"
+            ],
+            [
+              "VERIFY_APPR",
+              "BANK_REVIEW"
+            ]
+          ]
+        },
+        "approval_placeholder": "REQUEST_APPROVAL按FI01替换为REQUEST_OPS_APPROVAL或REQUEST_FIN_APPROVAL",
+        "semantics": "逻辑路径只到当前安全终点；不是已执行记录。同一层无边的节点可任意拓扑排序。"
+      }
+    },
+    "incidents.csv#I01": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:2",
+      "value": {
+        "incident_id": "I01",
+        "amount_cny": 1200,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "OPS",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": true,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "常规小额，资料、验收、书面批准和账户核验齐备，尚无付款回执。"
+      }
+    },
+    "incidents.csv#I02": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:3",
+      "value": {
+        "incident_id": "I02",
+        "amount_cny": 5000,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "OPS",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": false,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": true,
+        "description": "金额恰好5000元，只有OPS书面批准，客户要求绿色先付。"
+      }
+    },
+    "incidents.csv#I03": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:4",
+      "value": {
+        "incident_id": "I03",
+        "amount_cny": 1200,
+        "documents_complete": false,
+        "received": true,
+        "inspected": false,
+        "approved_by": "",
+        "approval_written": false,
+        "approval_after_inspection": false,
+        "clock_started": false,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "缺购买凭证，包裹已签收；不能将缺资料直接视为最终拒绝。"
+      }
+    },
+    "incidents.csv#I04": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:5",
+      "value": {
+        "incident_id": "I04",
+        "amount_cny": 4500,
+        "documents_complete": true,
+        "received": true,
+        "inspected": false,
+        "approved_by": "OPS",
+        "approval_written": true,
+        "approval_after_inspection": false,
+        "clock_started": false,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "签收完成但未实物验收；运营预先签了批准，不得推成验收或有效资金门禁。"
+      }
+    },
+    "incidents.csv#I05": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:6",
+      "value": {
+        "incident_id": "I05",
+        "amount_cny": 8000,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "FC",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": true,
+        "safety_risk": true,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "原时钟已启动，后报安全风险；金额批准仍在，没有QA解除记录。"
+      }
+    },
+    "incidents.csv#I06": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:7",
+      "value": {
+        "incident_id": "I06",
+        "amount_cny": 500,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "OPS",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": true,
+        "safety_risk": false,
+        "privacy_risk": true,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "原时钟已启动，工单疑含错误客户信息；无PR解除，不执行删除或外发。"
+      }
+    },
+    "incidents.csv#I07": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:8",
+      "value": {
+        "incident_id": "I07",
+        "amount_cny": 7000,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "FC",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": true,
+        "safety_risk": true,
+        "privacy_risk": true,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": true,
+        "description": "安全与隐私同时出现，OPS负责协调，但两域均无解除记录。"
+      }
+    },
+    "incidents.csv#I08": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:9",
+      "value": {
+        "incident_id": "I08",
+        "amount_cny": 1200,
+        "documents_complete": false,
+        "received": true,
+        "inspected": false,
+        "approved_by": "OPS",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": false,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "RMA-240",
+        "withdrawal_requested": false,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "同一申请已有原案，不另建退款流程或另起时钟，不重复索取全部资料。"
+      }
+    },
+    "incidents.csv#I09": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:10",
+      "value": {
+        "incident_id": "I09",
+        "amount_cny": 1900,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "OPS",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": true,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": true,
+        "account_changed": false,
+        "current_account_verified": true,
+        "urgent": false,
+        "description": "时钟已启动，现请求撤回；工单显示未付款但尚无FC撤回批准，不直接关单。"
+      }
+    },
+    "incidents.csv#I10": {
+      "source": "incidents.csv",
+      "source_sha256": "ae0e1d647ceab4c402f5626f394a652c0854f1141c3232da471cfc422436cc5d",
+      "locator": "row:11",
+      "value": {
+        "incident_id": "I10",
+        "amount_cny": 5200,
+        "documents_complete": true,
+        "received": true,
+        "inspected": true,
+        "approved_by": "FC",
+        "approval_written": true,
+        "approval_after_inspection": true,
+        "clock_started": true,
+        "safety_risk": false,
+        "privacy_risk": false,
+        "linked_case_id": "",
+        "withdrawal_requested": false,
+        "account_changed": true,
+        "current_account_verified": false,
+        "urgent": true,
+        "description": "原批准有效、时钟已启动，新账户尚未核验；客户要求口头担保先付。"
+      }
+    }
+  }
+}

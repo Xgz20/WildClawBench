@@ -1,0 +1,17 @@
+{
+  "schema_version": "h031-rule-evidence-contract/v1",
+  "frozen_evidence_requirements_unchanged": true,
+  "required_context": [
+    "GENERAL_E2E_RULE_EVIDENCE_DIR",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE",
+    "GENERAL_E2E_RESEARCH_SOURCE_BUNDLE_SHA256"
+  ],
+  "conditional_context": {
+    "GENERAL_E2E_OFFICE_LOCK": "Required for actual formula recomputation; outer official task also declares office runtime."
+  },
+  "raw_API_decode": "Strict actual JSON/content path, base64 canonical bytes, Git blob SHA, UTF-8 and original decoded line/byte ranges; no new GET/source or code execution.",
+  "process_truth": "Actual search/read/full-body/identity/date roles/evidence-level/comparability/recommendations require independent Judge.",
+  "unknown": "No fabricated citation or reverse closure required. Explicit unasserted_unknown opportunity remains in fixed denominator, with no acquired-source truth claim.",
+  "failure": "Missing/drifted trusted evidence or unsupported representation is evaluation_error; no zero/reweight fallback.",
+  "HTML_JSON_string_array_decode": "Actual unique inert script XPath plus strict RFC6901 pointer, explicit newline reconstruction, source/script/decoded SHA lineage and original1-based lines; no JS/code or HTML entity second decode."
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "h049-dual-runtime/v1",
+  "interpreters": [
+    {
+      "version": "3.11",
+      "path": "/usr/local/bin/python3.11",
+      "executable_sha256": "1943d43f469e22f3959810a5373ae6a1122d279fb5a5e13333bb4d4d05178ea9",
+      "observed": {
+        "major": 3,
+        "minor": 11,
+        "version": "3.11.11 (main, Dec  7 2024, 12:10:35) [Clang 13.0.0 (clang-1300.0.29.30)]",
+        "executable": "/usr/local/opt/python@3.11/bin/python3.11"
+      }
+    },
+    {
+      "version": "3.12",
+      "path": "/usr/local/bin/python3.12",
+      "executable_sha256": "c3b99f7bdb3bdeeb74f1e6b3cb261f3e05ec6aaff97b8674885bb0706b3399ff",
+      "observed": {
+        "major": 3,
+        "minor": 12,
+        "version": "3.12.8 (main, Dec  7 2024, 22:10:08) [Clang 13.0.0 (clang-1300.0.29.30)]",
+        "executable": "/usr/local/opt/python@3.12/bin/python3.12"
+      }
+    }
+  ]
+}

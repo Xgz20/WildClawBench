@@ -1,0 +1,98 @@
+{
+  "schema_version": "general-hard-integration-validation/v1",
+  "status": "FRAMEWORK_INTEGRATION_CHECKS_PASSED",
+  "checked_at": "2026-11-17T10:07:59.311647+00:00",
+  "branch": "feat/general-hard-integration",
+  "worktree": "/Users/gzx/Project/GitHub/xgz/ai/evaluate/WildClawBench/WildClawBench/.agents/general-hard-integration",
+  "base_revision": "8a15e0835180eb8ec62d06fa68f57a85ed267cd1",
+  "incoming_revision": "d99cc800c58b7fbb5c2ab64d23001b9df640f28a",
+  "text_conflicts_resolved": 21,
+  "versions": {
+    "grading_core": "0.16.0",
+    "score-general-e2e": "0.29.0",
+    "report-general-e2e": "0.10.0"
+  },
+  "changes": [
+    "统一catalog和旧产品定义/快照，保留两种CLI及冻结源码锚点。",
+    "保留最新主线执行、重评分、独立业务/能力有效性与报告行为，融合Office/HTML/image/research取证。",
+    "按dataset ID/digest物化冻结exec/GT，支持显式锁定bounded symlink，拒绝缓存漂移。",
+    "输出隔离检查真实planned_tasks，阻止跨版本/digest结果混用。",
+    "私有参考封装容器兼容原生取证，原成员与容器分别绑定。",
+    "五维/七维及多轮冻结分类分别统计，保留null和有效覆盖。"
+  ],
+  "static_validation": {
+    "challenge": {
+      "status": "PASS",
+      "tasks": 60,
+      "issues": 0,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/static-hard/20261117T093512Z_4d185df7a0/report.json",
+      "sha256": "966f82bcbb9b7c155f43a685fcceb9bb08eaa9613194853019d7b1d94855a5ce"
+    },
+    "product": {
+      "status": "PASS",
+      "tasks": 70,
+      "issues": 0,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/static-product/20261117T093517Z_f88626bbd6/report.json",
+      "sha256": "582492cc8107d04ef33805231d85c4b33220d5f59d984dbd08f657279de120e6"
+    }
+  },
+  "frozen_versions": 11,
+  "protected_files": 4032,
+  "hard_bundle_sha256": "a861919455853fac4556f3ad1744eb8a90b93fa415a5ed5c13c592a600608a24",
+  "receipts": {
+    "dataset-integration-verification.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/dataset-integration-verification.json",
+      "sha256": "aff56d14404b0c0fb009b83da5cce1a2153243ab05acc3f1d300b2b8002ff089"
+    },
+    "final-selection-regression.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/final-selection-regression.json",
+      "sha256": "597bdef6282d79a6ac1faf8eb4b6c11cd1456f1b43a0297c55a4c8ad2aa856bc"
+    },
+    "final-packaging-regression.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/final-packaging-regression.json",
+      "sha256": "e197ff45ac46a16e905d610865a6529980e61df5ad83cfa15ba1ccfa04e7ac4c"
+    },
+    "dataset-compatibility-final.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/dataset-compatibility-final.json",
+      "sha256": "a7ab13ab668be0d10c8eb91ed7d3102a4ff44d0e1a0e83064b23b992540031ad"
+    },
+    "scoring-verification.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/scoring-verification.json",
+      "sha256": "5b36f551c36057667f9843873276092c77bc4cbebc358c3809d900b9ae66c595"
+    },
+    "reporting-verification.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/reporting-verification.json",
+      "sha256": "040e37850411c57cc54d2cd70cbf8fbe79fd631f55cfcfc9012cc8308c8d380f"
+    },
+    "proxy-image-regression-final.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/proxy-image-regression-final.json",
+      "sha256": "b147ace83fdc4c156205e08227210d24a176fb178196d42587f1068073dce528"
+    },
+    "platform-prepare-smoke.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/platform-prepare-smoke.json",
+      "sha256": "5725bbb80a9a8e8d9ffb50b65af8c15f39af29f03ab5d1b91ae10e6315bf8f2d"
+    },
+    "dataset-workspace-legacy60-smoke.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/dataset-workspace-legacy60-smoke.json",
+      "sha256": "835cedbdfda70337aad3ec5723e57e61cac424e7156e47113798d4ad3a426d1c"
+    },
+    "protected-final.json": {
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/protected-final.json",
+      "sha256": "1f711c82dd086b531bd309103a5f87db0920b8d946719780e15c022d9eb500ed"
+    }
+  },
+  "supplemental_artifact_roundtrip": {
+    "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-integration_20261117/artifact-runtime-roundtrip.log",
+    "sha256": "d56a5c0db329db27bc12aa7418abc6c664f24e775e33e67ba806568fc82a31cc"
+  },
+  "boundaries": {
+    "main_and_original_hard_checkout_unchanged": true,
+    "frozen_task_material_or_manifest_changes": false,
+    "dependency_installation": false,
+    "real_candidate_Harness_execution": false,
+    "formal_semantic_Judge_or_12_case_calibration": false,
+    "network_tests": "Controlled localhost fixture servers only; no external source recollection.",
+    "real_Office_or_browser_rendering": false,
+    "standalone_release": "Build and verify after this merge commit; final receipt is recorded separately."
+  }
+}

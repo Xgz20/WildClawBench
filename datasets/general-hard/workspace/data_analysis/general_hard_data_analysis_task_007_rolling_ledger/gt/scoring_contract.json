@@ -1,0 +1,29 @@
+{
+  "schema_version": "h023-scoring/v1",
+  "weights": {
+    "business_correctness": 0.55,
+    "boundary_cases": 0.25,
+    "delivery_integrity": 0.15,
+    "evidence_binding": 0.05
+  },
+  "private_sha256": {
+    "ledger_io.py": "77f098c3834c088ae61d7b29e55db28d6cbc6312ebca357bd3704745c5126f55",
+    "xlsx_observations.py": "992dbe965ed3aad3f5ee4e15f2a0e2facd751ea80fb9c279e20f46d9d670a089",
+    "office_runtime.py": "a18c64c8ea7d267157e95d46a544471e7b47018ce1afad9c0da49537f0bf5cf3",
+    "business_model.py": "ece95824041dfa3a53d8714dfaa575d4ff0f9deef8c1a21f7faa3897fb3a0df1",
+    "independent_sql_model.py": "2a1bad485332f4376c544155af19fdcc709a44284df9c5c2b2f1207f28274cd7",
+    "source_expected.json": "fece1b63a92d9f36655d6d9527596e3dffa1ea8bb0e14bc91821736ecf3f8af2",
+    "source_records.json": "4a6701d422e9942c6f30d87171bfbd584a2d9de6d24994854bd9d378658853ad",
+    "protected_sha256.json": "e56357a1d39a5b3d4d6db391c453e8c48e0fb09c3f85094f8df91505bc683731",
+    "independent_validation.json": "9d682b03ea44199d5453f14e1f0eb29ec36ca06d21381901631e012f55169582",
+    "business_oracle.json": "0dbb1a467071711378c1209a876f46932e2a639e4927d451791bd0041b5a7195",
+    "counterexamples.json": "3b2774d9f797f9b680c461e25c5cc272b43cbd2cc30ed25bce7726c6a1dc3471",
+    "artifact_contract.json": "41c72ec3f7eb0c39811b9b8b27ae7f25f4a4f43ea37027ffb84c44bcd753ab09",
+    "evidence_requirements.json": "d792936a52c15858ad3552ba49c3105e68cbe9ddb470895cec07a7756a34cfaa",
+    "runtime_contract.json": "debcb5ffc9ace18cd9958bb977f5d04bd669c25d6eca59576a3b831fe1dc4b2e",
+    "scenarios/late_invoice/source_expected.json": "ad30ca702b8d313f60d3a2c5e135d170f46a5f34eaf29cbf66e77613ee2ed8fd",
+    "scenarios/late_receipt/source_expected.json": "671762f19c52505ba1c67e264c04e64094b85fb4e685cbcecd629283849b8130",
+    "scenarios/late_refund/source_expected.json": "a4a02a57c356715e621e0aeed34e06143b318f9601d7a494dc2df4b89aa7cefb"
+  },
+  "grading_source_sha256": "f68fb12b8a872b60f7f9426b092b6fdc31ecca92aebdff4b0873fb5a26c1d167"
+}

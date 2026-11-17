@@ -1,0 +1,142 @@
+{
+  "schema_version": "h004-artifacts/v1",
+  "workbook": "results/traceability.xlsx",
+  "response": "results/response_revised.docx",
+  "gaps": "results/gaps.md",
+  "required_fields": [
+    "req_id",
+    "mandatory",
+    "draft_status",
+    "coverage",
+    "certificate_status",
+    "requirement",
+    "risk",
+    "next_step",
+    "requirement_refs",
+    "draft_refs",
+    "fact_refs",
+    "certificate_refs",
+    "revised_refs"
+  ],
+  "field_aliases": {
+    "req_id": [
+      "req_id",
+      "需求ID",
+      "需求编号"
+    ],
+    "mandatory": [
+      "mandatory",
+      "必须项",
+      "是否必须"
+    ],
+    "draft_status": [
+      "draft_status",
+      "初稿状态"
+    ],
+    "coverage": [
+      "coverage",
+      "最终覆盖",
+      "覆盖结论"
+    ],
+    "certificate_status": [
+      "certificate_status",
+      "证书状态"
+    ],
+    "requirement": [
+      "requirement",
+      "需求说明",
+      "需求摘要"
+    ],
+    "risk": [
+      "risk",
+      "缺口或限制",
+      "风险说明"
+    ],
+    "next_step": [
+      "next_step",
+      "下一步"
+    ],
+    "requirement_refs": [
+      "requirement_refs",
+      "需求来源"
+    ],
+    "draft_refs": [
+      "draft_refs",
+      "初稿来源"
+    ],
+    "fact_refs": [
+      "fact_refs",
+      "核验事实",
+      "事实来源"
+    ],
+    "certificate_refs": [
+      "certificate_refs",
+      "证书来源"
+    ],
+    "revised_refs": [
+      "revised_refs",
+      "修订定位"
+    ]
+  },
+  "join_policy": "Fields may be split across tables/sheets and joined by req_id; names/row/column order arbitrary. Same field must be unambiguous. Missing column is not known empty.",
+  "gap_columns": [
+    "req_id",
+    "coverage",
+    "missing_evidence",
+    "proposed_action"
+  ],
+  "coverage_aliases": {
+    "已覆盖": "已覆盖",
+    "covered": "已覆盖",
+    "部分覆盖": "部分覆盖",
+    "partial": "部分覆盖",
+    "待核实": "待核实",
+    "unverified": "待核实",
+    "不满足": "不满足",
+    "unmet": "不满足"
+  },
+  "draft_aliases": {
+    "已覆盖": "已覆盖",
+    "covered": "已覆盖",
+    "部分覆盖": "部分覆盖",
+    "partial": "部分覆盖",
+    "缺失": "缺失",
+    "missing": "缺失",
+    "过度承诺": "过度承诺",
+    "overclaim": "过度承诺",
+    "证书过期": "证书过期",
+    "expired": "证书过期"
+  },
+  "cert_aliases": {
+    "有效": "有效",
+    "valid": "有效",
+    "过期": "过期",
+    "expired": "过期",
+    "范围不符": "范围不符",
+    "scope_mismatch": "范围不符",
+    "不要求": "不要求",
+    "not_required": "不要求",
+    "未生效": "未生效",
+    "not_yet_valid": "未生效"
+  },
+  "mandatory_aliases": {
+    "是": "是",
+    "必须": "是",
+    "required": "是",
+    "true": "是",
+    "否": "否",
+    "建议": "否",
+    "optional": "否",
+    "false": "否"
+  },
+  "empty_markers": [
+    "",
+    "无",
+    "N/A",
+    "n.a.",
+    "不适用",
+    "not_applicable"
+  ],
+  "response_protocol": "One unambiguous final coverage per req_id, in an explicit 覆盖结论: enum section or req_id/coverage table. Narratives freely worded but must be factually grounded.",
+  "gaps_protocol": "Markdown table req_id/coverage/missing_evidence/proposed_action lists mandatory unresolved items; optional issues may be explained outside that table."
+}

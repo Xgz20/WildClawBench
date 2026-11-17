@@ -1,0 +1,48 @@
+{
+  "schema": "h049-artifact-contract/v1",
+  "mutable": [
+    "project/pyproject.toml",
+    "project/legacy_cli.py",
+    "project/legacy_stamp.py",
+    "project/src/legacy_stamp.py",
+    "project/batchstamp/__init__.py",
+    "project/batchstamp/__main__.py",
+    "project/batchstamp/cli.py",
+    "project/batchstamp/core.py",
+    "project/src/batchstamp/__init__.py",
+    "project/src/batchstamp/__main__.py",
+    "project/src/batchstamp/cli.py",
+    "project/src/batchstamp/core.py"
+  ],
+  "required_sources": [
+    "project/pyproject.toml",
+    "project/src/legacy_stamp.py",
+    "project/src/batchstamp/__init__.py",
+    "project/src/batchstamp/__main__.py",
+    "project/src/batchstamp/cli.py",
+    "project/src/batchstamp/core.py"
+  ],
+  "reports": {
+    "matrix": "results/install_matrix.json",
+    "notes": "results/migration.md"
+  },
+  "matrix_schema": "h049-actual-install-matrix/v1",
+  "boundary_labels": [
+    "build",
+    "install",
+    "src_members",
+    "resource_members",
+    "new_origin",
+    "legacy_origin",
+    "resource_api",
+    "zip_resources",
+    "console-new",
+    "console-old",
+    "module-new",
+    "module-old",
+    "invalid_exit",
+    "checkout_legacy",
+    "public_tests",
+    "distribution_version"
+  ]
+}

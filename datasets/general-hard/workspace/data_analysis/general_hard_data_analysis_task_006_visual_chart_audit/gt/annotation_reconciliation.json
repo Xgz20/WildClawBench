@@ -1,0 +1,111 @@
+{
+  "status": "AUTHORIZED_DOUBLE_MODEL_SOURCE_ANNOTATIONS_RECONCILED",
+  "review_type": "independent_model_annotation",
+  "human_expert_review": false,
+  "authorization": {
+    "source": "direct_user_reply",
+    "reply": "授权两名子代理独立模型标注（推荐）",
+    "question_item_id": "[\"request_user_input_async\",\"call_7e6276cf406b4e4cb0e94c8c38c7c4a3\",0]",
+    "recorded_utc": "2026-10-28T02:18:58.790079+00:00",
+    "scope": "H022 only: two independent image-first model annotators, 20 readings and 8 claims each, including necessary revision rechecks; never human experts."
+  },
+  "history": [
+    {
+      "reviewer": "a",
+      "version": 1,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/a/claim_annotations_a.json",
+      "sha256": "b1b9e4ab3a8c8add7c6bb80f2d0d1eb4b6d998305392daf0fc24d0ab20af37a3",
+      "counts": {
+        "refuted": 4,
+        "supported": 2,
+        "uncertain": 2
+      }
+    },
+    {
+      "reviewer": "a",
+      "version": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/a/claim_annotations_a_v2.json",
+      "sha256": "c043114a493840b1a3b85283488469ef1cfe435f432ba632be704461adfe2d39",
+      "counts": {
+        "refuted": 4,
+        "supported": 2,
+        "uncertain": 2
+      }
+    },
+    {
+      "reviewer": "b",
+      "version": 1,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/b/claim_annotations_b.json",
+      "sha256": "3d3107f90bc4ee041c45531bf3758ca211fe0fb8869c3260ca8a7d82b1d604f5",
+      "counts": {
+        "refuted": 4,
+        "supported": 2,
+        "uncertain": 2
+      }
+    },
+    {
+      "reviewer": "b",
+      "version": 2,
+      "path": "/Users/gzx/debug-workspace/e2e-evaluate/general-hard-design_20261026/implementation/h022/independent-review/v2/b/claim_annotations_b_v2.json",
+      "sha256": "22f83fbac99335074576455b7de03bb3908aa2e2c73cf8acef12e913d26b0150",
+      "counts": {
+        "refuted": 4,
+        "supported": 2,
+        "uncertain": 2
+      }
+    }
+  ],
+  "reviewers": 2,
+  "readings_each": 20,
+  "claims_each": 8,
+  "agreed_claim_counts": {
+    "refuted": 4,
+    "supported": 2,
+    "uncertain": 2
+  },
+  "open_annotation_issues": [],
+  "intended_unknown_claims": [
+    "C06",
+    "C08"
+  ],
+  "model_error_correlation_limit": "Two independent model contexts may share errors; this is not human expert or native statistical review.",
+  "v2_clarity_revision": {
+    "status": "CLAIM_WORDING_CLARIFIED_PENDING_ORIGINAL_ANNOTATOR_RECHECK",
+    "before": "仅凭此图即可确认W5单周新增精确等于60000人，误差不超过1人。",
+    "after": "W5单周新增用户的实际人数在59999至60001人之间（含边界）。",
+    "reason": "Both raw reviews distinguish the unknown numerical fact from the unsupported assertion that the image can confirm it. Remove that meta-assertion so the public composite-claim rule has one unambiguous factual object.",
+    "raw_data_unchanged": true,
+    "four_image_bytes_unchanged": true,
+    "reading_rules_unchanged": true,
+    "other_seven_claims_unchanged": true,
+    "only_word_document_xml_changed": true,
+    "original_docx_sha256": "f4213644e21ce8eea1ac69b96701371769c0915c828d35b3f924834a3ea1dd35",
+    "revised_docx_sha256": "54a9fcdd888012a793c1f7d7714d8bc8ed7f2489d0359aaa1e9bc31be488cbf1",
+    "source_sha256": {
+      "reading_rules.md": "6a2845e9dc6229e09331d85d49e5499dfd43cb362e2ccb92ef410a2821b2c826",
+      "claims.docx": "54a9fcdd888012a793c1f7d7714d8bc8ed7f2489d0359aaa1e9bc31be488cbf1",
+      "chart_pages/chart_B.png": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+      "chart_pages/chart_C.png": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+      "chart_pages/chart_A.png": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+      "chart_pages/chart_D.png": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465"
+    }
+  },
+  "source_sha256": {
+    "chart_pages/chart_A.png": "af7a276449e94fadf92cdd24acb84e1fdfcabab8a745aee1404eee83f325c02e",
+    "chart_pages/chart_B.png": "73749d852b8e28c615066ec3e955b6f34a6fb64147079ae2e5471658516bb267",
+    "chart_pages/chart_C.png": "bb1888c11cd7d1df49bf8b8e3faeac032d3b14c21684647857872d72b98c3027",
+    "chart_pages/chart_D.png": "d1d8dc4960139618c5a62efd4c3db2c6cd5446639dc09cffc6f3f04ee5ac0465",
+    "claims.docx": "54a9fcdd888012a793c1f7d7714d8bc8ed7f2489d0359aaa1e9bc31be488cbf1",
+    "reading_rules.md": "6a2845e9dc6229e09331d85d49e5499dfd43cb362e2ccb92ef410a2821b2c826"
+  },
+  "source_first_provenance": {
+    "a": {
+      "image_reading_sha256": "97def72e5837a607a2f85c5b246846ee0c198ec861ab56e0f7bd10585f31fb15",
+      "final_claim_annotation_sha256": "c043114a493840b1a3b85283488469ef1cfe435f432ba632be704461adfe2d39"
+    },
+    "b": {
+      "image_reading_sha256": "6c681cf2b47278f1782e7a0a51bfb69ac0927620a555851c8eb46c3f64180eb2",
+      "final_claim_annotation_sha256": "22f83fbac99335074576455b7de03bb3908aa2e2c73cf8acef12e913d26b0150"
+    }
+  }
+}

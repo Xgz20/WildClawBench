@@ -1,0 +1,19 @@
+# 本批简报交付约定
+
+只交付results/brief.docx、results/evidence.xlsx、results/uncertainties.json；所有输入只读。原生Word须有可编辑文字，Excel须有原生表格，不以图片、单个JSON单元格或聊天自述代替。工作表名称、表格起点、行列顺序、Word版式、事实/主题编号和合法的不同选题排序均可不同。英文列名与下列中文列名均可。
+
+Word给出截至brand_constraints时点的简报：本周热点与竞品动作、旧闻/观点的处理理由、指标口径提醒、2至3个面向本品牌受众的选题及优先级理由。事实、厂商宣称、媒体/个人观点、编辑推断与unknown分开；每个主要判断能在Excel支持关系中定位。选题不要求与某个参考相同。不得把材料篇数当独立验证数、把转载日期当事件日期、把互动或表单提交写成商业转化。
+
+Excel包含三个逻辑表，可分工作表或在同一表的清晰区域。
+
+来源表每份S01至S08一行，列为source_id来源编号、parent_id直接转载来源（原始材料留空或none）、origin_id追溯原始材料、event_id自定事件组编号、published_date发布日期、event_date事件日期、source_kind材料类型、in_week是否本周、independent_roots本事件组独立原始材料数、quote原文摘录、line_start原文件起始行、line_end终止行、source_sha256文件SHA。event_id可自拟，真实同一事件/观点转载链归同组；原始个人观点也是独立原始帖子，不因此成为独立产品试验或市场调查。source_kind允许英文official_claim/media_repost/aggregate_repost/old_repost/user_opinion/opinion_repost或原输入中文类型。日期可为原生日期或完整ISO日期；是否本周可用原生布尔或明确是/否。
+
+指标表每份M01至M06一行，列为metric_id指标编号、source_id来源编号、platform平台、window_start采样开始、window_end采样结束、numerator_kind分子类型、numerator分子、denominator_kind分母类型、denominator分母、rate比例、rate_status比例状态、paid_conversions付费转化数、pair_comparable指定跨项是否可比。比例用数值小数存储并按百分比显示，或明确的百分号文本；不能把3.33当作3.33%。defined表示可计算；zero_denominator表示0分母且比例无定义；missing_denominator表示unknown分母且比例未知。后两者rate可空、null、undefined或unknown文字，但不能填0；unknown分母与付费数用unknown/未知/null，不能擅补为0。对M01与M02、M03与M04分别给出pair_comparable是否可直接比较，并在Word说明口径；其它行可留空或not_applicable。允许正确静态值；有公式时须依赖可追溯原生单元格，评分端清缓存后用锁定Office实际重算，不信任旧缓存。
+
+支持关系表每项判断一行或每个引据一行，列为claim_id判断编号、source_id来源编号、statement判断文字、evidence_level证据层级、quote原文摘录、line_start起始行、line_end终止行、source_sha256文件SHA、brief_locatorWord中实际标题或定位短语。claim_id自定；同一判断可以引用多行。至少覆盖四组原始材料各一项判断，包括不进入本周竞品动作的旧闻与仅可作假设线索的个人观点。quote至少8个非标点空白字符，须是指定相邻行内的连续原文片段，不能把不相邻短语拼接。line为原MD文件的物理行号，从1开始。Word定位短语须实际出现；来源编号、原文存在或层级标签齐全不等于判断受支持，语义另行审阅。evidence_level可用厂商宣称、媒体转述、个人观点、编辑推断、unknown或清楚等价词。
+
+uncertainties.json使用普通对象，含as_of、scope与issues列表。每项含issue_id自定编号、question_kind问题类别、source_refs来源/指标编号列表、status（unknown/未知）、question问题、next_check下一步核验。应覆盖六类未决问题：pilot_activation（试点实际激活与公开开放）、accuracy_validation（客观准确率/对照/工时）、adoption_sample（个人观点与采用代表性）、price_conversion（价格/合格线索/付费）、M05_rate（0分母）、M06_rate（缺失分母）。类别只用于交接，问题与核验动作是否有据、是否真正覆盖缺口仍由Judge审阅；不能只填类别标签。as_of与scope依brand_constraints，不新增网络采集或真实操作。
+
+比例数值的绝对容差为0.00005（小数口径，等于0.005个百分点），因此400/12000写成3.33%或0.0333可接受；把3.33当小数、把undefined/unknown填0仍不接受。建议显示到百分比小数点后两位。此容差不允许更换分子、分母、窗口或单位。
+
+自动部分核来源追溯图、日期、新旧、独立原始材料数、分子分母/比例/0与unknown边界、实际原文与文件SHA、原生交付及跨产物定位。Judge核原文是否支持主要判断、层级是否恰当、选题优先级与受众关联、未知解释和核验动作是否可继续办理。允许满足材料的多解，不按参考措辞或排序评分。本题不是周期监控，不创建定时任务、自动发布或真实账号动作。

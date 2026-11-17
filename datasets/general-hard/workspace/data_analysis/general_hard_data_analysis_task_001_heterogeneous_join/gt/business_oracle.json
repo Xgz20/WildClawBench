@@ -1,0 +1,42 @@
+{
+  "status": "construction_input_read_independently_before_reference",
+  "keys": "nonblank target project+month first; contract+month only if target project blank; no name/fuzzy/nearest-month matching",
+  "counts": {
+    "matched": 86,
+    "one_to_many": 16,
+    "no_match": 12,
+    "no_key": 6
+  },
+  "links": 118,
+  "unmatched_target": 18,
+  "unused_source": 28,
+  "audit_rows": 164,
+  "units": {
+    "money": "CNY元",
+    "time": "小时",
+    "count": "次"
+  },
+  "named_boundary_cases": {
+    "leading_zero": [
+      "T0001",
+      "T0097"
+    ],
+    "blank_and_zero": [
+      "T0116",
+      "T0118"
+    ],
+    "negative_adjustment": [
+      "T0115"
+    ],
+    "null_hours": [
+      "T0117"
+    ],
+    "null_count": [
+      "T0119"
+    ],
+    "identical_values_multiple_source_rows": [
+      "T0080"
+    ]
+  },
+  "limit": "Source-normalized native values, not model/Harness score or measured difficulty."
+}
