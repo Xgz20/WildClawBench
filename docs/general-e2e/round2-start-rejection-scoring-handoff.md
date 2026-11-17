@@ -1,0 +1,9 @@
+# 已受理启动拒绝的独立评分交接
+
+AStudio的正式启动拒绝可有完整原生Prompt/命令受理与拒绝账本，同时没有模型turn或SDK会话。旧Score只识别已绑定模型turn的TURN_ERROR/TURN_FAILED，因此即使Collect已完整收口，编排仍将该题留空。这是评分准入覆盖缺陷，不是新增候选作答或整题零分规则。
+
+Score0.10.111沿用evidence-accountability/v1与verified-harness-failure-evidence/v1：从正式evidence-manifest逐文件取得当前失败状态、原Prompt、完整旧状态/记录、同快照原生账本和源指纹，调用随Score分发的共享启动拒绝组件离线回放。它保留session.verified=false及null turn/SDK，不改原候选或错误，不推定模型已执行、回复已展示或能力应得分。原检查点、自动数值规则、权重和独立Judge决定结果。
+
+Orchestrate0.11.89只把精确原生启动拒绝形状当作可交Score验证的线索，不能自行认证或赋分。未知/在途/额度状态、来源漂移、无受理、未知源码、迟到turn及不闭合账本仍失败关闭。已有普通失败与旧评分manifest按原字节及原逻辑核验，运行时锁不变。
+
+合成验证覆盖传统与源指纹竞态两种证明、三种原grading_type的prepare与双重verify、旧记录原字节、无自动score文件，以及外层摘要自洽后的未知源码/迟到turn拒绝。测试不读取生产候选或GT，不创建裁判聊天。

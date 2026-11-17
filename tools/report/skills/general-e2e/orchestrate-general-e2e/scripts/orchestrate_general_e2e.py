@@ -571,7 +571,17 @@ def _execution_summary(
         and record.get('prompt', {}).get('send_status') == 'sent'
         and record.get('session', {}).get('verified') is True
     )
-    if interruption_candidate or collected_native_error or business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
+    start_rejection_candidate = (
+        record.get('harness', {}).get('id') == 'astronstudio' and record.get('phase') == 'FAILED'
+        and business_status == 'candidate_error' and isinstance(native_error,dict)
+        and native_error.get('code') == 'ASTRONSTUDIO_NATIVE_START_REJECTED'
+        and record.get('prompt', {}).get('send_status') == 'sent'
+        and record.get('session', {}).get('verified') is False
+        and record.get('session', {}).get('turn_id') is None
+        and record.get('session', {}).get('session_id') is None
+        and isinstance(evidence.get('native_start_rejection'),dict)
+    )
+    if interruption_candidate or collected_native_error or start_rejection_candidate or business_status == "candidate_error" and record.get("phase") == "FAILED" and verified_failure_profile:
         pass  # Frozen score Skill independently verifies every native source.
     elif business_status != "completed":
         failure = {

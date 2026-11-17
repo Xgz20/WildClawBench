@@ -8,6 +8,9 @@ import hashlib
 import base64
 import json
 import re
+import shutil
+import subprocess
+import tempfile
 from datetime import datetime
 from pathlib import Path
 import execution_accountability
@@ -173,6 +176,8 @@ def native_candidate(execution):
     error = execution.get('execution', {}).get('error')
     harness = execution.get('harness', {}).get('id')
     codes = {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'} if harness == 'astronstudio' else {'LOOMY_NATIVE_HTTP_ERROR'} if harness == 'loomy' else set()
+    if native_start_candidate(execution):
+        return True
     return (bool(codes)
             and execution.get('phase') == 'FAILED'
             and execution.get('execution', {}).get('business_status') == 'candidate_error'
@@ -180,6 +185,21 @@ def native_candidate(execution):
             and isinstance(error.get('message'), str) and bool(error['message'])
             and execution.get('prompt', {}).get('send_status') == 'sent'
             and execution.get('session', {}).get('verified') is True
+            and execution.get('candidate', {}).get('drift_status') == 'stable')
+
+
+def native_start_candidate(execution):
+    """Recognition only; admission still replays every frozen native source."""
+    error=execution.get('execution', {}).get('error')
+    return (execution.get('harness', {}).get('id') == 'astronstudio'
+            and execution.get('phase') == 'FAILED'
+            and execution.get('execution', {}).get('business_status') == 'candidate_error'
+            and isinstance(error,dict) and error.get('code') == 'ASTRONSTUDIO_NATIVE_START_REJECTED'
+            and execution.get('prompt', {}).get('send_status') == 'sent'
+            and execution.get('session', {}).get('verified') is False
+            and execution['session'].get('turn_id') is None
+            and execution['session'].get('session_id') is None
+            and isinstance(execution.get('evidence', {}).get('native_start_rejection'), dict)
             and execution.get('candidate', {}).get('drift_status') == 'stable')
 
 
@@ -280,7 +300,54 @@ def read_collected_files(unit_root, record_path, execution):
     files['original-state.json'] = read(root / states[0]['path'])
     state = json.loads(files['original-state.json'])
     files['PROMPT.md'] = read(Path(state['prompt']['path']))
+    if native_start_candidate(execution):
+        binding=execution['evidence']['native_start_rejection']
+        proof_path=root/binding['path']
+        files['start-rejection/proof.json']=read(proof_path)
+        proof=json.loads(files['start-rejection/proof.json'])
+        require(sha(files['start-rejection/proof.json'])==binding['sha256'], 'START_PROOF_SHA')
+        require({r['path'] for r in proof['files']}=={'original-state.json','original-execution-record.json','native-snapshot.json'}
+                and len(proof['files'])==3, 'START_PROOF_SOURCES')
+        for name in ['proof.json',*[r['path'] for r in proof['files']]]:
+            path=proof_path.with_name(name)
+            value=read(path)
+            artifacts=[r for r in manifest['artifacts'] if r['path']==path.relative_to(root).as_posix()]
+            require(len(artifacts)==1 and artifacts[0]['sha256']==sha(value)
+                    and artifacts[0]['size']==len(value), 'START_MANIFEST_BINDING')
+            files['start-rejection/'+name]=value
     return files
+
+
+def _validate_start_rejection(execution, state, files):
+    require(native_start_candidate(execution), 'START_EXECUTION_INVALID')
+    require(state['session'].get('verified') is False
+            and state['execution'].get('error')==execution['execution']['error'], 'START_TERMINAL_BINDING')
+    require(all(state['session'].get(k)==execution['session'].get(k)
+                for k in ('thread_id','turn_id','session_id','cwd')), 'START_SESSION_BINDING')
+    binding=execution['evidence']['native_start_rejection']
+    require(isinstance(binding.get('path'),str), 'START_PATH')
+    relative=Path(binding['path'])
+    require(not relative.is_absolute() and '..' not in relative.parts
+            and '\\' not in binding['path'] and relative.name=='proof.json', 'START_PATH')
+    node=shutil.which('node');require(node is not None,'START_NODE_REQUIRED')
+    with tempfile.TemporaryDirectory(prefix='general-start-rejection-replay-') as directory:
+        root=Path(directory);proof_path=root/relative;proof_path.parent.mkdir(parents=True)
+        for name in ('proof.json','original-state.json','original-execution-record.json','native-snapshot.json'):
+            proof_path.with_name(name).write_bytes(files['start-rejection/'+name])
+        state_path=root/'state.json';state_path.write_bytes(files['original-state.json'])
+        record_path=root/'record.json';record_path.write_bytes(files['original-execution-record.json'])
+        try:
+            result=subprocess.run([node,str(Path(__file__).with_name('verify_start_rejection.mjs')),
+                str(root),str(state_path),str(record_path)],capture_output=True,text=True,timeout=30,check=True)
+            replay=json.loads(result.stdout)
+        except (subprocess.SubprocessError,json.JSONDecodeError) as exc:
+            raise ValueError('FAILED_OUTPUT_ADMISSION_START_REPLAY_REJECTED') from exc
+    require(replay.get('status')=='PASS' and replay.get('identity')==execution['identity']
+            and replay.get('prompt_sha256')==execution['prompt']['sha256']
+            and replay.get('native_message_accepted') is True
+            and replay.get('native_turn_id') is None and replay.get('native_sdk_session_id') is None
+            and replay.get('error')==execution['execution']['error']['message'], 'START_REPLAY_BINDING')
+    return replay
 
 
 def validate_collected(execution, contract, files):
@@ -292,10 +359,22 @@ def validate_collected(execution, contract, files):
     states = [row for row in manifest['artifacts'] if row['path'].endswith('/execution/automation-state.json')]
     require(len(states) == 1 and states[0]['sha256'] == sha(files['original-state.json'])
             and states[0]['size'] == len(files['original-state.json']), 'ASTRON_STATE_BINDING')
-    require(state.get('phase') == 'FAILED' and state['session'].get('verified') is True
+    require(state.get('phase') == 'FAILED'
             and state['send'].get('dispatch_attempt_count') == 1
             and state['prompt'].get('send_status') == 'sent'
             and state['prompt'].get('sha256') == execution['prompt']['sha256'] == sha(files['PROMPT.md']), 'TERMINAL_BINDING')
+    if native_start_candidate(execution):
+        replay=_validate_start_rejection(execution,state,files)
+        return {'schema_version':execution_accountability.FAILED_ADMISSION,
+            'identity':execution['identity'],'profile':execution_accountability.PROFILE,
+            'source_kind':'collected-native-start-rejection','native_rejection_profile':replay['profile'],
+            'source_record_sha256':sha(files['original-execution-record.json']),
+            'contract_canonical_sha256':sha(json.dumps(dict(contract),ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()),
+            'original_failure_preserved':True,'numeric_decisions_assigned':False,
+            'sdk_terminal_required_for_admission':False,'native_message_accepted':True,'native_model_turn_started':False,
+            'missing_evidence':execution['evidence'].get('missing',[]),'policy':execution_accountability.POLICY,
+            'files':[{'path':name,'sha256':sha(value),'size':len(value)} for name,value in sorted(files.items())]}
+    require(state['session'].get('verified') is True, 'TERMINAL_BINDING')
     for key in ('thread_id', 'turn_id', 'session_id', 'cwd'):
         value = execution['session'].get(key)
         require(isinstance(value, str) and bool(value) and value == state['session'].get(key), 'NATIVE_SESSION_BINDING')
