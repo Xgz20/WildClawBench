@@ -601,6 +601,37 @@ class GeneralScoringOrchestrationTests(unittest.TestCase):
         self.assertTrue(all(len(task["prompt_sha256"]) == 64 for task in state["tasks"]))
         self.assertNotEqual(state["tasks"][0]["prompt_sha256"], state["tasks"][1]["prompt_sha256"])
 
+    def test_full_scope_sdk_authority_only_reaches_the_exact_discrepancy_task(self) -> None:
+        fixture = Fixture(self.root)
+        task = fixture.task_ids[1]
+        record = json.loads(fixture.execution_records[task].read_text())
+        record.update(harness={"id":"astronstudio"},session={"verified":True})
+        record["evidence"].update(completeness="partial",missing=["native-final-suffix-divergence"],
+            trace_index_path="synthetic-index",final_response_path="synthetic-native-final")
+        fixture.execution_records[task].write_text(json.dumps(record),encoding="utf-8")
+        authority=self.root/'sdk-authority.json'
+        authority.write_text(json.dumps({"tasks":[{"identity":record["identity"]}]}),encoding="utf-8")
+        calls=[]
+        def reject_unpublished_fixture(_skill, arguments):
+            calls.append(arguments)
+            raise ORCHESTRATOR.OrchestrationError("EXECUTION_NOT_SCORABLE","synthetic routing test; no score or judge")
+        kwargs=dict(unit_root=fixture.unit_root,scoring_package=fixture.scoring_package,
+            report_config=fixture.report_config,score_skill_dir=SCORE_SKILL,output_root=fixture.output_root,
+            orchestration_id='mixed-authority',task_ids=fixture.task_ids,
+            execution_records=fixture.execution_records,sdk_final_authorization=authority,now=self.t0)
+        with patch.object(ORCHESTRATOR,'_run_score_command',side_effect=reject_unpublished_fixture),patch.object(ORCHESTRATOR,'_assess_blocked_execution',return_value=None):
+            ORCHESTRATOR.initialize(**kwargs)
+        self.assertEqual(len(calls),2)
+        self.assertNotIn('--sdk-final-authorization',calls[0])
+        self.assertEqual(calls[1][calls[1].index('--sdk-final-authorization')+1],str(authority.resolve()))
+        ordinary=json.loads(fixture.execution_records[fixture.task_ids[0]].read_text())
+        authority.write_text(json.dumps({"tasks":[{"identity":ordinary["identity"]}]}),encoding='utf-8')
+        kwargs['orchestration_id']='wrong-authority'
+        with patch.object(ORCHESTRATOR,'_run_score_command') as score_call:
+            with self.assertRaisesRegex(ORCHESTRATOR.OrchestrationError,'SDK_FINAL_AUTHORIZATION_INVALID'):
+                ORCHESTRATOR.initialize(**kwargs)
+            score_call.assert_not_called()
+
     def test_registered_independent_prompt_freezes_managed_helper_command_only_for_new_route(self) -> None:
         lock=ORCHESTRATOR._score_skill_lock(SCORE_SKILL,python_runtime=ORCHESTRATOR._score_python_lock(Path(sys.executable)))
         judge={'protocol':'codex-agent-judge-v1','model':'gpt-fixture','reasoning_effort':'high'}

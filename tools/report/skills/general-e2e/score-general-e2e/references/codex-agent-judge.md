@@ -18,6 +18,8 @@
 
 若 evidence_admission 为 bound-native-moa-presentation-completeness/v1，先读取 private/evidence-admission.json：这是由冻结原件重算的展示适配证明，原执行/索引仍保留partial；原SDK调用、结果和媒体已完整对账。按原Rubric继续核验全部过程证据，不把学术占位卡解释为空结果，不因展示映射缺口拒绝整题；这不豁免过程评分，也不允许推断缺失媒体。
 
+若 evidence_admission 为 authorized-astronstudio-sdk-final/v1，先读取 private/evidence-admission.json，核验明确授权及同回合SDK正文的证据引用。原生短回复可能只保留全文的严格前缀或后缀；SDK全文可用于授权的内容核验，但不证明客户端实际展示全文、另有候选交付或完成主动验收。这些条件仍按原Rubric分别查证，不能因补采或评分端操作奖励候选。
+
 ## 独立业务与能力有效性
 
 新 SPY/VOO attempt 的 `runtime.business_capability_profile=independent-business-capability/v1` 精确绑定原 contract 和源码。仍逐项返回原全部6个语义 key；同时完整填写模板新增的 run_validity 和 capability_evidence_statuses，不能以业务分替代过程能力证据。

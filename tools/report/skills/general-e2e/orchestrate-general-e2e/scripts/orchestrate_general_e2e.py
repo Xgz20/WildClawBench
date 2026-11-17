@@ -598,7 +598,7 @@ def _execution_summary(
         )
         sdk_final_candidate = (sdk_final_authorized and record.get("harness", {}).get("id") == "astronstudio"
                                and evidence.get("completeness") == "partial"
-                               and missing == ["native-final-prefix-divergence"])
+                               and missing in (["native-final-prefix-divergence"], ["native-final-suffix-divergence"]))
         text_media_candidate = (
             reviewed_media_authorized and record.get("harness", {}).get("id") == "doubaowork"
             and evidence.get("completeness") == "partial" and isinstance(missing, list)
@@ -1073,6 +1073,19 @@ def initialize(
         sdk_final_authorization = _regular_file(sdk_final_authorization, "SDK_FINAL_AUTHORIZATION_INVALID")
         if not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1":
             raise OrchestrationError("SDK_FINAL_AUTHORIZATION_INVALID", "explicit task and execution record selection required")
+        authority = _read_json(sdk_final_authorization, "SDK_FINAL_AUTHORIZATION_INVALID")
+        approvals = authority.get("tasks")
+        if not isinstance(approvals, list) or not approvals or any(not isinstance(row, dict) or not isinstance(row.get("identity"), dict) for row in approvals):
+            raise OrchestrationError("SDK_FINAL_AUTHORIZATION_INVALID", "exact discrepancy approvals required")
+        approved_ids = [row["identity"].get("task_id") for row in approvals]
+        discrepancy_ids = {
+            task for task in selected
+            if _read_json(Path(explicit[task]), "EXECUTION_RECORD_INVALID").get("evidence", {}).get("missing") in (
+                ["native-final-prefix-divergence"], ["native-final-suffix-divergence"]
+            )
+        }
+        if len(set(approved_ids)) != len(approved_ids) or set(approved_ids) != discrepancy_ids:
+            raise OrchestrationError("SDK_FINAL_AUTHORIZATION_INVALID", "authorization must select exactly the discrepancy tasks, not ordinary completed tasks")
     if reviewed_media_authorization is not None:
         reviewed_media_authorization = _regular_file(reviewed_media_authorization, "TEXT_MEDIA_AUTHORIZATION_INVALID")
         if sdk_final_authorization is not None or not task_ids or set(explicit) != set(selected) or judge["protocol"] != "codex-agent-judge-v1":
@@ -1179,7 +1192,9 @@ def initialize(
                 prepare_arguments.append("--legacy-transcript-only")
             if protect_runtime_office_inputs:
                 prepare_arguments.append("--protect-runtime-office-inputs")
-            if sdk_final_authorization is not None:
+            if sdk_final_authorization is not None and _read_json(record, "EXECUTION_RECORD_INVALID").get("evidence", {}).get("missing") in (
+                ["native-final-prefix-divergence"], ["native-final-suffix-divergence"]
+            ):
                 prepare_arguments.extend(["--sdk-final-authorization", str(sdk_final_authorization)])
             if reviewed_media_authorization is not None:
                 prepare_arguments.extend(["--reviewed-media-authorization", str(reviewed_media_authorization)])

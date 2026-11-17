@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {createHash} from 'node:crypto';
-import {deriveFinalPrefix,FINAL_PREFIX_PROFILE} from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-final-prefix-divergence.mjs';
+import {deriveFinalPrefix,FINAL_PREFIX_PROFILE,deriveFinalSuffix,FINAL_SUFFIX_PROFILE} from '../../tools/report/e2e-shared/general-resource-supplements/astronstudio-final-prefix-divergence.mjs';
 const sha=b=>createHash('sha256').update(b).digest('hex');
 function fixture(){
  const id={batch_id:'batch',unit_id:'unit',task_id:'task',attempt_id:'attempt'};
@@ -32,4 +32,19 @@ test('unknown message binding, active projections, non-prefix bodies and extra s
  different.state.evidence.final_response_sha256=sha(different.final);assert.throws(()=>derive(different),/NOT_STRICT_PREFIX/);
  const twice=fixture();twice.state.send.dispatch_attempt_count=2;assert.throws(()=>derive(twice),/STATE_UNBOUND/);
  const modified=fixture();modified.final=Buffer.from('changed');assert.throws(()=>derive(modified),/ORIGINAL_FINAL_DRIFT/);
+});
+test('an exact native suffix has its own profile and never substitutes the SDK body',()=>{
+ const f=fixture();f.native.text='SDK continuation';f.final=Buffer.from(f.native.text+'\n');
+ f.state.evidence.final_response_sha256=sha(f.final);
+ const args=[Buffer.from(JSON.stringify(f.state)),f.index,f.sdk,f.native,f.final];
+ const proof=deriveFinalSuffix(...args);
+ assert.equal(proof.profile,FINAL_SUFFIX_PROFILE);assert.equal(proof.native_projection_preserved,true);
+ assert.equal(proof.sdk_final_not_substituted,true);assert.equal(proof.scoring_rules_changed,false);
+ assert.equal(proof.original_final_sha256,sha(f.final));assert.equal(f.native.text,'SDK continuation');
+ assert.throws(()=>deriveFinalPrefix(...args),/NOT_STRICT_PREFIX/);
+ const prefix=fixture();assert.throws(()=>deriveFinalSuffix(Buffer.from(JSON.stringify(prefix.state)),prefix.index,prefix.sdk,prefix.native,prefix.final),/NOT_STRICT_SUFFIX/);
+ for(const text of ['unrelated','prefix and full','']){
+  const bad=fixture();bad.native.text=text;bad.final=Buffer.from(text+'\n');bad.state.evidence.final_response_sha256=sha(bad.final);
+  assert.throws(()=>deriveFinalSuffix(Buffer.from(JSON.stringify(bad.state)),bad.index,bad.sdk,bad.native,bad.final),/NOT_STRICT_SUFFIX/);
+ }
 });

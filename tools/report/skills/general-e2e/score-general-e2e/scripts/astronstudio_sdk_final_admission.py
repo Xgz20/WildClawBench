@@ -12,6 +12,9 @@ VERIFIER = "astronstudio-final-prefix-divergence.mjs"
 MISSING = "native-final-prefix-divergence"
 PROOF = "bindings/final-prefix-divergence-proof.json"
 ORIGINAL_STATE = "bindings/final-prefix-original-state.json"
+SUFFIX_MISSING = "native-final-suffix-divergence"
+SUFFIX_PROOF = "bindings/final-suffix-divergence-proof.json"
+SUFFIX_STATE = "bindings/final-suffix-original-state.json"
 
 
 def sha(data):
@@ -31,7 +34,7 @@ def candidate(execution):
         and execution.get("execution", {}).get("business_status") == "completed"
         and execution.get("session", {}).get("verified") is True
         and evidence.get("completeness") == "partial"
-        and evidence.get("missing") == [MISSING]
+        and evidence.get("missing") in ([MISSING], [SUFFIX_MISSING])
         and all(evidence.get(key) for key in ("trace_index_path", "transcript_path", "final_response_path"))
     )
 
@@ -50,6 +53,8 @@ def _verifier():
 
 def validate(execution, record_bytes, contract_bytes, files):
     _require(candidate(execution), "expected only the authorized native final discrepancy")
+    suffix = execution["evidence"]["missing"] == [SUFFIX_MISSING]
+    missing, proof_path, state_path = (SUFFIX_MISSING, SUFFIX_PROOF, SUFFIX_STATE) if suffix else (MISSING, PROOF, ORIGINAL_STATE)
     authority = json.loads(files[AUTHORIZATION])
     identity = execution["identity"]
     _require(authority.get("schema_version") == ADMISSION
@@ -61,11 +66,11 @@ def validate(execution, record_bytes, contract_bytes, files):
     _require(approved["execution_record_sha256"] == sha(record_bytes)
              and approved["contract_sha256"] == sha(contract_bytes)
              and approved["trace_index_sha256"] == sha(files["trace-index.json"])
-             and approved["divergence_proof_sha256"] == sha(files[PROOF]), "authorization binding drift")
+             and approved["divergence_proof_sha256"] == sha(files[proof_path]), "authorization binding drift")
     index = json.loads(files["trace-index.json"])
     _require(index.get("schema_id") == "urn:wildclawbench:schema:general-e2e:trace-index:v1"
              and index.get("adapter", {}).get("id") == "astronstudio-provider-runtime-events"
-             and index.get("completeness", {}).get("missing") == [MISSING]
+             and index.get("completeness", {}).get("missing") == [missing]
              and index.get("completeness", {}).get("omitted_event_count") == 0,
              "unexpected trace scope")
     verifier = _verifier()
@@ -74,12 +79,12 @@ def validate(execution, record_bytes, contract_bytes, files):
     script = """
 import {readFile} from 'node:fs/promises';
 import {resolve} from 'node:path';
-const {verifyFinalPrefix, FINAL_PREFIX_STATE} = await import(process.argv[1]);
+const {verifyFinalPrefix} = await import(process.argv[1]);
 const root = process.argv[2];
 const read = name => readFile(resolve(root, name));
 const index = JSON.parse(await read('trace-index.json'));
 const record = JSON.parse(await read('bound-execution.json'));
-const proof = await verifyFinalPrefix(index, await read(FINAL_PREFIX_STATE), root, record);
+const proof = await verifyFinalPrefix(index, await read(process.argv[3]), root, record);
 process.stdout.write(JSON.stringify(proof));
 """
     with tempfile.TemporaryDirectory(prefix="astronstudio-sdk-final-") as directory:
@@ -91,15 +96,15 @@ process.stdout.write(JSON.stringify(proof));
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(raw)
         (root / "bound-execution.json").write_bytes(record_bytes)
-        run = subprocess.run([node, "--input-type=module", "-e", script, verifier.as_uri(), str(root)],
+        run = subprocess.run([node, "--input-type=module", "-e", script, verifier.as_uri(), str(root), state_path],
                              capture_output=True, timeout=30)
         _require(run.returncode == 0, "native divergence proof rejected: " + run.stderr.decode(errors="replace")[-1200:])
         proof = json.loads(run.stdout)
-    _require(proof == json.loads(files[PROOF])
-             and proof["source_state_sha256"] == sha(files[ORIGINAL_STATE])
+    _require(proof == json.loads(files[proof_path])
+             and proof["source_state_sha256"] == sha(files[state_path])
              and proof["original_final_sha256"] == sha(files["final-response-bound.txt"])
              and proof["sdk_final_sha256"] == approved["sdk_final_sha256"], "native proof binding drift")
-    state = json.loads(files[ORIGINAL_STATE])
+    state = json.loads(files[state_path])
     _require(state.get("prompt", {}).get("sha256") == execution.get("prompt", {}).get("sha256"),
              "sent prompt mismatch")
     transcript_ref = index["transcript"]

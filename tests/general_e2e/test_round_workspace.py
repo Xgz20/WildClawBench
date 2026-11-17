@@ -139,6 +139,12 @@ class ExternalScoringPackageTests(unittest.TestCase):
         self.prepare(scoring_package=self.scoring,keep_scoring_external=True,execution_records=['task=/frozen/recapture.json'])
         self.assertEqual(self.last_init_command[self.last_init_command.index('--execution-record')+1],'task=/frozen/recapture.json')
 
+    def test_exact_sdk_final_authority_is_explicit_and_keeps_scoring_external(self):
+        authority=self.base/'sdk-authority.json';authority.write_text('{"tasks":[]}',encoding='utf-8')
+        self.prepare(scoring_package=self.scoring,keep_scoring_external=True,sdk_final_authorization=authority)
+        self.assertEqual(self.last_init_command[self.last_init_command.index('--sdk-final-authorization')+1],str(authority.resolve()))
+        self.assertFalse(list(self.root.rglob('*.zip')))
+
     def test_runtime_office_guard_defaults_off_in_both_entrypoints(self):
         self.prepare(scoring_package=self.scoring,keep_scoring_external=True)
         self.assertNotIn('--protect-runtime-office-inputs',self.last_init_command)

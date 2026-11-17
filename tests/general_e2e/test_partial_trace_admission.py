@@ -10,11 +10,23 @@ RULE = "def grade(**kwargs):\n    from pathlib import Path\n    p = Path(kwargs.
 
 class PartialTraceAdmissionTests(unittest.TestCase):
     def test_native_final_prefix_conflict_never_enters_standard_or_optional_evidence_admission(self):
-        execution = {'evidence': {'completeness': 'partial', 'missing': ['native-final-prefix-divergence'],
-                                 'transcript_path': 'trace', 'trace_index_path': 'index', 'final_response_path': 'native-final'}}
-        for grading_type in ['automated', 'hybrid', 'llm_judge']:
-            with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, 'EXECUTION_NOT_SCORABLE'):
-                RUNTIME._validate_evidence_admission(execution, {'grading_type': grading_type, 'automated_checks': RULE})
+        for missing in ['native-final-prefix-divergence', 'native-final-suffix-divergence']:
+            execution = {'evidence': {'completeness': 'partial', 'missing': [missing],
+                                     'transcript_path': 'trace', 'trace_index_path': 'index', 'final_response_path': 'native-final'}}
+            for grading_type in ['automated', 'hybrid', 'llm_judge']:
+                with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, 'EXECUTION_NOT_SCORABLE'):
+                    RUNTIME._validate_evidence_admission(execution, {'grading_type': grading_type, 'automated_checks': RULE})
+
+    def test_sdk_final_authority_does_not_admit_other_missing_evidence(self):
+        execution = {'harness': {'id':'astronstudio'}, 'phase':'COMPLETED', 'session':{'verified':True},
+            'execution':{'business_status':'completed'}, 'evidence':{'completeness':'partial',
+            'missing':['native-final-suffix-divergence'],'transcript_path':'trace',
+            'trace_index_path':'index','final_response_path':'native-final'}}
+        self.assertEqual(RUNTIME._validate_evidence_admission(execution, {'grading_type':'llm_judge'},
+            sdk_final_authorized=True), RUNTIME.sdk_final.ADMISSION)
+        execution['evidence']['missing'].append('raw_trace')
+        with self.assertRaisesRegex(RUNTIME.ScoringRuntimeError, 'SDK_FINAL_AUTHORIZATION_INVALID'):
+            RUNTIME._validate_evidence_admission(execution, {'grading_type':'llm_judge'},sdk_final_authorized=True)
 
     def test_partial_without_missing_reason_is_never_standard(self):
         execution = {"evidence": {"completeness": "partial", "missing": []}}
