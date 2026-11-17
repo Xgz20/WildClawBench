@@ -38,9 +38,9 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("index.mjs", "ui.mjs", "execution.mjs", "batch.mjs", "collection.mjs", "verification.mjs", "native-state.py", "macos-ax.swift"),
     ),
     SharedComponentSpec(
-        name="astronstudio-start-rejection", version="1.0.8",
+        name="astronstudio-start-rejection", version="1.0.9",
         source_root="tools/report/e2e-shared/astronstudio-start-rejection",
-        vendor_root="vendor/e2e-shared/astronstudio-start-rejection", entrypoints=("index.mjs",),
+        vendor_root="vendor/e2e-shared/astronstudio-start-rejection", entrypoints=("index.mjs", "adapter-attestation.mjs"),
     ),
     SharedComponentSpec(
         name="independent-validity", version="1.0.1",

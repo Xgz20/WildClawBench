@@ -11,7 +11,7 @@ import { readFrozenStartRejection } from '../../tools/report/e2e-shared/astronst
 import { finalizeAstronStudioExecution as finalizeWithLiveGuard, verifyAstronStudioCollection } from '../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
 
 const sha = value => createHash('sha256').update(value).digest('hex');
-import { rejectionFixture as fixture } from './fixtures/native-start-rejection.mjs';
+import { rejectionFixture as fixture, fencedRejectionFixture } from './fixtures/native-start-rejection.mjs';
 
 test('verified native rejection preserves absence of model execution and does not determine a score', () => {
   const f = fixture(); const result = verifyNativeStartRejection(f.data, f.state, f.config);
@@ -301,11 +301,11 @@ test('resolution flag requires observation and forbids dispatch/retry', () => {
   assert.equal(parseArgs([...base,'--resume','--observe-once']).resolveNativeStartRejection,true);
 });
 
-test('resume publishes same-attempt failed terminal and archives original bytes without any send', async () => {
+for(const fenced of [false,true])test(`resume publishes same-attempt failed terminal and archives original bytes without any send; fenced=${fenced}`, async () => {
   const root=await mkdtemp(join(tmpdir(),'native-start-rejection-'));
   try {
     const taskRoot=join(root,'execution/tasks/task');
-    const f=fixture(join(taskRoot,'workspace'));
+    const f=(fenced?fencedRejectionFixture:fixture)(join(taskRoot,'workspace'));
     f.state.schema_version='wildclawbench.general-e2e-astronstudio-execution-state/v1';
     f.state.task_root=taskRoot;f.state.prompt.path=join(taskRoot,'PROMPT.md');
     await mkdir(f.config.candidateWorkspace,{recursive:true});
@@ -315,11 +315,11 @@ test('resume publishes same-attempt failed terminal and archives original bytes 
         task_ids:['task'],tasks:[{task_id:'task',prompt:{path:'execution/tasks/task/PROMPT.md',sent_sha256:f.state.prompt.sha256},workspace:{path:'execution/tasks/task/workspace'}}],
         unit:{harness:{id:'astronstudio',platform:'macos'},model:{requested_id:'Spark-X2.6',reasoning_effort:'high'}}},
       resume:true,observeOnce:true,resolveNativeStartRejection:true,timeoutMs:1000,endpoint:'http://localhost:9240'});
-    Object.assign(f.config.runConfig,{config_digest:'config',harness:{client_version:'3.6.0'},control:{endpoint:f.config.endpoint},
+    Object.assign(f.config.runConfig,{config_digest:'config',harness:{client_version:f.state.client.version},control:{endpoint:f.config.endpoint},
       tested_model:{display_name:'Spark-X2.6',reasoning_display:'High',permission_display:'完全访问'}});
     await mkdir(f.config.controlRoot); const original=JSON.stringify(f.state)+'\n',oldRecord=JSON.stringify({original:true,identity:f.state.identity,prompt:f.state.prompt})+'\n';
     await writeFile(f.config.stateFile,original);await writeFile(f.config.recordFile,oldRecord);
-    const result=await executeSingleTask(f.config,{probeAstronStudio:async()=>({ready:true,failed_checks:[],app:{version:'3.6.0'},cdp:{endpoint:f.config.endpoint},frozen_run_config:f.config.runConfig,state_database:{active_or_pending_session_count:0}}),
+    const result=await executeSingleTask(f.config,{probeAstronStudio:async()=>({ready:true,failed_checks:[],app:{version:f.state.client.version},cdp:{endpoint:f.config.endpoint},frozen_run_config:f.config.runConfig,state_database:{active_or_pending_session_count:0}}),
       queryNativeStartRejection:async()=>f.data,now:()=> '2026-11-06T07:00:00.000Z',clickSend:()=>{throw Error('must not send');},connectCdp:()=>{throw Error('must not navigate');}});
     assert.equal(result.phase,'FAILED');assert.equal(result.identity.attempt_id,'original');assert.equal(result.send.dispatch_attempt_count,1);
     assert.equal(result.session.verified,false);assert.equal(result.session.turn_id,null);

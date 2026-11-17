@@ -1,4 +1,6 @@
 import { withStateSnapshot, querySnapshot, STATE_SNAPSHOT_TABLES, START_REJECTION_TABLES } from './astronstudio-state.mjs';
+import {readFile} from 'node:fs/promises';
+import {readAdapterAttestation} from '../../vendor/e2e-shared/astronstudio-start-rejection/adapter-attestation.mjs';
 export { START_REJECTION_PROFILE, verifyNativeStartRejection } from '../../vendor/e2e-shared/astronstudio-start-rejection/index.mjs';
 const sql = text => `'${String(text).replaceAll("'", "''")}'`;
 const assert = (ok, code) => { if (!ok) throw new Error(`NATIVE_START_REJECTION_${code}`); };
@@ -17,6 +19,11 @@ export async function queryNativeStartRejection(database, state, overrides = {})
         : table === 'orchestration_command_receipts' ? `aggregate_id=${sql(thread)}`
         : `thread_id=${sql(thread)}`;
       data[table] = await querySnapshot(snapshot, `SELECT * FROM ${table} WHERE ${where}`, overrides);
+    }
+    if(state.run_config?.path){
+      const config=JSON.parse(await readFile(state.run_config.path,'utf8'));
+      const source=await readAdapterAttestation(config.app?.path,overrides.nativeProcess);
+      if(source)data.native_adapter_source=source;
     }
     return data;
   }, overrides, [...STATE_SNAPSHOT_TABLES, ...START_REJECTION_TABLES]);

@@ -6,6 +6,8 @@ export const START_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection
 export const IDLE_PREWARM_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection-idle-prewarm/v1';
 export const IDLE_BOOTSTRAP_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection-idle-bootstrap/v1';
 export const STOPPED_BOOTSTRAP_REJECTION_PROFILE = 'bound-native-unsubmitted-start-rejection-stopped-bootstrap/v1';
+export const FENCED_ABORT_REJECTION_PROFILE = 'bound-native-fenced-pretransport-abort/v1';
+import {attestedPretransportAbort} from './adapter-attestation.mjs';
 const digest = text => createHash('sha256').update(text).digest('hex');
 const assert = (ok, code) => { if (!ok) throw new Error(`NATIVE_START_REJECTION_${code}`); };
 const one = (rows, code) => { assert(rows?.length === 1, code); return rows[0]; };
@@ -143,6 +145,10 @@ export function verifyNativeStartRejection(data, state, config) {
   const runtime = one(data.provider_session_runtime, 'RUNTIME');
   const cursor = JSON.parse(runtime.resume_cursor_json || '{}');
   const runtimePayload = JSON.parse(runtime.runtime_payload_json || '{}');
+  const rawStarts=data.orchestration_events.filter(row=>row.event_type==='thread.turn-start-requested');
+  const fencedAbort=attestedPretransportAbort(data.native_adapter_source,state)&&rawStarts.length===1
+    &&data.orchestration_event_deliveries.some(row=>row.event_sequence===rawStarts[0].sequence
+      &&row.submission_state==='possibly-submitted-v1');
   const idlePrewarm = ['running', 'ready'].includes(runtime.status)
     && ['session.state.changed', 'provider.session.starting'].includes(runtimePayload.lastRuntimeEvent)
     && runtimePayload.activeTurnId === null && runtimePayload.lastError === null
@@ -212,6 +218,15 @@ export function verifyNativeStartRejection(data, state, config) {
     && request.payload.createdAt === message.created_at && sent.payload.text === message.text
     && sent.payload.messageId === message.message_id && sent.sequence === message.sequence, 'REQUEST_BINDING');
   const model = request.payload.modelSelection;
+  if(fencedAbort)assert(cursor.emptyPrewarm===true
+    &&Object.keys(cursor).sort().join(',')==='emptyPrewarm,threadId'
+    &&Object.keys(runtimePayload).sort().join(',')==='activeTurnId,contextRecovery,cwd,emptyPrewarmDispatch,inlineVisualTool,lastError,lastRuntimeEvent,lastRuntimeEventAt,lifecycleGeneration,model,modelSelection,providerOptions,workspaceKind'
+    &&runtimePayload.inlineVisualTool===true&&runtimePayload.contextRecovery===null
+    &&runtimePayload.workspaceKind==='project'&&runtimePayload.lifecycleGeneration===runtime.lifecycle_generation
+    &&runtimePayload.model===config.expectedModel.toLowerCase()
+    &&JSON.stringify(runtimePayload.modelSelection)===JSON.stringify(model)
+    &&JSON.stringify(runtimePayload.providerOptions)==='{"acode":{}}'
+    &&runtime.provider_name==='acode'&&runtime.adapter_key==='acode'&&runtime.runtime_mode==='full-access', 'FENCED_ABORT_SHAPE');
   assert(model?.provider === 'acode' && model.model === config.expectedModel.toLowerCase()
     && model.options?.reasoningEffort === config.expectedReasoning.toLowerCase()
     && request.payload.runtimeMode === 'full-access' && thread.runtime_mode === 'full-access'
@@ -230,11 +245,16 @@ export function verifyNativeStartRejection(data, state, config) {
     && payload.preparationTerminal === true && payload.settlementStatus === 'rejected'
     && payload.submissionState === 'not-sent'
     && typeof payload.detail === 'string' && (readyProjection || payload.detail === session.last_error)
-    && payload.detail.includes('ACode turn submission did not complete within 20000ms.')
+    && (fencedAbort?payload.detail.includes('Acode turn submission did not complete within 20000ms.')
+      :payload.detail.includes('ACode turn submission did not complete within 20000ms.'))
     && payload.detail.includes('/Applications/AStudio.app/Contents/Resources/app.asar/'), 'FAILURE_BINDING');
   const delivery = one(data.orchestration_event_deliveries.filter(row => row.event_sequence === request.sequence), 'DELIVERY');
   assert(delivery.consumer_name === 'provider-command-reactor.v1' && delivery.thread_id === route
-    && delivery.state === 'succeeded' && delivery.submission_state === 'not-submitted-v1'
+    && delivery.state === 'succeeded' && (delivery.submission_state === 'not-submitted-v1'
+      ||fencedAbort&&delivery.submission_state==='possibly-submitted-v1'
+        &&cursor.emptyPrewarm===true&&runtimePayload.activeTurnId===null
+        &&runtimePayload.lastError===null&&runtimePayload.emptyPrewarmDispatch===null
+        &&runtimePayload.inlineVisualTool===true)
     && delivery.attempt_count === 1 && !delivery.claim_owner && !delivery.claim_expires_at
     && delivery.completed_at === activity.createdAt
     && (readyProjection ? Date.parse(session.updated_at) < Date.parse(activity.createdAt) : session.updated_at === activity.createdAt)
@@ -257,7 +277,11 @@ export function verifyNativeStartRejection(data, state, config) {
         && event.command_id.endsWith(':'+accepted.command_fingerprint),'ERROR_RECEIPT_BINDING');
     }
   }
-  return { profile: stoppedBootstrap ? STOPPED_BOOTSTRAP_REJECTION_PROFILE : idleBootstrap ? IDLE_BOOTSTRAP_REJECTION_PROFILE : idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
+  return { profile: fencedAbort ? FENCED_ABORT_REJECTION_PROFILE : stoppedBootstrap ? STOPPED_BOOTSTRAP_REJECTION_PROFILE : idleBootstrap ? IDLE_BOOTSTRAP_REJECTION_PROFILE : idlePrewarm ? IDLE_PREWARM_REJECTION_PROFILE : START_REJECTION_PROFILE,
+    ...(fencedAbort?{native_adapter_source:data.native_adapter_source,
+      original_submission_ledger_state:delivery.submission_state,
+      submission_boundary_basis:'allowlisted source: unsubmitted-only timeout; abort checked before prewarm clearing and RPC write',
+      submission_ledger_modified:false}:{}),
     ...(bootstrapThread?{bootstrap_empty_thread_initialized:true,bootstrap_thread_started_sequence:bootstrapThread.sequence,
       bootstrap_mcp_ready_sequences:bootstrapReady.map(item=>item.row.sequence)}:{}),
     ...(mcpReady.length?{prewarm_mcp_recovered_without_model_turn:true,prewarm_mcp_ready_sequences:mcpReady.map(row=>row.sequence)}:{}),
@@ -304,7 +328,7 @@ export async function readFrozenStartRejection(unitRoot, state, record = null) {
   assert(digest(bytes) === binding.sha256
     && binding.sha256 === state.evidence?.native_start_rejection?.sha256, 'PROOF_SHA');
   const proof = JSON.parse(bytes);
-  assert([START_REJECTION_PROFILE, IDLE_PREWARM_REJECTION_PROFILE, IDLE_BOOTSTRAP_REJECTION_PROFILE, STOPPED_BOOTSTRAP_REJECTION_PROFILE].includes(proof.profile)
+  assert([START_REJECTION_PROFILE, IDLE_PREWARM_REJECTION_PROFILE, IDLE_BOOTSTRAP_REJECTION_PROFILE, STOPPED_BOOTSTRAP_REJECTION_PROFILE,FENCED_ABORT_REJECTION_PROFILE].includes(proof.profile)
     && JSON.stringify(proof.identity) === JSON.stringify(state.identity), 'PROOF_IDENTITY');
   assert(Array.isArray(proof.files) && proof.files.length === 3
     && [...proof.files.map(row => row.path)].sort().join('|') === 'native-snapshot.json|original-execution-record.json|original-state.json', 'PROOF_SOURCES');

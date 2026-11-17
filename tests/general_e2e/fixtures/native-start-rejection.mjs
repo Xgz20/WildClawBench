@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import {PRETRANSPORT_ABORT_SOURCE,ADAPTER_ATTESTATION} from '../../../tools/report/e2e-shared/astronstudio-start-rejection/adapter-attestation.mjs';
 const sha = value => createHash('sha256').update(value).digest('hex');
 export function rejectionFixture(workspace = '/tmp/subject/workspace') {
   const prompt = 'Create the requested deliverables.';
@@ -31,4 +32,26 @@ export function rejectionFixture(workspace = '/tmp/subject/workspace') {
     orchestration_event_deliveries: [{ consumer_name: 'provider-command-reactor.v1', event_sequence: 11, thread_id: 'thread', state: 'succeeded', submission_state: 'not-submitted-v1', attempt_count: 1, completed_at: failed }] };
   const config = { candidateWorkspace: workspace, promptSha256: sha(prompt), expectedPermission: '完全访问', expectedModel: 'Spark-X2.6', expectedReasoning: 'High', runConfig: { tested_model: {} } };
   return { state, data, config };
+}
+
+export function fencedRejectionFixture(workspace='/tmp/subject/workspace') {
+  const f=rejectionFixture(workspace),runtime=f.data.provider_session_runtime[0];
+  f.state.client.version='3.6.4';
+  const detail=f.data.projection_thread_sessions[0].last_error.replace('ACode','Acode');
+  f.data.projection_thread_sessions[0].last_error=detail;
+  const failure=JSON.parse(f.data.orchestration_events[2].payload_json);failure.activity.payload.detail=detail;
+  f.data.orchestration_events[2].payload_json=JSON.stringify(failure);
+  Object.assign(runtime,{status:'running',provider_name:'acode',adapter_key:'acode',runtime_mode:'full-access',
+    lifecycle_generation:'epoch',resume_cursor_json:JSON.stringify({threadId:'sdk',emptyPrewarm:true}),
+    runtime_payload_json:JSON.stringify({activeTurnId:null,contextRecovery:null,cwd:workspace,emptyPrewarmDispatch:null,
+      inlineVisualTool:true,lastError:null,lastRuntimeEvent:'session.state.changed',lastRuntimeEventAt:'2026-11-06T06:28:30Z',
+      lifecycleGeneration:'epoch',model:'spark-x2.6',modelSelection:JSON.parse(f.data.projection_threads[0].model_selection_json),
+      providerOptions:{acode:{}},workspaceKind:'project'})});
+  f.data.orchestration_event_deliveries[0].submission_state='possibly-submitted-v1';
+  f.data.native_adapter_source={schema_version:ADAPTER_ATTESTATION,app_path:'/Applications/AStudio.app',
+    asar_size:194202339,asar_inode:'12345',asar_modified_at:'2026-11-01T00:00:00Z',observed_at:'2026-11-06T06:30:00Z',
+    server_entry:'apps/server/dist/index.mjs',server_entry_sha256:PRETRANSPORT_ABORT_SOURCE,
+    main_process:{pid:7,started_at:'2026-11-02T00:00:00Z',executable_path:'/Applications/AStudio.app/Contents/MacOS/AStudio',command_sha256:'c'.repeat(64)},
+    asar_header_sha256:'b'.repeat(64),source_executed:false,native_files_modified:false};
+  return f;
 }

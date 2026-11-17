@@ -46,7 +46,7 @@ import { verifyFrameworkDispatchRecoveries, assertUnacceptedDispatch } from './l
 import {ensureExecutionUiVisible} from './lib/astronstudio-visibility.mjs';
 import {captureRuntimeDiagnostics,appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.31";
+export const EXECUTION_DRIVER_VERSION = "0.4.32";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -997,9 +997,9 @@ async function waitForTerminal(config, state, dependencies) {
 async function resumeExecution(config, state, dependencies) {
   assertStateIdentity(config, state);
   if (new Set(["COMPLETED", "FAILED"]).has(state.phase)) return state;
-  await currentProbe(config, dependencies, false);
+  const currentNativeProbe=await currentProbe(config, dependencies, false);
   if (config.resolveNativeStartRejection) {
-    const snapshot = await dependencies.queryNativeStartRejection(config.stateDatabase, state);
+    const snapshot = await dependencies.queryNativeStartRejection(config.stateDatabase, state,{nativeProcess:currentNativeProbe.process});
     const proof = verifyNativeStartRejection(snapshot, state, config);
     // Preserve the pre-repair state and record byte for byte before publishing
     // a derived terminal. The proof keeps turn/SDK identity explicitly absent.
