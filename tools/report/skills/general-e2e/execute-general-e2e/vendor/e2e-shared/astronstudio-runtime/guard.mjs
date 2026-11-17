@@ -89,7 +89,7 @@ export function createCleanupGuard({unitRoot,state,snapshotProcesses,querySafety
     last={...unit,native_check:"queried",state_database:config.state_database.path,
       snapshot_sha256:hash(JSON.stringify(stable(snapshot))),sessions:snapshot.sessions.map(s=>({
         thread_id:s.thread_id,turn_id:s.turn_id,status:s.status,active_turn_id:s.active_turn_id
-      })),blockers};
+      })),settled_structured_ledgers:snapshot.settled_structured_ledgers||[],blockers};
     if(blockers.length){const error=Error("ASTUDIO_COLLECT_NATIVE_ACTIVITY");error.blockers=blockers;throw error;}
     return last;
   };

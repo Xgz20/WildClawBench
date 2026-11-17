@@ -5,6 +5,7 @@ import { join, resolve } from "node:path";
 import { runCapture } from "../desktop-runtime/process.mjs";
 import { copySnapshotFile, configureSnapshotReader } from "../sqlite-snapshot/index.mjs";
 import { createHash } from "node:crypto";
+import {closedStructuredGatewayLedger} from './structured-ledger.mjs';
 
 const SESSION_QUERY = `
 WITH latest_turn AS (
@@ -279,14 +280,31 @@ export async function queryNativeRuntimeSafety(stateDatabase, overrides = {}) {
     const pending = await querySnapshot(snapshot, `
       SELECT thread_id, COUNT(*) AS pending_count
       FROM projection_pending_interactions WHERE status='pending' GROUP BY thread_id`, overrides);
-    const orphanTurns = await querySnapshot(snapshot, `
-      SELECT o.thread_id,o.turn_id FROM provider_runtime_open_turns o
+    const orphanRows = await querySnapshot(snapshot, `
+      SELECT o.* FROM provider_runtime_open_turns o
       LEFT JOIN projection_thread_sessions s ON s.thread_id=o.thread_id
       LEFT JOIN projection_threads t ON t.thread_id=o.thread_id
       LEFT JOIN projection_projects p ON p.project_id=t.project_id
       WHERE s.thread_id IS NULL OR t.thread_id IS NULL OR t.deleted_at IS NOT NULL
         OR p.project_id IS NULL OR p.deleted_at IS NOT NULL`, overrides);
-    return { sessions, orphan_sessions: orphanSessions, pending_interactions: pending, orphan_turns: orphanTurns };
+    const orphanTurns = [], settledLedgers = [];
+    for (const row of orphanRows) {
+      let proof = null;
+      if (String(row.thread_id).startsWith('structured-')) {
+        const key = sqlString(row.thread_id);
+        const anchors = {};
+        for (const [name, table] of [['threads','projection_threads'],['sessions','projection_thread_sessions'],
+          ['runtime','provider_session_runtime'],['pending','projection_pending_interactions']]) {
+          anchors[name] = (await querySnapshot(snapshot, `SELECT COUNT(*) AS n FROM ${table} WHERE thread_id=${key}`, overrides))[0]?.n;
+        }
+        const events = await querySnapshot(snapshot, `SELECT * FROM provider_runtime_events WHERE thread_id=${key} ORDER BY sequence`, overrides);
+        proof = closedStructuredGatewayLedger(row, events, anchors);
+      }
+      if (proof) settledLedgers.push(proof);
+      else orphanTurns.push({thread_id:row.thread_id, turn_id:row.turn_id});
+    }
+    return { sessions, orphan_sessions: orphanSessions, pending_interactions: pending, orphan_turns: orphanTurns,
+      settled_structured_ledgers: settledLedgers };
   }, overrides, SESSION_SNAPSHOT_TABLES);
 }
 
