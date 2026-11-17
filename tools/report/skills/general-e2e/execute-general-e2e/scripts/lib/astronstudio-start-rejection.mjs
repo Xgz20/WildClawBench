@@ -5,6 +5,13 @@ export { START_REJECTION_PROFILE, verifyNativeStartRejection } from '../../vendo
 const sql = text => `'${String(text).replaceAll("'", "''")}'`;
 const assert = (ok, code) => { if (!ok) throw new Error(`NATIVE_START_REJECTION_${code}`); };
 
+export async function readConfiguredAdapterAttestation(configPath, nativeProcess, reader = readAdapterAttestation) {
+  const config=JSON.parse(await readFile(configPath,'utf8'));
+  if(config.schema_version!=='wildclawbench.general-e2e-astronstudio-run-config/v1'
+    ||config.harness?.id!=='astronstudio')return null;
+  return reader(config.harness.app_path,nativeProcess);
+}
+
 // Every row comes from one integrity-checked snapshot. No provider operation,
 // UI action, cancellation or replay is performed by this reader.
 export async function queryNativeStartRejection(database, state, overrides = {}) {
@@ -21,8 +28,7 @@ export async function queryNativeStartRejection(database, state, overrides = {})
       data[table] = await querySnapshot(snapshot, `SELECT * FROM ${table} WHERE ${where}`, overrides);
     }
     if(state.run_config?.path){
-      const config=JSON.parse(await readFile(state.run_config.path,'utf8'));
-      const source=await readAdapterAttestation(config.app?.path,overrides.nativeProcess);
+      const source=await readConfiguredAdapterAttestation(state.run_config.path,overrides.nativeProcess);
       if(source)data.native_adapter_source=source;
     }
     return data;

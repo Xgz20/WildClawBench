@@ -6,6 +6,7 @@ import {join} from 'node:path';
 import {rejectionFixture} from './fixtures/native-start-rejection.mjs';
 import {verifyNativeStartRejection,FENCED_ABORT_REJECTION_PROFILE} from '../../tools/report/e2e-shared/astronstudio-start-rejection/index.mjs';
 import {readAdapterAttestation,PRETRANSPORT_ABORT_SOURCE,ADAPTER_ATTESTATION} from '../../tools/report/e2e-shared/astronstudio-start-rejection/adapter-attestation.mjs';
+import {readConfiguredAdapterAttestation} from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-start-rejection.mjs';
 
 function fixture(){
  const f=rejectionFixture(),runtime=f.data.provider_session_runtime[0];
@@ -60,5 +61,18 @@ test('attestation does not execute or accept an unknown native archive',async()=
  const root=await mkdtemp(join(tmpdir(),'fenced-asar-'));
  try {await mkdir(join(root,'Contents/Resources'),{recursive:true});await writeFile(join(root,'Contents/Resources/app.asar'),'unknown');
   assert.equal(await readAdapterAttestation(root),null);assert.equal(await readAdapterAttestation(undefined),null);
+ }finally{await rm(root,{recursive:true,force:true});}
+});
+test('formal run-config routes the verified harness path and exact process into attestation',async()=>{
+ const root=await mkdtemp(join(tmpdir(),'fenced-run-config-')),path=join(root,'run.json');
+ const config={schema_version:'wildclawbench.general-e2e-astronstudio-run-config/v1',
+  harness:{id:'astronstudio',app_path:'/Applications/AStudio.app'},app:{path:'/wrong/legacy.app'}};
+ const process={identity_verified:true,running:true,pid:7};let calls=0;
+ const reader=async(appPath,identity)=>{calls++;assert.equal(appPath,config.harness.app_path);assert.equal(identity,process);return {verified:true};};
+ try{
+  await writeFile(path,JSON.stringify(config));
+  assert.deepEqual(await readConfiguredAdapterAttestation(path,process,reader),{verified:true});
+  config.schema_version='unknown';await writeFile(path,JSON.stringify(config));
+  assert.equal(await readConfiguredAdapterAttestation(path,process,reader),null);assert.equal(calls,1);
  }finally{await rm(root,{recursive:true,force:true});}
 });

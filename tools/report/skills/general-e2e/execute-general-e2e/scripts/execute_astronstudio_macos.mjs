@@ -46,7 +46,7 @@ import { verifyFrameworkDispatchRecoveries, assertUnacceptedDispatch } from './l
 import {ensureExecutionUiVisible} from './lib/astronstudio-visibility.mjs';
 import {captureRuntimeDiagnostics,appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.32";
+export const EXECUTION_DRIVER_VERSION = "0.4.33";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";

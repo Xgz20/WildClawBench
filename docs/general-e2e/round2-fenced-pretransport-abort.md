@@ -9,3 +9,5 @@ Office013的原生用户消息和请求命令已受理；客户端随后记录20
 Execute0.15.13/Driver0.4.32仅在显式resume/observe/resolve入口将同一attempt派生为原生启动失败，不发送、不取消、不重启、不改原生数据库。Collect0.12.19与Report0.8.63离线重放证明，SDK/模型耗时等缺失值保持未知。已受理失败随后由独立裁判按原Rubric逐项评分，本Profile不分配分数或策略零分。旧Profile按原逻辑回放。
 
 验证：91项Node回归（含原件逐字节保留、两种Profile的收口/不可变校验、未知源/活动/时序拒绝）及15项组件/布局检查通过；真实Office013快照的纯只读推导通过。候选、Rubric、权重、执行范围与已有发行不变。
+
+0.15.13实机resolver在持久化前被FAILURE_BINDING拒绝：原生源码读取使用了不存在的config.app.path，缺少指纹后严格退回旧Profile。0.15.14/Driver0.4.33改为正式run-config的harness.app_path并校验配置Profile，新增真实配置形状及未知Profile拒绝回归；保留旧失败日志、发行和题目状态，不改变证明条件。
