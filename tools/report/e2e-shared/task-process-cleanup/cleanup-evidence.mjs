@@ -1,5 +1,5 @@
 export const COMPONENT_NAME = "task-process-cleanup";
-export const COMPONENT_VERSION = "0.1.0";
+export const COMPONENT_VERSION = "0.2.0";
 
 export function assertCleanupEvidence(cleanup, workspace, options, hook, elapsedMilliseconds) {
   const minimum = options.processQuietMilliseconds ?? 5_000;
@@ -21,4 +21,11 @@ export function assertCleanupEvidence(cleanup, workspace, options, hook, elapsed
     }
   }
   if (cleanup.after.targets.length !== 0) throw new Error("TASK_PROCESS_CLEANUP_RESIDUAL_PROCESSES");
+  if(cleanup.before.blocked_shared_processes?.length||cleanup.after.blocked_shared_processes?.length)
+    throw Error("SHARED_NATIVE_TASK_PROCESSES_ACTIVE");
+  const protectedPids=new Set(["before","after"].flatMap(name=>[
+    ...(cleanup[name].infrastructure_roots||[]),...(cleanup[name].protected_processes||[]),
+  ]).map(row=>row.pid));
+  if(cleanup.termination_attempts.some(row=>protectedPids.has(row.pid)&&row.exit_code===0))
+    throw Error("SHARED_NATIVE_INFRASTRUCTURE_SIGNALED");
 }

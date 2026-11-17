@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+0.15.11 默认限额采集共享进程指纹、宿主生命周期标记及框架操作时间线；原生异常、进程身份变化或日志告警时升级只读 SQLite 诊断。诊断不触发重发、重启、取消或评分。见[共享运行时安全与异常留证](vendor/e2e-shared/astronstudio-runtime/runtime-safety.md)。
+
 `0.15.10` Loomy 在同一原生会话的主模型请求重试耗尽、空助手消息已结束且随包后端空闲时，按原生日志精确核验 HTTP 5xx 并收口 FAILED；不重发、不把失败冒充完成。
 
 `0.15.9` Loomy 只读探针支持后端尚未运行：实际调用随包二进制 --version，冻结二进制摘要和数据库路径，PID、端口、所有权、health 保留为空或未观察；首次正常发送后按原生来源绑定同一安装，离线复验核对冷启动谱系。

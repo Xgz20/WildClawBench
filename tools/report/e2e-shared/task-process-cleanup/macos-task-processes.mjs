@@ -1,10 +1,10 @@
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { basename, isAbsolute, relative, resolve, sep } from "node:path";
 import { realpath } from "node:fs/promises";
 
 import { runCapture } from "../desktop-runtime/process.mjs";
 
-const PROCESS_LINE = /^\s*(\d+)\s+(\d+)\s+(\S{3})\s+(\S{3})\s+(\d{1,2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+(.*)$/u;
+const PROCESS_LINE = /^\s*(\d+)\s+(\d+)\s+(\S{3})\s+(\S{3})\s+(\d{1,2})\s+(\d{2}:\d{2}:\d{2})\s+(\d{4})\s+(?:(\d+(?:\.\d+)?)\s+(\d+)\s+)?(.*)$/u;
 
 function sha256(value) {
   return createHash("sha256").update(value, "utf8").digest("hex");
@@ -49,7 +49,7 @@ export function parseDarwinProcessTable(stdout) {
     const pid = Number(match[1]);
     const parentPid = Number(match[2]);
     if (!Number.isSafeInteger(pid) || pid <= 0 || !Number.isSafeInteger(parentPid)) continue;
-    const command = match[8];
+    const command = match[10];
     rows.push({
       pid,
       parent_pid: parentPid > 0 ? parentPid : null,
@@ -57,6 +57,7 @@ export function parseDarwinProcessTable(stdout) {
       command,
       command_name: commandName(command),
       command_sha256: sha256(command),
+      ...(match[8]!==undefined?{cpu_percent:Number(match[8]),rss_bytes:Number(match[9])*1024}:{}),
     });
   }
   return rows;
@@ -98,7 +99,56 @@ function publicProcess(item, seedKinds, targets) {
     matched_by_command: seedKinds.get(item.pid)?.has("command") || false,
     matched_by_cwd: seedKinds.get(item.pid)?.has("cwd") || false,
     descendant_of_seed: !seedKinds.has(item.pid) && targets.has(item.pid),
+    ...(Number.isFinite(item.cpu_percent)?{cpu_percent:item.cpu_percent,rss_bytes:item.rss_bytes}:{}),
   };
+}
+
+// cwd identifies a directory, not exclusive ownership. In particular AStudio
+// retains one app-server across workspaces. Never signal that service, its
+// ancestors, or unknown task processes below its shared process tree.
+export function nativeInfrastructureRole(item) {
+  const command = String(item?.command || "");
+  if (/^"?\/[^\n]*\/(?:AStudio|AstronStudio|Acode|Synara)(?: \(Dev\))?\.app\/Contents\/MacOS\//u.test(command)) {
+    if (/\/apps\/server\/(?:dist|src)\/index\.[cm]?[jt]s/u.test(command)) return "astudio-backend";
+    if (command.includes("signalExact(backend")&&command.includes("terminating")) return "astudio-backend-watchdog";
+    if (/--type=renderer/u.test(command)) return "astudio-renderer";
+    return /(?:\s-e\s|--type=|\.[cm]?js(?:\s|$))/u.test(command) ? "astudio-helper" : "astudio-main";
+  }
+  const image = String(item?.command_name || commandName(command));
+  const acode=/^acode(?:[-_][\w.-]+)?$/iu.test(image);
+  const legacyCodex=/^codex(?:[-_][\w.-]+)?$/iu.test(image)
+    && /(?:\/\.acode\/|\/(?:AStudio|AstronStudio)\.app\/)/u.test(command);
+  if ((acode||legacyCodex)
+      && /(?:^|\s)app-server(?:\s|$)/u.test(command)) return "shared-acode-app-server";
+  return null;
+}
+
+function infrastructureProtection(processes) {
+  const byPid = new Map(processes.map(item => [item.pid, item]));
+  const roots = new Map(processes.flatMap(item => {
+    const role = nativeInfrastructureRole(item);
+    return role ? [[item.pid, role]] : [];
+  }));
+  const protectedPids = new Map(roots);
+  for (const item of processes) {
+    let parent = item.parent_pid;
+    const seen = new Set([item.pid]);
+    while (parent && !seen.has(parent)) {
+      seen.add(parent);
+      if (roots.has(parent)) { protectedPids.set(item.pid, "shared-service-descendant"); break; }
+      parent = byPid.get(parent)?.parent_pid;
+    }
+  }
+  for (const pid of roots.keys()) {
+    let parent = byPid.get(pid)?.parent_pid;
+    const seen = new Set([pid]);
+    while (parent && parent !== 1 && !seen.has(parent)) {
+      seen.add(parent);
+      if (!protectedPids.has(parent)) protectedPids.set(parent, "shared-service-ancestor");
+      parent = byPid.get(parent)?.parent_pid;
+    }
+  }
+  return { roots, protectedPids };
 }
 
 export function selectDarwinTaskProcesses(processes, workspace, options = {}) {
@@ -109,6 +159,7 @@ export function selectDarwinTaskProcesses(processes, workspace, options = {}) {
   const cwdPids = new Set(options.cwdPids || []);
   const normalized = (processes || []).filter((item) => Number.isSafeInteger(item?.pid) && item.pid > 0);
   const byPid = new Map(normalized.map((item) => [item.pid, item]));
+  const protection = infrastructureProtection(normalized);
   const seedKinds = new Map();
   const addSeed = (pid, kind) => {
     if (excluded.has(pid) || !byPid.has(pid)) return;
@@ -120,12 +171,12 @@ export function selectDarwinTaskProcesses(processes, workspace, options = {}) {
   }
   for (const pid of cwdPids) addSeed(pid, "cwd");
 
-  const targets = new Set(seedKinds.keys());
+  const targets = new Set([...seedKinds.keys()].filter(pid => !protection.protectedPids.has(pid)));
   let changed = true;
   while (changed) {
     changed = false;
     for (const item of normalized) {
-      if (!excluded.has(item.pid) && !targets.has(item.pid)
+      if (!excluded.has(item.pid) && !protection.protectedPids.has(item.pid) && !targets.has(item.pid)
           && item.parent_pid && targets.has(item.parent_pid)) {
         targets.add(item.pid);
         changed = true;
@@ -149,14 +200,21 @@ export function selectDarwinTaskProcesses(processes, workspace, options = {}) {
       .filter((item) => targets.has(item.pid))
       .map((item) => publicProcess(item, seedKinds, targets))
       .sort((left, right) => left.pid - right.pid),
+    infrastructure_roots: normalized.filter(item => protection.roots.has(item.pid))
+      .map(item => ({ ...publicProcess(item, seedKinds, targets), protection_reason: protection.roots.get(item.pid) })),
+    protected_processes: normalized.filter(item => seedKinds.has(item.pid) && protection.protectedPids.has(item.pid))
+      .map(item => ({ ...publicProcess(item, seedKinds, targets), protection_reason: protection.protectedPids.get(item.pid) })),
+    blocked_shared_processes: normalized.filter(item => seedKinds.has(item.pid)
+      && protection.protectedPids.has(item.pid) && !protection.roots.has(item.pid))
+      .map(item => ({ ...publicProcess(item, seedKinds, targets), protection_reason: protection.protectedPids.get(item.pid) })),
   };
 }
 
 async function processTable(runCommand) {
   const result = await runCommand(
     "/bin/ps",
-    ["-axo", "pid=,ppid=,lstart=,command="],
-    { capture: true, allowFailure: true },
+    ["-axww", "-o", "pid=,ppid=,lstart=,%cpu=,rss=,command="],
+    { capture: true, allowFailure: true, env: { ...process.env, LC_ALL: "C" } },
   );
   if (result.code !== 0) {
     throw new Error(`TASK_PROCESS_TABLE_FAILED: ${String(result.stderr || `exit=${result.code}`).trim()}`);
@@ -231,12 +289,24 @@ export async function terminateDarwinTaskProcesses(candidateWorkspace, overrides
   const termGraceMilliseconds = Math.max(0, Number(overrides.termGraceMilliseconds ?? 1_000));
   const attempts = [];
   const attempted = new Set();
+  const operationId = overrides.operationId || randomUUID();
+  const audit = overrides.audit || (async () => {});
+  const assertSafe = overrides.assertSafe || (async () => {});
+  const blocked = value => (value.blocked_shared_processes || []).length > 0;
 
   const signal = overrides.signalProcess || (async (identity, signalName) => {
     const table = await processTable(runCommand);
     const actual = table.find((item) => item.pid === identity.pid) || null;
     if (!sameProcessIdentity(identity, actual)) {
       return { identity_matched: false, exit_code: null, error: "process identity changed or exited" };
+    }
+    // Recheck native ownership just before each signal, not only at selection.
+    // A new native root can appear under a previously selected process.
+    const protection = infrastructureProtection(table);
+    if (protection.protectedPids.has(identity.pid)
+        || table.some(item => protection.roots.has(item.pid)
+          && ancestorPids(table, item.pid).has(identity.pid))) {
+      return { identity_matched: true, exit_code: null, error: "shared native infrastructure protected", protected: true };
     }
     const result = await runCommand(
       "/bin/kill",
@@ -260,15 +330,23 @@ export async function terminateDarwinTaskProcesses(candidateWorkspace, overrides
       const key = `${target.pid}:${target.started_at}:${target.command_sha256}`;
       if (attempted.has(key)) continue;
       attempted.add(key);
+      await assertSafe();
+      const intentAt = new Date().toISOString();
+      await audit({ event: "process.signal.intent", operation_id: operationId,
+        actor_pid: process.pid, workspace: candidateWorkspace, signal: "SIGTERM", intent_at: intentAt, target });
       const term = await signal(target, "SIGTERM");
-      attempts.push({
+      const record = {
         pid: target.pid,
         started_at: target.started_at,
         command_sha256: target.command_sha256,
         signal: "SIGTERM",
         detected_late: late,
+        operation_id: operationId, actor_pid: process.pid,
+        intent_at: intentAt, result_at: new Date().toISOString(),
         ...term,
-      });
+      };
+      attempts.push(record);
+      await audit({ event: "process.signal.result", ...record });
     }
     if (ordered.length && termGraceMilliseconds) await wait(termGraceMilliseconds);
     const remaining = await snapshot(candidateWorkspace);
@@ -276,6 +354,10 @@ export async function terminateDarwinTaskProcesses(candidateWorkspace, overrides
     for (const target of ordered) {
       const actual = remainingByPid.get(target.pid);
       if (!sameProcessIdentity(target, actual)) continue;
+      await assertSafe();
+      const intentAt = new Date().toISOString();
+      await audit({ event: "process.signal.intent", operation_id: operationId,
+        actor_pid: process.pid, workspace: candidateWorkspace, signal: "SIGKILL", intent_at: intentAt, target });
       const killed = await signal(target, "SIGKILL");
       attempts.push({
         pid: target.pid,
@@ -283,12 +365,24 @@ export async function terminateDarwinTaskProcesses(candidateWorkspace, overrides
         command_sha256: target.command_sha256,
         signal: "SIGKILL",
         detected_late: late,
+        operation_id: operationId, actor_pid: process.pid,
+        intent_at: intentAt, result_at: new Date().toISOString(),
         ...killed,
       });
+      await audit({ event: "process.signal.result", ...attempts.at(-1) });
     }
   };
 
   const before = await snapshot(candidateWorkspace);
+  await assertSafe();
+  await audit({ event: "process.cleanup.snapshot", operation_id: operationId, snapshot: before });
+  if (blocked(before)) return {
+    schema_version: "wildclawbench.general-e2e-task-process-cleanup/v1",
+    supported: true, platform: "darwin", success: false,
+    error: "SHARED_NATIVE_TASK_PROCESSES_ACTIVE",
+    operation_id: operationId, before, after: before, termination_attempts: [],
+    quiet_window_milliseconds: quietMilliseconds, quiet_observed_milliseconds: 0, late_process_detected: false,
+  };
   await terminateSnapshot(before, false);
   let after = await snapshot(candidateWorkspace);
   const startedAt = now();
@@ -299,6 +393,7 @@ export async function terminateDarwinTaskProcesses(candidateWorkspace, overrides
     if (!after.targets.length && quietSince !== null && now() - quietSince >= quietMilliseconds) break;
     await wait(Math.min(250, Math.max(1, deadline - now())));
     after = await snapshot(candidateWorkspace);
+    if (blocked(after)) break;
     if (after.targets.length) {
       lateProcessDetected ||= quietSince !== null;
       quietSince = null;
@@ -312,7 +407,10 @@ export async function terminateDarwinTaskProcesses(candidateWorkspace, overrides
     schema_version: "wildclawbench.general-e2e-task-process-cleanup/v1",
     supported: true,
     platform: "darwin",
-    success: after.targets.length === 0 && quietObservedMilliseconds >= quietMilliseconds,
+    success: !blocked(after) && after.targets.length === 0 && quietObservedMilliseconds >= quietMilliseconds
+      && !attempts.some(item => item.protected),
+    operation_id: operationId,
+    ...(blocked(after) ? { error: "SHARED_NATIVE_TASK_PROCESSES_ACTIVE" } : {}),
     quiet_window_milliseconds: quietMilliseconds,
     quiet_observed_milliseconds: quietObservedMilliseconds,
     late_process_detected: lateProcessDetected,

@@ -1,10 +1,11 @@
+const finalizeAstronStudioExecution=(options,overrides={})=>finalizeWithLiveGuard(options,{runtimeSafetyGuard:async()=>({fixture:true,blockers:[]}),...overrides});
 // Closed synthetic native interruption; no real app, process cleanup or model.
 import { createHash } from 'node:crypto';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { deriveRuntimeInterruption, RUNTIME_INTERRUPTION_STATE, RUNTIME_INTERRUPTION_NATIVE, RUNTIME_INTERRUPTION_PROOF }
   from '../../../tools/report/e2e-shared/general-resource-supplements/astronstudio-runtime-interruption.mjs';
-import { finalizeAstronStudioExecution } from '../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
+import { finalizeAstronStudioExecution as finalizeWithLiveGuard } from '../../../tools/report/skills/general-e2e/collect-general-e2e/scripts/finalize_astronstudio_execution.mjs';
 const root=process.argv[2],missing=process.argv[3]==='--missing-provider',watchdog=process.argv[3]==='--watchdog';
 const hash=b=>createHash('sha256').update(b).digest('hex'),json=v=>Buffer.from(JSON.stringify(v)+'\n');
 const id={batch_id:'fixture-batch',unit_id:'astronstudio-macos',task_id:'interrupted-task',attempt_id:'original'};
