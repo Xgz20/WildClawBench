@@ -93,6 +93,7 @@
     "formal_semantic_Judge_or_12_case_calibration": false,
     "network_tests": "Controlled localhost fixture servers only; no external source recollection.",
     "real_Office_or_browser_rendering": false,
-    "standalone_release": "Build and verify after this merge commit; final receipt is recorded separately."
-  }
+    "standalone_release": "VERIFIED: general-hard-integration-release-20261117.json"
+  },
+  "framework_merge_commit": "de3c24fe8db28fbf6da0ac4752ce50f322ae16bd"
 }
