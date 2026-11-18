@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.114` 将已审核的发布来源LF/CRLF身份及报价横向布局Profile接入精确v6 digest，既有contract/source、原字节、数值公式、分母和权重不变。只在新评分Manifest冻结marker，旧未启用的attempt保持原回放，不原地重跑或补分。
+
 `0.10.113` general-custom70-v6新闻工作簿新增两项明确等价表头的独立Profile：精确绑定原contract/source与既有提取器SHA，保留完整单元格、原数值函数、分母和权重，重复字段拒绝。旧Manifest没有新marker时按原字节回放；修复只供同一执行的新独立评分attempt使用。
 
 `0.10.112` 独立保留SDK已完成后原生运行时再中断的证明：同回合完整终稿、较晚原生中断、停止运行时及仅用量尾账本须闭合；原FAILED/cancelled不改，不伪称SDK被取消或全文已在客户端展示。沿原检查点交独立评分，不生成策略零分。

@@ -7,6 +7,7 @@ CONTRACT='35838d318be427d0d292b7ae866761c4a66f0ada24c977e69ea4e15d9607fb13'
 SOURCE='9db04e9b4d6dd9abbfbe990454b84022847355ca37093c52109770674ba4a5ee'
 DATASET={'id':'general-custom70-v4','digest':'914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff'}
 V5_DATASET={'id': 'general-custom70-v5', 'digest': '8503a341fc496b88e1b8e368105e2d700360e026fa5c22578a819f0beb748a6d'}
+V6_DATASET={'id':'general-custom70-v6','digest':'20f9383bd124402703bf106d5d306cf64674cac6f83d1f7daa8e1859c3e03288'}
 PROFILE='sterilization-quote-complete-horizontal-fields/v3'
 HEADINGS={'Total (USD)':'grand','Quote validity':'validity','Estimated total delivery':'elapsed'}
 OLD_SCAN="""                    for rr in range(rn+1,min(rn+15,self.w[sn].max_row+1)):
@@ -20,7 +21,7 @@ NEW_SCAN="""                    for rr in range(rn+1,self.w[sn].max_row+1):
 
 def marker(contract,sha,dataset):
     if (contract.get('task_id')==TASK and sha==CONTRACT
-        and {k:dataset.get(k) for k in DATASET} in (DATASET,V5_DATASET)
+        and {k:dataset.get(k) for k in DATASET} in (DATASET,V5_DATASET,V6_DATASET)
         and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==SOURCE):
         return {'profile':PROFILE,'contract_sha256':CONTRACT,'source_sha256':SOURCE,'headings':HEADINGS,
                 'scan_boundary':'sheet end or next explicit multi-mode header'}

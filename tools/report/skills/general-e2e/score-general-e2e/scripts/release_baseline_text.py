@@ -10,6 +10,7 @@ V4_CONTRACT='57338e91bd87b3cff8f034d5da7340fa95d19dbeae701db8a3a57afa95252c45'
 V4_SOURCE='ec04d3539c64efaf0909e4c0772164e39fa30c835d389eff46d2c5becaa59fe1'
 V4_DATASET={'id':'general-custom70-v4','digest':'914783354b23efa4f814342187ebe931df76cbcb0b2ea3dd85bd3f5705f485ff'}
 V5_DATASET={'id': 'general-custom70-v5', 'digest': '8503a341fc496b88e1b8e368105e2d700360e026fa5c22578a819f0beb748a6d'}
+V6_DATASET={'id':'general-custom70-v6','digest':'20f9383bd124402703bf106d5d306cf64674cac6f83d1f7daa8e1859c3e03288'}
 V3_DATASET={'id':'general-custom70-v3','digest':'2a9ebd7ee9330a6d7fd7261df44275e8980eb95275b0ada2c80b4005573132b7'}
 
 def registry(contract_sha=None):
@@ -29,7 +30,7 @@ def registry(contract_sha=None):
 def marker(contract,contract_sha,dataset):
     row=registry(contract_sha)
     binding={k:dataset.get(k) for k in ['id','digest']}
-    dataset_matches=(binding in [V3_DATASET,V4_DATASET,V5_DATASET] if contract_sha==V4_CONTRACT else binding==row['dataset'])
+    dataset_matches=(binding in [V3_DATASET,V4_DATASET,V5_DATASET,V6_DATASET] if contract_sha==V4_CONTRACT else binding==row['dataset'])
     if (contract.get('task_id')==row['task_id'] and contract_sha==row['contract_sha256']
             and dataset_matches
             and hashlib.sha256(contract.get('automated_checks','').encode()).hexdigest()==row['source_sha256']):
@@ -77,9 +78,9 @@ def check_original(attempt,manifest,contract):
     return True
 
 def native_blocker_matches(rt,attempt,manifest,contract):
-    """Only the original uncorrected v4 LF/CRLF failure before semantic import."""
+    """Only exact uncorrected v4/v6 LF/CRLF failures before semantic import."""
     if (manifest.get('digests',{}).get('contract_sha256')!=V4_CONTRACT
-            or manifest.get('dataset')!=V4_DATASET
+            or manifest.get('dataset') not in (V4_DATASET,V6_DATASET)
             or marker(contract,V4_CONTRACT,manifest.get('dataset',{})) is None
             or manifest.get('runtime',{}).get('release_baseline_text_profile') is not None):
         return False
@@ -98,5 +99,16 @@ def native_blocker_matches(rt,attempt,manifest,contract):
             or (Path(attempt)/'semantic/semantic-component.json').exists()
             or not (Path(attempt)/'semantic/query-log.json').is_file()):
         raise ValueError('RELEASE_TEXT_NATIVE_BLOCKER_INVALID')
+    if manifest['dataset']==V6_DATASET:
+        evidence=b.get('evidence',{})
+        if (b.get('execution_attempt_id')!=manifest['identity']['execution_attempt_id']
+                or evidence.get('frozen_contract_sha256')!=V4_CONTRACT
+                or evidence.get('frozen_rule_source_sha256')!=V4_SOURCE
+                or evidence.get('dataset')!=V6_DATASET or evidence.get('profile_in_attempt') is not None
+                or evidence.get('all_eight_registered_original_identities') is not True
+                or any(b.get('preservation',{}).get(k) is not False for k in
+                    ['candidate_original_modified','frozen_skill_modified','harness_executed','rule_component_rerun',
+                     'old_component_modified','semantic_response_imported','finalize_run','verify_score_passed'])):
+            raise ValueError('RELEASE_TEXT_V6_NATIVE_BLOCKER_INVALID')
     check_original(attempt,manifest,contract)
     return True
