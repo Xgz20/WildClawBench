@@ -4,7 +4,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { artifact, assertNativeActivity, digest, isAbsentRuntime, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
 import { normalizeTrace, resourceMetrics } from './collection.mjs';
 import { checkNativeModel } from './execution.mjs';
-import { assertConfiguration } from './ui.mjs';
+import { assertConfiguration, registeredWorkspaceItems } from './ui.mjs';
 
 export async function readArchivedHttpFailure(recordPath, runtime) {
   requireValue(isAbsolute(recordPath), 'ARCHIVED_FAILURE_PATH_NOT_ABSOLUTE');
@@ -157,9 +157,12 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     ui.set(receipt.event, JSON.parse(source));
   }
   const selection = journal.workspace_selection;
+  const readback = ui.get('workspace-full-path-readback');
   requireValue(selection?.full_path_verified === true && selection.workspace === state.session.cwd
     && selection.selection_method === 'native-ui-menu-exact-full-path'
-    && ui.get('workspace-full-path-readback')?.nodes?.filter(node => node.help === state.session.cwd).length === 1,
+    && readback?.nodes && (version[0] > 0 || version[1] > 1 || version[1] === 1 && version[2] >= 12
+      ? registeredWorkspaceItems(readback, state.session.cwd).length === 1
+      : readback.nodes.filter(node => node.help === state.session.cwd).length === 1),
     'ARCHIVE_WORKSPACE_SELECTION_MISMATCH');
   const taskConfig = { ...config, configuration: { ...config.configuration, permission_label: selection.configuration.permission_label } };
   const prepared = ui.get('prompt-readback');

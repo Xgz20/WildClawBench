@@ -8,8 +8,20 @@ import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_M
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
+import { registeredWorkspaceItems } from '../../tools/report/e2e-shared/loomy/ui.mjs';
 
 const prompt = '仅处理本题 workspace。';
+test('Loomy selects the exact workspace menu item even if the sidebar repeats its path', () => {
+  const workspace = '/unit/task/workspace';
+  const node = (role, path, help = '') => ({ role, path, help });
+  const menu = node('AXMenuItem', [0, 1, 1]);
+  const snapshot = { nodes: [node('AXGroup', [0, 0, 0], workspace),
+    node('AXMenuItem', [0, 1, 0]), node('AXGroup', [0, 1, 0, 0], '/other/workspace'),
+    menu, node('AXGroup', [0, 1, 1, 0], workspace)] };
+  assert.deepEqual(registeredWorkspaceItems(snapshot, workspace), [menu]);
+  snapshot.nodes.push(node('AXMenuItem', [0, 1, 2]), node('AXGroup', [0, 1, 2, 0], workspace));
+  assert.equal(registeredWorkspaceItems(snapshot, workspace).length, 2);
+});
 test('Loomy cold start binds the measured binary version without inventing a live runtime', () => {
   const absent = { state: 'absent', pid: null, ppid: 10, executable: '/app/opencode', started_at: null,
     binary_sha256: 'a'.repeat(64), endpoint: null, database: '/native.db', database_owned: false,

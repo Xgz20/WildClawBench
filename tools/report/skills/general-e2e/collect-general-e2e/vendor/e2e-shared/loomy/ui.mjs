@@ -60,6 +60,12 @@ export async function newTask(config, save) {
   return snapshot;
 }
 
+export function registeredWorkspaceItems(snapshot, workspace) {
+  const items = snapshot.nodes.filter(node => node.role === 'AXMenuItem');
+  return items.filter(item => snapshot.nodes.some(node => node.help === workspace
+    && item.path.length <= node.path.length && item.path.every((part, i) => node.path[i] === part)));
+}
+
 export async function selectWorkspace(config, workspace, save) {
   let snapshot = await ax(config.ax_helper, config.process.pid);
   assertConfiguration(snapshot, config, { preparingWorkspace: true });
@@ -69,10 +75,8 @@ export async function selectWorkspace(config, workspace, save) {
   snapshot = await waitUi(config, row => row.nodes.some(node => node.role === 'AXMenuItem'
     && nodeLabel(node) === '打开本地文件夹'), 'workspace-menu');
   const selectRegistered = async menu => {
-    const pathNode = uniqueNode(menu, node => node.help === workspace, 'registered-workspace-full-path');
-    const items = menu.nodes.filter(node => node.role === 'AXMenuItem' && node.path.length < pathNode.path.length
-      && node.path.every((part, i) => pathNode.path[i] === part)).sort((a, b) => b.path.length - a.path.length);
-    requireValue(items.length > 0, 'REGISTERED_WORKSPACE_ITEM_MISSING');
+    const items = registeredWorkspaceItems(menu, workspace);
+    requireValue(items.length === 1, 'AX_TARGET_AMBIGUOUS:registered-workspace-menu-item');
     await save('workspace-full-path-readback', menu);
     await act(config, items[0], 'press', { workspace_guard: workspace });
     const selected = await waitUi(config, row => !row.nodes.some(node => node.role === 'AXMenuItem'), 'workspace-menu-closed');
@@ -81,7 +85,7 @@ export async function selectWorkspace(config, workspace, save) {
     return { workspace, selection_method: 'native-ui-menu-exact-full-path', full_path_verified: true,
       configuration: { model_label: observed.model_label, reasoning_effort: observed.reasoning_effort, permission_label: observed.permission_label } };
   };
-  if (snapshot.nodes.some(node => node.help === workspace)) return selectRegistered(snapshot);
+  if (registeredWorkspaceItems(snapshot, workspace).length) return selectRegistered(snapshot);
   await act(config, uniqueNode(snapshot, node => node.role === 'AXMenuItem'
     && nodeLabel(node) === '打开本地文件夹', 'open-folder'));
   snapshot = await waitUi(config, row => row.nodes.some(node => node.role === 'AXWindow'
@@ -118,7 +122,7 @@ export async function selectWorkspace(config, workspace, save) {
   // from the menu item's native AXHelp, then select that exact item once more.
   await act(config, uniqueNode(snapshot, node => node.role === 'AXPopUpButton'
     && node.description === '选择工作目录', 'selected-workspace'));
-  snapshot = await waitUi(config, row => row.nodes.some(node => node.help === workspace), 'workspace-registration-full-path');
+  snapshot = await waitUi(config, row => registeredWorkspaceItems(row, workspace).length > 0, 'workspace-registration-full-path');
   return { ...await selectRegistered(snapshot), native_folder_path_verified: true };
 }
 
