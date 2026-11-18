@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.113` general-custom70-v6新闻工作簿新增两项明确等价表头的独立Profile：精确绑定原contract/source与既有提取器SHA，保留完整单元格、原数值函数、分母和权重，重复字段拒绝。旧Manifest没有新marker时按原字节回放；修复只供同一执行的新独立评分attempt使用。
+
 `0.10.112` 独立保留SDK已完成后原生运行时再中断的证明：同回合完整终稿、较晚原生中断、停止运行时及仅用量尾账本须闭合；原FAILED/cancelled不改，不伪称SDK被取消或全文已在客户端展示。沿原检查点交独立评分，不生成策略零分。
 
 `0.10.111` 对已正式冻结的AStudio原生启动拒绝，离线重放完整受理/失败及源指纹证明后，按既有evidence-accountability/v1交原检查点评分。turn/SDK身份仍为null、session.verified仍为false，不伪造模型执行、交付或自动分数。未知、额度及在途状态继续拒绝，原契约、权重和运行时锁不变。

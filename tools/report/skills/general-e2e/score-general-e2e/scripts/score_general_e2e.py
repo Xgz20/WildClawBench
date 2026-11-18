@@ -51,6 +51,7 @@ import office001_semantic_ranges
 import private_reference_guard
 import generated_evidence_globs
 import news_workbook_layout
+import news_header_equivalence
 import procurement_summary_labels
 import public_text_profiles
 import work_order_evidence_budget
@@ -2099,6 +2100,8 @@ def prepare_attempt(
                    if private_reference_guard.marker(contract,_sha256_bytes(contract_bytes),dataset,private_gt_entries) is not None else {}),
                 **({'news_workbook_layout_profile':news_workbook_layout.marker(contract,_sha256_bytes(contract_bytes))}
                    if news_workbook_layout.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
+                **({'news_header_equivalence_profile':news_header_equivalence.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if news_header_equivalence.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -3000,6 +3003,7 @@ def _effective_rule_source(
         corrected, receipt = office001_rule_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = private_reference_guard.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = news_workbook_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = news_header_equivalence.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_summary_labels.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_text_profiles.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = work_order_evidence_budget.effective_source(manifest,source,corrected,receipt)
@@ -6707,6 +6711,8 @@ def prepare_rescore_attempt(
                    if private_reference_guard.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'],private_gt_entries) is not None else {}),
                 **({'news_workbook_layout_profile':news_workbook_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if news_workbook_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
+                **({'news_header_equivalence_profile':news_header_equivalence.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if news_header_equivalence.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
