@@ -1,7 +1,7 @@
 """Apply the frozen environment steps before handing a case to WGUI."""
 from __future__ import annotations
 
-import hashlib
+import base64
 import json
 from datetime import datetime, timezone
 from pathlib import Path, PureWindowsPath
@@ -18,6 +18,8 @@ from .preprocessing import EXE, MANIFEST, SHA, TRANSFER_TIMEOUT, checked_asset, 
 
 
 CHUNK_BYTES = 8 * 1024 * 1024
+# WGUI's workspace command limits the total size of each source directory.
+CHUNKS_PER_UPLOAD = 4
 SIMPLE_ERROR = re.compile(r"[A-Z0-9_]{1,100}\Z")
 WINDOWS_ROOT = PureWindowsPath(r"C:\ProgramData\WGUI\environment-preprocessing")
 PYTHON = r"Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe'"
@@ -87,25 +89,46 @@ def _upload(driver, sid, step, job, remote, guest, wgui, encode):
         files = {path.relative_to(payload).as_posix(): file_sha256(path)
                  for path in sorted(payload.rglob("*")) if path.is_file()}
         packed = staging / "payload.zip"
-        with zipfile.ZipFile(packed, "w", compression=zipfile.ZIP_STORED) as archive:
+        # Windows kernels can be hundreds of MiB uncompressed. Keep the
+        # chunked transfer within the step budget without changing file hashes.
+        with zipfile.ZipFile(packed, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
             for path in sorted(files):
                 archive.write(payload / path, path)
         contract = {"invocation": job["invocation"], "files": files, "step": recipe,
                     "package_sha256": file_sha256(packed)}
-        driver.client.checked(sid, "mkdir -p " + shlex.quote(remote) + " && chmod 700 " + shlex.quote(remote),
-                              timeout=min(30, remaining()))
-        driver.client.upload(sid, remote + "/step.json", json.dumps(contract, ensure_ascii=False).encode(), timeout=remaining())
+
+        def prepare(source):
+            quoted = shlex.quote(source)
+            driver.client.checked(sid, "mkdir -p " + quoted + " && chmod 700 " + quoted,
+                                  timeout=min(30, remaining()))
+
+        def upload_workspace(label, source, destination):
+            driver._checked_job(f"preprocess-upload-{job['index']}-{label}",
+                                wgui + " workspace upload --source " + shlex.quote(source)
+                                + " --guest " + shlex.quote(str(destination)), timeout=remaining())
+
+        control = remote + "/control"
+        prepare(control)
+        driver.client.upload(sid, control + "/step.json", json.dumps(contract, ensure_ascii=False).encode(),
+                             timeout=remaining())
         worker = Path(__file__).with_name("preprocess_windows_guest.py")
-        driver.client.upload(sid, remote + "/worker.py", worker.read_bytes(), timeout=remaining())
+        driver.client.upload(sid, control + "/worker.py", worker.read_bytes(), timeout=remaining())
+        upload_workspace("control", control, guest)
         with packed.open("rb") as input_file:
+            chunk = input_file.read(CHUNK_BYTES)
             index = 0
-            while chunk := input_file.read(CHUNK_BYTES):
-                driver.checkpoint()
-                driver.client.upload(sid, f"{remote}/part-{index:05d}", chunk, timeout=remaining())
-                index += 1
-        driver._checked_job("preprocess-upload-" + str(job["index"]),
-                            wgui + " workspace upload --source " + shlex.quote(remote)
-                            + " --guest " + shlex.quote(str(guest)), timeout=remaining())
+            while chunk:
+                label = f"parts-{index // CHUNKS_PER_UPLOAD:05d}"
+                source = remote + "/" + label
+                prepare(source)
+                for _ in range(CHUNKS_PER_UPLOAD):
+                    driver.checkpoint()
+                    driver.client.upload(sid, f"{source}/part-{index:05d}", chunk, timeout=remaining())
+                    index += 1
+                    chunk = input_file.read(CHUNK_BYTES)
+                    if not chunk:
+                        break
+                upload_workspace(label, source, guest / label)
         # Remote upload bookkeeping is controller-owned and separate from user code.
         probe = (f"$d='{guest}';$py={PYTHON};if(!(Test-Path -LiteralPath $py -PathType Leaf))"
                  "{throw 'WINDOWS_PREPROCESS_PYTHON_UNAVAILABLE'};"
@@ -130,17 +153,37 @@ def _launch(driver, sid, guest, encode):
         # The remote process may already be running. Only observe the same claim.
 
 
-def _receipt(driver, sid, guest, job, step):
+def _receipt(driver, sid, guest, job, step, encode):
+    # The Windows file route can return a gateway response while the worker is
+    # starting. Probe the exact receipt path inside the owned session instead.
+    path = str(guest / "receipt.json").replace("'", "''")
+    script = (
+        "$ErrorActionPreference='Stop';"
+        f"$p='{path}';"
+        "if(!(Test-Path -LiteralPath $p -PathType Leaf)){[Console]::Write('pending');return};"
+        "$f=[IO.File]::OpenRead($p);"
+        "try{if($f.Length -gt 8192){[Console]::Write('oversize');return};"
+        "$r=[IO.BinaryReader]::new($f);$data=$r.ReadBytes(8193);"
+        "if($data.Length -gt 8192){[Console]::Write('oversize');return};"
+        "[Console]::Write('receipt:'+ [Convert]::ToBase64String($data))}finally{$f.Dispose()}"
+    )
     while _elapsed(job["started_at"]) <= step["timeout"] + 40:
         driver.checkpoint()
         try:
-            value = driver.client.windows_download(sid, str(guest / "receipt.json"), timeout=10, max_bytes=8192)
-        except (FileNotFoundError, PlatformError):
+            response = driver.client.windows_execute(sid, encode(script), timeout=10)
+        except PlatformError:
             driver.stop.wait(1)
             continue
+        output = response.get("output")
+        if isinstance(output, str) and output.strip() == "pending":
+            driver.stop.wait(1)
+            continue
+        if not isinstance(output, str) or not output.strip().startswith("receipt:") or len(output) > 11000:
+            raise E2EError("PREPROCESS_STEP_RECEIPT_INVALID")
         try:
+            value = base64.b64decode(output.strip().removeprefix("receipt:"), validate=True)
             row = json.loads(value)
-        except (ValueError, UnicodeError) as exc:
+        except ValueError as exc:
             raise E2EError("PREPROCESS_STEP_RECEIPT_INVALID") from exc
         if (len(value) > 8192 or not isinstance(row, dict) or row.get("invocation") != job["invocation"]
                 or row.get("status") not in {"passed", "failed"}
@@ -202,7 +245,7 @@ def apply_recipe(driver, sid, recipe, wgui, encode, *, isolation_receipt=None):
                 jobs[key] = job
                 driver._phase("PREPARING", preprocess_jobs=jobs, preprocess_receipt=state)
                 _launch(driver, sid, guest, encode)
-            result = _receipt(driver, sid, guest, job, step)
+            result = _receipt(driver, sid, guest, job, step, encode)
         except (E2EError, OSError, ValueError, zipfile.BadZipFile) as exc:
             from .backend import ObservationPaused
             if isinstance(exc, ObservationPaused):

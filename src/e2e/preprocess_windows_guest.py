@@ -445,7 +445,7 @@ def main():
         payload = work / "payload"
         package = work / "payload.zip"
         with package.open("xb") as output:
-            for part in sorted(work.glob("part-*")):
+            for part in sorted(work.glob("parts-*/part-*"), key=lambda path: path.name):
                 with part.open("rb") as stream:
                     shutil.copyfileobj(stream, output)
         if sha(package) != contract["package_sha256"]:

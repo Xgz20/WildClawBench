@@ -78,4 +78,6 @@ scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General
 
 每个 `asset` 固定 `kind`、`name`、`size` 和 `sha256`。`skill` 指定 `target` 和 `source`，来源为 `auto`、`user`、`astudio` 或 `runtime`。`plugin` 指定 `target` 和本地 `marketplace`。`acode` 从 ZIP 中读取内核及配套清单。`powershell` 可在 `attachments` 中绑定 `kind=file` 的附件，并通过 `$env:WCB_PREPROCESS_ATTACHMENTS` 读取。预检为每步预留最多 300 秒的投递预算及运行预算。
 
+投递先压缩并切块，每次 WGUI 工作区上传最多 32 MiB，以兼容单次 64 MiB 限制。Windows 端核验完整包和成员摘要后才执行。回执在同一个 Windows 会话中回读，文件未发布时继续等待，发布后核对本次步骤身份。
+
 运行配置 `preprocessing_profiles` 缺省为空。沙箱隔离验收完成后，由部署管理员登记 `namespace`、`template`、`app_id`、`user_id`、`actions` 和验收记录的 SHA-256 `isolation_receipt`。该登记绑定经过审查的固定镜像版本、专用测试身份和宿主边界。变更镜像或身份时需要重新核验。特别需要检查 Windows 可访问的 WGUI 共享目录、宿主和控制面可达性、沙箱间隔离，以及登录材料是否限于评测账号。当前基础模板登记本身不足以证明这些条件。

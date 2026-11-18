@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import base64
 from dataclasses import asdict, dataclass, field
-import json
 import os
 from pathlib import Path
 import shlex
@@ -223,26 +222,8 @@ class AgentCubeClient:
             raise PlatformError("WINDOWS_COMMAND_FAILED: " + str(redact(result.get("error", "")[:1500], self.config.auth_token)))
         return result
 
-    def windows_download(self, sid: str, path: str, *, timeout=120, max_bytes: int | None = None) -> bytes:
-        if max_bytes is not None:
-            response = self._request("POST", self.windows + "/file", sid=sid, data={"file_path": path},
-                                     timeout=timeout, stream=True)
-            with response:
-                if response.status_code == 404:
-                    raise FileNotFoundError(path)
-                if response.status_code != 200:
-                    raise PlatformError(f"WINDOWS_DOWNLOAD_HTTP_{response.status_code}")
-                data = bytearray()
-                for chunk in response.iter_content(chunk_size=max_bytes):
-                    data.extend(chunk)
-                    if len(data) > max_bytes:
-                        raise E2EError("WINDOWS_DOWNLOAD_BYTE_LIMIT")
-                if response.headers.get("Content-Type", "").startswith("application/json"):
-                    payload = json.loads(data)
-                    if isinstance(payload, dict) and payload.get("code") == 10005:
-                        raise FileNotFoundError(path)
-                return bytes(data)
-        response = self._request("POST", self.windows + "/file", sid=sid, data={"file_path": path}, timeout=timeout)
+    def windows_download(self, sid: str, path: str) -> bytes:
+        response = self._request("POST", self.windows + "/file", sid=sid, data={"file_path": path}, timeout=120)
         if response.status_code == 404:
             raise FileNotFoundError(path)
         if response.status_code != 200:

@@ -1,8 +1,10 @@
+import base64
 import hashlib
+import io
 import json
 import struct
 import tempfile
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from threading import Event
 from types import SimpleNamespace
 import unittest
@@ -11,10 +13,10 @@ import zipfile
 
 from src.e2e.agentcube import AgentCubeConfig
 from src.e2e.backend import ObservationPaused
-from src.e2e.common import E2EError, atomic_json, digest, read_json
+from src.e2e.common import E2EError, atomic_json, digest, read_json, utc_now
 from src.e2e.preparation import normalize_plan
 from src.e2e.preprocessing import effective, freeze_assets, frozen_recipe, inspect_asset, require_admission, selection
-from src.e2e.windows_preprocess import apply_recipe, build_payload
+from src.e2e.windows_preprocess import _receipt, _upload, apply_recipe, build_payload
 
 
 def recipe(asset):
@@ -23,6 +25,64 @@ def recipe(asset):
 
 
 class PreprocessingTests(unittest.TestCase):
+    def test_large_payload_routes_wgui_transfers_to_separate_bounded_directories(self):
+        with tempfile.TemporaryDirectory() as directory:
+            driver = SimpleNamespace(batch=Path(directory), client=Mock(), _checked_job=Mock(), checkpoint=Mock())
+            contents = bytes(range(256)) * 2
+
+            def make_payload(batch, step, target):
+                target.mkdir()
+                (target / "payload.bin").write_bytes(contents)
+                return {"kind": "acode"}
+
+            with (patch("src.e2e.windows_preprocess.build_payload", side_effect=make_payload),
+                  patch("src.e2e.windows_preprocess.CHUNK_BYTES", 64),
+                  patch("src.e2e.windows_preprocess.CHUNKS_PER_UPLOAD", 2)):
+                _upload(driver, "session", {}, {"index": 0, "invocation": "fixture"}, "/tmp/fixture",
+                        PureWindowsPath(r"C:\fixture"), "wgui", str)
+            by_dir = {}
+            for request in driver.client.upload.call_args_list:
+                _, path, contents_part = request.args
+                folder, filename = path.rsplit("/", 1)
+                by_dir.setdefault(folder, {})[filename] = contents_part
+            control = by_dir.pop("/tmp/fixture/control")
+            self.assertEqual(set(control), {"worker.py", "step.json"})
+            self.assertGreater(len(by_dir), 1)
+            for folder, parts in by_dir.items():
+                self.assertLessEqual(sum(map(len, parts.values())), 128)
+                self.assertIn(folder, " ".join(request.args[1] for request in driver._checked_job.call_args_list))
+            package = b"".join(part for _, parts in sorted(by_dir.items()) for _, part in sorted(parts.items()))
+            self.assertEqual(hashlib.sha256(package).hexdigest(), json.loads(control["step.json"])["package_sha256"])
+            with zipfile.ZipFile(io.BytesIO(package)) as archive:
+                self.assertEqual(archive.read("payload.bin"), contents)
+
+    def test_windows_receipt_waits_for_atomic_publish_in_the_same_session(self):
+        driver = SimpleNamespace(client=Mock(), stop=Mock(), checkpoint=Mock())
+        job = {"invocation": "original-invocation", "started_at": utc_now()}
+        sent = {"invocation": job["invocation"], "status": "passed",
+                "duration_seconds": 1.5, "exit_code": 0, "stdout": "discarded from receipt"}
+        output = "receipt:" + base64.b64encode(json.dumps(sent).encode()).decode()
+        driver.client.windows_execute.side_effect = [{"output": "pending"}, {"output": output}]
+        observed = _receipt(driver, "owned-session", PureWindowsPath(r"C:\wcb"), job,
+                            {"kind": "powershell", "timeout": 10}, str)
+        self.assertEqual(observed, {"status": "passed", "duration_seconds": 1.5, "exit_code": 0})
+        driver.stop.wait.assert_called_once_with(1)
+        for request in driver.client.windows_execute.call_args_list:
+            self.assertEqual(request.args[0], "owned-session")
+            self.assertIn(r"C:\wcb\receipt.json", request.args[1])
+
+    def test_windows_receipt_rejects_foreign_invocation_and_invalid_transport(self):
+        driver = SimpleNamespace(client=Mock(), stop=Mock(), checkpoint=Mock())
+        job = {"invocation": "original-invocation", "started_at": utc_now()}
+        foreign = {"invocation": "another-invocation", "status": "passed",
+                   "duration_seconds": 1.5, "exit_code": 0}
+        for output in ("oversize", "receipt:%%%", "receipt:" + base64.b64encode(json.dumps(foreign).encode()).decode()):
+            with self.subTest(output=output):
+                driver.client.windows_execute.return_value = {"output": output}
+                with self.assertRaisesRegex(E2EError, "PREPROCESS_STEP_RECEIPT_INVALID"):
+                    _receipt(driver, "owned-session", PureWindowsPath(r"C:\wcb"), job,
+                             {"kind": "powershell", "timeout": 10}, str)
+
     def test_zip_previews_reject_windows_path_collisions(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "input.zip"
