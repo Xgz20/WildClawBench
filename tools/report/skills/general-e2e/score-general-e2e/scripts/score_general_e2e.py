@@ -75,6 +75,7 @@ import acl_index_headers
 import warranty_recovery_layout
 import service_report_layout
 import procurement_explicit_labels
+import procurement_annotation_formula
 import data_table_representations
 import answer_delivery
 import interrupted_answer_delivery
@@ -2102,6 +2103,8 @@ def prepare_attempt(
                    if news_workbook_layout.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'news_header_equivalence_profile':news_header_equivalence.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if news_header_equivalence.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'procurement_annotation_formula_profile':procurement_annotation_formula.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if procurement_annotation_formula.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -3025,6 +3028,7 @@ def _effective_rule_source(
         corrected, receipt = namc_inline_distances.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = shared_source_repairs.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_explicit_labels.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = procurement_annotation_formula.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = acl_index_headers.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
@@ -6713,6 +6717,8 @@ def prepare_rescore_attempt(
                    if news_workbook_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'news_header_equivalence_profile':news_header_equivalence.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if news_header_equivalence.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'procurement_annotation_formula_profile':procurement_annotation_formula.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if procurement_annotation_formula.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),

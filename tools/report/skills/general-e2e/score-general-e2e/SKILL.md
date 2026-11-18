@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.115` v6采购取证可显式冻结已通过合成自测的原生Calc只读观察：只把明确核对说明列中、相邻数值为字面量且被原生确认错误的公式作为完整原式/错误证据保全，不改候选或把错误当有效计算。其它未解析公式仍阻断；明确数量差额合计沿原提交记录完整性和原汇总算法比较。出现`diagnostics.native_formula_annotations`时，裁判必须复核原式、原生错误和位置；这是评分端事后观察，不证明候选已验收，取证status=ok不代表公式或产物质量通过。原C6/C7及所有Rubric/权重保持。
+
 `0.10.114` 将已审核的发布来源LF/CRLF身份及报价横向布局Profile接入精确v6 digest，既有contract/source、原字节、数值公式、分母和权重不变。只在新评分Manifest冻结marker，旧未启用的attempt保持原回放，不原地重跑或补分。
 
 `0.10.113` general-custom70-v6新闻工作簿新增两项明确等价表头的独立Profile：精确绑定原contract/source与既有提取器SHA，保留完整单元格、原数值函数、分母和权重，重复字段拒绝。旧Manifest没有新marker时按原字节回放；修复只供同一执行的新独立评分attempt使用。
