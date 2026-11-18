@@ -91,9 +91,15 @@ def _upload(driver, sid, step, job, remote, guest, wgui, encode):
         packed = staging / "payload.zip"
         # Windows kernels can be hundreds of MiB uncompressed. Keep the
         # chunked transfer within the step budget without changing file hashes.
-        with zipfile.ZipFile(packed, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=1) as archive:
+        with zipfile.ZipFile(packed, "w") as archive:
             for path in sorted(files):
-                archive.write(payload / path, path)
+                # A resumed upload can reuse earlier WGUI jobs. Keep the same
+                # archive bytes even when files were extracted at a new time.
+                entry = zipfile.ZipInfo(path)
+                entry.compress_type = zipfile.ZIP_DEFLATED
+                entry.file_size = (payload / path).stat().st_size
+                with (payload / path).open("rb") as source, archive.open(entry, "w") as target:
+                    shutil.copyfileobj(source, target)
         contract = {"invocation": job["invocation"], "files": files, "step": recipe,
                     "package_sha256": file_sha256(packed)}
 

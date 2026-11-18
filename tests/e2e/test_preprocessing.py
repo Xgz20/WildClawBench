@@ -2,6 +2,7 @@ import base64
 import hashlib
 import io
 import json
+import os
 import struct
 import tempfile
 from pathlib import Path, PureWindowsPath
@@ -29,10 +30,15 @@ class PreprocessingTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             driver = SimpleNamespace(batch=Path(directory), client=Mock(), _checked_job=Mock(), checkpoint=Mock())
             contents = bytes(range(256)) * 2
+            stage_count = 0
 
             def make_payload(batch, step, target):
+                nonlocal stage_count
                 target.mkdir()
-                (target / "payload.bin").write_bytes(contents)
+                file = target / "payload.bin"
+                file.write_bytes(contents)
+                stage_count += 1
+                os.utime(file, (1_750_000_000 + stage_count * 60,) * 2)
                 return {"kind": "acode"}
 
             with (patch("src.e2e.windows_preprocess.build_payload", side_effect=make_payload),
@@ -40,6 +46,12 @@ class PreprocessingTests(unittest.TestCase):
                   patch("src.e2e.windows_preprocess.CHUNKS_PER_UPLOAD", 2)):
                 _upload(driver, "session", {}, {"index": 0, "invocation": "fixture"}, "/tmp/fixture",
                         PureWindowsPath(r"C:\fixture"), "wgui", str)
+                first_upload = driver.client.upload.call_args_list[:]
+                driver.client.upload.reset_mock()
+                _upload(driver, "session", {}, {"index": 0, "invocation": "fixture"}, "/tmp/fixture",
+                        PureWindowsPath(r"C:\fixture"), "wgui", str)
+            self.assertEqual([request.args for request in driver.client.upload.call_args_list],
+                             [request.args for request in first_upload])
             by_dir = {}
             for request in driver.client.upload.call_args_list:
                 _, path, contents_part = request.args
