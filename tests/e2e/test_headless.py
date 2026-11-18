@@ -10,7 +10,7 @@ from unittest.mock import patch
 
 from src.e2e.common import E2EError, file_sha256
 from src.e2e.headless import normalize_config, inspect_container, owned, _private_environment, _check_files, _result_row
-from src.e2e.headless import _admit_immutable_inputs
+from src.e2e.headless import _admit_immutable_inputs, score_one
 from src.e2e.artifacts import remove_temporary_tree
 
 
@@ -74,6 +74,24 @@ class HeadlessContractTests(unittest.TestCase):
                 score_file.write_text('{}')
                 with self.assertRaisesRegex(E2EError, 'RESULT_DRIFT'):
                     _result_row(item, {'verified': True, 'verification': {}, 'score_sha256': checksum}, root)
+
+    @patch('src.e2e.headless.docker')
+    def test_unready_terminal_execution_keeps_its_failure_without_a_worker(self, docker):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'batch/execution').mkdir(parents=True)
+            reason = 'CONTROLLER_EXECUTION_INCOMPLETE: task_timeout'
+            item = {'key': 'k', 'task_id': 't', 'unit_id': 'u', 'run_index': 1, 'attempt_id': 'original',
+                    'phase': 'FAILED', 'execution_root': 'execution', 'error': {'message': reason}}
+            args = (root / 'batch', item, {}, self.config(), root / 'job', 'job', 'synthetic-key')
+            result = score_one(*args)
+            self.assertEqual(result['status'], 'unscored')
+            self.assertEqual(result['error'], reason)
+            self.assertTrue(result['execution_not_ready'])
+            self.assertTrue(result['container_released'])
+            self.assertIsNone(result['total_score'])
+            self.assertEqual(score_one(*args), result)
+            docker.assert_not_called()
 
     def test_explicit_score_skill_freezes_complete_inventory_and_rejects_drift(self):
         with tempfile.TemporaryDirectory() as directory:

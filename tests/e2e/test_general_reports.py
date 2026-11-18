@@ -13,13 +13,13 @@ def report():
 
 
 class GeneralReportExportTests(unittest.TestCase):
-    def unavailable(self, **changes):
+    def unavailable(self, outcome=None, **changes):
         core=SimpleNamespace(RESOURCE_FIELDS=[],resolve_file=None,sha256_file=None,
              report_views=SimpleNamespace(checkpoints=lambda *args:{}))
         item={'attempt_id':'attempt','phase':'FAILED','key':'key',
               'error':{'code':'E2EError','message':'FROZEN_TASK_INPUT_DRIFT'},**changes}
         return _unavailable_row(core,item,{'task_id':'task'},
-            {'unit_id':'unit','harness':'astronstudio','model':'spark'},None)
+            {'unit_id':'unit','harness':'astronstudio','model':'spark'},outcome)
 
     def test_known_predispatch_input_failure_is_infrastructure_without_score_zero(self):
         row=self.unavailable()
@@ -37,6 +37,16 @@ class GeneralReportExportTests(unittest.TestCase):
                 self.assertEqual(row['score_status'],'unscored')
                 self.assertIsNotNone(row['invalid_reason'])
                 self.assertIsNone(row['total_score'])
+
+    def test_execution_timeout_has_no_evaluator_failure_or_synthetic_score(self):
+        reason = 'CONTROLLER_EXECUTION_INCOMPLETE: task_timeout'
+        row = self.unavailable(outcome={'execution_not_ready': True, 'error': reason},
+                               dispatch_armed_at='observed', error={'message': reason})
+        self.assertEqual(row['execution_status'], 'timeout')
+        self.assertEqual(row['score_status'], 'unscored')
+        self.assertEqual(row['invalid_reason'], reason)
+        self.assertIsNone(row['evaluation'])
+        self.assertIsNone(row['total_score'])
 
     def test_zero_null_and_round_half_up_are_distinct(self):
         self.assertEqual(cell_text(0.0,'0.00'),'0.00')

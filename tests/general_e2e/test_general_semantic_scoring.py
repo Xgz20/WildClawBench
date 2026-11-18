@@ -167,8 +167,12 @@ class GeneralSemanticScoringTests(unittest.TestCase):
                 evidence_ids=ids, review={'query_ids':queries,'supporting_evidence_checked':True,
                     'contradicting_evidence_checked':True,'absence_claim':False,'complete_event_range_checked':False})
         source = attempt/'synthetic-response.json'
+        response.pop('schema_version')
         source.write_text(json.dumps(response,ensure_ascii=False),encoding='utf-8')
-        RUNTIME.record_semantics_attempt(attempt_root=attempt,response_path=source)
+        recorded = RUNTIME.record_semantics_attempt(attempt_root=attempt,response_path=source)
+        self.assertEqual(recorded['audit']['response_transport']['restored_schema_version'],
+                         RUNTIME.SEMANTIC_RESPONSE_SCHEMA)
+        self.assertEqual((attempt/'semantic/response.json').read_bytes(), source.read_bytes())
         result = RUNTIME.finalize_score_attempt(attempt_root=attempt)
         self.assertAlmostEqual(result['score']['result']['total_score'], .8)
         RUNTIME._remove_tree(attempt/'runtime')

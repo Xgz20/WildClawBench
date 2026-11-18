@@ -152,8 +152,10 @@ def _result_row(item, state, work: Path):
                 'total_score': score['result']['total_score'], 'judge': score.get('judge'),
                 'agent_used': result['agent_used'], 'agent_identity': result.get('agent_identity'), 'verification': state['verification'], 'artifacts': state.get('artifacts', {})}
     error = state.get('error')
-    status = 'evaluation_error' if error and error != 'SCORING_CANCELLED' else 'unscored'
+    execution_not_ready = state.get('phase') == 'execution_unscored'
+    status = 'evaluation_error' if error and error != 'SCORING_CANCELLED' and not execution_not_ready else 'unscored'
     return {**common, 'status': status, 'total_score': None, 'error': error or 'SCORING_NOT_FINISHED',
+            **({'execution_not_ready': True} if execution_not_ready else {}),
             'agent_used': (work / 'agent-process.json').is_file(), 'artifacts': state.get('artifacts', {})}
 
 
@@ -204,7 +206,13 @@ def score_one(batch: Path, item: dict, manifest: dict, config: dict, root: Path,
     if not state:
         state = {'schema': SCHEMA, 'job_id': job_id, 'container_name': name,
                  'request_sha256': request_hash, 'phase': 'preparing', 'container_released': False}
+        if item['phase'] in {'FAILED', 'CANCELLED'} and not (inside(batch, item['execution_root']) / 'execution-ready.json').exists():
+            failure = item.get('error') or {}
+            state.update(phase='execution_unscored', container_released=True,
+                         error=failure.get('message') or failure.get('code') or 'EXECUTION_' + item['phase'])
         atomic_json(state_file, state)
+    if state['phase'] == 'execution_unscored':
+        return _result_row(item, state, work)
     if state.get('phase') == 'completed' and state.get('container_released'):
         verify_ready(batch, item, manifest)
         if digest(inventory(work / 'context')) != state['source_context_sha256'] or digest(inventory(work / 'skills')) != state['skills_sha256']:

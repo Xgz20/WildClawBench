@@ -78,6 +78,7 @@ import warranty_recovery_layout
 import service_report_layout
 import procurement_explicit_labels
 import procurement_annotation_formula
+import procurement_signed_summary
 import data_table_representations
 import funnel_summary_tables
 import answer_delivery
@@ -96,7 +97,7 @@ API_JUDGE_RESPONSE_SCHEMA = "wildclawbench.general-e2e-api-judge-response/v1"
 API_JUDGE_AUDIT_SCHEMA = "wildclawbench.general-e2e-api-judge-audit/v1"
 SEMANTIC_CATALOG_SCHEMA = "wildclawbench.general-e2e-semantic-evidence-catalog/v1"
 SEMANTIC_REQUEST_SCHEMA = "wildclawbench.general-e2e-semantic-request/v1"
-SEMANTIC_RESPONSE_SCHEMA = "wildclawbench.general-e2e-codex-judge-response/v1"
+SEMANTIC_RESPONSE_SCHEMA = native_response_transport.RESPONSE_SCHEMA
 SEMANTIC_QUERY_LOG_SCHEMA = "wildclawbench.general-e2e-semantic-query-log/v1"
 SEMANTIC_AUDIT_SCHEMA = "wildclawbench.general-e2e-semantic-audit/v1"
 SCORE_AUDIT_SCHEMA = "wildclawbench.general-e2e-score-audit/v1"
@@ -2112,6 +2113,8 @@ def prepare_attempt(
                    if news_header_equivalence.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'procurement_annotation_formula_profile':procurement_annotation_formula.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if procurement_annotation_formula.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'procurement_signed_summary_profile': signed_summary_profile}
+                   if (signed_summary_profile := procurement_signed_summary.marker(contract, _sha256_bytes(contract_bytes), dataset)) else {}),
                 **({'work_order_equivalent_header_profile':work_order_equivalent_headers.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if work_order_equivalent_headers.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 "reference_guard": reference_guard,
@@ -3039,6 +3042,7 @@ def _effective_rule_source(
         corrected, receipt = shared_source_repairs.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_explicit_labels.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_annotation_formula.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = procurement_signed_summary.effective_source(manifest, source, corrected, receipt)
         corrected, receipt = acl_index_headers.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = work_order_equivalent_headers.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = news_header_equivalence.effective_source(manifest,source,corrected,receipt)
@@ -5488,7 +5492,10 @@ def record_semantics_attempt(
     try:
         if parse_error is not None:
             raise parse_error
-        if not isinstance(response, dict) or response.get("schema_version") != SEMANTIC_RESPONSE_SCHEMA:
+        if not isinstance(response, dict) or (
+            response.get("schema_version") != SEMANTIC_RESPONSE_SCHEMA
+            and not native_response_transport.schema_omission_allowed(manifest, response)
+        ):
             raise ScoringRuntimeError("SEMANTIC_RESPONSE_INVALID", "schema")
         if request.get('evidence_accountability_policy') != execution_accountability.policy(manifest):
             raise ScoringRuntimeError('EVIDENCE_ACCOUNTABILITY_POLICY_DRIFT')
@@ -6076,9 +6083,11 @@ def _verify_semantic_terminal(
             if request.get('response_transport_policy')!=native_response_transport.policy(manifest):
                 raise ScoringRuntimeError('SEMANTIC_RESPONSE_TRANSPORT_POLICY_DRIFT')
             if audit.get('status')=='completed' or 'response_transport' in audit:
-                _,expected_transport=native_response_transport.normalize(manifest,_read_json(paths['response']),_sha256_file(paths['response']))
+                effective,expected_transport=native_response_transport.normalize(manifest,_read_json(paths['response']),_sha256_file(paths['response']))
                 if audit.get('response_transport')!=expected_transport:
                     raise ScoringRuntimeError('SEMANTIC_RESPONSE_TRANSPORT_DRIFT')
+                if audit.get('status')=='completed' and effective.get('schema_version')!=SEMANTIC_RESPONSE_SCHEMA:
+                    raise ScoringRuntimeError('SEMANTIC_RESPONSE_INVALID', 'schema')
         else:
             if audit.get("query_log_sha256") is not None:
                 raise ScoringRuntimeError("SEMANTIC_AUDIT_INVALID", "api query log")
@@ -6735,6 +6744,9 @@ def prepare_rescore_attempt(
                    if news_header_equivalence.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'procurement_annotation_formula_profile':procurement_annotation_formula.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if procurement_annotation_formula.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'procurement_signed_summary_profile': signed_summary_profile}
+                   if (signed_summary_profile := procurement_signed_summary.marker(
+                       _read_json(staging/source_paths['contract']), _sha256_file(staging/source_paths['contract']), source_manifest['dataset'])) else {}),
                 **({'work_order_equivalent_header_profile':work_order_equivalent_headers.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if work_order_equivalent_headers.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 "reference_guard": reference_guard,

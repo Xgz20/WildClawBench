@@ -80,4 +80,39 @@ class ProcurementExplicitLabelsTests(unittest.TestCase):
         self.assertEqual(receipt['prior_correction'],prior)
         self.assertNotIn('procurement-declared-source-totals/v1',fixed)
 
+    def test_v6_signed_summary_preserves_values_and_applies_original_comparisons(self):
+        profile = RUNTIME.procurement_signed_summary
+        manifest = deepcopy(self.manifest)
+        manifest['dataset'] = RUNTIME.procurement_annotation_formula.DATASET
+        manifest['runtime']['procurement_explicit_labels_profile'] = P.marker(self.contract, P.CONTRACT)
+        self.assertIsNone(profile.marker(self.contract, P.CONTRACT, self.manifest['dataset']))
+        manifest['runtime']['procurement_signed_summary_profile'] = profile.marker(
+            self.contract, P.CONTRACT, manifest['dataset'])
+        source, receipt = RUNTIME._effective_rule_source(manifest, self.source)
+        self.assertEqual(receipt['correction_id'], profile.PROFILE)
+        namespace = {}
+        exec(source, namespace)
+        numeric = {'categories': {'qty': {'direction': -1}, 'amount': {'direction': -1}}}
+        records = {'qty': [{'id': 'q', 'values': {'dq': -2}}],
+                   'amount': [{'id': 'a', 'values': {'da': -6}}, {'id': 'b', 'values': {'da': 4}}]}
+        truth = {'qty': {'q'}, 'amount': {'a', 'b'}}
+        table = {'sheet': '汇总', 'kind': 'summary', 'rows': [
+            {'row': 1, 'values': ['指标', '数值', '口径 / 核对说明']},
+            {'row': 2, 'values': ['数量差异合计(入库-采购)', 2, '正为多入、负为少入，单位：件']},
+            {'row': 3, 'values': ['金额正差异合计(多入)', 99, '入库金额>采购金额的部分合计']},
+            {'row': 4, 'values': ['金额负差异合计(少入)', -4, '入库金额<采购金额的部分合计']},
+            {'row': 5, 'values': ['金额负差异合计(少入)', 4, '按绝对值合计']},
+        ]}
+        original = deepcopy(table)
+        # Exercise the installed view in isolation from the pre-existing matrix and CSV readers.
+        namespace['_pss_previous_view'] = lambda tables, *args: (tables.copy(), {}, {}, [])
+        tables, expected, _, audit = namespace['_pl_matrix_view']([table], records, {}, numeric, truth)
+        self.assertEqual(table, original)
+        self.assertEqual(expected, {'pss_quantity_net': 2, 'pss_amount_positive': 6, 'pss_amount_negative': -4})
+        self.assertEqual([entry['location'] for entry in audit], ['汇总!B2', '汇总!B3', '汇总!B4'])
+        self.assertEqual(tables[0]['rows'][2]['values'][1], 99)
+        self.assertEqual(tables[0]['rows'][4], original['rows'][4])
+        self.assertIsNone(namespace['summary_key'](original['rows'][4]['values'][0]))
+        self.assertIsNone(namespace['_pss_deltas'](records, numeric, {'qty': {'other'}}, 'qty', 'dq'))
+
 if __name__=='__main__':unittest.main()
