@@ -4,13 +4,29 @@ import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from 'node:fs/promi
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, parseNativeHttpError, PROFILE, sameRuntimeInstallation, sha, statusUrl, verifyBinding, verifyNativeHttpFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { assertNativeActivity, assertSiblingRuntimeIdle, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, parseNativeHttpError, PROFILE, sameRuntimeInstallation, selectConnectedRuntime, sha, statusUrl, verifyBinding, verifyNativeHttpFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
 import { registeredWorkspaceItems } from '../../tools/report/e2e-shared/loomy/ui.mjs';
 
 const prompt = '仅处理本题 workspace。';
+test('Loomy selects only the backend connected to its exact main process, rejecting ambiguity', () => {
+  const runtimes = [{ pid: 101, endpoint: 'http://127.0.0.1:4998' },
+    { pid: 102, endpoint: 'http://127.0.0.1:4539' }, { pid: 103, endpoint: 'http://127.0.0.1:5026' }];
+  const one = 'p10\nf74\nn127.0.0.1:64603->127.0.0.1:4539\nf76\nn127.0.0.1:64604->127.0.0.1:4539\n';
+  assert.equal(selectConnectedRuntime(runtimes, one).pid, 102);
+  assert.throws(() => selectConnectedRuntime(runtimes, 'p10\nn127.0.0.1:4539\n'), /CONNECTION_AMBIGUOUS/);
+  assert.throws(() => selectConnectedRuntime(runtimes, one + 'n127.0.0.1:64605->127.0.0.1:5026\n'), /CONNECTION_AMBIGUOUS/);
+  assert.throws(() => selectConnectedRuntime([...runtimes, { pid: 104, endpoint: runtimes[1].endpoint }], one), /CONNECTION_AMBIGUOUS/);
+  assert.throws(() => selectConnectedRuntime(runtimes, 'p10\nn127.0.0.1:64603->192.0.2.1:4539\n'), /CONNECTION_AMBIGUOUS/);
+});
+test('Loomy rejects a sibling busy only in a nondefault persisted directory', async () => {
+  await assert.rejects(assertSiblingRuntimeIdle({}, ['/quiet', '/foreign'], async (_runtime, workspace) =>
+    workspace === '/foreign' ? { ses_foreign: { type: 'busy' } } : {}), /FOREIGN_NATIVE_ACTIVITY/);
+  await assert.rejects(assertSiblingRuntimeIdle({}, ['/foreign'], async () => ({ ses_foreign: { type: 'retry' } })), /FOREIGN_NATIVE_ACTIVITY/);
+  await assert.doesNotReject(assertSiblingRuntimeIdle({}, ['/quiet'], async () => ({ ses_old: { type: 'idle' } })));
+});
 test('Loomy selects the exact workspace menu item even if the sidebar repeats its path', () => {
   const workspace = '/unit/task/workspace';
   const node = (role, path, help = '') => ({ role, path, help });

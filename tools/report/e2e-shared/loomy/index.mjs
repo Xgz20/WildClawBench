@@ -10,7 +10,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.12';
+export const COMPONENT_VERSION = '0.1.13';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -211,13 +211,22 @@ export async function captureNativeHttpFailure(context, journal, runtime, native
   return proof;
 }
 
-export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
-  const result = await execute('/bin/ps', ['-axo', 'pid=,ppid=,comm=']);
-  const rows = result.stdout.split('\n').map(line => /^\s*(\d+)\s+(\d+)\s+(.+)$/u.exec(line)).filter(Boolean);
-  const candidates = rows.filter(row => Number(row[2]) === app.pid && (row[3] === 'opencode' || row[3].endsWith('/opencode')));
-  requireValue(candidates.length > 0, 'RUNTIME_NOT_RUNNING');
-  requireValue(candidates.length === 1, 'RUNTIME_PROCESS_AMBIGUOUS');
-  const pid = Number(candidates[0][1]);
+export function selectConnectedRuntime(runtimes, connections) {
+  const ports = new Set(connections.split('\n').flatMap(line => {
+    const match = /^n127\.0\.0\.1:\d+->127\.0\.0\.1:(\d+)$/u.exec(line);
+    return match ? [match[1]] : [];
+  }));
+  const connected = runtimes.filter(row => ports.has(new URL(row.endpoint).port));
+  requireValue(connected.length === 1, 'RUNTIME_MAIN_CONNECTION_AMBIGUOUS');
+  return connected[0];
+}
+
+export async function assertSiblingRuntimeIdle(runtime, directories, readStatus = runtimeStatus) {
+  assertIdle(await readStatus(runtime));
+  for (const workspace of directories) assertIdle(await readStatus(runtime, workspace));
+}
+
+async function inspectRuntimeCandidate(app, database, pid) {
   const [text, listening, started, ownership] = await Promise.all([
     execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-d', 'txt', '-Fn']).catch(() => ({ stdout: '' })),
     execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-iTCP', '-sTCP:LISTEN', '-Fpn']).catch(() => ({ stdout: '' })),
@@ -231,7 +240,7 @@ export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
   requireValue(executable === join(dirname(dirname(app.executable_path)), 'Resources/opencode/darwin-arm64/opencode'), 'RUNTIME_BINARY_NOT_BUNDLED');
   const ports = [...listening.stdout.matchAll(/^n127\.0\.0\.1:(\d+)$/gmu)].map(match => match[1]);
   requireValue(ports.length > 0 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_STARTING');
-  requireValue(ports.length === 1 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_LISTENER_OR_DATABASE_UNOWNED');
+  requireValue(ports.length === 1, 'RUNTIME_LISTENER_OR_DATABASE_UNOWNED');
   const endpoint = 'http://127.0.0.1:' + ports[0];
   const healthResponse = await fetch(endpoint + '/global/health', { signal: AbortSignal.timeout(5000), redirect: 'error' });
   requireValue(healthResponse.ok, 'RUNTIME_HEALTH_UNAVAILABLE');
@@ -239,6 +248,31 @@ export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
   requireValue(health.healthy === true && health.version === '1.14.22', 'RUNTIME_VERSION_UNVERIFIED');
   return { pid, ppid: app.pid, executable, started_at: started.stdout.trim(),
     binary_sha256: sha(await readFile(executable)), endpoint, database, database_owned: true, health_version: health.version };
+}
+
+export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
+  const result = await execute('/bin/ps', ['-axo', 'pid=,ppid=,comm=']);
+  const rows = result.stdout.split('\n').map(line => /^\s*(\d+)\s+(\d+)\s+(.+)$/u.exec(line)).filter(Boolean);
+  const candidates = rows.filter(row => Number(row[2]) === app.pid && (row[3] === 'opencode' || row[3].endsWith('/opencode')));
+  requireValue(candidates.length > 0, 'RUNTIME_NOT_RUNNING');
+  requireValue(candidates.length <= 8, 'RUNTIME_PROCESS_BUDGET_EXCEEDED');
+  const runtimes = await Promise.all(candidates.map(row => inspectRuntimeCandidate(app, database, Number(row[1]))));
+  if (runtimes.length === 1) return runtimes[0];
+  const connections = async () => (await execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(app.pid), '-iTCP', '-sTCP:ESTABLISHED', '-Fpn'])).stdout;
+  const selected = selectConnectedRuntime(runtimes, await connections());
+  const siblings = runtimes.filter(row => row.pid !== selected.pid).sort((a, b) => a.pid - b.pid);
+  // Query every persisted directory on unselected servers: /session/status is
+  // directory scoped. An idle default instance alone does not prove them idle.
+  const native = await captureNative({ database });
+  const directories = [...new Set(native.session_index.map(row => row.directory))];
+  requireValue(directories.length <= 1000, 'RUNTIME_DIRECTORY_BUDGET_EXCEEDED');
+  for (const sibling of siblings) {
+    requireValue(sameRuntimeInstallation(selected, sibling), 'RUNTIME_SIBLING_INSTALLATION_MISMATCH');
+    await assertSiblingRuntimeIdle(sibling, directories);
+  }
+  requireValue(selectConnectedRuntime(runtimes, await connections()).pid === selected.pid, 'RUNTIME_MAIN_CONNECTION_CHANGED');
+  return { ...selected, selection: { profile: 'loomy-main-established-runtime/v1', main_pid: app.pid,
+    connected_endpoint: selected.endpoint, siblings } };
 }
 
 export function statusUrl(runtime, workspace = null) {
