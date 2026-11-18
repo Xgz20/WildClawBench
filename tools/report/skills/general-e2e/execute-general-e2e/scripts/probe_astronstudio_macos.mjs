@@ -786,6 +786,27 @@ LIMIT 1;`],
   };
 }
 
+export async function inspectValidatedRuntimeSnapshot(stateDb, snapshot, attempts) {
+  const source = await stat(stateDb);
+  const sqlite = await loadNodeSqlite();
+  if (!source.isFile() || !sqlite?.DatabaseSync) throw Error("ASTUDIO_SHARED_SNAPSHOT_PROBE_UNAVAILABLE");
+  const query = await querySnapshotWithNodeSqlite(snapshot, sqlite, []);
+  return {
+    path: stateDb,
+    readable: true,
+    source_open_mode: "copy-only",
+    snapshot_backend: "node:sqlite",
+    snapshot_attempts: attempts,
+    integrity_scope: "complete-runtime-tables",
+    integrity_tables: [...SESSION_SNAPSHOT_TABLES],
+    schema_ready: query.missing_required_tables.length === 0,
+    source_size_bytes: source.size,
+    source_modified_at_before_probe: source.mtime.toISOString(),
+    error: null,
+    ...query,
+  };
+}
+
 export async function inspectStateDatabase(stateDb, overrides = {}) {
   if (overrides.databaseValidationScope != null && overrides.databaseValidationScope !== "runtime") {
     throw new Error("未知状态库校验范围");

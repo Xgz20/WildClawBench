@@ -31,6 +31,14 @@ queue digest 覆盖 batch/unit、dataset、manifest SHA、运行配置 digest、
 
 ## Worker 与客户端中断恢复
 
+已绑定的在途任务在同一观察轮共用一份只读副本。状态探针、回合状态与绑定终稿均读这份副本。队列日记的 `queue.observation.snapshot` 记录复制方法、复制、校验和查询耗时。派发时继续使用新鲜快照和完整窗口预检。执行中的诊断保留进程和文本线索，大库诊断可在原生空闲后独立补采。
+
+每次正式 Worker 启动独立的本地原生日志监听器，证据在队列目录 `native-logs/<运行ID>/`。索引记录 inode、偏移、SHA-256、故障附近片段、截断和容量淘汰。原始片段权限为 0600，供本机取证，正式分包使用既有的脱敏诊断。每个监听器的片段有容量上限，回执可核对监听边界与保留范围。
+
+正常收口时，Worker 通知监听器采完最后一轮，记录监听器的退出结果，再释放队列锁。若进程退出时已发布可信终态回执，普通 `--resume` 可复核回执与已退出锁的身份，只解除该锁并留存恢复事件。身份未知、持有者仍在运行或终态回执漂移都会阻断恢复。
+
+已有零发送预备阻塞或等待处理的任务时，普通 `--resume` 在无 owner 锁且任务状态没有变化时返回退出码 5。调用方应停止重试。按已支持的零发送恢复或原回合观察入口核验状态变化后，可以恢复原队列。退出码 3 表示刚遇到需处理的状态。
+
 恢复必须使用同一 unit、run config、queue ID、任务参数和 `--resume`。死亡 Worker 的陈旧锁只在恢复模式清理，并在 history 中登记 `WORKER_PROCESS_LOST / WORKER_RESUMED` 及全部活动 task ID。队列读取各活动题已有 `automation-state.json` 后，只调用单题执行器的 `--resume --observe-once`，不重新走 fresh dispatch。
 
 单题状态已经绑定 `thread_id / turn_id / session_id / cwd` 时，客户端重启后仍按这些身份查询原生状态：若原 turn 仍可继续或已完成，就沿用原 attempt 收口；若原生状态为 `interrupted/cancelled`，则保存 `cancelled` 可信失败。两种结果都不重发 Prompt。客户端尚未恢复到冻结的 loopback CDP 和可见配置时，probe 失败并保留现场。

@@ -16,14 +16,17 @@ import {
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import {appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
-import { isRetryablePreSendFailure } from "./execute_astronstudio_macos.mjs";
+import { inspectValidatedRuntimeSnapshot, probeAstronStudio } from "./probe_astronstudio_macos.mjs";
+import { withQueueObservationSnapshot } from "./lib/astronstudio-state.mjs";
+import { startNativeLogSpool } from "./lib/astronstudio-log-spool.mjs";
+import { isRetryablePreSendFailure, main as observeSingleTask } from "./execute_astronstudio_macos.mjs";
 import { isQuotaError, pristineUnsentAttempt, readQuotaAuthorization, assertQuotaAuthorization, assertRetryableQuotaState,
   recoveryFiles, digest } from './lib/astronstudio-quota-retry.mjs';
 import { verifyFrameworkDispatchRecoveries } from './lib/astronstudio-dispatch-retry.mjs';
 export { acquireWorkerLock, persist as persistQueue };
 
 export const QUEUE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-queue/v1";
-export const QUEUE_WORKER_VERSION = "0.1.3";
+export const QUEUE_WORKER_VERSION = "0.1.4";
 export const QUEUE_REVISION = 1;
 export const UI_SLOTS = 1;
 export const RUN_SLOTS = 3;
@@ -373,7 +376,7 @@ function processIsAlive(pid) {
   }
 }
 
-async function acquireWorkerLock(path, allowStaleRecovery, isAlive = processIsAlive) {
+async function acquireWorkerLock(path, allowStaleRecovery, isAlive = processIsAlive, expectedStaleToken = null) {
   await mkdir(dirname(path), { recursive: true });
   let recovered = false;
   let handle;
@@ -382,7 +385,8 @@ async function acquireWorkerLock(path, allowStaleRecovery, isAlive = processIsAl
   } catch (error) {
     if (error?.code !== "EEXIST") throw error;
     const existing = await readJsonIfPresent(path).catch(() => null);
-    if (!allowStaleRecovery || isAlive(Number(existing?.pid))) {
+    if (!allowStaleRecovery || isAlive(Number(existing?.pid))
+        || (expectedStaleToken && existing?.token !== expectedStaleToken)) {
       throw new Error(`队列 Worker 锁已存在：${path}`);
     }
     await rm(path, { force: true });
@@ -577,7 +581,7 @@ async function archivePreviousReceipt(plan, state, transaction, dependencies) {
   await rm(plan.queueReceiptFile);
 }
 
-async function launchSingleTask(plan, args, taskId, operation, activeSessionIds = [], authorizationPath = null) {
+async function launchSingleTask(plan, args, taskId, operation, activeSessionIds = [], authorizationPath = null, readers = null) {
   const childArgs = [
     SINGLE_TASK_SCRIPT,
     "--unit-root", plan.unitRoot,
@@ -603,6 +607,12 @@ async function launchSingleTask(plan, args, taskId, operation, activeSessionIds 
     childArgs.push("--resume", "--observe-once");
   } else {
     throw new Error(`不支持的单题操作：${operation}`);
+  }
+  if (operation === "observe" && readers) {
+    const code = await observeSingleTask(childArgs.slice(1), {
+      dependencies: readers,
+    });
+    return { code, signal: null, pid: process.pid };
   }
   const child = spawn(process.execPath, childArgs, { stdio: "inherit" });
   return new Promise((resolvePromise, rejectPromise) => {
@@ -655,6 +665,36 @@ async function persist(plan, state, now = new Date().toISOString()) {
   await atomicWriteJson(plan.queueStateFile, state);
   if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) {
     await atomicWriteJson(plan.queueReceiptFile, buildQueueReceipt(plan, state, now));
+  }
+}
+
+async function releaseCompletedQueueStaleOwner(plan, state, isAlive) {
+  const info = await lstat(plan.workerLockFile).catch(error => {
+    if (error.code === "ENOENT") return null;
+    throw error;
+  });
+  if (!info) return;
+  if (!info.isFile()) throw Error("ASTUDIO_COMPLETED_QUEUE_LOCK_INVALID");
+  const bytes = await readFile(plan.workerLockFile);
+  const owner = JSON.parse(bytes);
+  if (!Number.isInteger(owner.pid) || owner.pid <= 0 || !owner.token || !owner.started_at) {
+    throw Error("ASTUDIO_COMPLETED_QUEUE_LOCK_IDENTITY_UNKNOWN");
+  }
+  if (isAlive(owner.pid)) throw Error("ASTUDIO_COMPLETED_QUEUE_OWNER_STILL_RUNNING");
+  const receipt = await readJson(plan.queueReceiptFile);
+  if (!receipt.integrity?.valid || canonicalJson(receipt) !==
+      canonicalJson(buildQueueReceipt(plan, state, receipt.generated_at))) {
+    throw Error("ASTUDIO_COMPLETED_QUEUE_RECEIPT_DRIFT");
+  }
+  const recovered = await acquireWorkerLock(plan.workerLockFile, true, isAlive, owner.token);
+  try {
+    await appendFrameworkEvent(join(plan.unitRoot, ".general-e2e", "diagnostics", "framework-events.jsonl"), {
+      caller: "run_astronstudio_macos_batch", queue_identity: state.identity,
+      event: "queue.completed-owner.recovered",
+      prior_owner_pid: owner.pid, prior_lock_sha256: sha256(bytes),
+    });
+  } finally {
+    await recovered.release();
   }
 }
 
@@ -719,7 +759,23 @@ export async function runQueue(plan, args, overrides = {}) {
       await cachedAuthorization(plan, state, row, transaction);
       await dependencies.recoveryFiles(plan.unitRoot, { ...authorization, path: resolve(args.quotaRetryAuthorization) }, true);
     }
+    await releaseCompletedQueueStaleOwner(plan, state, dependencies.isProcessAlive);
     return state;
+  }
+
+  const taskStateBlocker = /^(PRE_SEND_PREPARATION_BLOCKED:|任务需要人工关注：)/u.test(String(state.error));
+  const pendingQuotaRecovery = state.tasks.some(task => task.quota_recoveries?.length
+    && ["PENDING", "NEEDS_ATTENTION"].includes(task.phase));
+  if (args.resume && state.phase === "NEEDS_ATTENTION" && taskStateBlocker
+      && !pendingQuotaRecovery
+      && !args.retryPreSendTaskId && !args.retryQuotaTaskId && !args.quotaRetryAuthorization
+      && !await lstat(plan.workerLockFile).catch(error => {
+        if (error.code === "ENOENT") return null;
+        throw error;
+      })) {
+    const blockedTasks = canonicalJson(state.tasks);
+    await refreshAutomations(plan, state, dependencies);
+    if (canonicalJson(state.tasks) === blockedTasks) return { ...state, unchanged_blocker: true };
   }
   const now = dependencies.now();
   if (args.resume) recordUnexpectedWorkerLoss(state, dependencies.isProcessAlive, now);
@@ -729,7 +785,16 @@ export async function runQueue(plan, args, overrides = {}) {
       {caller:"run_astronstudio_macos_batch",queue_identity:state.identity,...event});}
     catch(error){state.runtime.audit_error=redactDiagnosticText(error.message).slice(0,300);}
   };
+  const database = plan.runConfig?.state_database?.path;
+  let stopSpool;
   try {
+    if (database && !overrides.runTask) {
+      const spoolRoot = join(plan.queueRoot, "native-logs");
+      await ownedDirectory(plan.unitRoot, spoolRoot);
+      const output = join(spoolRoot, randomUUID());
+      stopSpool = await startNativeLogSpool(database, output);
+      await audit({ event: "queue.native-log-spool.started", path: relativePosix(plan.unitRoot, output) });
+    }
     state.runtime.worker_pid = dependencies.pid;
     state.runtime.worker_started_at = now;
     state.runtime.recovered_stale_lock = lock.recovered;
@@ -952,47 +1017,84 @@ export async function runQueue(plan, args, overrides = {}) {
         return state;
       }
 
-      let observedChange = false;
-      for (const queueTask of running) {
-        const previousPhase = queueTask.phase;
-        let driverResult;
+      const observe = async (runTask) => {
+        let observedChange = false;
+        for (const queueTask of running) {
+          const previousPhase = queueTask.phase;
+          let driverResult;
+          try {
+            driverResult = await runTask(queueTask.task_id, "observe", []);
+          } catch (error) {
+            driverResult = {
+              code: 2,
+              signal: null,
+              error: error instanceof Error ? error.message : String(error),
+            };
+          }
+          queueTask.driver_exit_code = driverResult.code;
+          const automation = await readJsonIfPresent(
+            controlPath(plan, queueTask.task_id, "automation-state.json"),
+          );
+          if (!automation) {
+            queueTask.phase = "NEEDS_ATTENTION";
+            queueTask.error = {
+              code: "DRIVER_STATE_MISSING",
+              message: driverResult.error || "观察阶段缺少 automation-state",
+            };
+          } else {
+            synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
+          }
+          observedChange ||= queueTask.phase !== previousPhase;
+          if(queueTask.phase!==previousPhase)await audit({event:"queue.task.phase-changed",task_id:queueTask.task_id,
+            previous_phase:previousPhase,phase:queueTask.phase,driver_pid:driverResult.pid||null,
+            driver_exit_code:driverResult.code,driver_signal:driverResult.signal||null});
+          state.history.push({
+            at: dependencies.now(),
+            event: "TASK_OBSERVATION_RETURNED",
+            task_id: queueTask.task_id,
+            attempt_id: queueTask.selected_attempt_id,
+            task_phase: queueTask.phase,
+            driver_exit_code: driverResult.code,
+            driver_signal: driverResult.signal || null,
+          });
+          await persist(plan, state, dependencies.now());
+          if (externalQuotaFailure(queueTask)) break;
+        }
+        return observedChange;
+      };
+      let observedChange;
+      if (database && !overrides.runTask && running.length
+          && running.every(task => task.session.thread_id && task.session.turn_id && task.session.session_id)) {
+        let observing = false;
         try {
-          driverResult = await dependencies.runTask(queueTask.task_id, "observe", []);
+          observedChange = await withQueueObservationSnapshot(database, async (readers, metrics, snapshot) => {
+            observing = true;
+            let probe;
+            const observationDependencies = {
+              ...readers,
+              probeAstronStudio: (config, options) => {
+                if (resolve(config.stateDb) !== resolve(database)) throw Error("ASTUDIO_OBSERVATION_SNAPSHOT_SOURCE_MISMATCH");
+                return probe ??= probeAstronStudio(config, {
+                  ...options,
+                  inspectStateDatabase: path => inspectValidatedRuntimeSnapshot(path, snapshot, metrics.snapshot_attempt),
+                });
+              },
+            };
+            const result = await observe(taskId =>
+              launchSingleTask(plan, args, taskId, "observe", [], null, observationDependencies));
+            await audit({ event: "queue.observation.snapshot", tasks: running.map(task => task.task_id), ...metrics });
+            return result;
+          });
         } catch (error) {
-          driverResult = {
-            code: 2,
-            signal: null,
-            error: error instanceof Error ? error.message : String(error),
-          };
+          if (observing) throw error;
+          state.phase = "NEEDS_ATTENTION";
+          state.error = "ASTUDIO_SHARED_OBSERVATION_SNAPSHOT_FAILED";
+          await audit({ event: "queue.observation.snapshot-failed", reason: redactDiagnosticText(error.message) });
+          await persist(plan, state, dependencies.now());
+          return state;
         }
-        queueTask.driver_exit_code = driverResult.code;
-        const automation = await readJsonIfPresent(
-          controlPath(plan, queueTask.task_id, "automation-state.json"),
-        );
-        if (!automation) {
-          queueTask.phase = "NEEDS_ATTENTION";
-          queueTask.error = {
-            code: "DRIVER_STATE_MISSING",
-            message: driverResult.error || "观察阶段缺少 automation-state",
-          };
-        } else {
-          synchronizeTaskFromAutomation(plan, queueTask, automation, dependencies.now());
-        }
-        observedChange ||= queueTask.phase !== previousPhase;
-        if(queueTask.phase!==previousPhase)await audit({event:"queue.task.phase-changed",task_id:queueTask.task_id,
-          previous_phase:previousPhase,phase:queueTask.phase,driver_pid:driverResult.pid||null,
-          driver_exit_code:driverResult.code,driver_signal:driverResult.signal||null});
-        state.history.push({
-          at: dependencies.now(),
-          event: "TASK_OBSERVATION_RETURNED",
-          task_id: queueTask.task_id,
-          attempt_id: queueTask.selected_attempt_id,
-          task_phase: queueTask.phase,
-          driver_exit_code: driverResult.code,
-          driver_signal: driverResult.signal || null,
-        });
-        await persist(plan, state, dependencies.now());
-        if (externalQuotaFailure(queueTask)) break;
+      } else {
+        observedChange = await observe(dependencies.runTask);
       }
       if (!observedChange) await dependencies.sleep(args.pollIntervalMs);
     }
@@ -1003,8 +1105,15 @@ export async function runQueue(plan, args, overrides = {}) {
     await persist(plan, state, dependencies.now());
     throw error;
   } finally {
-    await audit({event:"queue.worker.stopped",phase:state.phase,error:state.error||null});
-    await lock.release();
+    try {
+      if (stopSpool) {
+        const exitCode = await stopSpool();
+        await audit({ event: "queue.native-log-spool.stopped", exit_code: exitCode });
+      }
+      await audit({event:"queue.worker.stopped",phase:state.phase,error:state.error||null});
+    } finally {
+      await lock.release();
+    }
   }
 }
 
@@ -1035,9 +1144,10 @@ export async function main(argv = process.argv.slice(2), overrides = {}) {
       tasks: state.tasks,
       queue_state: plan.queueStateFile,
       queue_receipt: plan.queueReceiptFile,
+      ...(state.unchanged_blocker ? { unchanged_blocker: true } : {}),
     }, null, 2));
     if (new Set(["COMPLETED", "COMPLETED_WITH_FAILURES"]).has(state.phase)) return 0;
-    if (state.phase === "NEEDS_ATTENTION") return 3;
+    if (state.phase === "NEEDS_ATTENTION") return state.unchanged_blocker ? 5 : 3;
     return 2;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));

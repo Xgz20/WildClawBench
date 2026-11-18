@@ -140,7 +140,7 @@ async function captureDatabases(config,state,center) {
   return result;
 }
 
-export async function captureRuntimeDiagnostics(config,state,{reason="observation",force=false,nativeSession=null,
+export async function captureRuntimeDiagnostics(config,state,{reason="observation",force=false,nativeSession=null,deferDatabaseCapture=false,
   intervalMs=30_000,maxBytes=16*1024*1024,processSnapshot=snapshotDarwinTaskProcesses,readConfig=readRuntimeConfig,
   databases=captureDatabases}={}) {
   const started=process.hrtime.bigint();
@@ -232,7 +232,9 @@ export async function captureRuntimeDiagnostics(config,state,{reason="observatio
     if(force||processChanged||unseen.length) {
       emergency=true;
       capture.escalation={forced:force,process_identity_changed:processChanged,new_alarm_count:unseen.length};
-      capture.databases=await databases(runtime,state,nativeSession?.completed_at||state.execution.finished_at||now);
+      const center=nativeSession?.completed_at||state.execution.finished_at||now;
+      if(deferDatabaseCapture)capture.database_capture_deferred={reason:"execution-stage",center};
+      else capture.databases=await databases(runtime,state,center);
     }
   } else capture.unavailable.push({source:"run-config",reason:"frozen-runtime-config-unavailable"});
   capture.finished_at=new Date().toISOString();

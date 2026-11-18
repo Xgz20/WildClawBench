@@ -812,6 +812,7 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
     }
   }
   if (!stateDatabase) throw new Error("STATE_DATABASE_MISSING");
+  await overrides.assertArchiveAllowed?.({ stateFile, state, stateDatabase });
   const outputDir = resolve(options.outputDir || join(dirname(stateFile), "trace"));
   const nativeLog = options.nativeProviderLogManifest
     ? await readBoundNativeLogBundle(resolve(options.nativeProviderLogManifest), state, stateBytes) : null;
@@ -1024,13 +1025,13 @@ export async function archiveAstronStudioTrace(options, overrides = {}) {
   }
 }
 
-export async function main() {
+export async function main(overrides = {}) {
   const parsed = parseArgs(process.argv.slice(2));
   if (parsed.help) {
     process.stdout.write(`${usage()}\n`);
     return;
   }
-  const result = await archiveAstronStudioTrace(parsed);
+  const result = await archiveAstronStudioTrace(parsed, overrides);
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 

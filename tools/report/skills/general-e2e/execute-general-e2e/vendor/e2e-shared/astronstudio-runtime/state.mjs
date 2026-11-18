@@ -172,9 +172,12 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
     const root = await mkdtemp(join(tmpdir(), "general-e2e-astudio-execute-"));
     const snapshot = join(root, "state.sqlite");
     try {
-      await copySnapshotFile(source, snapshot);
+      const copyStarted = performance.now();
+      const copy = await copySnapshotFile(source, snapshot);
       await copyIfPresent(`${source}-wal`, `${snapshot}-wal`);
       await copyIfPresent(`${source}-shm`, `${snapshot}-shm`);
+      const copyMs = performance.now() - copyStarted;
+      const checkStarted = performance.now();
       // High-frequency observations validate every complete table they read.
       // Probe and formal trace archival retain their whole-database check.
       for (const table of tables) {
@@ -182,7 +185,10 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
         const integrity = String(Object.values(integrityRows[0] || {})[0] || "");
         if (integrityRows.length !== 1 || integrity !== "ok") throw new Error(`状态库快照 ${table} quick_check=${integrity || "empty"}`);
       }
-      return await operation(snapshot, overrides);
+      return await operation(snapshot, overrides, {
+        copy_method: copy.method, copy_ms: copyMs,
+        quick_check_ms: performance.now() - checkStarted, snapshot_attempt: attempt,
+      });
     } catch (error) {
       lastError = error;
     } finally {
@@ -262,6 +268,51 @@ async function readNativeSessionsSnapshot(snapshot, overrides) {
 export async function queryNativeSessions(stateDatabase, overrides = {}) {
   return withStateSnapshot(stateDatabase,
     snapshot => readNativeSessionsSnapshot(snapshot, overrides), overrides, SESSION_SNAPSHOT_TABLES);
+}
+
+export async function withQueueObservationSnapshot(stateDatabase, observe, overrides = {}) {
+  const source = resolve(stateDatabase);
+  const outcome = await withStateSnapshot(source, async (snapshot, _options, metrics) => {
+    const started = performance.now();
+    const sessions = await readNativeSessionsSnapshot(snapshot, overrides);
+    metrics.sessions_query_ms = performance.now() - started;
+    let messagesVerified;
+    const assertSource = path => {
+      if (resolve(path) !== source) throw Error("ASTUDIO_OBSERVATION_SNAPSHOT_SOURCE_MISMATCH");
+    };
+    // Snapshot retries must never replay observers that already wrote task state.
+    try {
+      const result = await observe({
+        queryNativeSessions: async path => {
+          assertSource(path);
+          return sessions;
+        },
+        queryTerminalFinalResponse: async (path, threadId, turnId) => {
+          assertSource(path);
+          messagesVerified ??= (async () => {
+            const checkStarted = performance.now();
+            const rows = await querySnapshot(snapshot, 'PRAGMA quick_check("projection_thread_messages");', overrides);
+            metrics.messages_check_ms = performance.now() - checkStarted;
+            if (rows.length !== 1 || Object.values(rows[0])[0] !== "ok") {
+              throw Error("ASTUDIO_OBSERVATION_SNAPSHOT_MESSAGES_INVALID");
+            }
+          })();
+          await messagesVerified;
+          const queryStarted = performance.now();
+          try {
+            return await readTerminalFinalResponseSnapshot(snapshot, threadId, turnId, overrides);
+          } finally {
+            metrics.final_query_ms = (metrics.final_query_ms ?? 0) + performance.now() - queryStarted;
+          }
+        },
+      }, metrics, snapshot);
+      return { result };
+    } catch (error) {
+      return { error };
+    }
+  }, overrides, SESSION_SNAPSHOT_TABLES);
+  if ("error" in outcome) throw outcome.error;
+  return outcome.result;
 }
 
 export async function queryNativeRuntimeSafety(stateDatabase, overrides = {}) {
@@ -441,10 +492,9 @@ WHERE threads.thread_id = ${sqlString(threadId)}
 `, overrides), overrides, ["projection_threads", "projection_projects"]);
 }
 
-export async function queryTerminalFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
+async function readTerminalFinalResponseSnapshot(snapshot, threadId, turnId, overrides) {
   if (!threadId || !turnId) return { ready: false, text: "", reason: "missing_identity" };
-  return withStateSnapshot(stateDatabase, async (snapshot) => {
-    const rows = await querySnapshot(snapshot, `
+  const rows = await querySnapshot(snapshot, `
 SELECT turns.assistant_message_id AS terminal_message_id,
   messages.message_id, messages.text, messages.role, messages.is_streaming
 FROM projection_turns AS turns
@@ -455,15 +505,21 @@ WHERE turns.thread_id = ${sqlString(threadId)}
   AND turns.turn_id = ${sqlString(turnId)} AND turns.state = 'completed'
   AND turns.checkpoint_turn_count IS NULL;
 `, overrides);
-    const row = rows[0];
-    if (rows.length !== 1 || typeof row?.terminal_message_id !== "string"
-      || !row.terminal_message_id || row.message_id !== row.terminal_message_id
-      || row.role !== "assistant" || row.is_streaming !== 0 || typeof row.text !== "string") {
-      return { ready: false, text: "", reason: "bound_terminal_message_not_materialized" };
-    }
-    return { ready: true, text: row.text.trim(), message_id: row.message_id,
-      source: "completed-turn.assistant_message_id" };
-  }, overrides, ["projection_turns", "projection_thread_messages"]);
+  const row = rows[0];
+  if (rows.length !== 1 || typeof row?.terminal_message_id !== "string"
+    || !row.terminal_message_id || row.message_id !== row.terminal_message_id
+    || row.role !== "assistant" || row.is_streaming !== 0 || typeof row.text !== "string") {
+    return { ready: false, text: "", reason: "bound_terminal_message_not_materialized" };
+  }
+  return { ready: true, text: row.text.trim(), message_id: row.message_id,
+    source: "completed-turn.assistant_message_id" };
+}
+
+export async function queryTerminalFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {
+  if (!threadId || !turnId) return { ready: false, text: "", reason: "missing_identity" };
+  return withStateSnapshot(stateDatabase,
+    snapshot => readTerminalFinalResponseSnapshot(snapshot, threadId, turnId, overrides),
+    overrides, ["projection_turns", "projection_thread_messages"]);
 }
 
 export async function queryFinalResponse(stateDatabase, threadId, turnId, overrides = {}) {

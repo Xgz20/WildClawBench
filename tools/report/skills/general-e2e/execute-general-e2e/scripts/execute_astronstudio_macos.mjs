@@ -561,7 +561,9 @@ async function persist(config, state) {
 
 async function diagnose(config,state,dependencies,reason,{force=false,nativeSession=null}={}) {
   try {
-    const reference=await dependencies.captureRuntimeDiagnostics(config,state,{reason,force,nativeSession});
+    const reference=await dependencies.captureRuntimeDiagnostics(config,state,{
+      reason,force,nativeSession,deferDatabaseCapture:config.detachAfterSubmit||config.observeOnce,
+    });
     if(reference)state.evidence.runtime_diagnostics=reference;
   } catch(error) {
     // Evidence collection must not change task outcome or trigger a resend.

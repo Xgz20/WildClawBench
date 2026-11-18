@@ -207,6 +207,16 @@ test("five tasks fill default three slots and dynamically refill in manifest ord
     assert.equal(receipt.run_slots, 3);
     assert.equal(receipt.integrity.valid, true);
     assert.equal(receipt.integrity.no_duplicate_dispatch, true);
+    const completedState = await readFile(current.plan.queueStateFile, "utf8");
+    await writeFile(current.plan.workerLockFile, JSON.stringify({
+      pid: 9876, token: "known-dead-owner", started_at: receipt.generated_at,
+    }));
+    await runQueue(current.plan, { ...current.args, resume: true }, {
+      isProcessAlive: () => false,
+      runTask: async () => assert.fail("completed stale owner recovery started a task"),
+    });
+    assert.equal(await readFile(current.plan.queueStateFile, "utf8"), completedState);
+    await assert.rejects(readFile(current.plan.workerLockFile), { code: "ENOENT" });
   } finally {
     await rm(current.unitRoot, { recursive: true, force: true });
   }
@@ -232,6 +242,12 @@ test('a zero-send preparation fault drains accepted work without cascading even 
     assert.equal(result.tasks[1].selected_attempt_id,'unsent-original');
     assert.ok(result.tasks.slice(2).every(t=>t.phase==='PENDING'));
     assert.deepEqual(calls.filter(c=>c[1]==='dispatch').map(c=>c[0]),TASK_IDS.slice(0,2));
+    const blockedBytes = await readFile(current.plan.queueStateFile, "utf8");
+    const repeated = await runQueue(current.plan, { ...current.args, resume: true }, {
+      runTask: async () => assert.fail("unchanged zero-send blocker started a task"),
+    });
+    assert.equal(repeated.unchanged_blocker, true);
+    assert.equal(await readFile(current.plan.queueStateFile, "utf8"), blockedBytes);
   } finally {await rm(current.unitRoot,{recursive:true,force:true});}
 });
 
@@ -367,6 +383,11 @@ test("needs-attention preserves identities of other active tasks", async () => {
     assert.equal(result.tasks[0].dispatch_attempt_count, 1);
     assert.equal(result.tasks[1].phase, "RUNNING");
     assert.equal(result.tasks[2].phase, "RUNNING");
+    const repeated = await runQueue(current.plan, { ...current.args, resume: true }, {
+      runTask: async () => assert.fail("unchanged task blocker started a new worker"),
+    });
+    assert.equal(repeated.unchanged_blocker, true);
+    assert.deepEqual(repeated.active_task_ids, TASK_IDS.slice(1, 3));
   } finally {
     await rm(current.unitRoot, { recursive: true, force: true });
   }

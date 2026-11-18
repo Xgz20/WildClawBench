@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { queryNativeSessions, queryTerminalFinalResponse } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
+import { queryNativeSessions, queryTerminalFinalResponse, withQueueObservationSnapshot } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
 
 test('mapped stopped error head ignores only a strictly bound usage-only reopened ledger',async()=>{
   const root=await mkdtemp(join(tmpdir(),'astronstudio-closed-metric-tail-')),file=join(root,'state.sqlite'),db=new DatabaseSync(file);
@@ -32,6 +32,14 @@ test('mapped stopped error head ignores only a strictly bound usage-only reopene
     add.run('thread','head','turn.completed',tail,10,JSON.stringify(terminal));add.run('thread','head','turn.gateway-usage.updated',tail,11,JSON.stringify(metric));
     const status=async()=>(await queryNativeSessions(file))[0].status;
     assert.equal(await status(),'error');
+    await withQueueObservationSnapshot(file, async (reader, metrics) => {
+      assert.equal(metrics.snapshot_attempt, 1);
+      assert.equal((await reader.queryNativeSessions(file))[0].status, 'error');
+      db.exec("UPDATE provider_session_runtime SET status='running'");
+      assert.equal((await reader.queryNativeSessions(file))[0].status, 'error');
+      await assert.rejects(reader.queryNativeSessions(join(root, 'other.sqlite')), /SOURCE_MISMATCH/);
+      db.exec("UPDATE provider_session_runtime SET status='stopped'");
+    });
     add.run('thread','head','content.delta',end,1,'{}');
     assert.equal(await status(),'error','historical model activity precedes the bound terminal and remains preserved');
     db.exec('DELETE FROM provider_runtime_events WHERE sequence=1');
