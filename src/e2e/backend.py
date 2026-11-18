@@ -547,7 +547,6 @@ print(json.dumps({
         changed=[path for path in after if before.get(path)!=after[path]]
         native_dir=self.staging/'native'/stage;native_dir.mkdir(parents=True,exist_ok=True)
         product_path='/logs/agent/native-trajectory/workbuddy-trajectory/report.json'
-        diagnostics_path='/logs/artifacts/collect/evidence/diagnostics.json'
         product=json.loads(self.client.download(sid,product_path))
         # The WGUI guest retains model/Max/workspace observations under its artifact root.
         diagnostics=self._read_workbuddy_diagnostics(sid)
@@ -569,7 +568,15 @@ print(json.dumps({
 
     def _read_workbuddy_diagnostics(self,sid):
         output=self.client.windows_download(sid,r'C:\ProgramData\WGUI\staging\diagnostics.json')
-        return json.loads(output.decode('utf-8-sig'))
+        diagnostics = json.loads(output.decode("utf-8-sig"))
+        # The Windows file proxy wraps JSON files in its API response on some deployments.
+        if isinstance(diagnostics, dict) and {"code", "msg", "data"} <= diagnostics.keys():
+            if type(diagnostics["code"]) is not int or diagnostics["code"] != 0:
+                raise E2EError("WORKBUDDY_DIAGNOSTICS_DOWNLOAD_REJECTED")
+            diagnostics = diagnostics["data"]
+        if not isinstance(diagnostics, dict):
+            raise E2EError("WORKBUDDY_DIAGNOSTICS_INVALID")
+        return diagnostics
 
 
 DRIVERS[('agentcube','workbuddy')]=WorkBuddySandboxDriver

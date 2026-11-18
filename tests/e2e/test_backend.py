@@ -19,6 +19,18 @@ from src.e2e.common import E2EError, digest
 
 
 class BackendTests(unittest.TestCase):
+    def test_workbuddy_diagnostics_accepts_raw_json_and_windows_proxy_envelope(self):
+        driver = object.__new__(WorkBuddySandboxDriver)
+        driver.client = Mock()
+        diagnostics = {"model": "GLM-5.3", "workspace": GUEST_WORKSPACE, "max_mode": False}
+        for payload in (diagnostics, {"code": 0, "msg": "", "data": diagnostics}):
+            with self.subTest(payload=payload):
+                driver.client.windows_download.return_value = json.dumps(payload).encode()
+                self.assertEqual(driver._read_workbuddy_diagnostics("sid"), diagnostics)
+        driver.client.windows_download.return_value = b'{"code": 10005, "msg": "", "data": null}'
+        with self.assertRaisesRegex(E2EError, "WORKBUDDY_DIAGNOSTICS_DOWNLOAD_REJECTED"):
+            driver._read_workbuddy_diagnostics("sid")
+
     def test_workbuddy_full_access_works_with_controllers_that_enable_it_natively(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
