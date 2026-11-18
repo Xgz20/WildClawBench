@@ -12,8 +12,9 @@ import native_writer_cleanup_failure
 import registered_rule_source_failures as source_failures
 import news_header_equivalence
 import prepared_v6_profile_failure
+import work_order_equivalent_headers
 
-KINDS={aggregation_runtime_failure.ERROR_KIND,source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,prepared_v6_profile_failure.ERROR_KIND}
+KINDS={aggregation_runtime_failure.ERROR_KIND,source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,prepared_v6_profile_failure.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
@@ -24,6 +25,9 @@ def failure_kind(rt,root,state,task):
     if contract.get('task_id')==news_header_equivalence.TASK:
         news_header_equivalence.validate_blocker(rt,attempt,m,contract,task)
         return news_header_equivalence.ERROR_KIND
+    if contract.get('task_id')==work_order_equivalent_headers.TASK:
+        work_order_equivalent_headers.validate_blocker(rt,attempt,m,contract,task)
+        return work_order_equivalent_headers.ERROR_KIND
     if contract.get('task_id')==sterilization_quote_layout.TASK and task.get('thread') is None:
         prepared_v6_profile_failure.evidence(rt,attempt,m,contract,task)
         return prepared_v6_profile_failure.ERROR_KIND
@@ -87,7 +91,7 @@ def locks(rt,root,task,kind=None):
     attempt=root/task['attempt_path'];paths=[attempt/'attempt-manifest.json',root/task['prompt_path']]
     m=rt._read_json(attempt/'attempt-manifest.json')
     selected_kind=kind or (task.get('framework_failure') or {}).get('kind')
-    if (selected_kind in {aggregation_runtime_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND}
+    if (selected_kind in {aggregation_runtime_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND}
             or selected_kind==release_baseline_text.ERROR_KIND and m.get('dataset')==release_baseline_text.V6_DATASET):
         # Retain unpublished judge drafts and its query exports, not just the semantic folder.
         paths.extend(p for p in attempt.glob('*.json') if p.is_file())
@@ -97,7 +101,7 @@ def locks(rt,root,task,kind=None):
     for folder in ['worker','semantic','rule-review','infrastructure-evidence']:
         base=attempt/folder
         if base.exists():paths.extend(p for p in base.rglob('*') if p.is_file() and 'runtime' not in p.relative_to(base).parts)
-    if (kind or (task.get('framework_failure') or {}).get('kind'))==news_header_equivalence.ERROR_KIND:
+    if selected_kind in {news_header_equivalence.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND}:
         paths.extend(p for p in (attempt/'grader-evidence').rglob('*') if p.is_file())
     paths.extend(p for p in [attempt/'rule-audit.json',attempt/'rule-component.json',attempt/'rule-source-correction.json'] if p.exists())
     paths.extend(source_failures.partial_evidence_paths(attempt,task['task_id']))
@@ -143,6 +147,12 @@ def verify(rt,root,state,task):
             rt._read_json(root/task['attempt_path']/m['paths']['contract']),task)
         if proof.get('prepared_registration_failure')!=observed or proof.get('semantic_judging_performed') is not False:
             raise ValueError('PREPARED_V6_PROFILE_PROOF_DRIFT')
+    if proof['kind']==work_order_equivalent_headers.ERROR_KIND:
+        m=rt._read_json(root/task['attempt_path']/'attempt-manifest.json')
+        observed=work_order_equivalent_headers.validate_blocker(rt,root/task['attempt_path'],m,
+            rt._read_json(root/task['attempt_path']/m['paths']['contract']),task)
+        if (proof.get('work_order_header_review')!=observed or proof.get('semantic_judging_performed') is not True
+                or proof.get('semantic_result_published') is not False):raise ValueError('WORK_ORDER_HEADER_PROOF_DRIFT')
     if proof['kind'] in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
         result=(source_failures.evidence(rt,root/task['attempt_path'],rt._read_json(root/task['attempt_path']/'attempt-manifest.json'),
             rt._read_json(root/task['attempt_path']/rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['paths']['contract']),task)
@@ -152,7 +162,7 @@ def verify(rt,root,state,task):
                 raise ValueError('RULE_SOURCE_PREWORKER_OWNER_INVALID')
         elif (proof.get('owner_exit',{}).get('pid')!=result.get('worker',{}).get('pid')
                 or proof.get('owner_exit',{}).get('ps_no_process') is not True):raise ValueError('DISCOVERY_OWNER_EXIT_PROOF_INVALID')
-    if (proof['kind'] in {aggregation_runtime_failure.ERROR_KIND,release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND}
+    if (proof['kind'] in {aggregation_runtime_failure.ERROR_KIND,release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND}
             or proof['kind']==source_failures.ERROR_KIND and task.get('thread') is not None):
         native=proof.get('native_context',{})
         if (native.get('status')!='PASS' or native.get('unfinished_turns')!=[]
@@ -167,7 +177,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
     expected_phase={aggregation_runtime_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if source_failures.registered(task_id) else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
         declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION',
-        sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING',native_writer_cleanup_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',news_header_equivalence.ERROR_KIND:'SCORE_VERIFICATION_PENDING',prepared_v6_profile_failure.ERROR_KIND:'RULES_READY'}[kind]
+        sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING',native_writer_cleanup_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',news_header_equivalence.ERROR_KIND:'SCORE_VERIFICATION_PENDING',prepared_v6_profile_failure.ERROR_KIND:'RULES_READY',work_order_equivalent_headers.ERROR_KIND:'SCORE_VERIFICATION_PENDING'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
     rt._run_score_command(state['score_skill'],['verify','--attempt-root',str(attempt)])
     if kind==public_snapshot_sidecar.ERROR_KIND:
@@ -190,6 +200,11 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
         m=rt._read_json(attempt/'attempt-manifest.json')
         proof['prepared_registration_failure']=prepared_v6_profile_failure.evidence(rt,attempt,m,
             rt._read_json(attempt/m['paths']['contract']),task)
+    if kind==work_order_equivalent_headers.ERROR_KIND:
+        m=rt._read_json(attempt/'attempt-manifest.json')
+        proof['work_order_header_review']=work_order_equivalent_headers.validate_blocker(rt,attempt,m,
+            rt._read_json(attempt/m['paths']['contract']),task)
+        proof['semantic_judging_performed']=True;proof['semantic_result_published']=False
     if kind in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
         manifest=rt._read_json(attempt/'attempt-manifest.json')
         result=(source_failures.evidence(rt,attempt,manifest,rt._read_json(attempt/manifest['paths']['contract']),task)
@@ -202,7 +217,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
             process=subprocess.run(['ps','-p',str(pid),'-o','pid=,lstart=,command='],capture_output=True,text=True)
             if process.returncode!=1 or process.stdout.strip():raise ValueError('DISCOVERY_OWNER_NOT_PROVEN_EXITED')
             proof['owner_exit']={'pid':pid,'ps_no_process':True,'observed_at':proof['at']}
-    if (kind in {aggregation_runtime_failure.ERROR_KIND,release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND}
+    if (kind in {aggregation_runtime_failure.ERROR_KIND,release_baseline_text.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND}
             or kind==source_failures.ERROR_KIND and task.get('thread') is not None):
         if sdk_file is None:raise ValueError('COMPLETED_NATIVE_SDK_REQUIRED')
         from verify_judge_context import verify_context

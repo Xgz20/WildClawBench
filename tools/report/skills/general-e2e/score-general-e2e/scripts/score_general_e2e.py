@@ -56,6 +56,7 @@ import procurement_summary_labels
 import public_text_profiles
 import work_order_evidence_budget
 import work_order_table_roles
+import work_order_equivalent_headers
 import runtime_office_guard
 import typed_rule_diagnostics
 import grade_wrapper_normalization
@@ -2105,6 +2106,8 @@ def prepare_attempt(
                    if news_header_equivalence.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'procurement_annotation_formula_profile':procurement_annotation_formula.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if procurement_annotation_formula.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'work_order_equivalent_header_profile':work_order_equivalent_headers.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if work_order_equivalent_headers.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
@@ -3030,6 +3033,7 @@ def _effective_rule_source(
         corrected, receipt = procurement_explicit_labels.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_annotation_formula.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = acl_index_headers.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = work_order_equivalent_headers.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:
@@ -6719,6 +6723,8 @@ def prepare_rescore_attempt(
                    if news_header_equivalence.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'procurement_annotation_formula_profile':procurement_annotation_formula.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if procurement_annotation_formula.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'work_order_equivalent_header_profile':work_order_equivalent_headers.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if work_order_equivalent_headers.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 "reference_guard": reference_guard,
                 "canonical_office_guard": canonical_office_guard,
                 **({"formal_completion_receipt": formal_completion} if formal_completion else {}),
