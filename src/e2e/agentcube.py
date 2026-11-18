@@ -12,6 +12,7 @@ from urllib.parse import quote, urlsplit
 
 import requests
 
+from . import DEFAULT_AGENTCUBE_NAMESPACE, DEFAULT_AGENTCUBE_TEMPLATE
 from .common import E2EError, identifier, read_json, redact
 
 
@@ -26,8 +27,8 @@ class PlatformError(E2EError):
 class AgentCubeConfig:
     workload_manager_url: str = "http://eval-agent-prod.maas.private"
     router_url: str = "http://eval-agent-prod.maas.private"
-    namespace: str = "default"
-    template: str = "winarena-pc-20261104-a"
+    namespace: str = DEFAULT_AGENTCUBE_NAMESPACE
+    template: str = DEFAULT_AGENTCUBE_TEMPLATE
     app_id: str = "AstronEval"
     user_id: str = ""
     active_ttl: int = 10800

@@ -4,12 +4,12 @@
 
 支持 `runtime-preflight` 能力的发行可使用 `preflight --plan PLAN --check-runtime`，额外验证执行进程的 AgentCube Token、User-ID、TTL 和端点域名解析。失败返回 `valid=false` 及具体 issues，不创建沙箱。默认 preflight 仍可离线检查选题和参数；带 `--agentcube-config` 的原调用规则保持兼容。该检查不验证远端账号权限或 VM 可用性，实际执行仍需可访问的公司网络。
 
-`--agentcube-config` 指向非密钥 JSON 配置；平台通过 `WCB_E2E_AGENTCUBE_CONFIG` 引用同一文件。`namespace` 未填写时为 `default`，同时用于会话创建请求和 PicoD/Windows 路由。以下为相关字段示例，其余身份、地址和运行时字段按部署配置保留：
+`--agentcube-config` 指向非密钥 JSON 配置；平台通过 `WCB_E2E_AGENTCUBE_CONFIG` 引用同一文件。`namespace` 未填写时为 `agentcube-windows`，同时用于会话创建请求和 PicoD/Windows 路由。以下为相关字段示例，其余身份、地址和运行时字段按部署配置保留：
 
 ```json
 {
   "namespace": "agentcube-windows",
-  "template": "winarena-pc-20261116-b",
+  "template": "winarena-pc-20261118-a",
   "create_timeout_seconds": 1800
 }
 ```
@@ -64,6 +64,8 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 
 历史批次的冻结采集器不识别新原生格式时，`export --purpose scoring --verification-skill-dir <新版collect-general-e2e目录>` 可显式补充独立采集校验器。包内保存其完整副本和 inventory 摘要，原批次、数据集、评分 Skill 与题目绑定不变；已有评分交接绑定拒绝冲突覆盖。该选项只准备可供离线评分的材料，不启动评分。
 
-当前默认模板 winarena-pc-20261104-a 发布已验证的 Auto/High 与 Spark-X2.5/High。2026-11-09 的 Max 配置两次在 controller select_reasoning 阶段被拒绝，默认目录已收口到 high，预检会拒绝未发布档位。新增可用组合通过执行器能力文件发布。
+新批次默认使用 `winarena-pc-20261118-a`。模板和内置模型候选可由能力文件发布，运行时以部署的控制器、客户端和原生回读为准。
+
+WorkBuddy 单元可设置布尔字段 `workbuddy_full_access`，新默认模板缺省关闭。单单元 CLI 使用 `--workbuddy-full-access` 或 `--no-workbuddy-full-access`。配置随单元冻结，分别通过 WGUI `product_config.ui.permission` 下发 `full access` 或 `default`。执行前检查已部署 WorkBuddy 驱动是否转发该字段。通用请求字段存在但驱动未接线时，执行在发送题目前停止。
 
 scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General 范围的 report-only manifest 与 report-config，保留原输入制品锁。接收方将独立单题标准回传导入为显式来源后，可直接将其 path 交给 selected_report.py 的 --batch-root，按 expected_execution_keys 检查全范围。coverage_status 区分完整与部分材料，单题快速评分仍使用 scoring_contexts。包索引记录 exporter_revision，执行发行仍由 parent-batch 的原快照保存。新版只读导出器可在协议 v1 下整理旧批次的封存原件。

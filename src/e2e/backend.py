@@ -256,6 +256,8 @@ class AStudioSandboxDriver:
             ui["reasoning"] = {"none": "None", "high": "High", "max": "Max"}[self.unit["reasoning_effort"].casefold()]
         if self.product=="workbuddy":
             proposed={"mode":"代码开发","max_mode":self.unit.get("max_mode",False),"plan_mode":False,"ask_mode":False}
+            if "workbuddy_full_access" in self.unit:
+                proposed["permission"] = "full access" if self.unit["workbuddy_full_access"] else "default"
             ui={key:value for key,value in proposed.items() if key in getattr(self,"ui_fields",set(proposed))}
         request = {"schema_version": 2, "product": self.product, "instruction_file": "/run/wgui/instruction.txt",
                    "workspace": {"guest": GUEST_WORKSPACE}, "timeout_sec": self.unit["timeout_override"],
@@ -495,12 +497,46 @@ class WorkBuddySandboxDriver(AStudioSandboxDriver):
 
     def _prepare_runtime(self,sid):
         # Inspect the installed controller contract before dispatch, without sending a prompt.
-        script="import json,typing;from controller.contracts.models import ProductUIConfig,RunRequestV2;print(json.dumps({'ui_fields':list(ProductUIConfig.model_fields),'products':list(typing.get_args(RunRequestV2.model_fields['product'].annotation))}))"
+        script = """import ast, importlib.util, json, pathlib, typing
+from controller.contracts.models import ProductUIConfig, RunRequestV2
+
+def loads_permission(node):
+    return any(
+        (isinstance(part, ast.Attribute) and part.attr in {'permission', '_permission'})
+        or (isinstance(part, ast.Constant) and part.value == 'permission')
+        for part in ast.walk(node)
+    )
+
+permission_forwarded = False
+spec = importlib.util.find_spec('guest.products.workbuddy.ui_driver')
+if spec is not None and spec.origin:
+    tree = ast.parse(pathlib.Path(spec.origin).read_text(encoding='utf-8'))
+    for klass in tree.body:
+        if not isinstance(klass, ast.ClassDef) or klass.name != 'WorkBuddyUiDriver':
+            continue
+        methods = {node.name: node for node in klass.body if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))}
+        configure = methods.get('configure')
+        run = methods.get('_do_automation')
+        if configure and run and loads_permission(configure):
+            permission_forwarded = any(
+                isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                and node.func.attr == 'run'
+                and any(keyword.arg == 'permission' and loads_permission(keyword.value) for keyword in node.keywords)
+                for node in ast.walk(run)
+            )
+print(json.dumps({
+    'ui_fields': list(ProductUIConfig.model_fields),
+    'products': list(typing.get_args(RunRequestV2.model_fields['product'].annotation)),
+    'workbuddy_permission_forwarded': permission_forwarded,
+}))"""
         value=json.loads(self.client.checked(sid,"/opt/wgui-venv/bin/python -c "+shlex.quote(script),timeout=30))
         atomic_json(self.staging/"metadata/controller-capabilities.json",value)
         if 'workbuddy' not in value.get('products',[]):raise E2EError('DEPLOYED_CONTROLLER_WORKBUDDY_UNSUPPORTED')
         self.ui_fields=set(value.get('ui_fields',[]))
         if self.unit.get('max_mode') and 'max_mode' not in self.ui_fields:raise E2EError('DEPLOYED_CONTROLLER_MAX_MODE_UNSUPPORTED')
+        if "workbuddy_full_access" in self.unit:
+            if "permission" not in self.ui_fields or not value.get("workbuddy_permission_forwarded"):
+                raise E2EError("WORKBUDDY_PERMISSION_NOT_SUPPORTED: 部署的控制器尚未将权限参数传到界面驱动")
 
     def _bound_native(self,sid,before,report,identity,prompt,stage):
         from .workbuddy_trace import normalize_workbuddy

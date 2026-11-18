@@ -78,6 +78,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--model")
     run.add_argument("--reasoning-effort", type=str.lower, choices=("none", "high", "max"))
     run.add_argument("--template")
+    run.add_argument("--workbuddy-full-access", action=argparse.BooleanOptionalAction, default=None,
+                     help="为 WorkBuddy 明确启用或关闭完全访问权限")
     run.add_argument("--concurrency", "--parallel", type=int, help="批次沙箱并发，默认 3")
     run.add_argument("--runs", type=int, help="每题独立 run 数，默认 1")
     run.add_argument("--timeout-override", type=int, help="统一覆盖 wgui 运行预算（秒），默认 10800")
@@ -163,14 +165,17 @@ def _run(args):
     from .store import BatchStore
     if args.plan:
         raw = read_json(args.plan)
-        if any((args.scenario, args.dataset, args.task, args.task_id, args.category, args.tag,
-                args.exclude_tag, args.modality, args.harness, args.model, args.reasoning_effort, args.template)):
+        inline_selection = (args.scenario, args.dataset, args.task, args.task_id, args.category, args.tag,
+                            args.exclude_tag, args.modality, args.harness, args.model, args.reasoning_effort, args.template)
+        if any(inline_selection) or args.workbuddy_full_access is not None:
             raise E2EError("PLAN_AND_INLINE_UNIT_SELECTION_CONFLICT")
     else:
         unit = {"harness": args.harness or "astronstudio", "model": args.model,
                 "reasoning_effort": args.reasoning_effort}
         if args.template:
             unit["template"] = args.template
+        if args.workbuddy_full_access is not None:
+            unit["workbuddy_full_access"] = args.workbuddy_full_access
         raw = {"selection": {"scenario": args.scenario, "dataset": args.dataset,
                              "task": str(args.task.resolve()) if args.task else None, "task_ids": args.task_id,
                              "categories": args.category, "tags": args.tag, "exclude_tags": args.exclude_tag,

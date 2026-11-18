@@ -22,22 +22,6 @@ from .preparation import (
 
 API_VERSION = 1
 TERMINAL_PHASES = {"COMPLETED", "FAILED", "CANCELLED"}
-DEFAULT_PROFILE = {
-    "id": "astudio-winarena-20261104-a",
-    "harness": "astronstudio",
-    "display_name": "AStudio",
-    "backend": "agentcube",
-    "template": "winarena-pc-20261104-a",
-    "scenarios": ["general", "web"],
-    "enabled": True,
-    "models": [
-        {"id": "auto", "display_name": "Auto（实际模型以原生回读为准）"},
-        {"id": "spark-x2.5", "display_name": "Spark-X2.5"},
-    ],
-    # Publish combinations verified on this template. The controller currently
-    # cannot select Max. Operators may publish newly verified capabilities.
-    "reasoning_efforts": ["high"],
-}
 
 
 def envelope(kind: str, data: dict) -> dict:
@@ -87,6 +71,7 @@ def describe(repo: Path) -> dict:
             "catalog",
             "preflight",
             "runtime-preflight",
+            "workbuddy-permission",
             "environment-status",
             "windows-astudio-runtime-bootstrap",
             "execution",
@@ -469,6 +454,8 @@ def snapshot(batch: Path) -> dict:
                 or binding.get("actual_model"),
                 "reasoning_effort": units[row["unit_id"]].get("reasoning_effort"),
                 "max_mode": units[row["unit_id"]].get("max_mode"),
+                **({"workbuddy_full_access": units[row["unit_id"]]["workbuddy_full_access"]}
+                   if "workbuddy_full_access" in units[row["unit_id"]] else {}),
                 "scene": tasks[row["task_id"]].get("scene", "general"),
                 "trace_completeness": trace_status,
                 "backup_status": "verified" if backup.exists() else "pending",

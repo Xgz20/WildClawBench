@@ -65,6 +65,9 @@
           "template": {
             "type": "string"
           },
+          "workbuddy_full_access": {
+            "type": "boolean"
+          },
           "reasoning_effort": {
             "type": [
               "string",

@@ -13,12 +13,42 @@ import unittest
 from unittest.mock import Mock, patch
 
 from src.e2e.agentcube import AgentCubeClient, AgentCubeConfig
-from src.e2e.backend import AStudioSandboxDriver, GUEST_WORKSPACE, NATIVE_ROOT, powershell, process_cleanup_script
+from src.e2e.backend import AStudioSandboxDriver, WorkBuddySandboxDriver, GUEST_WORKSPACE, NATIVE_ROOT, powershell, process_cleanup_script
 from src.e2e.cli import build_parser, _run
 from src.e2e.common import E2EError, digest
 
 
 class BackendTests(unittest.TestCase):
+    def test_workbuddy_permission_is_sent_only_when_forwarded_by_controller(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            driver = object.__new__(WorkBuddySandboxDriver)
+            driver.client = Mock()
+            driver._checked_job = Mock()
+            driver.batch = root
+            driver.staging = root / "staging"
+            driver.task = {"input_root": "case"}
+            driver.unit = {"model": "GLM-5.3", "timeout_override": 600, "workbuddy_full_access": False}
+            public = root / "case/execution"
+            (public / "workspace").mkdir(parents=True)
+            (public / "PROMPT.md").write_text("test prompt")
+
+            capabilities = {"ui_fields": ["permission", "mode"], "products": ["workbuddy"],
+                            "workbuddy_permission_forwarded": False}
+            driver.client.checked.return_value = json.dumps(capabilities)
+            with self.assertRaisesRegex(E2EError, "WORKBUDDY_PERMISSION_NOT_SUPPORTED"):
+                driver._prepare_runtime("sid")
+            driver.client.upload.assert_not_called()
+
+            capabilities["workbuddy_permission_forwarded"] = True
+            driver.client.checked.return_value = json.dumps(capabilities)
+            driver._prepare_runtime("sid")
+            for enabled, expected in [(False, "default"), (True, "full access")]:
+                driver.unit["workbuddy_full_access"] = enabled
+                driver._upload("sid")
+                request = json.loads((driver.staging / "metadata/run-request.json").read_text())
+                self.assertEqual(request["product_config"]["ui"]["permission"], expected)
+
     def test_cleanup_script_fits_windows_command_limit_and_roundtrips(self):
         script = process_cleanup_script(r"C:\Windows\Temp\wcb-cleanup-attempt.json", GUEST_WORKSPACE)
         command = powershell(script)

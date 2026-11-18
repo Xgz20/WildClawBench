@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 import hashlib
 import subprocess
+from . import DEFAULT_AGENTCUBE_TEMPLATE
 from .common import E2EError
 
 CATALOG = Path(__file__).with_name("builtin_models.json")
@@ -92,7 +93,7 @@ def controller_catalog(source: Path):
     }
 
 
-def profiles_from_catalog(catalog, template="winarena-pc-20261104-a"):
+def profiles_from_catalog(catalog, template=DEFAULT_AGENTCUBE_TEMPLATE):
     return [
         {
             "id": ("astudio" if name == "astronstudio" else name) + "-" + template,
@@ -119,5 +120,5 @@ def profiles_from_catalog(catalog, template="winarena-pc-20261104-a"):
     ]
 
 
-def default_profiles(template="winarena-pc-20261104-a"):
+def default_profiles(template=DEFAULT_AGENTCUBE_TEMPLATE):
     return profiles_from_catalog(builtin_catalog(), template)

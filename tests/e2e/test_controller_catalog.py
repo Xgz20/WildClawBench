@@ -9,6 +9,7 @@ def test_builtin_catalog_covers_controller_defaults_and_never_publishes_connecti
     catalog = builtin_catalog()
     profiles = default_profiles()
     assert {p["harness"] for p in profiles} == {"astronstudio", "workbuddy"}
+    assert {p["template"] for p in profiles} == {"winarena-pc-20261118-a"}
     assert len(catalog["products"]["astronstudio"]["models"]) == 7
     assert len(catalog["products"]["workbuddy"]["models"]) == 20
     assert all(
@@ -40,3 +41,25 @@ def test_quota_rejection_is_a_platform_failure_before_model_dispatch():
     with pytest.raises(PlatformError) as caught:client._json(response,'CREATE_SESSION')
     assert caught.value.platform_code=='USER_QUOTA_NOT_ACTIVE' and not caught.value.uncertain
     assert '配额未生效' in str(caught.value)
+
+
+def test_workbuddy_permission_is_frozen_into_distinct_unit_identity():
+    import pytest
+    from src.e2e.common import E2EError
+
+    def normalized(harness, value):
+        return normalize_plan({
+            "selection": {"scenario": "general", "dataset": "general-custom70-v6"},
+            "units": [{"harness": harness, "model": "GLM-5.3", "workbuddy_full_access": value}],
+        })["units"][0]
+
+    off = normalized("workbuddy", False)
+    on = normalized("workbuddy", True)
+    assert off["template"] == on["template"] == "winarena-pc-20261118-a"
+    assert off["workbuddy_full_access"] is False
+    assert on["workbuddy_full_access"] is True
+    assert off["unit_id"] != on["unit_id"]
+    with pytest.raises(E2EError, match="WORKBUDDY_FULL_ACCESS_MUST_BE_BOOLEAN"):
+        normalized("workbuddy", "false")
+    with pytest.raises(E2EError, match="FULL_ACCESS_OPTION_REQUIRES_WORKBUDDY"):
+        normalized("astronstudio", False)

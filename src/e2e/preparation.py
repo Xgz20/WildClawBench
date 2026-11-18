@@ -10,7 +10,7 @@ import shutil
 import sys
 import uuid
 
-from . import DEFAULT_EXECUTION_CONCURRENCY
+from . import DEFAULT_AGENTCUBE_TEMPLATE, DEFAULT_EXECUTION_CONCURRENCY
 from .artifacts import inventory, copy_stream_readonly, _protect, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, load_script, read_json, utc_now
 from .store import BatchStore, controller_lock
@@ -187,11 +187,11 @@ def normalize_plan(raw: dict) -> dict:
     for raw_unit in plan["units"]:
         if not isinstance(raw_unit, dict):
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
-        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode"}:
+        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
         unit = {"harness": raw_unit.get("harness"), "backend": raw_unit.get("backend", "agentcube"),
                 "model": raw_unit.get("model"), "reasoning_effort": raw_unit.get("reasoning_effort"),
-                "template": raw_unit.get("template", "winarena-pc-20261104-a"),
+                "template": raw_unit.get("template", DEFAULT_AGENTCUBE_TEMPLATE),
                 "max_concurrency": raw_unit.get("max_concurrency", plan["execution_concurrency"]),
                 "timeout_override": raw_unit.get("timeout_override", plan["timeout_override"])}
         if not isinstance(unit["model"], str) or not unit["model"].strip():
@@ -209,6 +209,14 @@ def normalize_plan(raw: dict) -> dict:
             if type(raw_unit.get("max_mode",False)) is not bool: raise E2EError("WORKBUDDY_MAX_MODE_INVALID")
             unit["max_mode"] = raw_unit.get("max_mode",False)
         elif "max_mode" in raw_unit: raise E2EError("MAX_MODE_REQUIRES_WORKBUDDY")
+        if "workbuddy_full_access" in raw_unit:
+            if unit["harness"] != "workbuddy":
+                raise E2EError("FULL_ACCESS_OPTION_REQUIRES_WORKBUDDY")
+            if type(raw_unit["workbuddy_full_access"]) is not bool:
+                raise E2EError("WORKBUDDY_FULL_ACCESS_MUST_BE_BOOLEAN")
+            unit["workbuddy_full_access"] = raw_unit["workbuddy_full_access"]
+        elif unit["harness"] == "workbuddy" and unit["template"] == DEFAULT_AGENTCUBE_TEMPLATE:
+            unit["workbuddy_full_access"] = False
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]
         identifier(unit["unit_id"], "unit_id")
         identifier(unit["template"], "template")
