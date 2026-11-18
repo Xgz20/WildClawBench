@@ -57,6 +57,7 @@ import public_text_profiles
 import work_order_evidence_budget
 import work_order_table_roles
 import work_order_equivalent_headers
+import quote_arrival_summary
 import runtime_office_guard
 import typed_rule_diagnostics
 import grade_wrapper_normalization
@@ -2071,6 +2072,8 @@ def prepare_attempt(
                    if public_snapshot_sidecar.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if sterilization_quote_layout.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({'quote_arrival_summary_profile':quote_arrival_summary.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if quote_arrival_summary.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'shared_rule_source_repair': shared_source_repairs.marker(contract)}
                    if shared_source_repairs.marker(contract) is not None else {}),
                 **({'acl_index_header_profile':acl_index_headers.marker(contract)}
@@ -3021,6 +3024,7 @@ def _effective_rule_source(
         corrected, receipt = declared_public_snapshots.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_snapshot_sidecar.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = sterilization_quote_layout.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = quote_arrival_summary.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = warranty_recovery_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = service_report_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = data_table_representations.effective_source(manifest,source,corrected,receipt)
@@ -6685,6 +6689,8 @@ def prepare_rescore_attempt(
                    if public_snapshot_sidecar.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'sterilization_quote_layout_profile':sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if sterilization_quote_layout.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({'quote_arrival_summary_profile':quote_arrival_summary.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if quote_arrival_summary.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'shared_rule_source_repair': shared_source_repairs.marker(_read_json(staging/source_paths['contract']))}
                    if shared_source_repairs.marker(_read_json(staging/source_paths['contract'])) is not None else {}),
                 **({'acl_index_header_profile':acl_index_headers.marker(_read_json(staging/source_paths['contract']))}

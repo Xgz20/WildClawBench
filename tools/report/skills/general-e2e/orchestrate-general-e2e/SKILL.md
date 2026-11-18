@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.93` 严格保留已完成报价裁判的总交期表头漏读：核验原contract/source/Worker、可见单元格、原生Prompt/模型/High/终态及旧草稿/取证SHA后登记未评分；原候选与其他有效分保持，同一执行新建独立评分。
+
 `0.11.92` 严格保留已完成v6工单裁判的表头提取阻断，重验原contract/source/Worker、原生Prompt/模型/High/终态、原单元格和旧critical快照漏读，锁定草稿与全部取证后留作未评分。新独立评分只修复提取，不改候选、旧组件或真实缺陷。
 
 `0.11.91` 严格保留v6原始LF来源误判的已完成裁判，重验全部8份已登记字节、原Worker和未发布证明；另仅接受精确v6报价契约尚无Worker/裁判/组件且缺已审核Profile的准备故障。保留旧attempt后从同一执行独立评分，不给能力零分、不覆盖旧分。
