@@ -218,7 +218,7 @@ def notes(data, labels):
             qualifier = '，仅为已知区间下限' if value['coverage_status'] == 'partial' else ''
             parts.append(f"{name}配置{value['configured_slots']}，原生区间重叠峰值{peak}"
                          f"（区间覆盖{coverage['known']}/{coverage['total']}{qualifier}）")
-        output.append(f"运行审计：{label}：{'；'.join(parts)}。区间重叠不表示始终满载或同时HTTP请求。")
+        output.append(f"运行审计（最终选定执行/评分尝试）：{label}：{'；'.join(parts)}。区间重叠不表示始终满载或同时HTTP请求。")
         for hold in unit['controller_holds']:
             output.append(f"计时说明：{label}的控制审阅暂停{hold['duration_seconds']:.6f}秒"
                           f"（{hold['started_at']}至{hold['finished_at']}）；相关流程耗时包含该期间的控制等待。"

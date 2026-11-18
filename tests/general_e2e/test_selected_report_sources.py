@@ -15,6 +15,33 @@ SPEC.loader.exec_module(REPORT)
 
 
 class SelectedReportSourcesTest(unittest.TestCase):
+    def test_report_output_boundary_is_explicit_new_and_does_not_follow_symlinks(self):
+        with tempfile.TemporaryDirectory() as temp:
+            workspace=Path(temp);batch=workspace/'private'/'batch';batch.mkdir(parents=True)
+            reports=workspace/'reports';reports.mkdir();target=reports/'final'
+            with self.assertRaisesRegex(ValueError,'OUTPUT_UNSAFE'):
+                REPORT.report_output_path(target,workspace,batch)
+            self.assertEqual(REPORT.report_output_path(target,workspace,batch,reports),target.resolve())
+            self.assertEqual(REPORT.report_output_path(batch/'legacy',workspace,batch),(batch/'legacy').resolve())
+            target.mkdir()
+            with self.assertRaisesRegex(ValueError,'OUTPUT_UNSAFE'):
+                REPORT.report_output_path(target,workspace,batch,reports)
+            actual=reports/'actual';actual.mkdir();link=reports/'link';link.symlink_to(actual,target_is_directory=True)
+            with self.assertRaisesRegex(ValueError,'OUTPUT_UNSAFE'):
+                REPORT.report_output_path(link/'new',workspace,batch,reports)
+            with self.assertRaisesRegex(ValueError,'ROOT_UNSAFE'):
+                REPORT.report_output_path(link/'new',workspace,batch,link)
+            with self.assertRaisesRegex(ValueError,'OUTPUT_UNSAFE'):
+                REPORT.report_output_path(workspace/'escape',workspace,batch,reports)
+            with self.assertRaisesRegex(ValueError,'ROOT_UNSAFE'):
+                REPORT.report_output_path(workspace/'new',batch,batch,reports)
+
+    def test_explicit_report_root_requires_report_output(self):
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(ValueError,'REPORT_OUTPUT_ROOT_REQUIRES_REPORT_OUTPUT'):
+                REPORT.main(['--workspace-root',temp,'--batch-root',temp,'--source-index',temp+'/source.json',
+                             '--task-index',temp+'/tasks.json','--report-output-root',temp])
+
     def test_lineage_keeps_each_package_and_binds_archive_to_its_manifest(self):
         with tempfile.TemporaryDirectory() as temp:
             REPORT.ROOT=Path(temp)

@@ -25,6 +25,22 @@ def data_output_path(path, workspace_root, output_root=None):
     require(target.is_relative_to(boundary) and not target.exists(),"SELECTION_DATA_OUTPUT_UNSAFE")
     return target
 
+def report_output_path(path, workspace_root, batch_root, output_root=None):
+    """Explicit write boundary; source validation continues to use workspace-root."""
+    workspace=Path(workspace_root).resolve()
+    raw_boundary=Path(output_root or batch_root).expanduser().absolute()
+    boundary=raw_boundary.resolve()
+    require(raw_boundary.is_dir() and boundary.is_relative_to(workspace),"SELECTION_REPORT_OUTPUT_ROOT_UNSAFE")
+    for parent in (raw_boundary,*raw_boundary.parents):
+        require(not parent.is_symlink(),"SELECTION_REPORT_OUTPUT_ROOT_UNSAFE")
+        if parent.resolve()==workspace:break
+    raw=Path(path).expanduser().absolute();target=raw.resolve()
+    require(target.is_relative_to(boundary) and not target.exists(),"SELECTION_OUTPUT_UNSAFE_OR_EXISTS")
+    for parent in (raw,*raw.parents):
+        require(not parent.is_symlink(),"SELECTION_OUTPUT_UNSAFE_OR_EXISTS")
+        if parent.resolve()==boundary:break
+    return target
+
 def verify_source_package(root,expected,unit_id,task_ids,*,allow_subset=False):
     root=Path(root).resolve();require(root.is_relative_to(ROOT),"SELECTION_PACKAGE_OUTSIDE_ROOT")
     p=safe_file(root/"package-manifest.json",ROOT);require(sha(p)==expected,"SELECTION_PACKAGE_MANIFEST_DRIFT")
@@ -303,6 +319,7 @@ def main(argv=None):
     parser.add_argument("--resource-root",type=Path);parser.add_argument("--display-config",type=Path)
     parser.add_argument("--run-audit",type=Path,help="完整选定范围的原生区间与控制暂停审计")
     parser.add_argument("--target-unit");parser.add_argument("--output-dir",type=Path)
+    parser.add_argument("--report-output-root",type=Path,help="Explicit existing report destination boundary inside workspace-root; defaults to batch-root; source verification boundary is unchanged")
     parser.add_argument("--data-output",type=Path,help="Write verified report JSON without rendering a workbook; must be a new file inside workspace-root")
     parser.add_argument("--seal-output-dir",type=Path,help="Immediately seal a newly generated report into this separate directory")
     parser.add_argument("--data-output-root",type=Path,help="Explicit destination boundary for data-output; source verification still uses workspace-root")
@@ -314,6 +331,7 @@ def main(argv=None):
     maas_model_timing.add_arguments(parser)
     args=parser.parse_args(argv);ROOT=args.workspace_root.resolve();BATCH=args.batch_root.resolve()
     require(not args.seal_output_dir or args.output_dir,"SELECTION_SEAL_REQUIRES_REPORT_OUTPUT")
+    require(not args.report_output_root or args.output_dir,"SELECTION_REPORT_OUTPUT_ROOT_REQUIRES_REPORT_OUTPUT")
     require(not args.data_output_root or args.data_output,"SELECTION_DATA_OUTPUT_ROOT_REQUIRES_DATA_OUTPUT")
     batch=load(safe_file(BATCH/"manifest.json",ROOT));source=load(safe_file(args.source_index,ROOT));selection=load(safe_file(args.task_index,ROOT))
     require(selection["source_index_sha256"]==sha(args.source_index),"SELECTION_SOURCE_INDEX_DRIFT")
@@ -407,7 +425,7 @@ def main(argv=None):
         report.write_json(target,data)
     if args.output_dir:
         require(args.node_modules and args.node_modules.is_dir(),"SELECTION_EXCEL_RUNTIME_REQUIRED")
-        out=args.output_dir.resolve();require(out.is_relative_to(BATCH) and not out.exists(),"SELECTION_OUTPUT_UNSAFE_OR_EXISTS")
+        out=report_output_path(args.output_dir,ROOT,BATCH,args.report_output_root)
         stage=out.with_name('.'+out.name+'.'+uuid.uuid4().hex+'.staging');stage.mkdir(parents=True)
         try:
             run_audit_artifacts=report_run_audit.stage(data,stage)

@@ -97,6 +97,7 @@ class ReportRunAuditTests(unittest.TestCase):
         self.assertEqual(self.data['overall'], before['overall'])
         self.assertEqual(self.data['units'], before['units'])
         markdown = REPORT.render_markdown(self.data)
+        self.assertIn('最终选定执行/评分尝试', markdown)
         self.assertIn('执行配置3，原生区间重叠峰值1', markdown)
         self.assertIn('控制审阅暂停2.000000秒', markdown)
         self.assertIn('运行编排与控制介入', REPORT.render_audit_markdown(self.data))
