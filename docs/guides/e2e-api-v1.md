@@ -66,6 +66,6 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 
 新批次默认使用 `winarena-pc-20261118-a`。模板和内置模型候选可由能力文件发布，运行时以部署的控制器、客户端和原生回读为准。
 
-WorkBuddy 单元可设置布尔字段 `workbuddy_full_access`，新默认模板缺省关闭。单单元 CLI 使用 `--workbuddy-full-access` 或 `--no-workbuddy-full-access`。配置随单元冻结，分别通过 WGUI `product_config.ui.permission` 下发 `full access` 或 `default`。执行前检查已部署 WorkBuddy 驱动是否转发该字段。通用请求字段存在但驱动未接线时，执行在发送题目前停止。
+WorkBuddy 新批次默认开启完全访问，执行单元冻结 `workbuddy_full_access: true`。执行器通过 WGUI `product_config.ui.permission` 传递 `full access`。当前模板的 WorkBuddy 驱动也会在发送题目前通过原生流程切换并确认完全访问。API 和 CLI 显式请求默认权限时，执行器要求驱动支持该权限参数。
 
 scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General 范围的 report-only manifest 与 report-config，保留原输入制品锁。接收方将独立单题标准回传导入为显式来源后，可直接将其 path 交给 selected_report.py 的 --batch-root，按 expected_execution_keys 检查全范围。coverage_status 区分完整与部分材料，单题快速评分仍使用 scoring_contexts。包索引记录 exporter_revision，执行发行仍由 parent-batch 的原快照保存。新版只读导出器可在协议 v1 下整理旧批次的封存原件。

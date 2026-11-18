@@ -19,7 +19,7 @@ from src.e2e.common import E2EError, digest
 
 
 class BackendTests(unittest.TestCase):
-    def test_workbuddy_permission_is_sent_only_when_forwarded_by_controller(self):
+    def test_workbuddy_full_access_works_with_controllers_that_enable_it_natively(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             driver = object.__new__(WorkBuddySandboxDriver)
@@ -39,6 +39,12 @@ class BackendTests(unittest.TestCase):
             with self.assertRaisesRegex(E2EError, "WORKBUDDY_PERMISSION_NOT_SUPPORTED"):
                 driver._prepare_runtime("sid")
             driver.client.upload.assert_not_called()
+
+            driver.unit["workbuddy_full_access"] = True
+            driver._prepare_runtime("sid")
+            driver._upload("sid")
+            request = json.loads((driver.staging / "metadata/run-request.json").read_text())
+            self.assertEqual(request["product_config"]["ui"]["permission"], "full access")
 
             capabilities["workbuddy_permission_forwarded"] = True
             driver.client.checked.return_value = json.dumps(capabilities)

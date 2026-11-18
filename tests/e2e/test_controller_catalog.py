@@ -55,6 +55,11 @@ def test_workbuddy_permission_is_frozen_into_distinct_unit_identity():
 
     off = normalized("workbuddy", False)
     on = normalized("workbuddy", True)
+    implicit = normalize_plan({
+        "selection": {"scenario": "general", "dataset": "general-custom70-v6"},
+        "units": [{"harness": "workbuddy", "model": "GLM-5.3"}],
+    })["units"][0]
+    assert implicit == on
     assert off["template"] == on["template"] == "winarena-pc-20261118-a"
     assert off["workbuddy_full_access"] is False
     assert on["workbuddy_full_access"] is True

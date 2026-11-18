@@ -216,7 +216,7 @@ def normalize_plan(raw: dict) -> dict:
                 raise E2EError("WORKBUDDY_FULL_ACCESS_MUST_BE_BOOLEAN")
             unit["workbuddy_full_access"] = raw_unit["workbuddy_full_access"]
         elif unit["harness"] == "workbuddy" and unit["template"] == DEFAULT_AGENTCUBE_TEMPLATE:
-            unit["workbuddy_full_access"] = False
+            unit["workbuddy_full_access"] = True
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]
         identifier(unit["unit_id"], "unit_id")
         identifier(unit["template"], "template")
