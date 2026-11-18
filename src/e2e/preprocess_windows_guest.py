@@ -34,7 +34,9 @@ sys.exit(124)
 
 
 class StepError(Exception):
-    pass
+    def __init__(self, code, **diagnostics):
+        super().__init__(code)
+        self.diagnostics = diagnostics
 
 
 class BasicLimits(ctypes.Structure):
@@ -239,7 +241,9 @@ class Runtime:
                     raise StepError("ACODE_HANDSHAKE_CLOSED")
                 if reply.get("id") == self.counter:
                     if "error" in reply or not isinstance(reply.get("result"), dict):
-                        raise StepError("ACODE_RPC_REJECTED_" + method.upper().replace("/", "_"))
+                        error = reply.get("error")
+                        code = error.get("code") if isinstance(error, dict) else None
+                        raise StepError("ACODE_RPC_REJECTED_" + method.upper().replace("/", "_"), rpc_code=code)
                     return reply["result"]
         except Empty as exc:
             raise StepError("ACODE_RPC_TIMEOUT") from exc
@@ -418,10 +422,49 @@ def apply(work, step):
     if step["kind"] == "powershell":
         env = os.environ.copy()
         env["WCB_PREPROCESS_ATTACHMENTS"] = str(work / "payload" / "attachments")
+        diagnostic = work / "script-error.json"
+        launcher = work / "run-script.ps1"
+        launcher.write_text(r"""
+param([string]$ScriptFile, [string]$DiagnosticFile)
+$ErrorActionPreference = 'Stop'
+$global:LASTEXITCODE = 0
+try {
+    & $ScriptFile
+    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    exit 0
+} catch {
+    $line = 0
+    if ($_.InvocationInfo.ScriptName -ieq $ScriptFile) {
+        $line = [int]$_.InvocationInfo.ScriptLineNumber
+    } else {
+        $location = [regex]::Match([string]$_.ScriptStackTrace,
+            '(?im)' + [regex]::Escape($ScriptFile) + '[^\r\n]*?(\d+)[ \t]*\r?$')
+        if ($location.Success) { $line = [int]$location.Groups[1].Value }
+    }
+    $details = @{
+        category = $_.CategoryInfo.Category.ToString()
+        exception = $_.Exception.GetType().Name
+        error_id = ([string]$_.FullyQualifiedErrorId -split ',', 2)[0]
+    }
+    if ($line -gt 0) { $details['line'] = $line }
+    $details | ConvertTo-Json -Compress | Set-Content -LiteralPath $DiagnosticFile -Encoding UTF8
+    exit 1
+}
+""", encoding="utf-8-sig")
         status, _ = run_command(["powershell.exe", "-NoProfile", "-NonInteractive", "-File",
-                                 work / "payload" / "step.ps1"], work, step["timeout"] - 5, env=env)
+                                 launcher, work / "payload" / "step.ps1", diagnostic], work,
+                                step["timeout"] - 5, env=env)
         if status != 0:
-            return {"status": "failed", "error": "POWERSHELL_NONZERO_EXIT", "exit_code": status}
+            result = {"status": "failed", "error": "POWERSHELL_NONZERO_EXIT", "exit_code": status}
+            if diagnostic.is_file() and diagnostic.stat().st_size <= 4096:
+                try:
+                    fields = json.loads(diagnostic.read_text(encoding="utf-8-sig"))
+                    if isinstance(fields, dict):
+                        result["diagnostics"] = fields
+                        result["error"] = "POWERSHELL_SCRIPT_ERROR"
+                except (OSError, ValueError):
+                    pass
+            return result
         return {"exit_code": 0}
     quiescent(work)
     binary, data, source, home = astudio_paths()
@@ -462,9 +505,10 @@ def main():
     except subprocess.TimeoutExpired:
         result = {"status": "failed", "error": "PREPROCESS_STEP_TIMEOUT"}
     except StepError as exc:
-        result = {"status": "failed", "error": str(exc)}
-    except (OSError, KeyError, UnicodeError, ValueError, zipfile.BadZipFile):
-        result = {"status": "failed", "error": "WINDOWS_PREPROCESS_WORKER_FAILED"}
+        result = {"status": "failed", "error": str(exc), "diagnostics": exc.diagnostics}
+    except (OSError, KeyError, UnicodeError, ValueError, zipfile.BadZipFile) as exc:
+        result = {"status": "failed", "error": "WINDOWS_PREPROCESS_WORKER_FAILED",
+                  "diagnostics": {"exception": type(exc).__name__, "winerror": getattr(exc, "winerror", None)}}
     result.update(invocation=contract["invocation"], duration_seconds=round(time.monotonic() - started, 2))
     temporary = work / ".receipt.tmp"
     temporary.write_text(json.dumps(result), encoding="utf-8")

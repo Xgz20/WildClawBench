@@ -25,6 +25,25 @@ WINDOWS_ROOT = PureWindowsPath(r"C:\ProgramData\WGUI\environment-preprocessing")
 PYTHON = r"Join-Path $env:LOCALAPPDATA 'Programs\Python\Python312\python.exe'"
 
 
+def diagnostic_code(error, default):
+    # Only stable identifiers are safe to project. Provider bodies can contain
+    # arbitrary guest text, paths or credentials.
+    code = str(error).partition(":")[0]
+    return code if SIMPLE_ERROR.fullmatch(code) else default
+
+
+def public_diagnostics(value):
+    if not isinstance(value, dict):
+        return {}
+    data = {key: value[key] for key in ("line", "winerror", "rpc_code")
+            if type(value.get(key)) is int and abs(value[key]) <= 2 ** 31}
+    for key in ("category", "exception", "error_id"):
+        field = value.get(key)
+        if isinstance(field, str) and re.fullmatch(r"[A-Za-z][A-Za-z0-9_.-]{0,63}", field):
+            data[key] = field
+    return data
+
+
 def _asset(batch, asset):
     path = batch / "preprocess-assets" / asset["sha256"]
     checked_asset(path, asset)
@@ -207,6 +226,9 @@ def _receipt(driver, sid, guest, job, step, encode):
         if row["status"] == "failed":
             code = row.get("error")
             result["error"] = code if isinstance(code, str) and SIMPLE_ERROR.fullmatch(code) else "PREPROCESS_STEP_FAILED"
+            details = public_diagnostics(row.get("diagnostics"))
+            if details:
+                result["diagnostics"] = details
         elif step["kind"] != "powershell" and not {"before_sha256", "after_sha256"} <= result.keys():
             raise E2EError("PREPROCESS_STEP_RECEIPT_INVALID")
         elif step["kind"] == "powershell" and result.get("exit_code") != 0:
@@ -243,22 +265,31 @@ def apply_recipe(driver, sid, recipe, wgui, encode, *, isolation_receipt=None):
         base = {"index": index, "kind": step["kind"], "asset_sha256": step["asset"]["sha256"]}
         guest = WINDOWS_ROOT / attempt / key
         remote = "/tmp/wcb-preprocess-" + attempt + "/" + key
+        stage = "receipt" if job else "upload"
         try:
             if job is None:
+                state["current"] = {**base, "stage": stage}
+                driver._phase("PREPARING", preprocess_receipt=state)
                 job = {"invocation": invocation, "index": index}
                 _upload(driver, sid, step, job, remote, guest, wgui, encode)
+                stage = "launch"
                 job["started_at"] = utc_now()
                 jobs[key] = job
+                state["current"] = {**base, "stage": stage}
                 driver._phase("PREPARING", preprocess_jobs=jobs, preprocess_receipt=state)
                 _launch(driver, sid, guest, encode)
+            stage = "receipt"
+            state["current"] = {**base, "stage": stage}
+            driver._phase("PREPARING", preprocess_receipt=state)
             result = _receipt(driver, sid, guest, job, step, encode)
+            stage = "verify"
         except (E2EError, OSError, ValueError, zipfile.BadZipFile) as exc:
             from .backend import ObservationPaused
             if isinstance(exc, ObservationPaused):
                 raise
-            code = str(exc)
-            result = {"status": "failed", "error": code if SIMPLE_ERROR.fullmatch(code) else "PREPROCESS_STEP_TRANSPORT_FAILED"}
-        state["steps"].append({**base, **result})
+            result = {"status": "failed", "error": diagnostic_code(exc, "PREPROCESS_STEP_TRANSPORT_FAILED")}
+        state.pop("current", None)
+        state["steps"].append({**base, "stage": stage, **result})
         state["status"] = "failed" if result["status"] != "passed" else "running"
         atomic_json(driver.staging / "metadata/preprocessing.json", state)
         driver._phase("PREPARING", preprocess_jobs=jobs, preprocess_receipt=state)

@@ -45,6 +45,10 @@ def build_parser() -> argparse.ArgumentParser:
     asset.add_argument("--file", type=Path, required=True)
     asset.add_argument("--name", required=True)
     asset.add_argument("--kind", required=True)
+    validation = commands.add_parser("validate-preprocess", help="在专用 Windows 沙箱中验证预处理方案")
+    validation.add_argument("--request", required=True, type=Path)
+    validation.add_argument("--workspace-root", required=True, type=Path)
+    _agentcube(validation)
     events = commands.add_parser("events", help="按游标只读查询执行事件")
     _batch(events)
     events.add_argument("--after-cursor", type=int, default=0)
@@ -376,6 +380,19 @@ def _print_event(args, batch_id, event):
     print(json.dumps(value, ensure_ascii=False), flush=True)
 
 
+def _validate_preprocess(args):
+    import signal
+    from threading import Event
+    from .preprocess_validation import run_validation
+
+    stop = Event()
+    previous = signal.signal(signal.SIGTERM, lambda *_: stop.set())
+    try:
+        return run_validation(args.workspace_root, read_json(args.request), args.agentcube_config, stop=stop)
+    finally:
+        signal.signal(signal.SIGTERM, previous)
+
+
 def _public_command(args):
     from . import protocol
     if args.command == "inspect-preprocess-asset":
@@ -407,7 +424,7 @@ def main(argv=None) -> int:
             print(json.dumps({"type": "POC_INPUT_ERROR", "error": str(error)}, ensure_ascii=False))
             return 2
     handlers = {"run": _run, "resume": _resume, "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
-                "reconcile-absent-creation": _reconcile_absent_creation,
+                "reconcile-absent-creation": _reconcile_absent_creation, "validate-preprocess": _validate_preprocess,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "general-report": _general_report,
                 **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status", "inspect-preprocess-asset")}}
     try:
@@ -425,7 +442,10 @@ def main(argv=None) -> int:
             return 130
         if result.get("status") == "NEEDS_ATTENTION" or result.get("state") == "needs_attention":
             return 3
-        return 1 if result.get("status") == "FAILED" or result.get("state") in {"failed", "partial"} else 0
+        failed = result.get("status") == "FAILED" or result.get("state") in {"failed", "partial"}
+        if args.command == "validate-preprocess":
+            failed = result.get("status") != "passed"
+        return 1 if failed else 0
     except KeyboardInterrupt:
         return 130
     except (E2EError, OSError, KeyError, ValueError) as error:

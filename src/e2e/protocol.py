@@ -77,6 +77,7 @@ def describe(repo: Path) -> dict:
             "environment-status",
             "windows-astudio-runtime-bootstrap",
             preprocessing.CAPABILITY,
+            "windows-preprocess-validation",
             "execution",
             "events",
             "artifacts",
