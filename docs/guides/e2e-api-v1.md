@@ -69,3 +69,13 @@ purpose=scoring 整理成功题的本地 Skill 标准输入。结果包保留父
 WorkBuddy 新批次默认开启完全访问，执行单元冻结 `workbuddy_full_access: true`。执行器通过 WGUI `product_config.ui.permission` 传递 `full access`。当前模板的 WorkBuddy 驱动也会在发送题目前通过原生流程切换并确认完全访问。API 和 CLI 显式请求默认权限时，执行器要求驱动支持该权限参数。
 
 scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General 范围的 report-only manifest 与 report-config，保留原输入制品锁。接收方将独立单题标准回传导入为显式来源后，可直接将其 path 交给 selected_report.py 的 --batch-root，按 expected_execution_keys 检查全范围。coverage_status 区分完整与部分材料，单题快速评分仍使用 scoring_contexts。包索引记录 exporter_revision，执行发行仍由 parent-batch 的原快照保存。新版只读导出器可在协议 v1 下整理旧批次的封存原件。
+
+## 环境预处理
+
+`describe` 发布 `windows-environment-preprocessing` 能力。配置单元可提供 `preprocessing`，其中 `default` 为冻结方案或 null，`overrides` 按用例 ID 覆盖，同样允许 null 表示跳过。方案包含 `version_id`、`version`、`name` 和有序 `steps`。每步指定 `kind`、`timeout`、附件摘要 `asset`，以及该动作的专用字段。
+
+`inspect-preprocess-asset --kind ... --name ... --file ...` 校验上传件并返回类型、大小、SHA-256、可选 Skill 名称或插件/内核版本。预检返回 `preprocessing_sha256` 和按单元展开的生效范围。创建预处理批次时，`run` 接收 `--expected-preprocessing-sha256` 和按 SHA-256 命名的 `--preprocess-asset-dir`。执行器验证并冻结为私有控制文件，续接沿用同一版本。公开回执包含版本号、步骤结果与摘要。
+
+每个 `asset` 固定 `kind`、`name`、`size` 和 `sha256`。`skill` 指定 `target` 和 `source`，来源为 `auto`、`user`、`astudio` 或 `runtime`。`plugin` 指定 `target` 和本地 `marketplace`。`acode` 从 ZIP 中读取内核及配套清单。`powershell` 可在 `attachments` 中绑定 `kind=file` 的附件，并通过 `$env:WCB_PREPROCESS_ATTACHMENTS` 读取。预检为每步预留最多 300 秒的投递预算及运行预算。
+
+运行配置 `preprocessing_profiles` 缺省为空。沙箱隔离验收完成后，由部署管理员登记 `namespace`、`template`、`app_id`、`user_id`、`actions` 和验收记录的 SHA-256 `isolation_receipt`。该登记绑定经过审查的固定镜像版本、专用测试身份和宿主边界。变更镜像或身份时需要重新核验。特别需要检查 Windows 可访问的 WGUI 共享目录、宿主和控制面可达性、沙箱间隔离，以及登录材料是否限于评测账号。当前基础模板登记本身不足以证明这些条件。

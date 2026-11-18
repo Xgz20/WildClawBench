@@ -14,6 +14,7 @@ from . import DEFAULT_AGENTCUBE_TEMPLATE, DEFAULT_EXECUTION_CONCURRENCY
 from .artifacts import inventory, copy_stream_readonly, _protect, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, load_script, read_json, utc_now
 from .store import BatchStore, controller_lock
+from . import preprocessing
 
 
 PLAN_SCHEMA = "wildclawbench.sandbox-batch-plan/v1"
@@ -187,7 +188,7 @@ def normalize_plan(raw: dict) -> dict:
     for raw_unit in plan["units"]:
         if not isinstance(raw_unit, dict):
             raise E2EError("HARNESS_UNIT_OBJECT_REQUIRED")
-        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access"}:
+        if set(raw_unit) - {"unit_id", "harness", "backend", "model", "reasoning_effort", "template", "max_concurrency", "timeout_override", "max_mode", "workbuddy_full_access", "preprocessing"}:
             raise E2EError("HARNESS_UNIT_UNKNOWN_KEYS")
         unit = {"harness": raw_unit.get("harness"), "backend": raw_unit.get("backend", "agentcube"),
                 "model": raw_unit.get("model"), "reasoning_effort": raw_unit.get("reasoning_effort"),
@@ -217,6 +218,8 @@ def normalize_plan(raw: dict) -> dict:
             unit["workbuddy_full_access"] = raw_unit["workbuddy_full_access"]
         elif unit["harness"] == "workbuddy" and unit["template"] == DEFAULT_AGENTCUBE_TEMPLATE:
             unit["workbuddy_full_access"] = True
+        if "preprocessing" in raw_unit:
+            unit["preprocessing"] = preprocessing.normalize_binding(raw_unit["preprocessing"], unit["harness"])
         unit["unit_id"] = raw_unit.get("unit_id") or unit["harness"] + "-" + digest(unit)[:12]
         identifier(unit["unit_id"], "unit_id")
         identifier(unit["template"], "template")
@@ -227,12 +230,16 @@ def normalize_plan(raw: dict) -> dict:
     return plan
 
 
-def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selection_sha256: str | None = None) -> Path:
+def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selection_sha256: str | None = None,
+                  preprocess_asset_dir: Path | None = None, expected_preprocessing_sha256: str | None = None) -> Path:
     from .protocol import resolve
     repo, workspace = repo.resolve(strict=True), workspace.expanduser().resolve()
     plan, selected, members, general_manifest, web = resolve(repo, raw_plan)
     if expected_selection_sha256 and digest(selected) != expected_selection_sha256:
         raise E2EError("CONFIRMED_SELECTION_CHANGED")
+    preprocessing_selection = preprocessing.selection(plan["units"], selected)
+    if expected_preprocessing_sha256 is not None and preprocessing_selection.get("preprocessing_sha256") != expected_preprocessing_sha256:
+        raise E2EError("PREPROCESS_SELECTION_DRIFT")
     batch = workspace / "batches" / plan["batch_id"]
     general_prepare = canonical_script(repo, "general-e2e", "prepare-general-e2e-workspaces", "prepare_general_e2e_workspaces.py")
     workspace.mkdir(parents=True, exist_ok=True)
@@ -250,6 +257,7 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
         staging = batch.with_name("." + batch.name + ".prepare-" + uuid.uuid4().hex)
         staging.mkdir(parents=True)
         try:
+            preprocessing.freeze_assets(plan["units"], preprocess_asset_dir, staging / "preprocess-assets")
             prepared = []
             for task in selected:
                 identifier(task["task_id"], "task_id")
@@ -274,22 +282,29 @@ def prepare_batch(repo: Path, workspace: Path, raw_plan: dict, *, expected_selec
                 finally:
                     destination.chmod(destination.stat().st_mode & ~0o222)
                 prepared.append(row)
-            units = []
+            units, bindings = [], {}
             groups = sorted({(task["scene"], task["metric_profile"]) for task in prepared})
             for base in plan["units"]:
                 for scenario, profile in groups:
-                    unit = {**base, "scene": scenario, "metric_profile": profile}
+                    unit = {**preprocessing.public_unit(base), "scene": scenario, "metric_profile": profile}
                     unit["unit_id"] = base["unit_id"] + "-" + scenario + "-" + digest(profile)[:6]
                     unit["task_ids"] = [task["task_id"] for task in prepared if (task["scene"], task["metric_profile"]) == (scenario, profile)]
                     units.append(unit)
+                    if "preprocessing" in base:
+                        bindings[unit["unit_id"]] = base["preprocessing"]
                     atomic_json(staging / "units" / unit["unit_id"] / "unit.json", unit)
             from .compatibility import freeze_assets
             compatibility = freeze_assets(repo, staging, prepared, general_manifest, members)
-            manifest = {"schema": BATCH_SCHEMA, "created_at": utc_now(), "plan": plan,
+            manifest = {"schema": BATCH_SCHEMA, "created_at": utc_now(), "plan": preprocessing.public_plan(plan),
                         "source_revision": _revision(repo), "units": units, "tasks": prepared,
                         "engine": {"api_version": 1, "root": str(repo), "python": sys.executable,
                                    "revision": _revision(repo)},
                         "compatibility": compatibility}
+            if preprocessing_selection:
+                manifest["preprocessing_sha256"] = preprocessing_selection["preprocessing_sha256"]
+                manifest["preprocessing_bindings_sha256"] = digest(bindings)
+                atomic_json(staging / "preprocessing.json", bindings)
+                (staging / "preprocessing.json").chmod(0o400)
             atomic_json(staging / "batch.json", manifest)
             atomic_json(staging / "selection.json", {"requested": plan["selection"], "tasks": [{
                 "task_id": task["task_id"], "scene": task["scene"], "dataset": task.get("dataset"),

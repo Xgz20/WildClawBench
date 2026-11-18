@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from . import preprocessing
+
 from collections import Counter
 from datetime import datetime
 import json
@@ -74,6 +76,7 @@ def describe(repo: Path) -> dict:
             "workbuddy-permission",
             "environment-status",
             "windows-astudio-runtime-bootstrap",
+            preprocessing.CAPABILITY,
             "execution",
             "events",
             "artifacts",
@@ -207,6 +210,7 @@ def resolve(
 
 def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_runtime: bool = False) -> dict:
     plan, tasks, members, _, _ = resolve(repo, raw)
+    preprocess_selection = preprocessing.selection(plan["units"], tasks)
     issues = []
     warnings = []
     published = profiles()
@@ -283,10 +287,15 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             issues.append({"code": "AGENTCUBE_RUNTIME_CONFIG_INVALID", "message": str(exc)})
     if config:
         if any(
-            config.required_expire_ttl(unit["timeout_override"]) > config.expire_ttl
+            config.required_expire_ttl(unit["timeout_override"], preprocessing.budget(unit)) > config.expire_ttl
             for unit in plan["units"]
         ):
             issues.append({"code": "PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT"})
+        for unit in plan["units"]:
+            try:
+                preprocessing.require_admission(config, unit)
+            except E2EError as exc:
+                issues.append({"code": str(exc), "unit_id": unit["unit_id"]})
         if check_runtime:
             runtime_checks["dns"] = "passed"
             checked = set()
@@ -311,12 +320,13 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
         "runtime_checks": runtime_checks,
         "warnings": warnings,
         "issues": issues,
-        "plan": plan,
-        "plan_sha256": digest(plan),
+        "plan": preprocessing.public_plan(plan),
+        "plan_sha256": digest(preprocessing.public_plan(plan)),
         "selection_sha256": digest(tasks),
         "selected_task_count": len(tasks),
         "unit_count": len(plan["units"]) * len(groups),
         "planned_execution_count": len(tasks) * len(plan["units"]) * plan["runs"],
+        **preprocess_selection,
         "cases": [
             {
                 key: task.get(key)
@@ -448,6 +458,7 @@ def snapshot(batch: Path) -> dict:
                 "resource_held": row["resource_held"],
                 "session_id": row.get("session_id"),
                 "error": error,
+                **({"preprocessing": row["preprocess_receipt"]} if row.get("preprocess_receipt") else {}),
                 "harness": units[row["unit_id"]]["harness"],
                 "requested_model": units[row["unit_id"]]["model"],
                 "actual_model": ready.get("actual_model")

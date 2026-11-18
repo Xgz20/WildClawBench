@@ -102,6 +102,8 @@ def _source_row(core, source, item, task, original_unit, result, target):
                    evaluation={'status': 'evaluation_error', 'error': row_result.get('error')})
     row['source_execution'] = {'batch_id': result['batch_id'], 'unit_id': item['unit_id'],
                                'run_index': item['run_index'], 'attempt_id': item['attempt_id']}
+    if item.get("preprocess_receipt"):
+        row["preprocessing"] = item["preprocess_receipt"]
     return row
 
 
@@ -157,8 +159,10 @@ def _unavailable_row(core, item, task, unit, outcome):
         and not item.get('session_id') and isinstance(execution_error, dict)
         and execution_error.get('code') == 'E2EError'
         and execution_error.get('message') == 'FROZEN_TASK_INPUT_DRIFT')
+    preprocessing = item.get("preprocess_receipt")
+    preprocess_failure = preprocessing and preprocessing.get("status") == "failed" and not item.get("dispatch_armed_at")
     status = ('cancelled' if item['phase'] == 'CANCELLED' else
-              'infrastructure_error' if frozen_input_failure else 'unknown')
+              'infrastructure_error' if frozen_input_failure or preprocess_failure else 'unknown')
     if (outcome or {}).get('execution_not_ready') and error == 'CONTROLLER_EXECUTION_INCOMPLETE: task_timeout':
         status = 'timeout'
     reason = error
@@ -182,8 +186,9 @@ def _unavailable_row(core, item, task, unit, outcome):
             'checkpoints': core.report_views.checkpoints(None, None, core.resolve_file, core.sha256_file),
             'tool_calls': {'status': 'unavailable', 'total': None, 'by_tool': {}},
             'task_definition': {'task_id': task['task_id'], 'status': 'unavailable', 'sources': []},
+            **({"preprocessing": preprocessing} if preprocessing else {}),
             'lineage': {'source_unit_id': unit['unit_id'], 'source_execution_state': item['key'],
-                        'execution_not_dispatched': frozen_input_failure}}
+                        'execution_not_dispatched': bool(frozen_input_failure or preprocess_failure)}}
 
 
 def normalize_presentation(data):
@@ -193,6 +198,17 @@ def normalize_presentation(data):
     for name in p['score_detail_order']:
         p['tables'][name] = p['score_details'][name]
         p['sheet_order'].append(name)
+    if any(task.get("preprocessing") for task in data["tasks"]):
+        rows = []
+        for task in data["tasks"]:
+            receipt = task.get("preprocessing")
+            recipe = receipt["recipe"] if receipt else None
+            rows.append([task["unit_id"], task["task_name"] or task["task_id"],
+                         f"#{recipe['version_id']} · v{recipe['version']}" if recipe else "原始环境",
+                         {"passed": "通过", "failed": "失败", "running": "未收口"}.get(receipt["status"], "—") if receipt else "—",
+                         receipt["recipe_sha256"] if receipt else None])
+        p["tables"]["环境预处理"] = {"headers": ["单元", "用例", "方案版本", "状态", "配置 SHA-256"], "rows": rows}
+        p["sheet_order"].append("环境预处理")
     resource_rows = []
     for task in data['tasks']:
         for field, observation in task['resource'].items():

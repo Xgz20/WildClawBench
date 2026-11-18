@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import base64
 from dataclasses import asdict, dataclass, field
+import json
 import os
 from pathlib import Path
 import shlex
@@ -37,6 +38,7 @@ class AgentCubeConfig:
     astudio_runtime: dict | None = None
     auth_token: str = field(default="", repr=False)
     create_timeout_seconds: int = 900
+    preprocessing_profiles: tuple = ()
 
     @classmethod
     def load(cls, path: Path | None = None, *, template: str | None = None):
@@ -72,6 +74,8 @@ class AgentCubeConfig:
         if result.astudio_runtime is not None:
             from .windows_runtime import validate_runtime
             validate_runtime(result.astudio_runtime)
+        from .preprocessing import validate_admissions
+        validate_admissions(result.preprocessing_profiles)
         identifier(result.template, "template")
         identifier(result.namespace, "namespace")
         return result
@@ -79,11 +83,12 @@ class AgentCubeConfig:
     def public(self) -> dict:
         return {key: value for key, value in asdict(self).items()
                 if key != "auth_token" and not (key == "astudio_runtime" and value is None)
+                and key != "preprocessing_profiles"
                 # Keep legacy runtime fingerprints stable when using their original timeout.
                 and not (key == "create_timeout_seconds" and value == 900)}
 
-    def required_expire_ttl(self, execution_timeout: int) -> int:
-        return execution_timeout + 2400 + max(0, self.create_timeout_seconds - 900)
+    def required_expire_ttl(self, execution_timeout: int, preprocessing_timeout: int = 0) -> int:
+        return execution_timeout + preprocessing_timeout + 2400 + max(0, self.create_timeout_seconds - 900)
 
 
 class AgentCubeClient:
@@ -181,8 +186,8 @@ class AgentCubeClient:
                 (result.get("stderr") or result.get("stdout") or "")[-1000:], self.config.auth_token)))
         return result.get("stdout") or ""
 
-    def upload(self, sid: str, remote: str, content: bytes):
-        response = self._request("POST", self.picod + "/files", sid=sid, timeout=300,
+    def upload(self, sid: str, remote: str, content: bytes, *, timeout=300):
+        response = self._request("POST", self.picod + "/files", sid=sid, timeout=timeout,
                                  data={"path": remote, "mode": "0644"},
                                  files={"file": (remote.rsplit("/", 1)[-1], content)})
         self._json(response, "UPLOAD")
@@ -218,8 +223,26 @@ class AgentCubeClient:
             raise PlatformError("WINDOWS_COMMAND_FAILED: " + str(redact(result.get("error", "")[:1500], self.config.auth_token)))
         return result
 
-    def windows_download(self, sid: str, path: str) -> bytes:
-        response = self._request("POST", self.windows + "/file", sid=sid, data={"file_path": path}, timeout=120)
+    def windows_download(self, sid: str, path: str, *, timeout=120, max_bytes: int | None = None) -> bytes:
+        if max_bytes is not None:
+            response = self._request("POST", self.windows + "/file", sid=sid, data={"file_path": path},
+                                     timeout=timeout, stream=True)
+            with response:
+                if response.status_code == 404:
+                    raise FileNotFoundError(path)
+                if response.status_code != 200:
+                    raise PlatformError(f"WINDOWS_DOWNLOAD_HTTP_{response.status_code}")
+                data = bytearray()
+                for chunk in response.iter_content(chunk_size=max_bytes):
+                    data.extend(chunk)
+                    if len(data) > max_bytes:
+                        raise E2EError("WINDOWS_DOWNLOAD_BYTE_LIMIT")
+                if response.headers.get("Content-Type", "").startswith("application/json"):
+                    payload = json.loads(data)
+                    if isinstance(payload, dict) and payload.get("code") == 10005:
+                        raise FileNotFoundError(path)
+                return bytes(data)
+        response = self._request("POST", self.windows + "/file", sid=sid, data={"file_path": path}, timeout=timeout)
         if response.status_code == 404:
             raise FileNotFoundError(path)
         if response.status_code != 200:

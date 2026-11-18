@@ -41,6 +41,10 @@ def build_parser() -> argparse.ArgumentParser:
     preflight.add_argument("--plan", type=Path, required=True)
     preflight.add_argument("--check-runtime", action="store_true", help="额外检查运行凭据、TTL 和沙箱平台域名解析，不创建沙箱")
     _agentcube(preflight)
+    asset = commands.add_parser("inspect-preprocess-asset", help="校验端到端环境预处理附件")
+    asset.add_argument("--file", type=Path, required=True)
+    asset.add_argument("--name", required=True)
+    asset.add_argument("--kind", required=True)
     events = commands.add_parser("events", help="按游标只读查询执行事件")
     _batch(events)
     events.add_argument("--after-cursor", type=int, default=0)
@@ -87,6 +91,8 @@ def build_parser() -> argparse.ArgumentParser:
     run.add_argument("--scoring-concurrency", type=int, help="评分槽位，默认 3")
     run.add_argument("--dry-run", action="store_true")
     run.add_argument("--expected-selection-sha256")
+    run.add_argument("--preprocess-asset-dir", type=Path)
+    run.add_argument("--expected-preprocessing-sha256")
     run.add_argument("--jsonl", action="store_true", help="逐行输出持久化事件与最终回执")
     resume = commands.add_parser("resume", help="按冻结批次恢复原任务与远端 job")
     _batch(resume)
@@ -191,10 +197,10 @@ def _run(args):
     config = None if args.dry_run else AgentCubeConfig.load(args.agentcube_config)
     if args.jsonl and not args.api_version:
         print(json.dumps({"type": "BATCH_PREPARING", "batch_id": raw.get("batch_id")}, ensure_ascii=False), flush=True)
-    if args.expected_selection_sha256:
-        batch = prepare_batch(args.repo_root, args.workspace_root, raw, expected_selection_sha256=args.expected_selection_sha256)
-    else:
-        batch = prepare_batch(args.repo_root, args.workspace_root, raw)
+    batch = prepare_batch(args.repo_root, args.workspace_root, raw,
+                          expected_selection_sha256=args.expected_selection_sha256,
+                          preprocess_asset_dir=args.preprocess_asset_dir,
+                          expected_preprocessing_sha256=args.expected_preprocessing_sha256)
     if args.jsonl and not args.api_version:
         print(json.dumps({"type": "BATCH_PREPARED", "batch_id": batch.name, "batch_root": str(batch)}, ensure_ascii=False), flush=True)
     if args.dry_run:
@@ -372,6 +378,9 @@ def _print_event(args, batch_id, event):
 
 def _public_command(args):
     from . import protocol
+    if args.command == "inspect-preprocess-asset":
+        from .preprocessing import inspect_asset
+        return inspect_asset(args.file, args.kind, args.name)
     if args.command == "describe":
         return protocol.describe(args.repo_root)
     if args.command == "catalog":
@@ -400,7 +409,7 @@ def main(argv=None) -> int:
     handlers = {"run": _run, "resume": _resume, "recover-native-terminal": _recover_native_terminal, "status": _status, "cleanup": _cleanup,
                 "reconcile-absent-creation": _reconcile_absent_creation,
                 "restore": _restore, "export": _export, "import": _import, "pipeline": _pipeline, "headless-score": _headless_score, "general-report": _general_report,
-                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status")}}
+                **{name: _public_command for name in ("describe", "catalog", "preflight", "events", "artifacts", "environment-status", "inspect-preprocess-asset")}}
     try:
         result = handlers[args.command](args)
         if args.api_version:

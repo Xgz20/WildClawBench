@@ -18,6 +18,7 @@ from .agentcube import AgentCubeClient, AgentCubeConfig, PlatformError
 from .artifacts import _members, _protect, copy_stream_readonly, inventory, quarantine_local_metadata, remove_temporary_tree
 from .common import E2EError, atomic_json, digest, file_sha256, identifier, inside, read_json, utc_now
 from .trace import normalize_rollout, windows_equal
+from . import preprocessing, windows_preprocess
 
 
 WGUI = "/opt/wgui-venv/bin/python -m controller.cli.main"
@@ -142,6 +143,8 @@ class AStudioSandboxDriver:
         self.root = inside(batch_root, item["execution_root"])
         self.staging = self.root / "staging"
         self.staging.mkdir(parents=True, exist_ok=True)
+        self.preprocess_recipe = None
+        self.preprocess_admission = None
 
     def checkpoint(self):
         if self.stop.is_set():
@@ -151,6 +154,14 @@ class AStudioSandboxDriver:
         if self.unit["model"].casefold().startswith(("custom/","third-party/")) or "://" in self.unit["model"]:
             raise E2EError("CUSTOM_TESTED_MODELS_NOT_SUPPORTED")
         if self.config.required_expire_ttl(self.unit["timeout_override"]) > self.config.expire_ttl:
+            raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
+        if (self.batch / "batch.json").is_file():
+            self.preprocess_recipe = preprocessing.frozen_recipe(self.batch, self.unit["unit_id"], self.task["task_id"])
+        bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {}}}
+        if self.preprocess_recipe is not None:
+            self.preprocess_admission = preprocessing.require_admission(self.config, bound)
+        if self.preprocess_recipe is not None and self.config.required_expire_ttl(
+                self.unit["timeout_override"], preprocessing.budget(bound)) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
         for name, value in self.task.get("requirements", {}).items():
             if str(value).strip().casefold() not in {"", "none", "null", "n/a", "无", "{}", "[]"}:
@@ -386,6 +397,8 @@ class AStudioSandboxDriver:
         if not self.store.get(self.key).get("dispatch_armed_at"):
             self._health(sid)
             self._prepare_runtime(sid)
+            windows_preprocess.apply_recipe(self, sid, self.preprocess_recipe, WGUI, powershell,
+                                            isolation_receipt=self.preprocess_admission)
             self._upload(sid)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
@@ -408,6 +421,8 @@ class AStudioSandboxDriver:
         prompt = (inside(self.batch, self.task["input_root"]) / "execution/PROMPT.md").read_text(encoding="utf-8")
         before = self.store.get(self.key).get("native_before", {})
         before_close, before_binding = self._bound_native(sid, before, report, identity, prompt, "before-cleanup")
+        if self.preprocess_recipe:
+            windows_preprocess.bind_running_acode(self, sid, powershell)
         cleanup = self._cleanup_processes(sid)
         self._checked_job("task-collect", WGUI + " task collect --request /run/wgui/collect-request.json --output /logs/artifacts/collect", timeout=600)
         collected = self._download_tree(sid, "/logs/artifacts/collect", "collect")
