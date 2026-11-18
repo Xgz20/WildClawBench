@@ -4,7 +4,7 @@ import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { artifact, assertArchivedFailuresIdle, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
-  runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
+  runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, verifyNativeLengthFailure, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
 export const STATE_SCHEMA = 'wildclawbench.general-e2e-execution-state/v1';
@@ -140,6 +140,7 @@ export function buildState(context, journal) {
         runtime_rebindings: journal.runtime_rebindings || [],
         runtime_absence_before_dispatch: journal.runtime_absence_before_dispatch || null,
         ...(journal.native_http_failure ? { native_http_failure: journal.native_http_failure } : {}),
+        ...(journal.native_length_failure ? { native_length_failure: journal.native_length_failure } : {}),
         final_message_id: journal.final_message_id ?? null, native_finished_at: journal.native_finished_at ?? null,
         attention: journal.attention ?? null, journal_path: relative(context.unitRoot, context.journalPath),
         source_repairs: journal.source_repairs || [], observer_version: journal.observer_version || journal.version,
@@ -246,6 +247,8 @@ export async function observe(context, journal, allowedSessionIds = []) {
   const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt,
     baseline: journal.baseline, sessionId: journal.session?.id });
   checkNativeModel(binding);
+  requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question'
+    && !['completed', 'error'].includes(row.parsed.state?.status)), 'PENDING_QUESTION_REQUIRES_INTERVENTION');
   assertIdle(status, [...allowedSessionIds, ...binding.session_ids]);
   requireValue(binding.user.time_created >= Date.parse(journal.sent_at) - 2000, 'NATIVE_USER_PREDATES_DISPATCH');
   if (!journal.session) {
@@ -262,7 +265,18 @@ export async function observe(context, journal, allowedSessionIds = []) {
   journal.send_status = 'sent'; journal.phase = 'RUNNING'; journal.attention = null;
   const idle = binding.session_ids.every(id => !status[id] || status[id].type === 'idle');
   if (idle && !binding.final?.parsed.finish && !binding.final?.parsed.error) await recordNativeHttpFailure(context, journal, context.config.runtime, native);
-  if (idle && (binding.final?.parsed.error || journal.native_http_failure)) {
+  if (idle && binding.final?.parsed.finish === 'length') {
+    const proof = { profile: 'loomy-native-output-length-failure/v1', identity: journal.identity,
+      prompt_sha256: context.locks.prompt, session_id: binding.root.id, final_message_id: binding.final.id,
+      runtime: context.config.runtime, runtime_status: status, observed_at: new Date().toISOString(),
+      runtime_status_scope: { directory: context.workspace, endpoint: statusUrl(context.config.runtime, context.workspace).href } };
+    const verified = verifyNativeLengthFailure(proof, { native, workspace: context.workspace, prompt: context.prompt,
+      baseline: journal.baseline, sessionId: binding.root.id, identity: journal.identity });
+    const bytes = jsonBytes(proof), path = join(context.control, 'native-length-failure.json');
+    await writeFile(path, bytes, { flag: 'wx', mode: 0o600 });
+    journal.native_length_failure = artifact(relative(context.unitRoot, path), bytes);
+    journal.phase = 'FAILED'; journal.business_status = 'candidate_error'; journal.native_error = verified.error;
+  } else if (idle && (binding.final?.parsed.error || journal.native_http_failure)) {
     journal.phase = 'FAILED'; journal.business_status = 'candidate_error';
     const proof = journal.native_http_failure && JSON.parse(await readFile(join(context.unitRoot, journal.native_http_failure.path), 'utf8'));
     journal.native_error = proof ? { code: 'LOOMY_NATIVE_HTTP_ERROR', message: 'Native primary model HTTP '

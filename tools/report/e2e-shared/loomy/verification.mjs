@@ -97,6 +97,13 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   ]);
   const { config_digest, ...payload } = config;
   const failureBytes = journal.native_http_failure && await bytes('raw/native-http-failure.json');
+  const lengthBytes = journal.native_length_failure && await bytes('raw/native-length-failure.json');
+  if (lengthBytes) {
+    requiredRaw.push('raw/native-length-failure.json');
+    requireValue(sha(lengthBytes) === journal.native_length_failure.sha256 && lengthBytes.length === journal.native_length_failure.size
+      && digest(state.extensions?.loomy?.native_length_failure) === digest(journal.native_length_failure)
+      && index.raw_trace.some(row => row.path === 'raw/native-length-failure.json'), 'ARCHIVE_LENGTH_FAILURE_HASH_MISMATCH');
+  }
   if (failureBytes) {
     requiredRaw.push('raw/native-http-failure.json');
     requireValue(sha(failureBytes) === journal.native_http_failure.sha256 && failureBytes.length === journal.native_http_failure.size,
@@ -183,7 +190,9 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     && digest(baseline.session_index.map(row => row.id)) === digest(journal.baseline)
     && state.prompt.sent_at === journal.sent_at && Date.parse(baseline.observed_at) <= Date.parse(journal.sent_at), 'ARCHIVE_PRE_SEND_BASELINE_MISMATCH');
   assertNativeActivity(baseline, journal.allowed_session_ids, config.archived_http_failures);
-  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline, nativeFailure: failureBytes && JSON.parse(failureBytes) });
+  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline, nativeFailure: failureBytes && JSON.parse(failureBytes),
+    nativeLengthFailure: lengthBytes && JSON.parse(lengthBytes) });
+  if (lengthBytes) requireValue(digest(JSON.parse(lengthBytes).runtime) === digest(effectiveRuntime), 'ARCHIVE_LENGTH_RUNTIME_MISMATCH');
   const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(old);

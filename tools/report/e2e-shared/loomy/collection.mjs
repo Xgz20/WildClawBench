@@ -1,21 +1,24 @@
 import { mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile, lstat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, verifyNativeHttpFailure, COMPONENT_VERSION } from './index.mjs';
+import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, COMPONENT_VERSION } from './index.mjs';
 import { applyJournalRuntime, buildState, checkNativeModel, lease, loadTask, verifyRuntime } from './execution.mjs';
 
 const lines = rows => Buffer.from(rows.map(row => JSON.stringify(row)).join('\n') + '\n');
 const metric = (value, basis, status = 'observed') => ({ value, status, basis });
 const unavailable = basis => metric(null, basis, 'unavailable');
 
-export function normalizeTrace(native, { state, prompt, baseline, nativeFailure = null }) {
+export function normalizeTrace(native, { state, prompt, baseline, nativeFailure = null, nativeLengthFailure = null }) {
   const binding = verifyBinding(native, { workspace: state.session.cwd, prompt, baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(binding);
   if (state.phase === 'COMPLETED') requireValue(!binding.final.parsed.error, 'COMPLETED_NATIVE_ERROR_CONFLICT');
   const httpFailure = nativeFailure && verifyNativeHttpFailure(nativeFailure, { native, workspace: state.session.cwd,
     prompt, baseline, sessionId: state.session.session_id, identity: state.identity });
+  const lengthFailure = nativeLengthFailure && verifyNativeLengthFailure(nativeLengthFailure, { native, workspace: state.session.cwd,
+    prompt, baseline, sessionId: state.session.session_id, identity: state.identity });
   if (state.phase === 'FAILED') requireValue((binding.final?.parsed.error || httpFailure
-    && digestError(httpFailure.error) === digestError(state.execution.error)) && state.execution.business_status === 'candidate_error', 'NATIVE_FAILURE_UNPROVED');
+    && digestError(httpFailure.error) === digestError(state.execution.error) || lengthFailure
+    && digestError(lengthFailure.error) === digestError(state.execution.error)) && state.execution.business_status === 'candidate_error', 'NATIVE_FAILURE_UNPROVED');
   requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question'), 'HUMAN_QUESTION_REQUIRES_INTERVENTION_RECEIPT');
   const messages = new Map(binding.messages.map(row => [row.id, row]));
   const events = [], grouped = new Map(), missing = [], callIds = new Set();
@@ -76,6 +79,13 @@ export function normalizeTrace(native, { state, prompt, baseline, nativeFailure 
       content: JSON.stringify({ name: row.error.name, statusCode: row.error.statusCode, responseBody: row.error.responseBody }),
       native_session_id: binding.root.id, native_message_id: binding.final.id,
       source: { adapter: PROFILE, raw_ref: 'raw/native-http-failure.json#/source_lines/' + position, redacted: false } });
+  }
+  if (lengthFailure) {
+    nativeAtoms++;
+    append({ event_id: binding.final.id + '-length-failure', occurred_at: iso(binding.final.parsed.time.completed),
+      type: 'error', role: 'assistant', content: JSON.stringify(lengthFailure.error),
+      native_session_id: binding.root.id, native_message_id: binding.final.id,
+      source: { adapter: PROFILE, raw_ref: 'raw/native-length-failure.json', redacted: false } });
   }
   const filtered = [...grouped.values()].reduce((count, rows) => count + rows.length - 1, 0);
   events.sort((a, b) => Date.parse(a.occurred_at) - Date.parse(b.occurred_at) || (a.event_id < b.event_id ? -1 : a.event_id > b.event_id ? 1 : 0));
@@ -138,8 +148,11 @@ export async function collectTask(options) {
     const failureBytes = journal.native_http_failure && await readFile(join(context.unitRoot, journal.native_http_failure.path));
     if (failureBytes) requireValue(sha(failureBytes) === journal.native_http_failure.sha256
       && failureBytes.length === journal.native_http_failure.size, 'HTTP_FAILURE_PROOF_CHANGED');
+    const lengthBytes = journal.native_length_failure && await readFile(join(context.unitRoot, journal.native_length_failure.path));
+    if (lengthBytes) requireValue(sha(lengthBytes) === journal.native_length_failure.sha256
+      && lengthBytes.length === journal.native_length_failure.size, 'LENGTH_FAILURE_PROOF_CHANGED');
     const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline,
-      nativeFailure: failureBytes && JSON.parse(failureBytes) });
+      nativeFailure: failureBytes && JSON.parse(failureBytes), nativeLengthFailure: lengthBytes && JSON.parse(lengthBytes) });
     requireValue(currentNative.sessions.every(row => !statuses[row.id] || statuses[row.id].type === 'idle'), 'COLLECT_NATIVE_STILL_ACTIVE');
     requireValue(normalized.binding.final?.id === journal.final_message_id, 'COLLECT_FINAL_MESSAGE_CHANGED');
     const baselineBytes = await readFile(join(context.unitRoot, journal.baseline_evidence.path));
@@ -163,6 +176,7 @@ export async function collectTask(options) {
       ['raw/terminal-evidence.json', terminalBytes], ['raw/pre-send-native-baseline.json', baselineBytes],
       ['raw/current-scoped-snapshot.json', jsonBytes({ native: currentNative, runtime: collectionRuntime, runtime_status: statuses })]]);
     if (failureBytes) files.set('raw/native-http-failure.json', failureBytes);
+    if (lengthBytes) files.set('raw/native-length-failure.json', lengthBytes);
     for (const [i, receipt] of journal.history.entries()) {
       const bytes = await readFile(join(context.unitRoot, receipt.path));
       requireValue(sha(bytes) === receipt.sha256 && bytes.length === receipt.size, 'UI_PREPARATION_EVIDENCE_CHANGED');

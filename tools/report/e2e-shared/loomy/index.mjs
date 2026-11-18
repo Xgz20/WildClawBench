@@ -10,7 +10,7 @@ import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 
-export const COMPONENT_VERSION = '0.1.13';
+export const COMPONENT_VERSION = '0.1.14';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -209,6 +209,34 @@ export async function captureNativeHttpFailure(context, journal, runtime, native
   verifyNativeHttpFailure(proof, { native, workspace: context.workspace, prompt: context.prompt,
     baseline: journal.baseline, sessionId: binding.root.id, identity: journal.identity });
   return proof;
+}
+
+export const LENGTH_ERROR = { code: 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT', message: 'Native primary model ended with finish=length' };
+export function verifyNativeLengthFailure(proof, { native, workspace, prompt, baseline, sessionId, identity }) {
+  requireValue(proof?.profile === 'loomy-native-output-length-failure/v1'
+    && digest(proof.identity) === digest(identity) && proof.prompt_sha256 === sha(Buffer.from(prompt)), 'LENGTH_FAILURE_IDENTITY_INVALID');
+  const binding = verifyBinding(native, { workspace, prompt, baseline, sessionId });
+  const final = binding.final?.parsed;
+  requireValue(final?.finish === 'length' && !final.error && Number.isSafeInteger(final.time?.created)
+    && Number.isSafeInteger(final.time.completed) && final.time.completed >= final.time.created
+    && binding.final.id === proof.final_message_id && binding.root.id === proof.session_id, 'LENGTH_FAILURE_HEAD_INVALID');
+  requireValue(binding.user.parsed.model?.providerID === 'imodel' && binding.user.parsed.model?.modelID === 'spark-x2.6'
+    && binding.user.parsed.model.variant === 'high'
+    && binding.messages.filter(row => row.session_id === binding.root.id && row.parsed.role === 'assistant').every(row =>
+      row.parsed.providerID === 'imodel' && row.parsed.modelID === 'spark-x2.6' && row.parsed.variant === 'high'), 'LENGTH_FAILURE_MODEL_INVALID');
+  requireValue(binding.parts.filter(row => row.parsed.type === 'tool').every(row =>
+    ['completed', 'error'].includes(row.parsed.state?.status) && row.parsed.tool !== 'question'), 'LENGTH_FAILURE_TOOL_NOT_TERMINAL');
+  for (const id of binding.session_ids) {
+    const tail = binding.messages.filter(row => row.session_id === id && row.parsed.role === 'assistant').at(-1)?.parsed;
+    requireValue(Number.isSafeInteger(tail?.time?.completed)
+      && (['stop', 'length'].includes(tail.finish) || Boolean(tail.error)), 'LENGTH_FAILURE_CHILD_NOT_TERMINAL');
+  }
+  requireValue(proof.runtime?.database_owned === true && proof.runtime.health_version === '1.14.22'
+    && proof.runtime_status_scope?.directory === workspace
+    && proof.runtime_status_scope.endpoint === statusUrl(proof.runtime, workspace).href
+    && binding.session_ids.every(id => !proof.runtime_status[id] || proof.runtime_status[id].type === 'idle')
+    && Date.parse(proof.observed_at) >= final.time.completed, 'LENGTH_FAILURE_IDLE_UNPROVED');
+  return { binding, error: { ...LENGTH_ERROR } };
 }
 
 export function selectConnectedRuntime(runtimes, connections) {

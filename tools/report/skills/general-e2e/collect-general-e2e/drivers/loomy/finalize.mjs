@@ -31,7 +31,7 @@ export async function finalizeLoomyExecution(options) {
     if (config_digest !== digest(payload) || sha(configBytes) !== journal.input_locks.config
       || runConfig && runConfig.config_digest !== config_digest) throw Error('LOOMY_FINALIZER_RUN_CONFIG_MISMATCH');
     runConfig = config;
-    if (state.phase === 'FAILED' && state.extensions?.loomy?.native_http_failure) {
+    if (state.phase === 'FAILED' && (state.extensions?.loomy?.native_http_failure || state.extensions?.loomy?.native_length_failure)) {
       const index = JSON.parse(await readFile(join(collected, 'trace/trace-index.json'), 'utf8'));
       const frozen = JSON.parse(await readFile(join(collected, 'execution/automation-state.json'), 'utf8'));
       await verifyArchivedLoomy(index, frozen, join(collected, 'trace'));
