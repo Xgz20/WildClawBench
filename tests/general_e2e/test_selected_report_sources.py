@@ -2,6 +2,7 @@ from pathlib import Path
 import hashlib
 import importlib.util
 import json
+import shutil
 import sys
 import tempfile
 import unittest
@@ -15,6 +16,31 @@ SPEC.loader.exec_module(REPORT)
 
 
 class SelectedReportSourcesTest(unittest.TestCase):
+    def test_selected_report_emits_a_real_flow_receipt_and_seals_external_output(self):
+        import seal_report
+        run_scripts=SCRIPT.parents[2]/'run-general-e2e/scripts'
+        sys.path.insert(0,str(run_scripts))
+        import run_general_e2e as flow
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp).resolve();batch=root/'private-batch';batch.mkdir()
+            (root/'reports').mkdir();stage=root/'reports/.staging';stage.mkdir();published=root/'reports/final'
+            data={'batch_id':'batch','dataset':{'id':'dataset','digest':'a'*64},
+                  'generated_at':'2026-11-18T00:00:00Z','scope':{'task_ids':['task']}}
+            (stage/'general_e2e_report_data.json').write_text(json.dumps(data))
+            (stage/'result.xlsx').write_bytes(b'verified test workbook bytes')
+            path=REPORT.write_flow_report_receipt(data,stage,published,root)
+            receipt=json.loads(path.read_text());self.assertEqual(receipt['scope']['batch_id'],'batch')
+            self.assertEqual(receipt['stage'],'report');self.assertEqual(receipt['task_ids'],['task'])
+            self.assertEqual({x['path'] for x in receipt['artifacts']},
+                             {'reports/final/general_e2e_report_data.json','reports/final/result.xlsx'})
+            stage.rename(published)
+            sealed=seal_report.seal_report(published,root/'sealed',batch_root=root)
+            copy=batch/'report-receipt.json';shutil.copy2(published/'receipts/report-receipt.json',copy)
+            flow.validate_canonical_report_archive(Path(sealed['archive']),copy,receipt)
+            copy.write_text('{}')
+            with self.assertRaisesRegex(flow.FlowError,'CANONICAL_REPORT_RECEIPT_DRIFT'):
+                flow.validate_canonical_report_archive(Path(sealed['archive']),copy,receipt)
+
     def test_report_output_boundary_is_explicit_new_and_does_not_follow_symlinks(self):
         with tempfile.TemporaryDirectory() as temp:
             workspace=Path(temp);batch=workspace/'private'/'batch';batch.mkdir(parents=True)

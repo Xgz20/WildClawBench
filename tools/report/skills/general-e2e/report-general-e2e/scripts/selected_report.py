@@ -41,6 +41,16 @@ def report_output_path(path, workspace_root, batch_root, output_root=None):
         if parent.resolve()==boundary:break
     return target
 
+def write_flow_report_receipt(data, stage, published, workspace_root):
+    """A genuine report receipt; no collection or scoring receipt is synthesized."""
+    artifacts=sorted(p for p in stage.rglob('*') if p.is_file())
+    receipt=report.build_report_receipt(data,workspace_root,artifacts,
+        staged_output_root=stage,published_output_root=published)
+    report.CONTRACTS.validate_contract(receipt,expected_schema_id=report.RECEIPT_SCHEMA)
+    path=stage/'receipts/report-receipt.json'
+    report.write_json(path,receipt)
+    return path
+
 def verify_source_package(root,expected,unit_id,task_ids,*,allow_subset=False):
     root=Path(root).resolve();require(root.is_relative_to(ROOT),"SELECTION_PACKAGE_OUTSIDE_ROOT")
     p=safe_file(root/"package-manifest.json",ROOT);require(sha(p)==expected,"SELECTION_PACKAGE_MANIFEST_DRIFT")
@@ -445,10 +455,11 @@ def main(argv=None):
                 "model_timing_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in model_artifacts],
                 "run_audit_artifacts":[{"path":p.relative_to(stage).as_posix(),"sha256":sha(p)} for p in run_audit_artifacts]})
             shutil.copy2(args.source_index,stage/"developer-source-index.json");shutil.copy2(args.task_index,stage/"developer-task-index.json")
+            write_flow_report_receipt(data,stage,out,ROOT)
             stage.rename(out)
             if args.seal_output_dir:
                 import seal_report
-                seal_report.seal_report(out,args.seal_output_dir)
+                seal_report.seal_report(out,args.seal_output_dir,batch_root=ROOT)
         except BaseException:
             if stage.exists():shutil.rmtree(stage)
             raise

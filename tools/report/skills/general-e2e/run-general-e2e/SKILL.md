@@ -3,6 +3,8 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.31` 选定研发包从规范报告保留标准report回执和运行审计；未由原生报告生成的附加验分索引为可选，存在时仍保留。核心报告成员及逐题score/record/candidate SHA门禁不放宽。
+
 0.7.30 `prepare-score --sdk-final-authorization ABS`显式透传逐题SHA绑定的SDK终稿授权；必须同时显式选择完整任务及执行记录。编排仅为原生前缀/后缀差异题使用授权，普通题保持原准入，外置评分模式和阶段屏障不变。
 
 0.7.29 AStudio 并发执行期间只做观察及只读轨迹/资源归档；整个执行范围终态、原生无活动/待处理/未知会话后才正式 collect/finalize。收口门禁失败保留诊断，不判能力零分、不重发、不重启。Execute 的周期诊断和 Collect 的信号审计来自同一版本化共享组件；历史冻结 Skill 和已发布报告不替换。

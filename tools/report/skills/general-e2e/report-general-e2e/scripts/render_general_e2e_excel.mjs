@@ -431,7 +431,9 @@ async function main() {
       // Whole-sheet rendering exceeds the image engine's height limit for
       // sixty-case detail and 2,640 resource rows. Bound visual previews while
       // exporting and validating every full sheet in the workbook itself.
-      const left = `A1:${columnName(Math.min(columns, 12))}${rows}`;
+      // The resource title spans A:M. A partial merged range suppresses its
+      // label in previews, so render its full13-column viewport together.
+      const left = `A1:${columnName(sheetName === "资源覆盖与异常" ? columns : Math.min(columns, 12))}${rows}`;
       const image = await renderPreview({ sheetName, range: left, scale: 1, format: "png" });
       const filename = `${sheetName}.png`;
       await fs.writeFile(path.join(args["preview-dir"], filename), new Uint8Array(await image.arrayBuffer()));
@@ -445,7 +447,8 @@ async function main() {
       }
       if (sheetName === "资源覆盖与异常") {
         const start = 4 + data.tasks.length * 11 + 2;
-        const exception = await renderPreview({ sheetName, range: `A${start}:H${start + 8}`, scale: 1, format: "png" });
+        const exceptions = data.tasks.filter(row => row.score_status !== "valid" || row.execution_status !== "completed").length;
+        const exception = await renderPreview({ sheetName, range: `A${start}:H${start + Math.max(8, exceptions + 1)}`, scale: 1, format: "png" });
         const exceptionName = `${sheetName}-异常.png`;
         await fs.writeFile(path.join(args["preview-dir"], exceptionName), new Uint8Array(await exception.arrayBuffer()));
         previewFiles.push(exceptionName);

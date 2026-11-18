@@ -34,6 +34,18 @@ def safe(value):
     assert value and not path.is_absolute() and ".." not in path.parts and "\\" not in value
     return path
 
+def report_artifact_names(data,sealed):
+    required=["general_e2e_report_data.json",data["artifact_filenames"]["excel"],
+              data["artifact_filenames"]["leader_markdown"],data["artifact_filenames"]["audit_markdown"],
+              "composite-report-receipt.json"]
+    if data.get('run_audit'):required.append('data/run-audit.json')
+    assert all(name in sealed for name in required), 'selected canonical report artifact missing'
+    # Native report paths do not all emit this optional administrator index.
+    # Exact report selection, score/record/candidate hashes and optional per-task
+    # native verification receipts remain checked by the exporter and VERIFY.
+    optional=['data/score-verification-index.json','receipts/report-receipt.json','general_e2e_leader_data.json']
+    return required+[name for name in optional if name in sealed]
+
 def copy_selected_symlink(source, target):
     assert source.is_symlink() and not target.exists() and not target.is_symlink()
     target.symlink_to(os.readlink(source))
@@ -225,9 +237,7 @@ def build(args, shared):
             copy_file(source, diagnostic["path"])
 
         copy_file(index_path, "SOURCE_SELECTION.json")
-        report_names = ["general_e2e_report_data.json", data["artifact_filenames"]["excel"],
-                        data["artifact_filenames"]["leader_markdown"], data["artifact_filenames"]["audit_markdown"],
-                        "composite-report-receipt.json", "data/score-verification-index.json"]
+        report_names = report_artifact_names(data,sealed)
         for relative in report_names:
             assert relative in sealed
             raw = report_zip.read(prefix + relative)
