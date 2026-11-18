@@ -79,6 +79,7 @@ import service_report_layout
 import procurement_explicit_labels
 import procurement_annotation_formula
 import data_table_representations
+import funnel_summary_tables
 import answer_delivery
 import interrupted_answer_delivery
 import quadrant_metric_layout
@@ -2086,6 +2087,8 @@ def prepare_attempt(
                    if procurement_explicit_labels.marker(contract,_sha256_bytes(contract_bytes)) is not None else {}),
                 **({'data_table_representation_profile':data_table_representations.marker(contract,_sha256_bytes(contract_bytes),dataset)}
                    if data_table_representations.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
+                **({funnel_summary_tables.RUNTIME_KEY: funnel_summary_tables.marker(contract,_sha256_bytes(contract_bytes),dataset)}
+                   if funnel_summary_tables.marker(contract,_sha256_bytes(contract_bytes),dataset) is not None else {}),
                 **({'interrupted_answer_delivery_profile':interrupted_answer_delivery.marker(
                     contract,_sha256_bytes(contract_bytes),dataset,evidence_admission)}
                    if interrupted_answer_delivery.marker(contract,_sha256_bytes(contract_bytes),dataset,evidence_admission) is not None else {}),
@@ -3028,6 +3031,7 @@ def _effective_rule_source(
         corrected, receipt = warranty_recovery_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = service_report_layout.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = data_table_representations.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = funnel_summary_tables.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = answer_delivery.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = interrupted_answer_delivery.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = quadrant_metric_layout.effective_source(manifest,source,corrected,receipt)
@@ -6703,6 +6707,8 @@ def prepare_rescore_attempt(
                    if procurement_explicit_labels.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None else {}),
                 **({'data_table_representation_profile':data_table_representations.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
                    if data_table_representations.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
+                **({funnel_summary_tables.RUNTIME_KEY: funnel_summary_tables.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])}
+                   if funnel_summary_tables.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset']) is not None else {}),
                 **({'interrupted_answer_delivery_profile':interrupted_answer_delivery.marker(
                     _read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),
                     source_manifest['dataset'],source_manifest.get('evidence_admission'))}
