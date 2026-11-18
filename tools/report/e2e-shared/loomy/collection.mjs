@@ -1,13 +1,13 @@
 import { mkdir, mkdtemp, readFile, realpath, rename, rm, writeFile, lstat } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, COMPONENT_VERSION } from './index.mjs';
+import { artifact, captureNative, currentOwnedRuntime, iso, jsonBytes, PROFILE, requireValue, runtimeStatus, sha, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, verifyNativeTerminalFailure, COMPONENT_VERSION } from './index.mjs';
 import { applyJournalRuntime, buildState, checkNativeModel, lease, loadTask, verifyRuntime } from './execution.mjs';
 
 const lines = rows => Buffer.from(rows.map(row => JSON.stringify(row)).join('\n') + '\n');
 const metric = (value, basis, status = 'observed') => ({ value, status, basis });
 const unavailable = basis => metric(null, basis, 'unavailable');
 
-export function normalizeTrace(native, { state, prompt, baseline, nativeFailure = null, nativeLengthFailure = null }) {
+export function normalizeTrace(native, { state, prompt, baseline, nativeFailure = null, nativeLengthFailure = null, nativeTerminalFailure = null }) {
   const binding = verifyBinding(native, { workspace: state.session.cwd, prompt, baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(binding);
@@ -16,10 +16,16 @@ export function normalizeTrace(native, { state, prompt, baseline, nativeFailure 
     prompt, baseline, sessionId: state.session.session_id, identity: state.identity });
   const lengthFailure = nativeLengthFailure && verifyNativeLengthFailure(nativeLengthFailure, { native, workspace: state.session.cwd,
     prompt, baseline, sessionId: state.session.session_id, identity: state.identity });
+  const terminalFailure = nativeTerminalFailure && verifyNativeTerminalFailure(nativeTerminalFailure, { native, workspace: state.session.cwd,
+    prompt, baseline, sessionId: state.session.session_id, identity: state.identity });
   if (state.phase === 'FAILED') requireValue((binding.final?.parsed.error || httpFailure
     && digestError(httpFailure.error) === digestError(state.execution.error) || lengthFailure
-    && digestError(lengthFailure.error) === digestError(state.execution.error)) && state.execution.business_status === 'candidate_error', 'NATIVE_FAILURE_UNPROVED');
-  requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question'), 'HUMAN_QUESTION_REQUIRES_INTERVENTION_RECEIPT');
+    && digestError(lengthFailure.error) === digestError(state.execution.error) || terminalFailure
+    && digestError(terminalFailure.error) === digestError(state.execution.error)) && state.execution.business_status === 'candidate_error', 'NATIVE_FAILURE_UNPROVED');
+  requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question')
+    || terminalFailure && terminalFailure.question_terminations.length > 0, 'HUMAN_QUESTION_REQUIRES_INTERVENTION_RECEIPT');
+  if (terminalFailure) requireValue(digestError(state.human_assistance) === digestError(terminalFailure.human_assistance)
+    && digestError(state.execution.error) === digestError(terminalFailure.error), 'TERMINAL_FAILURE_HUMAN_ASSISTANCE_MISMATCH');
   const messages = new Map(binding.messages.map(row => [row.id, row]));
   const events = [], grouped = new Map(), missing = [], callIds = new Set();
   const append = value => events.push({ schema_id: 'urn:wildclawbench:schema:general-e2e:transcript-event:v1', schema_version: 1,
@@ -87,6 +93,13 @@ export function normalizeTrace(native, { state, prompt, baseline, nativeFailure 
       native_session_id: binding.root.id, native_message_id: binding.final.id,
       source: { adapter: PROFILE, raw_ref: 'raw/native-length-failure.json', redacted: false } });
   }
+  if (terminalFailure && !binding.final.parsed.error) {
+    nativeAtoms++;
+    append({ event_id: binding.final.id + '-terminal-failure', occurred_at: iso(binding.final.parsed.time.completed),
+      type: 'error', role: 'assistant', content: JSON.stringify(terminalFailure.error),
+      native_session_id: binding.root.id, native_message_id: binding.final.id,
+      source: { adapter: PROFILE, raw_ref: 'raw/native-terminal-failure.json', redacted: false } });
+  }
   const filtered = [...grouped.values()].reduce((count, rows) => count + rows.length - 1, 0);
   events.sort((a, b) => Date.parse(a.occurred_at) - Date.parse(b.occurred_at) || (a.event_id < b.event_id ? -1 : a.event_id > b.event_id ? 1 : 0));
   events.forEach((event, index) => { event.sequence = index; });
@@ -118,7 +131,8 @@ export function resourceMetrics({ state, normalized, sources }) {
   coverage.agent_duration_seconds = { known: nativeElapsed === null ? 0 : 1, total: 1, unit: 'attempt' };
   return { schema_id: 'urn:wildclawbench:schema:general-e2e:resource-metrics:v1', schema_version: 1, identity: state.identity,
     collection: { collector: PROFILE, version: COMPONENT_VERSION, status: 'partial', collected_at: new Date().toISOString(), sources,
-      warnings: ['LOOMY_TOKEN_SEMANTICS_NOT_ADMITTED', 'LOOMY_MODEL_REQUEST_SEMANTICS_NOT_ADMITTED'],
+      warnings: ['LOOMY_TOKEN_SEMANTICS_NOT_ADMITTED', 'LOOMY_MODEL_REQUEST_SEMANTICS_NOT_ADMITTED',
+        ...(state.human_assistance?.operation_count === null ? ['LOOMY_ABORT_HUMAN_ASSISTANCE_COUNTS_UNAVAILABLE'] : [])],
       excluded_scope: ['judge_usage', 'control_usage', 'unobserved_http_retries', 'unrelated_client_sessions'], coverage,
       metric_sources: Object.fromEntries(names.map(name => [name, sources.map(row => row.path)])) },
     metrics: { usage: Object.fromEntries(tokens.map(name => [name, unavailable('Original OpenCode token fields retained; provider/cache semantics not admitted')])),
@@ -151,8 +165,12 @@ export async function collectTask(options) {
     const lengthBytes = journal.native_length_failure && await readFile(join(context.unitRoot, journal.native_length_failure.path));
     if (lengthBytes) requireValue(sha(lengthBytes) === journal.native_length_failure.sha256
       && lengthBytes.length === journal.native_length_failure.size, 'LENGTH_FAILURE_PROOF_CHANGED');
+    const terminalFailureBytes = journal.native_terminal_failure && await readFile(join(context.unitRoot, journal.native_terminal_failure.path));
+    if (terminalFailureBytes) requireValue(sha(terminalFailureBytes) === journal.native_terminal_failure.sha256
+      && terminalFailureBytes.length === journal.native_terminal_failure.size, 'TERMINAL_FAILURE_PROOF_CHANGED');
     const normalized = normalizeTrace(native, { state: originalState, prompt: context.prompt, baseline: journal.baseline,
-      nativeFailure: failureBytes && JSON.parse(failureBytes), nativeLengthFailure: lengthBytes && JSON.parse(lengthBytes) });
+      nativeFailure: failureBytes && JSON.parse(failureBytes), nativeLengthFailure: lengthBytes && JSON.parse(lengthBytes),
+      nativeTerminalFailure: terminalFailureBytes && JSON.parse(terminalFailureBytes) });
     requireValue(currentNative.sessions.every(row => !statuses[row.id] || statuses[row.id].type === 'idle'), 'COLLECT_NATIVE_STILL_ACTIVE');
     requireValue(normalized.binding.final?.id === journal.final_message_id, 'COLLECT_FINAL_MESSAGE_CHANGED');
     const baselineBytes = await readFile(join(context.unitRoot, journal.baseline_evidence.path));
@@ -177,6 +195,7 @@ export async function collectTask(options) {
       ['raw/current-scoped-snapshot.json', jsonBytes({ native: currentNative, runtime: collectionRuntime, runtime_status: statuses })]]);
     if (failureBytes) files.set('raw/native-http-failure.json', failureBytes);
     if (lengthBytes) files.set('raw/native-length-failure.json', lengthBytes);
+    if (terminalFailureBytes) files.set('raw/native-terminal-failure.json', terminalFailureBytes);
     for (const [i, receipt] of journal.history.entries()) {
       const bytes = await readFile(join(context.unitRoot, receipt.path));
       requireValue(sha(bytes) === receipt.sha256 && bytes.length === receipt.size, 'UI_PREPARATION_EVIDENCE_CHANGED');

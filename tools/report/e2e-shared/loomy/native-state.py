@@ -59,7 +59,7 @@ def capture(request):
                     info = json.loads(tail["data"]) if tail else {}
                     pending = backup.execute(pending_query, (row["id"],)).fetchone()[0]
                     completed = info.get("time", {}).get("completed")
-                    settled = (info.get("role") == "assistant" and (info.get("finish") in {"stop", "length"} or bool(info.get("error")))
+                    settled = (info.get("role") == "assistant" and (info.get("finish") in {"stop", "length", "other"} or bool(info.get("error")))
                                and type(completed) is int and completed >= 0 and pending == 0)
                     activity.append({"session_id": row["id"], "parent_id": row["parent_id"], "directory": row["directory"],
                                      "status": "settled" if settled else "active_or_unknown", "last_message_id": tail["id"] if tail else None,

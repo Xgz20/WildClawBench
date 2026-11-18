@@ -35,6 +35,19 @@ def _mutate(document: object, dotted_path: str, value: object) -> None:
 
 
 class GeneralE2EContractTests(unittest.TestCase):
+    def test_unknown_human_assistance_counts_remain_null_and_invalid_counts_fail(self) -> None:
+        from eval_general_e2e.contracts import execution_state
+        schema = json.loads(execution_state.SCHEMA_FILE.read_text())['properties']['human_assistance']
+        document = json.loads((VALID/'execution-record.json').read_text())
+        unknown = {'mode':'automatic','operation_count':None,'semantic_intervention_count':None}
+        document['human_assistance'] = unknown
+        self.assertIsNone(validate_contract(document)['human_assistance']['operation_count'])
+        execution_state._shape(unknown, schema)
+        for value in [-1, True, '0', 0.5]:
+            changed = copy.deepcopy(document); changed['human_assistance']['operation_count'] = value
+            with self.subTest(value=value), self.assertRaises(ContractValidationError):validate_contract(changed)
+            with self.subTest(shape_value=value), self.assertRaises(ValueError):execution_state._shape(changed['human_assistance'], schema)
+
     def test_all_positive_examples_validate(self) -> None:
         examples = sorted(VALID.glob("*.json"))
         self.assertEqual(len(examples), len(KNOWN_SCHEMAS))

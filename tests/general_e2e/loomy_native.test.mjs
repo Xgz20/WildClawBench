@@ -4,7 +4,7 @@ import { copyFile, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } 
 import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, assertSiblingRuntimeIdle, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, LENGTH_ERROR, parseNativeHttpError, PROFILE, sameRuntimeInstallation, selectConnectedRuntime, sha, statusUrl, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { assertNativeActivity, assertSiblingRuntimeIdle, abortedQuestionReceipts, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, LENGTH_ERROR, parseNativeHttpError, PROFILE, sameRuntimeInstallation, selectConnectedRuntime, sha, statusUrl, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, verifyNativeTerminalFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
@@ -128,6 +128,45 @@ function fixture({ tool = true, child = false } = {}) {
   return native;
 }
 const options = { workspace: '/fixture/workspace', prompt, baseline: [], sessionId: 'ses_root', terminal: true };
+test('Loomy proves aborted unanswered questions and other finish across a replaced backend, keeping human counts unknown', () => {
+  for (const kind of ['aborted', 'other-finish']) {
+    const native = fixture(); const final = JSON.parse(native.messages[1].data);
+    if (kind === 'aborted') { delete final.finish; final.error = { name: 'MessageAbortedError', data: { message: 'Aborted' } }; }
+    else final.finish = 'other';
+    native.messages[1].data = JSON.stringify(final);
+    if (kind === 'aborted') native.parts.push({ id: 'question_part', message_id: 'msg_final', session_id: 'ses_root',
+      data: JSON.stringify({ type: 'tool', tool: 'question', callID: 'question_call', state: { status: 'error', input: { questions: [] },
+        error: 'Tool execution aborted', metadata: { interrupted: true }, time: { start: 1500, end: 1999 } } }) });
+    const before = { pid: 101, ppid: 10, executable: '/app/opencode', binary_sha256: 'a'.repeat(64), database: '/native.db',
+      database_owned: true, health_version: '1.14.22', endpoint: 'http://127.0.0.1:4539' };
+    const after = { ...before, pid: 102, endpoint: 'http://127.0.0.1:5054' };
+    const binding = verifyBinding(native, { ...options, terminal: false });
+    const assistance = { mode: 'automatic', operation_count: kind === 'aborted' ? null : 0, semantic_intervention_count: kind === 'aborted' ? null : 0 };
+    const proof = { profile: 'loomy-native-terminal-failure/v1', kind, identity: state().identity, prompt_sha256: sha(Buffer.from(prompt)),
+      session_id: 'ses_root', final_message_id: 'msg_final', original_runtime: before, observed_runtime: after,
+      runtime_status: {}, observed_at: '1970-01-01T00:00:03Z', runtime_status_scope: { directory: options.workspace, endpoint: statusUrl(after, options.workspace).href },
+      question_terminations: abortedQuestionReceipts(binding), human_assistance: assistance };
+    const verified = verifyNativeTerminalFailure(proof, { ...options, native, identity: state().identity });
+    const failed = state(); failed.phase = 'FAILED'; failed.execution.business_status = 'candidate_error'; failed.execution.error = verified.error; failed.human_assistance = assistance;
+    const normalized = normalizeTrace(native, { state: failed, prompt, baseline: [], nativeTerminalFailure: proof });
+    assert.equal(normalized.events.filter(row => row.type === 'error').length, 1);
+    assert.equal(normalized.calls.length, kind === 'aborted' ? 2 : 1);
+    assert.deepEqual(verified.human_assistance, assistance);
+    for (const mutate of [p => { p.runtime_status.ses_root = { type: 'busy' }; }, p => { p.observed_runtime.binary_sha256 = 'b'.repeat(64); },
+      p => { p.final_message_id = 'other'; }]) {
+      const changed = structuredClone(proof); mutate(changed);
+      assert.throws(() => verifyNativeTerminalFailure(changed, { ...options, native, identity: state().identity }));
+    }
+    if (kind === 'aborted') {
+      const zero = structuredClone(proof); zero.human_assistance.operation_count = 0;
+      assert.throws(() => verifyNativeTerminalFailure(zero, { ...options, native, identity: state().identity }), /HUMAN_COUNTS/);
+      const answered = structuredClone(native); const row = answered.parts.at(-1); const data = JSON.parse(row.data); data.state.status = 'completed'; data.state.output = 'chosen'; row.data = JSON.stringify(data);
+      assert.throws(() => verifyNativeTerminalFailure(proof, { ...options, native: answered, identity: state().identity }), /QUESTION_ABORT/);
+      const quota = structuredClone(native); const data2 = JSON.parse(quota.messages[1].data); data2.error = { name: 'APIError', data: { statusCode: 402 } }; quota.messages[1].data = JSON.stringify(data2);
+      assert.throws(() => verifyNativeTerminalFailure(proof, { ...options, native: quota, identity: state().identity }), /HEAD_INVALID/);
+    }
+  }
+});
 test('Loomy retains a completed length truncation as a bound failed output, without assigning zero', () => {
   const native = fixture({ child: true });
   const data = JSON.parse(native.messages[1].data); data.finish = 'length'; native.messages[1].data = JSON.stringify(data);

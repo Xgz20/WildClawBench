@@ -4,7 +4,8 @@ import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { artifact, assertArchivedFailuresIdle, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
-  runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, verifyNativeLengthFailure, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
+  runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, verifyNativeLengthFailure, verifyNativeTerminalFailure,
+  abortedQuestionReceipts, nativeTerminalFailureKind, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
 export const STATE_SCHEMA = 'wildclawbench.general-e2e-execution-state/v1';
@@ -132,7 +133,7 @@ export function buildState(context, journal) {
       finished_at: finished ? journal.finished_at : null,
       duration_seconds: finished && journal.sent_at ? (Date.parse(journal.finished_at) - Date.parse(journal.sent_at)) / 1000 : null,
       error: finished ? journal.native_error ?? null : null, cancellation_confirmed: null },
-    human_assistance: { mode: 'automatic', operation_count: 0, semantic_intervention_count: 0 },
+    human_assistance: journal.human_assistance || { mode: 'automatic', operation_count: 0, semantic_intervention_count: 0 },
     extensions: { client: { version: context.config.client.version, model: 'spark-x2.6', reasoning_effort: 'high',
       model_verification_status: session ? 'verified' : 'unverified', model_identity_kind: 'native-opencode-user-model-and-variant',
       model_evidence_sha256: session?.binding_evidence?.[0]?.sha256 ?? null },
@@ -141,6 +142,7 @@ export function buildState(context, journal) {
         runtime_absence_before_dispatch: journal.runtime_absence_before_dispatch || null,
         ...(journal.native_http_failure ? { native_http_failure: journal.native_http_failure } : {}),
         ...(journal.native_length_failure ? { native_length_failure: journal.native_length_failure } : {}),
+        ...(journal.native_terminal_failure ? { native_terminal_failure: journal.native_terminal_failure } : {}),
         final_message_id: journal.final_message_id ?? null, native_finished_at: journal.native_finished_at ?? null,
         attention: journal.attention ?? null, journal_path: relative(context.unitRoot, context.journalPath),
         source_repairs: journal.source_repairs || [], observer_version: journal.observer_version || journal.version,
@@ -203,9 +205,11 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
       try { binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline,
         sessionId: journal.session?.id, terminal: true }); }
       catch (error) {
-        if (error.message !== 'LOOMY_NATIVE_FINAL_NOT_COMPLETE'
-          || !await recordNativeHttpFailure(context, journal, current, native)) throw error;
         binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session?.id });
+        if (error.message !== 'LOOMY_NATIVE_FINAL_NOT_COMPLETE') throw error;
+        if (nativeTerminalFailureKind(binding)) await recordNativeTerminalFailure(context, journal, current, native, await runtimeStatus(current, context.workspace), previous);
+        else if (binding.final?.parsed.finish === 'length') await recordNativeLengthFailure(context, journal, current, native, await runtimeStatus(current, context.workspace));
+        else if (!await recordNativeHttpFailure(context, journal, current, native)) throw error;
       }
       checkNativeModel(binding);
       const statuses = await runtimeStatus(current, context.workspace);
@@ -219,6 +223,37 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
   journal.runtime_binding = current;
   context.config = { ...context.config, runtime: current };
   return true;
+}
+
+async function recordNativeLengthFailure(context, journal, runtime, native, status) {
+  if (journal.native_length_failure) return verifyNativeLengthFailure(JSON.parse(await readFile(join(context.unitRoot, journal.native_length_failure.path))),
+    { native, workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session.id, identity: journal.identity });
+  const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session?.id });
+  const proof = { profile: 'loomy-native-output-length-failure/v1', identity: journal.identity, prompt_sha256: context.locks.prompt,
+    session_id: binding.root.id, final_message_id: binding.final.id, runtime, runtime_status: status,
+    observed_at: new Date().toISOString(), runtime_status_scope: { directory: context.workspace, endpoint: statusUrl(runtime, context.workspace).href } };
+  const verified = verifyNativeLengthFailure(proof, { native, workspace: context.workspace, prompt: context.prompt,
+    baseline: journal.baseline, sessionId: binding.root.id, identity: journal.identity });
+  const bytes = jsonBytes(proof), path = join(context.control, 'native-length-failure.json');
+  await writeFile(path, bytes, { flag: 'wx', mode: 0o600 }); journal.native_length_failure = artifact(relative(context.unitRoot, path), bytes);
+  return verified;
+}
+async function recordNativeTerminalFailure(context, journal, runtime, native, status, originalRuntime = runtime) {
+  if (journal.native_terminal_failure) return verifyNativeTerminalFailure(JSON.parse(await readFile(join(context.unitRoot, journal.native_terminal_failure.path))),
+    { native, workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session.id, identity: journal.identity });
+  const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session?.id });
+  const kind = nativeTerminalFailureKind(binding);
+  const proof = { profile: 'loomy-native-terminal-failure/v1', kind, identity: journal.identity, prompt_sha256: context.locks.prompt,
+    session_id: binding.root.id, final_message_id: binding.final.id, original_runtime: originalRuntime, observed_runtime: runtime,
+    runtime_status: status, observed_at: new Date().toISOString(),
+    runtime_status_scope: { directory: context.workspace, endpoint: statusUrl(runtime, context.workspace).href },
+    question_terminations: abortedQuestionReceipts(binding),
+    human_assistance: { mode: 'automatic', operation_count: kind === 'aborted' ? null : 0, semantic_intervention_count: kind === 'aborted' ? null : 0 } };
+  const verified = verifyNativeTerminalFailure(proof, { native, workspace: context.workspace, prompt: context.prompt,
+    baseline: journal.baseline, sessionId: binding.root.id, identity: journal.identity });
+  const bytes = jsonBytes(proof), path = join(context.control, 'native-terminal-failure.json');
+  await writeFile(path, bytes, { flag: 'wx', mode: 0o600 }); journal.native_terminal_failure = artifact(relative(context.unitRoot, path), bytes);
+  journal.human_assistance = verified.human_assistance; return verified;
 }
 
 async function saveState(context, journal) {
@@ -266,15 +301,10 @@ export async function observe(context, journal, allowedSessionIds = []) {
   const idle = binding.session_ids.every(id => !status[id] || status[id].type === 'idle');
   if (idle && !binding.final?.parsed.finish && !binding.final?.parsed.error) await recordNativeHttpFailure(context, journal, context.config.runtime, native);
   if (idle && binding.final?.parsed.finish === 'length') {
-    const proof = { profile: 'loomy-native-output-length-failure/v1', identity: journal.identity,
-      prompt_sha256: context.locks.prompt, session_id: binding.root.id, final_message_id: binding.final.id,
-      runtime: context.config.runtime, runtime_status: status, observed_at: new Date().toISOString(),
-      runtime_status_scope: { directory: context.workspace, endpoint: statusUrl(context.config.runtime, context.workspace).href } };
-    const verified = verifyNativeLengthFailure(proof, { native, workspace: context.workspace, prompt: context.prompt,
-      baseline: journal.baseline, sessionId: binding.root.id, identity: journal.identity });
-    const bytes = jsonBytes(proof), path = join(context.control, 'native-length-failure.json');
-    await writeFile(path, bytes, { flag: 'wx', mode: 0o600 });
-    journal.native_length_failure = artifact(relative(context.unitRoot, path), bytes);
+    const verified = await recordNativeLengthFailure(context, journal, context.config.runtime, native, status);
+    journal.phase = 'FAILED'; journal.business_status = 'candidate_error'; journal.native_error = verified.error;
+  } else if (idle && nativeTerminalFailureKind(binding)) {
+    const verified = await recordNativeTerminalFailure(context, journal, context.config.runtime, native, status);
     journal.phase = 'FAILED'; journal.business_status = 'candidate_error'; journal.native_error = verified.error;
   } else if (idle && (binding.final?.parsed.error || journal.native_http_failure)) {
     journal.phase = 'FAILED'; journal.business_status = 'candidate_error';

@@ -32,7 +32,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("state.mjs", "guard.mjs", "diagnostics.mjs", "structured-ledger.mjs"),
     ),
     SharedComponentSpec(
-        name="loomy", version="0.1.14",
+        name="loomy", version="0.1.15",
         source_root="tools/report/e2e-shared/loomy",
         vendor_root="vendor/e2e-shared/loomy",
         entrypoints=("index.mjs", "ui.mjs", "execution.mjs", "batch.mjs", "collection.mjs", "verification.mjs", "native-state.py", "macos-ax.swift"),
@@ -155,7 +155,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     ),
     SharedComponentSpec(
         name="general-contracts",
-        version="1.3.2",
+        version="1.3.3",
         source_root="eval_general_e2e/contracts",
         vendor_root="vendor/e2e-shared/general-contracts",
         entrypoints=("validator.py", "execution_state.py", "schemas/general-execution-state-v1.schema.json",

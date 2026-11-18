@@ -321,11 +321,11 @@
           ]
         },
         "operation_count": {
-          "type": "integer",
+          "type": ["integer", "null"],
           "minimum": 0
         },
         "semantic_intervention_count": {
-          "type": "integer",
+          "type": ["integer", "null"],
           "minimum": 0
         }
       }

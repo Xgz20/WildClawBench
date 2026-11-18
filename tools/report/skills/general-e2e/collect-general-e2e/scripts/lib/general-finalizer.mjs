@@ -1318,7 +1318,9 @@ export async function finalizeExecution(options, profile, overrides = {}) {
       && state.extensions?.loomy?.native_http_failure && traceBundle?.index?.adapter?.id === 'loomy-opencode-sqlite/v1';
     const loomyLengthFailure = record.harness.id === 'loomy' && state.execution.error?.code === 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT'
       && state.extensions?.loomy?.native_length_failure && traceBundle?.index?.adapter?.id === 'loomy-opencode-sqlite/v1';
-    if ((astronNativeFailure || loomyHttpFailure || loomyLengthFailure) && state.phase === "FAILED"
+    const loomyTerminalFailure = record.harness.id === 'loomy' && ['LOOMY_NATIVE_ABORTED', 'LOOMY_NATIVE_OTHER_FINISH'].includes(state.execution.error?.code)
+      && state.extensions?.loomy?.native_terminal_failure && traceBundle?.index?.adapter?.id === 'loomy-opencode-sqlite/v1';
+    if ((astronNativeFailure || loomyHttpFailure || loomyLengthFailure || loomyTerminalFailure) && state.phase === "FAILED"
         && state.execution.business_status === "candidate_error"
         && state.prompt.send_status === "sent" && state.send.dispatch_attempt_count === 1
         && state.session.verified === true) {
@@ -1334,7 +1336,7 @@ export async function finalizeExecution(options, profile, overrides = {}) {
         ["candidate-artifact.json", prettyJson(candidateArtifact)],
         ["PROMPT.md", promptSource.bytes],
       ]);
-      if (loomyHttpFailure || loomyLengthFailure) for (const name of [loomyLengthFailure ? 'native-length-failure.json' : 'native-http-failure.json', 'native-scoped-snapshot.json', 'dispatch-journal.json', 'frozen-run-config.json']) {
+      if (loomyHttpFailure || loomyLengthFailure || loomyTerminalFailure) for (const name of [loomyTerminalFailure ? 'native-terminal-failure.json' : loomyLengthFailure ? 'native-length-failure.json' : 'native-http-failure.json', 'native-scoped-snapshot.json', 'dispatch-journal.json', 'frozen-run-config.json']) {
         sources.set(name, await readFile(join(staging, 'trace', 'raw', name)));
       }
       await mkdir(proofRoot);
