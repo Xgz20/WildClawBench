@@ -3,7 +3,7 @@ import { isEntrypoint } from '../../vendor/e2e-shared/loomy/index.mjs';
 import { resolve } from 'node:path';
 import { join } from 'node:path';
 import { readFile, access } from 'node:fs/promises';
-import { assertNativeActivity, captureNative } from '../../vendor/e2e-shared/loomy/index.mjs';
+import { assertArchivedFailuresIdle, assertNativeActivity, captureNative, currentOwnedRuntime, digest, sha } from '../../vendor/e2e-shared/loomy/index.mjs';
 import { finalizeGeneralExecution, verifyGeneralCollection } from '../../scripts/finalize_general_execution.mjs';
 import { parseArgs } from '../../scripts/lib/general-finalizer.mjs';
 import { terminateDarwinTaskProcesses } from '../../scripts/lib/macos-task-processes.mjs';
@@ -14,6 +14,7 @@ export async function finalizeLoomyExecution(options) {
   if (process.platform !== 'darwin' || process.arch !== 'arm64') throw Error('LOOMY_FINALIZER_REQUIRES_MACOS_ARM64');
   const manifest = JSON.parse(await readFile(join(options.unitRoot, 'manifest.json'), 'utf8'));
   let database;
+  let runConfig;
   const failedSessions = [];
   for (const task of manifest.tasks) {
     const state = JSON.parse(await readFile(join(options.unitRoot, 'execution/tasks', task.task_id, 'automation/loomy/automation-state.json'), 'utf8'));
@@ -23,6 +24,13 @@ export async function finalizeLoomyExecution(options) {
     for (const path of ['execution/automation-state.json', 'trace/trace-index.json', 'resource-metrics.json']) {
       await access(join(collected, path)).catch(() => { throw Error('LOOMY_ALL_NATIVE_COLLECTIONS_REQUIRED_BEFORE_FINALIZE'); });
     }
+    const configBytes = await readFile(join(collected, 'trace/raw/frozen-run-config.json'));
+    const journal = JSON.parse(await readFile(join(collected, 'trace/raw/dispatch-journal.json'), 'utf8'));
+    const config = JSON.parse(configBytes);
+    const { config_digest, ...payload } = config;
+    if (config_digest !== digest(payload) || sha(configBytes) !== journal.input_locks.config
+      || runConfig && runConfig.config_digest !== config_digest) throw Error('LOOMY_FINALIZER_RUN_CONFIG_MISMATCH');
+    runConfig = config;
     if (state.phase === 'FAILED' && state.extensions?.loomy?.native_http_failure) {
       const index = JSON.parse(await readFile(join(collected, 'trace/trace-index.json'), 'utf8'));
       const frozen = JSON.parse(await readFile(join(collected, 'execution/automation-state.json'), 'utf8'));
@@ -36,7 +44,14 @@ export async function finalizeLoomyExecution(options) {
     const native = activity.session_activity.find(item => item.session_id === row.session_id);
     if (native?.last_message_id !== row.final_message_id || native.pending_tool_count !== 0) throw Error('LOOMY_FAILED_HEAD_CHANGED');
   }
-  assertNativeActivity(activity, failedSessions.map(row => row.session_id));
+  assertNativeActivity(activity, failedSessions.map(row => row.session_id), runConfig?.archived_http_failures);
+  if (runConfig?.archived_http_failures?.length) {
+    const runtime = await currentOwnedRuntime(runConfig).catch(error => {
+      if (error.message !== 'LOOMY_RUNTIME_NOT_RUNNING') throw error;
+      return null;
+    });
+    if (runtime) await assertArchivedFailuresIdle(runtime, runConfig.archived_http_failures);
+  }
   return finalizeGeneralExecution({ ...options, pythonExecutable: options.pythonExecutable || process.env.PYTHON || 'python3' },
     { processCleanup: { id: 'loomy-macos-task-processes', version: '0.1.0', harness: 'loomy', platform: 'darwin',
       run: (workspace, cleanupOptions) => terminateDarwinTaskProcesses(workspace, cleanupOptions) } });

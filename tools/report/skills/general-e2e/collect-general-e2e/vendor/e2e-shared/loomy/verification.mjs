@@ -1,10 +1,72 @@
 // Replays archived evidence only; never contacts a running desktop client.
-import { readFile, realpath } from 'node:fs/promises';
-import { isAbsolute, join, resolve } from 'node:path';
-import { assertNativeActivity, digest, isAbsentRuntime, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
+import { lstat, readFile, realpath } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { artifact, assertNativeActivity, digest, isAbsentRuntime, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
 import { normalizeTrace, resourceMetrics } from './collection.mjs';
 import { checkNativeModel } from './execution.mjs';
 import { assertConfiguration } from './ui.mjs';
+
+export async function readArchivedHttpFailure(recordPath, runtime) {
+  requireValue(isAbsolute(recordPath), 'ARCHIVED_FAILURE_PATH_NOT_ABSOLUTE');
+  const path = resolve(recordPath);
+  const evidenceRoot = dirname(path);
+  const unitRoot = resolve(evidenceRoot, '../../../..');
+  const read = async target => {
+    requireValue(await realpath(target) === target && (await lstat(target)).isFile(), 'ARCHIVED_FAILURE_UNSAFE_FILE');
+    return readFile(target);
+  };
+  const recordBytes = await read(path);
+  const record = JSON.parse(recordBytes);
+  const identity = record.identity;
+  const expected = join(unitRoot, 'evidence/tasks', identity.task_id, identity.attempt_id, 'execution-record.json');
+  requireValue(path === expected && record.harness?.id === 'loomy' && record.phase === 'FAILED'
+    && record.execution?.error?.code === 'LOOMY_NATIVE_HTTP_ERROR' && record.session?.verified
+    && record.failure_evidence?.schema === 'verified-failed-output-evidence/v1', 'ARCHIVED_FAILURE_RECORD_INVALID');
+  const receiptBytes = await read(join(unitRoot, 'receipts/collect-evidence-receipt.json'));
+  const receipt = JSON.parse(receiptBytes);
+  requireValue(receipt.schema_id === 'urn:wildclawbench:schema:general-e2e:receipt:v1'
+    && receipt.stage === 'collect-evidence' && receipt.integrity?.valid === true
+    && receipt.scope?.batch_id === identity.batch_id && receipt.scope?.unit_id === identity.unit_id
+    && receipt.tasks?.some(row => row.task_id === identity.task_id && row.attempt_id === identity.attempt_id), 'ARCHIVED_FAILURE_RECEIPT_INVALID');
+  const assertHash = (target, bytes, artifacts) => {
+    const rows = artifacts.filter(row => row.path === relative(unitRoot, target));
+    requireValue(rows.length === 1 && rows[0].sha256 === sha(bytes) && rows[0].size === bytes.length,
+      'ARCHIVED_FAILURE_HASH_MISMATCH');
+  };
+  assertHash(path, recordBytes, receipt.artifacts);
+  const manifestPath = join(evidenceRoot, 'evidence-manifest.json');
+  const manifestBytes = await read(manifestPath);
+  assertHash(manifestPath, manifestBytes, receipt.artifacts);
+  const manifest = JSON.parse(manifestBytes);
+  requireValue(digest(manifest.identity) === digest(identity), 'ARCHIVED_FAILURE_MANIFEST_INVALID');
+  const traceRoot = join(evidenceRoot, 'trace');
+  const indexPath = join(traceRoot, 'trace-index.json');
+  const statePath = join(evidenceRoot, 'execution/automation-state.json');
+  const [indexBytes, stateBytes] = await Promise.all([read(indexPath), read(statePath)]);
+  assertHash(indexPath, indexBytes, manifest.artifacts);
+  assertHash(statePath, stateBytes, manifest.artifacts);
+  const index = JSON.parse(indexBytes), state = JSON.parse(stateBytes);
+  for (const row of [index.transcript, ...index.raw_trace, ...index.binding_evidence]) {
+    const target = resolve(traceRoot, row.path);
+    requireValue(target.startsWith(traceRoot + '/'), 'ARCHIVED_FAILURE_UNSAFE_FILE');
+    assertHash(target, await read(target), manifest.artifacts);
+  }
+  const source = state.extensions?.loomy;
+  requireValue(digest(state.identity) === digest(identity) && state.phase === 'FAILED'
+    && digest(state.execution?.error) === digest(record.execution.error)
+    && state.session?.session_id === record.session.session_id && state.session.cwd === record.session.cwd
+    && source?.native_http_failure && source.runtime.database === runtime.database
+    && source.runtime.binary_sha256 === runtime.binary_sha256 && source.runtime.executable === runtime.executable,
+    'ARCHIVED_FAILURE_RUNTIME_MISMATCH');
+  const normalized = await verifyArchivedLoomy(index, state, traceRoot);
+  const final = normalized?.binding.final;
+  requireValue(final?.id === source.final_message_id && final.session_id === state.session.session_id,
+    'ARCHIVED_FAILURE_TERMINAL_INVALID');
+  return { session_id: final.session_id, directory: state.session.cwd, last_message_id: final.id,
+    last_message_sha256: sha(final.data), completed_at: final.parsed.time.completed,
+    execution_record: artifact(path, recordBytes), collect_receipt_sha256: sha(receiptBytes),
+    evidence_manifest_sha256: sha(manifestBytes) };
+}
 
 export async function verifyArchivedLoomy(index, state, traceRoot) {
   if (index.adapter?.id !== PROFILE) {
@@ -57,7 +119,7 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
       requireValue(absence?.dispatch_attempt_count === 0 && absence.attempt_id === journal.identity.attempt_id
         && digest(absence.app_process) === digest(config.process)
         && Date.parse(absence.observed_at) <= Date.parse(journal.sent_at), 'ARCHIVE_COLD_START_ABSENCE_UNPROVED');
-      assertNativeActivity(absence.native);
+      assertNativeActivity(absence.native, [], config.archived_http_failures);
     }
     runtimeChain.push(row.current);
   }
@@ -117,7 +179,7 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   requireValue(sha(baselineBytes) === journal.baseline_evidence.sha256 && baselineBytes.length === journal.baseline_evidence.size
     && digest(baseline.session_index.map(row => row.id)) === digest(journal.baseline)
     && state.prompt.sent_at === journal.sent_at && Date.parse(baseline.observed_at) <= Date.parse(journal.sent_at), 'ARCHIVE_PRE_SEND_BASELINE_MISMATCH');
-  assertNativeActivity(baseline, journal.allowed_session_ids);
+  assertNativeActivity(baseline, journal.allowed_session_ids, config.archived_http_failures);
   const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline, nativeFailure: failureBytes && JSON.parse(failureBytes) });
   const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });

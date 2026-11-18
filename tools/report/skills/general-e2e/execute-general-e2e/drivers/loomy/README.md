@@ -17,6 +17,12 @@ node drivers/loomy/probe.mjs --output /absolute/new-probe.json \
 后端尚未运行时，探针只冻结随包二进制实测版本/摘要和数据库路径，保留运行状态为空；
 实际 PID、端口、数据库所有权及 health 由首次正常发送后的原生观测建立，不另发启动 Prompt。
 
+若上一个批次的主模型 HTTP 5xx 已正式收口，但数据库仍把空终态消息列为未结算，
+可向探针重复传入 `--archived-failure-record ABS/execution-record.json`。探针校验
+采集回执和归档轨迹，在运行配置中锁定原会话、完整工作目录及终态消息摘要。
+后续派发、收口和离线复验继续核对该终态，原生状态为忙碌、待执行工具或
+新增未结算子会话时停止。此参数只接受正式归档的 Loomy 原生 HTTP 5xx 执行记录。
+
 使用标准 `prepare-general-e2e-workspaces` 生成并安装的 execution unit：
 
 ```bash

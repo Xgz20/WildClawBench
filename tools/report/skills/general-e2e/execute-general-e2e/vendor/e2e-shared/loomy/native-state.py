@@ -63,6 +63,7 @@ def capture(request):
                                and type(completed) is int and completed >= 0 and pending == 0)
                     activity.append({"session_id": row["id"], "parent_id": row["parent_id"], "directory": row["directory"],
                                      "status": "settled" if settled else "active_or_unknown", "last_message_id": tail["id"] if tail else None,
+                                     "last_message_sha256": hashlib.sha256(tail["data"].encode("utf-8")).hexdigest() if tail else None,
                                      "last_role": info.get("role"), "finish": info.get("finish"), "completed_at": completed,
                                      "has_error": bool(info.get("error")), "pending_tool_count": pending})
                 messages, parts = [], []

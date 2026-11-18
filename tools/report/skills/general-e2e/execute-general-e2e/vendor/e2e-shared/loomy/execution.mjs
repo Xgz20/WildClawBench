@@ -3,7 +3,7 @@ import { mkdir, open, readFile, realpath, rename, unlink, writeFile } from 'node
 import { homedir, hostname } from 'node:os';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { artifact, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
+import { artifact, assertArchivedFailuresIdle, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
   runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
 
@@ -179,7 +179,8 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
   catch (error) {
     if (!['LOOMY_RUNTIME_NOT_RUNNING', 'LOOMY_RUNTIME_STARTING'].includes(error.message)) throw error;
     if (journal.dispatch_attempt_count === 0) {
-      const native = await waitNativeActivity({ database: previous.database, python: context.config.python });
+      const native = await waitNativeActivity({ database: previous.database, python: context.config.python,
+        archivedFailures: context.config.archived_http_failures });
       requireValue(sha(await readFile(previous.executable)) === previous.binary_sha256, 'LAZY_RUNTIME_BINARY_CHANGED');
       journal.runtime_absence_before_dispatch = { observed_at: journal.runtime_absence_before_dispatch?.observed_at || new Date().toISOString(), native,
         app_process: context.config.process, dispatch_attempt_count: 0, attempt_id: journal.identity.attempt_id,
@@ -208,7 +209,7 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
       checkNativeModel(binding);
       const statuses = await runtimeStatus(current, context.workspace);
       requireValue(binding.session_ids.every(id => !statuses[id] || statuses[id].type === 'idle'), 'RUNTIME_REBIND_NATIVE_STILL_ACTIVE');
-    } else if (journal.dispatch_attempt_count === 0) assertNativeActivity(native, allowedSessionIds);
+    } else if (journal.dispatch_attempt_count === 0) assertNativeActivity(native, allowedSessionIds, context.config.archived_http_failures);
     journal.runtime_rebindings = [...(journal.runtime_rebindings || []), { observed_at: new Date().toISOString(),
       previous, current, native, policy: journal.native_http_failure ? 'same-main-app-binary-database; bound-native-http-failure-idle'
         : lazyStart ? 'same-main-app-binary-database; initial-dispatch-after-recorded-absence'
@@ -343,7 +344,8 @@ export async function executeTask(options) {
         let runtimeReady = await refreshRuntime(context, journal, options.allowedSessionIds || []);
         await saveState(context, journal);
         if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
-        await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python, allowed: options.allowedSessionIds || [] });
+        await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python,
+          allowed: options.allowedSessionIds || [], archivedFailures: context.config.archived_http_failures });
         const existing = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
         requireValue(existing.sessions.length === 0, 'WORKSPACE_ALREADY_HAS_NATIVE_SESSION');
         const save = async (label, snapshot) => {
@@ -359,7 +361,9 @@ export async function executeTask(options) {
         await fillPrompt(taskConfig, context.prompt, save);
         runtimeReady = await refreshRuntime(context, journal, options.allowedSessionIds || []);
         if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
-        const finalBaseline = await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python, allowed: options.allowedSessionIds || [] });
+        const finalBaseline = await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python,
+          allowed: options.allowedSessionIds || [], archivedFailures: context.config.archived_http_failures });
+        if (runtimeReady) await assertArchivedFailuresIdle(context.config.runtime, context.config.archived_http_failures);
         requireValue(!finalBaseline.session_index.some(row => row.directory === context.workspace), 'WORKSPACE_SESSION_APPEARED_BEFORE_SEND');
         journal.baseline = finalBaseline.session_index.map(row => row.id);
         const baselinePath = join(context.control, (journal.history_prefix || '') + 'pre-send-native-baseline.json'), baselineBytes = jsonBytes(finalBaseline);

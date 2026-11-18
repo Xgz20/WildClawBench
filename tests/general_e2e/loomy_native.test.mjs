@@ -40,6 +40,25 @@ test('Loomy global activity admits only registered peers and their same-director
   assert.throws(() => assertNativeActivity(native, ['parent']));
   assert.throws(() => assertNativeActivity({}));
 });
+test('Loomy admits an archived failure only while its exact native head is unchanged', () => {
+  const proof = { session_id: 'ses_old', directory: '/prior/workspace', last_message_id: 'msg_failed',
+    last_message_sha256: 'a'.repeat(64), completed_at: 1000 };
+  const old = { ...proof, parent_id: null, last_role: 'assistant', finish: null, has_error: false,
+    pending_tool_count: 0, status: 'active_or_unknown' };
+  const native = row => ({ session_index: [{ id: 'ses_old', parent_id: null, directory: proof.directory }],
+    session_activity: [row] });
+  assert.throws(() => assertNativeActivity(native(old)), /FOREIGN_OR_UNSETTLED/);
+  assert.doesNotThrow(() => assertNativeActivity(native(old), [], [proof]));
+  for (const change of [{ last_message_sha256: 'b'.repeat(64) }, { last_message_id: 'msg_new' },
+    { directory: '/other/workspace' }, { completed_at: 1001 }, { pending_tool_count: 1 }]) {
+    assert.throws(() => assertNativeActivity(native({ ...old, ...change }), [], [proof]), /ARCHIVED_FAILURE_HEAD_CHANGED/);
+  }
+  const child = { id: 'ses_child', parent_id: 'ses_old', directory: proof.directory };
+  const withChild = native(old);
+  withChild.session_index.push(child);
+  withChild.session_activity.push({ ...child, session_id: child.id, status: 'active_or_unknown' });
+  assert.throws(() => assertNativeActivity(withChild, [], [proof]), /FOREIGN_OR_UNSETTLED/);
+});
 function fixture({ tool = true, child = false } = {}) {
   const session = (id, parent_id = null) => ({ id, parent_id, directory: '/fixture/workspace', version: 'fixture', time_created: 1000, time_updated: 2000 });
   const message = (id, session_id, data, time_created = 1000) => ({ id, session_id, time_created, time_updated: 2000, data: JSON.stringify(data) });
