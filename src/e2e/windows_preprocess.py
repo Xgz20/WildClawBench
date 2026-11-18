@@ -269,7 +269,7 @@ def apply_recipe(driver, sid, recipe, wgui, encode, *, isolation_receipt=None):
     driver._phase("PREPARING", preprocess_jobs=jobs, preprocess_receipt=state)
 
 
-def bind_running_acode(driver, sid, encode):
+def bind_running_acode(driver, sid, encode, *, required=True):
     row = driver.store.get(driver.key)
     state = row.get("preprocess_receipt")
     if not state:
@@ -278,27 +278,50 @@ def bind_running_acode(driver, sid, encode):
     if not steps:
         return
     expected = steps[-1]["after_sha256"]
-    # The model was dispatched only after the compatibility probe. Bind the live
-    # app-server process before the normal cleanup terminates this sandbox app.
+    dispatch = row.get("dispatch_armed_at")
+    existing = state.get("observed_acode", {})
+    if existing.get("sha256") == expected and existing.get("session_id") == sid and existing.get("dispatch_armed_at") == dispatch:
+        return existing
+    # Capture while task-run is active. The controller can close the subprocess
+    # before returning its completed report.
     script = r"""
 $ErrorActionPreference='Stop'
+$app=Join-Path $env:LOCALAPPDATA 'Programs\AStudio\AStudio.exe'
 $bin=Join-Path $env:LOCALAPPDATA 'Programs\AStudio\resources\bin\acode-windows-x64.exe'
-$rows=@(Get-CimInstance Win32_Process -Filter "Name='acode-windows-x64.exe'" |
-  Where-Object {$_.ExecutablePath -ieq $bin -and $_.CommandLine -match '\bapp-server\b'})
-if($rows.Count -ne 1){throw 'ASTUDIO_LIVE_ACODE_PROCESS_UNVERIFIED'}
-$parent=Get-CimInstance Win32_Process -Filter ('ProcessId='+$rows[0].ParentProcessId)
-if(!$parent -or !$parent.ExecutablePath -or
-    !$parent.ExecutablePath.StartsWith((Join-Path $env:LOCALAPPDATA 'Programs\AStudio\'), [StringComparison]::OrdinalIgnoreCase)){
-  throw 'ASTUDIO_LIVE_ACODE_PARENT_UNVERIFIED'
+$all=@(Get-CimInstance Win32_Process)
+$byId=@{}
+foreach($process in $all){$byId[[int]$process.ProcessId]=$process}
+$owned=@(foreach($candidate in $all){
+    if($candidate.ExecutablePath -ine $bin -or $candidate.CommandLine -notmatch '\bapp-server\b'){continue}
+    $child=$candidate
+    for($depth=0;$depth -lt 8;$depth++){
+      $parent=$byId[[int]$child.ParentProcessId]
+      if(!$parent -or !$parent.CreationDate -or !$child.CreationDate -or $parent.CreationDate -gt $child.CreationDate){break}
+      if($parent.ExecutablePath -ieq $app){$candidate;break}
+      $child=$parent
+    }
+})
+if($owned.Count -ne 1){
+    [Console]::Write('pending')
+    return
 }
-@{pid=[int]$rows[0].ProcessId;sha256=(Get-FileHash -LiteralPath $bin -Algorithm SHA256).Hash.ToLower()} | ConvertTo-Json -Compress
+@{pid=[int]$owned[0].ProcessId;sha256=(Get-FileHash -LiteralPath $bin -Algorithm SHA256).Hash.ToLower()} | ConvertTo-Json -Compress
 """
     try:
-        proof = json.loads(driver.client.windows_execute(sid, encode(script), timeout=45)["output"].strip())
+        output = driver.client.windows_execute(sid, encode(script), timeout=8)["output"].strip()
+        proof = json.loads(output) if output != "pending" else None
     except (PlatformError, ValueError, KeyError) as exc:
+        if not required:
+            return
         raise E2EError("ASTUDIO_LIVE_ACODE_IDENTITY_UNVERIFIED") from exc
+    if proof is None:
+        if not required:
+            return
+        raise E2EError("ASTUDIO_LIVE_ACODE_IDENTITY_UNVERIFIED")
     if not isinstance(proof, dict) or proof.get("sha256") != expected or type(proof.get("pid")) is not int:
         raise E2EError("ASTUDIO_LIVE_ACODE_IDENTITY_MISMATCH")
-    state["observed_acode"] = {"sha256": expected, "pid": proof["pid"], "version": steps[-1]["version"]}
+    state["observed_acode"] = {"sha256": expected, "pid": proof["pid"], "version": steps[-1]["version"],
+                               "session_id": sid, "dispatch_armed_at": dispatch}
     atomic_json(driver.staging / "metadata/preprocessing.json", state)
-    driver._phase("COLLECTING", preprocess_receipt=state)
+    driver._phase(row["phase"], preprocess_receipt=state)
+    return state["observed_acode"]

@@ -17,7 +17,7 @@ from src.e2e.backend import ObservationPaused
 from src.e2e.common import E2EError, atomic_json, digest, read_json, utc_now
 from src.e2e.preparation import normalize_plan
 from src.e2e.preprocessing import effective, freeze_assets, frozen_recipe, inspect_asset, require_admission, selection
-from src.e2e.windows_preprocess import _receipt, _upload, apply_recipe, build_payload
+from src.e2e.windows_preprocess import _receipt, _upload, apply_recipe, bind_running_acode, build_payload
 
 
 def recipe(asset):
@@ -26,6 +26,31 @@ def recipe(asset):
 
 
 class PreprocessingTests(unittest.TestCase):
+    def test_live_kernel_binding_survives_process_exit_after_controller_completion(self):
+        with tempfile.TemporaryDirectory() as directory:
+            checksum = "a" * 64
+            state = {
+                "phase": "RUNNING",
+                "dispatch_armed_at": utc_now(),
+                "preprocess_receipt": {"steps": [
+                    {"kind": "acode", "status": "passed", "after_sha256": checksum, "version": "1.0.0"},
+                ]},
+            }
+            driver = SimpleNamespace(key="case", store=Mock(), staging=Path(directory), client=Mock())
+            driver.store.get.side_effect = lambda key: state.copy()
+            driver._phase = lambda phase, **values: state.update(phase=phase, **values)
+            driver.client.windows_execute.side_effect = [
+                {"output": "pending"}, {"output": json.dumps({"pid": 123, "sha256": checksum})},
+            ]
+            self.assertIsNone(bind_running_acode(driver, "original-session", str, required=False))
+            proof = bind_running_acode(driver, "original-session", str, required=False)
+            self.assertEqual(proof["session_id"], "original-session")
+            self.assertEqual(state["phase"], "RUNNING")
+            state["phase"] = "COLLECTING"
+            self.assertEqual(bind_running_acode(driver, "original-session", str), proof)
+            self.assertEqual(driver.client.windows_execute.call_count, 2)
+            self.assertEqual(read_json(driver.staging / "metadata/preprocessing.json")["observed_acode"], proof)
+
     def test_large_payload_routes_wgui_transfers_to_separate_bounded_directories(self):
         with tempfile.TemporaryDirectory() as directory:
             driver = SimpleNamespace(batch=Path(directory), client=Mock(), _checked_job=Mock(), checkpoint=Mock())

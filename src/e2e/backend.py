@@ -207,7 +207,14 @@ class AStudioSandboxDriver:
         if timeout is not None and began:
             elapsed = (datetime.now(timezone.utc) - datetime.fromisoformat(began)).total_seconds()
             remaining = max(0, timeout - max(0, elapsed))
-        result = self.client.await_job(row["session_id"], job, control_timeout=remaining, heartbeat=self.checkpoint)
+        heartbeat = self.checkpoint
+        if name == "task-run" and any(
+                step["kind"] == "acode" and step["status"] == "passed"
+                for step in row.get("preprocess_receipt", {}).get("steps", [])):
+            def heartbeat():
+                self.checkpoint()
+                windows_preprocess.bind_running_acode(self, row["session_id"], powershell, required=False)
+        result = self.client.await_job(row["session_id"], job, control_timeout=remaining, heartbeat=heartbeat)
         job["result"] = result
         self._phase(self.store.get(self.key)["phase"], jobs=jobs)
         if result["exit_code"] != 0:
