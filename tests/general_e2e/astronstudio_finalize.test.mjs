@@ -54,6 +54,33 @@ test("production AStudio finalizer rejects another running task before invoking 
   } finally {await rm(value.root,{recursive:true,force:true});}
 });
 
+test("a large idle session inventory stays in the cleanup receipt without overflowing the journal", async () => {
+  const value = await fixture();
+  try {
+    const sessions = Array.from({ length: 800 }, (_, index) => ({
+      thread_id: `thread-${index}-12345678-1234-1234-1234-123456789012`,
+      turn_id: `turn-${index}-12345678-1234-1234-1234-123456789012`, status: "completed",
+    }));
+    const snapshot = { checked_at: "2026-11-19T00:00:00Z", native_check: "queried",
+      snapshot_sha256: "a".repeat(64), sessions, blockers: [] };
+    await finalizeAstronStudioExecution(options(value), {
+      runtimeSafetyGuard: async () => snapshot,
+      terminateProcesses: async () => successfulCleanup(),
+    });
+    const journal = await readFile(join(value.root, ".general-e2e", "diagnostics", "framework-events.jsonl"), "utf8");
+    const idle = journal.trim().split("\n").map(JSON.parse).find(x => x.event === "collect.native-idle-verified");
+    assert.equal(idle.guard.session_count, sessions.length);
+    assert.equal(idle.guard.snapshot_sha256, snapshot.snapshot_sha256);
+    assert.equal(idle.guard.sessions, undefined);
+    const state = JSON.parse(await readFile(value.statePath, "utf8"));
+    const receipt = JSON.parse(await readFile(join(value.root, "evidence", "tasks",
+      state.identity.task_id, state.identity.attempt_id, "process-cleanup.json"), "utf8"));
+    assert.deepEqual(receipt.native_runtime_guard.before.sessions, sessions);
+  } finally {
+    await rm(value.root, { recursive: true, force: true });
+  }
+});
+
 test("formal collection copies declared diagnostic evidence and immutable verification detects tampering",async()=>{
   const value=await fixture();
   try {

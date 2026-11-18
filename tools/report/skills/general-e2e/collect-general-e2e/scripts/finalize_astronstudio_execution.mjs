@@ -54,7 +54,17 @@ export async function finalizeAstronStudioExecution(options, overrides = {}) {
       await audit({event:"collect.requested",workspace});
       try {
         const before=await guard();
-        await audit({event:"collect.native-idle-verified",guard:before});
+        const guardSummary = {
+          checked_at: before.checked_at,
+          native_check: before.native_check,
+          snapshot_sha256: before.snapshot_sha256,
+          session_count: before.sessions?.length ?? null,
+          settled_structured_ledger_count: before.settled_structured_ledgers?.length ?? 0,
+          blocker_count: before.blockers?.length ?? 0,
+        };
+        // The complete guard is retained in process-cleanup.json; the journal
+        // bounds each line regardless of the number of historical sessions.
+        await audit({event:"collect.native-idle-verified",guard:guardSummary});
         const priorAudit=processOptions.audit,priorAssert=processOptions.assertSafe;
         const cleanup=await terminate(workspace,{...processOptions,operationId,
           audit:async event=>{await audit(event);await priorAudit?.(event);},
