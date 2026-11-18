@@ -3009,7 +3009,6 @@ def _effective_rule_source(
         corrected, receipt = office001_rule_review.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = private_reference_guard.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = news_workbook_layout.effective_source(manifest,source,corrected,receipt)
-        corrected, receipt = news_header_equivalence.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_summary_labels.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = public_text_profiles.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = work_order_evidence_budget.effective_source(manifest,source,corrected,receipt)
@@ -3034,6 +3033,7 @@ def _effective_rule_source(
         corrected, receipt = procurement_annotation_formula.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = acl_index_headers.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = work_order_equivalent_headers.effective_source(manifest,source,corrected,receipt)
+        corrected, receipt = news_header_equivalence.effective_source(manifest,source,corrected,receipt)
     except ValueError as exc:
         raise ScoringRuntimeError("RULE_SOURCE_CORRECTION_MISMATCH", str(exc)) from exc
     if receipt is not None:

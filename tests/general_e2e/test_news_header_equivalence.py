@@ -93,6 +93,15 @@ class NewsHeaderEquivalenceTests(unittest.TestCase):
         old = deepcopy(manifest); old['runtime'] = {}
         self.assertEqual(ADAPTER.effective_source(old, original, source(NEWS), {'old': True}), (source(NEWS), {'old': True}))
 
+    def test_complete_scoring_entrypoint_applies_shared_dependency_before_new_headers(self):
+        original, contract, manifest = self.inputs()
+        manifest['runtime']['shared_rule_source_repair'] = RUNTIME.shared_source_repairs.marker(contract)
+        standalone, _ = ADAPTER.effective_source(manifest, original, source(NEWS), None)
+        integrated, receipt = RUNTIME._effective_rule_source(manifest, original)
+        self.assertEqual(integrated, standalone)
+        self.assertEqual(receipt['correction_id'], ADAPTER.PROFILE)
+        self.assertEqual(receipt['prior_correction']['effective_source_sha256'], ADAPTER.PRIOR_SOURCE_SHA)
+
     def fixture(self, folder):
         p = Path(folder)
         write = lambda name, value: (p/name).write_text(json.dumps(value, ensure_ascii=False), encoding='utf-8')
