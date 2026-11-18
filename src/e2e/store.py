@@ -204,7 +204,7 @@ class BatchStore:
             db.execute("INSERT INTO events(at,kind,item_key,data) VALUES (?,?,NULL,?)",
                        (utc_now(), "PIPELINE_OWNER_TRANSFER", json.dumps({"previous": previous, "owner": owner, "reason": reason})))
 
-    def claim_score(self, owner: str, slots: int, *, mode: str) -> dict | None:
+    def claim_score(self, owner: str, slots: int, *, mode: str, execution_key: str | None = None) -> dict | None:
         with self.transaction() as db:
             controller = db.execute("SELECT value FROM metadata WHERE key='pipeline_owner'").fetchone()
             if controller and controller[0] != owner:
@@ -214,7 +214,9 @@ class BatchStore:
             active = db.execute("SELECT COUNT(*) FROM scoring WHERE phase IN ('CLAIMED','RUNNING','NEEDS_ATTENTION')").fetchone()[0]
             if active >= slots:
                 return None
-            row = db.execute("SELECT * FROM scoring WHERE phase='READY' ORDER BY rowid LIMIT 1").fetchone()
+            row = (db.execute("SELECT * FROM scoring WHERE phase='READY' AND key=?", (execution_key,)).fetchone()
+                   if execution_key is not None else
+                   db.execute("SELECT * FROM scoring WHERE phase='READY' ORDER BY rowid LIMIT 1").fetchone())
             if row is None:
                 return None
             data = json.loads(row["data"])

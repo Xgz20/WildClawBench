@@ -157,6 +157,16 @@ class ExecutionCoreTests(unittest.TestCase):
         store.score_update(claim["key"], claim["claim_id"], "NEEDS_ATTENTION")
         self.assertIsNone(store.claim_score("owner", 1, mode="streaming"))
 
+    def test_targeted_claim_leaves_other_scoring_sources_ready(self):
+        store = BatchStore(self.root)
+        store.initialize({}, [{"key": f"t{i}", "unit_id": "u", "run_index": 1, "task_id": f"t{i}"} for i in range(3)])
+        for i in range(3):
+            store.publish_ready(f"t{i}", {"backup_sha256": str(i)})
+        claim = store.claim_score("owner", 1, mode="streaming", execution_key="t2")
+        self.assertEqual(claim["key"], "t2")
+        self.assertEqual({item["key"]: item["phase"] for item in store.scoring_rows()},
+                         {"t0": "READY", "t1": "READY", "t2": "CLAIMED"})
+
     def test_kernel_controller_lock_rejects_second_owner(self):
         with controller_lock(self.root):
             with self.assertRaisesRegex(E2EError, "ALREADY_RUNNING"):

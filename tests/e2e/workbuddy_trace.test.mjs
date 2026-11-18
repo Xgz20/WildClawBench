@@ -6,3 +6,25 @@ function fixture(){const cwd='C:\\ProgramData\\WGUI\\workspace\\project',prompt=
 test('bind native model, user, tools, final and deduplicated usage',()=>{const f=fixture(),b=analyzeWorkBuddy(f.bytes(),f.options);assert.deepEqual(b.missing,[]);assert.deepEqual(b.calls,[{call_id:'call1',call_sequence:1,result_sequence:2}]);assert.equal(b.native_resources.metrics.usage.total_tokens.value,220);assert.equal(b.final_response,'Done');});
 test('reject cross-workspace, wrong prompt/model, unverified Max and incomplete native terminal',()=>{for(const kind of ['cwd','prompt','model','max','terminal']){const f=fixture();if(kind==='cwd')f.rows[1].cwd='C:\\other';if(kind==='prompt')f.options.prompt='different';if(kind==='model')f.rows[1].providerData.requestModelName='different';if(kind==='max')f.options.requested_max_mode=true;if(kind==='terminal')delete f.rows.at(-1).status;assert.throws(()=>analyzeWorkBuddy(f.bytes(),f.options),/WORKBUDDY_/);}});
 test('missing raw provider counters remain unknown instead of normalized zero',()=>{const f=fixture();for(const row of f.rows)if(row.providerData){delete row.providerData.rawUsage;row.providerData.usage={requests:1,inputTokens:0,outputTokens:0,totalTokens:0}};assert.equal(analyzeWorkBuddy(f.bytes(),f.options).native_resources.metrics.usage.total_tokens.value,null);});
+
+test('replay accepts only the observed WorkBuddy inline context newline projection', () => {
+  const f = fixture();
+  const prompt = '工作区公开指令（AGENTS.md）：\n\n# 范围\n只用公开资料。\n\n任务：\n\n调研指定主题';
+  const prolog = '<system-reminder data-role="user-context">VM</system-reminder>\n';
+  const record = (text, prefix = prolog) => [{type: 'input_text', text: prefix + '<user_query>' + text + '</user_query>'}];
+  f.options = {...f.options, prompt};
+  f.options.product_report.product_version = '5.9.3';
+  const collapsed = prompt.replace(/\n{2,}/g, '\n');
+  f.rows[0].content = record(collapsed);
+  const bound = analyzeWorkBuddy(f.bytes(), f.options);
+  assert.equal(bound.prompt_transport.kind, 'workbuddy-user-query-inline-context-blank-lines-collapsed');
+  assert.equal(bound.prompt_transport.dropped_linefeeds, 3);
+  assert.notEqual(bound.prompt_sha256, bound.prompt_transport.decoded_text_sha256);
+  for (const [observed, prefix] of [[collapsed + '。', prolog], [collapsed, ''], [prompt.replaceAll('\n', ''), prolog]]) {
+    f.rows[0].content = record(observed, prefix);
+    assert.throws(() => analyzeWorkBuddy(f.bytes(), f.options), /WORKBUDDY_PROMPT_MISMATCH/);
+  }
+  f.options.prompt = prompt + '\n第二行';
+  f.rows[0].content = record(collapsed + '\n第二行');
+  assert.throws(() => analyzeWorkBuddy(f.bytes(), f.options), /WORKBUDDY_PROMPT_MISMATCH/);
+});

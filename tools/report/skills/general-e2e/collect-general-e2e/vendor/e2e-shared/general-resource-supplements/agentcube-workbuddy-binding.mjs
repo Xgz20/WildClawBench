@@ -10,6 +10,35 @@ const time=v=>typeof v==='number'?new Date(v).toISOString():typeof v==='string'&
 const modelKey=v=>String(v||'').trim().toLowerCase().replace(/[ _]/g,'-');
 export const ADAPTER='agentcube-workbuddy-native';
 
+function bindPrompt(user, prompt, product) {
+  const nativePrompt = textOf(user.content);
+  const wrappers = [...nativePrompt.matchAll(/<user_query>([\s\S]*?)<\/user_query>/g)];
+  const wrapped = wrappers.length === 1 && nativePrompt.trimEnd().endsWith('</user_query>');
+  const actual = wrapped ? wrappers[0][1] : nativePrompt;
+  const normalize = text => text.replace(/\r\n/g, '\n').trim();
+  const expected = normalize(prompt);
+  const observed = normalize(actual);
+  let kind = 'workbuddy-user-query';
+  let droppedLinefeeds;
+  if (observed !== expected) {
+    // WorkBuddy 5.9.3 can collapse consecutive linefeeds in the native text block.
+    // Keep nonempty line boundaries, the single-line task, and every other character exact.
+    const sections = expected.split(/\n+任务：\n+/);
+    const collapsed = wrapped && product.product_version === '5.9.3'
+      && Array.isArray(user.content) && user.content.length === 1 && user.content[0].type === 'input_text'
+      && nativePrompt.startsWith('<system-reminder data-role="user-context">')
+      && sections.length === 2 && sections[0].startsWith('工作区公开指令（AGENTS.md）：\n')
+      && sections[1] && !/[\r\n]/.test(sections[1])
+      && expected.replace(/\n{2,}/g, '\n') === observed;
+    ensure(collapsed, 'WORKBUDDY_PROMPT_MISMATCH');
+    kind = 'workbuddy-user-query-inline-context-blank-lines-collapsed';
+    droppedLinefeeds = expected.length - observed.length;
+  }
+  return {kind, native_message_sha256: sha(Buffer.from(nativePrompt)),
+    decoded_text_sha256: sha(Buffer.from(actual)),
+    ...(droppedLinefeeds === undefined ? {} : {dropped_linefeeds: droppedLinefeeds})};
+}
+
 export function analyzeWorkBuddy(bytes, input) {
   const {identity,prompt,guest_cwd:cwd,requested_model:model,requested_max_mode:maxMode=false,report,product_report:product}=input;
   ensure(report?.schema_version===2&&report.status==='completed','WORKBUDDY_CONTROLLER_TERMINAL_UNVERIFIED');
@@ -18,9 +47,8 @@ export function analyzeWorkBuddy(bytes, input) {
   const messages=rows.filter(x=>x.value.type==='message'&&['user','assistant'].includes(x.value.role));
   const users=messages.filter(x=>x.value.role==='user'&&!x.value.providerData?.isMeta&&!x.value.providerData?.isCompactInternal);
   ensure(users.length===1,'WORKBUDDY_SINGLE_TASK_BINDING_AMBIGUOUS');
-  const user=users[0].value;let actual=textOf(user.content);const matches=[...actual.matchAll(/<user_query>([\s\S]*?)<\/user_query>/g)];
-  if(matches.length===1&&actual.trimEnd().endsWith('</user_query>'))actual=matches[0][1];
-  ensure(actual.replace(/\r\n/g,'\n').trim()===prompt.replace(/\r\n/g,'\n').trim(),'WORKBUDDY_PROMPT_MISMATCH');
+  const user=users[0].value;
+  const promptTransport=bindPrompt(user,prompt,product);
   const scoped=rows.filter(x=>['message','function_call','function_call_result','model-usage'].includes(x.value.type));
   const sessions=new Set(scoped.map(x=>x.value.sessionId).filter(Boolean));
   ensure(sessions.size===1&&scoped.filter(x=>x.value.type!=='model-usage').every(x=>x.value.sessionId&&pathEqual(x.value.cwd,cwd)),'WORKBUDDY_NATIVE_IDENTITY_MISMATCH');
@@ -67,7 +95,6 @@ export function analyzeWorkBuddy(bytes, input) {
   }
   if([...calls.keys()].some(id=>results.has(id)&&results.get(id)<calls.get(id).call_sequence))missing.push('native-tool-order-invalid');
   if([...calls.keys()].some(id=>!results.has(id))||[...results.keys()].some(id=>!calls.has(id)))missing.push('native-tool-trajectory-incomplete');
-  const nativePrompt=textOf(user.content);
   // This profile binds a fresh AgentCube task directly to its primary raw log;
   // it does not pretend that a desktop runtime snapshot was observed.
   const metricRows=rows.map(({value})=>{
@@ -90,7 +117,7 @@ export function analyzeWorkBuddy(bytes, input) {
   ensure(duration===null||duration>=0,'WORKBUDDY_NATIVE_CLOCK_INVALID');
   fields.timing={duration_seconds:{value:duration===null?null:duration/1000,status:duration===null?'unavailable':'observed',basis:'native bound user record to native terminal; excludes scoring'},agent_duration_seconds:{value:null,status:'unavailable',basis:'native request start clock is not supplied by JSONL'}};
   return {schema:'wildclawbench.agentcube-workbuddy-native-binding/v1',adapter:ADAPTER,identity,session,actual_model:actualModel,native_model:actualModel,reasoning_effort:null,max_mode:maxMode,
-    prompt_sha256:sha(Buffer.from(prompt)),prompt_transport:{kind:'workbuddy-user-query',native_message_sha256:sha(Buffer.from(nativePrompt)),decoded_text_sha256:sha(Buffer.from(actual))},
+    prompt_sha256:sha(Buffer.from(prompt)),prompt_transport:promptTransport,
     raw_sha256:sha(bytes),user_line:users[0].line,terminal_line:terminal.line,native_event_count:rows.length,filtered_native_event_count:filtered,events,calls:[...calls.values()].map(call=>({...call,result_sequence:results.get(call.call_id)??null})),missing,
     final_response:textOf(final.value.content),native_duration_ms:null,native_started_at:started,native_finished_at:ended,
     native_resources:{metrics:fields,collection:{coverage:{},known_subtotals:parsed.collection.known_subtotals||{},warnings:parsed.collection.warnings||[]}},
@@ -115,6 +142,7 @@ export async function verifyAgentCubeWorkBuddy({unitRoot,traceRoot,index,stateBy
  const prompt=(await readInside(unitRoot,`execution/tasks/${record.identity.task_id}/PROMPT.md`)).toString('utf8');
  const replay=analyzeWorkBuddy(raw,{identity:state.identity,prompt,guest_cwd:bound.session.cwd,requested_model:state.unit.model,requested_max_mode:state.unit.max_mode||false,report:state.report,...bound.controller_binding,raw_name:ref.path.split('/').at(-1)});
  ensure(!replay.missing.length&&same(replay.session,bound.session)&&replay.actual_model===bound.actual_model&&replay.max_mode===bound.max_mode&&replay.raw_sha256===bound.raw_sha256&&replay.prompt_sha256===state.prompt_sha256,'WORKBUDDY_ARCHIVE_BINDING');
+ ensure(same(replay.prompt_transport,bound.prompt_transport),'WORKBUDDY_ARCHIVE_PROMPT_TRANSPORT');
  const transcript=(await readInside(traceRoot,index.transcript.path));ensure(sha(transcript)===index.transcript.sha256&&transcript.length===index.transcript.size,'WORKBUDDY_ARCHIVE_TRANSCRIPT_DRIFT');
  const events=transcript.toString('utf8').split(/\r?\n/).filter(x=>x.trim()).map(JSON.parse);ensure(same(events,replay.events)&&same(index.calls,replay.calls),'WORKBUDDY_ARCHIVE_TRANSCRIPT_REPLAY');
  const final=(await readInside(unitRoot,record.evidence.final_response_path)).toString('utf8');ensure(final===replay.final_response,'WORKBUDDY_ARCHIVE_FINAL_DRIFT');
