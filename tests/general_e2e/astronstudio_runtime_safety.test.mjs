@@ -39,6 +39,16 @@ test("a shared app-server matched by cwd is protected; unknown shared task desce
   const bare=selectDarwinTaskProcesses(ps,"/workspace/A",{cwdPids:[11]});
   assert.equal(bare.targets.length,0);assert.equal(bare.blocked_shared_processes.length,0);
 });
+test("Loomy application and its bundled OpenCode service stay protected even when cwd names one task",()=>{
+  const ps=[proc(10,1,"/Applications/Loomy.app/Contents/MacOS/Loomy"),
+    proc(11,10,"opencode serve --hostname=127.0.0.1 --port=5054"),proc(12,11,"/bin/sleep 60"),
+    proc(20,1,"/bin/python3 /workspace/A/tool.py")];
+  const selected=selectDarwinTaskProcesses(ps,"/workspace/A",{cwdPids:[10,11,12,20]});
+  assert.deepEqual(selected.targets.map(x=>x.pid),[20]);
+  assert.deepEqual(selected.protected_processes.map(x=>x.pid),[10,11,12]);
+  assert.deepEqual(selected.blocked_shared_processes.map(x=>x.pid),[12]);
+  assert.equal(selected.infrastructure_roots.find(x=>x.pid===11).protection_reason,"shared-loomy-opencode");
+});
 test("a task wrapper holding a shared native child cannot be killed through ancestor selection",()=>{
   const ps=[proc(10,1,"/bin/sh /workspace/A/runner.sh"),proc(11,10,"/app/acode app-server")];
   const selected=selectDarwinTaskProcesses(ps,"/workspace/A",{cwdPids:[10]});

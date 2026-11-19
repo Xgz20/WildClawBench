@@ -53,7 +53,7 @@ export async function finalizeLoomyExecution(options) {
     if (runtime) await assertArchivedFailuresIdle(runtime, runConfig.archived_http_failures);
   }
   return finalizeGeneralExecution({ ...options, pythonExecutable: options.pythonExecutable || process.env.PYTHON || 'python3' },
-    { processCleanup: { id: 'loomy-macos-task-processes', version: '0.1.0', harness: 'loomy', platform: 'darwin',
+    { processCleanup: { id: 'loomy-macos-task-processes', version: '0.1.1', harness: 'loomy', platform: 'darwin',
       run: (workspace, cleanupOptions) => terminateDarwinTaskProcesses(workspace, cleanupOptions) } });
 }
 export async function main(argv = process.argv.slice(2)) {
