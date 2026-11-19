@@ -18,6 +18,8 @@ def mcp_callable_matches(name, server, tool) -> bool:
     """Replay acode's ASCII connector-name shortening; never relax argument binding."""
     if not all(isinstance(value, str) and value for value in (name, server, tool)):
         return False
+    if server == "acode" and name == tool and re.fullmatch(r"astron_browser_[a-z_]+", tool):
+        return True
     prefix = "mcp__" + server + "__"
     if name.startswith(prefix) and name.endswith("__" + tool):
         return True

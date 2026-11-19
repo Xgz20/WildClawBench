@@ -98,6 +98,15 @@ class NativeMcpTests(unittest.TestCase):
                 with self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
                     self.normalize()
 
+    def test_builtin_browser_mirror_requires_same_name_and_acode_server(self):
+        name = "astron_browser_press"
+        self.rows[3]["payload"]["name"] = name
+        self.end["invocation"].update(server="acode", tool=name)
+        self.assertEqual(self.normalize()["missing"], [])
+        self.end["invocation"]["server"] = "acode_apps"
+        with self.assertRaisesRegex(E2EError, "NATIVE_MCP_INVOCATION_MISMATCH"):
+            self.normalize()
+
     def test_mcp_end_with_wrong_invocation_is_rejected(self):
         self.end["invocation"]["arguments"] = {"operation": "delete"}
         with self.assertRaisesRegex(E2EError, "MCP_INVOCATION_MISMATCH"):
