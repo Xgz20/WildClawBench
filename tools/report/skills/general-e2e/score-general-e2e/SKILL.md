@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.124` v6 iPad题原生产者在无PPT分支只生成状态与参考，不生成候选页。严格回验原状态/Worker/空候选后显式留存条件缺失，不补候选或页文件、不改原数值规则。旧失败仅供新只读验证器留证，语义准备必须新attempt冻结Profile。
+
 `0.10.123` 新缺答复Profile v2明确保留event_index=null，避免证据导出KeyError；旧v1字节重放保持。原作答、终态、Rubric及分值规则不变。
 
 `0.10.122` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。

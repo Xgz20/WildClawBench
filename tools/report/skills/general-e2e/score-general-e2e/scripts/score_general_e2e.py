@@ -50,6 +50,7 @@ import office001_rule_review
 import office001_semantic_ranges
 import private_reference_guard
 import generated_evidence_globs
+import conditional_generated_evidence
 import news_workbook_layout
 import news_header_equivalence
 import procurement_summary_labels
@@ -2050,6 +2051,8 @@ def prepare_attempt(
                 **({'business_capability_profile':business_capability.profile_marker(contract,_sha256_bytes(contract_bytes))}
                    if business_capability.profile_marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'conditional_generated_evidence_profile':conditional_profile}
+                   if (conditional_profile := conditional_generated_evidence.new_marker(contract,_sha256_bytes(contract_bytes),dataset)) else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(contract) else {}),
                 **({'procurement_summary_label_profile':procurement_summary_labels.marker(contract,_sha256_bytes(contract_bytes))}
@@ -2397,6 +2400,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         expected_argument = paths["runtime_workspace"]
     if runtime_info.get("workspace_argument") != expected_argument:
         raise ScoringRuntimeError("WORKSPACE_PATH_RESOLUTION_INVALID", "workspace argument")
+    conditional_absences = []
     if require_runtime:
         rule_workspace = _resolve_within(root, expected_argument, "rule_workspace")
         if (not rule_workspace.is_dir() or rule_workspace.is_symlink()
@@ -2405,7 +2409,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         if (root / "rule-component.json").is_file():
             contract = _read_json(root / paths["contract"], code="SCORING_CONTRACT_INVALID")
             if _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest):
-                _generated_evidence_files(root, manifest, contract)
+                _generated_evidence_files(root, manifest, contract, absences=conditional_absences)
     _verify_rule_input_context(root, manifest)
     contract = _read_json(root / paths['contract'])
     adapter_profile=any(manifest.get('runtime',{}).get(k) for k in ['typed_rule_diagnostics_profile','work_order_final_total_policy_profile','domain_details_diagnostics_profile'])
@@ -2420,6 +2424,7 @@ def verify_attempt(attempt_root: Path, *, require_runtime: bool = True) -> dict[
         "candidate_sha256": candidate_sha,
         "entry_count": len(entries),
         **({'generated_evidence_glob_reader':glob_reader} if glob_reader else {}),
+        **({'conditional_generated_evidence_absences':conditional_absences} if conditional_absences else {}),
     }
 
 
@@ -3621,7 +3626,7 @@ def _required_generated_evidence(contract: Mapping[str, Any], *, extended: bool 
     return paths
 
 
-def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract: Mapping[str, Any]) -> list[Path]:
+def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract: Mapping[str, Any], *, absences: list | None = None) -> list[Path]:
     required = _required_generated_evidence(contract, extended=_extended_evaluator_inputs(manifest), manifest=manifest)
     if not required:
         return []
@@ -3648,6 +3653,11 @@ def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract:
         except ValueError as exc:
             raise ScoringRuntimeError('JUDGE_EVIDENCE_PATH_INVALID',str(exc)) from exc
         if not targets:
+            try:absence=conditional_generated_evidence.absence(root,workspace,relative,manifest,contract)
+            except ValueError as exc:raise ScoringRuntimeError('CONDITIONAL_EVIDENCE_INVALID',str(exc)) from exc
+            if absence is not None:
+                if absences is not None:absences.append(absence)
+                continue
             raise ScoringRuntimeError("JUDGE_EVIDENCE_MISSING", relative)
         for target in targets:
             chain = target.relative_to(workspace).parts
@@ -3668,7 +3678,10 @@ def _generated_evidence_files(root: Path, manifest: Mapping[str, Any], contract:
 
 def _snapshot_generated_evidence(root: Path, manifest: Mapping[str, Any], contract: Mapping[str, Any]) -> list[Path]:
     """Keep required grader output portable when the disposable runtime is archived away."""
-    files = _generated_evidence_files(root, manifest, contract)
+    absences=[]
+    files = _generated_evidence_files(root, manifest, contract, absences=absences)
+    if absences and manifest.get('runtime',{}).get('conditional_generated_evidence_profile') is None:
+        raise ScoringRuntimeError('CONDITIONAL_EVIDENCE_REQUIRES_NEW_ATTEMPT')
     if not files:
         return []
     workspace = _resolve_within(root, manifest["runtime"]["workspace_argument"], "rule_workspace")
@@ -3683,6 +3696,7 @@ def _snapshot_generated_evidence(root: Path, manifest: Mapping[str, Any], contra
         "contract_sha256": _sha256_file(root / manifest["paths"]["contract"]),
         "rule_audit_sha256": _sha256_file(root / "rule-audit.json"),
         "files": entries,
+        **({"conditional_absences":absences} if absences else {}),
     }
     target = root / "grader-evidence"
     if target.exists() or target.is_symlink():
@@ -6678,6 +6692,8 @@ def prepare_rescore_attempt(
                 **({'business_capability_profile':business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'conditional_generated_evidence_profile':conditional_profile}
+                   if (conditional_profile := conditional_generated_evidence.new_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])) else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
                    if dataset_rule_corrections.procurement_matches(_read_json(staging/source_paths['contract'])) else {}),
                 **({'procurement_summary_label_profile':procurement_summary_labels.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
