@@ -62,6 +62,8 @@ class ExecutionAccountabilityTests(unittest.TestCase):
 
 def grade(transcript, workspace_path):
     answer, evidence = _final_answer(transcript)
+    if answer != '' or evidence['event_index'] is not None:
+        raise ValueError('Absent delivery must have a null answer event index')
     return {'candidate_work': 0.5, 'overall_score': 0.5}
 """
         with tempfile.TemporaryDirectory() as directory:
@@ -74,7 +76,7 @@ def grade(transcript, workspace_path):
             attempt = root / task['attempt_path']
             manifest = json.loads((attempt / 'attempt-manifest.json').read_bytes())
             self.assertEqual(manifest['runtime']['interrupted_answer_delivery_profile']['profile'],
-                             SCORE.interrupted_answer_delivery.GENERAL_PROFILE)
+                             SCORE.interrupted_answer_delivery.GENERAL_PROFILE_V2)
             result = SCORE.run_rules_attempt(attempt_root=attempt, runtime_python=Path(sys.executable), timeout_seconds=10)
             self.assertEqual(result['rule_component']['score'], .5)
             self.assertEqual(json.loads((attempt / 'private/contract.json').read_bytes())['automated_checks'], rule)

@@ -38,6 +38,7 @@ POLICY = {
     "numeric_decisions_assigned": False,
 }
 GENERAL_PROFILE = "verified-harness-failure-answer-not-provided/v1"
+GENERAL_PROFILE_V2 = "verified-harness-failure-answer-not-provided/v2"
 GENERAL_REPLACEMENT = '''    if not completed:
         return '',{'status':'verified_harness_failure_answer_not_provided',
                   'delivery_profile':'verified-harness-failure-answer-not-provided/v1',
@@ -50,6 +51,12 @@ GENERAL_POLICY = {
     "extraction_basis": "已核验原生受理和失败证明；未提供正式答复证据。保留原始过程，不伪造SDK终态，不声称未观察内容从未发生。",
     "judge_instruction": execution_accountability.POLICY['judge_instruction'],
 }
+GENERAL_REPLACEMENT_V2 = GENERAL_REPLACEMENT.replace(
+    "'formal_answer_evidence':'not_provided'", "'event_index':None,'formal_answer_evidence':'not_provided'").replace(
+        GENERAL_PROFILE, GENERAL_PROFILE_V2)
+GENERAL_POLICY_V2 = {**GENERAL_POLICY, 'profile': GENERAL_PROFILE_V2,
+                     'answer_event_index': None,
+                     'event_index_basis': 'No formal answer event is evidenced; null is not a terminal or answer event.'}
 
 
 def marker(contract, contract_sha, dataset, evidence_admission):
@@ -58,7 +65,7 @@ def marker(contract, contract_sha, dataset, evidence_admission):
         if GUARD in source:
             nodes = [n for n in ast.parse(source).body if isinstance(n, ast.FunctionDef) and n.name == '_final_answer']
             if len(nodes) == 1 and GUARD in ast.get_source_segment(source, nodes[0]):
-                return {'profile': GENERAL_PROFILE, 'contract_sha256': contract_sha,
+                return {'profile': GENERAL_PROFILE_V2, 'contract_sha256': contract_sha,
                         'source_sha256': hashlib.sha256(source.encode()).hexdigest()}
         return None
     if evidence_admission != ADMISSION or {k: dataset.get(k) for k in DATASET} != DATASET:
@@ -74,9 +81,12 @@ def policy(manifest, contract):
     if frozen is None:
         return None
     expected = marker(contract, manifest["digests"]["contract_sha256"], manifest["dataset"], manifest.get("evidence_admission"))
+    if expected and frozen.get('profile') == GENERAL_PROFILE and expected['profile'] == GENERAL_PROFILE_V2:
+        expected = {**expected, 'profile': GENERAL_PROFILE}
     if frozen != expected or expected is None:
         raise ValueError("INTERRUPTED_ANSWER_DELIVERY_PROFILE_MISMATCH")
-    return GENERAL_POLICY if frozen['profile'] == GENERAL_PROFILE else POLICY
+    return (GENERAL_POLICY_V2 if frozen['profile'] == GENERAL_PROFILE_V2 else
+            GENERAL_POLICY if frozen['profile'] == GENERAL_PROFILE else POLICY)
 
 
 def effective_source(manifest, original, current, prior):
@@ -91,13 +101,15 @@ def effective_source(manifest, original, current, prior):
     function = ast.get_source_segment(current, nodes[0])
     if function.count(GUARD) != 1:
         raise ValueError("INTERRUPTED_ANSWER_DELIVERY_SOURCE_MISMATCH")
-    general = manifest['runtime']['interrupted_answer_delivery_profile']['profile'] == GENERAL_PROFILE
-    corrected = current.replace(function, function.replace(GUARD, GENERAL_REPLACEMENT if general else REPLACEMENT, 1), 1)
-    receipt = {"schema_version": "wildclawbench.general-e2e-rule-source-correction/v1", "correction_id": GENERAL_PROFILE if general else PROFILE,
+    selected = manifest['runtime']['interrupted_answer_delivery_profile']['profile']
+    general = selected in {GENERAL_PROFILE, GENERAL_PROFILE_V2}
+    replacement = GENERAL_REPLACEMENT_V2 if selected == GENERAL_PROFILE_V2 else GENERAL_REPLACEMENT if general else REPLACEMENT
+    corrected = current.replace(function, function.replace(GUARD, replacement, 1), 1)
+    receipt = {"schema_version": "wildclawbench.general-e2e-rule-source-correction/v1", "correction_id": selected,
                "task_id": contract["task_id"], "contract_sha256": manifest["digests"]["contract_sha256"],
                "original_source_sha256": hashlib.sha256(original.encode()).hexdigest(),
                "effective_source_sha256": hashlib.sha256(corrected.encode()).hexdigest(),
-               "candidate_rewritten": False, "numeric_decisions_assigned": False, "answer_delivery_policy": GENERAL_POLICY if general else POLICY,
+               "candidate_rewritten": False, "numeric_decisions_assigned": False, "answer_delivery_policy": policy(manifest, contract),
                "reason": ("原生受理和失败证明已核验，正式答复证据未提供；仅解除已识别提取器的缺答复异常，不伪造终态、不给数值分，原检查点和权重保持。" if general else
                           "完整原生中断证明下，正式答复未交付作为交付缺失交接原Rubric，不再因提取不到正式答复阻止零权重取证Worker。原规则和业务/能力权重保持原契约。")}
     if prior:

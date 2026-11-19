@@ -3,6 +3,8 @@ name: score-general-e2e
 description: 对一个冻结的 General E2E 任务运行自动规则与指定语义裁判，生成证据可追溯的标准评分；不负责批量调度、执行 Harness 或报告汇总。
 ---
 
+`0.10.123` 新缺答复Profile v2明确保留event_index=null，避免证据导出KeyError；旧v1字节重放保持。原作答、终态、Rubric及分值规则不变。
+
 `0.10.122` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。
 
 `0.10.121` Loomy 原生 `finish=length` 仅在消息完成、全部工具和子会话结束及同一后端空闲时保留为执行失败，独立复验原 Prompt、Spark/High、终态和来源 SHA 后交原 Rubric 评分。保留截断前轨迹、原候选与旧发行，不重发、不把缺失终稿视为成功或统一零分；问题工具待处理时停止新派发。

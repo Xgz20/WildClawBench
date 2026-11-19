@@ -15,13 +15,17 @@ import prepared_v6_profile_failure
 import work_order_equivalent_headers
 import quote_arrival_summary
 import funnel_summary_tables
+import harness_answer_index_failure
 
-KINDS={aggregation_runtime_failure.ERROR_KIND,source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,prepared_v6_profile_failure.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND,quote_arrival_summary.ERROR_KIND,funnel_summary_tables.ERROR_KIND}
+KINDS={harness_answer_index_failure.ERROR_KIND,aggregation_runtime_failure.ERROR_KIND,source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,prepared_v6_profile_failure.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND,quote_arrival_summary.ERROR_KIND,funnel_summary_tables.ERROR_KIND}
 
 def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
+    if contract.get('task_id') == harness_answer_index_failure.TASK:
+        harness_answer_index_failure.evidence(rt,attempt,m,contract,task)
+        return harness_answer_index_failure.ERROR_KIND
     if aggregation_runtime_failure.matches(rt,root,state,task):
         return aggregation_runtime_failure.ERROR_KIND
     if contract.get('task_id')==news_header_equivalence.TASK:
@@ -178,10 +182,10 @@ def verify(rt,root,state,task):
         observed=quote_arrival_summary.validate_blocker(rt,root/task['attempt_path'],m,rt._read_json(root/task['attempt_path']/m['paths']['contract']),task)
         if (proof.get('quote_arrival_review')!=observed or proof.get('semantic_judging_performed') is not True
                 or proof.get('semantic_result_published') is not False):raise ValueError('QUOTE_ARRIVAL_REVIEW_PROOF_DRIFT')
-    if proof['kind'] in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
+    if proof['kind'] in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND,harness_answer_index_failure.ERROR_KIND}:
         result=(source_failures.evidence(rt,root/task['attempt_path'],rt._read_json(root/task['attempt_path']/'attempt-manifest.json'),
             rt._read_json(root/task['attempt_path']/rt._read_json(root/task['attempt_path']/'attempt-manifest.json')['paths']['contract']),task)
-            if proof['kind']==source_failures.ERROR_KIND else rt._read_json(root/task['attempt_path']/'rule-review/discovery/worker/result.json'))
+            if proof['kind']==source_failures.ERROR_KIND else rt._read_json(root/task['attempt_path']/('worker/result.json' if proof['kind']==harness_answer_index_failure.ERROR_KIND else 'rule-review/discovery/worker/result.json')))
         if result.get('worker_never_started') is True:
             if proof.get('owner_exit')!={'worker_never_started':True,'process_created':False}:
                 raise ValueError('RULE_SOURCE_PREWORKER_OWNER_INVALID')
@@ -200,7 +204,7 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
     root=rt._state_root(orchestration_root);state=rt._verify_state(root);task=rt._task_by_id(state,rt._identifier(task_id,'task_id'))
     if task.get('phase') not in {'RULES_READY','RULES_RUNNING','SCORE_VERIFICATION_PENDING','AWAITING_PROJECT','RULES_NEEDS_ATTENTION'}:raise ValueError('FRAMEWORK_FAILURE_PHASE_INVALID')
     kind=failure_kind(rt,root,state,task);attempt=root/task['attempt_path']
-    expected_phase={aggregation_runtime_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if source_failures.registered(task_id) else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
+    expected_phase={harness_answer_index_failure.ERROR_KIND:'RULES_NEEDS_ATTENTION',aggregation_runtime_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',source_failures.ERROR_KIND:source_failures.expected_phase(task_id) if source_failures.registered(task_id) else None,escrow_grouped_review.ERROR_KIND:'RULES_RUNNING',release_baseline_text.ERROR_KIND:'SCORE_VERIFICATION_PENDING',
         declared_public_snapshots.ERROR_KIND:'AWAITING_PROJECT',public_snapshot_sidecar.ERROR_KIND:'RULES_NEEDS_ATTENTION',
         sterilization_quote_layout.ERROR_KIND:'SCORE_VERIFICATION_PENDING',native_writer_cleanup_failure.ERROR_KIND:'SCORE_VERIFICATION_PENDING',news_header_equivalence.ERROR_KIND:'SCORE_VERIFICATION_PENDING',prepared_v6_profile_failure.ERROR_KIND:'RULES_READY',work_order_equivalent_headers.ERROR_KIND:'SCORE_VERIFICATION_PENDING',quote_arrival_summary.ERROR_KIND:'SCORE_VERIFICATION_PENDING',funnel_summary_tables.ERROR_KIND:'SCORE_VERIFICATION_PENDING'}[kind]
     if task['phase']!=expected_phase:raise ValueError('FRAMEWORK_FAILURE_KIND_PHASE_MISMATCH')
@@ -239,10 +243,10 @@ def record(rt,orchestration_root,*,task_id,reason,sdk_file=None,now=None):
         m=rt._read_json(attempt/'attempt-manifest.json')
         proof['quote_arrival_review']=quote_arrival_summary.validate_blocker(rt,attempt,m,rt._read_json(attempt/m['paths']['contract']),task)
         proof['semantic_judging_performed']=True;proof['semantic_result_published']=False
-    if kind in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND}:
+    if kind in {escrow_grouped_review.ERROR_KIND,source_failures.ERROR_KIND,harness_answer_index_failure.ERROR_KIND}:
         manifest=rt._read_json(attempt/'attempt-manifest.json')
         result=(source_failures.evidence(rt,attempt,manifest,rt._read_json(attempt/manifest['paths']['contract']),task)
-            if kind==source_failures.ERROR_KIND else rt._read_json(attempt/'rule-review/discovery/worker/result.json'))
+            if kind==source_failures.ERROR_KIND else rt._read_json(attempt/('worker/result.json' if kind==harness_answer_index_failure.ERROR_KIND else 'rule-review/discovery/worker/result.json')))
         if result.get('worker_never_started') is True:
             proof['owner_exit']={'worker_never_started':True,'process_created':False}
         else:
