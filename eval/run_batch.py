@@ -452,14 +452,26 @@ def _build_agent_backend(args) -> BaseAgent:
 
 def _is_extension_task(task: dict) -> bool:
     """Return whether a parsed task belongs to a self-built dataset."""
-    if task.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4','general-custom70-v5'}:return True
+    if task.get("dataset", {}).get("id", "").startswith("general-custom"):
+        return True
     try:
         relative_path = Path(task["file_path"]).resolve().relative_to(
             TASKS_DIR.resolve()
         )
     except (KeyError, TypeError, ValueError):
         return False
-    return bool(relative_path.parts) and relative_path.parts[0] in {"extension", "general_e2e"}
+    return _task_collection(relative_path) in {"extension", "general_e2e", "challenge"}
+
+
+def _task_collection(relative: Path) -> str:
+    parts = relative.parts
+    if parts[:2] == ("general", "work") or parts[:1] == ("general_e2e",):
+        return "general_e2e"
+    if parts[:2] == ("general", "challenge"):
+        return "challenge"
+    if parts[:1] in {("extension",), ("ppt",)} or parts[:2] in {("general", "regression"), ("web", "custom")}:
+        return "extension"
+    return "official"
 
 
 def _pending_task_counts(tasks: list[dict]) -> tuple[int, int]:
@@ -510,16 +522,14 @@ def _task_provenance_or_unavailable(task: dict) -> dict[str, Any]:
 
 def _task_scope_entry(task: dict) -> dict[str, Any]:
     path = Path(str(task.get("file_path") or ""))
-    source = "general_e2e" if task.get('dataset',{}).get('id') in {'general-custom70-v2','general-custom70-v3','general-custom70-v4','general-custom70-v5'} else "official"
+    dataset_id = task.get("dataset", {}).get("id", "")
+    source = ("general_e2e" if dataset_id.startswith("general-custom70-")
+              else "extension" if dataset_id == "general-custom60-v1" else "official")
     category = str(task.get("category") or "").strip()
     try:
         relative = path.resolve().relative_to(TASKS_DIR.resolve())
-        if relative.parts and relative.parts[0] in {"extension", "general_e2e"}:
-            source = relative.parts[0]
-            if source == 'extension' and len(relative.parts) > 1:
-                category = relative.parts[1]
-        elif relative.parts:
-            category = relative.parts[0]
+        source = _task_collection(relative)
+        category = category or path.parent.name
     except ValueError:
         pass
     entry = {
@@ -1402,7 +1412,8 @@ def main() -> None:
         default_model=DEFAULT_MODEL,
         default_parallel=DEFAULT_PARALLEL,
     )
-    frozen_source_cache = OUTPUT_DIR / ".dataset-sources" / args.agent_backend
+    from eval_general_e2e.datasets.layout import cli_category_paths, cli_task_path
+    frozen_source_cache = OUTPUT_DIR / ".dataset-sources" / args.agent_backend / "layout-v1"
     registered_selection = None
     if getattr(args, "dataset_id", None):
         try:
@@ -1429,7 +1440,7 @@ def main() -> None:
     if getattr(args, 'dataset', None):
         from src.utils.dataset_selection import dataset_task_paths, require_dataset_output_scope
         if args.modality or args.tags or args.exclude_tags:
-            raise ValueError("显式70题数据集不可通过modality/tag过滤缩小冻结范围")
+            raise ValueError("显式冻结数据集不可通过modality/tag过滤缩小范围")
         output_root = output_root / args.dataset
         dataset_manifest, dataset_groups = dataset_task_paths(ROOT_DIR, args.dataset,
                                                              materialize_root=frozen_source_cache)
@@ -1527,10 +1538,12 @@ def main() -> None:
                      lobster["name"], lobster["workspace"], lobster["env"])
 
     if args.task:
-        task_file = Path(args.task)
-        if not task_file.exists():
-            logger.error("File not found: %s", task_file)
-            sys.exit(1)
+        try:
+            task_file = cli_task_path(ROOT_DIR, TASKS_DIR, args.task)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+        if task_file.is_relative_to(TASKS_DIR / "web/artifactsbench"):
+            raise SystemExit("ArtifactsBench uses the Web E2E preparation and scoring profile")
         task = parse_task_md(task_file)
         logger.info("Single task mode: %s", task["task_id"])
         prior = None
@@ -1598,23 +1611,15 @@ def main() -> None:
             logger.info("Dataset: %s, category: %s, %d frozen tasks, parallelism: %d",
                         registered_selection.identity["release_id"], category, len(tasks), args.parallel)
         else:
-            # Scan both official tasks/<category>/ and extension tasks/extension/<category>/
-            # so --category X and --category all can pick up extension tasks that share
-            # the same logical category (output_dir/reports group by category).
-            category_dir = TASKS_DIR / category
-            extension_dir = TASKS_DIR / "extension" / category
-
-            task_files = []
-            if dataset_groups is not None:
-                task_files = dataset_groups[category]
-            elif category_dir.exists():
-                task_files.extend(sorted(category_dir.glob("*task_*.md")))
-            if dataset_groups is None and extension_dir.exists():
-                task_files.extend(sorted(extension_dir.glob("*task_*.md")))
+            task_files = dataset_groups[category] if dataset_groups is not None else cli_category_paths(TASKS_DIR, category)
+            legacy_web_root = TASKS_DIR / "web/artifactsbench"
+            artifacts = [path for path in task_files if path.is_relative_to(legacy_web_root)]
+            if artifacts:
+                logger.info("ArtifactsBench: %d tasks use the Web E2E preparation and scoring profile", len(artifacts))
+                task_files = [path for path in task_files if not path.is_relative_to(legacy_web_root)]
 
             if not task_files:
-                logger.error("No task_*.md files found in: %s (or %s)",
-                             category_dir, extension_dir)
+                logger.error("No active tasks found for category: %s", category)
                 continue
 
             logger.info("Category: %s, %d tasks (official + extension), parallelism: %d",
@@ -1623,11 +1628,12 @@ def main() -> None:
             tasks = []
             for tf in task_files:
                 try:
-                    parsed=parse_task_md(tf)
+                    parsed = parse_task_md(tf)
                     if dataset_groups is not None:
                         from eval_general_e2e.datasets.workspaces import frozen_workspace_path
                         parsed["workspace_path"] = str(frozen_workspace_path(
                             dataset_manifest, frozen_source_cache, parsed["task_id"]))
+                        parsed["category"] = category
                         parsed['dataset']={'id':dataset_manifest['dataset_id'],'digest':dataset_manifest['dataset_digest']}
                     tasks.append(parsed)
                 except Exception as exc:
@@ -1679,7 +1685,7 @@ def main() -> None:
     _write_evaluation_scope(
         output_root,
         planned_tasks,
-        mode="dataset" if registered_selection else "category",
+        mode="dataset" if registered_selection or dataset_groups is not None else "category",
         categories=categories,
         modality=args.modality,
         include_tags={t.strip().lower() for t in (args.tags or []) if t.strip()},

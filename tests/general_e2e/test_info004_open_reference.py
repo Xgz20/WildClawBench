@@ -27,7 +27,7 @@ RELATIVE = f'tasks/general_e2e/01_Information_Search_Organization/{TASK}.md'
 class Info004OpenReferenceTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.task = parse_task_md(REPO_ROOT / RELATIVE)
+        cls.task = parse_task_md(REPO_ROOT / RELATIVE.replace("tasks/general_e2e", "tasks/general/work", 1))
         cls.old = parse_task_md(REPO_ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v3/files' / RELATIVE)
         cls.workspace = Path(cls.task['workspace_path'])
         cls.manifest, cls.members = compile_dataset(REPO_ROOT, definition=INFO004_OPEN_V3_DEFINITION)
@@ -46,7 +46,7 @@ class Info004OpenReferenceTests(unittest.TestCase):
     def test_public_task_difficulty_and_all_score_bands_are_restored(self):
         for key in ['prompt', 'timeout_seconds', 'grading_weights', 'workspace_path', 'judge_evidence']:
             self.assertEqual(self.task[key], self.old[key], key)
-        current_metadata, current_sections, _ = _parse_task_source(REPO_ROOT / RELATIVE)
+        current_metadata, current_sections, _ = _parse_task_source(REPO_ROOT / RELATIVE.replace("tasks/general_e2e", "tasks/general/work", 1))
         old_metadata, old_sections, _ = _parse_task_source(Path(self.old['file_path']))
         self.assertEqual(current_metadata, old_metadata)
         self.assertEqual(current_sections['Expected Behavior'], old_sections['Expected Behavior'])

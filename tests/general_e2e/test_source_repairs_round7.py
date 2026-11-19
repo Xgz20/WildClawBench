@@ -23,7 +23,7 @@ from src.wildclawbench_grading_core.rules import _validate_grade_function
 ROOT=Path(__file__).resolve().parents[2]
 
 def sources(tid):
-    current=next((ROOT/'tasks/general_e2e').rglob(tid+'.md'))
+    current=next((ROOT/'tasks/general/work').rglob(tid+'.md'))
     index=ROOT/'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
     row=json.loads(index.read_text())['files'][current.relative_to(ROOT).as_posix()]
     old=index.parent/row['snapshot']

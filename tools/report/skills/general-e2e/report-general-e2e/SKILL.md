@@ -3,6 +3,8 @@ name: report-general-e2e
 description: 校验并汇总 General E2E submission 和回传包，生成同源 JSON、Markdown 与 Excel 报告；不执行用例、补评分或把评测异常计为能力零分。
 ---
 
+`0.10.1` 整合公司端最新报告修复和挑战集能力映射，支持按各数据集冻结的分类及五维、七维配置生成报告。
+
 `0.8.68` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。
 
 `0.8.67` Loomy 原生 `finish=length` 仅在消息完成、全部工具和子会话结束及同一后端空闲时保留为执行失败，独立复验原 Prompt、Spark/High、终态和来源 SHA 后交原 Rubric 评分。保留截断前轨迹、原候选与旧发行，不重发、不把缺失终稿视为成功或统一零分；问题工具待处理时停止新派发。

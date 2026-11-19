@@ -19,7 +19,7 @@ HR = '03_Data_Analysis_task_001_hr_worktime_reconciliation'
 
 
 def source(task, frozen=False):
-    path = next((ROOT / 'tasks/general_e2e').rglob(task + '.md'))
+    path = next((ROOT / 'tasks/general/work').rglob(task + '.md'))
     if frozen:
         index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
         entry = json.loads(index.read_text())['files'][path.relative_to(ROOT).as_posix()]
@@ -53,7 +53,7 @@ class Round1ScoringRepairTests(unittest.TestCase):
         fixed3, _ = m.effective_source({**manifest, 'dataset': m.V3_DATASET}, code, code, None)
         self.assertEqual(fixed3, fixed)
         ref = m.registry(m.V4_CONTRACT)['files'][0]
-        raw = (ROOT / 'workspace/general_e2e/02_Office/task_007_release_phase_gate_progression/exec' / ref['path']).read_bytes()
+        raw = (ROOT / 'workspace/general/work/02_Office/02_Office_task_007_release_phase_gate_progression/exec' / ref['path']).read_bytes()
         with tempfile.TemporaryDirectory() as folder:
             p = Path(folder) / 'public-source.json'
             for value in [raw, raw.replace(b'\n', b'\r\n')]:

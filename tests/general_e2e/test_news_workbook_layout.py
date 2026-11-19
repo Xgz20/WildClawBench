@@ -16,12 +16,12 @@ from eval_general_e2e.datasets.bundle import _strip_codeblock
 from tests.general_e2e.frozen_sources import parse_frozen_task_source as _parse_task_source
 
 LAYOUT=RUNTIME.news_workbook_layout
-WORKSPACE=REPO_ROOT/'workspace/general_e2e/02_Office/task_003_news_event_multifile_extract'
+WORKSPACE=REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_003_news_event_multifile_extract'
 
 
 class CompleteNewsWorkbookTests(unittest.TestCase):
     def inputs(self,enabled):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(LAYOUT.TASK+'.md'));_,sections,_=_parse_task_source(task)
+        task=next((REPO_ROOT/'tasks/general/work').rglob(LAYOUT.TASK+'.md'));_,sections,_=_parse_task_source(task)
         contract={'task_id':LAYOUT.TASK,'automated_checks':_strip_codeblock(sections['Automated Checks'])}
         row=next(r for r in RUNTIME.private_reference_guard.registry() if r['task_id']==LAYOUT.TASK)
         entries=[{'path':r['path'],'type':'file','sha256':r['canonical_sha256'],'size':r['size']} for r in row['references']]

@@ -17,7 +17,7 @@ LABELS=RUNTIME.procurement_summary_labels
 
 class ProcurementEquivalentSummaryTests(unittest.TestCase):
     def source(self):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(LABELS.TASK+'.md'))
+        task=next((REPO_ROOT/'tasks/general/work').rglob(LABELS.TASK+'.md'))
         _,sections,_=_parse_task_source(task);return _strip_codeblock(sections['Automated Checks'])
 
     def manifest(self,enabled):

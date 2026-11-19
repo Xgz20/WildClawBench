@@ -17,7 +17,7 @@ from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable, Mapping, Optional, Sequence
-from .source_history import FrozenSources
+from .source_history import FrozenSources, pre_migration_sources
 
 from .catalog import load_mapping, load_registered_dataset, repository_path
 from .definition import (
@@ -465,6 +465,19 @@ def compile_dataset(
 ) -> tuple[dict[str, Any], list[BundleMember]]:
     """Compile source tasks into a manifest plus deterministic archive members."""
     repo_root = repo_root.resolve()
+    with pre_migration_sources(repo_root, definition) as historical:
+        if historical is not None:
+            locked = load_manifest_lock(repository_path(repo_root, definition.manifest_path, label="manifest"))
+            revision = locked["source"]["revision"]
+            if source_revision is not None and source_revision != revision:
+                raise ValueError("historical dataset source revision is frozen")
+            return _compile_source_tree(historical, definition=definition, source_revision=revision)
+    return _compile_source_tree(repo_root, definition=definition, source_revision=source_revision)
+
+
+def _compile_source_tree(
+    repo_root: Path, *, definition: DatasetDefinition, source_revision: Optional[str],
+) -> tuple[dict[str, Any], list[BundleMember]]:
     sources = FrozenSources(repo_root, definition.frozen_source_index, definition.current_source_paths)
     tasks_root = repository_path(repo_root, definition.task_root, label="task root")
     workspace_base = repository_path(repo_root, definition.workspace_root, label="workspace root")
@@ -552,7 +565,8 @@ def compile_dataset(
         if definition.task_id_prefix:
             if category not in definition.category_labels:
                 raise ValueError(f"unregistered category for {task_id}: {category}")
-            if (not task_id.startswith(f"{definition.task_id_prefix}{category}_task_")
+            prefixes = (definition.task_id_prefix, *definition.legacy_task_id_prefixes)
+            if (not task_id.startswith(tuple(f"{prefix}{category}_task_" for prefix in prefixes))
                     or task_path.name != f"{task_id}.md"):
                 raise ValueError(f"task namespace/path mismatch: {task_id}")
             report_contract = metadata.get("dataset_report")
@@ -564,8 +578,7 @@ def compile_dataset(
                     or report_contract.get("category_name") != definition.category_labels[category]
                     or type(report_contract.get("category_order")) is not int
                     or report_contract.get("category_order") != list(definition.category_labels).index(category)
-                    or not isinstance(report_contract.get("series_id"), str)
-                    or report_contract.get("series_id", "").replace("-", "_").replace(".", "_") + "_" != definition.task_id_prefix
+                    or report_contract.get("series_id") != definition.series_id
                     or report_contract.get("checkpoint_capabilities") != report_capabilities[task_id]):
                 raise ValueError(f"frozen task report metadata disagrees with dataset definition/mapping: {task_id}")
             if json.loads(inline_contract.group(1)) != report_contract:

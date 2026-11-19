@@ -10,7 +10,7 @@ DELIVERY = RUNTIME.answer_delivery
 
 class AnswerDeliveryTests(unittest.TestCase):
     def extractor(self):
-        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(DELIVERY.TASK+'.md')))
+        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(DELIVERY.TASK+'.md')))
         original = _strip_codeblock(sections['Automated Checks'])
         marker = DELIVERY.marker({'task_id': DELIVERY.TASK, 'automated_checks': original}, DELIVERY.CONTRACT_SHA, DELIVERY.DATASET)
         self.assertIsNotNone(marker)

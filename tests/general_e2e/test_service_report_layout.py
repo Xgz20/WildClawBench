@@ -10,7 +10,7 @@ LAYOUT = RUNTIME.service_report_layout
 
 class ServiceReportLayoutTests(unittest.TestCase):
     def namespace(self):
-        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(LAYOUT.TASK+'.md')))
+        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(LAYOUT.TASK+'.md')))
         original = _strip_codeblock(sections['Automated Checks'])
         marker = LAYOUT.marker({'task_id': LAYOUT.TASK, 'automated_checks': original}, LAYOUT.CONTRACT_SHA, LAYOUT.DATASET)
         self.assertIsNotNone(marker)

@@ -228,9 +228,9 @@ def parse_rubric_criteria(rubric_text: str) -> list[dict]:
     return criteria
 
 
-def parse_task_md(task_file: Path, *, repo_root: Path | None = None) -> dict:
+def parse_task_md(task_file: Path, *, repo_root: Path | None = None, raw: str | None = None) -> dict:
     """Extract task_id, prompt, workspace_path, and automated_checks from task.md."""
-    content = task_file.read_text(encoding="utf-8")
+    content = task_file.read_text(encoding="utf-8") if raw is None else raw
 
     fm_match = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)", content, re.DOTALL)
     if not fm_match:
@@ -332,7 +332,8 @@ def parse_task_md(task_file: Path, *, repo_root: Path | None = None) -> dict:
 
     wp = Path(workspace_path)
     if not wp.is_absolute():
-        wp = ((repo_root or ROOT_DIR) / wp).resolve()
+        from eval_general_e2e.datasets.layout import workspace_for_task
+        wp = workspace_for_task(repo_root or ROOT_DIR, wp).resolve()
     workspace_path = str(wp)
 
     sp = Path(skills_path)

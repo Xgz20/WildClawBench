@@ -32,3 +32,20 @@ datasets:
   general-info004-open-v3:
     kind: builtin
     manifest: eval_general_e2e/datasets/manifests/general-info004-open-v3.json
+  general-regression:
+    kind: alias
+    default_release: general-custom60-v1
+    releases:
+    - general-custom60-v1
+  general-work:
+    kind: alias
+    default_release: general-custom70-v6
+    releases:
+    - general-custom116-v1
+    - general-custom70-v2
+    - general-custom70-v3
+    - general-custom70-v4
+    - general-custom70-v5
+    - general-custom70-v6
+  general-challenge:
+    definition: datasets/general/challenge/dataset.yaml

@@ -789,13 +789,20 @@ def load_all_task_meta(tasks_dir: Path | None) -> dict[str, dict]:
     out: dict[str, dict] = {}
     # extension/ 下是扩展任务（task_00N 系列），同样参与评测，其难度/模态元数据
     # 必须纳入，否则难度与模态维度会漏掉这批用例（合计小于总用例数）。
-    for base in (tasks_dir, tasks_dir / "extension",
-                 tasks_dir / "cn", tasks_dir / "extension" / "cn"):  # 先英文打底，再中文覆盖
+    if (tasks_dir / "general/wildclawbench/en").is_dir():
+        groups = [
+            ("general/wildclawbench/en", False), ("web/artifactsbench", False),
+            ("general/regression", True), ("general/work", True), ("general/challenge", True),
+            ("web/custom", True), ("ppt/custom", True), ("general/wildclawbench/cn", False),
+        ]
+    else:
+        groups = [("", False), ("extension", True), ("cn", False), ("extension/cn", True)]
+    for folder, is_ext in groups:  # 先原题打底，再用阅读译本覆盖展示字段
+        base = tasks_dir / folder
         if not base.is_dir():
             continue
-        is_ext = "extension" in base.relative_to(tasks_dir).parts if base != tasks_dir else False
         for suite_dir in sorted(base.iterdir()):
-            if not suite_dir.is_dir() or not SUITE_DIR_RE.match(suite_dir.name):
+            if not suite_dir.is_dir() or (not folder.startswith("general/") and not SUITE_DIR_RE.match(suite_dir.name)):
                 continue
             for md in sorted(suite_dir.glob("*.md")):
                 meta = parse_task_md(md)

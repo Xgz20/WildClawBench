@@ -35,6 +35,8 @@ class DatasetDefinition:
     manifest_path: str = "eval_general_e2e/datasets/manifests/general-custom60-v1.json"
     revision_scope: tuple[str, ...] = ("tasks/extension", "workspace/extension")
     task_id_prefix: str = ""
+    legacy_task_id_prefixes: tuple[str, ...] = ()
+    series_id: str = ""
     category_labels: Mapping[str, str] = field(default_factory=dict)
     constraints: Mapping[str, Any] = field(default_factory=dict)
 

@@ -8,7 +8,7 @@ from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codebloc
 
 class EscrowMarkerReviewTests(unittest.TestCase):
     def scope(self):
-        task = next((REPO_ROOT / 'tasks/general_e2e').rglob(RUNTIME.escrow_state_review.TASK + '.md'))
+        task = next((REPO_ROOT / 'tasks/general/work').rglob(RUNTIME.escrow_state_review.TASK + '.md'))
         index = REPO_ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
         item = json.loads(index.read_text())['files'][task.relative_to(REPO_ROOT).as_posix()]
         source = _strip_codeblock(_parse_task_source(index.parent / item['snapshot'])[1]['Automated Checks'])

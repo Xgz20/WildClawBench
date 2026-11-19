@@ -62,7 +62,7 @@ class General70SourceRevisionTests(unittest.TestCase):
 
     def test_reference_workbooks_pass_raw_grading_after_input_digest_repair(self):
         for token in ['03_Data_Analysis_task_002_','03_Data_Analysis_task_003_']:
-            p=next((ROOT/'tasks/general_e2e').rglob(token+'*.md'));task=parse_task_md(p);scope={}
+            p=next((ROOT/'tasks/general/work').rglob(token+'*.md'));task=parse_task_md(p);scope={}
             exec(compile(task['automated_checks'],'<reference-source-selfcheck>','exec'),scope)
             source=Path(task['workspace_path'])
             with tempfile.TemporaryDirectory() as tmp:
@@ -87,26 +87,26 @@ class General70SourceRevisionTests(unittest.TestCase):
         ledger=json.loads((ROOT/'eval_general_e2e/datasets/audits/general-custom70-v2-source-repairs.json').read_text())
         final={r['task_id']:r for r in ledger['repairs']}
         for tid,row in final.items():
-            p=next((ROOT/'tasks/general_e2e').rglob(tid+'.md'))
+            p=next((ROOT/'tasks/general/work').rglob(tid+'.md'))
             source=parse_task_md(p)['automated_checks']
             self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),row['effective_source_sha256'])
 
     def test_warranty_prompt_headers_work_without_runtime_profiles(self):
-        p=next((ROOT/'tasks/general_e2e').rglob('02_Office_task_010_*.md'))
+        p=next((ROOT/'tasks/general/work').rglob('02_Office_task_010_*.md'))
         scope={};exec(compile(parse_task_md(p)['automated_checks'],'<materialized-warranty>','exec'),scope)
         for value,key in [('本次金额','current'),('政策责任比例','ratio'),('已追偿','already'),('分摊及合同依据说明','note')]:
             self.assertEqual(scope['header_key'](value),key)
 
     def test_cli_preserves_authored_continuous_office_scores(self):
-        p=next((ROOT/'tasks/general_e2e').rglob('02_Office_task_001_*.md'))
+        p=next((ROOT/'tasks/general/work').rglob('02_Office_task_001_*.md'))
         rows={r['key']:r for r in parse_task_md(p)['rubric_criteria']}
         for key in ['c2_source_links','c3_fidelity','c6_readability','c7_self_verification']:
             self.assertEqual(rows[key]['allowed_scores'],[])
 
     def test_reference_index_is_real_exported_and_does_not_invent_yang_evidence(self):
-        p=next((ROOT/'tasks/general_e2e').rglob(INFO+'.md'));task=parse_task_md(p);scope={}
+        p=next((ROOT/'tasks/general/work').rglob(INFO+'.md'));task=parse_task_md(p);scope={}
         exec(compile(task['automated_checks'],'<info004-v2>','exec'),scope)
-        source=ROOT/'workspace/general_e2e/01_Information_Search_Organization/task_004_luxun_national_character_source_comparison/gt'
+        source=ROOT/'workspace/general/work/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/gt'
         with tempfile.TemporaryDirectory() as tmp:
             work=Path(tmp);shutil.copytree(source,work/'gt')
             # This test is for the immutable v2 profile, including its GT bytes.
@@ -208,7 +208,7 @@ class General70SourceRevisionTests(unittest.TestCase):
 
     def test_cli_scope_keeps_data_category_and_dataset_identity(self):
         from eval.run_batch import _task_scope_entry
-        p=next((ROOT/'tasks/general_e2e').rglob('03_Data_Analysis_task_002_*.md'));task=parse_task_md(p)
+        p=next((ROOT/'tasks/general/work').rglob('03_Data_Analysis_task_002_*.md'));task=parse_task_md(p)
         task['dataset']={'id':self.manifest['dataset_id'],'digest':self.manifest['dataset_digest']}
         row=_task_scope_entry(task)
         self.assertEqual(row['category'],'data-analysis')

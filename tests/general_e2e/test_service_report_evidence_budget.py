@@ -17,7 +17,7 @@ class EvaluationError(Exception):
 
 class ServiceReportEvidenceBudgetTests(unittest.TestCase):
     def setUp(self):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(BUDGET.SERVICE_TASK+'.md'))
+        task=next((REPO_ROOT/'tasks/general/work').rglob(BUDGET.SERVICE_TASK+'.md'))
         _,sections,_=parse_frozen_task_source(task)
         self.source=_strip_codeblock(sections['Automated Checks'])
         # The custom70 bundle freezes the already-reviewed v2 layout repair.

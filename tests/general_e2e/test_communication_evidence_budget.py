@@ -17,7 +17,7 @@ B=RUNTIME.work_order_evidence_budget
 class CommunicationEvidenceBudgetTests(unittest.TestCase):
     def test_weekly_and_consolidation_profiles_only_change_total_resource_guard(self):
         for task,(sha,source_sha,_,limit) in B.EXTRA.items():
-            source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{task}.md')['automated_checks']
+            source=parse_task_md(REPO_ROOT/'tasks/general/work/02_Office'/f'{task}.md')['automated_checks']
             self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),source_sha)
             marker=B.marker({'task_id':task,'automated_checks':source},sha)
             m={'identity':{'task_id':task},'digests':{'contract_sha256':sha},'runtime':{'work_order_evidence_budget_profile':marker}}
@@ -25,7 +25,7 @@ class CommunicationEvidenceBudgetTests(unittest.TestCase):
             expected=source.replace("    total=sum(len(p.read_text(encoding='utf-8')) for p in evidence.iterdir())\n    if total>"+str(limit)+':',"    total=sum(p.stat().st_size for p in evidence.iterdir())\n    if total>16777216:")
             self.assertEqual(fixed,expected);self.assertFalse(receipt['candidate_rewritten'])
     def test_prd_budget_has_exact_identity_and_does_not_modify_other_functions(self):
-        source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{B.PRD_TASK}.md')['automated_checks']
+        source=parse_task_md(REPO_ROOT/'tasks/general/work/02_Office'/f'{B.PRD_TASK}.md')['automated_checks']
         self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),B.PRD_SOURCE)
         marker=B.marker({'task_id':B.PRD_TASK,'automated_checks':source},B.PRD_CONTRACT)
         m={'identity':{'task_id':B.PRD_TASK},'digests':{'contract_sha256':B.PRD_CONTRACT},'runtime':{'work_order_evidence_budget_profile':marker}}
@@ -41,7 +41,7 @@ class CommunicationEvidenceBudgetTests(unittest.TestCase):
         self.assertTrue(FAILURE.prd_failure(m,contract,audit,error))
         error['error']['message']='unrelated failure';self.assertFalse(FAILURE.prd_failure(m,contract,audit,error))
     def test_only_total_resource_guard_changes_and_original_chunker_stays_exact(self):
-        source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{B.PACK_TASK}.md')['automated_checks']
+        source=parse_task_md(REPO_ROOT/'tasks/general/work/02_Office'/f'{B.PACK_TASK}.md')['automated_checks']
         self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),B.PACK_SOURCE)
         marker=B.marker({'task_id':B.PACK_TASK,'automated_checks':source},B.PACK_CONTRACT)
         m={'identity':{'task_id':B.PACK_TASK},'digests':{'contract_sha256':B.PACK_CONTRACT},'runtime':{'work_order_evidence_budget_profile':marker}}

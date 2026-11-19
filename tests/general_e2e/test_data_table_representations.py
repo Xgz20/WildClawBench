@@ -12,7 +12,7 @@ REP = RUNTIME.data_table_representations
 
 class DataTableRepresentationTests(unittest.TestCase):
     def helpers(self, task):
-        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(task+'.md')))
+        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(task+'.md')))
         source = _strip_codeblock(sections['Automated Checks'])
         entry = REP.REGISTRY[task]
         marker = REP.marker({'task_id': task, 'automated_checks': source}, entry[0], REP.DATASET)

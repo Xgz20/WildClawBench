@@ -13,74 +13,68 @@ from src.utils.task_parser import parse_task_md
 ROOT = Path(__file__).resolve().parents[1]
 RFC_TASK = (
     ROOT
-    / "tasks/extension/04_Search_Retrieval"
+    / "tasks/general/regression/04_Search_Retrieval"
     / "04_Search_Retrieval_task_006_rfc_http_obsolescence.md"
 )
 PENSION_TASK = (
     ROOT
-    / "tasks/extension/04_Search_Retrieval"
+    / "tasks/general/regression/04_Search_Retrieval"
     / "04_Search_Retrieval_task_012_personal_pension_policy_timeline.md"
 )
 APOLLO_TASK = (
     ROOT
-    / "tasks/extension/05_Creative_Synthesis"
+    / "tasks/general/regression/05_Creative_Synthesis"
     / "05_Creative_Synthesis_task_010_apollo_museum_narrative.md"
 )
 VENDOR_TASK = (
     ROOT
-    / "tasks/extension/03_Social_Interaction"
+    / "tasks/general/regression/03_Social_Interaction"
     / "03_Social_Interaction_task_010_vendor_delay_stakeholder_comms.md"
 )
 APPLE_TASK = (
     ROOT
-    / "tasks/extension/04_Search_Retrieval"
+    / "tasks/general/regression/04_Search_Retrieval"
     / "04_Search_Retrieval_task_005_apple_2023_segment_revenue.md"
 )
 MOUTAI_TASK = (
     ROOT
-    / "tasks/extension/04_Search_Retrieval"
+    / "tasks/general/regression/04_Search_Retrieval"
     / "04_Search_Retrieval_task_009_sse_annual_report_metrics.md"
 )
 APPLE_GT = (
     ROOT
-    / "workspace/extension/04_Search_Retrieval"
-    / "task_005_apple_2023_segment_revenue/gt/expected.json"
+    / 'workspace/general/regression/04_Search_Retrieval/04_Search_Retrieval_task_005_apple_2023_segment_revenue/gt/expected.json'
 )
 MOUTAI_GT = (
     ROOT
-    / "workspace/extension/04_Search_Retrieval"
-    / "task_009_sse_annual_report_metrics/gt/expected.json"
+    / 'workspace/general/regression/04_Search_Retrieval/04_Search_Retrieval_task_009_sse_annual_report_metrics/gt/expected.json'
 )
 CENSUS_TASK = (
     ROOT
-    / "tasks/extension/04_Search_Retrieval"
+    / "tasks/general/regression/04_Search_Retrieval"
     / "04_Search_Retrieval_task_007_census_province_change.md"
 )
 CENSUS_GT = (
     ROOT
-    / "workspace/extension/04_Search_Retrieval"
-    / "task_007_census_province_change/gt/expected.json"
+    / 'workspace/general/regression/04_Search_Retrieval/04_Search_Retrieval_task_007_census_province_change/gt/expected.json'
 )
 HOLIDAY_TASK = (
     ROOT
-    / "tasks/extension/01_Productivity_Flow"
+    / "tasks/general/regression/01_Productivity_Flow"
     / "01_Productivity_Flow_task_006_holiday_calendar.md"
 )
 HOLIDAY_GT = (
     ROOT
-    / "workspace/extension/01_Productivity_Flow"
-    / "task_006_holiday_calendar/gt/expected.json"
+    / 'workspace/general/regression/01_Productivity_Flow/01_Productivity_Flow_task_006_holiday_calendar/gt/expected.json'
 )
 VENDOR_GT = (
     ROOT
-    / "workspace/extension/03_Social_Interaction"
-    / "task_010_vendor_delay_stakeholder_comms/gt/expected.json"
+    / 'workspace/general/regression/03_Social_Interaction/03_Social_Interaction_task_010_vendor_delay_stakeholder_comms/gt/expected.json'
 )
 VENDOR_WORKSPACE = VENDOR_GT.parent.parent
 PENSION_GT = (
     ROOT
-    / "workspace/extension/04_Search_Retrieval"
-    / "task_012_personal_pension_policy_timeline/gt/expected.json"
+    / 'workspace/general/regression/04_Search_Retrieval/04_Search_Retrieval_task_012_personal_pension_policy_timeline/gt/expected.json'
 )
 
 

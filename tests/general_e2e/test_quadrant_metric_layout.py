@@ -9,7 +9,7 @@ LAYOUT = RUNTIME.quadrant_metric_layout
 
 class QuadrantMetricLayoutTests(unittest.TestCase):
     def namespace(self):
-        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(LAYOUT.TASK+'.md')))
+        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(LAYOUT.TASK+'.md')))
         source = _strip_codeblock(sections['Automated Checks'])
         profile = LAYOUT.marker({'task_id': LAYOUT.TASK, 'automated_checks': source}, LAYOUT.CONTRACT_SHA, LAYOUT.DATASET)
         self.assertIsNotNone(profile)

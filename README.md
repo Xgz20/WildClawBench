@@ -272,6 +272,8 @@ hf download internlm/WildClawBench workspace --repo-type dataset --local-dir .
 
 Run the preparation script to download YouTube videos, place them into the correct task directories, and extract archived git repos:
 
+For the repository layout under tasks/general and workspace/general, script/prepare.sh first relocates the downloaded upstream workspaces using the checked-in path map. It checks destination conflicts before moving files.
+
 ```bash
 bash script/prepare.sh
 ```

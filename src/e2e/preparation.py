@@ -52,10 +52,12 @@ def _general_catalog(repo: Path, dataset: str):
 
 
 def _web_catalog(repo: Path, web):
+    from eval_general_e2e.datasets.layout import is_reading_or_archived_task
     tasks = []
     seen = {}
-    for path in sorted((repo / "tasks").rglob("*.md")):
-        if "cn" in path.relative_to(repo / "tasks").parts:
+    root = repo / "tasks"
+    for path in sorted(root.rglob("*.md")):
+        if is_reading_or_archived_task(root, path):
             continue
         text = path.read_text(encoding="utf-8")
         if not text.startswith("---"):
@@ -81,8 +83,9 @@ def _select(tasks: list[dict], selection: dict, repo: Path, web) -> list[dict]:
     ids = web.read_ids(selection.get("task_ids") or [])
     path = selection.get("task")
     if path:
-        target = Path(path).expanduser().resolve(strict=True)
-        candidates = [task for task in tasks if (repo / task["source"]["task_path"]).resolve() == target]
+        from eval_general_e2e.datasets.layout import relocated_task
+        target = relocated_task(repo, Path(path).expanduser()).resolve(strict=True)
+        candidates = [task for task in tasks if relocated_task(repo, Path(task["source"]["task_path"])).resolve() == target]
         if len(candidates) != 1:
             raise E2EError("TASK_OUTSIDE_SELECTED_DATASET")
         ids = [candidates[0]["task_id"]]

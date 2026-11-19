@@ -33,7 +33,7 @@ REPORT_CONFIG_SCHEMA = "wildclawbench.web-e2e-report-config/v1"
 SKILLS_MANIFEST_SCHEMA = "wildclawbench.web-e2e-skills-manifest/v1"
 SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-skill/v1"
 SCORE_SKILL_METADATA_SCHEMA = "wildclawbench.web-e2e-score-skill/v1"
-SKILL_VERSION = "4.4.0"
+SKILL_VERSION = "4.4.1"
 SKILL_SET_HASH_ALGORITHM = "wildclawbench.e2e-skill-set-sha256/v1"
 SKILL_INSTALL_CONTENT_HASH_ALGORITHM = "wildclawbench.skill-install-content-sha256/v1"
 SKILL_IDENTITY_FIELDS = ("name", "version", "content_sha256")
@@ -334,7 +334,7 @@ def parse_criteria(rubric: str, path: Path, metric_profile: str = DETAILED_PROFI
 def resolve_task_file(repo_root: Path, task_id: str) -> Path:
     matches = [
         path for path in (repo_root / "tasks").rglob(f"{task_id}.md")
-        if "cn" not in path.relative_to(repo_root / "tasks").parts
+        if not {"cn", "_archive"}.intersection(path.relative_to(repo_root / "tasks").parts[:-1])
     ]
     if len(matches) != 1:
         raise ValueError(f"用例 ID 应唯一命中 1 个定义，实际 {len(matches)} 个: {task_id}")

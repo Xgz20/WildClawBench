@@ -25,7 +25,7 @@ class RegisteredAggregationHelperTests(unittest.TestCase):
         RUNTIME._remove_tree(self.root);self.temp.cleanup()
 
     def original(self,task,policy,value):
-        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(task+'.md')))
+        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(task+'.md')))
         code=_strip_codeblock(sections['Automated Checks'])
         self.assertEqual(hashlib.sha256(code.encode()).hexdigest(),policy['automated_source_sha256'])
         args,placeholders=GENERAL.helper_arguments(policy,value)

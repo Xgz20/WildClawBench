@@ -12,13 +12,12 @@ from src.utils.task_parser import parse_task_md
 ROOT = Path(__file__).resolve().parents[1]
 TASK = (
     ROOT
-    / "tasks/extension/05_Creative_Synthesis"
+    / "tasks/general/regression/05_Creative_Synthesis"
     / "05_Creative_Synthesis_task_008_accessible_timeline_microsite.md"
 )
 WORKSPACE = (
     ROOT
-    / "workspace/extension/05_Creative_Synthesis"
-    / "task_008_accessible_timeline_microsite"
+    / "workspace/general/regression/05_Creative_Synthesis/05_Creative_Synthesis_task_008_accessible_timeline_microsite"
 )
 
 

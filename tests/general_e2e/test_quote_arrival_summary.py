@@ -11,7 +11,7 @@ P=RUNTIME.quote_arrival_summary
 
 class QuoteArrivalSummaryTests(unittest.TestCase):
     def setUp(self):
-        path=REPO_ROOT/'tasks/general_e2e/02_Office'/(P.TASK+'.md')
+        path=REPO_ROOT/'tasks/general/work/02_Office'/(P.TASK+'.md')
         self.source=_strip_codeblock(_parse_task_source(path)[1]['Automated Checks'])
         self.contract={'task_id':P.TASK,'automated_checks':self.source}
         self.m={'identity':{'task_id':P.TASK},'dataset':P.DATASET,'digests':{'contract_sha256':P.CONTRACT},

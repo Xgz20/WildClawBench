@@ -16,7 +16,7 @@ import warranty_recovery_review as REVIEW
 
 class WarrantyReasonReviewTests(unittest.TestCase):
     def source_and_manifest(self):
-        source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{REVIEW.TASK}.md')['automated_checks']
+        source=parse_task_md(REPO_ROOT/'tasks/general/work/02_Office'/f'{REVIEW.TASK}.md')['automated_checks']
         manifest={'identity':{'task_id':REVIEW.TASK},'digests':{'contract_sha256':REVIEW.CONTRACT},'dataset':REVIEW.DATASET,
             'judge':{'protocol':'codex-agent-judge-v1'},'runtime':{'rule_review_profile':REVIEW.PROFILE,
             'warranty_recovery_layout_profile':REVIEW.marker({'task_id':REVIEW.TASK,'automated_checks':source},REVIEW.CONTRACT,REVIEW.DATASET)}}

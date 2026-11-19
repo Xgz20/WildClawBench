@@ -10,6 +10,7 @@ from typing import Iterable
 import yaml
 
 from eval_general_e2e.datasets.catalog import load_registered_dataset
+from eval_general_e2e.datasets.layout import is_reading_or_archived_task, relocated_task, load_layout
 from eval_general_e2e.datasets.source_history import FrozenSources
 from .contracts import FAIL, Issue
 
@@ -40,14 +41,7 @@ def _task_id(path: Path, sources: FrozenSources | None = None) -> str:
 
 def _is_doc_copy(path: Path, repo_root: Path) -> bool:
     """判断是否为仅供阅读的中文任务副本。"""
-    resolved = path.resolve()
-    for copy_root in (repo_root / "tasks" / "cn", repo_root / "tasks" / "extension" / "cn"):
-        try:
-            resolved.relative_to(copy_root.resolve())
-            return True
-        except ValueError:
-            continue
-    return False
+    return is_reading_or_archived_task(repo_root / "tasks", path.resolve())
 
 
 def _markdown_files(directory: Path, *, repo_root: Path, include_doc_copies: bool = False) -> list[Path]:
@@ -55,7 +49,8 @@ def _markdown_files(directory: Path, *, repo_root: Path, include_doc_copies: boo
         (
             path
             for path in directory.rglob("*.md")
-            if path.is_file() and (include_doc_copies or not _is_doc_copy(path, repo_root))
+            if path.is_file() and not is_reading_or_archived_task(
+                repo_root / "tasks", path.resolve(), include_translations=include_doc_copies)
         ),
         key=lambda path: str(path.resolve()),
     )
@@ -104,13 +99,21 @@ def select_task_files(
     if release_id and not dataset_id:
         return SelectionResult(issues=[Issue(FAIL, "DATASET_DEFINITION_INVALID", "release_id需要dataset_id")])
     if dataset_id:
+        historical_roots = {
+            "tasks/extension": "tasks/general/regression",
+            "tasks/general_e2e": "tasks/general/work",
+            "datasets/general-hard/tasks": "tasks/general/challenge",
+        }
         try:
             registered = load_registered_dataset(repo_root, dataset_id, release_id=release_id)
-            sources = FrozenSources(repo_root, registered.definition.frozen_source_index,
-                                    registered.definition.current_source_paths)
+            default_root = registered.definition.task_root
+            if registered.definition.dataset_id in load_layout(repo_root).get("historical_releases", ()):
+                default_root = historical_roots[default_root]
+            else:
+                sources = FrozenSources(repo_root, registered.definition.frozen_source_index,
+                                        registered.definition.current_source_paths)
         except (OSError, ValueError) as exc:
             return SelectionResult(issues=[Issue(FAIL, "DATASET_DEFINITION_INVALID", str(exc))])
-        default_root = registered.definition.task_root
         selectors.append(f"dataset:{registered.series_id}/{registered.definition.dataset_id}")
         if not dirs and not paths and not ids:
             ids = list(registered.definition.task_ids)
@@ -121,12 +124,21 @@ def select_task_files(
         candidate = directory if directory.is_absolute() else repo_root / directory
         selectors.append(str(candidate.resolve()))
         if not candidate.exists() or not candidate.is_dir():
+            if candidate.is_relative_to(repo_root):
+                prefix = candidate.relative_to(repo_root).as_posix() + "/"
+                relocated = [repo_root / new for old, new in load_layout(repo_root).get("task_paths", {}).items()
+                             if old.startswith(prefix)]
+                if relocated:
+                    selected.extend(path for path in relocated if path.is_file()
+                                    and not is_reading_or_archived_task(
+                                        repo_root / "tasks", path, include_translations=include_doc_copies))
+                    continue
             issues.append(Issue(FAIL, "TASK_DIR_NOT_FOUND", f"任务目录不存在: {candidate}", location=str(candidate)))
             continue
         selected.extend(_markdown_files(candidate, repo_root=repo_root, include_doc_copies=include_doc_copies))
 
     for item in paths:
-        candidate = item if item.is_absolute() else repo_root / item
+        candidate = relocated_task(repo_root, item)
         selectors.append(str(candidate.resolve()))
         if not candidate.exists() or not candidate.is_file():
             issues.append(Issue(FAIL, "TASK_PATH_NOT_FOUND", f"任务文件不存在: {candidate}", location=str(candidate)))
@@ -155,7 +167,7 @@ def select_task_files(
         for raw_id in ids:
             value = Path(raw_id).expanduser()
             if value.suffix.lower() == ".md" or value.exists() or "/" in raw_id:
-                candidate = value if value.is_absolute() else repo_root / value
+                candidate = relocated_task(repo_root, value)
                 if candidate.is_file():
                     selected.append(candidate)
                     selectors.append(str(candidate.resolve()))
@@ -171,8 +183,11 @@ def select_task_files(
 
     unique: dict[str, Path] = {}
     for path in selected:
+        if is_reading_or_archived_task(repo_root / "tasks", path.resolve(), include_translations=include_doc_copies):
+            issues.append(Issue(FAIL, "TASK_NOT_ACTIVE", "任务是阅读副本或归档题", location=str(path)))
+            continue
         if registered:
-            root = (repo_root / registered.definition.task_root).resolve()
+            root = (repo_root / default_root).resolve()
             if not path.resolve().is_relative_to(root):
                 issues.append(Issue(FAIL, "DATASET_TASK_OUTSIDE_ROOT", "任务越出所选数据集根目录", location=str(path)))
                 continue

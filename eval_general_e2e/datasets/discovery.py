@@ -11,6 +11,7 @@ from .catalog import load_registered_dataset
 from eval_general_e2e.shared.dataset_bundle.verify import _validate_manifest, sha256_file
 from src.utils.task_parser import parse_task_md
 from .source_history import dataset_task_path
+from .layout import load_layout, relocated_task
 from .workspaces import materialize_verified_workspaces
 
 
@@ -33,18 +34,28 @@ def discover_frozen_tasks(
     compiled, members = compile_dataset(root, definition=registered.definition, source_revision=manifest["source"]["revision"])
     if compiled != manifest:
         raise ValueError("dataset sources differ from the frozen manifest; publish a new release")
-    frozen_root = materialize_verified_workspaces(manifest, members, workspace_cache) if workspace_cache is not None else None
+    historical = manifest["dataset_id"] in load_layout(root).get("historical_releases", ())
+    frozen_root = (materialize_verified_workspaces(manifest, members, workspace_cache, include_task_files=historical)
+                   if workspace_cache is not None else None)
     identity = {"series_id": registered.series_id, "release_id": registered.definition.dataset_id,
                 "dataset_digest": manifest["dataset_digest"],
                 "task_root": registered.definition.task_root,
                 "workspace_root": registered.definition.workspace_root,
                 "manifest_sha256": sha256_file(registered.manifest_path)}
     tasks = []
+    task_text = {member.path: member.data for member in members if member.path.endswith("/task.md")}
     for record in manifest["tasks"]:
-        task_path = dataset_task_path(root, record["source"]["task_path"],
-                                      registered.definition.frozen_source_index,
-                                      registered.definition.current_source_paths)
-        task = parse_task_md(task_path, repo_root=root)
+        if historical:
+            task_path = (frozen_root / record["task_id"] / "task.md" if frozen_root else
+                         relocated_task(root, Path(record["source"]["task_path"])))
+            task = parse_task_md(task_path, repo_root=root,
+                                 raw=task_text[record["bundle"]["task_path"]].decode("utf-8"))
+        else:
+            task_path = dataset_task_path(root, record["source"]["task_path"],
+                                          registered.definition.frozen_source_index,
+                                          registered.definition.current_source_paths)
+            task = parse_task_md(task_path, repo_root=root)
+        task["category"] = record["category"]
         if frozen_root is not None:
             task["workspace_path"] = str(frozen_root / record["task_id"])
         task["dataset_selection"] = dict(identity)

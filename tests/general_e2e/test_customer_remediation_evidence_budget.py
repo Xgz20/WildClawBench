@@ -20,7 +20,7 @@ class EvaluatorEvidenceError(Exception):pass
 
 class CustomerEvidenceBudgetTests(unittest.TestCase):
     def setUp(self):
-        _,sections,_=parse_frozen_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(B.CUSTOMER_TASK+'.md')))
+        _,sections,_=parse_frozen_task_source(next((REPO_ROOT/'tasks/general/work').rglob(B.CUSTOMER_TASK+'.md')))
         self.source=_strip_codeblock(sections['Automated Checks'])
         self.contract={'task_id':B.CUSTOMER_TASK,'automated_checks':self.source}
         self.manifest={'identity':{'task_id':B.CUSTOMER_TASK},'digests':{'contract_sha256':B.CUSTOMER_CONTRACT},

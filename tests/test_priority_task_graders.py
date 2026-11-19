@@ -11,50 +11,50 @@ from src.utils.task_parser import parse_task_md
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TASK_ROOT = ROOT / "tasks/extension"
-WORKSPACE_ROOT = ROOT / "workspace/extension"
+TASK_ROOT = ROOT / "tasks/general/regression"
+WORKSPACE_ROOT = ROOT / "workspace/general/regression"
 
 PIPL_TASK = (
     TASK_ROOT
     / "04_Search_Retrieval/04_Search_Retrieval_task_004_pipl_article13_verification.md"
 )
 PIPL_WORKSPACE = (
-    WORKSPACE_ROOT / "04_Search_Retrieval/task_004_pipl_article13_verification"
+    WORKSPACE_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_004_pipl_article13_verification"
 )
 HANDOFF_TASK = (
     TASK_ROOT
     / "03_Social_Interaction/03_Social_Interaction_task_008_incident_handoff_update.md"
 )
 HANDOFF_WORKSPACE = (
-    WORKSPACE_ROOT / "03_Social_Interaction/task_008_incident_handoff_update"
+    WORKSPACE_ROOT / "03_Social_Interaction/03_Social_Interaction_task_008_incident_handoff_update"
 )
 COMMUNITY_TASK = (
     TASK_ROOT
     / "03_Social_Interaction/03_Social_Interaction_task_007_community_thread_deescalation.md"
 )
 COMMUNITY_WORKSPACE = (
-    WORKSPACE_ROOT / "03_Social_Interaction/task_007_community_thread_deescalation"
+    WORKSPACE_ROOT / "03_Social_Interaction/03_Social_Interaction_task_007_community_thread_deescalation"
 )
 RELEASE_TASK = (
     TASK_ROOT
     / "03_Social_Interaction/03_Social_Interaction_task_009_release_expectation_alignment.md"
 )
 RELEASE_WORKSPACE = (
-    WORKSPACE_ROOT / "03_Social_Interaction/task_009_release_expectation_alignment"
+    WORKSPACE_ROOT / "03_Social_Interaction/03_Social_Interaction_task_009_release_expectation_alignment"
 )
 SUPPORT_TASK = (
     TASK_ROOT
     / "03_Social_Interaction/03_Social_Interaction_task_002_support_ticket_summary.md"
 )
 SUPPORT_WORKSPACE = (
-    WORKSPACE_ROOT / "03_Social_Interaction/task_002_support_ticket_summary"
+    WORKSPACE_ROOT / "03_Social_Interaction/03_Social_Interaction_task_002_support_ticket_summary"
 )
 TIMELINE_TASK = (
     TASK_ROOT
     / "05_Creative_Synthesis/05_Creative_Synthesis_task_008_accessible_timeline_microsite.md"
 )
 TIMELINE_WORKSPACE = (
-    WORKSPACE_ROOT / "05_Creative_Synthesis/task_008_accessible_timeline_microsite"
+    WORKSPACE_ROOT / "05_Creative_Synthesis/05_Creative_Synthesis_task_008_accessible_timeline_microsite"
 )
 BRANCHING_TASK = (
     TASK_ROOT

@@ -17,7 +17,7 @@ from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT, SCR
 class DatasetRuleCorrectionTests(unittest.TestCase):
     def test_hr_row_prefix_is_equivalent_parsing_with_legacy_source_unchanged(self):
         tid='03_Data_Analysis_task_001_hr_worktime_reconciliation'
-        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))
+        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(tid+'.md')))
         source=_strip_codeblock(sections['Automated Checks']);review=RUNTIME.rule_review
         old,old_receipt=review.effective_source(source)
         fixed,receipt=review.effective_source(source,source_row_aliases=True)
@@ -47,7 +47,7 @@ class DatasetRuleCorrectionTests(unittest.TestCase):
 
     def test_procurement_alias_fix_preserves_all_numeric_scoring_functions(self):
         tid='02_Office_task_015_procurement_reconciliation'
-        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))
+        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(tid+'.md')))
         source=_strip_codeblock(sections['Automated Checks'])
         effective,receipt=RUNTIME._effective_rule_source({'identity':{'task_id':tid}},source)
         def functions(code):
@@ -77,7 +77,7 @@ class DatasetRuleCorrectionTests(unittest.TestCase):
 
     def test_result_adapter_extension_requires_exact_source_and_keeps_original_policy(self):
         tid = '03_Data_Analysis_task_005_cross_month_returns_regional_sales'
-        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md')))
+        _, sections, _ = _parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(tid+'.md')))
         code = _strip_codeblock(sections['Automated Checks'])
         policy = {'schema_version': 'wildclawbench.general-e2e-numeric-diagnostics/v1', 'diagnostic_keys': ['diagnostics', '诊断']}
         before = dict(policy)
@@ -127,7 +127,7 @@ class DatasetRuleCorrectionTests(unittest.TestCase):
 
     def test_cross_month_source_correction_is_exact_and_preserves_original_guard(self):
         tid = '03_Data_Analysis_task_005_cross_month_returns_regional_sales'
-        task = next((REPO_ROOT / 'tasks/general_e2e').rglob(tid + '.md'))
+        task = next((REPO_ROOT / 'tasks/general/work').rglob(tid + '.md'))
         _, sections, _ = _parse_task_source(task)
         code = _strip_codeblock(sections['Automated Checks'])
         effective, receipt = RUNTIME._effective_rule_source({'identity': {'task_id': tid}}, code)
@@ -139,7 +139,7 @@ class DatasetRuleCorrectionTests(unittest.TestCase):
     def test_paged_evidence_changes_only_resource_guards_on_exact_sources(self):
         for task_id, (digest, old, new) in RUNTIME.dataset_rule_corrections._PAGED_RULES.items():
             with self.subTest(task_id=task_id):
-                task = next((REPO_ROOT / "tasks/general_e2e").rglob(task_id + ".md"))
+                task = next((REPO_ROOT / "tasks/general/work").rglob(task_id + ".md"))
                 _, sections, _ = _parse_task_source(task)
                 code = _strip_codeblock(sections["Automated Checks"])
                 self.assertEqual(hashlib.sha256(code.encode()).hexdigest(), digest)

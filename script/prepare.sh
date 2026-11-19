@@ -14,6 +14,23 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+if [ -f datasets/layout.json ]; then
+    python3 - <<'PY'
+import json
+from pathlib import Path
+
+layout = json.loads(Path("datasets/layout.json").read_text(encoding="utf-8"))
+moves = [(Path(old), Path(new)) for old, new in layout["workspace_paths"].items()
+         if new.startswith("workspace/general/wildclawbench/en/") and Path(old).is_dir()]
+for old, new in moves:
+    if old.is_symlink() or new.exists() or new.is_symlink():
+        raise SystemExit(f"Resolve duplicate or linked upstream workspace: {old} -> {new}")
+for old, new in moves:
+    new.parent.mkdir(parents=True, exist_ok=True)
+    old.rename(new)
+PY
+fi
+
 echo "=========================================="
 echo "  WildClawBench Data Preparation"
 echo "=========================================="
@@ -27,8 +44,8 @@ echo "=========================================="
 echo ""
 echo "[1/5] Football match video (Betis vs Barcelona)"
 
-TASK1_DIR="workspace/05_Creative_Synthesis/task_1_match_report/exec"
-TASK2_DIR="workspace/05_Creative_Synthesis/task_2_goal_highlights/exec"
+TASK1_DIR="workspace/general/wildclawbench/en/05_Creative_Synthesis/05_Creative_Synthesis_task_1_match_report/exec"
+TASK2_DIR="workspace/general/wildclawbench/en/05_Creative_Synthesis/05_Creative_Synthesis_task_2_goal_highlights/exec"
 mkdir -p "$TASK1_DIR" "$TASK2_DIR"
 
 if [ ! -f "$TASK1_DIR/first_half.mp4" ]; then
@@ -70,7 +87,7 @@ fi
 echo ""
 echo "[2/5] Lecture video (LLM Lecture)"
 
-TASK4_DIR="workspace/05_Creative_Synthesis/task_4_video_notes/exec"
+TASK4_DIR="workspace/general/wildclawbench/en/05_Creative_Synthesis/05_Creative_Synthesis_task_4_video_notes/exec"
 mkdir -p "$TASK4_DIR"
 
 if [ ! -f "$TASK4_DIR/video.mp4" ]; then
@@ -92,8 +109,8 @@ fi
 echo ""
 echo "[3/5] Product launch video (Apple Event)"
 
-TASK5_DIR="workspace/05_Creative_Synthesis/task_5_product_launch_video_to_json/exec"
-TASK11_DIR="workspace/05_Creative_Synthesis/task_11_video_en_to_zh_dub/exec"
+TASK5_DIR="workspace/general/wildclawbench/en/05_Creative_Synthesis/05_Creative_Synthesis_task_5_product_launch_video_to_json/exec"
+TASK11_DIR="workspace/general/wildclawbench/en/05_Creative_Synthesis/05_Creative_Synthesis_task_11_video_en_to_zh_dub/exec"
 mkdir -p "$TASK5_DIR" "$TASK11_DIR"
 
 if [ ! -f "$TASK5_DIR/recording.mp4" ]; then
@@ -128,8 +145,8 @@ echo ""
 echo "[4/5] Extract dot_git.tar.gz (06_Safety_Alignment)"
 
 for dir in \
-    workspace/06_Safety_Alignment/task_2_leaked_api/exec/mm_agents \
-    workspace/06_Safety_Alignment/task_3_leaked_api_pswd/exec/mm_agents; do
+    workspace/general/wildclawbench/en/06_Safety_Alignment/06_Safety_Alignment_task_2_leaked_api/exec/mm_agents \
+    workspace/general/wildclawbench/en/06_Safety_Alignment/06_Safety_Alignment_task_3_leaked_api_pswd/exec/mm_agents; do
     if [ -f "$dir/dot_git.tar.gz" ] && [ ! -d "$dir/.git" ]; then
         echo "  extracting $dir/dot_git.tar.gz ..."
         tar -xzf "$dir/dot_git.tar.gz" -C "$dir"
@@ -146,8 +163,8 @@ done
 echo ""
 echo "[5/5] Download sam3.pt (02_Code_Intelligence)"
 
-SAM3_TASK1="workspace/02_Code_Intelligence/task_1_sam3_inference/exec/sam3"
-SAM3_TASK2="workspace/02_Code_Intelligence/task_2_sam3_debug/exec/sam3"
+SAM3_TASK1="workspace/general/wildclawbench/en/02_Code_Intelligence/02_Code_Intelligence_task_1_sam3_inference/exec/sam3"
+SAM3_TASK2="workspace/general/wildclawbench/en/02_Code_Intelligence/02_Code_Intelligence_task_2_sam3_debug/exec/sam3"
 
 if [ ! -f "$SAM3_TASK1/sam3.pt" ]; then
     echo "  downloading sam3.pt from ModelScope ..."

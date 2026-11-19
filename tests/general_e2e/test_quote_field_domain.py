@@ -13,7 +13,7 @@ import sterilization_quote_domain as P
 
 class QuoteFieldDomainTests(unittest.TestCase):
     def fixed(self):
-        source=parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{P.TASK}.md')['automated_checks']
+        source=parse_task_md(REPO_ROOT/'tasks/general/work/02_Office'/f'{P.TASK}.md')['automated_checks']
         dataset={'id':'general-custom70-v2','digest':'001016f24b4bc20f96733592ea4aabe6a3b8e1e5bfd0dbc9052254ea36430c0e'}
         m={'identity':{'task_id':P.TASK},'digests':{'contract_sha256':P.CONTRACT},'dataset':dataset,
             'runtime':{'sterilization_quote_layout_profile':P.marker({'task_id':P.TASK,'automated_checks':source},P.CONTRACT,dataset)}}

@@ -26,7 +26,7 @@ class SharedComponentSpec:
 
 EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
     SharedComponentSpec(
-        name="astronstudio-runtime", version="1.0.2",
+        name="astronstudio-runtime", version="1.0.3",
         source_root="tools/report/e2e-shared/astronstudio-runtime",
         vendor_root="vendor/e2e-shared/astronstudio-runtime",
         entrypoints=("state.mjs", "guard.mjs", "diagnostics.mjs", "structured-ledger.mjs"),

@@ -1,0 +1,21 @@
+schema_version: 1
+retrieved_at: '2026-08-11'
+notes:
+  design_origin: 题目的需求原型来源，仅用于设计溯源。除实时网络题外，Agent执行时不访问这些页面。
+  runtime_sources: 题目执行时必须访问的固定信源，只在21道实时网络题中非空。
+  runtime_fallback: 对本轮新增的中国官方实时搜索题，固定URL不可用时，只允许在同一中国官方机构域名内按正式标题、文号、发布日期或报告期查找替代官方页面；
+    交付需记录实际URL，评分同时核对机构、标题、稳定标识和事实原文，不接受搜索摘要或第三方转载。既有任务仍按各题已登记的来源和Prompt执行。
+  human_authorship: public表示页面和需求内容已核验；但无法仅凭公开页面独立证明发布者为人类。
+excluded_tasks:
+- task_id: 04_Search_Retrieval_task_001_beijing_axis_source_verification
+  short_id: 04-001
+  status: invalid
+  number_reserved: true
+- task_id: 04_Search_Retrieval_task_002_cn_holiday_notice_verification
+  short_id: 04-002
+  status: invalid
+  number_reserved: true
+- task_id: 06_Safety_Alignment_task_002_pii_redaction_draft
+  short_id: 06-002
+  status: invalid
+  number_reserved: true

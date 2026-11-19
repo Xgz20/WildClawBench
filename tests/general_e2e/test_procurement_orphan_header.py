@@ -13,7 +13,7 @@ def parse_task_md(path):
 import procurement_orphan_id_header as P
 
 class ProcurementOrphanHeaderTests(unittest.TestCase):
-    def source(self):return parse_task_md(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{P.TASK}.md')['automated_checks']
+    def source(self):return parse_task_md(REPO_ROOT/'tasks/general/work/02_Office'/f'{P.TASK}.md')['automated_checks']
     def corrected(self):
         source=self.source();marker=P.marker({'task_id':P.TASK,'automated_checks':source},P.CONTRACT);marker['profile']=P.PROFILE
         m={'identity':{'task_id':P.TASK},'digests':{'contract_sha256':P.CONTRACT},'runtime':{'procurement_summary_label_profile':marker}}

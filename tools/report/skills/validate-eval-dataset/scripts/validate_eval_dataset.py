@@ -11,6 +11,7 @@ import shlex
 import sys
 import tempfile
 import zipfile
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
 
@@ -38,6 +39,8 @@ from tools.report.lib.eval_dataset.website_contracts import (
     validate_website_contract,
 )
 from eval_general_e2e.datasets.catalog import load_mapping, load_registered_dataset, repository_path
+from eval_general_e2e.datasets.layout import load_layout, workspace_for_task
+from eval_general_e2e.datasets.source_history import pre_migration_sources
 
 
 def _issue(code: str, message: str, doc: TaskDocument, *, severity: str = FAIL, evidence: dict[str, Any] | None = None) -> Issue:
@@ -154,7 +157,7 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
     raw_workspace = strip_codeblock(doc.section("Workspace Path"))
     workspace = Path(raw_workspace).expanduser()
     if not workspace.is_absolute():
-        workspace = (repo_root / workspace).resolve()
+        workspace = workspace_for_task(repo_root, workspace).resolve()
         if not path_within(workspace, repo_root):
             issues.append(_issue("WORKSPACE_OUTSIDE_REPO", "Workspace Path 越出仓库根目录", doc, evidence={"workspace": str(workspace)}))
     else:
@@ -232,8 +235,9 @@ def validate_document(doc: TaskDocument, repo_root: Path, *, smoke: bool = False
 
 
 def validate_extension_registry(repo_root: Path, selected: list[Path]) -> list[Issue]:
-    extension = repo_root / "tasks" / "extension"
-    registry = extension / "task_sources.yaml"
+    migrated = bool(load_layout(repo_root))
+    extension = repo_root / ("tasks/general/regression" if migrated else "tasks/extension")
+    registry = repo_root / "datasets/general/regression/task_sources.yaml" if migrated else extension / "task_sources.yaml"
     def is_under_extension(path: Path) -> bool:
         try:
             path.resolve().relative_to(extension.resolve())
@@ -262,11 +266,12 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
     cache: dict[str, tuple[Any, dict, dict] | Exception] = {}
     for selected_path in selected:
         path = selected_path.resolve()
-        try:
-            relative = path.relative_to(repo_root / "datasets")
-        except ValueError:
+        if path.is_relative_to(repo_root / "tasks/general/challenge"):
+            series = "general-challenge"
+        elif path.is_relative_to(repo_root / "datasets"):
+            series = path.relative_to(repo_root / "datasets").parts[0]
+        else:
             continue
-        series = relative.parts[0]
         if series not in cache:
             try:
                 registered = load_registered_dataset(repo_root, series)
@@ -294,7 +299,8 @@ def validate_registered_registry(repo_root: Path, selected: list[Path]) -> list[
         expected_task = repo_root / definition.task_root / category / f"{task_id}.md"
         if (category not in definition.category_labels or path != expected_task
                 or path.resolve() != expected_task
-                or not re.fullmatch(re.escape(definition.task_id_prefix + category) + r"_task_\d{3}_[a-z0-9_]+", task_id)):
+                or not any(re.fullmatch(re.escape(prefix + category) + r"_task_\d{3}_[a-z0-9_]+", task_id)
+                           for prefix in (definition.task_id_prefix, *definition.legacy_task_id_prefixes))):
             issues.append(_issue("DATASET_TASK_LAYOUT_INVALID", "任务路径、分类或数据集命名空间不一致", doc))
             continue
         tags = doc.metadata.get("tags", [])
@@ -498,6 +504,36 @@ def main(argv: list[str] | None = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     repo_root = args.repo_root.resolve()
+    if args.dataset_id and load_layout(repo_root):
+        try:
+            registered = load_registered_dataset(repo_root, args.dataset_id, release_id=args.release_id)
+        except (OSError, ValueError):
+            pass  # The normal selector produces the structured diagnostic.
+        else:
+            if registered.definition.dataset_id in load_layout(repo_root)["historical_releases"]:
+                paths = ["skills", "datasets/catalog.yaml", registered.definition.manifest_path]
+                if registered.definition_path:
+                    paths.append(registered.definition_path.relative_to(repo_root).as_posix())
+                with pre_migration_sources(repo_root, registered.definition, additional_paths=paths) as historical:
+                    return validate(args, historical, report_root=repo_root, frozen_id=registered.definition.dataset_id)
+    return validate(args, repo_root)
+
+
+def validate(args, repo_root: Path, *, report_root: Path | None = None, frozen_id: str | None = None) -> int:
+    # Historical scope retains the original logical source paths after the temporary tree is removed.
+    def report_path(path):
+        return str(path).replace(str(repo_root), str(report_root), 1) if report_root else str(path)
+
+    if frozen_id:
+        args.dataset_id, args.release_id = frozen_id, None
+        for field in ("task_dir", "task_path", "task_id"):
+            reverse = {new: old for old, new in load_layout(report_root)["task_paths"].items()}
+            values = []
+            for item in getattr(args, field):
+                path = Path(item)
+                value = path.relative_to(report_root).as_posix() if path.is_relative_to(report_root) else item
+                values.append(reverse.get(value, value))
+            setattr(args, field, values)
     selection = select_task_files(repo_root, task_dirs=args.task_dir, task_paths=args.task_path, task_ids=args.task_id, default_root="tasks", include_doc_copies=args.include_doc_copies, dataset_id=args.dataset_id, release_id=args.release_id)
     issues = list(selection.issues)
     source_view = None
@@ -530,8 +566,11 @@ def main(argv: list[str] | None = None) -> int:
         except (OSError, ValueError) as exc:
             issues.append(Issue(FAIL, "DATASET_RELEASE_CONTRACT_INVALID", str(exc)))
     status = status_for_issues(issues)
-    report = Report(1, status, {"repo": str(repo_root), "tasks": [str(path) for path in selection.files], "selectors": selection.selectors, "include_doc_copies": args.include_doc_copies, "dataset_id": args.dataset_id, "release_id": args.release_id, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
-    target = write_report(report, repo_root=repo_root, kind="static", output_dir=args.output_dir)
+    if report_root:
+        issues = [replace(issue, location=report_path(issue.location), message=report_path(issue.message))
+                  for issue in issues]
+    report = Report(1, status, {"repo": str(report_root or repo_root), "tasks": [report_path(path) for path in selection.files], "selectors": [report_path(s) for s in selection.selectors], "include_doc_copies": args.include_doc_copies, "dataset_id": args.dataset_id, "release_id": args.release_id, "smoke": args.smoke}, {"task_count": len(selection.files), "website_task_count": len(website_task_ids), "issue_count": len(issues), "action_summary": build_action_summary(task_ids, issues)}, issues)
+    target = write_report(report, repo_root=report_root or repo_root, kind="static", output_dir=args.output_dir)
     print(target)
     return exit_code(status, fail_on_review=args.fail_on == "review")
 

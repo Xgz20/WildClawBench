@@ -172,8 +172,8 @@ def main() -> None:
     skipped: list[str] = []
     for rel in read_task_list(task_list_path):
         task_file = Path(rel).expanduser()
-        if not task_file.is_absolute():
-            task_file = repo_root / task_file
+        from eval_general_e2e.datasets.layout import relocated_task
+        task_file = relocated_task(repo_root, task_file)
         if not task_file.is_file():
             logger.error("用例文件不存在，跳过: %s", task_file)
             skipped.append(rel)

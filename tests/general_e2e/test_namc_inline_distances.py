@@ -18,7 +18,7 @@ NS = {'wp': 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDraw
 
 class NamcInlineDistanceTests(unittest.TestCase):
     def source(self):
-        path = next((REPO_ROOT / 'tasks/general_e2e').rglob(NAMC.TASK + '.md'))
+        path = next((REPO_ROOT / 'tasks/general/work').rglob(NAMC.TASK + '.md'))
         _, sections, _ = _parse_task_source(path)
         return _strip_codeblock(sections['Automated Checks'])
 

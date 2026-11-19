@@ -13,7 +13,7 @@ RANGES=RUNTIME.office001_semantic_ranges
 
 class OriginalOfficeSemanticRangeTests(unittest.TestCase):
     def inputs(self):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(RANGES.TASK+'.md'))
+        task=next((REPO_ROOT/'tasks/general/work').rglob(RANGES.TASK+'.md'))
         _,sections,_=_parse_task_source(task)
         contract={'task_id':RANGES.TASK,'automated_checks':_strip_codeblock(sections['Automated Checks']),
             'llm_judge_rubric':sections['LLM Judge Rubric'].strip()}

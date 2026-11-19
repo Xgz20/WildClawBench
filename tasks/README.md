@@ -1,4 +1,14 @@
-# QwenWork macOS General 前置核验
+# 评测任务目录
+
+题面位于 tasks/<场景>/<数据集>/<分类>/<任务 ID>.md。逐题素材在 workspace/ 下使用相同的场景、数据集、分类和任务 ID。
+
+- general/wildclawbench/en 为上游原版题面。cn 是阅读译本，共用 en 的素材。
+- general/regression、general/work、general/challenge 分别维护基础回归、真实工作和挑战场景。
+- web/artifactsbench、web/custom 和 ppt/custom 分别维护 ArtifactsBench、自建 Web 及 PPT 专项。
+
+固定范围的批次按数据集冻结清单选题。目录和 CLI 的说明见[通用场景自建评测集说明](../docs/guides/general-e2e/通用场景自建评测集说明.md)。
+
+## QwenWork macOS General 前置核验
 
 真机执行前，使用仓库内的只读入口核对原始日志 metadata：
 

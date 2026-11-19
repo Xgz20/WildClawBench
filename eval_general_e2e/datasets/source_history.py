@@ -7,7 +7,47 @@ from __future__ import annotations
 
 import hashlib
 import json
+from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
+import re
+import subprocess
+import tarfile
+import tempfile
+
+from .layout import load_layout, relocated_task
+
+
+@contextmanager
+def pre_migration_sources(repo: Path, definition, *, additional_paths=()):
+    """Expose the verified legacy layout as a temporary source tree."""
+    layout = load_layout(repo)
+    if definition.dataset_id not in layout.get("historical_releases", ()):
+        yield None
+        return
+    revision = layout.get("historical_source_revision", "")
+    if not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("invalid pre-migration source revision")
+    paths = [definition.task_root, definition.workspace_root, definition.registry_path,
+             definition.capability_map_path, *additional_paths]
+    if definition.frozen_source_index:
+        paths.append(str(_relative(definition.frozen_source_index).parent))
+    paths = sorted({_relative(path).as_posix() for path in paths})
+    paths = [path for path in paths if not any(path.startswith(parent + "/") for parent in paths)]
+    with tempfile.TemporaryDirectory(prefix="wcb-frozen-sources-") as temporary:
+        root = Path(temporary)
+        archive = root / "source.tar"
+        result = subprocess.run(
+            ["git", "archive", "--format=tar", f"--output={archive}", revision, "--", *paths],
+            cwd=repo, capture_output=True, text=True,
+        )
+        if result.returncode:
+            raise ValueError(f"cannot read historical source tree {revision}; fetch its Git history: "
+                             f"{result.stderr.strip()}")
+        checkout = root / "checkout"
+        with tarfile.open(archive) as stream:
+            stream.extractall(checkout, filter="data")
+        archive.unlink()
+        yield checkout.resolve()
 
 
 def _relative(value: str) -> PurePosixPath:
@@ -62,7 +102,7 @@ def dataset_task_path(
     frozen = FrozenSources(repo, index, current_paths)
     _relative(relative)
     if relative not in frozen.overrides:
-        return repo / relative
+        return relocated_task(repo, Path(relative))
     target = repo / _relative(index)
     row = json.loads(target.read_text(encoding='utf-8'))['files'][relative]
     return target.parent / _relative(row['snapshot'])
@@ -87,4 +127,4 @@ def frozen_task_path(path: Path) -> Path:
             if hashlib.sha256(candidate.read_bytes()).hexdigest() != row["sha256"]:
                 raise ValueError("FROZEN_SOURCE_SNAPSHOT_DRIFT")
             return candidate
-    return path
+    return relocated_task(repo, path)

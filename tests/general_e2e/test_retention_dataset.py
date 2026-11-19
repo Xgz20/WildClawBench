@@ -15,8 +15,8 @@ from tools.report.lib.eval_dataset.task_files import parse_task_document
 
 ROOT = Path(__file__).resolve().parents[2]
 ID = 'general_hard_data_analysis_task_005_retention_cohort'
-WORK = ROOT / 'datasets/general-hard/workspace/data_analysis' / ID
-TASK = ROOT / 'datasets/general-hard/tasks/data_analysis' / (ID + '.md')
+WORK = ROOT / 'workspace/general/challenge/data_analysis' / ID
+TASK = ROOT / 'tasks/general/challenge/data_analysis' / (ID + '.md')
 
 
 class RetentionDatasetTests(unittest.TestCase):

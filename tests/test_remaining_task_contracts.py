@@ -13,8 +13,8 @@ from src.utils.task_parser import parse_task_md
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TASK_ROOT = ROOT / "tasks/extension"
-WORKSPACE_ROOT = ROOT / "workspace/extension"
+TASK_ROOT = ROOT / "tasks/general/regression"
+WORKSPACE_ROOT = ROOT / "workspace/general/regression"
 
 TASKS = {
     "paper": TASK_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_008_paper_reading_pack.md",
@@ -35,20 +35,20 @@ TASKS = {
 }
 
 WORKSPACES = {
-    "paper": WORKSPACE_ROOT / "01_Productivity_Flow/task_008_paper_reading_pack",
-    "support": WORKSPACE_ROOT / "01_Productivity_Flow/task_005_support_handoff",
-    "holiday": WORKSPACE_ROOT / "01_Productivity_Flow/task_006_holiday_calendar",
-    "action": WORKSPACE_ROOT / "01_Productivity_Flow/task_009_action_reconciliation",
-    "launch": WORKSPACE_ROOT / "01_Productivity_Flow/task_010_launch_program_pack",
-    "inventory": WORKSPACE_ROOT / "02_Code_Intelligence/task_002_inventory_aggregator",
-    "config": WORKSPACE_ROOT / "02_Code_Intelligence/task_008_config_migrator",
-    "procurement": WORKSPACE_ROOT / "04_Search_Retrieval/task_008_procurement_clause_version_lookup",
-    "census": WORKSPACE_ROOT / "04_Search_Retrieval/task_007_census_province_change",
-    "statfs": WORKSPACE_ROOT / "04_Search_Retrieval/task_010_node_statfs_release_trace",
-    "nist": WORKSPACE_ROOT / "04_Search_Retrieval/task_011_nist_sha1_transition",
-    "pension": WORKSPACE_ROOT / "04_Search_Retrieval/task_012_personal_pension_policy_timeline",
-    "redaction": WORKSPACE_ROOT / "06_Safety_Alignment/task_005_incident_log_redaction",
-    "consent": WORKSPACE_ROOT / "06_Safety_Alignment/task_009_consent_filtering",
+    "paper": WORKSPACE_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_008_paper_reading_pack",
+    "support": WORKSPACE_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_005_support_handoff",
+    "holiday": WORKSPACE_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_006_holiday_calendar",
+    "action": WORKSPACE_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_009_action_reconciliation",
+    "launch": WORKSPACE_ROOT / "01_Productivity_Flow/01_Productivity_Flow_task_010_launch_program_pack",
+    "inventory": WORKSPACE_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_002_inventory_aggregator",
+    "config": WORKSPACE_ROOT / "02_Code_Intelligence/02_Code_Intelligence_task_008_config_migrator",
+    "procurement": WORKSPACE_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_008_procurement_clause_version_lookup",
+    "census": WORKSPACE_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_007_census_province_change",
+    "statfs": WORKSPACE_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_010_node_statfs_release_trace",
+    "nist": WORKSPACE_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_011_nist_sha1_transition",
+    "pension": WORKSPACE_ROOT / "04_Search_Retrieval/04_Search_Retrieval_task_012_personal_pension_policy_timeline",
+    "redaction": WORKSPACE_ROOT / "06_Safety_Alignment/06_Safety_Alignment_task_005_incident_log_redaction",
+    "consent": WORKSPACE_ROOT / "06_Safety_Alignment/06_Safety_Alignment_task_009_consent_filtering",
 }
 
 

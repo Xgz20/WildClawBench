@@ -18,7 +18,7 @@ GUARD=RUNTIME.private_reference_guard
 
 class CanonicalPrivateReferenceTests(unittest.TestCase):
     def contract(self,row):
-        path=next((REPO_ROOT/'tasks/general_e2e').rglob(row['task_id']+'.md'))
+        path=next((REPO_ROOT/'tasks/general/work').rglob(row['task_id']+'.md'))
         _,sections,_=_parse_task_source(path)
         return {'task_id':row['task_id'],'automated_checks':_strip_codeblock(sections['Automated Checks'])}
 
@@ -46,7 +46,7 @@ class CanonicalPrivateReferenceTests(unittest.TestCase):
             for ref in row.get('public_text_guards',[]):
                 original=next(e for e in task['materials']['execution']['entries'] if e['path']==ref['path'])
                 self.assertEqual((original['sha256'],original['size']),(ref['canonical_sha256'],ref['size']))
-                path=REPO_ROOT/'workspace/general_e2e/02_Office/task_014_invoice_email_archive_manifest/exec'/ref['path']
+                path=REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_014_invoice_email_archive_manifest/exec'/ref['path']
                 self.assertEqual(hashlib.sha256(path.read_bytes().replace(b'\n',b'\r\n')).hexdigest(),ref['declared_sha256'])
         self.assertIsNone(GUARD.registered({'task_id':'unrelated','automated_checks':None},'x',{}))
 
@@ -74,7 +74,7 @@ class CanonicalPrivateReferenceTests(unittest.TestCase):
             with self.subTest(task=row['task_id']),tempfile.TemporaryDirectory() as folder:
                 root=Path(folder);workspace=root/'workspace';workspace.mkdir();(workspace/'results').mkdir()
                 stem=row['task_id'].removeprefix('02_Office_')
-                original=REPO_ROOT/'workspace/general_e2e/02_Office'/stem/'gt'
+                original=REPO_ROOT/'workspace/general/work/02_Office'/('02_Office_'+stem)/'gt'
                 shutil.copytree(original,workspace/'gt')
                 inventory,_=RUNTIME._inventory_tree(workspace/'gt')
                 RUNTIME._guard_candidate_office_copies(workspace/'gt',inventory,role='test-canonical-private-reference')
@@ -98,7 +98,7 @@ class CanonicalPrivateReferenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);(root/'private/gt').mkdir(parents=True)
             ref=row['references'][0]
-            original=REPO_ROOT/'workspace/general_e2e/02_Office/task_003_news_event_multifile_extract/gt'/ref['path']
+            original=REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_003_news_event_multifile_extract/gt'/ref['path']
             shutil.copyfile(original,root/'private/gt'/ref['path'])
             error={'type':'EvidenceError','message':'Private reference mismatch: '+ref['path']}
             self.assertTrue(GUARD.matches_old_failure(root,manifest,self.contract(row),error))
@@ -110,7 +110,7 @@ class CanonicalPrivateReferenceTests(unittest.TestCase):
 
     def test_original_crlf_and_registered_lf_fixtures_produce_identical_numeric_results(self):
         row=next(r for r in GUARD.registry() if 'task_014_' in r['task_id'])
-        original=REPO_ROOT/'workspace/general_e2e/02_Office/task_014_invoice_email_archive_manifest'
+        original=REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_014_invoice_email_archive_manifest'
         source=self.contract(row)['automated_checks']
         fixed,_=RUNTIME._effective_rule_source(self.manifest(row),source)
         results=[]
@@ -142,7 +142,7 @@ class CanonicalPrivateReferenceTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root=Path(folder);(root/'private/gt').mkdir(parents=True)
             ref=row['references'][0];path=root/'private/gt'/ref['path']
-            source=REPO_ROOT/'workspace/general_e2e/02_Office/task_020_research_factor_table_extract/gt'/ref['path']
+            source=REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_020_research_factor_table_extract/gt'/ref['path']
             shutil.copyfile(source,path)
             error={'type':'RuntimeError','message':'Evaluator GT changed: research_factor_extract.json'}
             self.assertTrue(ORCHESTRATOR._registered_reference_failure(root,manifest,contract,error))

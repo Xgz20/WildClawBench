@@ -11,8 +11,8 @@ from src.utils.task_parser import parse_task_md
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CATEGORY = "07_Website_Generation"
-TASKS_DIR = REPO_ROOT / "tasks" / "extension" / CATEGORY
-WORKSPACE_DIR = REPO_ROOT / "workspace" / "extension" / CATEGORY
+TASKS_DIR = REPO_ROOT / "tasks" / "web" / "custom" / CATEGORY
+WORKSPACE_DIR = REPO_ROOT / "workspace" / "web" / "custom" / CATEGORY
 
 EXPECTED_TASKS = {
     "task_001_daymark_product_website": {
@@ -334,7 +334,7 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
         for path in sorted(TASKS_DIR.glob("*.md")):
             task = parse_task_md(path)
             short_id = task["task_id"].removeprefix(f"{CATEGORY}_")
-            expected_workspace = (WORKSPACE_DIR / short_id).resolve()
+            expected_workspace = (WORKSPACE_DIR / task["task_id"]).resolve()
 
             with self.subTest(task_id=task["task_id"]):
                 self.assertEqual(Path(task["workspace_path"]), expected_workspace)
@@ -375,7 +375,7 @@ class WebsiteGenerationTaskContractTest(unittest.TestCase):
             with self.subTest(task_id=task["task_id"]):
                 self.assertEqual(
                     load_sections(path).get("Workspace Path"),
-                    f"workspace/extension/{CATEGORY}/{short_id}",
+                    f"workspace/web/custom/{CATEGORY}/{task['task_id']}",
                 )
 
     def test_web_task_rubrics_expose_stable_metric_dimensions(self) -> None:

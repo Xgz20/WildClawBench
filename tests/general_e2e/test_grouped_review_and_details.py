@@ -116,14 +116,14 @@ def grade(transcript: list, workspace_path: str) -> dict:
         self.assertEqual(len(namespace['_GENERAL_E2E_RULE_REVIEW']['applied']),3)
 
     def test_exact_release_text_hashes_accept_only_registered_original_newlines(self):
-        row=RELEASE.registry();task=next((REPO_ROOT/'tasks/general_e2e').rglob(row['task_id']+'.md'));_,sections,_=_parse_task_source(task)
+        row=RELEASE.registry();task=next((REPO_ROOT/'tasks/general/work').rglob(row['task_id']+'.md'));_,sections,_=_parse_task_source(task)
         source=_strip_codeblock(sections['Automated Checks']);contract={'task_id':row['task_id'],'automated_checks':source}
         marker=RELEASE.marker(contract,row['contract_sha256'],row['dataset']);self.assertIsNotNone(marker)
         m={'identity':{'task_id':row['task_id']},'digests':{'contract_sha256':row['contract_sha256']},'dataset':row['dataset'],'runtime':{'release_baseline_text_profile':marker}}
         fixed,receipt=RELEASE.effective_source(m,source,source,None);namespace={};exec(compile(fixed,'<exact-release-baseline>','exec'),namespace)
         with tempfile.TemporaryDirectory() as folder:
             p=Path(folder)/'reference';ref=row['files'][0]
-            raw=(REPO_ROOT/'workspace/general_e2e/02_Office/task_007_release_phase_gate_progression/exec'/ref['path']).read_bytes()
+            raw=(REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_007_release_phase_gate_progression/exec'/ref['path']).read_bytes()
             for content in [raw,raw.replace(b'\n',b'\r\n')]:
                 p.write_bytes(content);self.assertTrue(namespace['_ge2e_release_protected_matches'](p,ref['path']))
             p.write_bytes(b'arbitrary\n');self.assertFalse(namespace['_ge2e_release_protected_matches'](p,ref['path']))

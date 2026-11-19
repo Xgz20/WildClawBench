@@ -357,9 +357,10 @@ def validate_website_contract(
         checker_path = repo_root / "eval/checks/website/tasks" / f"{module_name}.py"
 
     layout_errors: list[str] = []
-    expected_workspace = (
-        repo_root / WEBSITE_WORKSPACE_ROOT / (module_name or "<invalid-task-id>")
-    ).resolve()
+    if doc.path.is_relative_to(repo_root / "tasks/web/custom"):
+        expected_workspace = (repo_root / "workspace/web/custom" / doc.category / doc.task_id).resolve()
+    else:
+        expected_workspace = (repo_root / WEBSITE_WORKSPACE_ROOT / (module_name or "<invalid-task-id>")).resolve()
     if workspace.resolve() != expected_workspace:
         layout_errors.append("Workspace Path 与网站评测器固定素材目录不一致")
     if not (workspace / "exec").is_dir():

@@ -13,7 +13,7 @@ NATIVE=RUNTIME.office001_native_profile
 
 class OfficeNativeProfileTests(unittest.TestCase):
     def source(self):
-        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(NATIVE.TASK+'.md')))
+        _,sections,_=_parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(NATIVE.TASK+'.md')))
         return _strip_codeblock(sections['Automated Checks'])
 
     def manifest(self):

@@ -16,7 +16,7 @@ RELEASE=RUNTIME.release_baseline_text
 import sterilization_quote_complete_layout as QUOTE
 
 def rule(task):
-    p=next((REPO_ROOT/'tasks/general_e2e').rglob(task+'.md'))
+    p=next((REPO_ROOT/'tasks/general/work').rglob(task+'.md'))
     return _strip_codeblock(_parse_task_source(p)[1]['Automated Checks'])
 
 
@@ -38,7 +38,7 @@ class V6ProfileRegistrationTests(unittest.TestCase):
         self.assertFalse(receipt['candidate_rewritten']);self.assertFalse(receipt['numeric_decisions_assigned'])
         with tempfile.TemporaryDirectory() as folder:
             p=Path(folder)/'protected.txt';ref=row['files'][0]
-            raw=(REPO_ROOT/'workspace/general_e2e/02_Office/task_007_release_phase_gate_progression/exec'/ref['path']).read_bytes()
+            raw=(REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_007_release_phase_gate_progression/exec'/ref['path']).read_bytes()
             for data in [raw,raw.replace(b'\n',b'\r\n')]:
                 p.write_bytes(data);self.assertTrue(new['_ge2e_release_protected_matches'](p,ref['path']))
             p.write_bytes(raw+b' ');self.assertFalse(new['_ge2e_release_protected_matches'](p,ref['path']))
@@ -46,7 +46,7 @@ class V6ProfileRegistrationTests(unittest.TestCase):
     def release_fixture(self,folder):
         root=Path(folder);base=root/'candidate-original/workspace';base.mkdir(parents=True)
         row=RELEASE.registry(RELEASE.V4_CONTRACT)
-        original=REPO_ROOT/'workspace/general_e2e/02_Office/task_007_release_phase_gate_progression/exec'
+        original=REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_007_release_phase_gate_progression/exec'
         for ref in row['files']:
             target=base/ref['path'];target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes((original/ref['path']).read_bytes())
         identity={'task_id':row['task_id'],'scoring_attempt_id':'synthetic-v6','execution_attempt_id':'execution-001'}

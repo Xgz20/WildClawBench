@@ -118,7 +118,7 @@ Score 0.0: 结果错误。
     def test_website_tag_selects_metric_profile(self) -> None:
         task = parse_task_md(
             Path(__file__).resolve().parents[1]
-            / "tasks/extension/07_Website_Generation"
+            / "tasks/web/custom/07_Website_Generation"
             / "07_Website_Generation_task_001_daymark_product_website.md"
         )
 

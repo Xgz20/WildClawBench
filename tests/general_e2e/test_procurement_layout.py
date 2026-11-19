@@ -109,7 +109,7 @@ class ProcurementLayoutTests(unittest.TestCase):
 
     def test_new_profile_is_opt_in_and_original_scoring_functions_stay_equal(self):
         tid = '02_Office_task_015_procurement_reconciliation'
-        _, sections, _ = _parse_task_source(next((REPO_ROOT / 'tasks/general_e2e').rglob(tid + '.md')))
+        _, sections, _ = _parse_task_source(next((REPO_ROOT / 'tasks/general/work').rglob(tid + '.md')))
         source = _strip_codeblock(sections['Automated Checks'])
         legacy, old_receipt = RUNTIME.dataset_rule_corrections.effective_source(tid, source)
         current, receipt = RUNTIME.dataset_rule_corrections.effective_source(tid, source, procurement_layout_enabled=True)

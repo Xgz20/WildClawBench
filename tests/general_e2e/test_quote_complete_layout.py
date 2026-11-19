@@ -23,7 +23,7 @@ class QuoteCompleteLayoutTests(unittest.TestCase):
         self.assertEqual(result.returncode,0,result.stderr)
 
     def setUp(self):
-        _,sections,_=_parse_task_source(REPO_ROOT/'tasks/general_e2e/02_Office'/f'{P.TASK}.md')
+        _,sections,_=_parse_task_source(REPO_ROOT/'tasks/general/work/02_Office'/f'{P.TASK}.md')
         self.source=_strip_codeblock(sections['Automated Checks'])
         self.contract={'task_id':P.TASK,'automated_checks':self.source}
         self.manifest={'identity':{'task_id':P.TASK},'dataset':P.DATASET,'digests':{'contract_sha256':P.CONTRACT},

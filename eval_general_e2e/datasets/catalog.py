@@ -145,9 +145,20 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
         raise CatalogError(f"dataset schema/series mismatch: {path}")
     base = path.parent
     paths: dict[str, str] = {}
+    layout_root = data.get("layout_root")
+    if layout_root is not None:
+        parts = Path(_text(layout_root, "dataset layout root")).parts
+        if len(parts) != 2 or any(not ID_RE.fullmatch(part) for part in parts):
+            raise CatalogError("layout_root must be <scene>/<dataset>")
+        if base != root / "datasets" / layout_root:
+            raise CatalogError("dataset definition and layout_root must correspond")
     for key in ("task_root", "workspace_root", "source_registry", "capability_map"):
         target = repository_path(root, data.get(key), label=key)
-        if not target.is_relative_to(base) or target == base:
+        if layout_root and key in {"task_root", "workspace_root"}:
+            prefix_root = "tasks" if key == "task_root" else "workspace"
+            if target != root / prefix_root / layout_root:
+                raise CatalogError(f"{key} must match its canonical layout_root")
+        elif not target.is_relative_to(base) or target == base:
             raise CatalogError(f"{key} must stay inside its dataset directory")
         paths[key] = target.relative_to(root).as_posix()
     task_root, workspace_root = [root / paths[k] for k in ("task_root", "workspace_root")]
@@ -182,7 +193,10 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
     prefix = _text(data.get("task_id_prefix"), "task ID prefix")
     if prefix != series_id.replace("-", "_").replace(".", "_") + "_":
         raise CatalogError("task ID prefix must be derived from its unique series ID")
-    if not re.fullmatch(r"[a-z][a-z0-9_]*_", prefix) or any(not t.startswith(prefix) or not TASK_ID_RE.fullmatch(t) for t in task_ids):
+    legacy_prefixes = _strings(data.get("legacy_task_id_prefixes", []), "legacy task ID prefixes", empty=True)
+    prefixes = (prefix, *legacy_prefixes)
+    if (len(set(prefixes)) != len(prefixes) or any(not re.fullmatch(r"[a-z][a-z0-9_]*_", p) for p in prefixes)
+            or any(not t.startswith(prefixes) or not TASK_ID_RE.fullmatch(t) for t in task_ids)):
         raise CatalogError("release task IDs must use the declared namespace")
     statistics = release.get("expected_statistics")
     if not isinstance(statistics, dict):
@@ -194,7 +208,8 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
     if set(category_counts) - set(labels):
         raise CatalogError("release contains an unregistered category")
     for task_id in task_ids:
-        category = task_id[len(prefix):].split("_task_", 1)[0]
+        namespace = max((p for p in prefixes if task_id.startswith(p)), key=len)
+        category = task_id[len(namespace):].split("_task_", 1)[0]
         if category not in category_counts:
             raise CatalogError(f"release task ID has an unregistered category: {task_id}")
     include = _strings(data.get("required_tags"), "required tags")
@@ -221,7 +236,8 @@ def _family_release(root: Path, series_id: str, path: Path, release_id: str | No
         task_root=paths["task_root"], workspace_root=paths["workspace_root"],
         registry_path=paths["source_registry"], capability_map_path=paths["capability_map"],
         manifest_path=manifest.relative_to(root).as_posix(), revision_scope=scope,
-        task_ids=task_ids, task_id_prefix=prefix, category_labels=labels,
+        task_ids=task_ids, task_id_prefix=prefix, legacy_task_id_prefixes=legacy_prefixes,
+        series_id=series_id, category_labels=labels,
         constraints=_constraints(release.get("constraints", {}), count),
     )
     if status == "frozen":
@@ -251,12 +267,18 @@ def load_catalog(repo_root: Path) -> dict[str, dict[str, Any]]:
             if (definition is None or entry.get("manifest") != definition.manifest_path
                     or entry.get("kind") == "legacy" and key != DEFAULT_DEFINITION.dataset_id):
                 raise CatalogError("builtin entry must reference its existing frozen manifest")
+        elif entry.get("kind") == "alias":
+            if entry.get("default_release") not in DATASETS:
+                raise CatalogError("series alias must select an existing builtin release")
+            allowed = _strings(entry.get("releases"), "alias releases")
+            if entry["default_release"] not in allowed or any(release not in DATASETS for release in allowed):
+                raise CatalogError("series alias has an invalid release")
         else:
             path = repository_path(root, entry.get("definition"), label="definition")
             if entry.get("kind") not in {None, "family"}:
                 raise CatalogError(f"unknown catalog entry kind: {entry.get('kind')!r}")
-            if path != root / "datasets" / key / "dataset.yaml":
-                raise CatalogError("a family definition must be datasets/<series_id>/dataset.yaml")
+            if not path.is_relative_to(root / "datasets") or path.name != "dataset.yaml":
+                raise CatalogError("a family definition must be a dataset.yaml inside datasets/")
             expected_prefix = key.replace("-", "_").replace(".", "_") + "_"
             for other in result:
                 if expected_prefix == other.replace("-", "_").replace(".", "_") + "_":
@@ -269,6 +291,11 @@ def load_registered_dataset(repo_root: Path, dataset_id: str, *, release_id: str
     root = repo_root.resolve()
     catalog = load_catalog(root)
     entry = catalog.get(dataset_id)
+    if entry is not None and entry.get("kind") == "alias":
+        selected = release_id or entry["default_release"]
+        if selected not in entry["releases"]:
+            raise CatalogError(f"release {selected!r} does not belong to {dataset_id}")
+        return replace(load_registered_dataset(root, selected), series_id=dataset_id)
     if entry is not None and entry.get("kind") in {"legacy", "builtin"}:
         if release_id and release_id != dataset_id:
             raise CatalogError("the builtin entry has only its frozen release")
@@ -286,13 +313,11 @@ def load_registered_dataset(repo_root: Path, dataset_id: str, *, release_id: str
         return RegisteredDataset(dataset_id, definition, None, manifest, "frozen", entry["kind"])
     if entry is not None:
         path = repository_path(root, entry["definition"], label="definition")
-        if path != root / "datasets" / dataset_id / "dataset.yaml":
-            raise CatalogError("a family definition must be datasets/<series_id>/dataset.yaml")
         return _family_release(root, dataset_id, path, release_id)
     # A published release ID is also an unambiguous selector.
     matches: list[RegisteredDataset] = []
     for series, candidate in catalog.items():
-        if candidate.get("kind") in {"legacy", "builtin"}:
+        if candidate.get("kind") in {"legacy", "builtin", "alias"}:
             continue
         path = repository_path(root, candidate["definition"], label="definition")
         if dataset_id in (load_mapping(path).get("releases") or {}):

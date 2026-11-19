@@ -21,7 +21,7 @@ WORKER=importlib.util.module_from_spec(spec);spec.loader.exec_module(WORKER)
 
 class WrapperAndTypedDiagnosticsTests(unittest.TestCase):
     def source(self,tid):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md'));_,s,_=_parse_task_source(task);return _strip_codeblock(s['Automated Checks'])
+        task=next((REPO_ROOT/'tasks/general/work').rglob(tid+'.md'));_,s,_=_parse_task_source(task);return _strip_codeblock(s['Automated Checks'])
 
     def test_six_exact_wrappers_keep_every_function_body_and_alias_call(self):
         self.assertEqual(len(ENTRY.registry()),6)

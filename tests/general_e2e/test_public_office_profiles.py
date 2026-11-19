@@ -87,7 +87,7 @@ class PublicOfficeProfilesTests(unittest.TestCase):
     def test_only_new_marked_exact_contracts_apply_and_original_math_stays_intact(self):
         for row in PROFILE.registry():
             task_id = row['task_id']
-            _,sections,_ = _parse_task_source(next((REPO_ROOT/'tasks/general_e2e').rglob(task_id+'.md')))
+            _,sections,_ = _parse_task_source(next((REPO_ROOT/'tasks/general/work').rglob(task_id+'.md')))
             source = _strip_codeblock(sections['Automated Checks'])
             contract = {'task_id':task_id,'automated_checks':source}
             marker = PROFILE.marker(contract,row['contract_sha256'])

@@ -20,7 +20,7 @@ QUOTE=RUNTIME.sterilization_quote_layout
 
 class SterilizationQuoteLayoutTests(unittest.TestCase):
     def source(self):
-        file=next((REPO_ROOT/'tasks/general_e2e').rglob(QUOTE.TASK+'.md'));_,sections,_=_parse_task_source(file)
+        file=next((REPO_ROOT/'tasks/general/work').rglob(QUOTE.TASK+'.md'));_,sections,_=_parse_task_source(file)
         return _strip_codeblock(sections['Automated Checks'])
 
     def fixed(self):

@@ -9,7 +9,7 @@ TASK = '03_Data_Analysis_task_010_contract_escrow_refund_reconciliation'
 
 
 def codes():
-    path = next((ROOT / 'tasks/general_e2e').rglob(TASK + '.md'))
+    path = next((ROOT / 'tasks/general/work').rglob(TASK + '.md'))
     index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
     entry = json.loads(index.read_text())['files'][path.relative_to(ROOT).as_posix()]
     old = index.parent / entry['snapshot']

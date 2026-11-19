@@ -17,7 +17,7 @@ BUDGET=RUNTIME.work_order_evidence_budget
 
 class PublicTextAndBudgetTests(unittest.TestCase):
     def source(self,tid):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(tid+'.md'));_,s,_=_parse_task_source(task)
+        task=next((REPO_ROOT/'tasks/general/work').rglob(tid+'.md'));_,s,_=_parse_task_source(task)
         return _strip_codeblock(s['Automated Checks'])
 
     def manifest(self,row):
@@ -43,7 +43,7 @@ class PublicTextAndBudgetTests(unittest.TestCase):
     def test_managed_matcher_accepts_only_original_lf_crlf_bytes_and_keeps_real_sha(self):
         row=TEXT.registry()[0];contract,m=self.manifest(row);source,_=RUNTIME._effective_rule_source(m,contract['automated_checks'])
         ref=row['files'][0]
-        original=next((REPO_ROOT/'workspace/general_e2e').rglob(Path(ref['path']).name))
+        original=next((REPO_ROOT/'workspace/general/work').rglob(Path(ref['path']).name))
         raw=original.read_bytes();self.assertEqual(hashlib.sha256(raw).hexdigest(),ref['canonical_sha256'])
         probe=source+"\ndef grade(transcript,workspace_path):\n    path=_ge2e_Path(workspace_path)/"+repr(ref['path'])+"\n    return {'accepted':float(_ge2e_public_office_matches(path,"+repr(ref['declared_sha256'])+",workspace_path))}\n"
         for label,content,expected in [('lf',raw,1.),('crlf',raw.replace(b'\n',b'\r\n'),1.),('changed',raw+b'altered',0.)]:

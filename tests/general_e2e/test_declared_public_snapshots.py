@@ -19,7 +19,7 @@ SNAPSHOT=RUNTIME.declared_public_snapshots
 class DeclaredPublicSnapshotTests(unittest.TestCase):
     def test_exact_profiles_keep_original_score_math_and_reject_source_or_dataset_drift(self):
         for row in SNAPSHOT.registry():
-            task=next((REPO_ROOT/'tasks/general_e2e').rglob(row['task_id']+'.md'));_,sections,_=_parse_task_source(task)
+            task=next((REPO_ROOT/'tasks/general/work').rglob(row['task_id']+'.md'));_,sections,_=_parse_task_source(task)
             source=_strip_codeblock(sections['Automated Checks']);contract={'task_id':row['task_id'],'automated_checks':source}
             marker=SNAPSHOT.marker(contract,row['contract_sha256'],row['dataset']);self.assertIsNotNone(marker)
             m={'identity':{'task_id':row['task_id']},'dataset':row['dataset'],'digests':{'contract_sha256':row['contract_sha256']},'runtime':{'declared_public_snapshot_profile':marker}}
@@ -37,7 +37,7 @@ class DeclaredPublicSnapshotTests(unittest.TestCase):
     def test_original_text_and_strict_office_variance_preserve_bytes_in_isolated_worker(self):
         profile=SNAPSHOT.registry()[0]
         text=next(r for r in profile['files'] if r['kind']=='text-newlines');office=next(r for r in profile['files'] if r['kind']=='office-cwm-only')
-        raw=(REPO_ROOT/'workspace/general_e2e/02_Office/task_018_targeted_repair_communication_pack/exec'/text['path']).read_bytes()
+        raw=(REPO_ROOT/'workspace/general/work/02_Office/02_Office_task_018_targeted_repair_communication_pack/exec'/text['path']).read_bytes()
         self.assertTrue(SNAPSHOT.matches_bytes(text,raw));self.assertTrue(SNAPSHOT.matches_bytes(text,raw.replace(b'\n',b'\r\n')))
         self.assertFalse(SNAPSHOT.matches_bytes(text,raw+b'changed'))
         content=with_cwm(base64.b64decode(office['base64']))

@@ -152,7 +152,7 @@ target.write_bytes(b'%PDF-1.4\\nprotocol-only\\n%%EOF\\n')
 
     def test_frozen_old_word_and_pptx_helpers_keep_v1_compatibility(self):
         for fmt,task in [('docx','general_hard_office_documents_task_010_capex_packet'),('pptx','general_hard_office_documents_task_005_annual_deck')]:
-            helper=(ROOT/'datasets/general-hard/workspace/office_documents'/task/'gt/office_runtime.py').read_bytes()
+            helper=(ROOT/'workspace/general/challenge/office_documents'/task/'gt/office_runtime.py').read_bytes()
             attempt=self.attempt('legacy-'+fmt,fmt=fmt,legacy_helper=helper,one_format=fmt)
             result=RUNTIME.run_rules_attempt(attempt_root=attempt,runtime_python=Path(sys.executable),timeout_seconds=30)
             self.assertEqual(result['rule_component']['score'],1.)

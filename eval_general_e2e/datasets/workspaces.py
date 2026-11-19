@@ -36,7 +36,7 @@ def frozen_workspace_path(manifest: Mapping[str, Any], cache_root: Path, task_id
     return target / _component(task_id, "TASK_ID") if task_id is not None else target
 
 
-def _expected_workspaces(manifest: Mapping[str, Any], members: Sequence[Any]):
+def _expected_workspaces(manifest: Mapping[str, Any], members: Sequence[Any], *, include_task_files: bool):
     indexed = {}
     for member in members:
         name = member.path.rstrip("/")
@@ -65,6 +65,14 @@ def _expected_workspaces(manifest: Mapping[str, Any], members: Sequence[Any]):
         if task_id in seen:
             raise FrozenWorkspaceError("FROZEN_WORKSPACE_DUPLICATE_TASK")
         seen.add(task_id)
+        if include_task_files:
+            member = indexed.get(task["bundle"]["task_path"])
+            digest = task["digests"]["task_sha256"]
+            if member is None or member.kind != "file" or hashlib.sha256(member.data).hexdigest() != digest:
+                raise FrozenWorkspaceError("FROZEN_WORKSPACE_TASK_MISMATCH: " + task_id)
+            relative = f"{task_id}/task.md"
+            add(relative, {"kind": "file", "mode": 0o644, "size": len(member.data), "sha256": digest})
+            payloads[relative] = member.data
         for key, tree_name, bundle_tree in (("execution", "exec", "execution/exec"),
                                            ("private_scoring", "gt", "private-scoring/gt")):
             base = f"{task_id}/{tree_name}"
@@ -140,7 +148,9 @@ def _verify_workspace(root: Path, expected: Mapping[str, Mapping[str, Any]]) -> 
         raise FrozenWorkspaceError("FROZEN_WORKSPACE_MISSING_PATH")
 
 
-def materialize_verified_workspaces(manifest: Mapping[str, Any], members: Sequence[Any], cache_root: Path) -> Path:
+def materialize_verified_workspaces(
+    manifest: Mapping[str, Any], members: Sequence[Any], cache_root: Path, *, include_task_files: bool = False,
+) -> Path:
     """Publish task_id/{exec,gt} atomically and verify every byte before reuse.
 
     The caller must first compare the compiled manifest with its frozen lock.
@@ -148,7 +158,7 @@ def materialize_verified_workspaces(manifest: Mapping[str, Any], members: Sequen
     extra paths and cache drift fail closed instead of falling back to sources.
     """
     target = frozen_workspace_path(manifest, cache_root)
-    expected, payloads = _expected_workspaces(manifest, members)
+    expected, payloads = _expected_workspaces(manifest, members, include_task_files=include_task_files)
     cache_root = Path(cache_root).absolute()
     for directory in (cache_root, target.parent):
         if directory.is_symlink():

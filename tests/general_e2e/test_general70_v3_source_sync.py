@@ -99,7 +99,7 @@ class General70V3SourceSyncTests(unittest.TestCase):
 class DeclaredCLIReviewWorkflowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        path=REPO_ROOT/'tasks/general_e2e/02_Office'/f'{REVIEW.TASK}.md'
+        path=REPO_ROOT/'tasks/general/work/02_Office'/f'{REVIEW.TASK}.md'
         source=parse_task_md(path)['automated_checks']
         names={'_rr_normalize','_rr_decide','_warranty_reason_matches'}
         nodes=[n for n in ast.parse(source).body if isinstance(n,ast.FunctionDef) and n.name in names]

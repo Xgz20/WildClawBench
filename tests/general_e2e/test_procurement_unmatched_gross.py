@@ -30,7 +30,7 @@ class UnmatchedGrossTests(unittest.TestCase):
                 writer = csv.writer(stream)
                 writer.writerow(headers)
                 writer.writerows(rows)
-        _, sections, _ = _parse_task_source(ROOT / 'tasks/general_e2e/02_Office' / (TASK + '.md'))
+        _, sections, _ = _parse_task_source(ROOT / 'tasks/general/work/02_Office' / (TASK + '.md'))
         self.scope = {}
         exec(_strip_codeblock(sections['Automated Checks']), self.scope)
         self.scope['_PS_ROOT'] = self.root
@@ -146,7 +146,7 @@ class UnmatchedGrossTests(unittest.TestCase):
     def current_priority_scope(self):
         from src.wildclawbench_grading_core import source_repairs
         digest = '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b'
-        task = ROOT / 'tasks/general_e2e/02_Office' / (TASK + '.md')
+        task = ROOT / 'tasks/general/work/02_Office' / (TASK + '.md')
         index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
         row = json.loads(index.read_text())['files'][task.relative_to(ROOT).as_posix()]
         _, sections, _ = _parse_task_source(index.parent / row['snapshot'])

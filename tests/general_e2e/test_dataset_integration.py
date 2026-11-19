@@ -55,7 +55,7 @@ class DatasetIntegrationTests(unittest.TestCase):
                 self.assertEqual(result.issues, [])
                 self.assertEqual(len(result.files), registered.definition.expected_task_count)
                 self.assertEqual({path.stem for path in result.files}, set(registered.definition.task_ids))
-                self.assertTrue(all(path.is_relative_to(REPO_ROOT / registered.definition.task_root) for path in result.files))
+                self.assertTrue(all(path.is_relative_to(REPO_ROOT / "tasks") for path in result.files))
         legacy = select_task_files(REPO_ROOT, dataset_id="general-custom60-v1").files[0]
         outside = select_task_files(REPO_ROOT, dataset_id="general-hard-v1", task_paths=[legacy])
         self.assertEqual(outside.files, [])

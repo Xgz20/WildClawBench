@@ -21,7 +21,7 @@ SNAPSHOT=RUNTIME.declared_public_snapshots
 class PublicSnapshotSidecarTests(unittest.TestCase):
     def test_exact_new_profile_moves_only_added_audit_preserving_original_budgets_and_legacy_code(self):
         row=next(r for r in SNAPSHOT.registry() if r['task_id']==SIDE.TASK)
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(SIDE.TASK+'.md'));_,sections,_=_parse_task_source(task)
+        task=next((REPO_ROOT/'tasks/general/work').rglob(SIDE.TASK+'.md'));_,sections,_=_parse_task_source(task)
         source=_strip_codeblock(sections['Automated Checks']);contract={'task_id':SIDE.TASK,'automated_checks':source}
         parent=SNAPSHOT.marker(contract,row['contract_sha256'],row['dataset']);profile=SIDE.marker(contract,row['contract_sha256'],row['dataset'])
         m={'identity':{'task_id':SIDE.TASK},'digests':{'contract_sha256':row['contract_sha256']},'dataset':row['dataset'],

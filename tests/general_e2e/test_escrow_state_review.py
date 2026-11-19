@@ -78,7 +78,7 @@ class EscrowStateReviewTests(unittest.TestCase):
 
 class ExactEscrowSourceTests(unittest.TestCase):
     def test_frozen_v1_v2_profiles_reconstruct_identical_sources_and_receipts(self):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(REVIEW.TASK+'.md'));_,sections,_=_parse_task_source(task)
+        task=next((REPO_ROOT/'tasks/general/work').rglob(REVIEW.TASK+'.md'));_,sections,_=_parse_task_source(task)
         source=_strip_codeblock(sections['Automated Checks']);contract={'task_id':REVIEW.TASK,'automated_checks':source}
         # Frozen source and receipt hashes must survive the default profile advancing.
         frozen={
@@ -102,7 +102,7 @@ class ExactEscrowSourceTests(unittest.TestCase):
         self.assertEqual(receipt['correction_id'],profile)
 
     def test_real_source_profile_is_exact_and_keeps_normalization_opt_in(self):
-        task=next((REPO_ROOT/'tasks/general_e2e').rglob(REVIEW.TASK+'.md'));_,s,_=_parse_task_source(task)
+        task=next((REPO_ROOT/'tasks/general/work').rglob(REVIEW.TASK+'.md'));_,s,_=_parse_task_source(task)
         source=_strip_codeblock(s['Automated Checks']);self.assertEqual(hashlib.sha256(source.encode()).hexdigest(),REVIEW.SOURCE_SHA)
         manifest={'identity':{'task_id':REVIEW.TASK},'digests':{'contract_sha256':REVIEW.CONTRACT_SHA},'runtime':{'rule_review_profile':REVIEW.PROFILE}}
         code,receipt=RUNTIME._effective_rule_source(manifest,source)
