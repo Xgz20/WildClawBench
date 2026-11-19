@@ -85,6 +85,9 @@ def effective_source(manifest, original, current, prior):
 
 
 def blocker_paths(attempt):
+    if (attempt/"judge-review/evaluation-blocker.json").exists():
+        import learning_summary_tables
+        return learning_summary_tables.blocker_paths(attempt)
     return [attempt / name for name in ("evaluator-issue.json", "review-observations.txt", "review_inspect.py",
             "semantic-response-reviewed-not-imported.json", "semantic-response-precheck.json",
             "grader-evidence/files/评分证据/指标与分析.json",
@@ -93,6 +96,9 @@ def blocker_paths(attempt):
 
 def validate_blocker(rt, attempt, manifest, contract, task):
     """Bind the retired attempt to original worker bytes and independently reproduced cells."""
+    import learning_summary_tables
+    if contract.get("task_id")==learning_summary_tables.TASK:
+        return learning_summary_tables.validate_blocker(rt,attempt,manifest,contract,task)
     identity = manifest["identity"]
     if (marker(contract, manifest["digests"]["contract_sha256"], manifest["dataset"]) is None
             or manifest.get("runtime", {}).get(RUNTIME_KEY)

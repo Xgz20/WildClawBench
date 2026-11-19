@@ -15,6 +15,7 @@ import prepared_v6_profile_failure
 import work_order_equivalent_headers
 import quote_arrival_summary
 import funnel_summary_tables
+import learning_summary_tables
 import harness_answer_index_failure
 
 KINDS={harness_answer_index_failure.ERROR_KIND,aggregation_runtime_failure.ERROR_KIND,source_failures.ERROR_KIND,escrow_grouped_review.ERROR_KIND,release_baseline_text.ERROR_KIND,declared_public_snapshots.ERROR_KIND,public_snapshot_sidecar.ERROR_KIND,sterilization_quote_layout.ERROR_KIND,native_writer_cleanup_failure.ERROR_KIND,news_header_equivalence.ERROR_KIND,prepared_v6_profile_failure.ERROR_KIND,work_order_equivalent_headers.ERROR_KIND,quote_arrival_summary.ERROR_KIND,funnel_summary_tables.ERROR_KIND}
@@ -34,7 +35,8 @@ def failure_kind(rt,root,state,task):
     if contract.get('task_id')==work_order_equivalent_headers.TASK:
         work_order_equivalent_headers.validate_blocker(rt,attempt,m,contract,task)
         return work_order_equivalent_headers.ERROR_KIND
-    if contract.get('task_id') == funnel_summary_tables.TASK and (attempt / 'evaluator-issue.json').is_file():
+    if (contract.get('task_id') == funnel_summary_tables.TASK and (attempt / 'evaluator-issue.json').is_file()
+            or contract.get('task_id') == learning_summary_tables.TASK and (attempt / 'judge-review/evaluation-blocker.json').is_file()):
         funnel_summary_tables.validate_blocker(rt,attempt,m,contract,task)
         return funnel_summary_tables.ERROR_KIND
     if contract.get('task_id')==quote_arrival_summary.TASK and any((attempt/name).is_file() for name in ['scoring-infrastructure-review.json','evaluator-extraction-issue.json']):
