@@ -13,6 +13,7 @@ import subprocess
 import tempfile
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 import execution_accountability
 
 ADMISSION = "verified-failed-output-evidence/v1"
@@ -175,7 +176,7 @@ def accountable_profile(execution):
 def native_candidate(execution):
     error = execution.get('execution', {}).get('error')
     harness = execution.get('harness', {}).get('id')
-    codes = {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'} if harness == 'astronstudio' else {'LOOMY_NATIVE_HTTP_ERROR'} if harness == 'loomy' else set()
+    codes = {'ASTRONSTUDIO_TURN_ERROR', 'ASTRONSTUDIO_TURN_FAILED'} if harness == 'astronstudio' else {'LOOMY_NATIVE_HTTP_ERROR', 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT', 'LOOMY_NATIVE_ABORTED', 'LOOMY_NATIVE_OTHER_FINISH'} if harness == 'loomy' else set()
     if native_start_candidate(execution):
         return True
     return (bool(codes)
@@ -205,6 +206,10 @@ def native_start_candidate(execution):
 
 def _validate_loomy_sources(execution, state, files):
     """Replay primary-provider failure from retained source bytes, never task IDs."""
+    if execution['execution']['error']['code'] == 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT':
+        return _validate_loomy_length_sources(execution, state, files)
+    if execution['execution']['error']['code'] in {'LOOMY_NATIVE_ABORTED','LOOMY_NATIVE_OTHER_FINISH'}:
+        return _validate_loomy_terminal_sources(execution, state, files)
     proof_bytes = files['native-http-failure.json']
     proof = json.loads(proof_bytes)
     native = json.loads(files['native-scoped-snapshot.json'])
@@ -283,6 +288,160 @@ def _validate_loomy_sources(execution, state, files):
     expected = {'code': 'LOOMY_NATIVE_HTTP_ERROR', 'message': f"Native primary model HTTP {errors[-1]['statusCode']} after provider retries"}
     require(execution['execution']['error'] == state['execution']['error'] == journal['native_error'] == expected,
             'LOOMY_NATIVE_ERROR')
+
+
+def _validate_loomy_length_sources(execution, state, files):
+    """The native completed length finish proves failure, never an assigned zero."""
+    names = ['native-length-failure.json', 'native-scoped-snapshot.json', 'dispatch-journal.json', 'frozen-run-config.json']
+    proof, native, journal, config = [json.loads(files[name]) for name in names]
+    manifest = json.loads(files['original-evidence-manifest.json'])
+    require(manifest['identity'] == execution['identity'], 'LOOMY_LENGTH_IDENTITY')
+    for name in names:
+        rows = [row for row in manifest['artifacts'] if row['path'].endswith('/trace/raw/' + name)]
+        require(len(rows) == 1 and rows[0]['sha256'] == sha(files[name]) and rows[0]['size'] == len(files[name]), 'LOOMY_LENGTH_SOURCE_SHA')
+    binding = journal.get('native_length_failure', {})
+    require(binding.get('sha256') == sha(files[names[0]]) and binding.get('size') == len(files[names[0]])
+            and state['extensions']['loomy']['native_length_failure'] == binding, 'LOOMY_LENGTH_PROOF_SHA')
+    require(proof.get('profile') == 'loomy-native-output-length-failure/v1'
+            and proof['identity'] == journal['identity'] == execution['identity']
+            and journal['phase'] == 'FAILED' and journal['dispatch_attempt_count'] == 1 and journal['send_status'] == 'sent'
+            and journal['input_locks']['config'] == sha(files[names[3]])
+            and proof['prompt_sha256'] == execution['prompt']['sha256'] == sha(files['PROMPT.md']), 'LOOMY_LENGTH_BINDING')
+    require(native.get('profile') == 'loomy-opencode-sqlite/v1'
+            and native['snapshot']['method'] == 'readonly-source-sqlite-online-backup' and native['snapshot']['quick_check'] == 'ok', 'LOOMY_LENGTH_SOURCE')
+    sid = execution['session']['session_id']; workspace = execution['session']['cwd']
+    roots = [r for r in native['sessions'] if r['id'] == sid and r['parent_id'] is None and r['directory'] == workspace]
+    scope = {sid}
+    while True:
+        expanded = scope | {r['id'] for r in native['sessions'] if r['parent_id'] in scope}
+        if expanded == scope: break
+        scope = expanded
+    require(len(roots) == 1 and {r['id'] for r in native['sessions']} == scope
+            and all(r['directory'] == workspace for r in native['sessions']), 'LOOMY_LENGTH_SCOPE')
+    messages = [(r, json.loads(r['data'])) for r in native['messages']]
+    parts = [(r, json.loads(r['data'])) for r in native['parts']]
+    message_ids = {r['id']: r for r, _ in messages}
+    require(len(message_ids) == len(messages) and len({r['id'] for r, _ in parts}) == len(parts)
+            and all(r['session_id'] in scope for r, _ in messages)
+            and all(r['session_id'] in scope and message_ids.get(r['message_id'], {}).get('session_id') == r['session_id'] for r, _ in parts), 'LOOMY_LENGTH_ROWS')
+    users = [(r, d) for r, d in messages if r['session_id'] == sid and d.get('role') == 'user']
+    assistants = [(r, d) for r, d in messages if r['session_id'] == sid and d.get('role') == 'assistant']
+    require(len(users) == 1 and bool(assistants) and users[0][1].get('model') == {'providerID':'imodel','modelID':'spark-x2.6','variant':'high'}
+            and sum(d.get('text') == files['PROMPT.md'].decode('utf-8') for r, d in parts if r['message_id'] == users[0][0]['id']) == 1
+            and all(d.get('providerID') == 'imodel' and d.get('modelID') == 'spark-x2.6' and d.get('variant') == 'high' for _, d in assistants), 'LOOMY_LENGTH_PROMPT_MODEL')
+    texts = [d.get('text') for r, d in parts if r['message_id'] == users[0][0]['id'] and d.get('type') == 'text' and not d.get('synthetic') and not d.get('ignored')]
+    memory_prefix = '## 可用记忆条目\n\n'
+    memory_empty = memory_prefix + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。'
+    memory_suffix = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。'
+    require(texts and texts[-1] == files['PROMPT.md'].decode('utf-8') and (len(texts) == 1 or len(texts) == 2
+            and isinstance(texts[0],str) and (texts[0] == memory_empty or texts[0].startswith(memory_prefix)
+                and texts[0].endswith(memory_suffix) and bool(texts[0][len(memory_prefix):-len(memory_suffix)].strip()))), 'LOOMY_LENGTH_USER_TEXT_SCOPE')
+    head, final = assistants[-1]; created = final.get('time', {}).get('created'); completed = final.get('time', {}).get('completed')
+    require(final.get('finish') == 'length' and not final.get('error') and type(created) is int and type(completed) is int and completed >= created
+            and head['id'] == proof['final_message_id'] == state['extensions']['loomy']['final_message_id'] == journal['final_message_id']
+            and proof['session_id'] == sid, 'LOOMY_LENGTH_FINAL')
+    require(all(d.get('tool') != 'question' and d.get('state', {}).get('status') in {'completed','error'} for _, d in parts if d.get('type') == 'tool'), 'LOOMY_LENGTH_TOOLS')
+    for child in scope:
+        tails = [d for r, d in messages if r['session_id'] == child and d.get('role') == 'assistant']
+        require(bool(tails) and type(tails[-1].get('time', {}).get('completed')) is int
+                and (tails[-1].get('finish') in {'stop','length'} or bool(tails[-1].get('error'))), 'LOOMY_LENGTH_CHILD')
+    runtime = proof['runtime']
+    endpoint = urlsplit(proof['runtime_status_scope']['endpoint']); base = urlsplit(runtime['endpoint'])
+    require(base.scheme == endpoint.scheme == 'http' and base.hostname == endpoint.hostname == '127.0.0.1'
+            and base.port == endpoint.port and not base.username and not endpoint.username
+            and base.path in {'','/'} and endpoint.path == '/session/status' and not endpoint.fragment
+            and parse_qs(endpoint.query) == {'directory':[workspace]}, 'LOOMY_LENGTH_STATUS_SCOPE')
+    require(runtime == state['extensions']['loomy']['runtime'] == journal['runtime_binding'] and runtime['database_owned'] is True
+            and runtime['health_version'] == '1.14.22' and runtime['ppid'] == config['process']['pid']
+            and all(runtime[k] == config['runtime'][k] for k in ['executable','binary_sha256','database'])
+            and all(proof['runtime_status'].get(child, {}).get('type','idle') == 'idle' for child in scope)
+            and proof['runtime_status_scope']['directory'] == workspace
+            and datetime.fromisoformat(proof['observed_at'].replace('Z','+00:00')).timestamp()*1000 >= completed, 'LOOMY_LENGTH_IDLE')
+    expected = {'code':'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT','message':'Native primary model ended with finish=length'}
+    require(execution['execution']['error'] == state['execution']['error'] == journal['native_error'] == expected, 'LOOMY_LENGTH_ERROR')
+
+
+def _validate_loomy_terminal_sources(execution, state, files):
+    """Replay only a completed MessageAbortedError or exact other finish, with no invented answer/actor."""
+    names = ['native-terminal-failure.json','native-scoped-snapshot.json','dispatch-journal.json','frozen-run-config.json']
+    proof, native, journal, config = [json.loads(files[name]) for name in names]
+    manifest = json.loads(files['original-evidence-manifest.json'])
+    require(manifest['identity'] == execution['identity'], 'LOOMY_TERMINAL_IDENTITY')
+    for name in names:
+        rows = [r for r in manifest['artifacts'] if r['path'].endswith('/trace/raw/'+name)]
+        require(len(rows)==1 and rows[0]['sha256']==sha(files[name]) and rows[0]['size']==len(files[name]), 'LOOMY_TERMINAL_SOURCE_SHA')
+    binding=journal.get('native_terminal_failure',{})
+    require(binding.get('sha256')==sha(files[names[0]]) and binding.get('size')==len(files[names[0]])
+            and state['extensions']['loomy']['native_terminal_failure']==binding, 'LOOMY_TERMINAL_PROOF_SHA')
+    require(proof.get('profile')=='loomy-native-terminal-failure/v1' and proof['identity']==journal['identity']==execution['identity']
+            and journal['phase']=='FAILED' and journal['dispatch_attempt_count']==1 and journal['send_status']=='sent'
+            and journal['input_locks']['config']==sha(files[names[3]])
+            and proof['prompt_sha256']==execution['prompt']['sha256']==sha(files['PROMPT.md']), 'LOOMY_TERMINAL_BINDING')
+    require(native.get('profile')=='loomy-opencode-sqlite/v1' and native['snapshot']['method']=='readonly-source-sqlite-online-backup'
+            and native['snapshot']['quick_check']=='ok', 'LOOMY_TERMINAL_SOURCE')
+    sid=execution['session']['session_id'];workspace=execution['session']['cwd'];scope={sid}
+    while True:
+        expanded=scope|{r['id'] for r in native['sessions'] if r['parent_id'] in scope}
+        if expanded==scope:break
+        scope=expanded
+    roots=[r for r in native['sessions'] if r['id']==sid and r['parent_id'] is None]
+    require(len(roots)==1 and {r['id'] for r in native['sessions']}==scope
+            and all(r['directory']==workspace for r in native['sessions']), 'LOOMY_TERMINAL_SCOPE')
+    messages=[(r,json.loads(r['data'])) for r in native['messages']];parts=[(r,json.loads(r['data'])) for r in native['parts']]
+    ids={r['id']:r for r,_ in messages}
+    require(len(ids)==len(messages) and len({r['id'] for r,_ in parts})==len(parts)
+            and all(r['session_id'] in scope for r,_ in messages)
+            and all(r['session_id'] in scope and ids.get(r['message_id'],{}).get('session_id')==r['session_id'] for r,_ in parts), 'LOOMY_TERMINAL_ROWS')
+    users=[(r,d) for r,d in messages if r['session_id']==sid and d.get('role')=='user']
+    assistants=[(r,d) for r,d in messages if r['session_id']==sid and d.get('role')=='assistant']
+    require(len(users)==1 and bool(assistants) and users[0][1].get('model')=={'providerID':'imodel','modelID':'spark-x2.6','variant':'high'}
+            and sum(d.get('text')==files['PROMPT.md'].decode('utf-8') for r,d in parts if r['message_id']==users[0][0]['id'])==1
+            and all(d.get('providerID')=='imodel' and d.get('modelID')=='spark-x2.6' and d.get('variant')=='high' for _,d in assistants), 'LOOMY_TERMINAL_PROMPT_MODEL')
+    texts=[d.get('text') for r,d in parts if r['message_id']==users[0][0]['id'] and d.get('type')=='text' and not d.get('synthetic') and not d.get('ignored')]
+    prefix='## 可用记忆条目\n\n';suffix='\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。'
+    empty=prefix+'当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。'
+    require(texts and texts[-1]==files['PROMPT.md'].decode('utf-8') and (len(texts)==1 or len(texts)==2
+            and isinstance(texts[0],str) and (texts[0]==empty or texts[0].startswith(prefix) and texts[0].endswith(suffix)
+                and bool(texts[0][len(prefix):-len(suffix)].strip()))), 'LOOMY_TERMINAL_USER_TEXT_SCOPE')
+    head,final=assistants[-1];start=final.get('time',{}).get('created');finish=final.get('time',{}).get('completed')
+    aborted={'name':'MessageAbortedError','data':{'message':'Aborted'}}
+    kind='aborted' if final.get('error')==aborted and not final.get('finish') else 'other-finish' if final.get('finish')=='other' and not final.get('error') else None
+    require(kind is not None and proof['kind']==kind and type(start) is int and type(finish) is int and finish>=start
+            and head['id']==proof['final_message_id']==state['extensions']['loomy']['final_message_id']==journal['final_message_id']
+            and proof['session_id']==sid, 'LOOMY_TERMINAL_HEAD')
+    require(all(d.get('state',{}).get('status') in {'completed','error'} for _,d in parts if d.get('type')=='tool'), 'LOOMY_TERMINAL_TOOLS')
+    for child in scope:
+        tails=[d for r,d in messages if r['session_id']==child and d.get('role')=='assistant']
+        require(bool(tails) and type(tails[-1].get('time',{}).get('completed')) is int
+                and (tails[-1].get('finish') in {'stop','length','other'} or tails[-1].get('error')==aborted), 'LOOMY_TERMINAL_CHILD')
+    questions=[]
+    for row,data in parts:
+        if data.get('type')!='tool' or data.get('tool')!='question':continue
+        value=data.get('state',{});times=value.get('time',{})
+        require(kind=='aborted' and value.get('status')=='error' and value.get('error')=='Tool execution aborted'
+                and value.get('metadata')=={'interrupted':True} and 'output' not in value
+                and type(times.get('start')) is int and type(times.get('end')) is int and times['start']<=times['end']<=finish, 'LOOMY_QUESTION_ABORT_UNPROVED')
+        questions.append({'part_id':row['id'],'message_id':row['message_id'],'session_id':row['session_id'],'call_id':data['callID'],
+                          'native_part_data_sha256':sha(row['data'].encode()),'started_at':times['start'],'finished_at':times['end'],
+                          'outcome':'aborted-without-answer','answer_observed':False,'actor':'unknown'})
+    assistance={'mode':'automatic','operation_count':None if kind=='aborted' else 0,'semantic_intervention_count':None if kind=='aborted' else 0}
+    require(proof['question_terminations']==questions and proof['human_assistance']==assistance
+            and state['human_assistance']==execution['human_assistance']==journal['human_assistance']==assistance, 'LOOMY_TERMINAL_HUMAN_RECEIPT')
+    before=proof['original_runtime'];after=proof['observed_runtime']
+    require(all(before[k]==after[k] for k in ['ppid','executable','binary_sha256','database','health_version'])
+            and before['database_owned'] is True and after['database_owned'] is True and after['health_version']=='1.14.22'
+            and after['ppid']==config['process']['pid'] and all(after[k]==config['runtime'][k] for k in ['executable','binary_sha256','database'])
+            and after==state['extensions']['loomy']['runtime']==journal['runtime_binding']
+            and (before==after or any(r['previous']==before and r['current']==after for r in journal['runtime_rebindings']))
+            and all(proof['runtime_status'].get(child,{}).get('type','idle')=='idle' for child in scope)
+            and datetime.fromisoformat(proof['observed_at'].replace('Z','+00:00')).timestamp()*1000>=finish, 'LOOMY_TERMINAL_RUNTIME')
+    endpoint=urlsplit(proof['runtime_status_scope']['endpoint']);base=urlsplit(after['endpoint'])
+    require(base.scheme==endpoint.scheme=='http' and base.hostname==endpoint.hostname=='127.0.0.1'
+            and base.port==endpoint.port and not base.username and not endpoint.username and endpoint.path=='/session/status'
+            and not endpoint.fragment and parse_qs(endpoint.query)=={'directory':[workspace]}
+            and proof['runtime_status_scope']['directory']==workspace, 'LOOMY_TERMINAL_STATUS_SCOPE')
+    expected={'code':'LOOMY_NATIVE_ABORTED','message':'Native primary session ended with MessageAbortedError'} if kind=='aborted' else {'code':'LOOMY_NATIVE_OTHER_FINISH','message':'Native primary model ended with finish=other'}
+    require(execution['execution']['error']==state['execution']['error']==journal['native_error']==expected, 'LOOMY_TERMINAL_ERROR')
 
 
 def read_collected_files(unit_root, record_path, execution):
@@ -400,6 +559,16 @@ def validate_collected(execution, contract, files):
             'files': [{'path': name, 'sha256': sha(value), 'size': len(value)} for name, value in sorted(files.items())]}
 
 
+def _terminal_delivery_notes(execution, files):
+    if 'native-terminal-failure.json' not in files:
+        return {}
+    proof=json.loads(files['native-terminal-failure.json'])
+    return {'native_terminal_delivery':{'kind':proof['kind'],'completed_answer_delivery_proved':False,
+            'retained_latest_text_status':'Partial/latest assistant or question text; not a finish=stop completed answer',
+            'unanswered_question_termination_count':len(proof['question_terminations']),
+            'human_assistance_counts':execution['human_assistance']}}
+
+
 def validate_accountable(execution, contract, files):
     accountable_profile(execution)
     proof, original, state = _validate_sources(execution, files)
@@ -426,5 +595,6 @@ def validate_accountable(execution, contract, files):
         "sdk_terminal_required_for_admission": False,
         "missing_evidence": execution["evidence"].get("missing", []),
         "policy": execution_accountability.POLICY,
+        **_terminal_delivery_notes(execution, files),
         "files": [{"path": name, "sha256": sha(value), "size": len(value)} for name, value in sorted(files.items())],
     }

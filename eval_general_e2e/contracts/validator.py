@@ -401,11 +401,10 @@ def _validate_execution_record(document: Mapping[str, Any]) -> None:
         {"automatic", "human_assisted"},
         "$.human_assistance.mode",
     )
-    _integer(_required(assistance, "operation_count", "$.human_assistance"), "$.human_assistance.operation_count")
-    _integer(
-        _required(assistance, "semantic_intervention_count", "$.human_assistance"),
-        "$.human_assistance.semantic_intervention_count",
-    )
+    for name in ("operation_count", "semantic_intervention_count"):
+        value = _required(assistance, name, "$.human_assistance")
+        if value is not None:
+            _integer(value, "$.human_assistance." + name)
     if business_status == "completed":
         if completeness == "unavailable":
             _fail("EVIDENCE_MISSING", "$.evidence", "completed execution cannot have unavailable evidence")

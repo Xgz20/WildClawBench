@@ -3,6 +3,10 @@ name: run-general-e2e
 description: 按用户明确选择的阶段串联 General E2E 准备、执行、证据、评分、回传和报告，并维护恢复状态；不替代各阶段 Skill 的判断与契约。
 ---
 
+`0.7.33` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。
+
+`0.7.32` Loomy 原生 `finish=length` 仅在消息完成、全部工具和子会话结束及同一后端空闲时保留为执行失败，独立复验原 Prompt、Spark/High、终态和来源 SHA 后交原 Rubric 评分。保留截断前轨迹、原候选与旧发行，不重发、不把缺失终稿视为成功或统一零分；问题工具待处理时停止新派发。
+
 `0.7.31` 选定研发包从规范报告保留标准report回执和运行审计；未由原生报告生成的附加验分索引为可选，存在时仍保留。核心报告成员及逐题score/record/candidate SHA门禁不放宽。
 
 0.7.30 `prepare-score --sdk-final-authorization ABS`显式透传逐题SHA绑定的SDK终稿授权；必须同时显式选择完整任务及执行记录。编排仅为原生前缀/后缀差异题使用授权，普通题保持原准入，外置评分模式和阶段屏障不变。

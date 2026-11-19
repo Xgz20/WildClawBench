@@ -3,6 +3,16 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.99` 精确留证v6促销题原缺公式缓存的未评分Worker失败；新裁判Prompt交接完整原生只读求值与内存视图，不计候选验收。旧attempt和Prompt保持。
+
+`0.11.98` 增加v6 Info004同一已实际发生的event_index导出失败精确注册；复验原Worker/源码/无Judge与分数，Info003原留证和旧发行不变。
+
+`0.11.97` 严格留证无Judge、无分数的v6原缺答复event_index导出失败；绑定原contract/source/Worker/运行时及退出证明，同一冻结执行另建评分。旧attempt和原证据保留。
+
+`0.11.96` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。
+
+`0.11.95` Loomy 原生 `finish=length` 仅在消息完成、全部工具和子会话结束及同一后端空闲时保留为执行失败，独立复验原 Prompt、Spark/High、终态和来源 SHA 后交原 Rubric 评分。保留截断前轨迹、原候选与旧发行，不重发、不把缺失终稿视为成功或统一零分；问题工具待处理时停止新派发。
+
 `0.11.94` Data011 v6 评分端辅助表头覆盖可在真实原生裁判终态后留证为未评分。复核原候选、规则结果和具体被覆盖单元格，再从同一原执行准备独立新评分。
 
 `0.11.93` 严格保留已完成报价裁判的总交期表头漏读：核验原contract/source/Worker、可见单元格、原生Prompt/模型/High/终态及旧草稿/取证SHA后登记未评分；原候选与其他有效分保持，同一执行新建独立评分。

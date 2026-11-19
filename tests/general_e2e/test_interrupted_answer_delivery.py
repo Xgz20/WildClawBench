@@ -61,6 +61,31 @@ class InterruptedAnswerDeliveryTests(unittest.TestCase):
                                          "wrong-contract", DELIVERY.DATASET, DELIVERY.ADMISSION))
         self.assertIsNone(DELIVERY.marker({}, "wrong-contract", DELIVERY.DATASET, "standard"))
 
+    def test_general_v2_null_index_and_v1_frozen_source_remain_distinct(self):
+        source = RUNTIME.answer_delivery.FUNCTION
+        contract = {'task_id': 'fixture', 'automated_checks': source}
+        admission = next(iter(RUNTIME.execution_accountability.NATIVE_ADMISSIONS))
+        marker = DELIVERY.marker(contract, 'contract-sha', {}, admission)
+        manifest = {'identity': {'task_id': 'fixture'}, 'digests': {'contract_sha256': 'contract-sha'},
+                    'dataset': {}, 'evidence_admission': admission,
+                    'runtime': {'interrupted_answer_delivery_profile': marker}}
+        prior = {'correction_id': 'prior'}
+        for profile, replacement in [(DELIVERY.GENERAL_PROFILE, DELIVERY.GENERAL_REPLACEMENT),
+                                     (DELIVERY.GENERAL_PROFILE_V2, DELIVERY.GENERAL_REPLACEMENT_V2)]:
+            manifest['runtime']['interrupted_answer_delivery_profile'] = {**marker, 'profile': profile}
+            fixed, receipt = DELIVERY.effective_source(manifest, source, source, prior)
+            self.assertEqual(fixed, source.replace(DELIVERY.GUARD, replacement))
+            self.assertEqual(receipt['prior_correction'], prior)
+            namespace = {'hashlib': hashlib, '_visible_text': lambda row: row.get('content', '')}
+            exec(compile(fixed, '<general-failure-answer>', 'exec'), namespace)
+            answer, evidence = namespace['_final_answer']([{'role': 'user', 'content': 'q'}])
+            self.assertEqual(answer, '')
+            if profile == DELIVERY.GENERAL_PROFILE_V2:
+                self.assertIsNone(evidence['event_index'])
+                self.assertEqual(evidence['delivery_profile'], profile)
+            else:
+                self.assertNotIn('event_index', evidence)
+
 
 if __name__ == "__main__":
     unittest.main()

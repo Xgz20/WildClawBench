@@ -108,6 +108,10 @@ function publicProcess(item, seedKinds, targets) {
 // ancestors, or unknown task processes below its shared process tree.
 export function nativeInfrastructureRole(item) {
   const command = String(item?.command || "");
+  if (/^"?\/[^\n]*\/Loomy\.app\/Contents\/MacOS\/Loomy(?:\s|$)/u.test(command)) {
+    return /(?:\s-e\s|--type=|\.[cm]?js(?:\s|$))/u.test(command) ? "loomy-helper" : "loomy-main";
+  }
+  if (/^"?\/[^\n]*\/Loomy\.app\/Contents\/Frameworks\//u.test(command)) return "loomy-helper";
   if (/^"?\/[^\n]*\/(?:AStudio|AstronStudio|Acode|Synara)(?: \(Dev\))?\.app\/Contents\/MacOS\//u.test(command)) {
     if (/\/apps\/server\/(?:dist|src)\/index\.[cm]?[jt]s/u.test(command)) return "astudio-backend";
     if (command.includes("signalExact(backend")&&command.includes("terminating")) return "astudio-backend-watchdog";
@@ -129,6 +133,10 @@ function infrastructureProtection(processes) {
     const role = nativeInfrastructureRole(item);
     return role ? [[item.pid, role]] : [];
   }));
+  for (const item of processes) {
+    if (roots.get(item.parent_pid) === "loomy-main" && item.command_name === "opencode"
+        && /(?:^|\s)serve(?:\s|$)/u.test(String(item.command || ""))) roots.set(item.pid, "shared-loomy-opencode");
+  }
   const protectedPids = new Map(roots);
   for (const item of processes) {
     let parent = item.parent_pid;

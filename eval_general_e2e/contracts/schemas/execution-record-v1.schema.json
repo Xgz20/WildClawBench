@@ -72,7 +72,7 @@
     "resource_metrics_path": {"type": ["string", "null"]},
     "human_assistance": {
       "type": "object", "additionalProperties": false, "required": ["mode", "operation_count", "semantic_intervention_count"],
-      "properties": {"mode": {"enum": ["automatic", "human_assisted"]}, "operation_count": {"type": "integer", "minimum": 0}, "semantic_intervention_count": {"type": "integer", "minimum": 0}}
+      "properties": {"mode": {"enum": ["automatic", "human_assisted"]}, "operation_count": {"type": ["integer", "null"], "minimum": 0}, "semantic_intervention_count": {"type": ["integer", "null"], "minimum": 0}}
     }
   }
 }

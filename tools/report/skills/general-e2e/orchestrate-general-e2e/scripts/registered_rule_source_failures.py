@@ -1,6 +1,7 @@
 """Retain known, unscored source failures; never rerun the frozen rule worker."""
 import hashlib
 import json
+import promotion_cache_failure
 
 ERROR_KIND = 'registered-rule-source-implementation-failure/v1'
 HR_TASK = '03_Data_Analysis_task_001_hr_worktime_reconciliation'
@@ -60,7 +61,7 @@ def _escrow_locator_evidence(rt,attempt,manifest,contract,task):
     return result
 
 def registered(task_id):
-    return task_id in ROWS or task_id in {HR_TASK,ESCROW_TASK}
+    return task_id in ROWS or task_id in {HR_TASK,ESCROW_TASK,promotion_cache_failure.TASK}
 
 def _hr_evidence(rt, attempt, manifest, contract, task):
     if (manifest.get('identity',{}).get('task_id') != HR_TASK
@@ -127,6 +128,8 @@ ROWS = {
 
 
 def evidence(rt, attempt, manifest, contract, task):
+    if contract.get('task_id')==promotion_cache_failure.TASK:
+        return promotion_cache_failure.evidence(rt,attempt,manifest,contract,task)
     if contract.get('task_id') == ESCROW_TASK:
         return _escrow_locator_evidence(rt,attempt,manifest,contract,task)
     if contract.get('task_id') == HR_TASK:
@@ -186,6 +189,7 @@ def evidence(rt, attempt, manifest, contract, task):
 
 
 def expected_phase(task_id):
+    if task_id==promotion_cache_failure.TASK:return 'RULES_NEEDS_ATTENTION'
     if task_id == ESCROW_TASK:
         return 'SCORE_VERIFICATION_PENDING'
     if task_id == HR_TASK:

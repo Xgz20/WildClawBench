@@ -58,6 +58,88 @@ class LoomyFailureEvidenceTests(unittest.TestCase):
     def test_validates_primary_failure_without_task_allowlist_or_numeric_score(self):
         SCORE.failure_evidence._validate_loomy_sources(*self.fixture())
 
+    def length_fixture(self, mutate=None):
+        module = SCORE.failure_evidence
+        execution, state, old = self.fixture()
+        native = json.loads(old['native-scoped-snapshot.json'])
+        final = json.loads(native['messages'][-1]['data']); final['finish'] = 'length'
+        native['messages'][-1]['data'] = json.dumps(final)
+        runtime = copy.deepcopy(state['extensions']['loomy']['runtime']); runtime['endpoint'] = 'http://127.0.0.1:5072'
+        error = {'code':'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT','message':'Native primary model ended with finish=length'}
+        proof = {'profile':'loomy-native-output-length-failure/v1','identity':execution['identity'],
+                 'prompt_sha256':execution['prompt']['sha256'],'session_id':'ses_root','final_message_id':'empty',
+                 'runtime':runtime,'runtime_status':{},'runtime_status_scope':{'directory':'/workspace','endpoint':'http://127.0.0.1:5072/session/status?directory=%2Fworkspace'},
+                 'observed_at':'1970-01-01T00:00:04Z'}
+        if mutate: mutate(proof, native)
+        config = encoded({'process':{'pid':99},'runtime':runtime})
+        proof_bytes = encoded(proof); binding = {'path':'native-length-failure.json','sha256':module.sha(proof_bytes),'size':len(proof_bytes)}
+        journal = {'identity':execution['identity'],'phase':'FAILED','dispatch_attempt_count':1,'send_status':'sent',
+                   'input_locks':{'config':module.sha(config)},'native_error':error,'native_length_failure':binding,
+                   'runtime_binding':runtime,'final_message_id':'empty'}
+        execution['execution']['error'] = error; state['execution']['error'] = error
+        state['extensions']['loomy'] = {'native_length_failure':binding,'final_message_id':'empty','runtime':runtime}
+        files = {'PROMPT.md':old['PROMPT.md'],'native-length-failure.json':proof_bytes,'native-scoped-snapshot.json':encoded(native),
+                 'dispatch-journal.json':encoded(journal),'frozen-run-config.json':config}
+        files['original-evidence-manifest.json'] = encoded({'identity':execution['identity'],'artifacts':[
+            {'path':'evidence/trace/raw/'+name,'sha256':module.sha(value),'size':len(value)} for name,value in files.items() if name!='PROMPT.md']})
+        return execution, state, files
+
+    def test_validates_completed_length_without_turning_it_into_a_success_or_zero(self):
+        SCORE.failure_evidence._validate_loomy_sources(*self.length_fixture())
+
+    def terminal_fixture(self, kind='aborted', mutate=None):
+        module=SCORE.failure_evidence
+        execution,state,old=self.length_fixture();native=json.loads(old['native-scoped-snapshot.json'])
+        final=json.loads(native['messages'][-1]['data'])
+        if kind=='aborted':final.pop('finish');final['error']={'name':'MessageAbortedError','data':{'message':'Aborted'}}
+        else:final['finish']='other'
+        native['messages'][-1]['data']=json.dumps(final)
+        before=json.loads(old['frozen-run-config.json'])['runtime'];before['pid']=101
+        after=copy.deepcopy(before);after['pid']=102;after['endpoint']='http://127.0.0.1:5054'
+        assistance={'mode':'automatic','operation_count':None if kind=='aborted' else 0,'semantic_intervention_count':None if kind=='aborted' else 0}
+        questions=[]
+        if kind=='aborted':
+            data={'type':'tool','tool':'question','callID':'q_call','state':{'status':'error','input':{'questions':[]},'error':'Tool execution aborted','metadata':{'interrupted':True},'time':{'start':1000,'end':2999}}}
+            row={'id':'q_part','session_id':'ses_root','message_id':'empty','data':json.dumps(data)};native['parts'].append(row)
+            questions=[{'part_id':'q_part','message_id':'empty','session_id':'ses_root','call_id':'q_call','native_part_data_sha256':module.sha(row['data'].encode()),'started_at':1000,'finished_at':2999,'outcome':'aborted-without-answer','answer_observed':False,'actor':'unknown'}]
+        error={'code':'LOOMY_NATIVE_ABORTED','message':'Native primary session ended with MessageAbortedError'} if kind=='aborted' else {'code':'LOOMY_NATIVE_OTHER_FINISH','message':'Native primary model ended with finish=other'}
+        proof={'profile':'loomy-native-terminal-failure/v1','kind':kind,'identity':execution['identity'],'prompt_sha256':execution['prompt']['sha256'],'session_id':'ses_root','final_message_id':'empty','original_runtime':before,'observed_runtime':after,'runtime_status':{},'runtime_status_scope':{'directory':'/workspace','endpoint':'http://127.0.0.1:5054/session/status?directory=%2Fworkspace'},'observed_at':'1970-01-01T00:00:04Z','question_terminations':questions,'human_assistance':assistance}
+        if mutate:mutate(proof,native)
+        config=encoded({'process':{'pid':99},'runtime':before});proof_bytes=encoded(proof)
+        binding={'path':'native-terminal-failure.json','sha256':module.sha(proof_bytes),'size':len(proof_bytes)}
+        journal={'identity':execution['identity'],'phase':'FAILED','dispatch_attempt_count':1,'send_status':'sent','input_locks':{'config':module.sha(config)},'native_error':error,'native_terminal_failure':binding,'runtime_binding':after,'runtime_rebindings':[{'previous':before,'current':after}],'final_message_id':'empty','human_assistance':assistance}
+        state['human_assistance']=assistance;execution['human_assistance']=assistance
+        execution['execution']['error']=error;state['execution']['error']=error
+        state['extensions']['loomy']={'native_terminal_failure':binding,'final_message_id':'empty','runtime':after}
+        files={'PROMPT.md':old['PROMPT.md'],'native-terminal-failure.json':proof_bytes,'native-scoped-snapshot.json':encoded(native),'dispatch-journal.json':encoded(journal),'frozen-run-config.json':config}
+        files['original-evidence-manifest.json']=encoded({'identity':execution['identity'],'artifacts':[{'path':'evidence/trace/raw/'+name,'sha256':module.sha(value),'size':len(value)} for name,value in files.items() if name!='PROMPT.md']})
+        return execution,state,files
+
+    def test_replays_aborted_unanswered_question_and_other_finish_with_unknown_counts(self):
+        for kind in ['aborted','other-finish']:
+            with self.subTest(kind=kind):SCORE.failure_evidence._validate_loomy_sources(*self.terminal_fixture(kind))
+
+    def test_terminal_failure_rejects_answers_quota_busy_and_invented_zero(self):
+        def answered(proof,native):
+            data=json.loads(native['parts'][-1]['data']);data['state']['status']='completed';data['state']['output']='answer';native['parts'][-1]['data']=json.dumps(data)
+        def quota(proof,native):
+            data=json.loads(native['messages'][-1]['data']);data['error']={'name':'APIError','data':{'statusCode':402}};native['messages'][-1]['data']=json.dumps(data)
+        def busy(proof,native):proof['runtime_status']['ses_root']={'type':'busy'}
+        def zero(proof,native):proof['human_assistance']={'mode':'automatic','operation_count':0,'semantic_intervention_count':0}
+        for change in [answered,quota,busy,zero]:
+            with self.subTest(change=change),self.assertRaises(ValueError):SCORE.failure_evidence._validate_loomy_sources(*self.terminal_fixture(mutate=change))
+
+    def test_rejects_length_with_busy_runtime_wrong_finish_or_open_tools(self):
+        def busy(proof, native): proof['runtime_status']['ses_root']={'type':'busy'}
+        def wrong_finish(proof, native):
+            value=json.loads(native['messages'][-1]['data']);value['finish']='stop';native['messages'][-1]['data']=json.dumps(value)
+        def pending(proof, native): native['parts'].append({'id':'pending','session_id':'ses_root','message_id':'empty','data':json.dumps({'type':'tool','tool':'bash','state':{'status':'running'}})})
+        def model(proof, native):
+            value=json.loads(native['messages'][0]['data']);value['model']['variant']='low';native['messages'][0]['data']=json.dumps(value)
+        def wrong_scope(proof, native): proof['runtime_status_scope']['endpoint']='http://127.0.0.1:5072/session/status?directory=%2Fother'
+        for change in [busy,wrong_finish,pending,model,wrong_scope]:
+            with self.subTest(change=change),self.assertRaises(ValueError): SCORE.failure_evidence._validate_loomy_sources(*self.length_fixture(change))
+
     def test_rejects_other_requests_busy_runtime_and_nonempty_head(self):
         def change_model(proof, native, line):
             data = json.loads(native['messages'][0]['data']); data['model']['variant'] = 'low'

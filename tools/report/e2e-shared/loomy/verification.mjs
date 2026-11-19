@@ -97,6 +97,20 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
   ]);
   const { config_digest, ...payload } = config;
   const failureBytes = journal.native_http_failure && await bytes('raw/native-http-failure.json');
+  const lengthBytes = journal.native_length_failure && await bytes('raw/native-length-failure.json');
+  const terminalFailureBytes = journal.native_terminal_failure && await bytes('raw/native-terminal-failure.json');
+  if (terminalFailureBytes) {
+    requiredRaw.push('raw/native-terminal-failure.json');
+    requireValue(sha(terminalFailureBytes) === journal.native_terminal_failure.sha256 && terminalFailureBytes.length === journal.native_terminal_failure.size
+      && digest(state.extensions?.loomy?.native_terminal_failure) === digest(journal.native_terminal_failure)
+      && index.raw_trace.some(row => row.path === 'raw/native-terminal-failure.json'), 'ARCHIVE_TERMINAL_FAILURE_HASH_MISMATCH');
+  }
+  if (lengthBytes) {
+    requiredRaw.push('raw/native-length-failure.json');
+    requireValue(sha(lengthBytes) === journal.native_length_failure.sha256 && lengthBytes.length === journal.native_length_failure.size
+      && digest(state.extensions?.loomy?.native_length_failure) === digest(journal.native_length_failure)
+      && index.raw_trace.some(row => row.path === 'raw/native-length-failure.json'), 'ARCHIVE_LENGTH_FAILURE_HASH_MISMATCH');
+  }
   if (failureBytes) {
     requiredRaw.push('raw/native-http-failure.json');
     requireValue(sha(failureBytes) === journal.native_http_failure.sha256 && failureBytes.length === journal.native_http_failure.size,
@@ -175,15 +189,24 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     && journal.dispatch_attempt_count === 1 && state.send.dispatch_attempt_count === 1
     && journal.send_status === 'sent' && state.prompt.send_status === 'sent'
     && sha(promptBytes) === state.prompt.sha256 && sha(promptBytes) === journal.input_locks.prompt, 'ARCHIVE_DISPATCH_MISMATCH');
-  requireValue(state.human_assistance.mode === 'automatic' && state.human_assistance.operation_count === 0
+  if (!terminalFailureBytes) requireValue(state.human_assistance.mode === 'automatic' && state.human_assistance.operation_count === 0
     && state.human_assistance.semantic_intervention_count === 0, 'ARCHIVE_HUMAN_INTERVENTION_UNSUPPORTED');
+  else requireValue(digest(state.human_assistance) === digest(driver.human_assistance)
+    && digest(state.human_assistance) === digest(journal.human_assistance), 'ARCHIVE_TERMINAL_HUMAN_COUNTS_MISMATCH');
   const prompt = promptBytes.toString('utf8');
   const baselineBytes = await bytes('raw/pre-send-native-baseline.json'), baseline = JSON.parse(baselineBytes);
   requireValue(sha(baselineBytes) === journal.baseline_evidence.sha256 && baselineBytes.length === journal.baseline_evidence.size
     && digest(baseline.session_index.map(row => row.id)) === digest(journal.baseline)
     && state.prompt.sent_at === journal.sent_at && Date.parse(baseline.observed_at) <= Date.parse(journal.sent_at), 'ARCHIVE_PRE_SEND_BASELINE_MISMATCH');
   assertNativeActivity(baseline, journal.allowed_session_ids, config.archived_http_failures);
-  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline, nativeFailure: failureBytes && JSON.parse(failureBytes) });
+  const normalized = normalizeTrace(native, { state, prompt, baseline: journal.baseline, nativeFailure: failureBytes && JSON.parse(failureBytes),
+    nativeLengthFailure: lengthBytes && JSON.parse(lengthBytes), nativeTerminalFailure: terminalFailureBytes && JSON.parse(terminalFailureBytes) });
+  if (lengthBytes) requireValue(digest(JSON.parse(lengthBytes).runtime) === digest(effectiveRuntime), 'ARCHIVE_LENGTH_RUNTIME_MISMATCH');
+  if (terminalFailureBytes) {
+    const proof = JSON.parse(terminalFailureBytes);
+    requireValue(digest(proof.observed_runtime) === digest(effectiveRuntime)
+      && runtimeChain.some(row => digest(row) === digest(proof.original_runtime)), 'ARCHIVE_TERMINAL_RUNTIME_MISMATCH');
+  }
   const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(old);
