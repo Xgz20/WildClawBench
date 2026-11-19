@@ -366,9 +366,12 @@ export async function executeTask(options) {
       }
       await sourceRepair(context, journal, options.sourceRepairManifest);
       if (journal.dispatch_attempt_count === 0 && options.retryPreSendFailure) {
-        requireValue(journal.send_status === 'not_sent' && !journal.sent_at, 'ZERO_SEND_RECOVERY_REQUIRES_NO_INTENT');
-        const target = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
-        requireValue(target.sessions.length === 0, 'ZERO_SEND_RECOVERY_NATIVE_SESSION_EXISTS');
+        requireValue(journal.send_status === 'not_sent' && !journal.sent_at && !journal.session
+          && !journal.history.some(row => row.event === 'physical-send-guard'), 'ZERO_SEND_RECOVERY_REQUIRES_NO_INTENT');
+        const native = await captureNative({ database: context.config.runtime.database, python: context.config.python });
+        assertNativeActivity(native, options.allowedSessionIds || [], context.config.archived_http_failures);
+        const targetIds = native.session_index.filter(row => row.directory === context.workspace).map(row => row.id);
+        requireValue(targetIds.every(id => journal.baseline.includes(id)), 'ZERO_SEND_RECOVERY_NEW_NATIVE_SESSION_EXISTS');
         const previous = await Promise.all([context.journalPath, context.statePath, ...journal.history.map(row => join(context.unitRoot, row.path))].map(async path => {
           const bytes = await readFile(path); return { ...artifact(relative(context.unitRoot, path), bytes), bytes_base64: bytes.toString('base64') };
         }));
@@ -383,7 +386,10 @@ export async function executeTask(options) {
           requireValue(uiConfiguration(await ax(context.config.ax_helper, context.config.process.pid)).composer.value === '', 'ZERO_SEND_RECOVERY_DRAFT_NOT_CLEARED');
         }
         journal.pre_send_recoveries = [...(journal.pre_send_recoveries || []), { at: new Date().toISOString(), originals: previous,
-          ui_before: snapshot, prompt_dispatches: 0 }];
+          ui_before: snapshot, prompt_dispatches: 0, native_before: {
+            snapshot: native.snapshot, observed_at: native.observed_at, workspace: context.workspace,
+            workspace_session_ids: targetIds, baseline_sha256: digest(journal.baseline),
+          } }];
         journal.history = []; journal.history_prefix = 'recovery-' + journal.pre_send_recoveries.length + '-';
         journal.phase = 'PENDING'; journal.attention = null; shouldPrepare = true;
       } else requireValue(journal.dispatch_attempt_count === 1, 'ZERO_SEND_ATTEMPT_NEEDS_EXPLICIT_PREPARATION_RECOVERY');
