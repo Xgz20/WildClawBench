@@ -14,6 +14,7 @@ from unittest.mock import patch
 
 from eval_general_e2e.datasets.bundle import _tree_materials, load_manifest_lock
 from eval_general_e2e.datasets.discovery import discover_frozen_tasks
+from eval_general_e2e.datasets.layout import workspace_for_task
 from eval_general_e2e.datasets.workspaces import (
     FrozenWorkspaceError, frozen_workspace_path, materialize_verified_workspaces,
 )
@@ -148,17 +149,17 @@ class FrozenWorkspaceTests(unittest.TestCase):
         with patch("eval_general_e2e.datasets.bundle.compile_dataset", return_value=(manifest, members)) as compiler, \
                 patch("eval_general_e2e.datasets.bundle.load_manifest_lock", return_value=manifest), \
                 patch("eval_general_e2e.datasets.source_history.dataset_task_path", side_effect=lambda repo, relative, *args: repo / relative):
-            selected, groups = dataset_task_paths(REPO_ROOT, manifest["dataset_id"], materialize_root=self.cache)
+            selected, groups = dataset_task_paths(self.root, manifest["dataset_id"], materialize_root=self.cache)
         compiler.assert_called_once()
         self.assertEqual(selected, manifest)
-        self.assertEqual(groups, {"sample": [REPO_ROOT / manifest["tasks"][0]["source"]["task_path"]]})
+        self.assertEqual(groups, {"sample": [self.root / manifest["tasks"][0]["source"]["task_path"]]})
         self.assertTrue((frozen_workspace_path(manifest, self.cache, self.task_id) / "gt/reference.txt").is_file())
 
     def test_discovery_materializes_historical_gt_instead_of_current_reference(self):
         dataset = "general-info004-open-v1"
         manifest = load_manifest_lock(REPO_ROOT / f"eval_general_e2e/datasets/manifests/{dataset}.json")
         record = manifest["tasks"][0]
-        current = REPO_ROOT / record["source"]["workspace_path"] / "gt/reference_answer.md"
+        current = workspace_for_task(REPO_ROOT, Path(record["source"]["workspace_path"])) / "gt/reference_answer.md"
         current_before = current.read_bytes()
         selected = discover_frozen_tasks(REPO_ROOT, dataset, workspace_cache=self.cache)
         material = Path(selected.tasks[0]["workspace_path"]) / "gt/reference_answer.md"

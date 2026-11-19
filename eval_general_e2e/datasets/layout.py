@@ -74,13 +74,14 @@ def cli_task_path(repo: Path, tasks_root: Path, argument: str) -> Path:
     candidate = relocated_task(repo, path)
     if not candidate.is_file() and path.name == argument and path.suffix != ".md":
         matches = [p for p in tasks_root.rglob(f"{path.name}.md")
-                   if not is_reading_or_archived_task(tasks_root, p)]
+                   if p.stem == path.name and not is_reading_or_archived_task(tasks_root, p)]
         if len(matches) > 1:
             raise ValueError(f"ambiguous task ID: {argument}")
         if matches:
             candidate = matches[0]
     if not candidate.is_file():
         raise ValueError(f"task file not found: {argument}")
-    if is_reading_or_archived_task(tasks_root, candidate):
+    candidate = candidate.resolve()
+    if is_reading_or_archived_task(tasks_root.resolve(), candidate):
         raise ValueError(f"task is a reading copy or archived: {argument}")
     return candidate

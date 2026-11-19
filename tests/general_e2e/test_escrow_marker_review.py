@@ -1,8 +1,8 @@
 from copy import deepcopy
-import json
 from pathlib import Path
 import unittest
 from tests.general_e2e.test_local_scoring_runtime import RUNTIME, REPO_ROOT
+from eval_general_e2e.datasets.source_history import dataset_task_path
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 
 
@@ -10,8 +10,8 @@ class EscrowMarkerReviewTests(unittest.TestCase):
     def scope(self):
         task = next((REPO_ROOT / 'tasks/general/work').rglob(RUNTIME.escrow_state_review.TASK + '.md'))
         index = REPO_ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
-        item = json.loads(index.read_text())['files'][task.relative_to(REPO_ROOT).as_posix()]
-        source = _strip_codeblock(_parse_task_source(index.parent / item['snapshot'])[1]['Automated Checks'])
+        old = dataset_task_path(REPO_ROOT, task.relative_to(REPO_ROOT).as_posix(), index.relative_to(REPO_ROOT).as_posix())
+        source = _strip_codeblock(_parse_task_source(old)[1]['Automated Checks'])
         manifest = {'identity': {'task_id': RUNTIME.escrow_state_review.TASK},
                     'digests': {'contract_sha256': 'c93e50e83a8ac8eb9d6ba9e02510a762952b4011e8495c763073029a42bfff75'},
                     'runtime': {'rule_review_profile': 'escrow-status-equivalence-review/v5'}}

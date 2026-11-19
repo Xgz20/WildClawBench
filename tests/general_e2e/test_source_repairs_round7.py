@@ -16,6 +16,7 @@ from types import SimpleNamespace
 import openpyxl
 from openpyxl.formula.tokenizer import Tokenizer
 from openpyxl.utils.cell import range_boundaries
+from eval_general_e2e.datasets.source_history import dataset_task_path
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 from src.wildclawbench_grading_core.source_repairs import _PROFILES, effective_source
 from src.wildclawbench_grading_core.rules import _validate_grade_function
@@ -25,8 +26,7 @@ ROOT=Path(__file__).resolve().parents[2]
 def sources(tid):
     current=next((ROOT/'tasks/general/work').rglob(tid+'.md'))
     index=ROOT/'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
-    row=json.loads(index.read_text())['files'][current.relative_to(ROOT).as_posix()]
-    old=index.parent/row['snapshot']
+    old=dataset_task_path(ROOT,current.relative_to(ROOT).as_posix(),index.relative_to(ROOT).as_posix())
     _,a,_=_parse_task_source(old);_,b,_=_parse_task_source(current)
     return a,b,_strip_codeblock(a['Automated Checks']),_strip_codeblock(b['Automated Checks'])
 

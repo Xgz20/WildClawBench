@@ -1,5 +1,19 @@
 # General E2E 数据集包
 
+当前题面在 `tasks/general/{regression,work,challenge}/`，素材在对应的 `workspace/general/`。
+目录迁移保留旧60题和70题的冻结 ID、清单及评分身份。旧版本从
+`datasets/layout.json` 指定的迁移前 Git 提交及当时的题源快照重建。浅克隆需要先获取对应历史。
+
+新批次可以按系列选择冻结版本。例如，明确选用基础60题、真实工作70题 v6 和挑战60题 v2：
+
+```bash
+python -m eval_general_e2e.datasets.bundle build --dataset-id general-regression --release-id general-custom60-v1
+python -m eval_general_e2e.datasets.bundle build --dataset-id general-work --release-id general-custom70-v6
+python -m eval_general_e2e.datasets.bundle build --dataset-id general-challenge --release-id general-challenge-v2
+```
+
+以上命令用于准备冻结数据集包。现有 `--dataset <历史版本ID>` 仍可用于构建相应旧版。
+
 以下冻结数据集，使用同一套七阶段 Skill：
 
 | dataset ID | 任务来源 | 题量 | 能力映射 |
@@ -67,7 +81,7 @@ python -m eval_general_e2e.datasets.bundle build --dataset general-custom116-v1
 
 命令读取对应 `manifests/<dataset-id>.json`，核对全部任务、公开材料和私有评分材料的摘要，
 输出到 `report-workspace/general-e2e/datasets/<dataset-id>/<dataset-id>.dataset.zip`。
-新题来源登记在 `tasks/general_e2e/task_sources.yaml`，导入锚点是 `9bee3a12`；
+新题来源登记在 `datasets/general/work/task_sources.yaml`，历史导入锚点是 `9bee3a12`；
 实际任务和适配后的契约以 manifest 内逐项 SHA 为准。新增题目或材料变更经审核后，
 只更新对应数据集的 lock：
 

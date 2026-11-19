@@ -14,6 +14,7 @@ from eval_general_e2e.datasets.bundle import (compile_dataset, DEFAULT_DEFINITIO
     GENERAL70_V2_DEFINITION, dataset_manifest_path, load_manifest_lock, _parse_task_source, _strip_codeblock)
 from src.utils.task_parser import parse_task_md as _parse_task_md, normalize_judge_evidence
 from eval_general_e2e.datasets.source_history import frozen_v2_task_path
+from eval_general_e2e.datasets.layout import load_layout, relocated_task, workspace_for_task
 
 def parse_task_md(path):
     # These regressions exercise the immutable v2 correction profiles.
@@ -33,8 +34,12 @@ class General70SourceRevisionTests(unittest.TestCase):
         legacy=load_manifest_lock(dataset_manifest_path('general-custom116-v1'))
         self.assertEqual([t['task_id'] for t in self.manifest['tasks']],[t['task_id'] for t in legacy['tasks'][:70]])
         self.assertEqual(self.manifest['statistics']['category_counts'],{'01_Information_Search_Organization':20,'02_Office':30,'data-analysis':20})
+        moves = load_layout(ROOT)["workspace_paths"]
         for task in legacy['tasks'][70:]:
-            self.assertEqual(hashlib.sha256((ROOT/task['source']['task_path']).read_bytes()).hexdigest(),task['digests']['task_sha256'])
+            raw = relocated_task(ROOT, Path(task['source']['task_path'])).read_bytes()
+            old = task["source"]["workspace_path"]
+            raw = raw.replace(moves[old].encode(), old.encode(), 1)
+            self.assertEqual(hashlib.sha256(raw).hexdigest(),task['digests']['task_sha256'])
 
     def test_historical_60_and_116_locks_are_byte_identical_after_rebuild(self):
         for definition in [DEFAULT_DEFINITION,GENERAL116_DEFINITION]:
@@ -55,7 +60,10 @@ class General70SourceRevisionTests(unittest.TestCase):
         frozen=FrozenSources(ROOT,GENERAL116_DEFINITION.frozen_source_index)
         self.assertEqual(len(ledger['material_repairs']),2)
         for row in ledger['material_repairs']:
-            p=ROOT/row['path'];original=frozen.read_bytes(p);current=p.read_bytes()
+            p = ROOT / row['path']
+            original = frozen.read_bytes(p)
+            workspace, _, relative = row['path'].partition('/gt/')
+            current = (workspace_for_task(ROOT, Path(workspace)) / 'gt' / relative).read_bytes()
             self.assertEqual(hashlib.sha256(original).hexdigest(),row['original_file_sha256'])
             self.assertEqual(hashlib.sha256(current).hexdigest(),row['revised_file_sha256'])
             self.assertEqual(original.replace(row['declared_text_sha256_before'].encode(),row['canonical_text_sha256_after'].encode()),current)
@@ -106,15 +114,14 @@ class General70SourceRevisionTests(unittest.TestCase):
     def test_reference_index_is_real_exported_and_does_not_invent_yang_evidence(self):
         p=next((ROOT/'tasks/general/work').rglob(INFO+'.md'));task=parse_task_md(p);scope={}
         exec(compile(task['automated_checks'],'<info004-v2>','exec'),scope)
-        source=ROOT/'workspace/general/work/01_Information_Search_Organization/01_Information_Search_Organization_task_004_luxun_national_character_source_comparison/gt'
         with tempfile.TemporaryDirectory() as tmp:
-            work=Path(tmp);shutil.copytree(source,work/'gt')
-            # This test is for the immutable v2 profile, including its GT bytes.
-            from eval_general_e2e.datasets.source_history import FrozenSources
-            frozen=FrozenSources(ROOT, GENERAL70_V2_DEFINITION.frozen_source_index)
-            for path in source.rglob('*'):
-                if path.is_file():
-                    (work/'gt'/path.relative_to(source)).write_bytes(frozen.read_bytes(path))
+            work = Path(tmp)
+            prefix = f"tasks/{INFO}/private-scoring/gt/"
+            for member in self.members:
+                if member.kind == "file" and member.path.startswith(prefix):
+                    target = work / "gt" / member.path.removeprefix(prefix)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(member.data)
             trace=[{'role':'assistant','channel':'final','content':'使用已取得段落，其他解释待核验。 https://example.org/source'},
                    {'type':'task_complete','last_agent_message':'使用已取得段落，其他解释待核验。 https://example.org/source'}]
             result=scope['grade'](trace,str(work));self.assertEqual(result['source_link_present'],1.)

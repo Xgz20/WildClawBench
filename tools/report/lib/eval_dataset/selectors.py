@@ -39,11 +39,6 @@ def _task_id(path: Path, sources: FrozenSources | None = None) -> str:
     return path.stem
 
 
-def _is_doc_copy(path: Path, repo_root: Path) -> bool:
-    """判断是否为仅供阅读的中文任务副本。"""
-    return is_reading_or_archived_task(repo_root / "tasks", path.resolve())
-
-
 def _markdown_files(directory: Path, *, repo_root: Path, include_doc_copies: bool = False) -> list[Path]:
     return sorted(
         (

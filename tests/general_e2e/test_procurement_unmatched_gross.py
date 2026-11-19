@@ -2,12 +2,12 @@
 import csv
 import ast
 import hashlib
-import json
 from decimal import Decimal
 from pathlib import Path
 import tempfile
 import unittest
 
+from eval_general_e2e.datasets.source_history import dataset_task_path
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -148,8 +148,8 @@ class UnmatchedGrossTests(unittest.TestCase):
         digest = '7117b998478660abcb33c78c87074e0f0e89b496cfb7beb632e37a61432c979b'
         task = ROOT / 'tasks/general/work/02_Office' / (TASK + '.md')
         index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
-        row = json.loads(index.read_text())['files'][task.relative_to(ROOT).as_posix()]
-        _, sections, _ = _parse_task_source(index.parent / row['snapshot'])
+        old = dataset_task_path(ROOT, task.relative_to(ROOT).as_posix(), index.relative_to(ROOT).as_posix())
+        _, sections, _ = _parse_task_source(old)
         original = _strip_codeblock(sections['Automated Checks'])
         self.assertEqual(hashlib.sha256(original.encode()).hexdigest(), digest)
         historical, _ = source_repairs.effective_source(

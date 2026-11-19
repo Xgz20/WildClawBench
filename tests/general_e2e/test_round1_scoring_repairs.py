@@ -11,6 +11,7 @@ import unittest
 from unittest.mock import patch
 
 import openpyxl
+from eval_general_e2e.datasets.source_history import dataset_task_path
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,8 +23,7 @@ def source(task, frozen=False):
     path = next((ROOT / 'tasks/general/work').rglob(task + '.md'))
     if frozen:
         index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
-        entry = json.loads(index.read_text())['files'][path.relative_to(ROOT).as_posix()]
-        path = index.parent / entry['snapshot']
+        path = dataset_task_path(ROOT, path.relative_to(ROOT).as_posix(), index.relative_to(ROOT).as_posix())
     return _strip_codeblock(_parse_task_source(path)[1]['Automated Checks'])
 
 

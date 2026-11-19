@@ -1,7 +1,7 @@
 from pathlib import Path
 import ast
-import json
 import unittest
+from eval_general_e2e.datasets.source_history import dataset_task_path
 from eval_general_e2e.datasets.bundle import _parse_task_source, _strip_codeblock
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -11,8 +11,7 @@ TASK = '03_Data_Analysis_task_010_contract_escrow_refund_reconciliation'
 def codes():
     path = next((ROOT / 'tasks/general/work').rglob(TASK + '.md'))
     index = ROOT / 'eval_general_e2e/datasets/source-snapshots/general-custom70-v4/index.json'
-    entry = json.loads(index.read_text())['files'][path.relative_to(ROOT).as_posix()]
-    old = index.parent / entry['snapshot']
+    old = dataset_task_path(ROOT, path.relative_to(ROOT).as_posix(), index.relative_to(ROOT).as_posix())
     return [_strip_codeblock(_parse_task_source(p)[1]['Automated Checks']) for p in [old, path]]
 
 

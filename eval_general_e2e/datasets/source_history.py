@@ -99,6 +99,8 @@ def dataset_task_path(
     repo: Path, relative: str, index: str | None = None, current_paths: tuple[str, ...] = (),
 ) -> Path:
     """Expose the exact archived task to CLI consumers without rewriting it."""
+    if index:
+        relative = _historical_task_name(repo, relative)
     frozen = FrozenSources(repo, index, current_paths)
     _relative(relative)
     if relative not in frozen.overrides:
@@ -106,6 +108,10 @@ def dataset_task_path(
     target = repo / _relative(index)
     row = json.loads(target.read_text(encoding='utf-8'))['files'][relative]
     return target.parent / _relative(row['snapshot'])
+
+
+def _historical_task_name(repo: Path, relative: str) -> str:
+    return next((old for old, new in load_layout(repo).get("task_paths", {}).items() if new == relative), relative)
 
 
 def frozen_v2_task_path(path: Path) -> Path:
@@ -117,7 +123,7 @@ def frozen_v2_task_path(path: Path) -> Path:
 def frozen_task_path(path: Path) -> Path:
     """Explicit v1 fixture path for tests of historical correction profiles."""
     repo = Path(__file__).resolve().parents[2]
-    relative = path.resolve().relative_to(repo).as_posix()
+    relative = _historical_task_name(repo, path.resolve().relative_to(repo).as_posix())
     root = Path(__file__).with_name("source-snapshots") / "general-custom116-v1"
     index = root / "index.json"
     if index.is_file():
