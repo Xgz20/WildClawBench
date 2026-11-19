@@ -4,7 +4,7 @@ import { copyFile, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } 
 import { hostname, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
-import { assertNativeActivity, assertSiblingRuntimeIdle, abortedQuestionReceipts, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, LENGTH_ERROR, parseNativeHttpError, PROFILE, sameRuntimeInstallation, selectConnectedRuntime, sha, statusUrl, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, verifyNativeTerminalFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
+import { assertNativeActivity, assertSiblingRuntimeIdle, abortedQuestionReceipts, captureNative, COMPONENT_VERSION, digest, EMPTY_MEMORY_CONTEXT, isAbsentRuntime, jsonBytes, LENGTH_ERROR, nativeQuotaExceeded, parseNativeHttpError, PROFILE, sameRuntimeInstallation, selectConnectedRuntime, sha, statusUrl, verifyBinding, verifyNativeHttpFailure, verifyNativeLengthFailure, verifyNativeTerminalFailure } from '../../tools/report/e2e-shared/loomy/index.mjs';
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
@@ -361,6 +361,19 @@ test('Loomy retains its native memory prefix separately from the exact frozen ta
   assert.equal(normalized.events.find(row => row.native_type === 'client-memory-context').content, EMPTY_MEMORY_CONTEXT);
   native.parts[0].data = JSON.stringify({ type: 'text', text: 'unrecognized prefix' });
   assert.throws(() => verifyBinding(native, options), /PROMPT_MISMATCH/);
+});
+
+test('Loomy pauses only on its native completed insufficient-credit provider error', () => {
+  const parsed = { time: { completed: 123 }, error: { name: 'APIError',
+    data: { statusCode: 402, message: '积分余额不足，请获取积分后再试', isRetryable: false } } };
+  const binding = { final: { parsed } };
+  assert.equal(nativeQuotaExceeded(binding), true);
+  parsed.error.data.statusCode = 502;
+  assert.equal(nativeQuotaExceeded(binding), false);
+  parsed.error.data.statusCode = 402;
+  parsed.time.completed = null;
+  assert.equal(nativeQuotaExceeded(binding), false);
+  assert.equal(nativeQuotaExceeded({}), false);
 });
 
 test('Loomy binds the fixed full-access prelude and still requires the original prompt exactly once', () => {

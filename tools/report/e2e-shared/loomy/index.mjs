@@ -11,7 +11,7 @@ import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
 import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
-export const COMPONENT_VERSION = '0.1.20';
+export const COMPONENT_VERSION = '0.1.21';
 export const SEND_GUARD_PROFILE = 'loomy-exact-workspace-ax-send/v1';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
@@ -217,6 +217,13 @@ export async function captureNativeHttpFailure(context, journal, runtime, native
 }
 
 export const LENGTH_ERROR = { code: 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT', message: 'Native primary model ended with finish=length' };
+export function nativeQuotaExceeded(binding) {
+  const final = binding.final?.parsed;
+  const error = final?.error;
+  return error?.name === 'APIError' && error.data?.statusCode === 402
+    && error.data?.message === '积分余额不足，请获取积分后再试' && error.data?.isRetryable === false
+    && Number.isSafeInteger(final.time?.completed) && !final.finish;
+}
 export function nativeTerminalFailureKind(binding) {
   const value = binding.final?.parsed;
   if (value?.error && digest(value.error) === digest({ name: 'MessageAbortedError', data: { message: 'Aborted' } }) && !value.finish) return 'aborted';

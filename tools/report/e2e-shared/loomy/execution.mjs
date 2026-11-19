@@ -5,7 +5,7 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { artifact, assertArchivedFailuresIdle, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
   runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, verifyNativeLengthFailure, verifyNativeTerminalFailure,
-  abortedQuestionReceipts, nativeTerminalFailureKind, waitNativeActivity, COMPONENT_VERSION, SEND_GUARD_PROFILE } from './index.mjs';
+  abortedQuestionReceipts, nativeQuotaExceeded, nativeTerminalFailureKind, waitNativeActivity, COMPONENT_VERSION, SEND_GUARD_PROFILE } from './index.mjs';
 import { fillPrompt, newTask, selectWorkspace, guardSend } from './ui.mjs';
 
 export const STATE_SCHEMA = 'wildclawbench.general-e2e-execution-state/v1';
@@ -167,6 +167,19 @@ async function recordNativeHttpFailure(context, journal, runtime, native) {
   journal.native_http_failure = artifact(relative(context.unitRoot, path), bytes);
   return proof;
 }
+async function preserveNativeQuota(context, journal, binding, native, runtime, statuses) {
+  checkNativeModel(binding);
+  if (!journal.native_quota_failure) {
+    const path = join(context.control, 'native-quota-pause.json');
+    const bytes = jsonBytes({ profile: 'loomy-native-quota-pause/v1', observed_at: new Date().toISOString(),
+      identity: journal.identity, prompt_sha256: context.locks.prompt, session_id: binding.root.id,
+      final_message_id: binding.final.id, final_message_sha256: sha(binding.final.data),
+      prior_runtime: context.config.runtime, observed_runtime: runtime, runtime_status: statuses, native });
+    await writeFile(path, bytes, { flag: 'wx', mode: 0o600 });
+    journal.native_quota_failure = artifact(relative(context.unitRoot, path), bytes);
+  }
+  throw Error('LOOMY_NATIVE_QUOTA_EXHAUSTED');
+}
 export async function refreshRuntime(context, journal, allowedSessionIds = []) {
   applyJournalRuntime(context, journal);
   const previous = context.config.runtime;
@@ -207,6 +220,8 @@ export async function refreshRuntime(context, journal, allowedSessionIds = []) {
       catch (error) {
         binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt, baseline: journal.baseline, sessionId: journal.session?.id });
         if (error.message !== 'LOOMY_NATIVE_FINAL_NOT_COMPLETE') throw error;
+        if (nativeQuotaExceeded(binding)) await preserveNativeQuota(context, journal, binding, native, current,
+          await runtimeStatus(current, context.workspace));
         if (nativeTerminalFailureKind(binding)) await recordNativeTerminalFailure(context, journal, current, native, await runtimeStatus(current, context.workspace), previous);
         else if (binding.final?.parsed.finish === 'length') await recordNativeLengthFailure(context, journal, current, native, await runtimeStatus(current, context.workspace));
         else if (!await recordNativeHttpFailure(context, journal, current, native)) throw error;
@@ -315,6 +330,7 @@ export async function observe(context, journal, allowedSessionIds = []) {
   }
   journal.send_status = 'sent'; journal.phase = 'RUNNING'; journal.attention = null;
   const idle = binding.session_ids.every(id => !status[id] || status[id].type === 'idle');
+  if (nativeQuotaExceeded(binding)) await preserveNativeQuota(context, journal, binding, native, context.config.runtime, status);
   if (idle && !binding.final?.parsed.finish && !binding.final?.parsed.error) await recordNativeHttpFailure(context, journal, context.config.runtime, native);
   if (idle && binding.final?.parsed.finish === 'length') {
     const verified = await recordNativeLengthFailure(context, journal, context.config.runtime, native, status);
