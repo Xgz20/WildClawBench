@@ -1,5 +1,6 @@
 import { basename, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { requireFullAccess } from '../../vendor/e2e-shared/desktop-gui/formal-permission.mjs';
 
 // QwenWork 1.4 removes the legacy wrapper. Scope its observed model labels to
 // the unique new-task composer; never match project/sidebar text globally.
@@ -71,7 +72,7 @@ function visibleValue(value) {
 
 export function classifyQwenPermissionLabel(label) {
   const value = visibleValue(label);
-  if (/完全访问(?:权限)?|Full access/iu.test(value)) return "full-access";
+  if (['完全访问','完全访问权限','full access','full-access'].includes(value.toLowerCase())) return "full-access";
   if (/默认权限|Default permission|Sandbox/iu.test(value)) return "default-sandbox";
   return null;
 }
@@ -619,6 +620,8 @@ export async function fillQwenPrompt(page, prompt, timeoutMilliseconds = 30_000,
 export async function dispatchQwenPrompt(page, timeoutMilliseconds = 30_000) {
   const button = await requireUniqueVisible(page.locator(QWEN_SEND_SELECTOR), "send-button");
   if (!await button.isEnabled().catch(() => false)) throw new Error("QWENWORK_SEND_BUTTON_DISABLED");
+  const configuration = await readQwenUiConfiguration(page);
+  requireFullAccess('qwenwork', configuration.permission.confirmed_mode, 'physical-send');
   await button.click({ timeout: timeoutMilliseconds });
   return { invoked: true, method: "unique-accessible-send-button" };
 }

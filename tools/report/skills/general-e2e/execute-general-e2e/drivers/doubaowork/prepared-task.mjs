@@ -56,7 +56,7 @@ export async function validateGeneralTask({ unitRoot, taskId, expectedPermission
   const requestedModel = manifest.unit.model?.requested_id;
   if (typeof requestedModel !== "string" || !requestedModel.trim()) throw new Error("DOUBAOWORK_GENERAL_MODEL_MISSING");
   return {
-    scene: "general", unitRoot, taskRoot, workspace: candidateWorkspace, candidateWorkspace, captureNativeTools: true, captureNativeLifecycle: true,
+    scene: "general", requireFullAccess: true, unitRoot, taskRoot, workspace: candidateWorkspace, candidateWorkspace, captureNativeTools: true, captureNativeLifecycle: true,
     promptFile, prompt, promptSha256: sha(promptBytes), promptBytes: promptBytes.length,
     manifestPath, manifestSha256: sha(manifestBytes), batchId: manifest.batch_id,
     taskId, taskName: task.task_name ?? null, requestedModel,

@@ -2,6 +2,7 @@ import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
 import { act, ax, uniqueNode, nodeLabel, requireValue, uiConfiguration } from './index.mjs';
+import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
 export async function waitUi(config, predicate, label, timeoutMs = 15000) {
   const until = Date.now() + timeoutMs;
@@ -15,9 +16,10 @@ export async function waitUi(config, predicate, label, timeoutMs = 15000) {
 
 export function assertConfiguration(snapshot, config, { preparingWorkspace = false } = {}) {
   const ui = uiConfiguration(snapshot);
+  if (!preparingWorkspace && config.permission_policy === 'require-full-access') requireFullAccess('loomy', ui.permission_label, 'ui-readback');
   requireValue(ui.model_label === config.configuration.model_label
     && ui.reasoning_effort === config.configuration.reasoning_effort
-    && (preparingWorkspace && config.permission_policy === 'preserve-workspace-policy'
+    && (preparingWorkspace && ['preserve-workspace-policy', 'require-full-access'].includes(config.permission_policy)
       || ui.permission_label === config.configuration.permission_label), 'UI_CONFIGURATION_CHANGED');
   return ui;
 }
@@ -81,8 +83,9 @@ export async function selectWorkspace(config, workspace, save) {
     await act(config, items[0], 'press', { workspace_guard: workspace });
     const selected = await waitUi(config, row => !row.nodes.some(node => node.role === 'AXMenuItem'), 'workspace-menu-closed');
     const observed = assertConfiguration(selected, config, { preparingWorkspace: true });
+    const fullAccess = requireFullAccess('loomy', observed.permission_label, 'workspace-selected');
     await save('workspace-selected', selected);
-    return { workspace, selection_method: 'native-ui-menu-exact-full-path', full_path_verified: true,
+    return { workspace, selection_method: 'native-ui-menu-exact-full-path', full_path_verified: true, full_access_gate: fullAccess,
       configuration: { model_label: observed.model_label, reasoning_effort: observed.reasoning_effort, permission_label: observed.permission_label } };
   };
   if (registeredWorkspaceItems(snapshot, workspace).length) return selectRegistered(snapshot);
@@ -141,8 +144,10 @@ export async function fillPrompt(config, prompt, save) {
 }
 
 export async function sendOnce(config, prompt) {
+  requireFullAccess('loomy', config.configuration.permission_label, 'frozen-send-expectation');
   const snapshot = await ax(config.ax_helper, config.process.pid);
   const ui = assertConfiguration(snapshot, config);
+  requireFullAccess('loomy', ui.permission_label, 'physical-send');
   requireValue(ui.composer.value === prompt, 'PROMPT_CHANGED_BEFORE_SEND');
   const button = uniqueNode(snapshot, node => node.role === 'AXButton'
     && node.description === '发送消息' && node.enabled, 'send');

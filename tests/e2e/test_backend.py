@@ -31,7 +31,7 @@ class BackendTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "WORKBUDDY_DIAGNOSTICS_DOWNLOAD_REJECTED"):
             driver._read_workbuddy_diagnostics("sid")
 
-    def test_workbuddy_full_access_works_with_controllers_that_enable_it_natively(self):
+    def test_workbuddy_requires_explicit_full_access_and_controller_forwarding(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             driver = object.__new__(WorkBuddySandboxDriver)
@@ -48,24 +48,29 @@ class BackendTests(unittest.TestCase):
             capabilities = {"ui_fields": ["permission", "mode"], "products": ["workbuddy"],
                             "workbuddy_permission_forwarded": False}
             driver.client.checked.return_value = json.dumps(capabilities)
-            with self.assertRaisesRegex(E2EError, "WORKBUDDY_PERMISSION_NOT_SUPPORTED"):
+            with self.assertRaisesRegex(E2EError, "GENERAL_E2E_FULL_ACCESS_REQUIRED"):
                 driver._prepare_runtime("sid")
             driver.client.upload.assert_not_called()
 
             driver.unit["workbuddy_full_access"] = True
-            driver._prepare_runtime("sid")
-            driver._upload("sid")
-            request = json.loads((driver.staging / "metadata/run-request.json").read_text())
-            self.assertEqual(request["product_config"]["ui"]["permission"], "full access")
+            with self.assertRaisesRegex(E2EError, "WORKBUDDY_PERMISSION_NOT_SUPPORTED"):
+                driver._prepare_runtime("sid")
 
             capabilities["workbuddy_permission_forwarded"] = True
             driver.client.checked.return_value = json.dumps(capabilities)
             driver._prepare_runtime("sid")
-            for enabled, expected in [(False, "default"), (True, "full access")]:
-                driver.unit["workbuddy_full_access"] = enabled
+            driver._upload("sid")
+            request = json.loads((driver.staging / "metadata/run-request.json").read_text())
+            self.assertEqual(request["product_config"]["ui"]["permission"], "full access")
+            driver.unit["workbuddy_full_access"] = False
+            driver.client.upload.reset_mock()
+            with self.assertRaisesRegex(E2EError, "GENERAL_E2E_FULL_ACCESS_REQUIRED"):
                 driver._upload("sid")
-                request = json.loads((driver.staging / "metadata/run-request.json").read_text())
-                self.assertEqual(request["product_config"]["ui"]["permission"], expected)
+            driver.client.upload.assert_not_called()
+            driver.unit["workbuddy_full_access"] = True
+            driver.ui_fields.remove('permission')
+            with self.assertRaisesRegex(E2EError, "GENERAL_E2E_FULL_ACCESS_UNVERIFIABLE"):
+                driver._upload("sid")
 
     def test_cleanup_script_fits_windows_command_limit_and_roundtrips(self):
         script = process_cleanup_script(r"C:\Windows\Temp\wcb-cleanup-attempt.json", GUEST_WORKSPACE)

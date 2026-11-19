@@ -5,6 +5,7 @@ import { lstat, mkdir, open, readFile, realpath, rename, rm, stat, writeFile } f
 import { homedir, hostname } from "node:os";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { requireFullAccess } from '../../vendor/e2e-shared/desktop-gui/formal-permission.mjs';
 
 import {
   DEFAULT_EXTENSION_DATA_ROOT,
@@ -35,7 +36,7 @@ import {
 
 export const WORKBUDDY_EXECUTION_JOURNAL_SCHEMA =
   "wildclawbench.general-e2e-workbuddy-dispatch-journal/v1";
-export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.10";
+export const WORKBUDDY_EXECUTION_DRIVER_VERSION = "0.5.11";
 export const WORKBUDDY_PROJECT_COMPONENT_MAX_BYTES = 255;
 export const WORKBUDDY_PROJECT_PATH_MAX_BYTES = 1024;
 const PROCESS_STARTED_AT = new Date().toISOString();
@@ -862,6 +863,7 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
   const dependencies = {
     inspectRuntime: defaultInspectRuntime,
     prepareUi: defaultPrepareUi,
+    readUiConfiguration: (handle) => readWorkBuddyUi(handle),
     fillPrompt: (handle, prompt) => fillWorkBuddyPrompt(handle, prompt, config.timeoutMs),
     dispatchPrompt: (handle) => dispatchWorkBuddyPrompt(handle, config.timeoutMs),
     snapshotBaseline: snapshotWorkBuddyNativeBaseline,
@@ -928,11 +930,13 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
 
   let handle = null;
   try {
+    requireFullAccess('workbuddy', config.expectedPermission, 'configured-expectation');
     const prepared = await dependencies.prepareUi(config);
     handle = prepared.handle;
     if (prepared.ui_idle?.verified !== true) throw new Error("WorkBuddy UI 空闲证据缺失");
     journal.preflight.ui_idle = prepared.ui_idle;
     journal.verified_ui = assertWorkBuddyUiConfiguration(prepared.ui, journal.expected_ui);
+    journal.full_access_gate = requireFullAccess('workbuddy', journal.verified_ui.permission, 'workspace-selected');
     journal.send.pre_send_dom_conversation_id = prepared.ui.selected_conversation_id || null;
     journal.native.baseline = await dependencies.snapshotBaseline({
       sessionDb: config.sessionDb,
@@ -957,6 +961,9 @@ export async function executeWorkBuddyTask(config, overrides = {}) {
       });
     }
     await dependencies.fillPrompt(handle, config.prompt);
+    const finalUi = await dependencies.readUiConfiguration(handle);
+    assertWorkBuddyUiConfiguration(finalUi, journal.expected_ui);
+    journal.full_access_gate = requireFullAccess('workbuddy', finalUi.permission, 'before-dispatch-intent');
     journal.prompt.send_status = "intent_persisted";
     journal.send.dispatch_attempt_count = 1;
     journal.send.dispatch_armed_at = dependencies.now();

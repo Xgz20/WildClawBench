@@ -14,6 +14,7 @@ import {
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
+import { requireFullAccess } from '../vendor/e2e-shared/desktop-gui/formal-permission.mjs';
 
 import {
   calculateRunConfigDigest,
@@ -46,7 +47,7 @@ import { verifyFrameworkDispatchRecoveries, assertUnacceptedDispatch } from './l
 import {ensureExecutionUiVisible} from './lib/astronstudio-visibility.mjs';
 import {captureRuntimeDiagnostics,appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 
-export const EXECUTION_DRIVER_VERSION = "0.4.33";
+export const EXECUTION_DRIVER_VERSION = "0.4.34";
 export const EXECUTION_STATE_SCHEMA = "wildclawbench.general-e2e-astronstudio-execution-state/v1";
 export const EXECUTION_RECORD_SCHEMA = "urn:wildclawbench:schema:general-e2e:execution-record:v1";
 const RUN_CONFIG_SCHEMA = "wildclawbench.general-e2e-astronstudio-run-config/v1";
@@ -1243,6 +1244,7 @@ export async function executeSingleTask(config, overrides = {}) {
   let client = null;
   let capturedNative = null;
   try {
+    requireFullAccess('astronstudio', config.expectedPermission, 'configured-expectation');
     // Persist the zero-send attempt before a fresh environment probe. A probe
     // rejection must retain PRE_SEND_DRIVER_ERROR evidence for the queue's
     // existing strict recovery contract, rather than leaving STATE_MISSING.
@@ -1250,6 +1252,7 @@ export async function executeSingleTask(config, overrides = {}) {
     const target = await dependencies.discoverMainTarget(config.endpoint, config.timeoutMs);
     client = await dependencies.connectCdp(target.webSocketDebuggerUrl, config.timeoutMs);
     const prepared = await dependencies.prepareExecutionUi(client, config);
+    state.client.full_access_gate = requireFullAccess('astronstudio', prepared.ui.permission, 'workspace-selected');
     state.client.ui_verification = prepared.ui;
     state.client.workspace_selection = prepared.workspace;
     state.send.pre_send_route_thread_id = prepared.ui.thread_id;
@@ -1280,6 +1283,8 @@ export async function executeSingleTask(config, overrides = {}) {
     // existing app immediately before arming a physical dispatch.
     await diagnose(config,state,dependencies,"before-dispatch");
     const finalProbe = await currentProbe(config, dependencies, true);
+    const finalPermissionUi = await dependencies.readUiConfiguration(client, config.stateDatabase);
+    state.client.full_access_gate = requireFullAccess('astronstudio', finalPermissionUi.permission, 'before-dispatch-intent');
     const sendTarget = await dependencies.ensureSendTargetReady(client, config.prompt, config.candidateWorkspace);
     if (config.runConfig.tested_model.custom_mapping || sendTarget.settled_transient_dialog) {
       const lastUi = await dependencies.readUiConfiguration(client, config.stateDatabase);

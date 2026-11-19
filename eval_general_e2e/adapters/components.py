@@ -32,7 +32,7 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         entrypoints=("state.mjs", "guard.mjs", "diagnostics.mjs", "structured-ledger.mjs"),
     ),
     SharedComponentSpec(
-        name="loomy", version="0.1.15",
+        name="loomy", version="0.1.16",
         source_root="tools/report/e2e-shared/loomy",
         vendor_root="vendor/e2e-shared/loomy",
         entrypoints=("index.mjs", "ui.mjs", "execution.mjs", "batch.mjs", "collection.mjs", "verification.mjs", "native-state.py", "macos-ax.swift"),
@@ -65,13 +65,13 @@ EXPECTED_COMPONENTS: Tuple[SharedComponentSpec, ...] = (
         vendor_root="vendor/e2e-shared/qwenwork-native-state", entrypoints=("index.mjs", "engine-sqlite.mjs"),
     ),
     SharedComponentSpec(
-        name="desktop-gui", version="1.0.0",
+        name="desktop-gui", version="1.0.1",
         source_root="tools/report/e2e-shared/desktop-gui",
-        vendor_root="vendor/e2e-shared/desktop-gui", entrypoints=("macos.mjs",),
+        vendor_root="vendor/e2e-shared/desktop-gui", entrypoints=("macos.mjs", "formal-permission.mjs"),
     ),
     SharedComponentSpec(
         name="doubaowork",
-        version="0.8.25",
+        version="0.8.26",
         source_root="tools/report/e2e-shared/doubaowork",
         vendor_root="vendor/e2e-shared/doubaowork",
         entrypoints=("controller.mjs", "native-evidence.mjs", "runtime-dispatcher.mjs", "runtime-moa.mjs", "probe.mjs", "process-cleanup.mjs", "select-folder.swift", "tool-counts.mjs", "presentation-proof.mjs"),

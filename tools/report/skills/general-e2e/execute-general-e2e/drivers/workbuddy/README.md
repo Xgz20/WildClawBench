@@ -74,7 +74,7 @@ node collect-general-e2e/drivers/workbuddy/finalize.mjs \
 ```bash
 node execute-general-e2e/drivers/workbuddy/batch.mjs \
   --unit-root /absolute/new-execution-unit --queue-id serial-01 \
-  --endpoint http://127.0.0.1:9229 --expected-permission default-sandbox \
+  --endpoint http://127.0.0.1:9229 --expected-permission full-access \
   --run-slots 3
 ```
 

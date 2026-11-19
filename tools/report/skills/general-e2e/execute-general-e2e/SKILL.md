@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.22` 正式General E2E派发统一要求完全访问。AStudio、Loomy、WorkBuddy、QwenWork及DoubaoWork在工作区选择后、发送意图前和实际发送边界检查对应客户端的明确全访问值；默认、询问、未知、含糊值或漂移均阻断，不把“与当前值一致”当作达标。Loomy新探针冻结require-full-access，不再将默认权限设为正式预期。原生UI操作仍不自动批准未知权限或业务确认；控制会话按授权通过公开UI设置模式后须重新核验。历史已发送观察和旧包离线回放保留原权限，不追溯改成完全访问。见[完全访问基线](references/full-access-baseline.md)。
+
 `0.15.21` macOS清理器显式保护Loomy应用、同父进程OpenCode共享服务及其依赖树。即使共享后端cwd命中某题workspace也不发送信号；共享树内归属不明进程继续阻断收口。只更新进程保护，不改候选、终态、Rubric、资源或已冻结执行。
 
 `0.15.20` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。

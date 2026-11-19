@@ -254,6 +254,10 @@ class AStudioSandboxDriver:
         return {row["FullName"]: row for row in rows}
 
     def _upload(self, sid):
+        if self.unit.get("workbuddy_full_access") is False:
+            raise E2EError("GENERAL_E2E_FULL_ACCESS_REQUIRED: sandbox unit requests default permissions")
+        if self.product == "workbuddy" and "permission" not in getattr(self, "ui_fields", {"permission"}):
+            raise E2EError("GENERAL_E2E_FULL_ACCESS_UNVERIFIABLE: controller permission field missing")
         self.client.checked(sid, "mkdir -p /run/wgui /workspace/input /logs/agent /logs/artifacts")
         self.client.windows_execute(sid, powershell("$ErrorActionPreference='Stop';New-Item -ItemType Directory -Force -Path '"
                                                     + GUEST_WORKSPACE + "'|Out-Null"))
@@ -270,9 +274,8 @@ class AStudioSandboxDriver:
         if self.product=="astudio" and self.unit.get("reasoning_effort") is not None:
             ui["reasoning"] = {"none": "None", "high": "High", "max": "Max"}[self.unit["reasoning_effort"].casefold()]
         if self.product=="workbuddy":
-            proposed={"mode":"代码开发","max_mode":self.unit.get("max_mode",False),"plan_mode":False,"ask_mode":False}
-            if "workbuddy_full_access" in self.unit:
-                proposed["permission"] = "full access" if self.unit["workbuddy_full_access"] else "default"
+            proposed={"mode":"代码开发","max_mode":self.unit.get("max_mode",False),"plan_mode":False,"ask_mode":False,
+                      "permission":"full access"}
             ui={key:value for key,value in proposed.items() if key in getattr(self,"ui_fields",set(proposed))}
         request = {"schema_version": 2, "product": self.product, "instruction_file": "/run/wgui/instruction.txt",
                    "workspace": {"guest": GUEST_WORKSPACE}, "timeout_sec": self.unit["timeout_override"],
@@ -554,11 +557,10 @@ print(json.dumps({
         if 'workbuddy' not in value.get('products',[]):raise E2EError('DEPLOYED_CONTROLLER_WORKBUDDY_UNSUPPORTED')
         self.ui_fields=set(value.get('ui_fields',[]))
         if self.unit.get('max_mode') and 'max_mode' not in self.ui_fields:raise E2EError('DEPLOYED_CONTROLLER_MAX_MODE_UNSUPPORTED')
-        # Existing WorkBuddy drivers already enable and verify full access in their native flow.
-        # Forwarding the field is required only when asking the driver to keep default permissions.
         if self.unit.get("workbuddy_full_access") is False:
-            if "permission" not in self.ui_fields or not value.get("workbuddy_permission_forwarded"):
-                raise E2EError("WORKBUDDY_PERMISSION_NOT_SUPPORTED: 部署的控制器尚未将权限参数传到界面驱动")
+            raise E2EError("GENERAL_E2E_FULL_ACCESS_REQUIRED: sandbox unit requests default permissions")
+        if "permission" not in self.ui_fields or not value.get("workbuddy_permission_forwarded"):
+            raise E2EError("WORKBUDDY_PERMISSION_NOT_SUPPORTED: 正式评测要求控制器显式传递并核验完全访问")
 
     def _bound_native(self,sid,before,report,identity,prompt,stage):
         from .workbuddy_trace import normalize_workbuddy

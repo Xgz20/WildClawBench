@@ -13,6 +13,7 @@ import { basename, dirname, isAbsolute, join, parse as parsePath, resolve, sep }
 import { promisify } from "node:util";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { parseArgs } from "node:util";
+import { requireFullAccess, invokeWithFullAccess } from '../desktop-gui/formal-permission.mjs';
 
 import {
   DEFAULT_APP_PATH,
@@ -1026,6 +1027,9 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
     throw new Error("未知工作环境模式");
   }
   const actual = await readConfiguration(client.page, config.projectName);
+  if (config.requireFullAccess || config.scene === 'general') {
+    state.full_access_gate = requireFullAccess('doubaowork', actual.permission, 'workspace-selected');
+  }
   confirmPermission(state, actual.permission);
   await atomicWriteAttemptState(stateFile, state);
   confirmModel(state, actual.model);
@@ -1067,6 +1071,9 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
   await atomicWriteAttemptState(stateFile, state);
   const readyScreenshot = await captureScreenshot(client.page, join(config.outputDir, "ready-to-send.png"));
   const finalConfig = await readConfiguration(client.page, config.projectName);
+  if (config.requireFullAccess || config.scene === 'general') {
+    state.full_access_gate = requireFullAccess('doubaowork', finalConfig.permission, 'before-dispatch');
+  }
   if (finalConfig.model !== state.actual.model || finalConfig.permission !== state.actual.permission_mode) {
     throw new Error("DOUBAOWORK_PRE_SEND_CONFIGURATION_DRIFT");
   }
@@ -1076,7 +1083,13 @@ async function dispatchFromSelectedProject({ client, state, stateFile, config, r
     process_start_identity: environment.listener.listeners[0].process_start_identity,
     command_sha256: environment.listener.listeners[0].command_sha256 });
   await persistBeforeDispatch(stateFile, state);
-  await sendButton.click();
+  if (config.requireFullAccess || config.scene === 'general') {
+    await invokeWithFullAccess('doubaowork',
+      async () => (await readConfiguration(client.page, config.projectName)).permission,
+      () => sendButton.click());
+  } else {
+    await sendButton.click();
+  }
   recordPromptAccepted(state);
   await atomicWriteAttemptState(stateFile, state);
   const sentScreenshot = await captureScreenshot(client.page, join(config.outputDir, "prompt-sent.png"));

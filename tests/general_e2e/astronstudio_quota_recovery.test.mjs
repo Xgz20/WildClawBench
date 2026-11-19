@@ -118,7 +118,8 @@ function driver(f, counter, options = {}) {
       status: 'completed', turn_state: 'completed', active_turn_id: null, updated_at_ms: 100 }] : [])],
     discoverMainTarget: async () => ({ webSocketDebuggerUrl: 'ws://synthetic' }),
     connectCdp: async () => ({ close() {} }),
-    prepareExecutionUi: async () => ({ ui: { thread_id: 'retry-thread' }, workspace: { method: 'synthetic' } }),
+    prepareExecutionUi: async () => ({ ui: { thread_id: 'retry-thread', permission:'完全访问' }, workspace: { method: 'synthetic' } }),
+    readUiConfiguration: async () => ({permission_count:1,permission:'完全访问'}),
     fillPrompt: async () => {
       assert.equal(await readFile(join(f.cfg(ids[1]).candidateWorkspace, 'input.txt'), 'utf8'), 'pristine input\n');
       assert.equal(await exists(join(f.cfg(ids[1]).candidateWorkspace, 'partial.txt')), false);

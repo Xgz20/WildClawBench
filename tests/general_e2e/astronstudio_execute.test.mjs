@@ -334,6 +334,7 @@ function commonDependencies(config, sessions, clickCounter) {
     probeAstronStudio: async () => probeReport(config),
     discoverMainTarget: async () => ({ webSocketDebuggerUrl: "ws://page" }),
     connectCdp: async () => client,
+    readUiConfiguration: async () => ({permission_count:1, permission:'完全访问'}),
     prepareExecutionUi: async () => ({
       task: { thread_id: "thread-1" },
       workspace: { method: "exact-path-selection", path: config.candidateWorkspace },
@@ -419,6 +420,7 @@ test("send uses one CDP mouse click after exact UI validation", async () => {
         assert.match(expression, /expectedWorkspace/u);
         return { ready: true, count: 1, x: 14, y: 28, thread_id: "before" };
       }
+      if (reads === 2) return { permission_count:1, permission:'完全访问' };
       return { thread_id: "after", editor_count: 1, editor_text: "" };
     },
     send: async (method, params) => calls.push({ method, params }),

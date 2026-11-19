@@ -149,8 +149,11 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     && (config.runtime.health_version === '1.14.22' || isAbsentRuntime(config.runtime))
     && config.transport === 'macos-native-accessibility'
     && sha(await bytes('raw/frozen-run-config.json')) === journal.input_locks.config, 'ARCHIVE_RUN_CONFIG_INVALID');
-  requireValue(config.permission_policy === 'preserve-workspace-policy' && Array.isArray(journal.history)
+  requireValue(['preserve-workspace-policy', 'require-full-access'].includes(config.permission_policy) && Array.isArray(journal.history)
     && index.raw_trace.length === requiredRaw.length + journal.history.length + (journal.source_repairs || []).length, 'ARCHIVE_PREPARATION_SCOPE_INVALID');
+  if (config.permission_policy === 'require-full-access') {
+    requireValue(config.configuration?.permission_label === '完全访问', 'ARCHIVE_FULL_ACCESS_POLICY_MISMATCH');
+  }
   for (const [i, receipt] of (journal.source_repairs || []).entries()) {
     const path = `raw/source-repairs/${i + 1}.json`, source = await bytes(path), repair = JSON.parse(source);
     requireValue(index.raw_trace.some(row => row.path === path) && sha(source) === receipt.sha256

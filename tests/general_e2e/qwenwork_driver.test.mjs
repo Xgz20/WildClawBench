@@ -143,7 +143,7 @@ function makeConfig(overrides = {}) {
   return config;
 }
 
-function configuration(model = "qwen-model", permission = "default-sandbox") {
+function configuration(model = "qwen-model", permission = "full-access") {
   return {
     model: { actual_model: model, changed: false },
     permission: { confirmed_mode: permission, changed: false },

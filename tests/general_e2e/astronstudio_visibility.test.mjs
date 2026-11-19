@@ -50,8 +50,9 @@ for(const visibility of ['hidden','visible'])test('actual send-target DOM evalua
   const editor=Object.assign(new Element(),{innerText:'prompt',querySelectorAll:()=>[]});
   const workspace=Object.assign(new Element(),{getAttribute:()=>'/workspace'});
   const button=Object.assign(new Element(),{disabled:false,contains:()=>false});
+  const permission=Object.assign(new Element(),{innerText:'完全访问'});
   const document={visibilityState:visibility,elementFromPoint:()=>button,querySelectorAll:s=>
-    s.includes('composer-editor')?[editor]:s.includes('workspace-picker-trigger')?[workspace]:s.includes('project-picker-trigger')?[]:s.startsWith('button[type=')?[button]:[]};
+    s.includes('composer-editor')?[editor]:s.includes('workspace-picker-trigger')?[workspace]:s.includes('runtime-permission-trigger')?[permission]:s.includes('project-picker-trigger')?[]:s.startsWith('button[type=')?[button]:[]};
   const calls=[];const client={evaluate:expr=>vm.runInNewContext(expr,{document,Element,location:{hash:'#/owned'},getComputedStyle:()=>({visibility:'visible',display:'block'})}),
     send:async(method,params)=>calls.push({method,params})};
   const result=await clickSend(client,'prompt','/workspace');assert.equal(result.clicked,visibility==='visible');assert.equal(calls.length,visibility==='visible'?3:0);

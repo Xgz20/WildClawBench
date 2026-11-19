@@ -156,6 +156,7 @@ function binding(config, state = "running") {
 function dependencies(config, counters, selectedBinding, clock = { value: Date.parse("2026-09-19T08:00:00.000Z") }) {
   return {
     inspectRuntime: async () => runtime(),
+    readUiConfiguration: async () => rawUi(config.candidateWorkspace),
     prepareUi: async () => {
       counters.prepare += 1;
       return {
@@ -742,7 +743,8 @@ test("WorkBuddy dispatch waits for stable hit-tested control and clicks once", a
         samples += 1;
         return { clicked: samples > 1, count: 1, point: { x: 100, y: samples < 3 ? 100 : 150 } };
       }
-      return { selected_conversation_id: "new-conversation", editor_nonempty_count: 0 };
+      return { selected_conversation_id: "new-conversation", editor_nonempty_count: 0,
+        permission_count: 1, permission: 'full-access' };
     },
   };
   await dispatchWorkBuddyPrompt(client, 1000);

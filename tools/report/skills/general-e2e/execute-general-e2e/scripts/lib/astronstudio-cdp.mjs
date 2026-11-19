@@ -1,6 +1,7 @@
 import { queryExactProjectsForWorkspace, queryProjectForThread, queryNativeSessions, queryPristineThread } from "./astronstudio-state.mjs";
 import { readCurrentCustomModel } from "./astronstudio-custom-model.mjs";
 import {readNativeForegroundApp} from './astronstudio-native-foreground.mjs';
+import { requireFullAccess } from '../../vendor/e2e-shared/desktop-gui/formal-permission.mjs';
 
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
@@ -1001,6 +1002,9 @@ export async function clickSend(client, prompt, workspace, options={}) {
     const native = await (options.readNativeForegroundApp || readNativeForegroundApp)();
     if (native.pid !== options.expectedNativePid) return {clicked:false,reason:'native-foreground-owner-changed',native_foreground:native};
   }
+  const permission = await readUiConfiguration(client);
+  if (permission.permission_count !== 1) throw new Error('GENERAL_E2E_FULL_ACCESS_READBACK_AMBIGUOUS:astronstudio');
+  requireFullAccess('astronstudio', permission.permission, 'physical-send');
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved", x: target.x, y: target.y,
   });

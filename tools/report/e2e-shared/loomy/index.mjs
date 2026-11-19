@@ -9,8 +9,9 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-discovery/index.mjs';
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
+import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
-export const COMPONENT_VERSION = '0.1.15';
+export const COMPONENT_VERSION = '0.1.16';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -481,10 +482,11 @@ export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRo
   await assertArchivedFailuresIdle(runtime, archivedFailures);
   assertNativeActivity(native, allowedSessionIds, archivedFailures);
   const ui = uiConfiguration(snapshot);
+  requireFullAccess('loomy', ui.permission_label, 'probe');
   const config = { schema_version: 'wildclawbench.general-e2e-loomy-run-config/v1', version: COMPONENT_VERSION,
     client, process: processIdentity, runtime, ax_helper: helper, python,
     configuration: { model: ui.model, model_label: ui.model_label, reasoning_effort: ui.reasoning_effort, permission_label: ui.permission_label },
-    permission_policy: 'preserve-workspace-policy',
+    permission_policy: 'require-full-access',
     archived_http_failures: archivedFailures,
     execution_concurrency: 3, initial_concurrency: 3, transport: 'macos-native-accessibility',
     observed_at: new Date().toISOString() };

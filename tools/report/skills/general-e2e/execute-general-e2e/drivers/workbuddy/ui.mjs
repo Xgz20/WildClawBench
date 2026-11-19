@@ -1,3 +1,5 @@
+import { requireFullAccess } from '../../vendor/e2e-shared/desktop-gui/formal-permission.mjs';
+
 function sleep(milliseconds) {
   return new Promise((resolvePromise) => setTimeout(resolvePromise, milliseconds));
 }
@@ -460,6 +462,9 @@ export async function dispatchWorkBuddyPrompt(client, timeoutMs = 30_000) {
   if (!result.point || !Number.isFinite(result.point.x) || !Number.isFinite(result.point.y)) {
     throw new Error("WorkBuddy 发送按钮坐标不可用");
   }
+  const permissions = await readWorkBuddyUi(client);
+  if (permissions.permission_count !== 1) throw new Error('GENERAL_E2E_FULL_ACCESS_READBACK_AMBIGUOUS:workbuddy');
+  requireFullAccess('workbuddy', permissions.permission, 'physical-send');
   await client.send("Input.dispatchMouseEvent", {
     type: "mouseMoved", x: result.point.x, y: result.point.y,
   });

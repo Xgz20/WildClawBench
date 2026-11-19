@@ -17,7 +17,7 @@ test('native foreground command failure fails closed',async()=>{
   await assert.rejects(readNativeForegroundApp({runCommand:async()=>({code:1,stdout:asn})}),/READ_FAILED/);
 });
 for(const pid of [77876,96898])test('physical send checks native foreground PID '+pid,async()=>{
-  const calls=[];const client={evaluate:async()=>({ready:true,count:1,x:10,y:20,thread_id:'owned'}),send:async(...args)=>calls.push(args)};
+  const calls=[];const client={evaluate:async()=>({ready:true,count:1,x:10,y:20,thread_id:'owned',permission_count:1,permission:'完全访问'}),send:async(...args)=>calls.push(args)};
   const result=await clickSend(client,'prompt','/workspace',{expectedNativePid:77876,readNativeForegroundApp:async()=>({pid,bundle_id:pid===77876?'cn.xfyun.acode':'com.openai.codex'})});
   assert.equal(result.clicked,pid===77876);assert.equal(calls.length,pid===77876?3:0);
 });

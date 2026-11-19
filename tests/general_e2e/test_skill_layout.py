@@ -25,6 +25,22 @@ EXPECTED_NAMES = (
 
 
 class GeneralE2ESkillLayoutTests(unittest.TestCase):
+    def test_live_checkout_vendor_mirrors_match_changed_canonical_components(self) -> None:
+        root=REPO_ROOT/'tools/report'
+        for component,scopes in [
+            ('desktop-gui',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e'),('web-e2e','execute-web-e2e')]),
+            ('doubaowork',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e'),('web-e2e','execute-web-e2e')]),
+            ('loomy',[('general-e2e','execute-general-e2e'),('general-e2e','collect-general-e2e')]),
+        ]:
+            source=root/'e2e-shared'/component
+            for p in source.rglob('*'):
+                rel=p.relative_to(source)
+                if not p.is_file() or any(x in rel.parts for x in ['__pycache__','node_modules']) or p.name=='.DS_Store':continue
+                for scene,skill in scopes:
+                    mirror=root/'skills'/scene/skill/'vendor/e2e-shared'/component/rel
+                    with self.subTest(component=component,scene=scene,file=str(rel)):
+                        self.assertEqual(mirror.read_bytes(),p.read_bytes())
+
     def test_doubaowork_runtime_and_distribution_version_agree(self) -> None:
         catalog = json.loads((REPO_ROOT / "tools/report/e2e-shared/components.json").read_text())
         component = next(row for row in catalog["components"] if row["name"] == "doubaowork")
@@ -52,49 +68,49 @@ class GeneralE2ESkillLayoutTests(unittest.TestCase):
                 get_skill_spec("prepare-general-e2e-workspaces").version,
                 get_skill_spec("prepare-general-e2e-workspaces").implementation_status,
             ),
-            ("0.3.5", "operational"),
+            ("0.3.6", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("execute-general-e2e").version,
                 get_skill_spec("execute-general-e2e").implementation_status,
             ),
-            ("0.15.17", "operational"),
+            ("0.15.22", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("collect-general-e2e").version,
                 get_skill_spec("collect-general-e2e").implementation_status,
             ),
-            ("0.12.25", "operational"),
+            ("0.12.30", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("orchestrate-general-e2e").version,
                 get_skill_spec("orchestrate-general-e2e").implementation_status,
             ),
-            ("0.11.94", "operational"),
+            ("0.11.101", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("score-general-e2e").version,
                 get_skill_spec("score-general-e2e").implementation_status,
             ),
-            ("0.10.120", "operational"),
+            ("0.10.127", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("run-general-e2e").version,
                 get_skill_spec("run-general-e2e").implementation_status,
             ),
-            ("0.7.31", "operational"),
+            ("0.7.36", "operational"),
         )
         self.assertEqual(
             (
                 get_skill_spec("report-general-e2e").version,
                 get_skill_spec("report-general-e2e").implementation_status,
             ),
-            ("0.8.66", "operational"),
+            ("0.8.68", "operational"),
         )
         self.assertTrue(
             all(

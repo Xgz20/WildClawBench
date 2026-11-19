@@ -641,7 +641,7 @@ print(json.dumps({'run_rules': run_rules.__name__, 'error': error_type.__name__}
         source_version = json.loads((REPO_ROOT / "tools/report/skills/general-e2e/run-general-e2e/skill-metadata.json").read_text())["version"]
         self.assertEqual(bundled["skill_version"], source_version)
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
-        self.assertEqual(component["version"], "1.3.2")
+        self.assertEqual(component["version"], "1.3.3")
         for relative in ("execution_state.py", "schemas/general-execution-state-v1.schema.json"):
             self.assertEqual(
                 (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),
@@ -735,7 +735,7 @@ console.log(JSON.stringify(analyzeRollout(Buffer.from(rows.map(JSON.stringify).j
         source_version = json.loads((REPO_ROOT / "tools/report/skills/general-e2e/collect-general-e2e/skill-metadata.json").read_text())["version"]
         self.assertEqual(bundled["skill_version"], source_version)
         component = next(item for item in bundled["components"] if item["name"] == "general-contracts")
-        self.assertEqual(component["version"], "1.3.2")
+        self.assertEqual(component["version"], "1.3.3")
         for relative in ("collection_validation.py", "schemas/trace-index-v2.schema.json"):
             self.assertEqual(
                 (installed / "vendor/e2e-shared/general-contracts" / relative).read_bytes(),

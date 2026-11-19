@@ -128,7 +128,7 @@
     },
     {
       "name": "doubaowork",
-      "version": "0.8.25",
+      "version": "0.8.26",
       "source_root": "tools/report/e2e-shared/doubaowork",
       "vendor_root": "vendor/e2e-shared/doubaowork",
       "entrypoints": [
@@ -145,11 +145,12 @@
     },
     {
       "name": "desktop-gui",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "source_root": "tools/report/e2e-shared/desktop-gui",
       "vendor_root": "vendor/e2e-shared/desktop-gui",
       "entrypoints": [
-        "macos.mjs"
+        "macos.mjs",
+        "formal-permission.mjs"
       ]
     },
     {
@@ -214,7 +215,7 @@
     },
     {
       "name": "loomy",
-      "version": "0.1.15",
+      "version": "0.1.16",
       "source_root": "tools/report/e2e-shared/loomy",
       "vendor_root": "vendor/e2e-shared/loomy",
       "entrypoints": [

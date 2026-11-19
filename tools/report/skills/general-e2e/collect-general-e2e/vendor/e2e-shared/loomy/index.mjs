@@ -9,8 +9,9 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { discoverDesktopApp, inspectMacDesktopAppProcess } from '../desktop-app-discovery/index.mjs';
 import { LOOMY_APP_PROFILE } from '../desktop-app-discovery/profiles.mjs';
 import { inspectMacGuiSession, assertMacGuiReady } from '../desktop-gui/macos.mjs';
+import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
-export const COMPONENT_VERSION = '0.1.12';
+export const COMPONENT_VERSION = '0.1.16';
 export const MEMORY_CONTEXT_PREFIX = '## 可用记忆条目\n\n';
 export const EMPTY_MEMORY_CONTEXT = MEMORY_CONTEXT_PREFIX + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。';
 export const MEMORY_CONTEXT_SUFFIX = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。';
@@ -211,13 +212,102 @@ export async function captureNativeHttpFailure(context, journal, runtime, native
   return proof;
 }
 
-export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
-  const result = await execute('/bin/ps', ['-axo', 'pid=,ppid=,comm=']);
-  const rows = result.stdout.split('\n').map(line => /^\s*(\d+)\s+(\d+)\s+(.+)$/u.exec(line)).filter(Boolean);
-  const candidates = rows.filter(row => Number(row[2]) === app.pid && (row[3] === 'opencode' || row[3].endsWith('/opencode')));
-  requireValue(candidates.length > 0, 'RUNTIME_NOT_RUNNING');
-  requireValue(candidates.length === 1, 'RUNTIME_PROCESS_AMBIGUOUS');
-  const pid = Number(candidates[0][1]);
+export const LENGTH_ERROR = { code: 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT', message: 'Native primary model ended with finish=length' };
+export function nativeTerminalFailureKind(binding) {
+  const value = binding.final?.parsed;
+  if (value?.error && digest(value.error) === digest({ name: 'MessageAbortedError', data: { message: 'Aborted' } }) && !value.finish) return 'aborted';
+  if (value?.finish === 'other' && !value.error) return 'other-finish';
+  return null;
+}
+export function abortedQuestionReceipts(binding) {
+  return binding.parts.filter(row => row.parsed.type === 'tool' && row.parsed.tool === 'question').map(row => {
+    const value = row.parsed, state = value.state;
+    requireValue(state?.status === 'error' && state.error === 'Tool execution aborted'
+      && state.metadata?.interrupted === true && Object.keys(state.metadata).every(key => key === 'interrupted')
+      && !Object.hasOwn(state, 'output') && Number.isSafeInteger(state.time?.start)
+      && Number.isSafeInteger(state.time.end) && state.time.end >= state.time.start
+      && state.time.end <= binding.final.parsed.time.completed, 'QUESTION_ABORT_RECEIPT_UNPROVED');
+    return { part_id: row.id, message_id: row.message_id, session_id: row.session_id, call_id: value.callID,
+      native_part_data_sha256: sha(row.data), started_at: state.time.start, finished_at: state.time.end,
+      outcome: 'aborted-without-answer', answer_observed: false, actor: 'unknown' };
+  });
+}
+export function verifyNativeTerminalFailure(proof, { native, workspace, prompt, baseline, sessionId, identity }) {
+  requireValue(proof?.profile === 'loomy-native-terminal-failure/v1' && digest(proof.identity) === digest(identity)
+    && proof.prompt_sha256 === sha(Buffer.from(prompt)), 'TERMINAL_FAILURE_IDENTITY_INVALID');
+  const binding = verifyBinding(native, { workspace, prompt, baseline, sessionId });
+  const kind = nativeTerminalFailureKind(binding), final = binding.final?.parsed;
+  requireValue(kind && proof.kind === kind && Number.isSafeInteger(final.time?.created)
+    && Number.isSafeInteger(final.time.completed) && final.time.completed >= final.time.created
+    && binding.final.id === proof.final_message_id && binding.root.id === proof.session_id, 'TERMINAL_FAILURE_HEAD_INVALID');
+  requireValue(binding.user.parsed.model?.providerID === 'imodel' && binding.user.parsed.model?.modelID === 'spark-x2.6'
+    && binding.user.parsed.model.variant === 'high'
+    && binding.messages.filter(row => row.session_id === binding.root.id && row.parsed.role === 'assistant').every(row =>
+      row.parsed.providerID === 'imodel' && row.parsed.modelID === 'spark-x2.6' && row.parsed.variant === 'high'), 'TERMINAL_FAILURE_MODEL_INVALID');
+  requireValue(binding.parts.filter(row => row.parsed.type === 'tool').every(row =>
+    ['completed', 'error'].includes(row.parsed.state?.status)), 'TERMINAL_FAILURE_TOOL_NOT_TERMINAL');
+  for (const id of binding.session_ids) {
+    const tail = binding.messages.filter(row => row.session_id === id && row.parsed.role === 'assistant').at(-1)?.parsed;
+    requireValue(Number.isSafeInteger(tail?.time?.completed) && (['stop', 'length', 'other'].includes(tail.finish)
+      || Boolean(tail.error) && digest(tail.error) === digest({ name: 'MessageAbortedError', data: { message: 'Aborted' } })), 'TERMINAL_FAILURE_CHILD_NOT_TERMINAL');
+  }
+  const questions = abortedQuestionReceipts(binding);
+  requireValue((!questions.length || kind === 'aborted') && digest(proof.question_terminations) === digest(questions), 'TERMINAL_FAILURE_QUESTION_RECEIPT_INVALID');
+  const assistance = { mode: 'automatic', operation_count: kind === 'aborted' ? null : 0,
+    semantic_intervention_count: kind === 'aborted' ? null : 0 };
+  requireValue(digest(proof.human_assistance) === digest(assistance), 'TERMINAL_FAILURE_HUMAN_COUNTS_INVALID');
+  const before = proof.original_runtime, after = proof.observed_runtime;
+  requireValue(sameRuntimeInstallation(before, after) && before.database_owned === true && after.database_owned === true
+    && proof.runtime_status_scope?.directory === workspace && proof.runtime_status_scope.endpoint === statusUrl(after, workspace).href
+    && binding.session_ids.every(id => !proof.runtime_status[id] || proof.runtime_status[id].type === 'idle')
+    && Date.parse(proof.observed_at) >= final.time.completed, 'TERMINAL_FAILURE_IDLE_UNPROVED');
+  return { binding, human_assistance: assistance, question_terminations: questions,
+    error: kind === 'aborted' ? { code: 'LOOMY_NATIVE_ABORTED', message: 'Native primary session ended with MessageAbortedError' }
+      : { code: 'LOOMY_NATIVE_OTHER_FINISH', message: 'Native primary model ended with finish=other' } };
+}
+export function verifyNativeLengthFailure(proof, { native, workspace, prompt, baseline, sessionId, identity }) {
+  requireValue(proof?.profile === 'loomy-native-output-length-failure/v1'
+    && digest(proof.identity) === digest(identity) && proof.prompt_sha256 === sha(Buffer.from(prompt)), 'LENGTH_FAILURE_IDENTITY_INVALID');
+  const binding = verifyBinding(native, { workspace, prompt, baseline, sessionId });
+  const final = binding.final?.parsed;
+  requireValue(final?.finish === 'length' && !final.error && Number.isSafeInteger(final.time?.created)
+    && Number.isSafeInteger(final.time.completed) && final.time.completed >= final.time.created
+    && binding.final.id === proof.final_message_id && binding.root.id === proof.session_id, 'LENGTH_FAILURE_HEAD_INVALID');
+  requireValue(binding.user.parsed.model?.providerID === 'imodel' && binding.user.parsed.model?.modelID === 'spark-x2.6'
+    && binding.user.parsed.model.variant === 'high'
+    && binding.messages.filter(row => row.session_id === binding.root.id && row.parsed.role === 'assistant').every(row =>
+      row.parsed.providerID === 'imodel' && row.parsed.modelID === 'spark-x2.6' && row.parsed.variant === 'high'), 'LENGTH_FAILURE_MODEL_INVALID');
+  requireValue(binding.parts.filter(row => row.parsed.type === 'tool').every(row =>
+    ['completed', 'error'].includes(row.parsed.state?.status) && row.parsed.tool !== 'question'), 'LENGTH_FAILURE_TOOL_NOT_TERMINAL');
+  for (const id of binding.session_ids) {
+    const tail = binding.messages.filter(row => row.session_id === id && row.parsed.role === 'assistant').at(-1)?.parsed;
+    requireValue(Number.isSafeInteger(tail?.time?.completed)
+      && (['stop', 'length'].includes(tail.finish) || Boolean(tail.error)), 'LENGTH_FAILURE_CHILD_NOT_TERMINAL');
+  }
+  requireValue(proof.runtime?.database_owned === true && proof.runtime.health_version === '1.14.22'
+    && proof.runtime_status_scope?.directory === workspace
+    && proof.runtime_status_scope.endpoint === statusUrl(proof.runtime, workspace).href
+    && binding.session_ids.every(id => !proof.runtime_status[id] || proof.runtime_status[id].type === 'idle')
+    && Date.parse(proof.observed_at) >= final.time.completed, 'LENGTH_FAILURE_IDLE_UNPROVED');
+  return { binding, error: { ...LENGTH_ERROR } };
+}
+
+export function selectConnectedRuntime(runtimes, connections) {
+  const ports = new Set(connections.split('\n').flatMap(line => {
+    const match = /^n127\.0\.0\.1:\d+->127\.0\.0\.1:(\d+)$/u.exec(line);
+    return match ? [match[1]] : [];
+  }));
+  const connected = runtimes.filter(row => ports.has(new URL(row.endpoint).port));
+  requireValue(connected.length === 1, 'RUNTIME_MAIN_CONNECTION_AMBIGUOUS');
+  return connected[0];
+}
+
+export async function assertSiblingRuntimeIdle(runtime, directories, readStatus = runtimeStatus) {
+  assertIdle(await readStatus(runtime));
+  for (const workspace of directories) assertIdle(await readStatus(runtime, workspace));
+}
+
+async function inspectRuntimeCandidate(app, database, pid) {
   const [text, listening, started, ownership] = await Promise.all([
     execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-d', 'txt', '-Fn']).catch(() => ({ stdout: '' })),
     execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(pid), '-iTCP', '-sTCP:LISTEN', '-Fpn']).catch(() => ({ stdout: '' })),
@@ -231,7 +321,7 @@ export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
   requireValue(executable === join(dirname(dirname(app.executable_path)), 'Resources/opencode/darwin-arm64/opencode'), 'RUNTIME_BINARY_NOT_BUNDLED');
   const ports = [...listening.stdout.matchAll(/^n127\.0\.0\.1:(\d+)$/gmu)].map(match => match[1]);
   requireValue(ports.length > 0 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_STARTING');
-  requireValue(ports.length === 1 && ownership.stdout.includes('n' + database + '\n'), 'RUNTIME_LISTENER_OR_DATABASE_UNOWNED');
+  requireValue(ports.length === 1, 'RUNTIME_LISTENER_OR_DATABASE_UNOWNED');
   const endpoint = 'http://127.0.0.1:' + ports[0];
   const healthResponse = await fetch(endpoint + '/global/health', { signal: AbortSignal.timeout(5000), redirect: 'error' });
   requireValue(healthResponse.ok, 'RUNTIME_HEALTH_UNAVAILABLE');
@@ -239,6 +329,31 @@ export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
   requireValue(health.healthy === true && health.version === '1.14.22', 'RUNTIME_VERSION_UNVERIFIED');
   return { pid, ppid: app.pid, executable, started_at: started.stdout.trim(),
     binary_sha256: sha(await readFile(executable)), endpoint, database, database_owned: true, health_version: health.version };
+}
+
+export async function runtimeIdentity(app, database = DEFAULT_DATABASE) {
+  const result = await execute('/bin/ps', ['-axo', 'pid=,ppid=,comm=']);
+  const rows = result.stdout.split('\n').map(line => /^\s*(\d+)\s+(\d+)\s+(.+)$/u.exec(line)).filter(Boolean);
+  const candidates = rows.filter(row => Number(row[2]) === app.pid && (row[3] === 'opencode' || row[3].endsWith('/opencode')));
+  requireValue(candidates.length > 0, 'RUNTIME_NOT_RUNNING');
+  requireValue(candidates.length <= 8, 'RUNTIME_PROCESS_BUDGET_EXCEEDED');
+  const runtimes = await Promise.all(candidates.map(row => inspectRuntimeCandidate(app, database, Number(row[1]))));
+  if (runtimes.length === 1) return runtimes[0];
+  const connections = async () => (await execute('/usr/sbin/lsof', ['-nP', '-a', '-p', String(app.pid), '-iTCP', '-sTCP:ESTABLISHED', '-Fpn'])).stdout;
+  const selected = selectConnectedRuntime(runtimes, await connections());
+  const siblings = runtimes.filter(row => row.pid !== selected.pid).sort((a, b) => a.pid - b.pid);
+  // Query every persisted directory on unselected servers: /session/status is
+  // directory scoped. An idle default instance alone does not prove them idle.
+  const native = await captureNative({ database });
+  const directories = [...new Set(native.session_index.map(row => row.directory))];
+  requireValue(directories.length <= 1000, 'RUNTIME_DIRECTORY_BUDGET_EXCEEDED');
+  for (const sibling of siblings) {
+    requireValue(sameRuntimeInstallation(selected, sibling), 'RUNTIME_SIBLING_INSTALLATION_MISMATCH');
+    await assertSiblingRuntimeIdle(sibling, directories);
+  }
+  requireValue(selectConnectedRuntime(runtimes, await connections()).pid === selected.pid, 'RUNTIME_MAIN_CONNECTION_CHANGED');
+  return { ...selected, selection: { profile: 'loomy-main-established-runtime/v1', main_pid: app.pid,
+    connected_endpoint: selected.endpoint, siblings } };
 }
 
 export function statusUrl(runtime, workspace = null) {
@@ -367,10 +482,11 @@ export async function probe({ appPath = '', database = DEFAULT_DATABASE, cacheRo
   await assertArchivedFailuresIdle(runtime, archivedFailures);
   assertNativeActivity(native, allowedSessionIds, archivedFailures);
   const ui = uiConfiguration(snapshot);
+  requireFullAccess('loomy', ui.permission_label, 'probe');
   const config = { schema_version: 'wildclawbench.general-e2e-loomy-run-config/v1', version: COMPONENT_VERSION,
     client, process: processIdentity, runtime, ax_helper: helper, python,
     configuration: { model: ui.model, model_label: ui.model_label, reasoning_effort: ui.reasoning_effort, permission_label: ui.permission_label },
-    permission_policy: 'preserve-workspace-policy',
+    permission_policy: 'require-full-access',
     archived_http_failures: archivedFailures,
     execution_concurrency: 3, initial_concurrency: 3, transport: 'macos-native-accessibility',
     observed_at: new Date().toISOString() };

@@ -8,6 +8,7 @@ import { dirname, isAbsolute, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { runCapture } from "../../vendor/e2e-shared/desktop-runtime/process.mjs";
+import { requireFullAccess } from '../../vendor/e2e-shared/desktop-gui/formal-permission.mjs';
 import { inspectQwenExecutionEnvironment, assertQwenExecutionEnvironment } from "./environment.mjs";
 import { buildQwenGeneralExecutionState } from "./execution-state.mjs";
 import { FLOW_TIMING_PROFILE, flowTiming } from "../../vendor/e2e-shared/resource-metrics/flow-timing.mjs";
@@ -51,7 +52,7 @@ import {
 } from "./ui.mjs";
 
 export const QWENWORK_CANARY_CONFIG_SCHEMA = "wildclawbench.general-e2e-qwenwork-canary-config/v1";
-export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.13";
+export const QWENWORK_CANARY_DRIVER_VERSION = "0.1.14";
 const PROVISIONAL_SESSION_SETTLE_MS = 60_000;
 const SCRIPT_DIR = resolve(fileURLToPath(new URL(".", import.meta.url)));
 const BUNDLE_ID = "cn.qwenwork.desktop.mac";
@@ -986,9 +987,11 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
     let prepared;
     try {
       prepared = await dependencies.prepareUi(config, state);
+      requireFullAccess('qwenwork', prepared.configuration?.permission?.confirmed_mode, 'workspace-selected');
       await dependencies.fillPrompt(config.prompt.content, recordPromptFallback);
       const verified = await dependencies.verifyPreparedUi(config, state, prepared);
       assertStableQwenUiConfiguration(prepared.configuration, verified.configuration);
+      state.full_access_gate = requireFullAccess('qwenwork', verified.configuration?.permission?.confirmed_mode, 'workspace-selected');
       if (prepared.project.project_id !== verified.project.project_id
           || resolve(prepared.project.confirmed_path) !== resolve(verified.project.confirmed_path)) {
         throw new Error("QWENWORK_PRE_SEND_WORKSPACE_DRIFT");
@@ -1055,6 +1058,7 @@ async function runQwenGeneralAttemptLocked(config, overrides = {}) {
   try {
     const prepared = await dependencies.verifyPreparedUi(config, state);
     samePreparedProject(state, prepared);
+    state.full_access_gate = requireFullAccess('qwenwork', prepared.configuration?.permission?.confirmed_mode, 'before-dispatch-intent');
     if (action === "dispatch-once") await recordDispatchStage("final-readback-verified");
   } catch (error) {
     return persistAttention(

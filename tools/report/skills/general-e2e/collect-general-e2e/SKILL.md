@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.30` Loomy离线核验支持新require-full-access配置，并检查其冻结权限确为完全访问。旧preserve-workspace-policy来源继续按原实际权限回放，不给旧默认权限记录追加全访问合规标签；新执行的发送门禁由Execute强制执行。
+
 `0.12.29` macOS清理器显式保护Loomy应用、同父进程OpenCode共享服务及其依赖树。即使共享后端cwd命中某题workspace也不发送信号；共享树内归属不明进程继续阻断收口。只更新进程保护，不改候选、终态、Rubric、资源或已冻结执行。
 
 `0.12.28` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。
