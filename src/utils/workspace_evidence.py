@@ -11,7 +11,7 @@ try:
 except ImportError:
     from src.wildclawbench_grading_core.native_text import NativeTextError, extract_native_text, is_native_text_format
 
-JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION = "wildclaw-workspace-evidence-v5"
+JUDGE_WORKSPACE_EVIDENCE_POLICY_VERSION = "wildclaw-workspace-evidence-v6"
 DEFAULT_JUDGE_WORKSPACE_MAX_CHARS = 80_000
 DEFAULT_JUDGE_WORKSPACE_FILE_MAX_CHARS = 12_000
 DEFAULT_DECLARED_EVIDENCE_FILE_MAX_CHARS = 20_000
@@ -160,7 +160,10 @@ def collect_workspace_evidence(
     selected_blocks: list[str] = []
     for item in sorted(
         (entry for entry in manifest if entry["status"] == "pending"),
-        key=lambda entry: (entry["priority"], entry["path"]),
+        # Keep text and existing page sidecars ahead of native projections
+        # within each declaration class. A projection can consume the same
+        # character budget needed by a complete source transcription.
+        key=lambda entry: (entry["priority"], is_native_text_format(entry["path"]), entry["path"]),
     ):
         path = workspace / item["path"]
         explicit = item["priority"] <= 1

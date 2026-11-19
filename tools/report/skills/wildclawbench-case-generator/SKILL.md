@@ -9,7 +9,7 @@ description: 将真实用户 Query 和可选本地素材转换、登记为 WildC
 
 ## 转换边界
 
-- 不指定数据集时继续支持 `01_Productivity_Flow` 至 `06_Safety_Alignment` 六类，写入旧扩展集。指定`dataset_id`或`--dataset-id`时，从catalog注册定义读取该系列的分类、双标签、任务/Workspace根、来源表和能力映射。
+- 不指定数据集时继续支持 `01_Productivity_Flow` 至 `06_Safety_Alignment` 六类，写入 `tasks/general/regression/`。指定`dataset_id`或`--dataset-id`时，从catalog注册定义读取该系列的分类、双标签、任务/Workspace根、来源表和能力映射。
 - 遇到网站生成、Playwright、PPT/图片专项指标协议时使用对应专项流程；原生办公文件交付和图片理解可以按已批准的通用业务契约制作，不因为格式自动加入专项标签。
 - 不从一条 Query 推断评测集难度梯度或模型区分度。生成结果必须标记为需要人工审核，后续需用真实多模型/多 Harness 结果审计质量。
 - 不覆盖已有任务、Workspace、来源登记或能力映射；冲突时停止并报告。
@@ -31,9 +31,8 @@ description: 将真实用户 Query 和可选本地素材转换、登记为 WildC
 5. 修正所有预检问题后去掉 `--dry-run`。脚本会一次性创建任务和 `exec/gt`，更新 `task_sources.yaml` 与 `checkpoint_capability_map7.yaml`，并调用现有 `validate-eval-dataset`；最终校验失败会回滚本次生成物。
 6. 检查新任务、Workspace 和两份登记文件的差异。至少人工确认题意无歧义、输入足够、真值未泄露、评分点彼此独立、自动评分不会误杀合理答案、Rubric 档位可判、难度与超时合理。
 
-当前仓库的 `tasks/extension/README.md` 曾引用不存在的 `tools/validate_extension_tasks.py`。不要把该命令当作门禁；以组装脚本的登记一致性检查和 `validate-eval-dataset` 结果为准，除非仓库后来真实新增了该脚本。
 
-注册数据集示例：在spec中设`"dataset_id": "general-hard"`，或在命令中加`--dataset-id general-hard`。规划清单内的编号只能生成同ID、同slug且状态为`building`的任务；`ready/frozen`版本的编号不可复用。新增源池任务不自动改变任何版本清单。注册数据集要求真实GT，首次创建来源表和能力映射时若最终门禁失败，也会移除本次创建的登记文件。正式整版验收另运行`validate_eval_dataset.py --dataset-id general-hard-v1`，逐题生成通过不能代替60题齐全及配额检查。
+注册数据集示例：在spec中设`"dataset_id": "general-challenge"`，或在命令中加`--dataset-id general-challenge`。规划清单内的编号只能生成同ID、同slug且状态为`building`的任务；`ready/frozen`版本的编号不可复用。新增源池任务不自动改变任何版本清单。注册数据集要求真实GT，首次创建来源表和能力映射时若最终门禁失败，也会移除本次创建的登记文件。正式整版验收另运行`validate_eval_dataset.py --dataset-id general-challenge-v2`，逐题生成通过不能代替60题齐全及配额检查。
 
 ## 交付说明
 

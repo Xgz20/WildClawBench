@@ -8,6 +8,8 @@
 
 固定范围的批次按数据集冻结清单选题。目录和 CLI 的说明见[通用场景自建评测集说明](../docs/guides/general-e2e/通用场景自建评测集说明.md)。
 
+新增题目请使用 [TASK_TEMPLATE_v2.md](TASK_TEMPLATE_v2.md)，在对应数据集登记来源和能力映射后做静态校验。已有编号（含停用任务）继续保留，无输入的题目可用 `exec/.gitkeep` 表示空工作区。
+
 ## QwenWork macOS General 前置核验
 
 真机执行前，使用仓库内的只读入口核对原始日志 metadata：

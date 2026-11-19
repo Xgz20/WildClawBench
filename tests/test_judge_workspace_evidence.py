@@ -78,7 +78,7 @@ class JudgeWorkspaceEvidenceTest(unittest.TestCase):
         self.assertIn("H" * 100, evidence["text"])
         self.assertIn("T" * 100, evidence["text"])
 
-    def test_manifest_records_missing_and_unsupported_declared_artifacts(self) -> None:
+    def test_manifest_records_missing_and_unreadable_declared_artifacts(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
             (root / "results").mkdir()
@@ -103,8 +103,8 @@ class JudgeWorkspaceEvidenceTest(unittest.TestCase):
             item for item in evidence["metadata"]["manifest"]
             if item["path"] == "results/deck.pptx"
         )
-        self.assertEqual(deck["status"], "omitted")
-        self.assertEqual(deck["reason"], "unsupported_text_extension")
+        self.assertEqual(deck["status"], "unreadable")
+        self.assertEqual(deck["reason"], "NATIVE_TEXT_INVALID")
 
 
 if __name__ == "__main__":
