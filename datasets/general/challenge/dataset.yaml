@@ -35,7 +35,7 @@ categories:
 default_release: general-challenge-v2
 releases:
   general-challenge-v2:
-    status: ready
+    status: frozen
     created_at: '2026-11-19T00:00:00+08:00'
     manifest: datasets/general/challenge/manifests/general-challenge-v2.json
     task_ids:
