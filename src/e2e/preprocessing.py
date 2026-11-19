@@ -311,29 +311,3 @@ def checked_asset(path, ref):
 def budget(unit):
     return max((sum(step["timeout"] + 40 + TRANSFER_TIMEOUT for step in recipe["steps"])
                 for recipe in recipes(unit)), default=0)
-
-
-def require_admission(config, unit):
-    kinds = {step["kind"] for recipe in recipes(unit) for step in recipe["steps"]}
-    if not kinds:
-        return
-    for profile in config.preprocessing_profiles:
-        if (profile["template"] == unit["template"] and profile["namespace"] == config.namespace
-                and profile["app_id"] == config.app_id and profile["user_id"] == config.user_id
-                and kinds.issubset(profile["actions"])):
-            return profile["isolation_receipt"]
-    raise E2EError("PREPROCESS_SANDBOX_ISOLATION_NOT_VERIFIED")
-
-
-def validate_admissions(profiles):
-    if not isinstance(profiles, (list, tuple)):
-        raise E2EError("PREPROCESS_ADMISSION_INVALID")
-    for profile in profiles:
-        if (not isinstance(profile, dict)
-                or set(profile) != {"template", "namespace", "app_id", "user_id", "actions", "isolation_receipt"}
-                or not isinstance(profile["actions"], list) or not profile["actions"]
-                or any(not isinstance(action, str) or action not in KINDS for action in profile["actions"])
-                or not SHA.fullmatch(str(profile["isolation_receipt"]))):
-            raise E2EError("PREPROCESS_ADMISSION_INVALID")
-        for key in ("template", "namespace", "app_id", "user_id"):
-            identifier(profile[key], key)

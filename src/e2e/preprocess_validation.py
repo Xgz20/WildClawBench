@@ -9,7 +9,7 @@ import time
 from .agentcube import AgentCubeConfig, PlatformError
 from .backend import DRIVERS, ObservationPaused, WGUI, powershell
 from .common import E2EError, atomic_json, identifier, utc_now
-from .preprocessing import budget, normalize_recipe, require_admission
+from .preprocessing import budget, normalize_recipe
 from .protocol import profiles
 from .windows_preprocess import apply_recipe, diagnostic_code
 
@@ -74,7 +74,6 @@ def run_validation(root: Path, raw: dict, config_path: Path | None, *, stop=None
         result["target"] = unit
         config = AgentCubeConfig.load(config_path)
         bound = {**unit, "preprocessing": {"default": recipe, "overrides": {}}}
-        admission = require_admission(config, bound)
         if config.required_expire_ttl(0, budget(bound)) > config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT")
         store.event("checking", "passed")
@@ -94,7 +93,7 @@ def run_validation(root: Path, raw: dict, config_path: Path | None, *, stop=None
         driver._prepare_runtime(sid)
         store.event("bootstrap", "passed")
         store.event("preprocessing", "running")
-        apply_recipe(driver, sid, recipe, WGUI, powershell, isolation_receipt=admission)
+        apply_recipe(driver, sid, recipe, WGUI, powershell)
         store.event("preprocessing", "passed")
         result["outcome"] = "passed"
     except (ObservationPaused, KeyboardInterrupt):

@@ -21,13 +21,8 @@ REQUEST = {
 
 
 class ValidationTests(unittest.TestCase):
-    def run_fixture(self, driver, *, admitted=True, script_error=None):
-        config = AgentCubeConfig(user_id="test-user")
-        if admitted:
-            config = AgentCubeConfig(user_id="test-user", preprocessing_profiles=({
-                "namespace": config.namespace, "template": PROFILE["template"], "app_id": config.app_id,
-                "user_id": config.user_id, "actions": ["powershell"], "isolation_receipt": "b" * 64,
-            },))
+    def run_fixture(self, driver, *, config=None, script_error=None):
+        config = config or AgentCubeConfig(user_id="test-user")
         with (TemporaryDirectory() as directory,
               patch("src.e2e.preprocess_validation.profiles", return_value=[PROFILE]),
               patch("src.e2e.preprocess_validation.AgentCubeConfig.load", return_value=config),
@@ -38,7 +33,7 @@ class ValidationTests(unittest.TestCase):
             self.assertEqual(result, read_json(root / "validation.json"))
             return result
 
-    def test_validation_checks_exact_steps_then_releases_without_dispatch(self):
+    def test_validation_creates_sandbox_using_standard_config_and_releases_without_dispatch(self):
         driver = Mock()
         driver.client.create_session.return_value = "original-session"
         driver.client.delete_session.return_value = {"confirmed": True}
@@ -46,14 +41,15 @@ class ValidationTests(unittest.TestCase):
         self.assertEqual((result["status"], result["cleanup"]), ("passed", "released"))
         self.assertEqual(result["planned_steps"], ["powershell"])
         driver.execute.assert_not_called()
+        driver.client.create_session.assert_called_once_with()
         driver.client.delete_session.assert_called_once_with("original-session")
         self.assertIn(("preprocessing", "passed"), [(row["stage"], row["status"]) for row in result["events"]])
 
-    def test_validation_does_not_create_sandbox_until_admitted(self):
+    def test_validation_still_rejects_insufficient_session_lifetime(self):
         driver = Mock()
-        result = self.run_fixture(driver, admitted=False)
+        result = self.run_fixture(driver, config=AgentCubeConfig(user_id="test-user", active_ttl=100, expire_ttl=100))
         self.assertEqual((result["status"], result["cleanup"]), ("failed", "not_created"))
-        self.assertEqual(result["error"], "PREPROCESS_SANDBOX_ISOLATION_NOT_VERIFIED")
+        self.assertEqual(result["error"], "PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT")
         driver.client.create_session.assert_not_called()
 
     def test_step_failure_and_cleanup_failure_are_separate_diagnostics(self):

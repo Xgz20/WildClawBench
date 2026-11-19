@@ -237,7 +237,7 @@ def _receipt(driver, sid, guest, job, step, encode):
     raise E2EError("PREPROCESS_STEP_RESULT_UNCONFIRMED")
 
 
-def apply_recipe(driver, sid, recipe, wgui, encode, *, isolation_receipt=None):
+def apply_recipe(driver, sid, recipe, wgui, encode):
     if recipe is None:
         return
     row = driver.store.get(driver.key)
@@ -245,10 +245,6 @@ def apply_recipe(driver, sid, recipe, wgui, encode, *, isolation_receipt=None):
     identity = digest({"recipe": recipe, "session": sid, "attempt": attempt})
     state = row.get("preprocess_receipt") or {"recipe": {key: recipe[key] for key in ("version_id", "version")},
                                                "recipe_sha256": digest(recipe), "status": "running", "steps": []}
-    if isolation_receipt:
-        if state.get("isolation_receipt", isolation_receipt) != isolation_receipt:
-            raise E2EError("PREPROCESS_SANDBOX_ADMISSION_DRIFT")
-        state["isolation_receipt"] = isolation_receipt
     jobs = row.get("preprocess_jobs", {})
     if not row.get("preprocess_receipt"):
         driver._phase("PREPARING", preprocess_receipt=state)

@@ -37,11 +37,12 @@ class AgentCubeConfig:
     astudio_runtime: dict | None = None
     auth_token: str = field(default="", repr=False)
     create_timeout_seconds: int = 900
-    preprocessing_profiles: tuple = ()
 
     @classmethod
     def load(cls, path: Path | None = None, *, template: str | None = None):
         values = {key.lower(): value for key, value in (read_json(path) if path else {}).items()}
+        # Existing deployments may still carry the retired admission field.
+        values.pop("preprocessing_profiles", None)
         unknown = set(values) - set(cls.__dataclass_fields__)
         if unknown:
             raise E2EError("AGENTCUBE_CONFIG_UNKNOWN_KEYS: " + ",".join(sorted(unknown)))
@@ -73,8 +74,6 @@ class AgentCubeConfig:
         if result.astudio_runtime is not None:
             from .windows_runtime import validate_runtime
             validate_runtime(result.astudio_runtime)
-        from .preprocessing import validate_admissions
-        validate_admissions(result.preprocessing_profiles)
         identifier(result.template, "template")
         identifier(result.namespace, "namespace")
         return result
@@ -82,7 +81,6 @@ class AgentCubeConfig:
     def public(self) -> dict:
         return {key: value for key, value in asdict(self).items()
                 if key != "auth_token" and not (key == "astudio_runtime" and value is None)
-                and key != "preprocessing_profiles"
                 # Keep legacy runtime fingerprints stable when using their original timeout.
                 and not (key == "create_timeout_seconds" and value == 900)}
 

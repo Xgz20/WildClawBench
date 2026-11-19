@@ -215,6 +215,28 @@ class ProtocolTests(unittest.TestCase):
         self.assertIn("AGENTCUBE_ENDPOINT_UNRESOLVABLE", {i["code"] for i in result["issues"]})
         create.assert_not_called()
 
+    def test_runtime_preflight_accepts_preprocessing_with_standard_agentcube_config(self):
+        repo = Path(__file__).resolve().parents[2]
+        raw = {
+            "selection": {"scenario": "general", "dataset": "general-custom60-v1",
+                          "task_ids": ["03_Social_Interaction_task_003_colleague_leave_reply"]},
+            "units": [{"harness": "astronstudio", "model": "auto", "reasoning_effort": "high",
+                       "preprocessing": {"overrides": {}, "default": {
+                           "version_id": 1, "version": 1, "name": "fixture",
+                           "steps": [{"kind": "powershell", "timeout": 20, "attachments": [],
+                                      "asset": {"kind": "powershell", "name": "fixture.ps1",
+                                                "size": 1, "sha256": "a" * 64}}],
+                       }}}],
+        }
+        with (patch.dict(os.environ, {"AGENTCUBE_AUTH_TOKEN": "synthetic", "AGENTCUBE_USER_ID": "synthetic"}, clear=True),
+              patch("src.e2e.protocol.socket.getaddrinfo"),
+              patch("src.e2e.agentcube.AgentCubeClient.create_session") as create):
+            result = preflight(repo, raw, check_runtime=True)
+        self.assertTrue(result["valid"], result["issues"])
+        self.assertEqual(result["runtime_checks"], {"credentials": "passed", "dns": "passed"})
+        self.assertEqual(result["preprocessing"][0]["cases"][0]["recipe"]["version_id"], 1)
+        create.assert_not_called()
+
     def test_inline_and_plan_invocations_resolve_identical_scope(self):
         repo = Path(__file__).resolve().parents[2]
         task_id = "03_Social_Interaction_task_003_colleague_leave_reply"

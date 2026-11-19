@@ -12,11 +12,10 @@ import unittest
 from unittest.mock import Mock, patch
 import zipfile
 
-from src.e2e.agentcube import AgentCubeConfig
 from src.e2e.backend import ObservationPaused
 from src.e2e.common import E2EError, atomic_json, digest, read_json, utc_now
 from src.e2e.preparation import normalize_plan
-from src.e2e.preprocessing import effective, freeze_assets, frozen_recipe, inspect_asset, require_admission, selection
+from src.e2e.preprocessing import effective, freeze_assets, frozen_recipe, inspect_asset, selection
 from src.e2e.windows_preprocess import _receipt, _upload, apply_recipe, bind_running_acode, build_payload
 
 
@@ -190,8 +189,6 @@ class PreprocessingTests(unittest.TestCase):
                               for row in preview["preprocessing"][0]["cases"]], [2, 3, None])
             with self.assertRaisesRegex(E2EError, "OUTSIDE_SELECTION"):
                 selection(plan["units"], cases[:-1])
-            with self.assertRaisesRegex(E2EError, "ISOLATION_NOT_VERIFIED"):
-                require_admission(AgentCubeConfig(), unit)
             freeze_assets(plan["units"], source, root / "preprocess-assets")
             (source / sha).write_bytes(b"tampered")
             self.assertEqual((root / "preprocess-assets" / sha).read_bytes(), b"exit 0")

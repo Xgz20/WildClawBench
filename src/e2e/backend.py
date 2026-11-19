@@ -144,7 +144,6 @@ class AStudioSandboxDriver:
         self.staging = self.root / "staging"
         self.staging.mkdir(parents=True, exist_ok=True)
         self.preprocess_recipe = None
-        self.preprocess_admission = None
 
     def checkpoint(self):
         if self.stop.is_set():
@@ -158,8 +157,6 @@ class AStudioSandboxDriver:
         if (self.batch / "batch.json").is_file():
             self.preprocess_recipe = preprocessing.frozen_recipe(self.batch, self.unit["unit_id"], self.task["task_id"])
         bound = {**self.unit, "preprocessing": {"default": self.preprocess_recipe, "overrides": {}}}
-        if self.preprocess_recipe is not None:
-            self.preprocess_admission = preprocessing.require_admission(self.config, bound)
         if self.preprocess_recipe is not None and self.config.required_expire_ttl(
                 self.unit["timeout_override"], preprocessing.budget(bound)) > self.config.expire_ttl:
             raise E2EError("PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT: increase expire_ttl in AgentCube configuration")
@@ -404,8 +401,7 @@ class AStudioSandboxDriver:
         if not self.store.get(self.key).get("dispatch_armed_at"):
             self._health(sid)
             self._prepare_runtime(sid)
-            windows_preprocess.apply_recipe(self, sid, self.preprocess_recipe, WGUI, powershell,
-                                            isolation_receipt=self.preprocess_admission)
+            windows_preprocess.apply_recipe(self, sid, self.preprocess_recipe, WGUI, powershell)
             self._upload(sid)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)

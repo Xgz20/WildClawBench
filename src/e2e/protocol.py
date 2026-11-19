@@ -292,11 +292,6 @@ def preflight(repo: Path, raw: dict, config_path: Path | None = None, *, check_r
             for unit in plan["units"]
         ):
             issues.append({"code": "PLATFORM_TTL_TOO_SHORT_FOR_TIMEOUT"})
-        for unit in plan["units"]:
-            try:
-                preprocessing.require_admission(config, unit)
-            except E2EError as exc:
-                issues.append({"code": str(exc), "unit_id": unit["unit_id"]})
         if check_runtime:
             runtime_checks["dns"] = "passed"
             checked = set()

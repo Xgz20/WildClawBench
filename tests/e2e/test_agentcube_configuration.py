@@ -35,6 +35,10 @@ class AgentCubeConfigurationTests(unittest.TestCase):
         self.assertIn("/v1/namespaces/agentcube-windows/code-interpreters/", client.picod)
         self.assertIn("/v1/namespaces/agentcube-windows/code-interpreters/", client.windows)
 
+    def test_legacy_preprocessing_registration_field_is_ignored(self):
+        config = self.load({"preprocessing_profiles": [{"legacy": "entry"}]})
+        self.assertEqual(config, self.load({}))
+
     def test_uncertain_creation_is_not_retried(self):
         client = AgentCubeClient(self.load({"create_timeout_seconds": 1800}))
         self.addCleanup(client.close)
