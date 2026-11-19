@@ -3,6 +3,7 @@
 import Foundation
 import AppKit
 import ApplicationServices
+import CryptoKit
 
 enum Failure: Error { case invalid(String) }
 func attribute(_ element: AXUIElement, _ name: String) -> CFTypeRef? {
@@ -35,6 +36,95 @@ func resolve(_ root: AXUIElement, _ path: [Int]) throws -> AXUIElement {
         target = values[index]
     }
     return target
+}
+func descendants(_ root: AXUIElement) throws -> [AXUIElement] {
+    var pending = [root], result: [AXUIElement] = []
+    while let element = pending.popLast() {
+        if string(element, kAXRoleAttribute) == "AXMenuBar" { continue }
+        guard result.count < 12000 else { throw Failure.invalid("AX_GUARD_BUDGET") }
+        result.append(element)
+        pending.append(contentsOf: children(element))
+    }
+    return result
+}
+func registeredWorkspace(_ nodes: [AXUIElement], _ folder: String) throws -> AXUIElement {
+    var matches: [AXUIElement] = []
+    for item in nodes where string(item, kAXRoleAttribute) == "AXMenuItem" {
+        if try descendants(item).filter({ string($0, kAXHelpAttribute) == folder }).count == 1 {
+            matches.append(item)
+        }
+    }
+    guard matches.count == 1 else { throw Failure.invalid("AX_WORKSPACE_PATH_CHANGED_OR_AMBIGUOUS") }
+    return matches[0]
+}
+func label(_ element: AXUIElement) -> String {
+    let title = string(element, kAXTitleAttribute)
+    return title.isEmpty ? string(element, kAXDescriptionAttribute) : title
+}
+func safeComposer(_ nodes: [AXUIElement], _ pid: Int32) -> Bool {
+    return NSWorkspace.shared.frontmostApplication?.processIdentifier == pid
+        && nodes.filter({ string($0, kAXRoleAttribute) == "AXWindow" }).count == 1
+        && !nodes.contains(where: { element in
+            let role = string(element, kAXRoleAttribute)
+            return ["AXMenuItem", "AXSheet", "AXDialog"].contains(role)
+                || string(element, kAXSubroleAttribute).hasSuffix("Dialog")
+                || attribute(element, "AXModal") as? Bool == true
+        })
+}
+func guardedSend(_ app: AXUIElement, _ pid: Int32, _ guardValues: [String: String],
+                 press: Bool) throws -> [String: Any] {
+    guard let prompt = guardValues["prompt"], !prompt.isEmpty,
+          let folder = guardValues["workspace"], folder.hasPrefix("/"),
+          let model = guardValues["model_label"], model == "Spark-X2.6 正式版 高",
+          guardValues["permission_label"] == "完全访问" else { throw Failure.invalid("AX_SEND_GUARD_REQUIRED") }
+    func readComposer(_ nodes: [AXUIElement]) throws -> AXUIElement {
+        let composers = nodes.filter { string($0, kAXRoleAttribute) == "AXTextArea" }
+        let popups = nodes.filter { string($0, kAXRoleAttribute) == "AXPopUpButton" }
+        let send = nodes.filter { string($0, kAXRoleAttribute) == "AXButton"
+            && string($0, kAXDescriptionAttribute) == "发送消息"
+            && attribute($0, kAXEnabledAttribute) as? Bool == true }
+        guard safeComposer(nodes, pid), composers.count == 1,
+              string(composers[0], kAXValueAttribute).utf8.elementsEqual(prompt.utf8),
+              popups.filter({ label($0) == model }).count == 1,
+              popups.filter({ ["完全访问", "默认权限", "询问模式"].contains(label($0)) }).map({ label($0) }) == ["完全访问"],
+              send.count == 1 else { throw Failure.invalid("AX_SEND_CONFIGURATION_OR_PROMPT_CHANGED") }
+        return send[0]
+    }
+    let before = try descendants(app)
+    _ = try readComposer(before)
+    let selector = before.filter { string($0, kAXRoleAttribute) == "AXPopUpButton"
+        && string($0, kAXDescriptionAttribute) == "选择工作目录" }
+    guard selector.count == 1 else { throw Failure.invalid("AX_SEND_WORKSPACE_SELECTOR_AMBIGUOUS") }
+    try checked(AXUIElementPerformAction(selector[0], kAXPressAction as CFString), "OPEN_WORKSPACE_MENU")
+    let menuDeadline = Date().addingTimeInterval(4)
+    var item: AXUIElement?
+    repeat {
+        let menu = try descendants(app)
+        if menu.contains(where: { string($0, kAXRoleAttribute) == "AXMenuItem" }) {
+            item = try registeredWorkspace(menu, folder)
+            break
+        }
+        Thread.sleep(forTimeInterval: 0.06)
+    } while Date() < menuDeadline
+    guard let item, NSWorkspace.shared.frontmostApplication?.processIdentifier == pid else {
+        throw Failure.invalid("AX_SEND_WORKSPACE_MENU_NOT_READY")
+    }
+    try checked(AXUIElementPerformAction(item, kAXPressAction as CFString), "SELECT_EXACT_WORKSPACE")
+    let closeDeadline = Date().addingTimeInterval(4)
+    repeat {
+        let after = try descendants(app)
+        if safeComposer(after, pid) {
+            let send = try readComposer(after)
+            if press { try checked(AXUIElementPerformAction(send, kAXPressAction as CFString), "PRESS") }
+            let hash = SHA256.hash(data: Data(prompt.utf8)).map { String(format: "%02x", $0) }.joined()
+            return ["status": "PASS", "pid": pid, "action": press ? "send" : "verify-send",
+                    "workspace": folder, "model_label": model, "permission_label": "完全访问",
+                    "prompt_sha256": hash, "workspace_selection": "guarded-native-exact-menu-path",
+                    "dispatched": press]
+        }
+        Thread.sleep(forTimeInterval: 0.06)
+    } while Date() < closeDeadline
+    throw Failure.invalid("AX_SEND_WORKSPACE_SELECTION_NOT_CONFIRMED")
 }
 func main() throws -> [String: Any] {
     let data = FileHandle.standardInput.readDataToEndOfFile()
@@ -90,23 +180,23 @@ func main() throws -> [String: Any] {
                 "nodes": nodes]
     }
     guard NSWorkspace.shared.frontmostApplication?.processIdentifier == pid else { throw Failure.invalid("LOOMY_NOT_FRONTMOST") }
+    if action == "send" || action == "verify-send" {
+        guard let values = request["send_guard"] as? [String: String] else { throw Failure.invalid("AX_SEND_GUARD_REQUIRED") }
+        return try guardedSend(app, pid, values, press: action == "send")
+    }
     guard let path = request["path"] as? [Int], path.first == 0,
           let expected = request["expected"] as? [String: String] else {
         throw Failure.invalid("AX_ACTION_TARGET_REQUIRED")
     }
-    let target = try resolve(app, path)
+    let target: AXUIElement
+    if action == "press", let folder = request["workspace_guard"] as? String {
+        target = try registeredWorkspace(descendants(app), folder)
+    } else {
+        target = try resolve(app, path)
+    }
     guard identity(target) == expected,
           (attribute(target, kAXEnabledAttribute) as? Bool ?? true) else { throw Failure.invalid("AX_TARGET_CHANGED_OR_DISABLED") }
     if action == "press" {
-        if let folder = request["workspace_guard"] as? String {
-            guard string(target, kAXRoleAttribute) == "AXMenuItem" else { throw Failure.invalid("AX_WORKSPACE_ITEM_REQUIRED") }
-            var pending = [target], matches = 0
-            while let element = pending.popLast() {
-                if string(element, kAXHelpAttribute) == folder { matches += 1 }
-                pending.append(contentsOf: children(element))
-            }
-            guard matches == 1 else { throw Failure.invalid("AX_WORKSPACE_PATH_CHANGED") }
-        }
         if string(target, "AXIdentifier") == "OKButton" {
             guard let folder = request["folder_guard"] as? String, folder.hasPrefix("/") else {
                 throw Failure.invalid("AX_FOLDER_CONFIRM_GUARD_REQUIRED")
@@ -129,25 +219,7 @@ func main() throws -> [String: Any] {
             guard selectedMatches == 1 else { throw Failure.invalid("AX_FOLDER_CONFIRM_SELECTION_CHANGED") }
         }
         if string(target, kAXDescriptionAttribute) == "发送消息" {
-            guard let sendGuard = request["send_guard"] as? [String: String],
-                  let prompt = sendGuard["prompt"], !prompt.isEmpty,
-                  let model = sendGuard["model_label"], let permission = sendGuard["permission_label"] else {
-                throw Failure.invalid("AX_SEND_GUARD_REQUIRED")
-            }
-            var pending = [app], count = 0, composers: [String] = [], models = 0, permissions = 0
-            while let element = pending.popLast() {
-                count += 1
-                guard count < 12000 else { throw Failure.invalid("AX_SEND_GUARD_BUDGET") }
-                let role = string(element, kAXRoleAttribute)
-                if role == "AXMenuBar" { continue }
-                if role == "AXTextArea" { composers.append(string(element, kAXValueAttribute)) }
-                if role == "AXPopUpButton" && string(element, kAXTitleAttribute) == model { models += 1 }
-                if role == "AXPopUpButton" && string(element, kAXTitleAttribute) == permission { permissions += 1 }
-                pending.append(contentsOf: children(element))
-            }
-            guard composers == [prompt], models == 1, permissions == 1 else {
-                throw Failure.invalid("AX_SEND_CONFIGURATION_OR_PROMPT_CHANGED")
-            }
+            throw Failure.invalid("AX_SEND_REQUIRES_GUARDED_ACTION")
         }
         try checked(AXUIElementPerformAction(target, kAXPressAction as CFString), "PRESS")
     } else if action == "set-value" {

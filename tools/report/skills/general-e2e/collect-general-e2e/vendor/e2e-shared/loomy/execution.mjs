@@ -5,8 +5,8 @@ import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { artifact, assertArchivedFailuresIdle, assertIdle, assertNativeActivity, ax, captureNative, captureNativeHttpFailure, command, currentOwnedRuntime, digest, iso, jsonBytes, requireValue,
   runtimeIdentity, runtimeStatus, statusUrl, sha, uiConfiguration, verifyBinding, verifyNativeLengthFailure, verifyNativeTerminalFailure,
-  abortedQuestionReceipts, nativeTerminalFailureKind, waitNativeActivity, COMPONENT_VERSION } from './index.mjs';
-import { fillPrompt, newTask, selectWorkspace, sendOnce } from './ui.mjs';
+  abortedQuestionReceipts, nativeTerminalFailureKind, waitNativeActivity, COMPONENT_VERSION, SEND_GUARD_PROFILE } from './index.mjs';
+import { fillPrompt, newTask, selectWorkspace, guardSend } from './ui.mjs';
 
 export const STATE_SCHEMA = 'wildclawbench.general-e2e-execution-state/v1';
 export async function atomicJson(path, value) {
@@ -270,22 +270,38 @@ export async function observe(context, journal, allowedSessionIds = []) {
     if (!journal.session) journal.send_status = 'uncertain'; return saveState(context, journal);
   }
   const status = await verifyRuntime(context.config, context.workspace);
-  const native = await captureNative({ database: context.config.runtime.database, workspace: context.workspace,
-    sessionId: journal.session?.id, python: context.config.python });
-  const candidates = native.sessions.filter(row => row.parent_id === null && !journal.baseline.includes(row.id));
-  const users = candidates.length === 1 ? native.messages.filter(row => row.session_id === candidates[0].id && JSON.parse(row.data).role === 'user') : [];
-  const texts = users.length === 1 ? native.parts.filter(row => row.message_id === users[0].id && JSON.parse(row.data).type === 'text') : [];
-  if (candidates.length === 0 || candidates.length === 1 && (users.length === 0 || users.length === 1 && !texts.some(row => JSON.parse(row.data).text === context.prompt))) {
+  const pendingAcceptance = () => {
     journal.phase = 'NEEDS_ATTENTION'; journal.send_status = 'uncertain'; journal.attention = 'NATIVE_ACCEPTANCE_NOT_YET_OBSERVED';
     return saveState(context, journal);
+  };
+  let sessionId = journal.session?.id;
+  if (!sessionId) {
+    // Same absolute paths can occur in a previous run. Only query message
+    // bodies of the unique root outside the current, pre-dispatch baseline.
+    const index = await captureNative({ database: context.config.runtime.database, python: context.config.python });
+    const candidates = index.session_index.filter(row => row.parent_id === null && row.directory === context.workspace
+      && !journal.baseline.includes(row.id));
+    if (!candidates.length) return pendingAcceptance();
+    requireValue(candidates.length === 1, 'NATIVE_SESSION_BINDING_AMBIGUOUS');
+    sessionId = candidates[0].id;
   }
+  const native = await captureNative({ database: context.config.runtime.database, sessionId, python: context.config.python });
+  const users = native.messages.filter(row => row.session_id === sessionId && JSON.parse(row.data).role === 'user');
+  if (!journal.session && (users.length === 0 || users.length === 1 && !native.parts.some(row => {
+    const part = JSON.parse(row.data);
+    return row.message_id === users[0].id && part.type === 'text' && part.text === context.prompt;
+  }))) return pendingAcceptance();
   const binding = verifyBinding(native, { workspace: context.workspace, prompt: context.prompt,
-    baseline: journal.baseline, sessionId: journal.session?.id });
+    baseline: journal.baseline, sessionId });
   checkNativeModel(binding);
   requireValue(!binding.parts.some(row => row.parsed.type === 'tool' && row.parsed.tool === 'question'
     && !['completed', 'error'].includes(row.parsed.state?.status)), 'PENDING_QUESTION_REQUIRES_INTERVENTION');
   assertIdle(status, [...allowedSessionIds, ...binding.session_ids]);
-  requireValue(binding.user.time_created >= Date.parse(journal.sent_at) - 2000, 'NATIVE_USER_PREDATES_DISPATCH');
+  const sentAt = Date.parse(journal.sent_at);
+  const strictTiming = context.config.send_guard_profile === SEND_GUARD_PROFILE;
+  requireValue(strictTiming
+    ? binding.root.time_created >= sentAt && binding.user.time_created >= binding.root.time_created
+    : binding.user.time_created >= sentAt - 2000, 'NATIVE_USER_PREDATES_DISPATCH');
   if (!journal.session) {
     const bindingBytes = jsonBytes({ profile: 'loomy-native-dispatch-binding/v1', identity: journal.identity,
       prompt_sha256: context.locks.prompt, baseline_session_ids: journal.baseline, sent_at: journal.sent_at,
@@ -390,8 +406,9 @@ export async function executeTask(options) {
         if (runtimeReady) assertIdle(await verifyRuntime(context.config), options.allowedSessionIds || []);
         await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python,
           allowed: options.allowedSessionIds || [], archivedFailures: context.config.archived_http_failures });
-        const existing = await captureNative({ database: context.config.runtime.database, workspace: context.workspace, python: context.config.python });
-        requireValue(existing.sessions.length === 0, 'WORKSPACE_ALREADY_HAS_NATIVE_SESSION');
+        const preparationBaseline = await captureNative({ database: context.config.runtime.database, python: context.config.python });
+        const previousWorkspaceSessions = preparationBaseline.session_index.filter(row => row.directory === context.workspace);
+        requireValue(previousWorkspaceSessions.every(row => journal.baseline.includes(row.id)), 'WORKSPACE_SESSION_APPEARED_DURING_PREPARATION');
         const save = async (label, snapshot) => {
           const path = join(context.control, (journal.history_prefix || '') + String(journal.history.length).padStart(4, '0') + '-' + label + '.json');
           const bytes = jsonBytes(snapshot); await writeFile(path, bytes, { flag: 'wx', mode: 0o600 });
@@ -408,7 +425,9 @@ export async function executeTask(options) {
         const finalBaseline = await waitNativeActivity({ database: context.config.runtime.database, python: context.config.python,
           allowed: options.allowedSessionIds || [], archivedFailures: context.config.archived_http_failures });
         if (runtimeReady) await assertArchivedFailuresIdle(context.config.runtime, context.config.archived_http_failures);
-        requireValue(!finalBaseline.session_index.some(row => row.directory === context.workspace), 'WORKSPACE_SESSION_APPEARED_BEFORE_SEND');
+        requireValue(digest(finalBaseline.session_index.filter(row => row.directory === context.workspace))
+          === digest(previousWorkspaceSessions), 'WORKSPACE_SESSION_CHANGED_BEFORE_SEND');
+        await save('before-send-intent', await guardSend(taskConfig, context.workspace, context.prompt, false));
         journal.baseline = finalBaseline.session_index.map(row => row.id);
         const baselinePath = join(context.control, (journal.history_prefix || '') + 'pre-send-native-baseline.json'), baselineBytes = jsonBytes(finalBaseline);
         await writeFile(baselinePath, baselineBytes, { flag: 'wx', mode: 0o600 });
@@ -418,7 +437,11 @@ export async function executeTask(options) {
         journal.dispatch_driver_version = COMPONENT_VERSION;
         journal.send_status = 'intent_persisted'; journal.dispatch_attempt_count = 1;
         await saveState(context, journal);
-        try { await sendOnce(taskConfig, context.prompt); journal.click_returned_at = new Date().toISOString(); }
+        try {
+          const proof = await guardSend(taskConfig, context.workspace, context.prompt, true);
+          journal.click_returned_at = new Date().toISOString();
+          await save('physical-send-guard', proof);
+        }
         catch (error) { journal.click_error = error.message; journal.send_status = 'uncertain'; }
         await saveState(context, journal);
       } finally { await releaseUi(); }

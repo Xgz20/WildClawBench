@@ -1,10 +1,12 @@
+import { SEND_GUARD_PROFILE } from './index.mjs';
+import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 // Replays archived evidence only; never contacts a running desktop client.
 import { lstat, readFile, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { artifact, assertNativeActivity, digest, isAbsentRuntime, jsonBytes, PROFILE, requireValue, sameRuntimeInstallation, statusUrl, sha, verifyBinding } from './index.mjs';
 import { normalizeTrace, resourceMetrics } from './collection.mjs';
 import { checkNativeModel } from './execution.mjs';
-import { assertConfiguration, registeredWorkspaceItems } from './ui.mjs';
+import { assertConfiguration, assertSendGuard, registeredWorkspaceItems } from './ui.mjs';
 
 export async function readArchivedHttpFailure(recordPath, runtime) {
   requireValue(isAbsolute(recordPath), 'ARCHIVED_FAILURE_PATH_NOT_ABSOLUTE');
@@ -182,6 +184,21 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
       : readback.nodes.filter(node => node.help === state.session.cwd).length === 1),
     'ARCHIVE_WORKSPACE_SELECTION_MISMATCH');
   const taskConfig = { ...config, configuration: { ...config.configuration, permission_label: selection.configuration.permission_label } };
+  const requiresSendGuards = config.send_guard_profile === SEND_GUARD_PROFILE;
+  if (requiresSendGuards) {
+    requireValue(config.permission_policy === 'require-full-access'
+      && digest(selection.full_access_gate) === digest(requireFullAccess('loomy', selection.configuration.permission_label, 'workspace-selected')),
+    'ARCHIVE_WORKSPACE_FULL_ACCESS_MISMATCH');
+    for (const [event, dispatched] of [['before-send-intent', false], ['physical-send-guard', true]]) {
+      const proof = ui.get(event);
+      const verified = assertSendGuard(proof?.observed, config, state.session.cwd, promptBytes.toString('utf8'), dispatched);
+      const observedAt = Date.parse(journal.history.find(row => row.event === event)?.at);
+      const sentAt = Date.parse(journal.sent_at);
+      requireValue(digest(proof?.full_access_gate) === digest(verified)
+        && (dispatched ? observedAt >= sentAt && Boolean(journal.click_returned_at) : observedAt <= sentAt),
+      'ARCHIVE_SEND_GUARD_EVIDENCE_MISMATCH');
+    }
+  }
   const prepared = ui.get('prompt-readback');
   requireValue(prepared?.pid === config.process.pid && prepared.frontmost_pid === config.process.pid,
     'ARCHIVE_PREPARATION_PROCESS_MISMATCH');
@@ -210,6 +227,8 @@ export async function verifyArchivedLoomy(index, state, traceRoot) {
     requireValue(digest(proof.observed_runtime) === digest(effectiveRuntime)
       && runtimeChain.some(row => digest(row) === digest(proof.original_runtime)), 'ARCHIVE_TERMINAL_RUNTIME_MISMATCH');
   }
+  if (requiresSendGuards) requireValue(normalized.binding.root.time_created >= Date.parse(journal.sent_at)
+    && normalized.binding.user.time_created >= normalized.binding.root.time_created, 'ARCHIVE_NATIVE_SESSION_PREDATES_DISPATCH');
   const old = verifyBinding(terminal.native, { workspace: state.session.cwd, prompt, baseline: journal.baseline,
     sessionId: state.session.session_id, terminal: state.phase === 'COMPLETED' });
   checkNativeModel(old);

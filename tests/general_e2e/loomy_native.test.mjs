@@ -8,9 +8,22 @@ import { assertNativeActivity, assertSiblingRuntimeIdle, abortedQuestionReceipts
 import { checkNativeModel, buildState, loadTask, sourceRepair } from '../../tools/report/e2e-shared/loomy/execution.mjs';
 import { runBatch } from '../../tools/report/e2e-shared/loomy/batch.mjs';
 import { normalizeTrace, resourceMetrics } from '../../tools/report/e2e-shared/loomy/collection.mjs';
-import { registeredWorkspaceItems } from '../../tools/report/e2e-shared/loomy/ui.mjs';
+import { assertSendGuard, registeredWorkspaceItems } from '../../tools/report/e2e-shared/loomy/ui.mjs';
 
 const prompt = '仅处理本题 workspace。';
+test('Loomy native send proof binds the exact directory, model, prompt and dispatch stage', () => {
+  const config = { process: { pid: 42 }, configuration: { model_label: 'Spark-X2.6 正式版 高' } };
+  const workspace = '/evaluation/task/workspace';
+  const proof = { status: 'PASS', pid: 42, action: 'send', workspace, model_label: config.configuration.model_label,
+    prompt_sha256: sha(Buffer.from(prompt)), permission_label: '完全访问', dispatched: true,
+    workspace_selection: 'guarded-native-exact-menu-path' };
+  assert.equal(assertSendGuard(proof, config, workspace, prompt, true).stage, 'physical-send');
+  assert.throws(() => assertSendGuard(proof, config, '/other/workspace', prompt, true), /AX_SEND_PROOF_MISMATCH/);
+  assert.throws(() => assertSendGuard(proof, config, workspace, prompt + '\n', true), /AX_SEND_PROOF_MISMATCH/);
+  assert.throws(() => assertSendGuard(proof, config, workspace, prompt, false), /AX_SEND_PROOF_MISMATCH/);
+  assert.throws(() => assertSendGuard({ ...proof, permission_label: '默认权限' }, config, workspace, prompt, true), /FULL_ACCESS_REQUIRED/);
+});
+
 test('Loomy controller recovery never archives a live owner or a changed lock', async () => {
   const root = await realpath(await mkdtemp(join(tmpdir(), 'loomy-owner-test-')));
   try {

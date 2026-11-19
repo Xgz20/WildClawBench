@@ -1,7 +1,7 @@
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { setTimeout as delay } from 'node:timers/promises';
-import { act, ax, uniqueNode, nodeLabel, requireValue, uiConfiguration } from './index.mjs';
+import { act, ax, uniqueNode, nodeLabel, requireValue, sha, uiConfiguration } from './index.mjs';
 import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
 
 export async function waitUi(config, predicate, label, timeoutMs = 15000) {
@@ -68,7 +68,7 @@ export function registeredWorkspaceItems(snapshot, workspace) {
     && item.path.length <= node.path.length && item.path.every((part, i) => node.path[i] === part)));
 }
 
-export async function selectWorkspace(config, workspace, save) {
+export async function selectWorkspace(config, workspace, save, { provisionFullAccess = false } = {}) {
   let snapshot = await ax(config.ax_helper, config.process.pid);
   assertConfiguration(snapshot, config, { preparingWorkspace: true });
   const selector = uniqueNode(snapshot, node => node.role === 'AXPopUpButton'
@@ -81,10 +81,12 @@ export async function selectWorkspace(config, workspace, save) {
     requireValue(items.length === 1, 'AX_TARGET_AMBIGUOUS:registered-workspace-menu-item');
     await save('workspace-full-path-readback', menu);
     await act(config, items[0], 'press', { workspace_guard: workspace });
-    const selected = await waitUi(config, row => !row.nodes.some(node => node.role === 'AXMenuItem'), 'workspace-menu-closed');
+    let selected = await waitUi(config, row => !row.nodes.some(node => node.role === 'AXMenuItem'
+      || /Dialog$/u.test(node.subrole || '')), 'workspace-menu-closed');
+    if (provisionFullAccess) selected = await prepareFullAccess(config, selected, save);
+    await save('workspace-selected', selected);
     const observed = assertConfiguration(selected, config, { preparingWorkspace: true });
     const fullAccess = requireFullAccess('loomy', observed.permission_label, 'workspace-selected');
-    await save('workspace-selected', selected);
     return { workspace, selection_method: 'native-ui-menu-exact-full-path', full_path_verified: true, full_access_gate: fullAccess,
       configuration: { model_label: observed.model_label, reasoning_effort: observed.reasoning_effort, permission_label: observed.permission_label } };
   };
@@ -129,6 +131,39 @@ export async function selectWorkspace(config, workspace, save) {
   return { ...await selectRegistered(snapshot), native_folder_path_verified: true };
 }
 
+const permissionOption = '完全访问 突破工作区边界；所有操作免询问。';
+const confirmationTitle = '开启完全访问？';
+const confirmationButton = '我已了解风险，开启完全访问';
+const isButton = label => node => node.role === 'AXButton' && nodeLabel(node) === label && node.enabled;
+const permissionButton = label => node => node.role === 'AXPopUpButton' && nodeLabel(node) === label;
+
+async function prepareFullAccess(config, selected, save) {
+  const ui = assertConfiguration(selected, config, { preparingWorkspace: true });
+  requireValue(ui.composer.value === '' && config.permission_policy === 'require-full-access'
+    && config.configuration.permission_label === '完全访问', 'PERMISSION_PROVISION_REQUIRES_EMPTY_COMPOSER_AND_POLICY');
+  if (ui.permission_label === '完全访问') return selected;
+  requireValue(ui.permission_label === '默认权限', 'PERMISSION_PROVISION_UNRECOGNIZED_MODE');
+  await save('workspace-before-permission', selected);
+  await act(config, uniqueNode(selected, permissionButton(ui.permission_label), 'workspace-permission'));
+  const menu = await waitUi(config, row => row.nodes.some(isButton(permissionOption)), 'workspace-permission-menu');
+  const menuGroup = uniqueNode(menu, n => n.subrole === 'AXApplicationDialog', 'workspace-permission-menu-group');
+  const within = (snapshot, group) => ({ nodes: snapshot.nodes.filter(node => group.path.every((part, i) => node.path[i] === part)) });
+  const menuContents = within(menu, menuGroup);
+  requireValue(menuContents.nodes.some(n => n.role === 'AXStaticText' && n.value === '当前工作区权限'), 'PERMISSION_MENU_TITLE_CHANGED');
+  await save('workspace-permission-menu', menu);
+  await act(config, uniqueNode(menuContents, isButton(permissionOption), 'exact-full-access-option'));
+  const dialog = await waitUi(config, row => row.nodes.some(isButton(confirmationButton)), 'workspace-permission-confirmation');
+  const alert = uniqueNode(dialog, n => n.subrole === 'AXApplicationAlertDialog' && nodeLabel(n) === confirmationTitle, 'workspace-permission-alert');
+  const contents = within(dialog, alert);
+  requireValue(contents.nodes.some(n => n.role === 'AXHeading' && nodeLabel(n) === confirmationTitle)
+    && contents.nodes.some(isButton('取消'))
+    && contents.nodes.filter(n => n.role === 'AXButton').length === 2, 'PERMISSION_CONFIRMATION_CHANGED');
+  await save('workspace-permission-confirmation', dialog);
+  await act(config, uniqueNode(contents, isButton(confirmationButton), 'confirm-exact-full-access-option'));
+  return waitUi(config, row => !row.nodes.some(n => /Dialog$/u.test(n.subrole || ''))
+    && row.nodes.some(permissionButton('完全访问')), 'workspace-full-access-readback');
+}
+
 export async function fillPrompt(config, prompt, save) {
   let snapshot = await ax(config.ax_helper, config.process.pid);
   const ui = assertConfiguration(snapshot, config);
@@ -143,14 +178,23 @@ export async function fillPrompt(config, prompt, save) {
   return snapshot;
 }
 
-export async function sendOnce(config, prompt) {
+export function assertSendGuard(proof, config, workspace, prompt, dispatched) {
+  const fullAccess = requireFullAccess('loomy', proof?.permission_label, dispatched ? 'physical-send' : 'before-send-intent');
+  requireValue(proof.status === 'PASS' && proof.pid === config.process.pid && proof.workspace === workspace
+    && proof.model_label === config.configuration.model_label && proof.prompt_sha256 === sha(Buffer.from(prompt))
+    && proof.workspace_selection === 'guarded-native-exact-menu-path'
+    && proof.dispatched === dispatched && proof.action === (dispatched ? 'send' : 'verify-send'), 'AX_SEND_PROOF_MISMATCH');
+  return fullAccess;
+}
+
+export async function guardSend(config, workspace, prompt, dispatched) {
   requireFullAccess('loomy', config.configuration.permission_label, 'frozen-send-expectation');
   const snapshot = await ax(config.ax_helper, config.process.pid);
   const ui = assertConfiguration(snapshot, config);
-  requireFullAccess('loomy', ui.permission_label, 'physical-send');
   requireValue(ui.composer.value === prompt, 'PROMPT_CHANGED_BEFORE_SEND');
   const button = uniqueNode(snapshot, node => node.role === 'AXButton'
     && node.description === '发送消息' && node.enabled, 'send');
-  return act(config, button, 'press', { send_guard: { prompt,
+  const proof = await act(config, button, dispatched ? 'send' : 'verify-send', { send_guard: { prompt, workspace,
     model_label: config.configuration.model_label, permission_label: config.configuration.permission_label } });
+  return { observed: proof, full_access_gate: assertSendGuard(proof, config, workspace, prompt, dispatched) };
 }

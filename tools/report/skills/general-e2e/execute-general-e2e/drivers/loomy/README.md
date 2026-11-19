@@ -23,6 +23,14 @@ node drivers/loomy/probe.mjs --output /absolute/new-probe.json \
 后续派发、收口和离线复验继续核对该终态，原生状态为忙碌、待执行工具或
 新增未结算子会话时停止。此参数只接受正式归档的 Loomy 原生 HTTP 5xx 执行记录。
 
+正式派发前使用 `prepare-workspaces.mjs --unit-root ABS --run-config ABS --output-dir NEW_DIR`
+按 manifest 顺序设置并回读各完整目录的完全访问权限。入口只进入空白主页，在确认全局空闲后
+操作客户端的已知权限菜单与明确确认框，逐题留存原始 AX 证据及 SHA；准备前后原生会话索引必须一致。
+将 `receipt.json` 以 `--workspace-preparation` 交给队列，队列重验完整题序、模式和哈希。
+新版发送在意图前及原生按下发送前分别借同一个 AX 调用选中精确菜单目录，再验证权限、模型与全文。
+原生发送证明随发题 journal 进入采集。已有相同路径的会话只从本轮前置基线排除；
+只读取新发后唯一新增会话的消息正文。
+
 使用标准 `prepare-general-e2e-workspaces` 生成并安装的 execution unit：
 
 ```bash

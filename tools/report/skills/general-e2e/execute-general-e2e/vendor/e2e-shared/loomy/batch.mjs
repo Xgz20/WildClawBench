@@ -1,8 +1,41 @@
 import { mkdir, readFile, realpath } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
-import { captureNative, digest, requireValue, sha, verifyBinding } from './index.mjs';
-import { atomicJson, executeTask, lease, loadTask } from './execution.mjs';
+import { captureNative, digest, requireValue, SEND_GUARD_PROFILE, sha, verifyBinding } from './index.mjs';
+import { atomicJson, executeTask, inside, lease, loadTask } from './execution.mjs';
+
+import { assertConfiguration, registeredWorkspaceItems } from './ui.mjs';
+import { requireFullAccess } from '../desktop-gui/formal-permission.mjs';
+
+async function preparationDigest(receiptPath, unitRoot, manifestBytes, manifest, config) {
+  requireValue(typeof receiptPath === 'string', 'QUEUE_WORKSPACE_PREPARATION_REQUIRED');
+  const path = await realpath(resolve(receiptPath));
+  const bytes = await readFile(path), receipt = JSON.parse(bytes);
+  requireValue(receipt.profile === 'loomy-full-access-workspace-preparation/v1' && receipt.status === 'PASS'
+    && receipt.prompt_sends === 0 && receipt.zero_native_sessions_created === true
+    && receipt.unit_root === unitRoot && receipt.manifest_sha256 === sha(manifestBytes)
+    && digest(receipt.process) === digest(config.process) && digest(receipt.configuration) === digest(config.configuration)
+    && digest(receipt.tasks.map(row => row.task_id)) === digest(manifest.task_ids), 'QUEUE_WORKSPACE_PREPARATION_INVALID');
+  const evidence = async row => {
+    const data = await readFile(await inside(dirname(path), row.path));
+    requireValue(row.size === data.length && row.sha256 === sha(data), 'QUEUE_WORKSPACE_PREPARATION_EVIDENCE_CHANGED');
+    return JSON.parse(data);
+  };
+  const [before, after] = await Promise.all([evidence(receipt.before), evidence(receipt.after)]);
+  requireValue(digest(before.native.session_index) === digest(after.native.session_index), 'QUEUE_WORKSPACE_PREPARATION_SESSION_CHANGED');
+  for (const row of receipt.tasks) {
+    const workspace = await inside(unitRoot, manifest.tasks.find(task => task.task_id === row.task_id).workspace.path);
+    const checks = new Map();
+    for (const artifact of row.evidence) checks.set(artifact.event, await evidence(artifact));
+    const selected = checks.get('workspace-selected'), menu = checks.get('workspace-full-path-readback');
+    requireValue(row.workspace === workspace && row.selected.workspace === workspace && row.selected.full_path_verified
+      && registeredWorkspaceItems(menu, workspace).length === 1 && selected.pid === config.process.pid
+      && assertConfiguration(selected, config).composer.value === ''
+      && digest(row.selected.full_access_gate) === digest(requireFullAccess('loomy', '完全访问', 'workspace-selected')),
+    'QUEUE_WORKSPACE_PREPARATION_TASK_INVALID');
+  }
+  return sha(bytes);
+}
 
 export async function runBatch(options, overrides = {}) {
   const performTask = overrides.executeTask || executeTask;
@@ -16,6 +49,9 @@ export async function runBatch(options, overrides = {}) {
   const input = { manifest_sha256: sha(manifestBytes), config_sha256: sha(configBytes), task_ids: manifest.task_ids,
     run_slots: slots, continue_on_terminal_failure: options.continueOnTerminalFailure === true };
   requireValue(manifest.unit?.harness?.id === 'loomy' && slots <= config.execution_concurrency, 'QUEUE_HARNESS_OR_CAPACITY_INVALID');
+  if (config.send_guard_profile === SEND_GUARD_PROFILE) {
+    input.workspace_preparation_sha256 = await preparationDigest(options.workspacePreparation, unitRoot, manifestBytes, manifest, config);
+  }
   const root = join(unitRoot, 'control/loomy-queues', options.queueId);
   await mkdir(root, { recursive: true, mode: 0o700 });
   const path = join(root, 'queue.json'), release = await lease(join(root, 'owner.lock'));

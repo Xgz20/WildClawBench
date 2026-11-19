@@ -3,6 +3,8 @@ name: execute-general-e2e
 description: 在 AstronStudio 等桌面 Harness 中执行单个或批量 General E2E 用例；用于自动或人机协作做题，不负责正式证据收口、评分或报告。
 ---
 
+`0.15.24` Loomy 逐目录通过公开 UI 准备完全访问。新发送在意图前及原生 AX 动作内选择精确目录并回读模型、权限和全文，保留可离线复验的原生证明；同目录历史会话只留作零发送基线，不读取旧候选正文。
+
 `0.15.23` AStudio 队列由独立采集进程续采原生日志，异常自动封存到队列本地目录，关联 Worker、任务、原生进程及 SQLite 和主机 I/O。轮转、写盘失败和采样中断均记录证据断点。详见[队列异常取证](references/astronstudio-incident-evidence.md)。
 
 `0.15.22` 正式General E2E派发统一要求完全访问。AStudio、Loomy、WorkBuddy、QwenWork及DoubaoWork在工作区选择后、发送意图前和实际发送边界检查对应客户端的明确全访问值；默认、询问、未知、含糊值或漂移均阻断，不把“与当前值一致”当作达标。Loomy新探针冻结require-full-access，不再将默认权限设为正式预期。原生UI操作仍不自动批准未知权限或业务确认；控制会话按授权通过公开UI设置模式后须重新核验。历史已发送观察和旧包离线回放保留原权限，不追溯改成完全访问。见[完全访问基线](references/full-access-baseline.md)。
