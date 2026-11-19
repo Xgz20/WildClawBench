@@ -128,6 +128,7 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
         raise E2EError("TESTED_REASONING_MISMATCH")
     events, missing, calls, results = [], [], {}, {}
     mcp_ends = []
+    previous_search = None
     filtered = 0
     raw_name = "raw/" + path.name
 
@@ -155,6 +156,9 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             if kind == "tool_search_call" and (
                     payload.get("execution") != "client" or not isinstance(arguments, dict)):
                 raise E2EError("NATIVE_TOOL_SEARCH_CALL_INVALID")
+            if kind == "tool_search_call":
+                context = payload.get("internal_chat_message_metadata_passthrough")
+                previous_search = (number, call_id, context.get("turn_id") if isinstance(context, dict) else None)
             if isinstance(arguments, str):
                 try:
                     arguments = json.loads(arguments)
@@ -164,9 +168,19 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
                 "name": name, "arguments": arguments})
         elif outer == "response_item" and kind in {"function_call_output", "custom_tool_call_output", "tool_search_output"}:
             call_id = payload.get("call_id")
+            result = payload.get("output")
+            # ACode emits this parser failure as the next response item with
+            # an empty call ID. Bind only to the adjacent client search in
+            # the same native turn, keeping the original bytes intact.
+            if (kind == "function_call_output" and call_id == "" and previous_search
+                    and isinstance(result, str) and result.startswith("failed to parse tool_search arguments: ")):
+                search_line, search_id, search_turn = previous_search
+                context = payload.get("internal_chat_message_metadata_passthrough")
+                if (search_line + 1 == number and search_turn == turn_id and isinstance(context, dict)
+                        and context.get("turn_id") == turn_id):
+                    call_id = search_id
             if not call_id or call_id in results:
                 raise E2EError("NATIVE_RESULT_ID_INVALID")
-            result = payload.get("output")
             if kind == "tool_search_output":
                 tools = payload.get("tools")
                 if (payload.get("execution") != "client" or payload.get("status") != "completed"

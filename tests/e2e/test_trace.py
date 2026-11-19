@@ -65,6 +65,23 @@ class NativeMcpTests(unittest.TestCase):
         with self.assertRaisesRegex(E2EError, "NATIVE_TOOL_SEARCH_CALL_MISMATCH"):
             self.normalize()
 
+    def test_parser_failure_with_empty_id_binds_only_to_adjacent_search(self):
+        message = 'failed to parse tool_search arguments: invalid type: string "20", expected usize'
+        metadata = {"turn_id": "turn"}
+        call = {"type": "tool_search_call", "call_id": "search", "execution": "client",
+                "arguments": {"limit": "20"}, "internal_chat_message_metadata_passthrough": metadata}
+        result = {"type": "function_call_output", "call_id": "", "output": message,
+                  "internal_chat_message_metadata_passthrough": metadata}
+        self.rows[3:3] = [{"type": "response_item", "payload": value} for value in (call, result)]
+        binding = self.normalize()
+        self.assertEqual(binding["missing"], [])
+        event = next(event for event in binding["events"] if event.get("tool", {}).get("result") == message)
+        self.assertEqual(event["tool"]["call_id"], "search")
+        self.assertEqual(result["call_id"], "")
+        result["internal_chat_message_metadata_passthrough"] = {"turn_id": "other"}
+        with self.assertRaisesRegex(E2EError, "NATIVE_RESULT_ID_INVALID"):
+            self.normalize()
+
     def test_pasted_text_rejects_different_body_additions_and_multiple_entries(self):
         user = next(row for row in self.rows if row.get("type") == "event_msg"
                     and row["payload"].get("type") == "user_message")
