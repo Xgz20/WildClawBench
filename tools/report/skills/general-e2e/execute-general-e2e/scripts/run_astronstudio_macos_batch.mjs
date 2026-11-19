@@ -18,7 +18,7 @@ import { fileURLToPath } from "node:url";
 import {appendFrameworkEvent,redactDiagnosticText} from "../vendor/e2e-shared/astronstudio-runtime/diagnostics.mjs";
 import { inspectValidatedRuntimeSnapshot, probeAstronStudio } from "./probe_astronstudio_macos.mjs";
 import { withQueueObservationSnapshot } from "./lib/astronstudio-state.mjs";
-import { startNativeLogSpool } from "./lib/astronstudio-log-spool.mjs";
+import { startNativeLogSpool } from "./lib/astronstudio-log-supervisor.mjs";
 import { isRetryablePreSendFailure, main as observeSingleTask } from "./execute_astronstudio_macos.mjs";
 import { isQuotaError, pristineUnsentAttempt, readQuotaAuthorization, assertQuotaAuthorization, assertRetryableQuotaState,
   recoveryFiles, digest } from './lib/astronstudio-quota-retry.mjs';
@@ -786,13 +786,20 @@ export async function runQueue(plan, args, overrides = {}) {
     catch(error){state.runtime.audit_error=redactDiagnosticText(error.message).slice(0,300);}
   };
   const database = plan.runConfig?.state_database?.path;
-  let stopSpool;
+  let spool;
+  let spoolError;
   try {
     if (database && !overrides.runTask) {
       const spoolRoot = join(plan.queueRoot, "native-logs");
       await ownedDirectory(plan.unitRoot, spoolRoot);
-      const output = join(spoolRoot, randomUUID());
-      stopSpool = await startNativeLogSpool(database, output);
+      const output = join(spoolRoot, "collector-v2");
+      spool = await startNativeLogSpool(database, output, {
+        queueState: plan.queueStateFile,
+        journal: join(plan.unitRoot, ".general-e2e", "diagnostics", "framework-events.jsonl"),
+        appPath: plan.runConfig.harness?.app_path,
+        queueLock: plan.workerLockFile,
+        ownerToken: lock.owner.token,
+      });
       await audit({ event: "queue.native-log-spool.started", path: relativePosix(plan.unitRoot, output) });
     }
     state.runtime.worker_pid = dependencies.pid;
@@ -879,6 +886,16 @@ export async function runQueue(plan, args, overrides = {}) {
     }
 
     for (;;) {
+      try {
+        if (spool && await spool.ensure() && spoolError) {
+          await audit({ event: "queue.native-log-spool.recovered", previous_error: spoolError });
+          spoolError = null;
+        }
+      } catch (error) {
+        const reason = redactDiagnosticText(error.message);
+        if (spoolError !== reason) await audit({ event: "queue.native-log-spool.failed", reason });
+        spoolError = reason;
+      }
       await refreshAutomations(plan, state, dependencies);
 
       let running = state.tasks.filter((task) => task.phase === "RUNNING");
@@ -1089,7 +1106,8 @@ export async function runQueue(plan, args, overrides = {}) {
           if (observing) throw error;
           state.phase = "NEEDS_ATTENTION";
           state.error = "ASTUDIO_SHARED_OBSERVATION_SNAPSHOT_FAILED";
-          await audit({ event: "queue.observation.snapshot-failed", reason: redactDiagnosticText(error.message) });
+          await audit({ event: "queue.observation.snapshot-failed", reason: redactDiagnosticText(error.message),
+            ...error.snapshot_metrics });
           await persist(plan, state, dependencies.now());
           return state;
         }
@@ -1106,11 +1124,15 @@ export async function runQueue(plan, args, overrides = {}) {
     throw error;
   } finally {
     try {
-      if (stopSpool) {
-        const exitCode = await stopSpool();
-        await audit({ event: "queue.native-log-spool.stopped", exit_code: exitCode });
-      }
       await audit({event:"queue.worker.stopped",phase:state.phase,error:state.error||null});
+      if (spool) {
+        try {
+          await spool.stop("drain");
+          await audit({ event: "queue.native-log-spool.draining" });
+        } catch (error) {
+          await audit({ event: "queue.native-log-spool.drain-failed", reason: redactDiagnosticText(error.message) });
+        }
+      }
     } finally {
       await lock.release();
     }

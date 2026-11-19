@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { DatabaseSync } from 'node:sqlite';
 import test from 'node:test';
-import { queryNativeSessions, queryTerminalFinalResponse, withQueueObservationSnapshot } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
+import { queryNativeSessions, queryTerminalFinalResponse, withQueueObservationSnapshot, withStateSnapshot } from '../../tools/report/skills/general-e2e/execute-general-e2e/scripts/lib/astronstudio-state.mjs';
 
 test('mapped stopped error head ignores only a strictly bound usage-only reopened ledger',async()=>{
   const root=await mkdtemp(join(tmpdir(),'astronstudio-closed-metric-tail-')),file=join(root,'state.sqlite'),db=new DatabaseSync(file);
@@ -141,4 +141,29 @@ test('completed sessions reject active/unknown evidence but accept an old usage-
     db.close();
     await rm(root, { recursive: true, force: true });
   }
+});
+
+
+test('snapshot metrics identify the failed stage and retained database and WAL sizes', async t => {
+  const root = await mkdtemp(join(tmpdir(), 'astronstudio-snapshot-diagnostics-'));
+  const file = join(root, 'state.sqlite');
+  const db = new DatabaseSync(file);
+  t.after(async () => { db.close(); await rm(root, { recursive: true, force: true }); });
+  db.exec("PRAGMA journal_mode=WAL; CREATE TABLE unrelated(id INT); INSERT INTO unrelated VALUES(1);");
+  await assert.rejects(withStateSnapshot(file, () => assert.fail('operation should not run'), { attempts: 1 },
+    ['projection_projects']), error => {
+    assert.equal(error.snapshot_metrics.snapshot_retries[0].stage, 'quick_check');
+    assert.match(error.snapshot_metrics.snapshot_retries[0].reason, /no such table/u);
+    assert.ok(error.snapshot_metrics.snapshot_retries[0].sqlite_wal_bytes > 0);
+    return true;
+  });
+  await withStateSnapshot(file, async (_path, _options, metrics) => {
+    assert.equal(metrics.snapshot_attempt, 2);
+    assert.equal(metrics.snapshot_retries[0].stage, 'quick_check');
+    assert.ok(metrics.sqlite_main_bytes > 0);
+    assert.ok(metrics.sqlite_wal_bytes > 0);
+    assert.ok(metrics.quick_check_ms >= 0);
+    assert.ok(Date.parse(metrics.snapshot_started_at) > 0);
+    assert.match(metrics.snapshot_monotonic_ns, /^\d+$/u);
+  }, { sleep: async () => db.exec('CREATE TABLE projection_projects(id INT);') }, ['projection_projects']);
 });

@@ -3,6 +3,8 @@ name: collect-general-e2e
 description: 收集 General E2E 执行状态、终态 Workspace、原始轨迹和资源数据并形成正式执行回执；不用于导入评分回传包或决定分数。
 ---
 
+`0.12.31` 同步 AStudio 共享 SQLite 快照诊断字段，记录主库及 WAL 大小和每次失败的阶段与耗时。正式采集仍依赖原生全局空闲门禁。
+
 `0.12.30` Loomy离线核验支持新require-full-access配置，并检查其冻结权限确为完全访问。旧preserve-workspace-policy来源继续按原实际权限回放，不给旧默认权限记录追加全访问合规标签；新执行的发送门禁由Execute强制执行。
 
 `0.12.29` macOS清理器显式保护Loomy应用、同父进程OpenCode共享服务及其依赖树。即使共享后端cwd命中某题workspace也不发送信号；共享树内归属不明进程继续阻断收口。只更新进程保护，不改候选、终态、Rubric、资源或已冻结执行。

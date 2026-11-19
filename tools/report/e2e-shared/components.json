@@ -231,7 +231,7 @@
     },
     {
       "name": "astronstudio-runtime",
-      "version": "1.0.2",
+      "version": "1.0.3",
       "source_root": "tools/report/e2e-shared/astronstudio-runtime",
       "vendor_root": "vendor/e2e-shared/astronstudio-runtime",
       "entrypoints": [

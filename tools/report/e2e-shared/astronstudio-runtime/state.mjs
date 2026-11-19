@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
@@ -127,9 +127,10 @@ function sleep(milliseconds) {
 
 async function copyIfPresent(source, destination) {
   try {
-    await copySnapshotFile(source, destination);
+    return await copySnapshotFile(source, destination);
   } catch (error) {
     if (error?.code !== "ENOENT") throw error;
+    return null;
   }
 }
 
@@ -167,17 +168,32 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
   const source = resolve(stateDatabase);
   const attempts = overrides.attempts || 3;
   const wait = overrides.sleep || sleep;
+  const startedAt = new Date().toISOString();
+  const monotonicNs = process.hrtime.bigint().toString();
+  const retries = [];
   let lastError = null;
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    const root = await mkdtemp(join(tmpdir(), "general-e2e-astudio-execute-"));
-    const snapshot = join(root, "state.sqlite");
+    let root;
+    let stage = "create_snapshot";
+    const started = performance.now();
+    const metrics = { snapshot_started_at: startedAt, snapshot_monotonic_ns: monotonicNs,
+      snapshot_attempt: attempt, snapshot_retries: retries };
     try {
+      root = await mkdtemp(join(tmpdir(), "general-e2e-astudio-execute-"));
+      const snapshot = join(root, "state.sqlite");
       const copyStarted = performance.now();
+      stage = "copy_main";
       const copy = await copySnapshotFile(source, snapshot);
-      await copyIfPresent(`${source}-wal`, `${snapshot}-wal`);
+      metrics.copy_method = copy.method;
+      metrics.sqlite_main_bytes = (await stat(snapshot)).size;
+      stage = "copy_wal";
+      const wal = await copyIfPresent(`${source}-wal`, `${snapshot}-wal`);
+      metrics.sqlite_wal_bytes = wal ? (await stat(`${snapshot}-wal`)).size : null;
+      stage = "copy_shm";
       await copyIfPresent(`${source}-shm`, `${snapshot}-shm`);
-      const copyMs = performance.now() - copyStarted;
+      metrics.copy_ms = performance.now() - copyStarted;
       const checkStarted = performance.now();
+      stage = "quick_check";
       // High-frequency observations validate every complete table they read.
       // Probe and formal trace archival retain their whole-database check.
       for (const table of tables) {
@@ -185,20 +201,24 @@ export async function withStateSnapshot(stateDatabase, operation, overrides = {}
         const integrity = String(Object.values(integrityRows[0] || {})[0] || "");
         if (integrityRows.length !== 1 || integrity !== "ok") throw new Error(`状态库快照 ${table} quick_check=${integrity || "empty"}`);
       }
-      return await operation(snapshot, overrides, {
-        copy_method: copy.method, copy_ms: copyMs,
-        quick_check_ms: performance.now() - checkStarted, snapshot_attempt: attempt,
-      });
+      metrics.quick_check_ms = performance.now() - checkStarted;
+      stage = "query";
+      return await operation(snapshot, overrides, metrics);
     } catch (error) {
       lastError = error;
+      const { snapshot_retries, ...partial } = metrics;
+      retries.push({ ...partial, stage, elapsed_ms: performance.now() - started,
+        error_code: error?.code ?? error?.name ?? null, reason: String(error?.message ?? error).slice(0, 256) });
     } finally {
-      await rm(root, { recursive: true, force: true }).catch(() => {});
+      if (root) await rm(root, { recursive: true, force: true }).catch(() => {});
     }
     if (attempt < attempts) await wait(100 * attempt);
   }
-  throw new Error(
+  const error = new Error(
     `读取 AstronStudio 状态库快照失败：${lastError instanceof Error ? lastError.message : String(lastError)}`,
   );
+  error.snapshot_metrics = { snapshot_started_at: startedAt, snapshot_monotonic_ns: monotonicNs, snapshot_retries: retries };
+  throw error;
 }
 
 function parseSessionId(cursor) {
