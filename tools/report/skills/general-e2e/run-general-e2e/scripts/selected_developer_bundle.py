@@ -25,6 +25,19 @@ def sha(path):
 def read(path):
     return json.loads(path.read_bytes())
 
+def validate_selected_score_result(score, row):
+    """Keep selected null scores with their original validity and denominator."""
+    status = row['score_status']
+    assert status in {'valid', 'evaluation_error'}, 'selected score status mismatch'
+    valid = status == 'valid'
+    assert score['result']['valid'] is valid, 'selected score validity mismatch'
+    total = score['result']['total_score']
+    assert total == row['total_score'], 'selected score total mismatch'
+    if valid:
+        assert isinstance(total, (int, float)) and not isinstance(total, bool) and 0 <= total <= 1
+    else:
+        assert total is None, 'evaluation error must retain null score'
+
 def write(path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
@@ -184,7 +197,7 @@ def build(args, shared):
                 sp = Path(item["score_file"])
                 assert sha(sp) == item["score_sha256"] == r["lineage"]["score_sha256"]
                 score = read(sp)
-                assert score["result"]["valid"] is True and r["score_status"] == "valid"
+                validate_selected_score_result(score, r)
                 assert score["identity"]["attempt_id"] == item["scoring_attempt_id"] == r["scoring_attempt_id"]
                 assert score["execution"]["record_sha256"] == sha(ep)
                 assert score["execution"]["attempt_id"] == identity["attempt_id"]
@@ -247,7 +260,7 @@ def build(args, shared):
         write(staging / "TASK_INDEX.json", {"schema_version": 1, "tasks": tasks})
         write(staging / "SELECTION.json", {"schema_version": 1, "selected_runs": len(tasks),
               "unique_tasks": data["scope"]["unique_task_count"], "report_data_sha256": index["report_data_sha256"],
-              "selection_rule": "exactly one report-selected execution per unit/task and only its selected valid scoring attempt",
+              "selection_rule": "exactly one report-selected execution per unit/task and its selected scoring attempt, including valid zero and null evaluation_error",
               "source_selection_sha256": sha(index_path), "units": [{"unit_id": uid, "harness": h} for uid, h in names.items()]})
         write(staging / "SOURCE_MAP.json", {"schema_version": 1, "files": source_files})
         write(staging / "PACKAGE_EXCLUSIONS.json", {"schema_version": 1, "entries": exclusions})
