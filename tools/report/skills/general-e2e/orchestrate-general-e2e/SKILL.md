@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.99` 精确留证v6促销题原缺公式缓存的未评分Worker失败；新裁判Prompt交接完整原生只读求值与内存视图，不计候选验收。旧attempt和Prompt保持。
+
 `0.11.98` 增加v6 Info004同一已实际发生的event_index导出失败精确注册；复验原Worker/源码/无Judge与分数，Info003原留证和旧发行不变。
 
 `0.11.97` 严格留证无Judge、无分数的v6原缺答复event_index导出失败；绑定原contract/source/Worker/运行时及退出证明，同一冻结执行另建评分。旧attempt和原证据保留。

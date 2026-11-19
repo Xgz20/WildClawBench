@@ -746,6 +746,7 @@ def _prompt_text(
     independent_validity_required: bool = False,
     native_writer_evidence_required: bool = False,
     terminal_projection_required: bool = False,
+    promotion_formula_evidence_required: bool = False,
 ) -> str:
     runtime_usage = ""
     rule_instruction = (
@@ -798,6 +799,13 @@ def _prompt_text(
             "原生编辑副本、评分端导出PDF/页图均是评测材料，不是候选交付或候选主动验收；C7只能引用同次原始执行轨迹。"
             "缺候选文件、损坏、渲染不可用与原生环境故障分别保留证据，按原Rubric判断，不能把评测故障当能力零分；"
             + ("依本题复核入口首次运行原规则，完成后不得重复运行或改写。" if rule_review_required else "不得重跑或改写自动规则。")
+        )
+    if promotion_formula_evidence_required:
+        rule_instruction += (
+            "本题已冻结原生只读公式求值Profile，自动规则沿原比较和权重使用data_only内存视图，原工作簿/公式/图表未保存或改写。"
+            "先读取评分证据/原生公式求值/内存视图说明.json；native-raw.zip完整保留原观察索引、逐格页、原始值、请求范围和原生日志，可按工作表与坐标回查，不能把ZIP当UTF-8文本查询。"
+            "缺缓存已由评分端安全求值，不将原件缺缓存误判为没有业务数值；真实原生错误仍依原Rubric核实，不能替换成0或修正候选公式。"
+            "全量数值比较由原规则完成，语义涉及具体指标时从完整值映射定位；求值不是候选主动验收，C1/C7仍只认原作答轨迹。勿重复运行规则或回写工作簿。"
         )
     if terminal_projection_required:
         if prompt_protocol != PROMPT_PROTOCOL:
@@ -1277,6 +1285,7 @@ def initialize(
                         independent_validity_required=attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                         native_writer_evidence_required=bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                         terminal_projection_required=bool((attempt_manifest.get('trace_bundle') or {}).get('terminal_projection_profile')),
+                        promotion_formula_evidence_required=bool(attempt_manifest.get('runtime',{}).get('promotion_formula_value_profile')),
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1294,6 +1303,7 @@ def initialize(
                     'independent_validity_required':attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                     'native_writer_evidence_required':bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                     'terminal_projection_required':bool((attempt_manifest.get('trace_bundle') or {}).get('terminal_projection_profile')),
+                    'promotion_formula_evidence_required':bool(attempt_manifest.get('runtime',{}).get('promotion_formula_value_profile')),
                     "scoring_attempt_id": attempt_id,
                     "attempt_path": attempt_root.relative_to(staging).as_posix(),
                     "attempt_manifest_sha256": _sha256_file(
@@ -1532,6 +1542,7 @@ def initialize_rescore(
                         independent_validity_required=attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                         native_writer_evidence_required=bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                         terminal_projection_required=bool((attempt_manifest.get('trace_bundle') or {}).get('terminal_projection_profile')),
+                        promotion_formula_evidence_required=bool(attempt_manifest.get('runtime',{}).get('promotion_formula_value_profile')),
                     ),
                     encoding="utf-8",
                     newline="\n",
@@ -1550,6 +1561,7 @@ def initialize_rescore(
                     'independent_validity_required':attempt_manifest.get('runtime',{}).get('business_capability_profile')=='independent-business-capability/v2',
                     'native_writer_evidence_required':bool(attempt_manifest.get('runtime',{}).get('office001_native_profile')),
                     'terminal_projection_required':bool((attempt_manifest.get('trace_bundle') or {}).get('terminal_projection_profile')),
+                    'promotion_formula_evidence_required':bool(attempt_manifest.get('runtime',{}).get('promotion_formula_value_profile')),
                     "execution": dict(source_task["execution"]),
                     "execution_record_path": frozen_record.relative_to(staging).as_posix(),
                     "execution_record_sha256": source_task["execution_record_sha256"],
@@ -2156,6 +2168,7 @@ def _verify_state(
                 independent_validity_required=task.get('independent_validity_required',False),
                 native_writer_evidence_required=task.get('native_writer_evidence_required',False),
                     terminal_projection_required=task.get('terminal_projection_required',False),
+                promotion_formula_evidence_required=task.get('promotion_formula_evidence_required',False),
                 ),
                 score_version=str(state.get('score_skill', {}).get('version', '')),
             )
@@ -2188,6 +2201,8 @@ def _verify_state(
             raise OrchestrationError('SCORING_INDEPENDENT_VALIDITY_ROUTE_DRIFT',str(task.get('task_id')))
         if task.get('native_writer_evidence_required',False)!=bool(manifest_document.get('runtime',{}).get('office001_native_profile')):
             raise OrchestrationError('NATIVE_WRITER_PROMPT_PROFILE_MISMATCH',task['task_id'])
+        if task.get('promotion_formula_evidence_required',False)!=bool(manifest_document.get('runtime',{}).get('promotion_formula_value_profile')):
+            raise OrchestrationError('PROMOTION_FORMULA_PROMPT_PROFILE_MISMATCH',task['task_id'])
         if task.get('terminal_projection_required',False)!=bool((manifest_document.get('trace_bundle') or {}).get('terminal_projection_profile')):
             raise OrchestrationError('TERMINAL_PROJECTION_PROMPT_PROFILE_MISMATCH',task['task_id'])
         reader=state['score_skill'];glob_repair=None

@@ -80,6 +80,8 @@ import service_report_layout
 import procurement_explicit_labels
 import procurement_annotation_formula
 import procurement_signed_summary
+import procurement_category_subtotals
+import promotion_formula_values
 import data_table_representations
 import funnel_summary_tables
 import answer_delivery
@@ -2051,6 +2053,10 @@ def prepare_attempt(
                 **({'business_capability_profile':business_capability.profile_marker(contract,_sha256_bytes(contract_bytes))}
                    if business_capability.profile_marker(contract,_sha256_bytes(contract_bytes)) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'promotion_formula_value_profile':promotion_formula_profile}
+                   if (promotion_formula_profile := promotion_formula_values.marker(contract,_sha256_bytes(contract_bytes),dataset)) else {}),
+                **({'procurement_category_subtotal_profile':category_subtotal_profile}
+                   if (category_subtotal_profile := procurement_category_subtotals.marker(contract,_sha256_bytes(contract_bytes),dataset)) else {}),
                 **({'conditional_generated_evidence_profile':conditional_profile}
                    if (conditional_profile := conditional_generated_evidence.new_marker(contract,_sha256_bytes(contract_bytes),dataset)) else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
@@ -3048,6 +3054,8 @@ def _effective_rule_source(
         corrected, receipt = procurement_explicit_labels.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_annotation_formula.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = procurement_signed_summary.effective_source(manifest, source, corrected, receipt)
+        corrected, receipt = procurement_category_subtotals.effective_source(manifest, source, corrected, receipt)
+        corrected, receipt = promotion_formula_values.effective_source(manifest, source, corrected, receipt)
         corrected, receipt = acl_index_headers.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = work_order_equivalent_headers.effective_source(manifest,source,corrected,receipt)
         corrected, receipt = news_header_equivalence.effective_source(manifest,source,corrected,receipt)
@@ -6692,6 +6700,10 @@ def prepare_rescore_attempt(
                 **({'business_capability_profile':business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']))}
                    if business_capability.profile_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract'])) is not None
                    and judge_config.get('protocol')=='codex-agent-judge-v1' else {}),
+                **({'promotion_formula_value_profile':promotion_formula_profile}
+                   if (promotion_formula_profile := promotion_formula_values.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])) else {}),
+                **({'procurement_category_subtotal_profile':category_subtotal_profile}
+                   if (category_subtotal_profile := procurement_category_subtotals.marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])) else {}),
                 **({'conditional_generated_evidence_profile':conditional_profile}
                    if (conditional_profile := conditional_generated_evidence.new_marker(_read_json(staging/source_paths['contract']),_sha256_file(staging/source_paths['contract']),source_manifest['dataset'])) else {}),
                 **({'procurement_layout_profile':'procurement-matrix-formulas/v2'}
