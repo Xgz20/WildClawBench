@@ -3,6 +3,8 @@ name: orchestrate-general-e2e
 description: 将有效 General E2E 执行回执交接为独立单题评分工作空间并调度 Codex 或 API Judge；用于评分编排，不负责执行用例或亲自判断分数。
 ---
 
+`0.11.98` 增加v6 Info004同一已实际发生的event_index导出失败精确注册；复验原Worker/源码/无Judge与分数，Info003原留证和旧发行不变。
+
 `0.11.97` 严格留证无Judge、无分数的v6原缺答复event_index导出失败；绑定原contract/source/Worker/运行时及退出证明，同一冻结执行另建评分。旧attempt和原证据保留。
 
 `0.11.96` Loomy 对精确已完成的 MessageAbortedError 与 finish=other 保留失败、原候选及原生轨迹，跨同一安装的后端更换仍须先证明原会话全部结束。未答问题只接纳原生 aborted/error 完整回执，已答或待答问题不准入；无法确认的人工介入计数保留 null。沿原 Rubric 独立评分，不补答案、不重发、不统一零分；旧冻结发行和数值规则保持。

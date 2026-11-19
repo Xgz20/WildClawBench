@@ -23,7 +23,7 @@ def failure_kind(rt,root,state,task):
     attempt=root/task['attempt_path'];m=rt._read_json(attempt/'attempt-manifest.json')
     contract=rt._read_json(attempt/m['paths']['contract'])
     if task.get('score') is not None or (attempt/'score.json').exists():raise ValueError('FRAMEWORK_FAILURE_HAS_SCORE')
-    if contract.get('task_id') == harness_answer_index_failure.TASK:
+    if contract.get('task_id') in {harness_answer_index_failure.TASK, harness_answer_index_failure.TASK004}:
         harness_answer_index_failure.evidence(rt,attempt,m,contract,task)
         return harness_answer_index_failure.ERROR_KIND
     if aggregation_runtime_failure.matches(rt,root,state,task):
