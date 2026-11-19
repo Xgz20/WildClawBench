@@ -587,18 +587,37 @@ class RunGeneralE2ETests(unittest.TestCase):
             dependency=attempt/'node_modules';dependency.symlink_to('/unavailable/external/judge/node_modules')
             review=attempt/'judge-review';review.mkdir();(review/'node_modules').symlink_to('/unavailable/external/judge/node_modules');(review/'review-facts.json').write_text('{"keep":true}')
             observations=attempt/'judge-observations';observations.mkdir();(observations/'node_modules').symlink_to('/unavailable/external/judge/node_modules');(observations/'observed-facts.json').write_text('{"keep":true}')
+            singular=attempt/'judge-observation';singular.mkdir();(singular/'node_modules').symlink_to('/unavailable/external/judge/node_modules');(singular/'observed-facts.json').write_text('{"keep":true}')
             candidate=attempt/'candidate-original/workspace/node_modules';candidate.mkdir();(candidate/'frozen.js').write_text('part of the frozen candidate')
             package=MODULE.package_return(package_args(unit,orchestration,root/'return'))
             checked=MODULE.inspect_return_archive(Path(package['archive']),Path(package['receipt']));names=set(checked['members'])
             self.assertNotIn('scoring/attempts/orch-001/node_modules',names)
             self.assertNotIn('scoring/attempts/orch-001/judge-review/node_modules',names)
             self.assertNotIn('scoring/attempts/orch-001/judge-observations/node_modules',names)
+            self.assertNotIn('scoring/attempts/orch-001/judge-observation/node_modules',names)
             self.assertIn('scoring/attempts/orch-001/judge-review/review-facts.json',names)
             self.assertIn('scoring/attempts/orch-001/judge-observations/observed-facts.json',names)
+            self.assertIn('scoring/attempts/orch-001/judge-observation/observed-facts.json',names)
             self.assertIn('scoring/attempts/orch-001/candidate-original/workspace/node_modules/frozen.js',names)
             self.assertIn('scoring/package-exclusions.json',names);self.assertTrue(dependency.is_symlink())
             self.assertEqual(os.readlink(dependency),'/unavailable/external/judge/node_modules')
             self.assertTrue((observations/'node_modules').is_symlink())
+            self.assertTrue((singular/'node_modules').is_symlink())
+
+    def test_singular_observation_dependencies_keep_frozen_and_parent_link_guards(self) -> None:
+        for mode in ['catalog','input','parent-link']:
+            with self.subTest(mode=mode),tempfile.TemporaryDirectory() as temp_dir:
+                root=Path(temp_dir);unit=create_unit(root);orchestration=create_orchestration(root,'observation-'+mode)
+                attempt=orchestration/'attempts/orch-001';observations=attempt/'judge-observation'
+                if mode=='parent-link':
+                    observations.symlink_to('/external/judge/observations');expected='SYMLINK_TARGET_INVALID'
+                else:
+                    observations.mkdir();(observations/'node_modules').symlink_to('/external/judge/modules')
+                    if mode=='catalog':
+                        path=attempt/'semantic/evidence-catalog.json';path.parent.mkdir();write_json(path,{'entries':[{'path':'judge-observation/node_modules/evidence.json'}]});expected='JUDGE_DEPENDENCY_IS_FROZEN_EVIDENCE'
+                    else:
+                        write_json(attempt/'attempt-manifest.json',{'paths':{'candidate_original':'judge-observation'}});expected='JUDGE_DEPENDENCY_IS_FROZEN_INPUT'
+                with self.assertRaisesRegex(MODULE.FlowError,expected):MODULE.package_return(package_args(unit,orchestration,root/'return'))
 
     def test_observation_dependency_referenced_by_catalog_or_frozen_root_is_never_excluded(self) -> None:
         for mode in ['catalog','input']:

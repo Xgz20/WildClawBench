@@ -984,7 +984,7 @@ def judge_dependency_exclusions(attempt: Path, relative: PurePosixPath) -> list[
         if isinstance(value,list):return any(referenced(v,prefixes) for v in value)
         return False
     results=[]
-    for dependency_path in ['node_modules','judge-review/node_modules','judge-observations/node_modules']:
+    for dependency_path in ['node_modules','judge-review/node_modules','judge-observations/node_modules','judge-observation/node_modules']:
         parent=PurePosixPath(dependency_path).parent
         if parent!=PurePosixPath('.') and (attempt/parent).is_symlink():
             continue  # An arbitrary parent link is never treated as disposable.
