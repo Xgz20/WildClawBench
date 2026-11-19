@@ -7,7 +7,7 @@ import { hostname } from 'node:os';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { assertArchivedFailuresIdle, assertIdle, assertNativeActivity, captureNative, command, currentOwnedRuntime,
-  isEntrypoint, jsonBytes, requireValue, runtimeStatus, sha } from '../../vendor/e2e-shared/loomy/index.mjs';
+  digest, isEntrypoint, jsonBytes, requireValue, runtimeStatus, sha } from '../../vendor/e2e-shared/loomy/index.mjs';
 
 export async function main(argv = process.argv.slice(2)) {
   const { values: args } = parseArgs({ args: argv, options: {
@@ -43,7 +43,12 @@ export async function main(argv = process.argv.slice(2)) {
   const ownerPath = ownerPaths[0], queuePath = join(resolve(ownerPath, '..'), 'queue.json');
   requireValue(sources.has(queuePath), 'CONTROLLER_QUEUE_SOURCE_REQUIRED');
   const queue = JSON.parse(sources.get(queuePath));
-  requireValue(queue.tasks.every(row => ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED'].includes(row.phase)), 'CONTROLLER_QUEUE_UNSAFE');
+  const zeroSendTask = stop.zero_send_task_id ?? null;
+  const paused = queue.tasks.filter(row => row.phase === 'NEEDS_ATTENTION');
+  requireValue(queue.tasks.every(row => ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED'].includes(row.phase)
+      || row.phase === 'NEEDS_ATTENTION' && row.task_id === zeroSendTask)
+    && (zeroSendTask === null ? paused.length === 0 : paused.length === 1 && queue.phase === 'NEEDS_ATTENTION'),
+  'CONTROLLER_QUEUE_UNSAFE');
   const configBytes = await readFile(args['run-config']), config = JSON.parse(configBytes);
   const manifestBytes = sources.get(join(unit, 'manifest.json'));
   requireValue(manifestBytes && sha(manifestBytes) === queue.input.manifest_sha256
@@ -57,13 +62,35 @@ export async function main(argv = process.argv.slice(2)) {
     if (row.state_file) {
       requireValue(sources.has(row.state_file), 'CONTROLLER_TASK_STATE_NOT_FROZEN');
       const state = JSON.parse(sources.get(row.state_file));
-      requireValue(state.send.dispatch_attempt_count === 1 && state.prompt.send_status === 'sent'
-        && state.session.verified && state.session.session_id === row.session_id, 'CONTROLLER_TASK_IDENTITY');
+      if (row.task_id === zeroSendTask) {
+        const journalPath = join(directory, 'dispatch-journal.json');
+        requireValue(sources.has(journalPath), 'CONTROLLER_ZERO_SEND_JOURNAL_NOT_FROZEN');
+        const journal = JSON.parse(sources.get(journalPath));
+        requireValue(row.phase === 'NEEDS_ATTENTION' && row.dispatch_attempt_count === 0 && row.session_id === null
+          && state.phase === 'NEEDS_ATTENTION' && state.send.dispatch_attempt_count === 0 && state.prompt.send_status === 'not_sent'
+          && !state.session.verified && !state.session.session_id && state.identity.attempt_id === row.attempt_id
+          && digest(journal.identity) === digest(state.identity) && journal.phase === 'NEEDS_ATTENTION'
+          && journal.dispatch_attempt_count === 0 && journal.send_status === 'not_sent' && !journal.sent_at && !journal.session
+          && journal.attention === 'LOOMY_UI_TIMEOUT:workspace-menu'
+          && JSON.stringify(journal.history.map(item => item.event)) === JSON.stringify(['before-new-task', 'new-task']),
+        'CONTROLLER_ZERO_SEND_TASK_IDENTITY');
+      } else {
+        requireValue(state.send.dispatch_attempt_count === 1 && state.prompt.send_status === 'sent'
+          && state.session.verified && state.session.session_id === row.session_id, 'CONTROLLER_TASK_IDENTITY');
+      }
     } else requireValue(row.phase === 'PENDING' && !row.attempt_id && !row.session_id, 'CONTROLLER_UNBOUND_ATTEMPT');
   }
   const runtime = await currentOwnedRuntime(config);
   const native = await captureNative({ database: runtime.database, python: config.python });
   assertNativeActivity(native, allowed, config.archived_http_failures);
+  if (zeroSendTask !== null) {
+    const directory = join(unit, 'execution/tasks', zeroSendTask, 'automation/loomy');
+    const journal = JSON.parse(sources.get(join(directory, 'dispatch-journal.json')));
+    const workspace = join(unit, 'execution/tasks', zeroSendTask, 'workspace');
+    requireValue(native.session_index.filter(row => row.directory === workspace)
+      .every(row => journal.baseline.includes(row.id)), 'CONTROLLER_ZERO_SEND_NEW_SESSION_EXISTS');
+  }
+
   assertIdle(await runtimeStatus(runtime), allowed);
   await assertArchivedFailuresIdle(runtime, config.archived_http_failures);
   await absent();
