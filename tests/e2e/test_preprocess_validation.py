@@ -37,9 +37,11 @@ class ValidationTests(unittest.TestCase):
         driver = Mock()
         driver.client.create_session.return_value = "original-session"
         driver.client.delete_session.return_value = {"confirmed": True}
+        driver.client.windows_execute.return_value = {"output": "3.6.3\n"}
         result = self.run_fixture(driver)
         self.assertEqual((result["status"], result["cleanup"]), ("passed", "released"))
         self.assertEqual(result["planned_steps"], ["powershell"])
+        self.assertEqual(result["target"]["client_version"], "3.6.3")
         driver.execute.assert_not_called()
         driver.client.create_session.assert_called_once_with()
         driver.client.delete_session.assert_called_once_with("original-session")
@@ -55,6 +57,7 @@ class ValidationTests(unittest.TestCase):
     def test_step_failure_and_cleanup_failure_are_separate_diagnostics(self):
         driver = Mock()
         driver.client.create_session.return_value = "original-session"
+        driver.client.windows_execute.side_effect = PlatformError("Version probe unavailable")
         driver.client.delete_session.side_effect = [
             PlatformError("provider diagnostic: private body"), {"confirmed": False}, {"confirmed": False},
         ]
@@ -62,6 +65,7 @@ class ValidationTests(unittest.TestCase):
             result = self.run_fixture(driver, script_error=E2EError("PREPROCESS_STEP_FAILED: private output"))
         self.assertEqual((result["status"], result["outcome"], result["cleanup"]), ("failed", "failed", "unconfirmed"))
         self.assertEqual(result["error"], "PREPROCESS_STEP_FAILED")
+        self.assertNotIn("client_version", result["target"])
         self.assertNotIn("private", str(result))
         self.assertEqual(result["events"][-2]["error"], "PREPROCESS_VALIDATION_CLEANUP_UNCONFIRMED")
 

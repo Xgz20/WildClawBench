@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from pathlib import Path
+import re
 from threading import Event
 import time
 
@@ -58,6 +59,29 @@ def _request(raw):
     return unit, normalize_recipe(raw["recipe"], unit["harness"])
 
 
+def _client_version(driver, sid, harness):
+    product = {"astronstudio": "AStudio", "workbuddy": "WorkBuddy"}.get(harness)
+    if product is None:
+        return None
+    # Prefer the executable in use. Fall back to the conventional install
+    # location documented by WGUI when the product is not running yet.
+    script = (
+        f"$paths=@(Get-Process -Name '{product}' -ErrorAction SilentlyContinue | "
+        "Where-Object {$_.Path} | Select-Object -ExpandProperty Path -Unique);"
+        "if($paths.Count -gt 1){return};"
+        f"$path=if($paths.Count -eq 1){{$paths[0]}}else{{Join-Path \"$env:LOCALAPPDATA\" 'Programs\\{product}\\{product}.exe'}};"
+        "if(Test-Path -LiteralPath $path -PathType Leaf){"
+        "[Console]::Write((Get-Item -LiteralPath $path).VersionInfo.ProductVersion)}"
+    )
+    try:
+        output = driver.client.windows_execute(sid, powershell(script), timeout=15).get("output")
+    except PlatformError:
+        return None
+    if isinstance(output, str) and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._+-]{0,79}", output.strip()):
+        return output.strip()
+    return None
+
+
 def run_validation(root: Path, raw: dict, config_path: Path | None, *, stop=None, driver_factory=None):
     identifier(root.name, "preprocess_validation_id")
     if not root.is_dir() or root.is_symlink():
@@ -91,6 +115,9 @@ def run_validation(root: Path, raw: dict, config_path: Path | None, *, stop=None
         store.event("health", "passed")
         store.event("bootstrap", "running")
         driver._prepare_runtime(sid)
+        version = _client_version(driver, sid, unit["harness"])
+        if version:
+            result["target"] = {**unit, "client_version": version}
         store.event("bootstrap", "passed")
         store.event("preprocessing", "running")
         apply_recipe(driver, sid, recipe, WGUI, powershell)
