@@ -403,6 +403,7 @@ class AStudioSandboxDriver:
             self._prepare_runtime(sid)
             windows_preprocess.apply_recipe(self, sid, self.preprocess_recipe, WGUI, powershell)
             self._upload(sid)
+            windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
             before = self._inventory_native(sid)
             atomic_json(self.staging / "metadata/native-before.json", before)
             self._phase("PREPARING", native_before=before)
@@ -418,6 +419,7 @@ class AStudioSandboxDriver:
         self._phase("COLLECTING", report=report, observed_terminal_at=utc_now())
         if result["exit_code"] != 0 or report.get("status") != "completed":
             raise E2EError("CONTROLLER_EXECUTION_INCOMPLETE: " + str(report.get("status")))
+        windows_preprocess.verify_remote_plugins(self, sid, self.preprocess_recipe, powershell)
         self._download_tree(sid, "/logs/artifacts/run", "run")
         identity = {"batch_id": self.batch.name + f"-r{row['run_index']:04d}", "unit_id": row["unit_id"], "task_id": row["task_id"],
                     "attempt_id": row["attempt_id"]}

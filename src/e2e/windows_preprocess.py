@@ -221,6 +221,16 @@ def _receipt(driver, sid, guest, job, step, encode):
                 result[key] = row[key]
         if isinstance(row.get("version"), str) and re.fullmatch(r"[A-Za-z0-9._-]{1,120}", row["version"]):
             result["version"] = row["version"]
+        if "plugin_cache_version" in row or "plugin_identity_sha256" in row:
+            slot = row.get("plugin_cache_version")
+            identity = row.get("plugin_identity_sha256")
+            if (step["kind"] != "plugin" or not isinstance(slot, str)
+                    or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", slot)
+                    or not SHA.fullmatch(str(identity))):
+                raise E2EError("PREPROCESS_STEP_RECEIPT_INVALID")
+            result.update(plugin_cache_version=slot, plugin_identity_sha256=identity)
+            if type(row.get("plugin_runtime_observed")) is bool:
+                result["plugin_runtime_observed"] = row["plugin_runtime_observed"]
         if type(row.get("exit_code")) is int:
             result["exit_code"] = row["exit_code"]
         if row["status"] == "failed":
@@ -294,6 +304,33 @@ def apply_recipe(driver, sid, recipe, wgui, encode):
     state["status"] = "passed"
     atomic_json(driver.staging / "metadata/preprocessing.json", state)
     driver._phase("PREPARING", preprocess_jobs=jobs, preprocess_receipt=state)
+
+
+def verify_remote_plugins(driver, sid, recipe, encode):
+    if not recipe:
+        return
+    row = driver.store.get(driver.key)
+    state = row.get("preprocess_receipt") or {}
+    for receipt in state.get("steps", []):
+        if receipt.get("status") != "passed" or not receipt.get("plugin_cache_version"):
+            continue
+        step = recipe["steps"][receipt["index"]]
+        if step["kind"] != "plugin":
+            raise E2EError("ASTUDIO_REMOTE_PLUGIN_VERIFICATION_REQUEST_INVALID")
+        guest = WINDOWS_ROOT / row["attempt_id"] / str(receipt["index"])
+        args = [step["marketplace"], step["target"], receipt["plugin_cache_version"],
+                receipt["after_sha256"], receipt["plugin_identity_sha256"]]
+        command = " ".join("'" + arg.replace("'", "''") + "'" for arg in args)
+        script = (f"$ErrorActionPreference='Stop';$py={PYTHON};"
+                  f"& $py -I '{guest / 'worker.py'}' --verify-remote-plugin {command};exit $LASTEXITCODE")
+        try:
+            data = json.loads(driver.client.windows_execute(sid, encode(script), timeout=75)["output"])
+        except (PlatformError, ValueError, KeyError) as exc:
+            raise E2EError("ASTUDIO_REMOTE_PLUGIN_CACHE_UNVERIFIED") from exc
+        if not isinstance(data, dict) or data.get("status") != "passed":
+            code = data.get("error") if isinstance(data, dict) else ""
+            raise E2EError(code if isinstance(code, str) and SIMPLE_ERROR.fullmatch(code)
+                           else "ASTUDIO_REMOTE_PLUGIN_CACHE_UNVERIFIED")
 
 
 def bind_running_acode(driver, sid, encode, *, required=True):
