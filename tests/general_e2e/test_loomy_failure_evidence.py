@@ -58,6 +58,16 @@ class LoomyFailureEvidenceTests(unittest.TestCase):
     def test_validates_primary_failure_without_task_allowlist_or_numeric_score(self):
         SCORE.failure_evidence._validate_loomy_sources(*self.fixture())
 
+    def test_full_access_failure_scope_requires_pinned_context_and_exact_prompt(self):
+        prompt = '仅处理本题。'
+        helper = SCORE.failure_evidence
+        config = {'send_guard_profile': 'loomy-exact-workspace-ax-send/v1',
+                  'permission_policy': 'require-full-access', 'configuration': {'permission_label': '完全访问'}}
+        self.assertTrue(helper._loomy_prompt_scope([prompt], prompt, {}))
+        self.assertFalse(helper._loomy_prompt_scope([prompt], prompt, config))
+        self.assertFalse(helper._loomy_prompt_scope(['<system-reminder>', prompt], prompt, config))
+        self.assertFalse(helper._loomy_prompt_scope([prompt, prompt], prompt, config))
+
     def length_fixture(self, mutate=None):
         module = SCORE.failure_evidence
         execution, state, old = self.fixture()

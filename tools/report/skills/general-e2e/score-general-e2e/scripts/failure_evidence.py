@@ -204,6 +204,27 @@ def native_start_candidate(execution):
             and execution.get('candidate', {}).get('drift_status') == 'stable')
 
 
+def _loomy_prompt_scope(texts, prompt, config):
+    if not texts or texts[-1] != prompt or texts.count(prompt) != 1:
+        return False
+    context = list(texts[:-1])
+    prefix = '## 可用记忆条目\n\n'
+    suffix = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。'
+    empty = prefix + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。'
+    if context and isinstance(context[0], str):
+        memory = context[0]
+        if memory == empty or (memory.startswith(prefix) and memory.endswith(suffix)
+                               and memory[len(prefix):-len(suffix)].strip()):
+            context.pop(0)
+    if config.get('send_guard_profile') == 'loomy-exact-workspace-ax-send/v1':
+        return (config.get('permission_policy') == 'require-full-access'
+                and config.get('configuration', {}).get('permission_label') == '完全访问'
+                and len(context) == 1 and isinstance(context[0], str)
+                and sha(context[0].encode('utf-8'))
+                == '267cad0f8fa5bf4cc143a3a679db6e75117accba8e18bfdb4771947d2dc46ffe')
+    return not context
+
+
 def _validate_loomy_sources(execution, state, files):
     """Replay primary-provider failure from retained source bytes, never task IDs."""
     if execution['execution']['error']['code'] == 'LOOMY_NATIVE_OUTPUT_LENGTH_LIMIT':
@@ -247,6 +268,10 @@ def _validate_loomy_sources(execution, state, files):
             and users[0][1].get('model') == {'providerID': 'imodel', 'modelID': 'spark-x2.6', 'variant': 'high'}
             and all(data.get('providerID') == 'imodel' and data.get('modelID') == 'spark-x2.6' and data.get('variant') == 'high'
                     for _, data in assistants), 'LOOMY_PROMPT_MODEL')
+    if config.get('send_guard_profile') == 'loomy-exact-workspace-ax-send/v1':
+        texts = [part.get('text') for row, part in parts if row['message_id'] == users[0][0]['id']
+                 and part.get('type') == 'text' and not part.get('synthetic') and not part.get('ignored')]
+        require(_loomy_prompt_scope(texts, prompt, config), 'LOOMY_FULL_ACCESS_USER_TEXT_SCOPE')
     head, data = assistants[-1]
     start, finish = data.get('time', {}).get('created'), data.get('time', {}).get('completed')
     require(type(start) is int and type(finish) is int and finish >= start
@@ -330,12 +355,7 @@ def _validate_loomy_length_sources(execution, state, files):
             and sum(d.get('text') == files['PROMPT.md'].decode('utf-8') for r, d in parts if r['message_id'] == users[0][0]['id']) == 1
             and all(d.get('providerID') == 'imodel' and d.get('modelID') == 'spark-x2.6' and d.get('variant') == 'high' for _, d in assistants), 'LOOMY_LENGTH_PROMPT_MODEL')
     texts = [d.get('text') for r, d in parts if r['message_id'] == users[0][0]['id'] and d.get('type') == 'text' and not d.get('synthetic') and not d.get('ignored')]
-    memory_prefix = '## 可用记忆条目\n\n'
-    memory_empty = memory_prefix + '当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。'
-    memory_suffix = '\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。'
-    require(texts and texts[-1] == files['PROMPT.md'].decode('utf-8') and (len(texts) == 1 or len(texts) == 2
-            and isinstance(texts[0],str) and (texts[0] == memory_empty or texts[0].startswith(memory_prefix)
-                and texts[0].endswith(memory_suffix) and bool(texts[0][len(memory_prefix):-len(memory_suffix)].strip()))), 'LOOMY_LENGTH_USER_TEXT_SCOPE')
+    require(_loomy_prompt_scope(texts, files['PROMPT.md'].decode('utf-8'), config), 'LOOMY_LENGTH_USER_TEXT_SCOPE')
     head, final = assistants[-1]; created = final.get('time', {}).get('created'); completed = final.get('time', {}).get('completed')
     require(final.get('finish') == 'length' and not final.get('error') and type(created) is int and type(completed) is int and completed >= created
             and head['id'] == proof['final_message_id'] == state['extensions']['loomy']['final_message_id'] == journal['final_message_id']
@@ -398,11 +418,7 @@ def _validate_loomy_terminal_sources(execution, state, files):
             and sum(d.get('text')==files['PROMPT.md'].decode('utf-8') for r,d in parts if r['message_id']==users[0][0]['id'])==1
             and all(d.get('providerID')=='imodel' and d.get('modelID')=='spark-x2.6' and d.get('variant')=='high' for _,d in assistants), 'LOOMY_TERMINAL_PROMPT_MODEL')
     texts=[d.get('text') for r,d in parts if r['message_id']==users[0][0]['id'] and d.get('type')=='text' and not d.get('synthetic') and not d.get('ignored')]
-    prefix='## 可用记忆条目\n\n';suffix='\n\n只在条目与当前请求明确相关时读取对应文件。不要向用户提及这些条目、路径或读取过程。'
-    empty=prefix+'当前没有可用记忆条目。不要调用 Read 读取记忆文件，也不要猜测任何文件路径；直接基于本轮对话自然回复。'
-    require(texts and texts[-1]==files['PROMPT.md'].decode('utf-8') and (len(texts)==1 or len(texts)==2
-            and isinstance(texts[0],str) and (texts[0]==empty or texts[0].startswith(prefix) and texts[0].endswith(suffix)
-                and bool(texts[0][len(prefix):-len(suffix)].strip()))), 'LOOMY_TERMINAL_USER_TEXT_SCOPE')
+    require(_loomy_prompt_scope(texts, files['PROMPT.md'].decode('utf-8'), config), 'LOOMY_TERMINAL_USER_TEXT_SCOPE')
     head,final=assistants[-1];start=final.get('time',{}).get('created');finish=final.get('time',{}).get('completed')
     aborted={'name':'MessageAbortedError','data':{'message':'Aborted'}}
     kind='aborted' if final.get('error')==aborted and not final.get('finish') else 'other-finish' if final.get('finish')=='other' and not final.get('error') else None
