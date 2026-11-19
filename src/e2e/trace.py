@@ -146,23 +146,39 @@ def normalize_rollout(path: Path, *, identity: dict, prompt: str, guest_cwd: str
             emit(number, item, "user_message", role="user", content=payload["message"])
         elif outer == "response_item" and kind == "message" and payload.get("role") == "assistant":
             emit(number, item, "assistant_message", role="assistant", content=_text(payload.get("content")))
-        elif outer == "response_item" and kind in {"function_call", "custom_tool_call"}:
+        elif outer == "response_item" and kind in {"function_call", "custom_tool_call", "tool_search_call"}:
             call_id = payload.get("call_id")
-            if not call_id or call_id in calls or not isinstance(payload.get("name"), str) or not payload["name"]:
+            name = "tool_search" if kind == "tool_search_call" else payload.get("name")
+            if not call_id or call_id in calls or not isinstance(name, str) or not name:
                 raise E2EError("NATIVE_CALL_ID_INVALID")
             arguments = payload.get("arguments", payload.get("input"))
+            if kind == "tool_search_call" and (
+                    payload.get("execution") != "client" or not isinstance(arguments, dict)):
+                raise E2EError("NATIVE_TOOL_SEARCH_CALL_INVALID")
             if isinstance(arguments, str):
                 try:
                     arguments = json.loads(arguments)
                 except ValueError:
                     pass
             calls[call_id] = emit(number, item, "tool_call", tool={"call_id": call_id,
-                "name": payload["name"], "arguments": arguments})
-        elif outer == "response_item" and kind in {"function_call_output", "custom_tool_call_output"}:
+                "name": name, "arguments": arguments})
+        elif outer == "response_item" and kind in {"function_call_output", "custom_tool_call_output", "tool_search_output"}:
             call_id = payload.get("call_id")
             if not call_id or call_id in results:
                 raise E2EError("NATIVE_RESULT_ID_INVALID")
             result = payload.get("output")
+            if kind == "tool_search_output":
+                tools = payload.get("tools")
+                if (payload.get("execution") != "client" or payload.get("status") != "completed"
+                        or result is not None or not isinstance(tools, list)
+                        or any(not isinstance(tool, dict) or tool.get("type") != "function"
+                               or not isinstance(tool.get("name"), str) or not tool["name"]
+                               or not isinstance(tool.get("parameters"), dict) for tool in tools)
+                        or len({tool["name"] for tool in tools}) != len(tools)):
+                    raise E2EError("NATIVE_TOOL_SEARCH_OUTPUT_INVALID")
+                if call_id not in calls or events[calls[call_id]]["tool"]["name"] != "tool_search":
+                    raise E2EError("NATIVE_TOOL_SEARCH_CALL_MISMATCH")
+                result = {"tools": tools}
             results[call_id] = emit(number, item, "tool_result", tool={"call_id": call_id,
                 "result": result, "status": "unknown"}, content=result if isinstance(result, str) else None)
         elif outer == "event_msg" and kind == "token_count":

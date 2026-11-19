@@ -47,6 +47,24 @@ class NativeMcpTests(unittest.TestCase):
         self.assertEqual(next(event for event in binding["events"] if event["type"] == "user_message")["content"], message)
         self.assertEqual(binding["missing"], [])
 
+    def test_client_tool_search_preserves_the_call_and_catalog_result(self):
+        tools = [{"type": "function", "name": "preview", "parameters": {"type": "object"}}]
+        native = [
+            {"type": "tool_search_call", "call_id": "search", "execution": "client",
+             "status": "completed", "arguments": {"query": "preview"}},
+            {"type": "tool_search_output", "call_id": "search", "execution": "client",
+             "status": "completed", "tools": tools},
+        ]
+        self.rows[3:3] = [{"type": "response_item", "payload": payload} for payload in native]
+        binding = self.normalize()
+        self.assertEqual(binding["missing"], [])
+        call, result = [event for event in binding["events"] if event.get("tool", {}).get("call_id") == "search"]
+        self.assertEqual(call["tool"]["name"], "tool_search")
+        self.assertEqual(result["tool"]["result"], {"tools": tools})
+        native[1]["call_id"] = "call-1"
+        with self.assertRaisesRegex(E2EError, "NATIVE_TOOL_SEARCH_CALL_MISMATCH"):
+            self.normalize()
+
     def test_pasted_text_rejects_different_body_additions_and_multiple_entries(self):
         user = next(row for row in self.rows if row.get("type") == "event_msg"
                     and row["payload"].get("type") == "user_message")
