@@ -76,7 +76,9 @@ scoring-purpose 导出另提供 parent_reports，按 run 保存完整父 General
 
 `inspect-preprocess-asset --kind ... --name ... --file ...` 校验上传件并返回类型、大小、SHA-256、可选 Skill 名称或插件/内核版本。预检返回 `preprocessing_sha256` 和按单元展开的生效范围。创建预处理批次时，`run` 接收 `--expected-preprocessing-sha256` 和按 SHA-256 命名的 `--preprocess-asset-dir`。执行器验证并冻结为私有控制文件，续接沿用同一版本。公开回执包含版本号、步骤结果与摘要。
 
-每个 `asset` 固定 `kind`、`name`、`size` 和 `sha256`。`skill` 指定 `target` 和 `source`，来源为 `auto`、`user`、`astudio` 或 `runtime`。`plugin` 指定 `target` 和本地 `marketplace`。`acode` 从 ZIP 中读取内核及配套清单。`powershell` 可在 `attachments` 中绑定 `kind=file` 的附件，并通过 `$env:WCB_PREPROCESS_ATTACHMENTS` 读取。预检为每步预留最多 300 秒的投递预算及运行预算。
+每个 `asset` 固定 `kind`、`name`、`size` 和 `sha256`。`skill` 指定 `target` 和 `source`，来源为 `auto`、`user`、`astudio` 或 `runtime`。`plugin` 指定已安装插件的 `target` 和本地或远程 `marketplace`。`acode` 从 ZIP 中读取内核及配套清单。`powershell` 可在 `attachments` 中绑定 `kind=file` 的附件，并通过 `$env:WCB_PREPROCESS_ATTACHMENTS` 读取。预检为每步预留最多 300 秒的投递预算及运行预算。
+
+远程市场插件通过已安装的缓存身份绑定目标。试验包替换本次沙箱内原缓存目录的内容，保留远程身份记录和原缓存目录版本。回执分别标明试验包版本与远程缓存版本。独立验证记录缓存摘要及可取得的运行时回读。正式执行在发题前和任务返回后检查缓存身份、目录及摘要，发生变化时拒绝发布该次执行就绪回执。
 
 投递先压缩并切块，每次 WGUI 工作区上传最多 32 MiB，以兼容单次 64 MiB 限制。Windows 端核验完整包和成员摘要后才执行。回执在同一个 Windows 会话中回读，文件未发布时继续等待，发布后核对本次步骤身份。
 

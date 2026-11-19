@@ -16,11 +16,14 @@ import subprocess
 import sys
 from threading import Thread
 import time
+import tomllib
 import zipfile
 
 
 EXE = "acode-windows-x64.exe"
 MANIFEST = "acode-runtime-manifest.json"
+PLUGIN_MANIFESTS = (".acode-plugin/plugin.json", ".codex-plugin/plugin.json", ".claude-plugin/plugin.json")
+REMOTE_PLUGIN_METADATA = ".acode-remote-plugin-install.json"
 JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE = 0x2000
 JOB_OBJECT_EXTENDED_LIMIT_INFORMATION = 9
 WAIT_GATE = """import pathlib, subprocess, sys, time
@@ -344,15 +347,18 @@ def apply_skill(work, step, binary, data, source, home):
     return replace_directory(work / "payload", target, work, verify)
 
 
-def find_local_plugin(rpc, step):
+def find_plugin(rpc, step):
     result = rpc.call("plugin/installed", {"cwds": []})
     identity = step["target"] + "@" + step["marketplace"]
     matches = [(market, plugin) for market in result.get("marketplaces", [])
                if market.get("name") == step["marketplace"]
                for plugin in market.get("plugins", []) if plugin.get("id") == identity]
-    if len(matches) != 1:
-        raise StepError("ASTUDIO_LOCAL_PLUGIN_NOT_FOUND")
-    market, plugin = matches[0]
+    if len(matches) > 1:
+        raise StepError("ASTUDIO_PLUGIN_IDENTITY_AMBIGUOUS")
+    return matches[0] if matches else None
+
+
+def local_plugin_paths(market, plugin):
     if (not market.get("path") or plugin.get("source", {}).get("type") != "local"
             or plugin.get("remotePluginId") or plugin.get("managed")
             or plugin.get("installPolicySource") is not None
@@ -365,27 +371,151 @@ def find_local_plugin(rpc, step):
 def apply_plugin(work, step, binary, home):
     expected = tree(work / "payload")
     with runtime(binary, home, work, step["timeout"] - 5) as rpc:
-        market, source, before = find_local_plugin(rpc, step)
-        if _reparse(source):
-            raise StepError("ASTUDIO_PLUGIN_SOURCE_UNSAFE")
-        source = user_path(source)
-        if source == home or market.is_relative_to(source) or home.is_relative_to(source):
-            raise StepError("ASTUDIO_PLUGIN_SOURCE_UNSAFE")
-        target_cache = home / "plugins" / "cache" / step["marketplace"] / step["target"]
+        match = find_plugin(rpc, step)
+        if match and (match[1].get("source") or {}).get("type") == "local" and not match[1].get("remotePluginId"):
+            return apply_local_plugin(rpc, work, step, home, expected, match)
+        cache = home / "plugins" / "cache" / step["marketplace"] / step["target"]
+        metadata = cache / REMOTE_PLUGIN_METADATA
+        if not match and not metadata.is_file():
+            raise StepError("ASTUDIO_LOCAL_PLUGIN_NOT_FOUND")
+        config = home / "config.toml"
+        if config.is_file():
+            with config.open("rb") as stream:
+                plugins = tomllib.load(stream).get("plugins", {})
+            if plugins.get(step["target"] + "@" + step["marketplace"], {}).get("enabled") is False:
+                raise StepError("ASTUDIO_REMOTE_PLUGIN_NOT_ACTIVE")
+        if match:
+            plugin = match[1]
+            if (plugin.get("installed") is not True or plugin.get("enabled") is not True
+                    or plugin.get("availability") != "AVAILABLE"):
+                raise StepError("ASTUDIO_REMOTE_PLUGIN_NOT_ACTIVE")
+        cache, slot, identity = remote_cache(cache)
+        if match and match[1].get("remotePluginId") and match[1]["remotePluginId"] != identity:
+            raise StepError("ASTUDIO_REMOTE_PLUGIN_IDENTITY_MISMATCH")
+    # Close the discovery runtime before swapping the cache. A fresh runtime
+    # verifies the replacement under the same published cache slot, so the
+    # routine synchronizer sees its original release version.
+    return apply_remote_plugin(work, step, binary, home, cache, slot, identity)
 
-        def verify(backup):
-            result = rpc.call("plugin/install", {"marketplacePath": str(market), "pluginName": step["target"]})
-            _, _, installed = find_local_plugin(rpc, step)
-            cached = user_path(target_cache / step["version"])
-            actual = tree(cached)
-            if (result.get("installed") is not True or installed.get("enabled") is not True
-                    or installed.get("localVersion") != step["version"]
-                    or any(actual.get(key) != value for key, value in expected.items())):
-                raise StepError("ASTUDIO_PLUGIN_VERIFICATION_FAILED")
-            return {"before_sha256": tree_digest(backup), "after_sha256": tree_digest(cached),
-                    "version": step["version"]}
 
-        return replace_directory(work / "payload", source, work, verify)
+def apply_local_plugin(rpc, work, step, home, expected, match):
+    market, source, _ = local_plugin_paths(*match)
+    if _reparse(source):
+        raise StepError("ASTUDIO_PLUGIN_SOURCE_UNSAFE")
+    source = user_path(source)
+    if source == home or market.is_relative_to(source) or home.is_relative_to(source):
+        raise StepError("ASTUDIO_PLUGIN_SOURCE_UNSAFE")
+    target_cache = home / "plugins" / "cache" / step["marketplace"] / step["target"]
+
+    def verify(backup):
+        result = rpc.call("plugin/install", {"marketplacePath": str(market), "pluginName": step["target"]})
+        installed = find_plugin(rpc, step)
+        if not installed:
+            raise StepError("ASTUDIO_LOCAL_PLUGIN_NOT_FOUND")
+        _, _, installed = local_plugin_paths(*installed)
+        cached = user_path(target_cache / step["version"])
+        actual = tree(cached)
+        if (result.get("installed") is not True or installed.get("enabled") is not True
+                or installed.get("localVersion") != step["version"]
+                or any(actual.get(key) != value for key, value in expected.items())):
+            raise StepError("ASTUDIO_PLUGIN_VERIFICATION_FAILED")
+        return {"before_sha256": tree_digest(backup), "after_sha256": tree_digest(cached),
+                "version": step["version"]}
+
+    return replace_directory(work / "payload", source, work, verify)
+
+
+def remote_cache(raw_cache):
+    if not raw_cache.is_dir() or _reparse(raw_cache):
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_CACHE_UNVERIFIED")
+    cache = user_path(raw_cache)
+    metadata = cache / REMOTE_PLUGIN_METADATA
+    if not metadata.is_file() or _reparse(metadata) or metadata.stat().st_size > 32768:
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_IDENTITY_UNVERIFIED")
+    document = json.loads(metadata.read_text(encoding="utf-8-sig"))
+    identity = document.get("remote_plugin_id") if isinstance(document, dict) else None
+    if (not isinstance(identity, str) or not identity.strip() or document.get("schema_version") != 1):
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_IDENTITY_UNVERIFIED")
+    slots = [item for item in cache.iterdir() if item.is_dir() and re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", item.name)]
+    if len(slots) != 1 or _reparse(slots[0]):
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_CACHE_AMBIGUOUS")
+    require_plugin_name(slots[0], cache.name)
+    return cache, slots[0], identity
+
+
+def require_plugin_name(root, name):
+    manifests = [root / relative for relative in PLUGIN_MANIFESTS if (root / relative).is_file()]
+    if not manifests:
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_MANIFEST_MISMATCH")
+    for path in manifests:
+        if _reparse(path) or path.stat().st_size > 256 * 1024:
+            raise StepError("ASTUDIO_REMOTE_PLUGIN_MANIFEST_MISMATCH")
+        manifest = json.loads(path.read_text(encoding="utf-8-sig"))
+        if not isinstance(manifest, dict) or manifest.get("name") != name:
+            raise StepError("ASTUDIO_REMOTE_PLUGIN_MANIFEST_MISMATCH")
+
+
+def remote_plugin_witness(rpc, step, payload, slot, work):
+    # Discover plugin skills using the runtime's normal roots. Injecting an
+    # extra root here could falsely certify a cache the product never selects.
+    expected = {}
+    for path in payload.rglob("SKILL.md"):
+        name = skill_name(path)
+        if not name or name in expected:
+            raise StepError("ASTUDIO_REMOTE_PLUGIN_SKILLS_INVALID")
+        expected[name] = (slot / path.relative_to(payload)).resolve()
+    if not expected:
+        match = find_plugin(rpc, step)
+        if match and match[1].get("enabled") is not True:
+            raise StepError("ASTUDIO_REMOTE_PLUGIN_NOT_ACTIVE")
+        return bool(match)
+    result = rpc.call("skills/list", {"cwds": [str(work)], "forceReload": True})
+    actual = {name: set() for name in expected}
+    for item in result.get("data", []):
+        for skill in item.get("skills", []):
+            name = skill.get("name")
+            path = skill.get("path")
+            if name in actual and skill.get("enabled") is True and isinstance(path, str):
+                actual[name].add(Path(path).resolve())
+    # The standalone app-server does not inherit the desktop's authenticated
+    # catalog session. In that case report only the verified on-disk overlay.
+    if not any(actual.values()):
+        return False
+    if any(actual[name] != {path} for name, path in expected.items()):
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_SKILL_NOT_ACTIVE")
+    return True
+
+
+def apply_remote_plugin(work, step, binary, home, cache, slot, identity):
+    payload = work / "payload"
+    require_plugin_name(payload, step["target"])
+    expected = tree_digest(payload)
+    identity_sha = hashlib.sha256(identity.encode("utf-8")).hexdigest()
+
+    def verify(backup):
+        with runtime(binary, home, work, step["timeout"] - 5) as rpc:
+            runtime_observed = remote_plugin_witness(rpc, step, payload, slot, work)
+        _, current, current_identity = remote_cache(cache)
+        if current != slot or current_identity != identity or tree_digest(slot) != expected:
+            raise StepError("ASTUDIO_REMOTE_PLUGIN_CACHE_DRIFT")
+        return {"before_sha256": tree_digest(backup), "after_sha256": expected,
+                "version": step["version"], "plugin_cache_version": slot.name,
+                "plugin_identity_sha256": identity_sha,
+                "plugin_runtime_observed": runtime_observed}
+
+    return replace_directory(payload, slot, work, verify)
+
+
+def verify_remote_plugin_cache(marketplace, target, version, expected_sha, identity_sha):
+    if (any(not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,119}", value)
+            for value in (marketplace, target, version))
+            or any(not re.fullmatch(r"[a-f0-9]{64}", value) for value in (expected_sha, identity_sha))):
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_VERIFICATION_REQUEST_INVALID")
+    _, _, _, home = astudio_paths()
+    _, slot, identity = remote_cache(home / "plugins" / "cache" / marketplace / target)
+    if (slot.name != version or hashlib.sha256(identity.encode("utf-8")).hexdigest() != identity_sha
+            or tree_digest(slot) != expected_sha):
+        raise StepError("ASTUDIO_REMOTE_PLUGIN_CACHE_DRIFT")
 
 
 def apply_acode(work, step, binary, home):
@@ -516,4 +646,12 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) == 7 and sys.argv[1] == "--verify-remote-plugin":
+        try:
+            verify_remote_plugin_cache(*sys.argv[2:])
+            print(json.dumps({"status": "passed"}))
+        except (StepError, OSError, ValueError) as exc:
+            code = str(exc) if isinstance(exc, StepError) else "ASTUDIO_REMOTE_PLUGIN_CACHE_UNVERIFIED"
+            print(json.dumps({"status": "failed", "error": code}))
+    else:
+        main()
