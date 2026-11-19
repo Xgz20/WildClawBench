@@ -47,6 +47,41 @@ class NativeMcpTests(unittest.TestCase):
         self.assertEqual(next(event for event in binding["events"] if event["type"] == "user_message")["content"], message)
         self.assertEqual(binding["missing"], [])
 
+    def test_client_tool_search_preserves_the_call_and_catalog_result(self):
+        tools = [{"type": "function", "name": "preview", "parameters": {"type": "object"}}]
+        native = [
+            {"type": "tool_search_call", "call_id": "search", "execution": "client",
+             "status": "completed", "arguments": {"query": "preview"}},
+            {"type": "tool_search_output", "call_id": "search", "execution": "client",
+             "status": "completed", "tools": tools},
+        ]
+        self.rows[3:3] = [{"type": "response_item", "payload": payload} for payload in native]
+        binding = self.normalize()
+        self.assertEqual(binding["missing"], [])
+        call, result = [event for event in binding["events"] if event.get("tool", {}).get("call_id") == "search"]
+        self.assertEqual(call["tool"]["name"], "tool_search")
+        self.assertEqual(result["tool"]["result"], {"tools": tools})
+        native[1]["call_id"] = "call-1"
+        with self.assertRaisesRegex(E2EError, "NATIVE_TOOL_SEARCH_CALL_MISMATCH"):
+            self.normalize()
+
+    def test_parser_failure_with_empty_id_binds_only_to_adjacent_search(self):
+        message = 'failed to parse tool_search arguments: invalid type: string "20", expected usize'
+        metadata = {"turn_id": "turn"}
+        call = {"type": "tool_search_call", "call_id": "search", "execution": "client",
+                "arguments": {"limit": "20"}, "internal_chat_message_metadata_passthrough": metadata}
+        result = {"type": "function_call_output", "call_id": "", "output": message,
+                  "internal_chat_message_metadata_passthrough": metadata}
+        self.rows[3:3] = [{"type": "response_item", "payload": value} for value in (call, result)]
+        binding = self.normalize()
+        self.assertEqual(binding["missing"], [])
+        event = next(event for event in binding["events"] if event.get("tool", {}).get("result") == message)
+        self.assertEqual(event["tool"]["call_id"], "search")
+        self.assertEqual(result["call_id"], "")
+        result["internal_chat_message_metadata_passthrough"] = {"turn_id": "other"}
+        with self.assertRaisesRegex(E2EError, "NATIVE_RESULT_ID_INVALID"):
+            self.normalize()
+
     def test_pasted_text_rejects_different_body_additions_and_multiple_entries(self):
         user = next(row for row in self.rows if row.get("type") == "event_msg"
                     and row["payload"].get("type") == "user_message")
@@ -62,6 +97,15 @@ class NativeMcpTests(unittest.TestCase):
                 user["payload"]["message"] = prefix + '<pasted_text>\n' + json.dumps(entries) + '\n</pasted_text>' + suffix
                 with self.assertRaisesRegex(E2EError, "NATIVE_PROMPT_MISMATCH"):
                     self.normalize()
+
+    def test_builtin_browser_mirror_requires_same_name_and_acode_server(self):
+        name = "astron_browser_press"
+        self.rows[3]["payload"]["name"] = name
+        self.end["invocation"].update(server="acode", tool=name)
+        self.assertEqual(self.normalize()["missing"], [])
+        self.end["invocation"]["server"] = "acode_apps"
+        with self.assertRaisesRegex(E2EError, "NATIVE_MCP_INVOCATION_MISMATCH"):
+            self.normalize()
 
     def test_mcp_end_with_wrong_invocation_is_rejected(self):
         self.end["invocation"]["arguments"] = {"operation": "delete"}
